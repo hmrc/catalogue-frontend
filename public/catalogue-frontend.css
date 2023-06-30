@@ -12780,4 +12780,20 @@ table.sticky-header thead {
   position: sticky;
   top: 0px;
   background: white;
+  z-index: 99999;
+}
+
+table.sticky-header tbody tr.sticky-row-caption td {
+  padding-top: 2em !important;
+  position: sticky;
+  top: 10px;
+  background: white;
+  border-top: none;
+  z-index: 1;
+}
+
+table.sticky-header tbody tr.row-caption td {
+  padding-top: 2em !important;
+  background: white;
+  border-top: none;
 }

@@ -130,63 +130,56 @@
         <textarea class="hidden" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
     }
 
-    @groupedByKey.map { res =>
-        @if(res.isEmpty) {
-            <p>No results found.</p>
-        }
-
-        @for((configKey, configByService) <- res) {
-            <div>Results for <code>@configKey.asString</code></div>
-            <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
-                <thead>
-                    <tr>
-                        <th>Service</th>
-                        @for(env <- form.get.showEnviroments) {
-                            <th id="@{env.asString}-tr">@env.displayString</th>
-                        }
-                    </tr>
-                </thead>
-                <tbody>
-                    @for((serviceName, configByEnv) <- configByService) {
-                        <tr>
-                            <td><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
-                            @for(env <- form.get.showEnviroments) {
-                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
-                            }
-                        </tr>
+    @if(groupedByKey.exists(_.isEmpty) && groupedByService.exists(_.isEmpty) ) {
+        <p>No results found.</p>
+    } else {
+        <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    @for(env <- form.get.showEnviroments) {
+                        <th id="@{env.asString}-tr">@env.displayString</th>
                     }
-                </tbody>
-            </table>
-        }
-    }
-     @groupedByService.map { res =>
-        @if(res.isEmpty) {
-            <p>No results found.</p>
-        }
-
-        @for((serviceName, configByKey) <- res) {
-            <div>Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></div>
-            <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
-                <thead>
-                    <tr>
-                        <th>Key</th>
-                        @for(env <- form.get.showEnviroments) {
-                            <th id="@{env.asString}-tr">@env.displayString</th>
-                        }
-                    </tr>
-                </thead>
-                <tbody>
-                    @for((configKey, configByEnv) <- configByKey) {
-                        <tr>
-                            <td><code>@configKey.asString</code></td>
-                            @for(env <- form.get.showEnviroments) {
-                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
-                            }
+                </tr>
+            </thead>
+            <tbody>
+                @groupedByKey.map { res =>
+                    @for((configKey, configByService) <- res) {
+                        <tr class="@if(configByService.size > 1) {sticky-row-caption} else {row-caption} ">
+                            <td colspan="@(form.get.showEnviroments.size + 1)">
+                                Results for <code>@configKey.asString</code>
+                            </td>
                         </tr>
+                        @for((serviceName, configByEnv) <- configByService) {
+                            <tr>
+                                <td><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
+                                @for(env <- form.get.showEnviroments) {
+                                    <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
+                                }
+                            </tr>
+                        }
                     }
-                </tbody>
-            </table>
-        }
+                }
+
+                @groupedByService.map { res =>
+                    @for((serviceName, configByKey) <- res) {
+                        <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">
+                            <td colspan="@(form.get.showEnviroments.size + 1)">
+                                Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
+                            </td>
+                        </tr>
+                        @for((configKey, configByEnv) <- configByKey) {
+                            <tr>
+                                <td><code>@configKey.asString</code></td>
+                                @for(env <- form.get.showEnviroments) {
+                                    <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
+                                }
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
     }
 
     <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
