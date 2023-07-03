@@ -19,7 +19,7 @@
 @import views.html.helper
 @import views.html.partials.form_warnings
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{GroupBy, SearchConfig, ServiceConfigsService, routes => serviceConfigsRoutes, ValueFilterType }
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{GroupBy, SearchConfig, ServiceConfigsService, routes => serviceConfigsRoutes, FormValueFilterType }
 
 @this()
 
@@ -59,7 +59,15 @@
             </div>
             <div class="col-md-8">
                 <dl>
-                    <dt><label for="config-key">Config Key</label></dt>
+                    <dt>
+                        <label for="config-key">Config Key</label>
+                        <div class="input-group-inline pull-right">
+                            @helper.checkbox(
+                                field            =  form("configKeyIgnoreCase"),
+                                Symbol("_label") -> "Ignore Case",
+                            )
+                        </div>
+                    </dt>
                     <dd>
                         <input class="form-control" id="config-key" type="text" name="configKey" value='@form("configKey").value' autocomplete="off" />
                         <div id="config-search-matches" class="search-matches-dropdown hide"></div>
@@ -92,7 +100,15 @@
             </div>
             <div class="col-md-8">
                 <dl class="clearfix">
-                    <dt><label>Config Value</label></dt>
+                    <dt>
+                        <label for="config-value">Config Value</label>
+                        <div class="input-group-inline pull-right">
+                            @helper.checkbox(
+                                field            =  form("configValueIgnoreCase"),
+                                Symbol("_label") -> "Ignore Case",
+                            )
+                        </div>
+                    </dt>
                     <dd>
                         <div class="input-group-multi">
                             <div class="col-xs-9 col-md-9">
@@ -100,7 +116,7 @@
                             </div>
                             <div class="col-xs-3 col-md-3">
                                 <select class="form-control input-group-end" name="valueFilterType">
-                                    @for(x <- ValueFilterType.values) {
+                                    @for(x <- FormValueFilterType.values) {
                                         <option value="@x.asString" @if(form("valueFilterType").value.contains(x.asString)) {selected}>@x.displayString</option>
                                     }
                                 </select>
@@ -130,63 +146,55 @@
         <textarea class="hidden" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
     }
 
-    @groupedByKey.map { res =>
-        @if(res.isEmpty) {
-            <p>No results found.</p>
-        }
-
-        @for((configKey, configByService) <- res) {
-            <div>Results for <code>@configKey.asString</code></div>
-            <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
-                <thead>
-                    <tr>
-                        <th>Service</th>
-                        @for(env <- form.get.showEnviroments) {
-                            <th id="@{env.asString}-tr">@env.displayString</th>
-                        }
-                    </tr>
-                </thead>
-                <tbody>
-                    @for((serviceName, configByEnv) <- configByService) {
-                        <tr>
-                            <td><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
-                            @for(env <- form.get.showEnviroments) {
-                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
-                            }
-                        </tr>
+    @if(groupedByKey.filter(_.nonEmpty).isEmpty && groupedByService.filter(_.nonEmpty).isEmpty) {
+        <p>No results found.</p>
+    } else {
+        <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+            <thead>
+                <tr>
+                    <th>@if(groupedByKey.isDefined) {Key} else {Service}</th>
+                    @for(env <- form.get.showEnviroments) {
+                        <th id="@{env.asString}-tr">@env.displayString</th>
                     }
-                </tbody>
-            </table>
-        }
-    }
-     @groupedByService.map { res =>
-        @if(res.isEmpty) {
-            <p>No results found.</p>
-        }
-
-        @for((serviceName, configByKey) <- res) {
-            <div>Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></div>
-            <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
-                <thead>
-                    <tr>
-                        <th>Key</th>
-                        @for(env <- form.get.showEnviroments) {
-                            <th id="@{env.asString}-tr">@env.displayString</th>
-                        }
-                    </tr>
-                </thead>
-                <tbody>
-                    @for((configKey, configByEnv) <- configByKey) {
-                        <tr>
-                            <td><code>@configKey.asString</code></td>
-                            @for(env <- form.get.showEnviroments) {
-                                <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
-                            }
+                </tr>
+            </thead>
+            <tbody>
+                @groupedByKey.map { res =>
+                    @for((configKey, configByService) <- res) {
+                        <tr class="@if(configByService.size > 1) {sticky-row-caption} else {row-caption} ">
+                            <td colspan="@(form.get.showEnviroments.size + 1)">
+                                Results for <code>@configKey.asString</code>
+                            </td>
                         </tr>
+                        @for((serviceName, configByEnv) <- configByService) {
+                            <tr>
+                                <td><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
+                                @for(env <- form.get.showEnviroments) {
+                                    <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
+                                }
+                            </tr>
+                        }
                     }
-                </tbody>
-            </table>
-        }
+                }
+                @groupedByService.map { res =>
+                    @for((serviceName, configByKey) <- res) {
+                        <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">
+                            <td colspan="@(form.get.showEnviroments.size + 1)">
+                                Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
+                            </td>
+                        </tr>
+                        @for((configKey, configByEnv) <- configByKey) {
+                            <tr>
+                                <td><code>@configKey.asString</code></td>
+                                @for(env <- form.get.showEnviroments) {
+                                    <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
+                                }
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
     }
 
     <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
@@ -196,18 +204,28 @@
             .addEventListener("change", () => {
                 document.getElementById('teamChange').value = true;
                 document.getElementById("form").submit();
-                document.getElementById('teamChange').value = false;
             });
 
-        let autocompleteValues = document.getElementById('autocomplete-values-textarea').value.split('\n');
-        init("form", "config-key", "config-search-matches", autocompleteValues);
+        autoCompleteInit({
+            formId:        "form",
+            inputSearchId: "config-key",
+            matchesDivId:  "config-search-matches",
+            allowPartial:  true,
+            ignoreCase:    document.getElementById('configKeyIgnoreCase').checked,
+            values:        document.getElementById('autocomplete-values-textarea').value.split('\n')
+        });
+
+        document
+            .getElementById('configKeyIgnoreCase')
+            .addEventListener("change", (event) => {
+                autoCompleteIgnoreCase = event.target.checked;
+            });
 
         document
             .getElementById("export-as-csv-btn")
             .addEventListener("click", () => {
                 document.getElementById('asCsv').value = true;
                 document.getElementById('form').submit();
-                document.getElementById('asCsv').value = false;
             });
 
         document

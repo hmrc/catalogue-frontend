@@ -78,7 +78,7 @@ final class ServiceConfigsConnectorSpec
   "configSearch" should {
     "return AppliedConfig" in {
       stubFor(
-        get(urlEqualTo("/service-configs/search?environment=production&key=test.key&value=testValue&valueFilterType=equalTo"))
+        get(urlEqualTo("/service-configs/search?environment=production&key=test.key&keyFilterType=contains&value=testValue&valueFilterType=equalTo"))
           .willReturn(aResponse().withBody(
             """[
               |  {
@@ -92,8 +92,15 @@ final class ServiceConfigsConnectorSpec
       )
 
       serviceConfigsConnector
-        .configSearch(teamName = None, environments = Seq(Environment.Production), serviceType = None, key = Some("test.key"), value = Some("testValue"), valueFilterType = Some(ValueFilterType.EqualTo))
-        .futureValue shouldBe (
+        .configSearch(
+          teamName        = None
+        , environments    = Seq(Environment.Production)
+        , serviceType     = None
+        , key             = Some("test.key")
+        , keyFilterType   = KeyFilterType.Contains
+        , value           = Some("testValue")
+        , valueFilterType = ValueFilterType.EqualTo
+       ).futureValue shouldBe (
           Right(Seq(
             AppliedConfig(
               ServiceName("test-service"),

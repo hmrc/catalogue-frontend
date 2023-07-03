@@ -2,23 +2,36 @@ let form;
 let inputSearch;
 let matchesDiv;
 let allValues = [];
+let autoCompleteAllowPartial;
+let autoCompleteIgnoreCase;
 
 const minSearch = 3;
 let selectedIdx = -1; // Allow partial search
-let matchesLen = 0;
+let matchesLen  = 0;
 
-const matchesListClass = "search-match-list";
-const matchesElemId = "search-match-";
+const matchesListClass   = "search-match-list";
+const matchesElemId      = "search-match-";
 const matchSelectedClass = "search-match-selected";
 
-function init(formId, inputSearchId, matchesDivId, values) {
-    form = document.getElementById(formId);
+// Changed outside of script
+function autoCompleteInit({formId, inputSearchId, matchesDivId, allowPartial, ignoreCase, values}) {
+    form        = document.forms[formId];
     inputSearch = document.getElementById(inputSearchId);
-    matchesDiv = document.getElementById(matchesDivId);
-    allValues = values;
+    matchesDiv  = document.getElementById(matchesDivId);
+    allValues   = values;
+
+    autoCompleteAllowPartial = allowPartial;
+    if (allowPartial) {
+        selectedIdx = -1;
+        document.body.addEventListener("click", e => clearMatches(), true);
+    }  else {
+        selectedIdx = 0;
+    }
+
+    autoCompleteIgnoreCase = ignoreCase;
 
     inputSearch.addEventListener('keydown', disableDefaults, false);
-    inputSearch.addEventListener('keyup', autoCompleteSearchInputListener, false)
+    inputSearch.addEventListener('keyup', autoCompleteSearchInputListener, false);
 }
 
 function findMatches(rawInput) {
@@ -29,13 +42,21 @@ function findMatches(rawInput) {
     let first = terms.shift();
 
     matches = allValues.filter(function (el) {
-        return el.toLowerCase().includes(first.toLowerCase());
+        if (autoCompleteIgnoreCase) {
+            return el.toLowerCase().includes(first.toLowerCase());
+        } else {
+            return el.includes(first);
+        }
     });
 
     if(terms.length > 0) {
         terms.forEach(function(term) {
             matches = matches.filter(function (el) {
-                return el.toLowerCase().includes(term.toLowerCase());
+                if (autoCompleteIgnoreCase) {
+                    return el.toLowerCase().includes(term.toLowerCase());
+                } else {
+                    return el.includes(term);
+                }
             });
         });
     }
@@ -66,7 +87,13 @@ function findMatches(rawInput) {
     }
 
     matchesDiv.appendChild(matchesList);
-    selectedIdx = -1;
+
+    if (autoCompleteAllowPartial) {
+        selectedIdx = -1;
+    } else {
+        selectedIdx = 0;
+    }
+
     updateScroll();
     highlightMatch(selectedIdx, true);
     matchesDiv.classList.remove('hide');
@@ -85,9 +112,16 @@ function highlightMatch(idx, toggle) {
 
 function matchesInBold(query, match) {
     let bolded = match;
-    query.split(' ').forEach(function (term) {
-        bolded = bolded.replaceAll(term, '<strong>' + term + '</strong>');
-    });
+
+    if (autoCompleteIgnoreCase) {
+        query.toLowerCase().split(' ').forEach(function (term) {
+            bolded = bolded.toLowerCase().replaceAll(term, '<strong>' + term + '</strong>');
+        });
+    } else {
+        query.split(' ').forEach(function (term) {
+            bolded = bolded.replaceAll(term, '<strong>' + term + '</strong>');
+        });
+    }
 
     return bolded;
 }
@@ -122,6 +156,7 @@ function autoCompleteSearchInputListener(e) {
             if(selected != null) {
                 selected.click();
             } else {
+                form.dispatchEvent(new Event("submit")); // Call form listener
                 form.submit();
             }
         } else if (e.keyCode === 40) { //down arrow
@@ -138,6 +173,8 @@ function autoCompleteSearchInputListener(e) {
                 highlightMatch(selectedIdx, true);
                 updateScroll();
             }
+        } else if (autoCompleteAllowPartial && e.keyCode === 27) { // escape
+            clearMatches();
         }
     } else {
         matchesDiv.innerHTML = '';

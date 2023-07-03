@@ -181,6 +181,7 @@
         }
     </div>
 
+    <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
     <script @CSPNonce.attr>
         @if(searchResults.exists(_.nonEmpty)) {
           let options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
@@ -197,16 +198,16 @@
 
         function exportAsCsv() {
             document.getElementById('asCsv').value = true;
+            document.getElementById('search-by-dependency-form').dispatchEvent(new Event("submit")); // Call form listener
             document.getElementById('search-by-dependency-form').submit();
-            document.getElementById('asCsv').value = false;
         }
 
         document.getElementById("export-button-1").addEventListener("click", function() {
             exportAsCsv()
         });
 
-        function updateGroupArtefact(groupArtefact) {
-            let parts = groupArtefact.split(':');
+        function updateGroupArtefact() {
+            let parts = document.getElementById('group-artefact-search').value.split(':');
             document.getElementById('group').value = parts[0];
             document.getElementById('artefact').value = parts[1];
         }
@@ -225,152 +226,18 @@
         }
 
         document.getElementById("search-by-dependency-form").addEventListener("submit", function() {
-            updateVersionRange()
+            updateGroupArtefact();
+            updateVersionRange();
         });
 
-        let gaSearch = document.getElementById('group-artefact-search');
-        let matchesDiv = document.getElementById("group-artefact-matches")
-
-        function clearMatches() {
-            matchesDiv.innerHTML = '';
-            matchesDiv.classList.add('hide');
-        }
-
-        function clearSearch() {
-            gaSearch.value = '';
-            document.getElementById('group').value = '';
-            document.getElementById('artefact').value = '';
-            clearMatches()
-        }
-
-        function highlightMatch(idx, toggle) {
-            let match = document.getElementById('dependency-match-' + idx)
-            if(match != null) {
-                if(toggle) {
-                    match.classList.add('dependency-match-selected');
-                } else {
-                    match.classList.remove('dependency-match-selected');
-                }
-            }
-        }
-
-        function matchesInBold(query, match) {
-            let bolded = match;
-            query.toLowerCase().split(' ').forEach(function (term) {
-                bolded = bolded.toLowerCase().replaceAll(term, '<strong>' + term + '</strong>');
-            });
-
-            return bolded;
-        }
-
-        const minSearch = 3;
-        let gaSelectedIdx = 0;
-        let gaMatchesLen = 0;
-        let gaScrollPos = 0;
-
-        function gaSearchInputListener(e) {
-            if(e.target.value.length >= minSearch) {
-                if(e.keyCode > 46 || e.keyCode === 32 || e.keyCode === 8) { // alphanum, space and backspace
-                    clearMatches();
-                    groupArtefactSearch(e.target.value);
-                } else if (e.keyCode === 13) { //enter
-                    let selected = document.getElementById('dependency-match-' + gaSelectedIdx);
-                    if(selected != null) {
-                        selected.click();
-                    } else {
-                        updateVersionRange()
-                        document.getElementById('search-by-dependency-form').submit();
-                    }
-                } else if (e.keyCode === 40) { //down arrow
-                    if(gaSelectedIdx < gaMatchesLen - 1) {
-                        highlightMatch(gaSelectedIdx, false);
-                        gaSelectedIdx++;
-                        highlightMatch(gaSelectedIdx, true);
-                        updateScroll();
-                    }
-                } else if (e.keyCode === 38) { //up arrow
-                    if(gaSelectedIdx > 0) {
-                        highlightMatch(gaSelectedIdx, false);
-                        gaSelectedIdx--;
-                        highlightMatch(gaSelectedIdx, true);
-                        updateScroll();
-                    }
-                }
-            } else {
-                matchesDiv.innerHTML = '';
-                matchesDiv.classList.add('hide');
-            }
-        }
-
-        function updateScroll() {
-            if(gaSelectedIdx > 5) {
-                const height = parseInt(window.getComputedStyle(document.getElementById('dependency-match-0')).height.replace('px', ''));
-                matchesDiv.scrollTop = (gaSelectedIdx - 5) * height;
-            } else {
-                matchesDiv.scrollTop = 0;
-            }
-        }
-
-        function gaDisableDefaults(e) {
-            if(e.keyCode === 38 || e.keyCode === 40 || e.keyCode === 13) {
-                e.preventDefault();
-            }
-        }
-
-        function groupArtefactSearch(raw) {
-            let query = raw.trim();
-            let matches = [];
-
-            let terms = query.split(' ');
-            let first = terms.shift();
-
-            matches = allGroupArtefacts.filter(function (el) {
-                return el.toLowerCase().includes(first.toLowerCase());
-            });
-
-            if(terms.length > 0) {
-                terms.forEach(function(term) {
-                    matches = matches.filter(function (el) {
-                        return el.toLowerCase().includes(term.toLowerCase());
-                    });
-                });
-            }
-
-            let matchesList = document.createElement('div')
-            matchesList.classList.add('list-group', 'dependency-match-list');
-
-            if(matches.length == 0) {
-                let node = document.createElement('button');
-                node.classList.add('list-group-item', 'disabled');
-                node.innerHTML = 'No matches found'
-                matchesList.appendChild(node);
-            } else {
-                let idx = 0
-                gaMatchesLen = matches.length;
-                matches.forEach(function (match) {
-                    let btn = document.createElement('a');
-                    btn.id = 'dependency-match-' + idx;
-                    btn.classList.add('list-group-item');
-                    btn.innerHTML = matchesInBold(query, match);
-                    btn.onclick = function() {
-                        clearMatches();
-                        gaSearch.value = match;
-                        updateGroupArtefact(match);
-                    }
-                    matchesList.appendChild(btn);
-                    idx++;
-                });
-            }
-
-            matchesDiv.appendChild(matchesList);
-            gaSelectedIdx = 0;
-            updateScroll();
-            highlightMatch(gaSelectedIdx, true);
-            matchesDiv.classList.remove('hide');
-        }
-
-        gaSearch.addEventListener('keyup', gaSearchInputListener, false);
-        gaSearch.addEventListener('keydown', gaDisableDefaults, false);
+        autoCompleteInit({
+            formId:        "search-by-dependency-form",
+            inputSearchId: "group-artefact-search",
+            matchesDivId:  "group-artefact-matches",
+            allowPartial:  false,
+            ignoreCase:    true,
+            values:        allGroupArtefacts
+        });
     </script>
 
     <script @CSPNonce.attr type="text/javascript">
