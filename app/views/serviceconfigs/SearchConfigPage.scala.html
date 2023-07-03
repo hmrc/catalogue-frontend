@@ -35,8 +35,39 @@
 
 @standard_layout("Search Config") {
     <header>
-        <h1>Search Config</h1>
+        <h1>
+            Search Config
+            <button class="btn btn-primary pull-right" type="button" data-toggle="collapse" data-target="#helpText" aria-expanded="false" aria-controls="helpText">
+                Help
+            </button>
+        </h1>
     </header>
+
+    <div class="collapse" id="helpText">
+        <div class="well">
+            <h2>How to use this page?</h2>
+            <ul>
+                <li>Search the latest deployed configs in each environment by:
+                    <ul>
+                        <li><code>Config Key</code></li>
+                        <li><code>Config Value</code></li>
+                        <li>Or both</li>
+                    </ul>
+                <li><code>Config Key</code> can be autocompleted once 3 characters or more have been entered</li>
+                <li>Autocompletion terms are updated on <code>Team</code> change. Select this first to see more relevant suggestions</li>
+                <li><code>Config Value</code> comparison can be altered using the drop down on the right hand-side of the textbox</li>
+                <li>By default searches are <strong>case insensitive</strong>. This can be turned off by clicking <code>Ignore Case</code></li>
+                <li>Searches returning too many results will fail. Refine your search to reduce the number of matches</li>
+                <li>Search Results:
+                    <ul>
+                        <li>Hover over a value to see where it was last defined</li>
+                        <li>Click on a value to see the hierarchical eviction in <code>Config Explorer</code></li>
+                    </ul>
+                </li>
+                <li>The results can be <code>Exported as CSV</code> using the button below</li>
+            </ul>
+        </div>
+    </div>
 
     @form_warnings(form)
 
