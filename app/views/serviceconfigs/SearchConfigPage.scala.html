@@ -207,8 +207,20 @@
                 document.getElementById('teamChange').value = false;
             });
 
-        let autocompleteValues = document.getElementById('autocomplete-values-textarea').value.split('\n');
-        init("form", "config-key", "config-search-matches", autocompleteValues);
+        autoCompleteInit({
+            formId:        "form",
+            inputSearchId: "config-key",
+            matchesDivId:  "config-search-matches",
+            allowPartial:  true,
+            ignoreCase:    document.getElementById('configKeyIgnoreCase').checked,
+            values:        document.getElementById('autocomplete-values-textarea').value.split('\n')
+        });
+
+        document
+            .getElementById('configKeyIgnoreCase')
+            .addEventListener("change", (event) => {
+                autoCompleteIgnoreCase = event.target.checked;
+            });
 
         document
             .getElementById("export-as-csv-btn")
