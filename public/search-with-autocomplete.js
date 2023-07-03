@@ -15,10 +15,10 @@ const matchSelectedClass = "search-match-selected";
 
 // Changed outside of script
 function autoCompleteInit({formId, inputSearchId, matchesDivId, allowPartial, ignoreCase, values}) {
-    form = document.getElementById(formId);
+    form        = document.forms[formId];
     inputSearch = document.getElementById(inputSearchId);
-    matchesDiv = document.getElementById(matchesDivId);
-    allValues = values;
+    matchesDiv  = document.getElementById(matchesDivId);
+    allValues   = values;
 
     autoCompleteAllowPartial = allowPartial;
     if (allowPartial) {
@@ -156,6 +156,7 @@ function autoCompleteSearchInputListener(e) {
             if(selected != null) {
                 selected.click();
             } else {
+                form.dispatchEvent(new Event("submit")); // Call form listener
                 form.submit();
             }
         } else if (e.keyCode === 40) { //down arrow
