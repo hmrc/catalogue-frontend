@@ -91,12 +91,13 @@ class ServiceConfigsController @Inject()(
                                                           Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys))
                                                         }
                                               case _ => EitherT(serviceConfigsService.configSearch(
-                                                          formObject.teamName
-                                                        , formObject.showEnviroments
-                                                        , formObject.serviceType
-                                                        , formObject.configKey
-                                                        , formObject.configValue
-                                                        , Some(formObject.valueFilterType)
+                                                          teamName        = formObject.teamName
+                                                        , environments    = formObject.showEnviroments
+                                                        , serviceType     = formObject.serviceType
+                                                        , key             = formObject.configKey
+                                                        , keyFilterType   = KeyFilterType.toKeyFilterType(formObject.configKeyIgnoreCase)
+                                                        , value           = formObject.configValue
+                                                        , valueFilterType = ValueFilterType.toValueFilterType(formObject.valueFilterType, formObject.configValueIgnoreCase)
                                                         )).leftMap(msg => Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys)))
                                                           .map(Option.apply)
                                             }
@@ -151,34 +152,38 @@ object SearchConfig {
   import play.api.data.{Form, Forms}
 
   case class SearchConfigForm(
-    teamName       : Option[TeamName]    = None
-  , configKey      : Option[String]      = None
-  , configValue    : Option[String]      = None
-  , valueFilterType: ValueFilterType     = ValueFilterType.Contains
-  , showEnviroments: List[Environment]   = Environment.values.filterNot(_ == Environment.Integration)
-  , serviceType    : Option[ServiceType] = None
-  , teamChange     : Boolean             = false
-  , asCsv          : Boolean             = false
-  , groupBy        : GroupBy             = GroupBy.Key
+    teamName             : Option[TeamName]    = None
+  , configKey            : Option[String]      = None
+  , configKeyIgnoreCase  : Boolean             = true
+  , configValue          : Option[String]      = None
+  , configValueIgnoreCase: Boolean             = true
+  , valueFilterType      : FormValueFilterType = FormValueFilterType.Contains
+  , showEnviroments      : List[Environment]   = Environment.values.filterNot(_ == Environment.Integration)
+  , serviceType          : Option[ServiceType] = None
+  , teamChange           : Boolean             = false
+  , asCsv                : Boolean             = false
+  , groupBy              : GroupBy             = GroupBy.Key
   )
 
   lazy val form: Form[SearchConfigForm] = Form(
     Forms.mapping(
-      "teamName"        -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
-    , "configKey"       -> Forms.optional(Forms.nonEmptyText(minLength = 3))
-    , "configValue"     -> Forms.optional(Forms.text)
-    , "valueFilterType" -> Forms.default(Forms.of[ValueFilterType](ValueFilterType.formFormat), ValueFilterType.Contains)
-    , "showEnviroments" -> Forms.list(Forms.text)
-                                .transform[List[Environment]](
-                                  xs => { val ys = xs.map(Environment.parse).flatten
-                                          if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration) // populate environments for config explorer link
-                                        }
-                                , x  => identity(x).map(_.asString)
-                                )
-    , "serviceType"     -> Forms.optional(Forms.of[ServiceType](ServiceType.formFormat))
-    , "teamChange"      -> Forms.default(Forms.boolean, false)
-    , "asCsv"           -> Forms.default(Forms.boolean, false)
-    , "groupBy"         -> Forms.default(Forms.of[GroupBy](GroupBy.formFormat), GroupBy.Key)
+      "teamName"              -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+    , "configKey"             -> Forms.optional(Forms.nonEmptyText(minLength = 3))
+    , "configKeyIgnoreCase"   -> Forms.default(Forms.boolean, false)
+    , "configValue"           -> Forms.optional(Forms.text)
+    , "configValueIgnoreCase" -> Forms.default(Forms.boolean, false)
+    , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType](FormValueFilterType.formFormat), FormValueFilterType.Contains)
+    , "showEnviroments"       -> Forms.list(Forms.text)
+                                      .transform[List[Environment]](
+                                        xs => { val ys = xs.map(Environment.parse).flatten
+                                                if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration) // populate environments for config explorer link
+                                              }
+                                      , x  => identity(x).map(_.asString)
+                                      )
+    , "serviceType"           -> Forms.optional(Forms.of[ServiceType](ServiceType.formFormat))
+    , "teamChange"            -> Forms.default(Forms.boolean, false)
+    , "asCsv"                 -> Forms.default(Forms.boolean, false)
+    , "groupBy"               -> Forms.default(Forms.of[GroupBy](GroupBy.formFormat), GroupBy.Key)
     )(SearchConfigForm.apply)(SearchConfigForm.unapply)
   )
 }

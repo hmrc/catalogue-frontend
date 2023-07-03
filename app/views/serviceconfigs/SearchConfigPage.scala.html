@@ -19,7 +19,7 @@
 @import views.html.helper
 @import views.html.partials.form_warnings
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{GroupBy, SearchConfig, ServiceConfigsService, routes => serviceConfigsRoutes, ValueFilterType }
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{GroupBy, SearchConfig, ServiceConfigsService, routes => serviceConfigsRoutes, FormValueFilterType }
 
 @this()
 
@@ -59,7 +59,15 @@
             </div>
             <div class="col-md-8">
                 <dl>
-                    <dt><label for="config-key">Config Key</label></dt>
+                    <dt>
+                        <label for="config-key">Config Key</label>
+                        <div class="input-group-inline pull-right">
+                            @helper.checkbox(
+                                field            =  form("configKeyIgnoreCase"),
+                                Symbol("_label") -> "Ignore Case",
+                            )
+                        </div>
+                    </dt>
                     <dd>
                         <input class="form-control" id="config-key" type="text" name="configKey" value='@form("configKey").value' autocomplete="off" />
                         <div id="config-search-matches" class="search-matches-dropdown hide"></div>
@@ -92,7 +100,15 @@
             </div>
             <div class="col-md-8">
                 <dl class="clearfix">
-                    <dt><label>Config Value</label></dt>
+                    <dt>
+                        <label for="config-value">Config Value</label>
+                        <div class="input-group-inline pull-right">
+                            @helper.checkbox(
+                                field            =  form("configValueIgnoreCase"),
+                                Symbol("_label") -> "Ignore Case",
+                            )
+                        </div>
+                    </dt>
                     <dd>
                         <div class="input-group-multi">
                             <div class="col-xs-9 col-md-9">
@@ -100,7 +116,7 @@
                             </div>
                             <div class="col-xs-3 col-md-3">
                                 <select class="form-control input-group-end" name="valueFilterType">
-                                    @for(x <- ValueFilterType.values) {
+                                    @for(x <- FormValueFilterType.values) {
                                         <option value="@x.asString" @if(form("valueFilterType").value.contains(x.asString)) {selected}>@x.displayString</option>
                                     }
                                 </select>
@@ -130,13 +146,13 @@
         <textarea class="hidden" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
     }
 
-    @if(groupedByKey.exists(_.isEmpty) && groupedByService.exists(_.isEmpty) ) {
+    @if(groupedByKey.filter(_.nonEmpty).isEmpty && groupedByService.filter(_.nonEmpty).isEmpty) {
         <p>No results found.</p>
     } else {
         <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
             <thead>
                 <tr>
-                    <th>Service</th>
+                    <th>@if(groupedByKey.isDefined) {Key} else {Service}</th>
                     @for(env <- form.get.showEnviroments) {
                         <th id="@{env.asString}-tr">@env.displayString</th>
                     }
@@ -160,7 +176,6 @@
                         }
                     }
                 }
-
                 @groupedByService.map { res =>
                     @for((serviceName, configByKey) <- res) {
                         <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">

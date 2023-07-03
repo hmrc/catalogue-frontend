@@ -12797,3 +12797,10 @@ table.sticky-header tbody tr.row-caption td {
   background: white;
   border-top: none;
 }
+
+.input-group-inline dl,
+.input-group-inline dt,
+.input-group-inline dd {
+  display: inline-block;
+  margin-bottom: 0px;
+}
