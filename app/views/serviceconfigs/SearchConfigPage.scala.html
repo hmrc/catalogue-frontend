@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import views.html.helper
-@import views.html.partials.form_warnings
+@import views.html.partials.form_global_errors
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{GroupBy, SearchConfig, ServiceConfigsService, routes => serviceConfigsRoutes, FormValueFilterType }
 
@@ -69,7 +69,7 @@
         </div>
     </div>
 
-    @form_warnings(form)
+    @form_global_errors(form)
 
     @helper.form(
         action          =  serviceConfigsRoutes.ServiceConfigsController.searchResults(),

@@ -19,7 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
-@import views.html.partials.{TeamNames, form_warnings}
+@import views.html.partials.{TeamNames, form_global_errors}
 
 @this(
         teamNames: TeamNames,
@@ -47,7 +47,7 @@
 
     <div id="service-list">
 
-        @form_warnings(form)
+        @form_global_errors(form)
 
         <form id="search-by-dependency-form" action="@appRoutes.DependencyExplorerController.search().url" method="get">
             <div class="form-group">
