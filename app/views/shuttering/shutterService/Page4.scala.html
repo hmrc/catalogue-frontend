@@ -50,7 +50,7 @@
 
 
                 @if(shutterType == ShutterType.Frontend && step1Out.status == ShutterStatusValue.Shuttered) {
-                    <ul style="list-style: disc;">
+                    <ul>
                         @serviceLinks.map { case (name, optUrl) =>
                             <li>
                                 @optUrl match {
@@ -67,7 +67,7 @@
                         <p>Above links will not work until shuttering has been applied.</p>
                     }
                 } else {
-                    <ul style="list-style: disc;">
+                    <ul>
                         @serviceLinks.keys.map { name =>
                             <li>@name</li>
                         }

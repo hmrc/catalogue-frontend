@@ -30,7 +30,7 @@
                 </div>
 
                 <div class="">
-                    <ul>
+                    <ul class="list-unstyled">
                     @for(transitiveDependency <- transitiveDependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))) {
                         <li>
                             @dependencyRow(transitiveDependency)

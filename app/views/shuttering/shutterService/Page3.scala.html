@@ -60,7 +60,7 @@
               You are about to <b id="shutterStatus">@valueFor(step1Out.status)</b> the following @{shutterType.asString}s in <b>@env</b>:
             </div>
             <div class="panel-body">
-                <ul id="service-list" style="list-style: disc;">
+                <ul id="service-list">
                   @step1Out.serviceNames.map { serviceName =>
                     <li>@serviceName</li>
                   }

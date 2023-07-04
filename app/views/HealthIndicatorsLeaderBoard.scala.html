@@ -75,7 +75,7 @@
                             <a href="/health-indicators/@{indicator.repoName}"><span class="repoName">@indicator.repoName</span></a>
                         </td>
                         <td id="row_@{i}_column_1">
-                            <ul class="list-group">
+                            <ul class="list-unstyled">
                                 @if(indicator.owningTeams.size > 10) {
                                     <li title="@{indicator.owningTeams.map(_.asString).mkString(", ")}"
                                     data-toggle="tooltip" data-placement="bottom">Multiple</li>
