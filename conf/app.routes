@@ -13,12 +13,17 @@ GET        /prototypes                                  uk.gov.hmrc.cataloguefro
 GET        /create-a-repository                         uk.gov.hmrc.cataloguefrontend.createarepository.CreateARepositoryController.createARepositoryLanding()
 POST       /create-a-repository                         uk.gov.hmrc.cataloguefrontend.createarepository.CreateARepositoryController.createARepository()
 
+GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
+POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
 
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
+
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
 GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name)
 GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name)
+
+
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)
 GET        /prototype/:name/change-password             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)

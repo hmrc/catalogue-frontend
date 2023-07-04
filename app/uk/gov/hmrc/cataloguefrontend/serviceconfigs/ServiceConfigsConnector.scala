@@ -20,7 +20,7 @@ import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet, TeamName}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfig

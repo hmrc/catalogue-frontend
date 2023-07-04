@@ -26,10 +26,12 @@ import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
+import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.cataloguefrontend.createappconfigs
 
 import java.net.URL
 import java.time.LocalDateTime
@@ -70,34 +72,35 @@ class BuildDeployApiConnector @Inject() (
     endpoint   : String,
     body       : JsValue,
     queryParams: Map[String, String] = Map.empty[String, String]
-  ): Future[Either[String, BuildDeployResponse]] = {
-    val url = buildUrl(endpoint, queryParams)
+  ): Future[Either[String, BuildDeployResponse]] = Future.successful(Left("Error"))
+//  {
+//    val url = buildUrl(endpoint, queryParams)
+//
+//    val headers = signedHeaders(url.getPath, queryParams, body)
+//
+//    implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
+//
+//    implicit val hr: HttpReads[Either[String, BuildDeployResponse]] =
+//      implicitly[HttpReads[Either[UpstreamErrorResponse, BuildDeployResponse]]]
+//        .flatMap {
+//          case Right(r) =>
+//            HttpReads.pure(Right(r))
+//          case Left(UpstreamErrorResponse.Upstream4xxResponse(e)) =>
+//            HttpReads.ask
+//              .flatMap { case (method, url, response) =>
+//                logger.error(s"Failed to call Build and Deploy API endpoint $endpoint. response: $response: ${e.getMessage}", e)
+//                Try(HttpReads.pure(Left((response.json \ "message").as[String]): Either[String, BuildDeployResponse])).getOrElse(throw e)
+//              }
+//          case Left(other) => throw other
+//        }
 
-    val headers = signedHeaders(url.getPath, queryParams, body)
-
-    implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
-
-    implicit val hr: HttpReads[Either[String, BuildDeployResponse]] =
-      implicitly[HttpReads[Either[UpstreamErrorResponse, BuildDeployResponse]]]
-        .flatMap {
-          case Right(r) =>
-            HttpReads.pure(Right(r))
-          case Left(UpstreamErrorResponse.Upstream4xxResponse(e)) =>
-            HttpReads.ask
-              .flatMap { case (method, url, response) =>
-                logger.error(s"Failed to call Build and Deploy API endpoint $endpoint. response: $response: ${e.getMessage}", e)
-                Try(HttpReads.pure(Left((response.json \ "message").as[String]): Either[String, BuildDeployResponse])).getOrElse(throw e)
-              }
-          case Left(other) => throw other
-        }
-
-    httpClientV2
-      .post(url)
-      .withBody(body)
-      .setHeader(headers.toSeq: _*)
-      .execute[Either[String, BuildDeployResponse]]
-  }
-
+//    httpClientV2
+//      .post(url)
+//      .withBody(body)
+//      .setHeader(headers.toSeq: _*)
+//      .execute[Either[String, BuildDeployResponse]]
+//  }
+//
   def changePrototypePassword(prototype: String, password: PrototypePassword): Future[Either[String, String]] = {
     val body = Json.obj(
       "repository_name" -> JsString(prototype),
@@ -145,9 +148,9 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(_ => ()))
   }
 
-  def createARepository(payload: CreateRepoForm): Future[Either[String, AsyncRequestId]] = {
-    implicit val arr = AsyncRequestId.reads
+  private implicit val arr = AsyncRequestId.reads
 
+  def createARepository(payload: CreateRepoForm): Future[Either[String, AsyncRequestId]] = {
     val finalPayload =
       s"""
          |{
@@ -168,6 +171,35 @@ class BuildDeployApiConnector @Inject() (
 
     signAndExecuteRequest(
       endpoint = "CreateRepository",
+      body     = body
+    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
+  }
+
+
+  def createAppConfigs(payload: CreateAppConfigsForm, serviceType: ServiceType, requiresMongo: Boolean): Future[Either[String, AsyncRequestId]] = {
+    val st = serviceType match {
+      case ServiceType.Frontend => "Frontend microservice"
+      case ServiceType.Backend  => "Backend microservice"
+    }
+    val finalPayload =
+      s"""
+         |{
+         |   "microservice_name": "${payload.serviceName}",
+         |   "microservice_type": "$st",
+         |   "microservice_requires_mongo": $requiresMongo,
+         |   "app_config_base": ${payload.appConfigBase},
+         |   "app_config_development": ${payload.appConfigDevelopment},
+         |   "app_config_qa": ${payload.appConfigQA},
+         |   "app_config_staging": ${payload.appConfigStaging},
+         |   "app_config_production": ${payload.appConfigProduction}
+         |}""".stripMargin
+
+    val body = Json.parse(finalPayload)
+
+    logger.info(s"Calling the B&D Create App Configs API with the following payload: $body")
+
+    signAndExecuteRequest(
+      endpoint = "CreateAppConfigs",
       body     = body
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
