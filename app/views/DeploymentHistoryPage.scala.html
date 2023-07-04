@@ -101,7 +101,7 @@
                       <a class="service-name-link" id="link-to-@{d.name.asString}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString)">@{d.name.asString}</a>
                   </td>
                   <td id="row@{i}_team" class="team">
-                    <ul class="list-group">
+                    <ul class="list-unstyled">
                     @for(team <- d.teams) {
                       <li><a id="link-to-team-page-for-@{team.asString.replace(" ", "-")}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(team)">@{team.asString}</a></li>
                     }

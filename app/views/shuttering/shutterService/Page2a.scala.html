@@ -19,7 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterState}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step1Out, Step2aForm, ServiceAndRouteWarnings}
 @import helper._
-@import partials.form_warnings
+@import partials.form_global_errors
 
 @this(viewMessages: ViewMessages)
 
@@ -41,7 +41,7 @@
 
 <div id="service-list">
 
-    @form_warnings(form)
+    @form_global_errors(form)
 
     <div class="board">
         <div class="board__body">
@@ -61,7 +61,7 @@
                     You are about to <b>Shutter</b> the following frontends in <b>@env</b>:
                 </div>
                 <div class="panel-body">
-                    <ul style="list-style: disc;">
+                    <ul>
                         @step1Out.serviceNames.map { serviceName =>
                         <li>@serviceName</li>
                         }

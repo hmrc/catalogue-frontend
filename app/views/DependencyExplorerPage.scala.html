@@ -19,7 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
-@import views.html.partials.TeamNames
+@import views.html.partials.{TeamNames, form_global_errors}
 
 @this(
         teamNames: TeamNames,
@@ -47,16 +47,7 @@
 
     <div id="service-list">
 
-        @if(form.hasGlobalErrors) {
-            <div class="alert alert-error error">
-                <a class="close" data-dismiss="alert">×</a>
-                <ul>
-                    @form.globalErrors.map { error =>
-                        <li>@error.format</li>
-                    }
-                </ul>
-            </div>
-        }
+        @form_global_errors(form)
 
         <form id="search-by-dependency-form" action="@appRoutes.DependencyExplorerController.search().url" method="get">
             <div class="form-group">
@@ -200,6 +191,7 @@
             document.getElementById('asCsv').value = true;
             document.getElementById('search-by-dependency-form').dispatchEvent(new Event("submit")); // Call form listener
             document.getElementById('search-by-dependency-form').submit();
+            document.getElementById('asCsv').value = false;  // fixes browser back button issue
         }
 
         document.getElementById("export-button-1").addEventListener("click", function() {

@@ -17,10 +17,8 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepositoryType
-@import views.html.partials.{form_warnings, form_fields_warnings}
-
+@import views.html.partials.{form_global_errors, form_fields_warnings}
 @import views.html.helper.select
-
 
 @this(viewMessages: ViewMessages)
 
@@ -37,17 +35,7 @@ repoTypes: Seq[CreateRepositoryType])(implicit
         <h1>Create A Repository</h1>
         <p>Use the below form to create a new repository. Make sure to follow the guidance for each field!</p>
 
-        @if(form.hasGlobalErrors) {
-        <div class="alert alert-danger">
-            <a class="close" data-dismiss="alert">×</a>
-            <ul>
-                @form.globalErrors.map { error =>
-                <li>@error.format</li>
-                }
-            </ul>
-        </div>
-        }
-
+        @form_global_errors(form)
 
         @helper.form(
             action           =  uk.gov.hmrc.cataloguefrontend.createarepository.routes.CreateARepositoryController.createARepository(),
@@ -61,7 +49,7 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                 <label for="repoNameInput">Repository name:</label>
                     <p>
                         You must comply with established naming conventions when naming your microservice:
-                        <ul style="list-style-type: disc";>
+                        <ul>
                             <li>separate words with hyphens; don't use spaces</li>
                             <li>maximum 47 characters</li>
                             <li>lowercase only</li>

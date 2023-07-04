@@ -19,7 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterWizardController, ShutterState, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step1Out, Step2bOut, Step3Form}
 @import helper._
-@import partials.form_warnings
+@import partials.form_global_errors
 
 @this(viewMessages: ViewMessages)
 
@@ -42,7 +42,7 @@
 
   <div>
 
-    @form_warnings(form)
+    @form_global_errors(form)
 
     <div class="board">
       <div class="board__body">
@@ -60,7 +60,7 @@
               You are about to <b id="shutterStatus">@valueFor(step1Out.status)</b> the following @{shutterType.asString}s in <b>@env</b>:
             </div>
             <div class="panel-body">
-                <ul id="service-list" style="list-style: disc;">
+                <ul id="service-list">
                   @step1Out.serviceNames.map { serviceName =>
                     <li>@serviceName</li>
                   }
