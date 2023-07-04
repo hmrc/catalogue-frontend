@@ -191,6 +191,7 @@
             document.getElementById('asCsv').value = true;
             document.getElementById('search-by-dependency-form').dispatchEvent(new Event("submit")); // Call form listener
             document.getElementById('search-by-dependency-form').submit();
+            document.getElementById('asCsv').value = false;  // fixes browser back button issue
         }
 
         document.getElementById("export-button-1").addEventListener("click", function() {

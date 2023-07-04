@@ -235,6 +235,7 @@
             .addEventListener("change", () => {
                 document.getElementById('teamChange').value = true;
                 document.getElementById("form").submit();
+                document.getElementById('teamChange').value = false;  // fixes browser back button issue
             });
 
         autoCompleteInit({
@@ -257,6 +258,7 @@
             .addEventListener("click", () => {
                 document.getElementById('asCsv').value = true;
                 document.getElementById('form').submit();
+                document.getElementById('asCsv').value = false;   // fixes browser back button issue
             });
 
         document
