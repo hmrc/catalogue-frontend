@@ -53,16 +53,9 @@ class ServiceConfigsService @Inject()(
                                      }
                                  }
                                }
-        newKeys             =  latestConfigByKey.keySet.diff(deployedConfigByKey.keySet)
         newConfig           =  latestConfigByKey
-                                 .filter { case (k, _) => newKeys.contains(k) }
-                                 .map {
-                                   case (k, m) => k -> m.map {
-                                     case (e, vs) if deployedConfigByKey.get(k).flatMap(_.get(e)).exists(_.lastOption != vs.lastOption)
-                                                      => e -> vs.lastOption.map(_.copy(source = "nextDeployment", sourceUrl = None)).toList
-                                     case (e, vs)     => e -> vs
-                                   }
-                               }
+                                 .filter { case (k, _) => !deployedConfigByKey.contains(k) }
+                                 .view.mapValues(_.view.mapValues(_.lastOption.map(_.copy(source = "nextDeployment", sourceUrl = None)).toList).toMap)
     } yield (configByKey ++ newConfig)
 
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
