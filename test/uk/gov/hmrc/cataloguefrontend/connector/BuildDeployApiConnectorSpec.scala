@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.libs.json.Json
+import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -318,4 +319,117 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
         result shouldBe Left("Some client error")
       }
     }
+
+  "CreateAppConfigs" should {
+     "return the Async request id when the request is accepted by the B&D async api" in {
+       val payload = CreateAppConfigsForm(
+         serviceName = "test-service", appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+       )
+
+       val expectedBody = s"""
+                             |{
+                             |   "microservice_name": "${payload.serviceName}",
+                             |   "microservice_type": "Backend microservice",
+                             |   "microservice_requires_mongo": true,
+                             |   "app_config_base": ${payload.appConfigBase},
+                             |   "app_config_development": ${payload.appConfigDevelopment},
+                             |   "app_config_qa": ${payload.appConfigQA},
+                             |   "app_config_staging": ${payload.appConfigStaging},
+                             |   "app_config_production": ${payload.appConfigProduction}
+                             |}""".stripMargin
+
+       stubFor(
+         post("/v1/CreateAppConfigs")
+           .withRequestBody(equalToJson(expectedBody))
+           .willReturn(aResponse().withStatus(202).withBody(
+             """
+               |{
+               |  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
+               |  "details": {
+               |    "get_request_state_payload": {
+               |       "bnd_api_request_id": "1234",
+               |       "start_timestamp_milliseconds": "1687852118708"
+               |    }
+               |  }
+               |}""".stripMargin
+           ))
+       )
+
+       val result =
+         connector.createAppConfigs(payload = payload, serviceType = ServiceType.Backend, requiresMongo = true)
+           .futureValue
+
+       result shouldBe Right(AsyncRequestId(id = "1234"))
+     }
+
+
+    "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
+      val payload = CreateAppConfigsForm(
+        serviceName = "test-service", appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+      )
+
+      val expectedBody = s"""
+                            |{
+                            |   "microservice_name": "${payload.serviceName}",
+                            |   "microservice_type": "Backend microservice",
+                            |   "microservice_requires_mongo": true,
+                            |   "app_config_base": ${payload.appConfigBase},
+                            |   "app_config_development": ${payload.appConfigDevelopment},
+                            |   "app_config_qa": ${payload.appConfigQA},
+                            |   "app_config_staging": ${payload.appConfigStaging},
+                            |   "app_config_production": ${payload.appConfigProduction}
+                            |}""".stripMargin
+
+      stubFor(
+        post("/v1/CreateAppConfigs")
+          .withRequestBody(equalToJson(expectedBody))
+          .willReturn(aResponse().withStatus(500).withBody(
+            """{ "code": "INTERNAL_SERVER_ERROR", "message": "Some server error" }"""
+          ))
+      )
+
+      val result =
+        connector.createAppConfigs(payload = payload, serviceType = ServiceType.Backend, requiresMongo = true)
+          .failed
+          .futureValue
+
+      result shouldBe a [UpstreamErrorResponse]
+    }
+
+    //NOTE: Currently the B&D async API will return a BuildDeployResponse when the client inputs are invalid, as it does not do any JSON validation/input validation up front prior to calling the lambda.
+    //This may however change in the future, so we are testing the desired future behaviour below.
+    "return an error message when the B&D async api returns a 4XX code" in {
+      val payload = CreateAppConfigsForm(
+        serviceName = "test-service", appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+      )
+
+      val expectedBody = s"""
+                            |{
+                            |   "microservice_name": "${payload.serviceName}",
+                            |   "microservice_type": "Backend microservice",
+                            |   "microservice_requires_mongo": true,
+                            |   "app_config_base": ${payload.appConfigBase},
+                            |   "app_config_development": ${payload.appConfigDevelopment},
+                            |   "app_config_qa": ${payload.appConfigQA},
+                            |   "app_config_staging": ${payload.appConfigStaging},
+                            |   "app_config_production": ${payload.appConfigProduction}
+                            |}""".stripMargin
+
+      stubFor(
+        post("/v1/CreateAppConfigs")
+          .withRequestBody(equalToJson(expectedBody))
+          .willReturn(aResponse().withStatus(400)
+            .withBody(
+              """{ "code": "CLIENT_ERROR", "message": "Some client error" }"""
+            ))
+      )
+
+      val result =
+        connector.createAppConfigs(payload = payload, serviceType = ServiceType.Backend, requiresMongo = true)
+          .futureValue
+
+      result shouldBe Left("Some client error")
+    }
+
+  }
 }

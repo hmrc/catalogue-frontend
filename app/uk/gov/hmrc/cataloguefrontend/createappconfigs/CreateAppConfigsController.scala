@@ -80,22 +80,25 @@ class CreateAppConfigsController @Inject()(
     ) .async { implicit request =>
       (
         for {
-        repo         <- EitherT.fromOptionF[Future, Result, GitRepository](
-                          teamsAndRepositoriesConnector.repositoryDetails(serviceName),
-                          NotFound(error_404_template())
-                        )
-        serviceType  <- EitherT.fromOption[Future](repo.serviceType, {
-                          logger.error(s"$serviceName is missing Service Type")
-                          NotFound(error_404_template())
-                        })
-        configChecks <- EitherT.liftF[Future, Result, List[Check]](serviceCommissioningStatusConnector.commissioningStatus(serviceName).map(_.getOrElse(List.empty[Check])))
-        baseConfig    = checkAppConfigBaseExists(configChecks)
-        envsConfig    = checkAppConfigEnvExists(configChecks)
-        hasPerm       = request.retrieval
-        form          = CreateAppConfigsForm.form.bindFromRequest()
-        form2         = if (!hasPerm) form.withGlobalError(s"You do not have permission to create App Configs for: $serviceName") else form
-      } yield Ok(createAppConfigsPage(form2, serviceName, serviceType, hasPerm, baseConfig, envsConfig))
-        ).merge
+          repo         <- EitherT.fromOptionF[Future, Result, GitRepository](
+                            teamsAndRepositoriesConnector.repositoryDetails(serviceName),
+                            NotFound(error_404_template())
+                          )
+          serviceType  <- EitherT.fromOption[Future](repo.serviceType, {
+                            logger.error(s"$serviceName is missing a Service Type")
+                            NotFound(error_404_template())
+                          })
+          configChecks <- EitherT.liftF[Future, Result, List[Check]](
+                            serviceCommissioningStatusConnector.commissioningStatus(serviceName)
+                              .map(_.getOrElse(List.empty[Check]))
+                          )
+          baseConfig    = checkAppConfigBaseExists(configChecks)
+          envsConfig    = checkAppConfigEnvExists(configChecks)
+          hasPerm       = request.retrieval
+          form          = CreateAppConfigsForm.form.bindFromRequest()
+          form2         = if (!hasPerm) form.withGlobalError(s"You do not have permission to create App Configs for: $serviceName") else form
+        } yield Ok(createAppConfigsPage(form2, serviceName, serviceType, hasPerm, baseConfig, envsConfig))
+      ).merge
     }
 
   def createAppConfigs(serviceName: String): Action[AnyContent] =
@@ -143,7 +146,7 @@ class CreateAppConfigsController @Inject()(
                                )
                              )
                            }
-          _             =  logger.info(s"Bnd api request id: $id:")
+          _              = logger.info(s"Bnd api request id: $id:")
         } yield
           Redirect(uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController.getCommissioningState(form.serviceName))
      ).merge

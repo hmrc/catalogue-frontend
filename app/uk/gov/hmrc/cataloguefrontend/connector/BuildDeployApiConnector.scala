@@ -72,35 +72,34 @@ class BuildDeployApiConnector @Inject() (
     endpoint   : String,
     body       : JsValue,
     queryParams: Map[String, String] = Map.empty[String, String]
-  ): Future[Either[String, BuildDeployResponse]] = Future.successful(Left("Error"))
-//  {
-//    val url = buildUrl(endpoint, queryParams)
-//
-//    val headers = signedHeaders(url.getPath, queryParams, body)
-//
-//    implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
-//
-//    implicit val hr: HttpReads[Either[String, BuildDeployResponse]] =
-//      implicitly[HttpReads[Either[UpstreamErrorResponse, BuildDeployResponse]]]
-//        .flatMap {
-//          case Right(r) =>
-//            HttpReads.pure(Right(r))
-//          case Left(UpstreamErrorResponse.Upstream4xxResponse(e)) =>
-//            HttpReads.ask
-//              .flatMap { case (method, url, response) =>
-//                logger.error(s"Failed to call Build and Deploy API endpoint $endpoint. response: $response: ${e.getMessage}", e)
-//                Try(HttpReads.pure(Left((response.json \ "message").as[String]): Either[String, BuildDeployResponse])).getOrElse(throw e)
-//              }
-//          case Left(other) => throw other
-//        }
+  ): Future[Either[String, BuildDeployResponse]] = {
+    val url = buildUrl(endpoint, queryParams)
 
-//    httpClientV2
-//      .post(url)
-//      .withBody(body)
-//      .setHeader(headers.toSeq: _*)
-//      .execute[Either[String, BuildDeployResponse]]
-//  }
-//
+    val headers = signedHeaders(url.getPath, queryParams, body)
+
+    implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
+
+    implicit val hr: HttpReads[Either[String, BuildDeployResponse]] =
+      implicitly[HttpReads[Either[UpstreamErrorResponse, BuildDeployResponse]]]
+        .flatMap {
+          case Right(r) =>
+            HttpReads.pure(Right(r))
+          case Left(UpstreamErrorResponse.Upstream4xxResponse(e)) =>
+            HttpReads.ask
+              .flatMap { case (method, url, response) =>
+                logger.error(s"Failed to call Build and Deploy API endpoint $endpoint. response: $response: ${e.getMessage}", e)
+                Try(HttpReads.pure(Left((response.json \ "message").as[String]): Either[String, BuildDeployResponse])).getOrElse(throw e)
+              }
+          case Left(other) => throw other
+        }
+
+    httpClientV2
+      .post(url)
+      .withBody(body)
+      .setHeader(headers.toSeq: _*)
+      .execute[Either[String, BuildDeployResponse]]
+  }
+
   def changePrototypePassword(prototype: String, password: PrototypePassword): Future[Either[String, String]] = {
     val body = Json.obj(
       "repository_name" -> JsString(prototype),
