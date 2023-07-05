@@ -99,7 +99,7 @@ class ServiceConfigsServiceSpec
 
       val latest =
         update(deployed)(KeyName("k2"), ConfigEnvironment.ForEnvironment(Environment.QA))(_ :+
-          ConfigSourceValue("nextDeployment", None, "new-val")
+          ConfigSourceValue("appConfigEnvironment", None, "new-val")
         )
 
       when(mockServiceConfigsConnector.configByKey(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
