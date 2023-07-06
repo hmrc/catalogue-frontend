@@ -175,7 +175,7 @@ class BuildDeployApiConnector @Inject() (
   }
 
 
-  def createAppConfigs(payload: CreateAppConfigsForm, serviceType: ServiceType, requiresMongo: Boolean): Future[Either[String, AsyncRequestId]] = {
+  def createAppConfigs(payload: CreateAppConfigsForm, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean): Future[Either[String, AsyncRequestId]] = {
     val st = serviceType match {
       case ServiceType.Frontend => "Frontend microservice"
       case ServiceType.Backend  => "Backend microservice"
@@ -183,7 +183,7 @@ class BuildDeployApiConnector @Inject() (
     val finalPayload =
       s"""
          |{
-         |   "microservice_name": "${payload.serviceName}",
+         |   "microservice_name": "$serviceName",
          |   "microservice_type": "$st",
          |   "microservice_requires_mongo": $requiresMongo,
          |   "app_config_base": ${payload.appConfigBase},

@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.Configuration
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus}
+import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
+import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
-import com.github.tomakehurst.wiremock.client.WireMock._
-import play.api.libs.json.Json
-import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
-import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -322,13 +321,12 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
   "CreateAppConfigs" should {
      "return the Async request id when the request is accepted by the B&D async api" in {
-       val payload = CreateAppConfigsForm(
-         serviceName = "test-service", appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+       val payload = CreateAppConfigsForm(appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
        )
 
        val expectedBody = s"""
                              |{
-                             |   "microservice_name": "${payload.serviceName}",
+                             |   "microservice_name": "test-service",
                              |   "microservice_type": "Backend microservice",
                              |   "microservice_requires_mongo": true,
                              |   "app_config_base": ${payload.appConfigBase},
@@ -356,7 +354,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
        )
 
        val result =
-         connector.createAppConfigs(payload = payload, serviceType = ServiceType.Backend, requiresMongo = true)
+         connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true)
            .futureValue
 
        result shouldBe Right(AsyncRequestId(id = "1234"))
@@ -365,12 +363,12 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
       val payload = CreateAppConfigsForm(
-        serviceName = "test-service", appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+       appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
       )
 
       val expectedBody = s"""
                             |{
-                            |   "microservice_name": "${payload.serviceName}",
+                            |   "microservice_name": "test-service",
                             |   "microservice_type": "Backend microservice",
                             |   "microservice_requires_mongo": true,
                             |   "app_config_base": ${payload.appConfigBase},
@@ -389,7 +387,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       )
 
       val result =
-        connector.createAppConfigs(payload = payload, serviceType = ServiceType.Backend, requiresMongo = true)
+        connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true)
           .failed
           .futureValue
 
@@ -399,36 +397,36 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     //NOTE: Currently the B&D async API will return a BuildDeployResponse when the client inputs are invalid, as it does not do any JSON validation/input validation up front prior to calling the lambda.
     //This may however change in the future, so we are testing the desired future behaviour below.
     "return an error message when the B&D async api returns a 4XX code" in {
-      val payload = CreateAppConfigsForm(
-        serviceName = "test-service", appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
-      )
+       val payload = CreateAppConfigsForm(
+         appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+       )
 
-      val expectedBody = s"""
-                            |{
-                            |   "microservice_name": "${payload.serviceName}",
-                            |   "microservice_type": "Backend microservice",
-                            |   "microservice_requires_mongo": true,
-                            |   "app_config_base": ${payload.appConfigBase},
-                            |   "app_config_development": ${payload.appConfigDevelopment},
-                            |   "app_config_qa": ${payload.appConfigQA},
-                            |   "app_config_staging": ${payload.appConfigStaging},
-                            |   "app_config_production": ${payload.appConfigProduction}
-                            |}""".stripMargin
+       val expectedBody = s"""
+                             |{
+                             |   "microservice_name": "test-service",
+                             |   "microservice_type": "Backend microservice",
+                             |   "microservice_requires_mongo": true,
+                             |   "app_config_base": ${payload.appConfigBase},
+                             |   "app_config_development": ${payload.appConfigDevelopment},
+                             |   "app_config_qa": ${payload.appConfigQA},
+                             |   "app_config_staging": ${payload.appConfigStaging},
+                             |   "app_config_production": ${payload.appConfigProduction}
+                             |}""".stripMargin
 
-      stubFor(
-        post("/v1/CreateAppConfigs")
-          .withRequestBody(equalToJson(expectedBody))
-          .willReturn(aResponse().withStatus(400)
-            .withBody(
-              """{ "code": "CLIENT_ERROR", "message": "Some client error" }"""
-            ))
-      )
+       stubFor(
+         post("/v1/CreateAppConfigs")
+           .withRequestBody(equalToJson(expectedBody))
+           .willReturn(aResponse().withStatus(400)
+             .withBody(
+               """{ "code": "CLIENT_ERROR", "message": "Some client error" }"""
+             ))
+       )
 
-      val result =
-        connector.createAppConfigs(payload = payload, serviceType = ServiceType.Backend, requiresMongo = true)
-          .futureValue
+       val result =
+         connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true)
+           .futureValue
 
-      result shouldBe Left("Some client error")
+       result shouldBe Left("Some client error")
     }
 
   }

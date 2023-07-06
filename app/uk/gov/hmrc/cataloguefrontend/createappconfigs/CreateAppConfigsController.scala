@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.createappconfigs
 
-import cats.data.{EitherT, OptionT}
+import cats.data.EitherT
 import play.api.Logger
 import play.api.data.Form
-import play.api.data.Forms.{boolean, mapping, nonEmptyText}
+import play.api.data.Forms.{boolean, mapping}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, GitRepository, ServiceDependenciesConnector, ServiceType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, GitRepository, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
@@ -59,7 +59,6 @@ class CreateAppConfigsController @Inject()(
       case _                                                       => false
     }
 
-
   private def checkAppConfigEnvExists(checks: List[Check]): Seq[Environment] =
     checks.flatMap {
       case EnvCheck("App Config Environment", checkResults, _, _) => checkResults.collect {
@@ -68,10 +67,8 @@ class CreateAppConfigsController @Inject()(
       case _                                                      => Seq.empty[Environment]
     }
 
-
   def createAppConfigsPermission(serviceName: String): Predicate =
     Predicate.Permission(Resource.from("catalogue-repository", serviceName), IAAction("CREATE_APP_CONFIGS"))
-
 
   def createAppConfigsLanding(serviceName: String): Action[AnyContent] =
     auth.authenticatedAction(
@@ -123,17 +120,18 @@ class CreateAppConfigsController @Inject()(
                                      serviceType   = serviceType,
                                      hasPerm       = true,
                                      hasBaseConfig = false,
-                                     envConfigs    = Seq.empty)
+                                     envConfigs    = Seq.empty
+                                   )
                                  )
                                ),
                              validForm => Right(validForm)
                            ))
-          _             <- EitherT.liftF(auth.authorised(Some(createAppConfigsPermission(form.serviceName))))
+          _             <- EitherT.liftF(auth.authorised(Some(createAppConfigsPermission(serviceName))))
           requiresMongo <- EitherT.liftF[Future, Result, Boolean](
                              serviceDependenciesConnector.getSlugInfo(serviceName)
                                .map(_.exists(_.dependencyDotCompile.exists(_.contains("\"hmrc-mongo\""))))
                            )
-          id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceType, requiresMongo)).leftMap { errMsg =>
+          id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo)).leftMap { errMsg =>
                              logger.info(s"createAppConfigs failed with: $errMsg")
                              InternalServerError(
                                createAppConfigsPage(
@@ -148,13 +146,12 @@ class CreateAppConfigsController @Inject()(
                            }
           _              = logger.info(s"Bnd api request id: $id:")
         } yield
-          Redirect(uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController.getCommissioningState(form.serviceName))
+          Redirect(uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController.getCommissioningState(serviceName))
      ).merge
     }
 }
 
 case class CreateAppConfigsForm(
-  serviceName         : String,
   appConfigBase       : Boolean,
   appConfigDevelopment: Boolean,
   appConfigQA         : Boolean,
@@ -165,7 +162,6 @@ case class CreateAppConfigsForm(
 object CreateAppConfigsForm {
   val form: Form[CreateAppConfigsForm] = Form(
     mapping(
-      "serviceName"          -> nonEmptyText,
       "appConfigBase"        -> boolean,
       "appConfigDevelopment" -> boolean,
       "appConfigQA"          -> boolean,
