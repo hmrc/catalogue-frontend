@@ -66,7 +66,9 @@ class ServiceConfigsController @Inject()(
   import cats.data.EitherT
   import cats.instances.future._
   def searchResults(
-    configKey: Option[String] // For dependencyExplorer reverse route
+    configKey            : Option[String ] // For dependencyExplorer reverse route
+  , configKeyIgnoreCase  : Option[Boolean]
+  , configValueIgnoreCase: Option[Boolean]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchConfig
