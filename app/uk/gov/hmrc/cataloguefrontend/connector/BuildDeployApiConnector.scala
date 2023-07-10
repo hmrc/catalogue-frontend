@@ -16,20 +16,21 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import com.google.inject.{Inject, Singleton}
+import play.api.Logging
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import com.google.inject.{Inject, Singleton}
 import play.api.mvc.PathBindable
-import play.api.Logging
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
+import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
-import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 
 import java.net.URL
 import java.time.LocalDateTime
@@ -145,9 +146,9 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(_ => ()))
   }
 
-  def createARepository(payload: CreateRepoForm): Future[Either[String, AsyncRequestId]] = {
-    implicit val arr = AsyncRequestId.reads
+  private implicit val arr = AsyncRequestId.reads
 
+  def createARepository(payload: CreateRepoForm): Future[Either[String, AsyncRequestId]] = {
     val finalPayload =
       s"""
          |{
@@ -168,6 +169,35 @@ class BuildDeployApiConnector @Inject() (
 
     signAndExecuteRequest(
       endpoint = "CreateRepository",
+      body     = body
+    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
+  }
+
+
+  def createAppConfigs(payload: CreateAppConfigsForm, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean): Future[Either[String, AsyncRequestId]] = {
+    val st = serviceType match {
+      case ServiceType.Frontend => "Frontend microservice"
+      case ServiceType.Backend  => "Backend microservice"
+    }
+    val finalPayload =
+      s"""
+         |{
+         |   "microservice_name": "$serviceName",
+         |   "microservice_type": "$st",
+         |   "microservice_requires_mongo": $requiresMongo,
+         |   "app_config_base": ${payload.appConfigBase},
+         |   "app_config_development": ${payload.appConfigDevelopment},
+         |   "app_config_qa": ${payload.appConfigQA},
+         |   "app_config_staging": ${payload.appConfigStaging},
+         |   "app_config_production": ${payload.appConfigProduction}
+         |}""".stripMargin
+
+    val body = Json.parse(finalPayload)
+
+    logger.info(s"Calling the B&D Create App Configs API with the following payload: $body")
+
+    signAndExecuteRequest(
+      endpoint = "CreateAppConfigs",
       body     = body
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }

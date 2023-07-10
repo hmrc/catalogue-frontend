@@ -1,0 +1,110 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import views.html.partials.{form_warnings, form_fields_warnings}
+@import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+
+@import views.html.helper.select
+
+
+@this(viewMessages: ViewMessages)
+
+
+@(form: Form[_],
+  serviceName  : String,
+  serviceType  : ServiceType,
+  hasPerm      : Boolean,
+  hasBaseConfig: Boolean,
+  envConfigs   : Seq[Environment]
+)( implicit
+  messages: Messages,
+  request: RequestHeader
+)
+
+@standard_layout("Create App Configs", "create app configs") {
+
+  <section class="section-wrapper">
+    <h1>Create App Configs</h1>
+    <p>Use the below form to create new app configs. Make sure to follow the guidance for each field!</p>
+
+    @form_warnings(form)
+    @helper.form(
+      action           =  uk.gov.hmrc.cataloguefrontend.createappconfigs.routes.CreateAppConfigsController.createAppConfigs(serviceName),
+      Symbol("id")     -> "createAppConfigsForm",
+      Symbol("method") -> "POST",
+    ) {
+      @csrfFormField
+
+      <div class="form-group row">
+        <div class="col-md-6">
+          <label for="serviceName">Service name:</label>
+          <input class="form-control" type="text" id="serviceName" name="serviceName" value="@serviceName" readonly="true">
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-md-6">
+          <label for="serviceType">Service type:</label>
+          <input class="form-control" type="text" id="serviceType" name="serviceType" value="@serviceType" readonly="true">
+          <p></p>
+          <span class="grey">Service type that was selected when creating the repository - if incorrect please contact</span> <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"></span></a>
+        </div>
+      </div>
+      @if(!hasBaseConfig){
+        <div class="form-group row">
+          <div class="col-md-6">
+            <input style="display:inline-block;" type="checkbox" id="appConfigBase" name="appConfigBase" value=true checked>
+            <label style="display:inline-block" for="appConfigBase">App Config Base</label>
+            <p class="grey">Create config in the app-config-base repository.</p>
+            @form_fields_warnings(form,"appConfigBase")
+          </div>
+        </div>
+      } else {
+        <div class="form-group row">
+          <div class="col-md-6">
+            <input style="display: none;" id="appConfigBase" name="appConfigBase" value="false" disabled checked>
+            <label style="display:inline-block" for="appConfigBase">App Config Base</label>
+            <p class="grey">Service has config in the app-config-base repository.</p>
+            @form_fields_warnings(form,"appConfigBase")
+          </div>
+        </div>
+      }
+
+      @createAppConfigEnv(envConfigs)
+
+      <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit" @if(!hasPerm){disabled}>Build</button>
+    }
+  </section>
+}
+
+@createAppConfigEnv(envsConfig: Seq[Environment]) = {
+  @Environment.values.filterNot(Seq(Environment.Integration, Environment.ExternalTest).contains).map { env =>
+    <div class="form-group row">
+      <div class="col-md-6">
+        <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" @if(envsConfig.contains(env)){disabled} value="@{!envsConfig.contains(env)}" checked>
+        <label style="display:inline-block" for="appConfig@env">App Config @env</label>
+        @if(!envsConfig.contains(env)) {
+          <p class="grey">Create config in the app-config-@{env.asString} repository.</p>
+        } else {
+          <p class="grey">Service has app-config-@{env.asString} repository.</p>
+        }
+        @form_fields_warnings(form, s"appConfig${env.displayString}")
+      </div>
+    </div>
+  }
+}
