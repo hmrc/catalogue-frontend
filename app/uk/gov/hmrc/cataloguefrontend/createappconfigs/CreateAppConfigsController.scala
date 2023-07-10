@@ -43,7 +43,7 @@ class CreateAppConfigsController @Inject()(
   buildDeployApiConnector            : BuildDeployApiConnector,
   teamsAndRepositoriesConnector      : TeamsAndRepositoriesConnector,
   serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector,
-  serviceDependenciesConnector: ServiceDependenciesConnector
+  serviceDependenciesConnector       : ServiceDependenciesConnector
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -97,6 +97,7 @@ class CreateAppConfigsController @Inject()(
         } yield Ok(createAppConfigsPage(form2, serviceName, serviceType, hasPerm, baseConfig, envsConfig))
       ).merge
     }
+
 
   def createAppConfigs(serviceName: String): Action[AnyContent] =
     auth.authorizedAction(

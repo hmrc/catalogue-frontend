@@ -65,64 +65,28 @@
           <span class="grey">Service type that was selected when creating the repository - if incorrect please contact</span> <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"></span></a>
         </div>
       </div>
-      <div class="form-group row">
-        <div class="col-md-6">
-          <input style="display:inline-block;" type="checkbox" id="requiresMongo" name="requiresMongo" value=false>
-          <label style="display:inline-block" for="requiresMongo">Microservice requires Mongo</label>
-          <p class="grey">Select if your microservice requires MongoDB. If you are unsure, ask your architect.</p>
-          @form_fields_warnings(form,"requiresMongo")
-        </div>
-      </div>
       @if(!hasBaseConfig){
         <div class="form-group row">
           <div class="col-md-6">
             <input style="display:inline-block;" type="checkbox" id="appConfigBase" name="appConfigBase" value=true checked>
             <label style="display:inline-block" for="appConfigBase">App Config Base</label>
-            <p class="grey">Whether config should be created in the app-config-base repository if it does not exist.</p>
+            <p class="grey">Create config in the app-config-base repository.</p>
+            @form_fields_warnings(form,"appConfigBase")
+          </div>
+        </div>
+      } else {
+        <div class="form-group row">
+          <div class="col-md-6">
+            <input style="display: none;" id="appConfigBase" name="appConfigBase" value="false" disabled checked>
+            <label style="display:inline-block" for="appConfigBase">App Config Base</label>
+            <p class="grey">Service has config in the app-config-base repository.</p>
             @form_fields_warnings(form,"appConfigBase")
           </div>
         </div>
       }
-      @if(!envConfigs.contains(Environment.Development)){
-      <div class="form-group row">
-        <div class="col-md-6">
-          <input style="display:inline-block;" type="checkbox" id="appConfigDevelopment" name="appConfigDevelopment" value=true checked>
-          <label style="display:inline-block" for="appConfigDevelopment">App Config Development</label>
-          <p class="grey">Whether config should be created in the app-config-development repository if it does not exist.</p>
-          @form_fields_warnings(form,"appConfigDevelopment")
-        </div>
-      </div>
-      }
-      @if(!envConfigs.contains(Environment.QA)){
-      <div class="form-group row">
-        <div class="col-md-6">
-          <input style="display:inline-block;" type="checkbox" id="appConfigQA" name="appConfigQA" value=true checked>
-          <label style="display:inline-block" for="appConfigQA">App Config QA</label>
-          <p class="grey">Whether config should be created in the app-config-qa repository if it does not exist.</p>
-          @form_fields_warnings(form,"appConfigQA")
-        </div>
-      </div>
-      }
-      @if(!envConfigs.contains(Environment.Staging)){
-      <div class="form-group row">
-        <div class="col-md-6">
-          <input style="display:inline-block;" type="checkbox" id="appConfigStaging" name="appConfigStaging" value=true checked>
-          <label style="display:inline-block" for="appConfigStaging">App Config Staging</label>
-          <p class="grey">Whether config should be created in the app-config-staging repository if it does not exist.</p>
-          @form_fields_warnings(form,"appConfigStaging")
-        </div>
-      </div>
-      }
-      @if(!envConfigs.contains(Environment.Production)){
-      <div class="form-group row">
-        <div class="col-md-6">
-          <input style="display:inline-block;" type="checkbox" id="appConfigProduction" name="appConfigProduction" value=true checked>
-          <label style="display:inline-block" for="appConfigProduction">App Config Production</label>
-          <p class="grey">Whether config should be created in the app-config-production repository if it does not exist.</p>
-          @form_fields_warnings(form,"appConfigProduction")
-        </div>
-      </div>
-      }
+
+      @createAppConfigEnv(envConfigs)
+
       <div>
         @if(hasPerm){
           <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit">Build</button>
@@ -130,4 +94,28 @@
       </div>
     }
   </section>
+}
+
+@createAppConfigEnv(envsConfig: Seq[Environment]) = {
+    @Environment.values.filterNot(Seq(Environment.Integration, Environment.ExternalTest).contains).map{ env =>
+      @if(!envsConfig.contains(env)) {
+        <div class="form-group row">
+          <div class="col-md-6">
+            <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" value=true checked>
+            <label style="display:inline-block" for="appConfig@env">App Config @env</label>
+            <p class="grey">Create config in the app-config-@{env.asString} repository.</p>
+            @form_fields_warnings(form, s"appConfig${env.displayString}")
+          </div>
+        </div>
+      } else {
+        <div class="form-group row">
+          <div class="col-md-6">
+            <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" value="false" disabled checked>
+            <label style="display:inline-block" for="appConfig@env">App Config @env</label>
+            <p class="grey">Service has app-config-@{env.asString} repository.</p>
+            @form_fields_warnings(form, s"appConfig${env.displayString}")
+          </div>
+        </div>
+      }
+    }
 }

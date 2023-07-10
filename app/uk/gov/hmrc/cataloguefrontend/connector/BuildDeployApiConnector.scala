@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import com.google.inject.{Inject, Singleton}
+import play.api.Logging
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import com.google.inject.{Inject, Singleton}
 import play.api.mvc.PathBindable
-import play.api.Logging
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
@@ -28,10 +28,9 @@ import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
-import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.cataloguefrontend.createappconfigs
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 
 import java.net.URL
 import java.time.LocalDateTime
