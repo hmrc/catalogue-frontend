@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import views.html.partials.{form_warnings, form_fields_warnings}
+@import views.html.partials.{form_global_errors, form_fields_warnings}
 @import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 
@@ -43,7 +43,7 @@
     <h1>Create App Configs</h1>
     <p>Use the below form to create new app configs. Make sure to follow the guidance for each field!</p>
 
-    @form_warnings(form)
+    @form_global_errors(form)
     @helper.form(
       action           =  uk.gov.hmrc.cataloguefrontend.createappconfigs.routes.CreateAppConfigsController.createAppConfigs(serviceName),
       Symbol("id")     -> "createAppConfigsForm",
