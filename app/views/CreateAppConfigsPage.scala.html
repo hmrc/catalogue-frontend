@@ -27,11 +27,11 @@
 
 
 @(form: Form[_],
-        serviceName: String,
-        serviceType: ServiceType,
-        hasPerm: Boolean,
-        hasBaseConfig: Boolean,
-        envConfigs: Seq[Environment]
+  serviceName  : String,
+  serviceType  : ServiceType,
+  hasPerm      : Boolean,
+  hasBaseConfig: Boolean,
+  envConfigs   : Seq[Environment]
 )( implicit
   messages: Messages,
   request: RequestHeader
@@ -47,7 +47,7 @@
     @helper.form(
       action           =  uk.gov.hmrc.cataloguefrontend.createappconfigs.routes.CreateAppConfigsController.createAppConfigs(serviceName),
       Symbol("id")     -> "createAppConfigsForm",
-      Symbol("method") -> "post",
+      Symbol("method") -> "POST",
     ) {
       @csrfFormField
 
@@ -87,35 +87,24 @@
 
       @createAppConfigEnv(envConfigs)
 
-      <div>
-        @if(hasPerm){
-          <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit">Build</button>
-        }
-      </div>
+      <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit" @if(!hasPerm){disabled}>Build</button>
     }
   </section>
 }
 
 @createAppConfigEnv(envsConfig: Seq[Environment]) = {
-    @Environment.values.filterNot(Seq(Environment.Integration, Environment.ExternalTest).contains).map{ env =>
-      @if(!envsConfig.contains(env)) {
-        <div class="form-group row">
-          <div class="col-md-6">
-            <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" value=true checked>
-            <label style="display:inline-block" for="appConfig@env">App Config @env</label>
-            <p class="grey">Create config in the app-config-@{env.asString} repository.</p>
-            @form_fields_warnings(form, s"appConfig${env.displayString}")
-          </div>
-        </div>
-      } else {
-        <div class="form-group row">
-          <div class="col-md-6">
-            <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" value="false" disabled checked>
-            <label style="display:inline-block" for="appConfig@env">App Config @env</label>
-            <p class="grey">Service has app-config-@{env.asString} repository.</p>
-            @form_fields_warnings(form, s"appConfig${env.displayString}")
-          </div>
-        </div>
-      }
-    }
+  @Environment.values.filterNot(Seq(Environment.Integration, Environment.ExternalTest).contains).map { env =>
+    <div class="form-group row">
+      <div class="col-md-6">
+        <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" @if(envsConfig.contains(env)){disabled} value="@{!envsConfig.contains(env)}" checked>
+        <label style="display:inline-block" for="appConfig@env">App Config @env</label>
+        @if(!envsConfig.contains(env)) {
+          <p class="grey">Create config in the app-config-@{env.asString} repository.</p>
+        } else {
+          <p class="grey">Service has app-config-@{env.asString} repository.</p>
+        }
+        @form_fields_warnings(form, s"appConfig${env.displayString}")
+      </div>
+    </div>
+  }
 }
