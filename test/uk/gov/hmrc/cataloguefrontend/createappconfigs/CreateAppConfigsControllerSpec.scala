@@ -30,8 +30,9 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector, routes}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
+import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.internalauth.client.{Predicate, Retrieval}
+import uk.gov.hmrc.internalauth.client.{IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
 import views.html.CreateAppConfigsPage
 
 import java.time.Instant
@@ -55,6 +56,17 @@ class CreateAppConfigsControllerSpec
     "have the correct url setup" in {
       uk.gov.hmrc.cataloguefrontend.createappconfigs.routes.CreateAppConfigsController.createAppConfigsLanding("test-service")
         .url shouldBe "/create-app-configs?serviceName=test-service"
+    }
+
+    "return permission with correct resource type and action" in new Setup {
+      controller.createAppConfigsPermission(serviceName) shouldBe
+        Permission(
+          Resource(
+            ResourceType("catalogue-frontend"),
+            ResourceLocation("test-service")
+          ),
+          IAAction("CREATE_APP_CONFIGS")
+        )
     }
   }
 
