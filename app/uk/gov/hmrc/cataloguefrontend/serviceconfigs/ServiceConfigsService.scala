@@ -100,13 +100,13 @@ class ServiceConfigsService @Inject()(
 
   private def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
 
-  def toKeyServiceEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[KeyName, Map[ServiceName, Map[Environment, ConfigSourceValue]]] =
+  def toKeyServiceEnvironmentMap(appliedConfig: Seq[AppliedConfig]): Map[KeyName, Map[ServiceName, Map[Environment, ConfigSourceValue]]] =
     appliedConfig
       .groupBy(_.key)
       .view
       .mapValues(xs => sorted(xs.groupBy(_.serviceName).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(Ordering.by(_.asString))).toMap
 
-  def toServiceKeyEnviromentMap(appliedConfig: Seq[AppliedConfig]): Map[ServiceName, Map[KeyName, Map[Environment, ConfigSourceValue]]] =
+  def toServiceKeyEnvironmentMap(appliedConfig: Seq[AppliedConfig]): Map[ServiceName, Map[KeyName, Map[Environment, ConfigSourceValue]]] =
     appliedConfig
       .groupBy(_.serviceName)
       .view
