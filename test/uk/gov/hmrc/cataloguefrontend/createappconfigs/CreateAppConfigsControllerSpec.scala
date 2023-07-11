@@ -20,6 +20,7 @@ import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.Configuration
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
@@ -265,6 +266,11 @@ class CreateAppConfigsControllerSpec
   }
 
   private trait Setup {
+
+    private val config = Configuration(
+      "environmentsToHideByDefault" -> List("integration", "development")
+    )
+
     implicit val hc       = HeaderCarrier()
     implicit val mcc      = app.injector.instanceOf[MessagesControllerComponents]
     val mockCACView       = app.injector.instanceOf[CreateAppConfigsPage]
@@ -282,9 +288,9 @@ class CreateAppConfigsControllerSpec
         buildDeployApiConnector             = mockBDConnector,
         teamsAndRepositoriesConnector       = mockTRConnector,
         serviceCommissioningStatusConnector = mockSCSConnector,
-        serviceDependenciesConnector        = mockSDConnector
+        serviceDependenciesConnector        = mockSDConnector,
+        configuration                       = config
       )
-
 
     val serviceName = "test-service"
 

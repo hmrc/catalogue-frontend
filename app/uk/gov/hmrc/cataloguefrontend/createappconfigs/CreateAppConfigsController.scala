@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.createappconfigs
 
 import cats.data.EitherT
-import play.api.Logger
+import play.api.{Configuration, Logger}
 import play.api.data.Form
 import play.api.data.Forms.{boolean, mapping}
 import play.api.i18n.I18nSupport
@@ -43,7 +43,8 @@ class CreateAppConfigsController @Inject()(
   buildDeployApiConnector            : BuildDeployApiConnector,
   teamsAndRepositoriesConnector      : TeamsAndRepositoriesConnector,
   serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector,
-  serviceDependenciesConnector       : ServiceDependenciesConnector
+  serviceDependenciesConnector       : ServiceDependenciesConnector,
+  configuration                      : Configuration
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -52,6 +53,12 @@ class CreateAppConfigsController @Inject()(
 
   private val logger = Logger(getClass)
 
+  import scala.jdk.CollectionConverters._
+
+  private val envsToHide: Set[Environment] =
+    configuration.underlying.getStringList("environmentsToHideByDefault").asScala.toSet.map { str: String =>
+      Environment.parse(str).getOrElse(sys.error(s"config 'environmentsToHideByDefault' contains an invalid environment: $str"))
+    }
 
   private def checkAppConfigBaseExists(checks: List[Check]): Boolean =
     checks.exists {
@@ -94,10 +101,9 @@ class CreateAppConfigsController @Inject()(
           hasPerm       = request.retrieval
           form          = CreateAppConfigsForm.form.bindFromRequest()
           form2         = if (!hasPerm) form.withGlobalError(s"You do not have permission to create App Configs for: $serviceName") else form
-        } yield Ok(createAppConfigsPage(form2, serviceName, serviceType, hasPerm, baseConfig, envsConfig))
+        } yield Ok(createAppConfigsPage(form2, serviceName, serviceType, hasPerm, baseConfig, envsConfig, envsToHide))
       ).merge
     }
-
 
   def createAppConfigs(serviceName: String): Action[AnyContent] =
     auth.authorizedAction(
@@ -121,7 +127,8 @@ class CreateAppConfigsController @Inject()(
                                      serviceType   = serviceType,
                                      hasPerm       = true,
                                      hasBaseConfig = false,
-                                     envConfigs    = Seq.empty
+                                     envConfigs    = Seq.empty,
+                                     envsToHide    = Set.empty
                                    )
                                  )
                                ),
@@ -141,7 +148,8 @@ class CreateAppConfigsController @Inject()(
                                  serviceType   = serviceType,
                                  hasPerm       = true,
                                  hasBaseConfig = false,
-                                 envConfigs    = Seq.empty
+                                 envConfigs    = Seq.empty,
+                                 envsToHide    = Set.empty
                                )
                              )
                            }
@@ -153,21 +161,21 @@ class CreateAppConfigsController @Inject()(
 }
 
 case class CreateAppConfigsForm(
-  appConfigBase       : Boolean,
-  appConfigDevelopment: Boolean,
-  appConfigQA         : Boolean,
-  appConfigStaging    : Boolean,
-  appConfigProduction : Boolean
+  appConfigBase        : Boolean,
+  appConfigDevelopment : Boolean,
+  appConfigQA          : Boolean,
+  appConfigStaging     : Boolean,
+  appConfigProduction  : Boolean
 )
 
 object CreateAppConfigsForm {
   val form: Form[CreateAppConfigsForm] = Form(
     mapping(
-      "appConfigBase"        -> boolean,
-      "appConfigDevelopment" -> boolean,
-      "appConfigQA"          -> boolean,
-      "appConfigStaging"     -> boolean,
-      "appConfigProduction"  -> boolean,
+      "appConfigBase"         -> boolean,
+      "appConfigDevelopment"  -> boolean,
+      "appConfigQA"           -> boolean,
+      "appConfigStaging"      -> boolean,
+      "appConfigProduction"   -> boolean,
     )(CreateAppConfigsForm.apply)(CreateAppConfigsForm.unapply)
   )
 }
