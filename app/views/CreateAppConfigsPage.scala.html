@@ -19,6 +19,7 @@
 @import views.html.partials.{form_global_errors, form_fields_warnings}
 @import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @import views.html.helper.select
 
@@ -65,21 +66,21 @@
           <span class="grey">Service type that was selected when creating the repository - if incorrect please contact</span> <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"></span></a>
         </div>
       </div>
-      @if(!hasBaseConfig){
+      @if(hasBaseConfig){
         <div class="form-group row">
           <div class="col-md-6">
-            <input style="display:inline-block;" type="checkbox" id="appConfigBase" name="appConfigBase" value=true checked>
+            <input style="display:inline-block;" type="checkbox" id="appConfigBase" name="appConfigBase" value="false"  checked disabled>
             <label style="display:inline-block" for="appConfigBase">App Config Base</label>
-            <p class="grey">Create config in the app-config-base repository.</p>
+            <p class="grey">Service has config in the app-config-base repository.</p>
             @form_fields_warnings(form,"appConfigBase")
           </div>
         </div>
       } else {
         <div class="form-group row">
           <div class="col-md-6">
-            <input style="display: none;" id="appConfigBase" name="appConfigBase" value="false" disabled checked>
+            <input style="display:inline-block;" type="checkbox" id="appConfigBase" name="appConfigBase" value=true checked>
             <label style="display:inline-block" for="appConfigBase">App Config Base</label>
-            <p class="grey">Service has config in the app-config-base repository.</p>
+            <p class="grey">Create config in the app-config-base repository.</p>
             @form_fields_warnings(form,"appConfigBase")
           </div>
         </div>
@@ -93,18 +94,20 @@
 }
 
 @createAppConfigEnv(envsConfig: Seq[Environment]) = {
-  @Environment.values.filterNot(Seq(Environment.Integration, Environment.ExternalTest).contains).map { env =>
-    <div class="form-group row">
-      <div class="col-md-6">
-        <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" @if(envsConfig.contains(env)){disabled} value="@{!envsConfig.contains(env)}" checked>
-        <label style="display:inline-block" for="appConfig@env">App Config @env</label>
-        @if(!envsConfig.contains(env)) {
-          <p class="grey">Create config in the app-config-@{env.asString} repository.</p>
-        } else {
-          <p class="grey">Service has app-config-@{env.asString} repository.</p>
-        }
-        @form_fields_warnings(form, s"appConfig${env.displayString}")
+  @Environment.values.filterNot(env =>
+    (Seq(Environment.Integration, Environment.ExternalTest) ++
+    (if(CatalogueFrontendSwitches.showCreateAppConfigDevelopment.isEnabled) Seq.empty else Seq(Environment.Development))).contains(env)).map { env =>
+      <div class="form-group row">
+        <div class="col-md-6">
+          <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" @if(envsConfig.contains(env)){disabled} value="@{!envsConfig.contains(env)}" checked>
+          <label style="display:inline-block" for="appConfig@env">App Config @env</label>
+          @if(!envsConfig.contains(env)) {
+            <p class="grey">Create config in the app-config-@{env.asString} repository.</p>
+          } else {
+            <p class="grey">Service has app-config-@{env.asString} repository.</p>
+          }
+          @form_fields_warnings(form, s"appConfig${env.displayString}")
+        </div>
       </div>
-    </div>
-  }
+    }
 }
