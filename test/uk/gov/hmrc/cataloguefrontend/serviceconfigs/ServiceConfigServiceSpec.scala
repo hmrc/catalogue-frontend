@@ -143,9 +143,9 @@ class ServiceConfigsServiceSpec
     }
   }
 
-  "serviceConfigsService.toKeyServiceEnviromentMap" should {
+  "serviceConfigsService.toKeyServiceEnvironmentMap" should {
     "group by key, service and environment" in new Setup {
-      serviceConfigsService.toKeyServiceEnviromentMap(
+      serviceConfigsService.toKeyServiceEnvironmentMap(
         List(
           AppliedConfig(
             ServiceName("test-service"),
@@ -167,9 +167,9 @@ class ServiceConfigsServiceSpec
     }
   }
 
-  "serviceConfigsService.toServiceKeyEnviromentMap" should {
+  "serviceConfigsService.toServiceKeyEnvironmentMap" should {
     "group by service, key and environment" in new Setup {
-      serviceConfigsService.toServiceKeyEnviromentMap(
+      serviceConfigsService.toServiceKeyEnvironmentMap(
         List(
           AppliedConfig(
             ServiceName("test-service"),

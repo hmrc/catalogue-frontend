@@ -92,7 +92,7 @@ class ServiceConfigsController @Inject()(
                                                         }
                                               case _ => EitherT(serviceConfigsService.configSearch(
                                                           teamName        = formObject.teamName
-                                                        , environments    = formObject.showEnviroments
+                                                        , environments    = formObject.showEnvironments
                                                         , serviceType     = formObject.serviceType
                                                         , key             = formObject.configKey
                                                         , keyFilterType   = KeyFilterType.toKeyFilterType(formObject.configKeyIgnoreCase)
@@ -104,14 +104,14 @@ class ServiceConfigsController @Inject()(
                               (groupedByKey, groupedByService)
                                          =  (optResults, formObject.groupBy) match {
                                               case (None,          _              ) => (None, None)
-                                              case (Some(results), GroupBy.Key    ) => (Some(serviceConfigsService.toKeyServiceEnviromentMap(results)), None)
-                                              case (Some(results), GroupBy.Service) => (None, Some(serviceConfigsService.toServiceKeyEnviromentMap(results)))
+                                              case (Some(results), GroupBy.Key    ) => (Some(serviceConfigsService.toKeyServiceEnvironmentMap(results)), None)
+                                              case (Some(results), GroupBy.Service) => (None, Some(serviceConfigsService.toServiceKeyEnvironmentMap(results)))
                                             }
                             } yield
                               if (formObject.asCsv) {
                                 val rows   = formObject.groupBy match {
-                                               case GroupBy.Key     => toRows(groupedByKey.getOrElse(Map.empty), formObject.showEnviroments)
-                                               case GroupBy.Service => toRows2(groupedByService.getOrElse(Map.empty), formObject.showEnviroments)
+                                               case GroupBy.Key     => toRows(groupedByKey.getOrElse(Map.empty), formObject.showEnvironments)
+                                               case GroupBy.Service => toRows2(groupedByService.getOrElse(Map.empty), formObject.showEnvironments)
                                              }
                                 val csv    = CsvUtils.toCsv(rows)
                                 val source = akka.stream.scaladsl.Source.single(akka.util.ByteString(csv, "UTF-8"))
@@ -126,26 +126,26 @@ class ServiceConfigsController @Inject()(
   }
 
   private def toRows(
-    results        : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
-  , showEnviroments: Seq[Environment]
+    results         : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
+  , showEnvironments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
     for {
       (key, services) <- results.toSeq
       (service, envs) <- services
     } yield
       Seq("key" -> key.asString, "service" -> service.asString) ++
-      showEnviroments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
+      showEnvironments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
 
   private def toRows2(
-    results        : Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
-  , showEnviroments: Seq[Environment]
+    results         : Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
+  , showEnvironments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
     for {
       (service, keys) <- results.toSeq
       (key, envs)     <- keys
     } yield
       Seq("service" -> service.asString, "key" -> key.asString) ++
-      showEnviroments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
+      showEnvironments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
 
 }
 object SearchConfig {
@@ -158,7 +158,7 @@ object SearchConfig {
   , configValue          : Option[String]      = None
   , configValueIgnoreCase: Boolean             = true
   , valueFilterType      : FormValueFilterType = FormValueFilterType.Contains
-  , showEnviroments      : List[Environment]   = Environment.values.filterNot(_ == Environment.Integration)
+  , showEnvironments     : List[Environment]   = Environment.values.filterNot(_ == Environment.Integration)
   , serviceType          : Option[ServiceType] = None
   , teamChange           : Boolean             = false
   , asCsv                : Boolean             = false
@@ -173,7 +173,7 @@ object SearchConfig {
     , "configValue"           -> Forms.optional(Forms.text)
     , "configValueIgnoreCase" -> Forms.default(Forms.boolean, false)
     , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType](FormValueFilterType.formFormat), FormValueFilterType.Contains)
-    , "showEnviroments"       -> Forms.list(Forms.text)
+    , "showEnvironments"      -> Forms.list(Forms.text)
                                       .transform[List[Environment]](
                                         xs => { val ys = xs.map(Environment.parse).flatten
                                                 if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration) // populate environments for config explorer link

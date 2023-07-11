@@ -113,7 +113,7 @@
                     <dd>
                         @for(env <-  Environment.values) {
                             <div class="checkbox-group">
-                                <input name="showEnviroments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.showEnviroments.contains(env)) {checked} />
+                                <input name="showEnvironments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.showEnvironments.contains(env)) {checked} />
                                 <label for="@{env.asString}-checkbox">@env.displayString</label>
                             </div>
                         }
@@ -143,7 +143,7 @@
                     <dd>
                         <div class="input-group-multi">
                             <div class="col-xs-9 col-md-9">
-                                <input class="form-control input-group-start" name="configValue" type="text" value='@form("configValue").value'>
+                                <input class="form-control input-group-start" id="config-value" name="configValue" type="text" value='@form("configValue").value'>
                             </div>
                             <div class="col-xs-3 col-md-3">
                                 <select class="form-control input-group-end" name="valueFilterType">
@@ -180,11 +180,11 @@
     @if(groupedByKey.filter(_.nonEmpty).isEmpty && groupedByService.filter(_.nonEmpty).isEmpty) {
         <p>No results found.</p>
     } else {
-        <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+        <table id="search-results" class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
             <thead>
                 <tr>
                     <th>@if(groupedByKey.isDefined) {Key} else {Service}</th>
-                    @for(env <- form.get.showEnviroments) {
+                    @for(env <- form.get.showEnvironments) {
                         <th id="@{env.asString}-tr">@env.displayString</th>
                     }
                 </tr>
@@ -193,14 +193,14 @@
                 @groupedByKey.map { res =>
                     @for((configKey, configByService) <- res) {
                         <tr class="@if(configByService.size > 1) {sticky-row-caption} else {row-caption} ">
-                            <td colspan="@(form.get.showEnviroments.size + 1)">
+                            <td colspan="@(form.get.showEnvironments.size + 1)">
                                 Results for <code>@configKey.asString</code>
                             </td>
                         </tr>
                         @for((serviceName, configByEnv) <- configByService) {
                             <tr>
                                 <td><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
-                                @for(env <- form.get.showEnviroments) {
+                                @for(env <- form.get.showEnvironments) {
                                     <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
                                 }
                             </tr>
@@ -210,14 +210,14 @@
                 @groupedByService.map { res =>
                     @for((serviceName, configByKey) <- res) {
                         <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">
-                            <td colspan="@(form.get.showEnviroments.size + 1)">
+                            <td colspan="@(form.get.showEnvironments.size + 1)">
                                 Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
                             </td>
                         </tr>
                         @for((configKey, configByEnv) <- configByKey) {
                             <tr>
                                 <td><code>@configKey.asString</code></td>
-                                @for(env <- form.get.showEnviroments) {
+                                @for(env <- form.get.showEnvironments) {
                                     <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
                                 }
                             </tr>
