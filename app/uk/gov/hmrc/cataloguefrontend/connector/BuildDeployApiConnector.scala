@@ -187,8 +187,8 @@ class BuildDeployApiConnector @Inject() (
          |   "microservice_requires_mongo": $requiresMongo,
          |   "app_config_base": ${payload.appConfigBase},
          |   "app_config_development": ${payload.appConfigDevelopment},
-         |   "app_config_staging": ${payload.appConfigStaging},
          |   "app_config_qa": ${payload.appConfigQA},
+         |   "app_config_staging": ${payload.appConfigStaging},
          |   "app_config_production": ${payload.appConfigProduction}
          |}""".stripMargin
 

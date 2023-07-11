@@ -28,7 +28,7 @@
   hasPerm      : Boolean,
   hasBaseConfig: Boolean,
   envConfigs   : Seq[Environment],
-  envsToHide   : Set[Environment]
+  envsToDisplay: Seq[Environment]
 )( implicit
   messages: Messages,
   request: RequestHeader
@@ -82,15 +82,15 @@
         </div>
       }
 
-      @createAppConfigEnv(envConfigs, envsToHide)
+      @createAppConfigEnv(envConfigs)
 
       <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit" @if(!hasPerm){disabled}>Build</button>
     }
   </section>
 }
 
-@createAppConfigEnv(envsConfig: Seq[Environment], envsToHide: Set[Environment]) = {
-  @Environment.values.filterNot(envsToHide.contains).map { env =>
+@createAppConfigEnv(envsConfig: Seq[Environment]) = {
+  @envsToDisplay.map { env =>
     <div class="form-group row">
       <div class="col-md-6">
         <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" @if(envsConfig.contains(env)){disabled} value="@{!envsConfig.contains(env)}" checked>

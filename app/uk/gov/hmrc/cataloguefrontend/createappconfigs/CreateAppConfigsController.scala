@@ -98,10 +98,11 @@ class CreateAppConfigsController @Inject()(
                           )
           baseConfig    = checkAppConfigBaseExists(configChecks)
           envsConfig    = checkAppConfigEnvExists(configChecks)
+          envsToDisplay = Environment.values.diff(envsToHide.toSeq)
           hasPerm       = request.retrieval
           form          = CreateAppConfigsForm.form.bindFromRequest()
           form2         = if (!hasPerm) form.withGlobalError(s"You do not have permission to create App Configs for: $serviceName") else form
-        } yield Ok(createAppConfigsPage(form2, serviceName, serviceType, hasPerm, baseConfig, envsConfig, envsToHide))
+        } yield Ok(createAppConfigsPage(form2, serviceName, serviceType, hasPerm, baseConfig, envsConfig, envsToDisplay))
       ).merge
     }
 
@@ -128,7 +129,7 @@ class CreateAppConfigsController @Inject()(
                                      hasPerm       = true,
                                      hasBaseConfig = false,
                                      envConfigs    = Seq.empty,
-                                     envsToHide    = Set.empty
+                                     envsToDisplay = Seq.empty
                                    )
                                  )
                                ),
@@ -149,7 +150,7 @@ class CreateAppConfigsController @Inject()(
                                  hasPerm       = true,
                                  hasBaseConfig = false,
                                  envConfigs    = Seq.empty,
-                                 envsToHide    = Set.empty
+                                 envsToDisplay = Seq.empty
                                )
                              )
                            }
