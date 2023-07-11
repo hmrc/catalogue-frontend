@@ -41,7 +41,4 @@ object CatalogueFrontendSwitches {
 
   def showConfigSearch: FeatureSwitch =
     FeatureSwitch.forName("show-config-search")
-
-  def showCreateAppConfigDevelopment: FeatureSwitch =
-    FeatureSwitch.forName("show-app-config-development")
 }

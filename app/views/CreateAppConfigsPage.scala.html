@@ -14,15 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import views.html.partials.{form_global_errors, form_fields_warnings}
 @import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
-
-@import views.html.helper.select
-
 
 @this(viewMessages: ViewMessages)
 
@@ -94,20 +89,18 @@
 }
 
 @createAppConfigEnv(envsConfig: Seq[Environment]) = {
-  @Environment.values.filterNot(env =>
-    (Seq(Environment.Integration, Environment.ExternalTest) ++
-    (if(CatalogueFrontendSwitches.showCreateAppConfigDevelopment.isEnabled) Seq.empty else Seq(Environment.Development))).contains(env)).map { env =>
-      <div class="form-group row">
-        <div class="col-md-6">
-          <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" @if(envsConfig.contains(env)){disabled} value="@{!envsConfig.contains(env)}" checked>
-          <label style="display:inline-block" for="appConfig@env">App Config @env</label>
-          @if(!envsConfig.contains(env)) {
-            <p class="grey">Create config in the app-config-@{env.asString} repository.</p>
-          } else {
-            <p class="grey">Service has app-config-@{env.asString} repository.</p>
-          }
-          @form_fields_warnings(form, s"appConfig${env.displayString}")
-        </div>
+  @Environment.values.filterNot(Seq(Environment.Integration, Environment.ExternalTest, Environment.Development).contains).map { env =>
+    <div class="form-group row">
+      <div class="col-md-6">
+        <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" @if(envsConfig.contains(env)){disabled} value="@{!envsConfig.contains(env)}" checked>
+        <label style="display:inline-block" for="appConfig@env">App Config @env</label>
+        @if(!envsConfig.contains(env)) {
+          <p class="grey">Create config in the app-config-@{env.asString} repository.</p>
+        } else {
+          <p class="grey">Service has app-config-@{env.asString} repository.</p>
+        }
+        @form_fields_warnings(form, s"appConfig${env.displayString}")
       </div>
-    }
+    </div>
+  }
 }
