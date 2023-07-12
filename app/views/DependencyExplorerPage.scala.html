@@ -140,16 +140,20 @@
                 <table id="search-results" class="table table-striped">
                     <thead>
                         <tr>
-                            <th rowspan="2"><button class="sort no-border" data-sort="service">Service</button></th>
-                            <th rowspan="2">Version</th>
-                            <th rowspan="2"><button class="sort no-border" data-sort="teams">Team</button></th>
-                            <th colspan="4" class="text-center">Dependency</th>
-                        </tr>
-                        <tr>
-                            <th>Group ID</th>
-                            <th>Artefact ID</th>
-                            <th><button class="sort no-border" data-sort="dep-version">Version</button></th>
-                            <th>Scope</th>
+                            <th rowspan="2" class="wrw-table-head"><button class="sort no-border" data-sort="service">Service</button></th>
+                            <th rowspan="2" class="wrw-table-head">Version</th>
+                            <th rowspan="2" class="wrw-table-head"><button class="sort no-border" data-sort="teams">Team</button></th>
+                            <th colspan="2" class="wrw-table-head">
+                                <div class="text-center table-header-title">@{s"${searchResults.head.depGroup}.${searchResults.head.depArtefact}"}</div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <button class="sort no-border" data-sort="dep-version">Version</button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        Scope
+                                    </div>
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="list">
@@ -160,8 +164,6 @@
                                 <td class="teams">
                                     @teamNames(result.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(result.slugName)}#teams")
                                 </td>
-                                <td>@result.depGroup</td>
-                                <td>@result.depArtefact</td>
                                 <td class="dep-version">@result.depVersion</td>
                                 <td>@result.scopes.map(_.displayString).mkString(", ")</td>
                             </tr>
