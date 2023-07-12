@@ -20,12 +20,13 @@
 @import views.html.partials.form_global_errors
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigWarning, ServiceConfigsService, routes => serviceConfigsRoutes }
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 
 @this()
 
 @(form          : Form[ConfigWarning.ConfigWarningForm],
   allServices   : Seq[GitRepository],
-  configWarnings: Option[Seq[ServiceConfigsService.ConfigWarning]] = None
+  configWarnings: Option[Seq[(WhatsRunningWhereVersion, Seq[ServiceConfigsService.ConfigWarning])]] = None
 )(implicit
   messages: Messages,
   request : RequestHeader
@@ -34,65 +35,85 @@
 @standard_layout("Config Warnings") {
     <header>
         <h1>
-            Search Warning
+            Config Warnings
         </h1>
     </header>
 
     @helper.form(
-        action          =  serviceConfigsRoutes.ServiceConfigsController.configWarningsResults(),
+        action          =  serviceConfigsRoutes.ServiceConfigsController.configWarnings(),
         Symbol("id")    -> "form",
         Symbol("class") -> "form-group"
     ) {
         <div class="row">
-            <div class="col-md-4">
-                @helper.select(
-                    field              = form("serviceName"),
-                    options            = allServices.map(t => t.name -> t.name),
-                    Symbol("_label")   -> "Service",
-                    Symbol("id")       -> "service-filter",
-                    Symbol("class")    -> "form-control",
-                )
-            </div>
-            <div class="col-md-2">
-                <dl>
-                    <dt><label>Environments</label></dt>
-                    <dd>
-                        @for(env <-  Environment.values) {
-                            <div class="checkbox-group">
-                                <input name="showEnvironments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(scala.util.Try(form.get.showEnvironments).getOrElse(Environment.values).contains(env)) {checked} />
-                                <label for="@{env.asString}-checkbox">@env.displayString</label>
-                            </div>
-                        }
-                    </dd>
-                </dl>
+            <div class="col-md-6">
+                <label for="service-name">Service</label>
+                <input class="form-control" id="service-name" type="text" name="serviceName" value='@form("serviceName").value' autocomplete="off" />
+                <div id="service-name-matches" class="search-matches-dropdown hide"></div>
             </div>
         </div>
     }
 
     @if(configWarnings.filter(_.nonEmpty).isEmpty) {
-        <p>No results found.</p>
+        <p>No warnings.</p>
     } else {
         <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
             <thead>
                 <tr>
-                    <th>@if(configWarnings.isDefined) {Key} else {Service}</th>
-                    @for(env <- form.get.showEnvironments) {
-                        <th id="@{env.asString}-tr">@env.displayString</th>
-                    }
+                    <th>Key</th>
+                    <th>Value</th>
+                    <th>Message</th>
                 </tr>
             </thead>
             <tbody>
-
+                @configWarnings.map { res =>
+                    @for((deployment, warnings) <- res.sortBy(_._1.environment)) {
+                        @if(warnings.nonEmpty) {
+                            <tr class="@if(warnings.size > 1) {sticky-row-caption} else {row-caption} ">
+                                <td colspan="3">
+                                    Warnings for <strong>@deployment.environment.displayString</strong> - including latest changes.
+                                </td>
+                            </tr>
+                            @for(x <- warnings) {
+                                <tr>
+                                    <td><code>@x.key.asString</code></td>
+                                    <td id="@{deployment.environment.asString}-td">@displayConfigSourceValue(form.get.serviceName, x.key, deployment.environment, Some(x.value))</td>
+                                    <td>@x.warning</td>
+                                </tr>
+                            }
+                        }
+                    }
+                }
             </tbody>
         </table>
     }
 
     <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
     <script @CSPNonce.attr>
-        document
-            .getElementById('service-filter')
-            .addEventListener("change", () => {
-                document.getElementById("form").submit();
-            });
+        autoCompleteInit({
+            formId:        "form",
+            inputSearchId: "service-name",
+            matchesDivId:  "service-name-matches",
+            allowPartial:  false,
+            ignoreCase:    true,
+            values:        [@for(service <- allServices) {'@service.name',}]
+        });
+
     </script>
+}
+
+@displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
+    @result match {
+        case None => {
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
+               title="Not deployed in environment - Link to Config Explorer">
+                <span class="glyphicon glyphicon-minus archived"></span>
+            </a
+        }
+        case Some(envData) => {
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
+               title="@ServiceConfigsService.friendlySourceName(envData.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(configKey)) - Link to Config Explorer">
+                @envData.value
+            </a>
+        }
+    }
 }

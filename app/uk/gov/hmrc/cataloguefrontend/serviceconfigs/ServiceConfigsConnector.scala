@@ -44,6 +44,7 @@ class ServiceConfigsConnector @Inject() (
 
   implicit val cber = ConfigByEnvironment.reads
   implicit val cbkr = ConfigByKey.reads
+  implicit val cwr  = ConfigWarning.reads
   implicit val cser = ConfigSourceEntries.reads
   implicit val srr  = ServiceRelationships.reads
 
@@ -51,6 +52,11 @@ class ServiceConfigsConnector @Inject() (
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/config-by-key/$service?latest=$latest")
       .execute[ConfigByKey]
+
+  def configWarnings(service: String, environment: Environment, latest: Boolean)(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/service-configs/warnings?serviceName=$service&environment=${environment.asString}&latest=$latest")
+      .execute[Seq[ConfigWarning]]
 
   def serviceRelationships(service: String)(implicit hc: HeaderCarrier): Future[ServiceRelationships] =
     httpClientV2

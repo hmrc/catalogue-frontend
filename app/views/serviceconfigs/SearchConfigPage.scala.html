@@ -201,7 +201,7 @@
                             <tr>
                                 <td><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
                                 @for(env <- form.get.showEnvironments) {
-                                    <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
+                                    <td id="@{env.asString}-td">@displayConfigSourceValue(serviceName, configKey, env, configByEnv.get(env))</td>
                                 }
                             </tr>
                         }
@@ -218,7 +218,7 @@
                             <tr>
                                 <td><code>@configKey.asString</code></td>
                                 @for(env <- form.get.showEnvironments) {
-                                    <td id="@{env.asString}-td">@displayResult(serviceName, configKey, env, configByEnv.get(env))</td>
+                                    <td id="@{env.asString}-td">@displayConfigSourceValue(serviceName, configKey, env, configByEnv.get(env))</td>
                                 }
                             </tr>
                         }
@@ -267,7 +267,7 @@
     </script>
 }
 
-@displayResult(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
+@displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
     @result match {
         case None => {
             <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"

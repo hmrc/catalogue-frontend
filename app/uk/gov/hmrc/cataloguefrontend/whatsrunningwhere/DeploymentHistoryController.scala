@@ -90,7 +90,7 @@ class DeploymentHistoryController @Inject() (
     val end    = from.atTime(23,59,59).toInstant(ZoneOffset.UTC)
 
     for {
-      services    <- teamsAndRepositoriesConnector.allServices
+      services    <- teamsAndRepositoriesConnector.allServices()
       serviceNames = services.map(_.name.toLowerCase).sorted
       data        <- deploymentGraphService.findEvents(service, start, end)
       slugInfo    <- data

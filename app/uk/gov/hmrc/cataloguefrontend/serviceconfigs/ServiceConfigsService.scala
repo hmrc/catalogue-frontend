@@ -58,6 +58,9 @@ class ServiceConfigsService @Inject()(
                                  .view.mapValues(_.view.mapValues(_.lastOption.map(_.copy(source = "nextDeployment", sourceUrl = None)).toList).toMap)
     } yield (configByKey ++ newConfig)
 
+  def configWarnings(serviceName: String, environment: Environment, latest: Boolean)(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
+    serviceConfigsConnector.configWarnings(serviceName, environment, latest)
+
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
     configByKey(serviceName, latest = true)
       .map(
@@ -86,6 +89,7 @@ class ServiceConfigsService @Inject()(
 
   def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
     serviceConfigsConnector.getConfigKeys(teamName)
+
 
   def configSearch(
     teamName       : Option[TeamName]
@@ -117,6 +121,21 @@ object ServiceConfigsService {
 
   case class KeyName(asString: String) extends AnyVal
   case class ServiceName(asString: String) extends AnyVal
+
+  case class ConfigWarning(
+    key    : KeyName
+  , value  : ConfigSourceValue
+  , warning: String
+  )
+  object ConfigWarning {
+    val reads: Reads[ConfigWarning] = {
+      implicit val readVal = ConfigSourceValue.reads
+      ( (__ \ "key"    ).read[String].map(KeyName.apply)
+      ~ (__ \ "value"  ).read[ConfigSourceValue]
+      ~ (__ \ "warning").read[String]
+      )(ConfigWarning.apply _)
+    }
+  }
 
   trait ConfigEnvironment { def asString: String; def displayString: String }
   object ConfigEnvironment {
