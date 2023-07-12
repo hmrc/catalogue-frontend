@@ -3163,7 +3163,7 @@ tbody.collapse.in {
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 1000;
+  z-index: 100000;
   display: none;
   float: left;
   min-width: 160px;
@@ -9015,7 +9015,7 @@ tbody.collapse.in {
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 1000;
+  z-index: 100000;
   display: none;
   float: left;
   min-width: 160px;
@@ -12799,4 +12799,10 @@ table.sticky-header tbody tr.row-caption td {
 .input-group-inline dd {
   display: inline-block;
   margin-bottom: 0px;
+}
+
+th .table-header-title {
+  border-bottom: 2px solid #ddd;
+  padding: 8px 0;
+  margin: 8px 0;
 }

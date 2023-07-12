@@ -47,7 +47,7 @@
 @bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
     @if(rulesByArtifactType.nonEmpty) {
         <div>
-            <table class="@{artifactType.toLowerCase}-rules table table-striped">
+            <table class="@{artifactType.toLowerCase}-rules table table-striped sticky-header">
                 <thead>
 
                     <tr>
