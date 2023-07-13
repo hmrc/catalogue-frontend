@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.google.inject.{Inject, Singleton}
-import play.api.Logging
+import play.api.{Configuration, Logging}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
@@ -41,7 +41,8 @@ import scala.util.Try
 class BuildDeployApiConnector @Inject() (
   httpClientV2          : HttpClientV2,
   awsCredentialsProvider: AwsCredentialsProvider,
-  config                : BuildDeployApiConfig
+  config                : BuildDeployApiConfig,
+  configuration         : Configuration
 )(implicit
   ec                    : ExecutionContext
 ) extends Logging {
@@ -91,6 +92,8 @@ class BuildDeployApiConnector @Inject() (
               }
           case Left(other) => throw other
         }
+
+    if (configuration.get[Boolean]("bd.logging.enabled")) { logger.info(headers.map(h => s" -H \"${h._1}: ${h._2}\"").mkString(" ")) }
 
     httpClientV2
       .post(url)
@@ -175,10 +178,11 @@ class BuildDeployApiConnector @Inject() (
 
 
   def createAppConfigs(payload: CreateAppConfigsForm, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean): Future[Either[String, AsyncRequestId]] = {
-    val st = serviceType match {
-      case ServiceType.Frontend => "Frontend microservice"
-      case ServiceType.Backend  => "Backend microservice"
+    val (st, zone) = serviceType match {
+      case ServiceType.Frontend => ("Frontend microservice", "public")
+      case ServiceType.Backend  => ("Backend microservice", "protected")
     }
+
     val finalPayload =
       s"""
          |{
@@ -189,7 +193,8 @@ class BuildDeployApiConnector @Inject() (
          |   "app_config_development": ${payload.appConfigDevelopment},
          |   "app_config_qa": ${payload.appConfigQA},
          |   "app_config_staging": ${payload.appConfigStaging},
-         |   "app_config_production": ${payload.appConfigProduction}
+         |   "app_config_production": ${payload.appConfigProduction},
+         |   "zone": "$zone"
          |}""".stripMargin
 
     val body = Json.parse(finalPayload)

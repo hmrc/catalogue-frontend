@@ -44,7 +44,12 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       )
     )
 
-  private val connector = new BuildDeployApiConnector(httpClientV2, awsCredentialsProvider, config)
+  private val configuration =
+    Configuration(
+      "bd.logging.enabled" -> false
+    )
+
+  private val connector = new BuildDeployApiConnector(httpClientV2, awsCredentialsProvider, config, configuration)
 
   "changePrototypePassword" should {
     "return success=true when Build & Deploy respond with 200" in {
@@ -333,7 +338,8 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
                              |   "app_config_development": ${payload.appConfigDevelopment},
                              |   "app_config_qa": ${payload.appConfigQA},
                              |   "app_config_staging": ${payload.appConfigStaging},
-                             |   "app_config_production": ${payload.appConfigProduction}
+                             |   "app_config_production": ${payload.appConfigProduction},
+                             |   "zone": "protected"
                              |}""".stripMargin
 
        stubFor(
@@ -369,13 +375,14 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       val expectedBody = s"""
                             |{
                             |   "microservice_name": "test-service",
-                            |   "microservice_type": "Backend microservice",
+                            |   "microservice_type": "Frontend microservice",
                             |   "microservice_requires_mongo": true,
                             |   "app_config_base": ${payload.appConfigBase},
                             |   "app_config_development": ${payload.appConfigDevelopment},
                             |   "app_config_qa": ${payload.appConfigQA},
                             |   "app_config_staging": ${payload.appConfigStaging},
-                            |   "app_config_production": ${payload.appConfigProduction}
+                            |   "app_config_production": ${payload.appConfigProduction},
+                            |   "zone": "public"
                             |}""".stripMargin
 
       stubFor(
@@ -410,7 +417,8 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
                              |   "app_config_development": ${payload.appConfigDevelopment},
                              |   "app_config_qa": ${payload.appConfigQA},
                              |   "app_config_staging": ${payload.appConfigStaging},
-                             |   "app_config_production": ${payload.appConfigProduction}
+                             |   "app_config_production": ${payload.appConfigProduction},
+                             |   "zone": "protected"
                              |}""".stripMargin
 
        stubFor(
