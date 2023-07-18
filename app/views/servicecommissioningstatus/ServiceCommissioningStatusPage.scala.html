@@ -105,18 +105,18 @@
     <tr>
         <td class="text-center">@popover(check)</td>
         <td>@check.title</td>
-        @Environment.values.map(e => (e -> check.checkResults.get(e))).sortBy(_._1).map { case (env, result) =>
-            @if(result.isDefined) {
-                <td>
-                    <ul class="list-compact">
-                        <li> @env.displayString </li>
-                        <li> @displayResult(createID(s"${check.title}-${env.displayString}"), result.get)</li>
-                    </ul>
-                </td>
-            } else {
-               <td></td>
-            }
-        }
+        @Environment.values.map(e => (e -> check.checkResults.get(e))).sortBy(_._1).map{
+            case (env, Some(result)) => {
+                    <td>
+                        <ul class="list-compact">
+                            <li> @env.displayString </li>
+                            <li> @displayResult(createID(s"${check.title}-${env.displayString}"), result)</li>
+                        </ul>
+                    </td>
+           }
+           case (_,None) => { <td></td> }
+          }
+
     </tr>
 }
 
