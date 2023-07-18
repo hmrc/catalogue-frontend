@@ -60,16 +60,19 @@
                   @if(repositoryDetails.isDeprecated) { <span>Deprecated</span> }
                   @if(repositoryDetails.isArchived) { <span>Archived</span> }
             </h1>
+            <button id="service-info-tour" class="btn btn-default pull-right">Take a tour!</button>
         </div>
 
         <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
-    @partials.leak_detection_banner(linkToLeakDetection)
-    @defining(envDatas.get(SlugInfoFlag.ForEnvironment(Environment.Production)).toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)){ dependencies =>
-      @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = false)
-      @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = true )
-    }
+    <div id="service-warnings">
+        @partials.leak_detection_banner(linkToLeakDetection)
+        @defining(envDatas.get(SlugInfoFlag.ForEnvironment(Environment.Production)).toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)){ dependencies =>
+          @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = false)
+          @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = true )
+        }
+    </div>
 
     <section class="section-wrapper">
 
@@ -130,4 +133,75 @@
           @Html(viewMessages.informationalText)
         </p>
     </div>
+
+    @* ----- Tour ----- *@
+    <script @CSPNonce.attr src="@routes.Assets.versioned("bootstrap-tourist.js")"></script>
+    <link rel="stylesheet" href="@routes.Assets.versioned("bootstrap-tourist.css")" />
+
+    <script @CSPNonce.attr>
+        let tourSteps = [
+            {
+                element   : "#service-warnings",
+                title     : "Service Warnings",
+                content   : "Here you can see any warnings relating to your Service. These include warnings from Leak Detection and Bobby Rules.",
+                placement : "bottom"
+            },
+            {
+                element   : "#cost-estimation",
+                title     : "Cost Estimation",
+                content   : "Here you can see an estimation of how much it costs to run the service across all environments per year.",
+                placement : "left"
+            },
+            {
+                element   : "#service-urls-section",
+                title     : "Frontend Routing Configuration",
+                content   : "Here you can see the URL path of the service.",
+                placement : "bottom"
+            },
+            {
+                element   : "#owning-team",
+                title     : "Teams",
+                content   : "Here you can see the service's Owning Team(s).",
+                placement : "right"
+            },
+            {
+                element   : "#code",
+                title     : "Code",
+                content   : "Here you can see the branch protection status of the repository, as well as a link to the GitHub repository. There are also links to other parts of the Catalogue, each covering different aspects of the service - take some time to explore.",
+                placement : "left"
+            },
+            {
+                element   : "#service_relationships",
+                title     : "Service Relationships",
+                content   : "Here you can see the service's relationships with other services. 'Inbound' are services that are configured to call this service, and 'Outbound' are the services that this service is configured to call.",
+                placement : "right"
+            },
+            {
+                element   : "#builds",
+                title     : "Builds",
+                content   : "Here you can see the build jobs associated with this service as well as the latest result from the build.",
+                placement : "left"
+            },
+            {
+                element   : "#environmentTabs",
+                title     : "Environments",
+                content   : "Here you can see which version of the service is deployed in each environment. Clicking the tabs will display the dependencies for that version of the service as well as the plugins. This is a useful tool for seeing how up to date the service's dependencies are.",
+                placement : "top"
+            }
+        ];
+
+        // remove any steps where the element isn't shown or is empty
+        let filteredSteps = tourSteps.filter( function(step) {
+            return $(step.element).length > 0 && $(step.element).html().trim().length > 0;
+        });
+
+        let tour = new Tour({
+            framework: "bootstrap3",
+            steps: filteredSteps
+        });
+
+        document.getElementById('service-info-tour').addEventListener("click", function() {
+            tour.restart()
+        });
+    </script>
 }
