@@ -22,7 +22,7 @@ import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCrede
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus}
-import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
+import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
@@ -326,7 +326,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
   "CreateAppConfigs" should {
      "return the Async request id when the request is accepted by the B&D async api" in {
-       val payload = CreateAppConfigsForm(appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+       val payload = CreateAppConfigsRequest(appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
        )
 
        val expectedBody = s"""
@@ -368,7 +368,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
-      val payload = CreateAppConfigsForm(
+      val payload = CreateAppConfigsRequest(
        appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
       )
 
@@ -404,7 +404,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     //NOTE: Currently the B&D async API will return a BuildDeployResponse when the client inputs are invalid, as it does not do any JSON validation/input validation up front prior to calling the lambda.
     //This may however change in the future, so we are testing the desired future behaviour below.
     "return an error message when the B&D async api returns a 4XX code" in {
-       val payload = CreateAppConfigsForm(
+       val payload = CreateAppConfigsRequest(
          appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
        )
 

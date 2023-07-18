@@ -26,7 +26,7 @@ import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
-import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
+import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -177,7 +177,7 @@ class BuildDeployApiConnector @Inject() (
   }
 
 
-  def createAppConfigs(payload: CreateAppConfigsForm, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean): Future[Either[String, AsyncRequestId]] = {
+  def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) = serviceType match {
       case ServiceType.Frontend => ("Frontend microservice", "public")
       case ServiceType.Backend  => ("Backend microservice", "protected")
