@@ -61,10 +61,6 @@ class CreateAppConfigsController @Inject()(
       Environment.parse(str).getOrElse(sys.error(s"config 'environmentsToHideByDefault' contains an invalid environment: $str"))
     }
 
-  private def configChecks(serviceName: String)(implicit hc: HeaderCarrier): Future[List[Check]] =
-    serviceCommissioningStatusConnector.commissioningStatus(serviceName)
-      .map(_.getOrElse(List.empty[Check]))
-
   private def checkAppConfigBaseExists(checks: List[Check]): Boolean =
     checks.exists {
       case SimpleCheck("App Config Base", Right(Present(_)), _, _) => true
@@ -97,24 +93,28 @@ class CreateAppConfigsController @Inject()(
                              logger.error(s"$serviceName is missing a Service Type")
                              NotFound(error_404_template())
                            })
-          configChecks  <- EitherT.liftF[Future, Result, List[Check]](configChecks(serviceName))
+          configChecks  <- EitherT.liftF[Future, Result, List[Check]](
+                             serviceCommissioningStatusConnector.commissioningStatus(serviceName)
+                               .map(_.getOrElse(List.empty[Check]))
+                           )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
           envsToDisplay =  Environment.values.diff(envsToHide.toSeq)
           hasPerm       =  request.retrieval
-          form          =  CreateAppConfigsRequest.form
-          form2         =  if(!hasPerm) form.withGlobalError(s"You do not have permission to create App Configs for: $serviceName") else form
+          form          =  { val f = CreateAppConfigsRequest.form
+                             if (!hasPerm) f.withGlobalError(s"You do not have permission to create App Configs for: $serviceName")
+                             else f.fill(CreateAppConfigsRequest(true, true, true, true, true))
+                           }
         } yield
             Ok(
               createAppConfigsPage(
-                form          = form2,
+                form          = form,
                 serviceName   = serviceName,
                 serviceType   = serviceType,
                 hasPerm       = hasPerm,
                 hasBaseConfig = baseConfig,
                 envConfigs    = envConfigs,
-                envsToDisplay = envsToDisplay,
-                isLandingPage = true
+                envsToDisplay = envsToDisplay
               )
             )
       ).merge
@@ -132,7 +132,10 @@ class CreateAppConfigsController @Inject()(
                              NotFound(error_404_template())
                            )
           serviceType   <- EitherT.fromOption[Future](repo.serviceType, InternalServerError("No Service Type"))
-          configChecks  <- EitherT.liftF[Future, Result, List[Check]](configChecks(serviceName))
+          configChecks  <- EitherT.liftF[Future, Result, List[Check]](
+                             serviceCommissioningStatusConnector.commissioningStatus(serviceName)
+                               .map(_.getOrElse(List.empty[Check]))
+                           )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
           form          <- EitherT.fromEither[Future](CreateAppConfigsRequest.form.bindFromRequest().fold(
@@ -146,8 +149,7 @@ class CreateAppConfigsController @Inject()(
                                      hasPerm       = true,
                                      hasBaseConfig = baseConfig,
                                      envConfigs    = envConfigs,
-                                     envsToDisplay = Environment.values.diff(envsToHide.toSeq),
-                                     isLandingPage = false
+                                     envsToDisplay = Environment.values.diff(envsToHide.toSeq)
                                    )
                                  )
                                ),
@@ -168,8 +170,7 @@ class CreateAppConfigsController @Inject()(
                                  hasPerm       = true,
                                  hasBaseConfig = baseConfig,
                                  envConfigs    = envConfigs,
-                                 envsToDisplay = Environment.values.diff(envsToHide.toSeq),
-                                 isLandingPage = false
+                                 envsToDisplay = Environment.values.diff(envsToHide.toSeq)
                                )
                              )
                            }
