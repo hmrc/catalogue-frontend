@@ -22,6 +22,7 @@ import cats.implicits._
 import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result, ResponseHeader}
 import play.api.http.HttpEntity
+import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -51,12 +52,22 @@ class ServiceConfigsController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def configExplorer(serviceName: String): Action[AnyContent] =
+  def configExplorer(serviceName: String, showWarnings: Boolean): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey <- serviceConfigsService.configByKey(serviceName)
-      } yield Ok(configExplorerPage(serviceName, configByKey, deployments))
+        warnings    <- if (CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+                        deployments
+                          .map(d => ServiceConfigsService.ConfigEnvironment.ForEnvironment(d.environment))
+                          .foldLeftM[Future, Map[ServiceConfigsService.ConfigEnvironment, Seq[ServiceConfigsService.ConfigWarning]]](Map.empty) {
+                            case (acc, configEnv) =>
+                              serviceConfigsService
+                                .configWarnings(serviceName, configEnv.env, latest = true)
+                                .map(warnings => acc ++ Map(configEnv -> (acc.getOrElse(configEnv, Seq.empty) ++ warnings)))
+                              }
+                       } else Future.successful(Map.empty[ServiceConfigsService.ConfigEnvironment, Seq[ServiceConfigsService.ConfigWarning]])
+      } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings))
     }
 
   def configWarnings(): Action[AnyContent] =
@@ -72,7 +83,7 @@ class ServiceConfigsController @Inject()(
                           allServices <- teamsAndReposConnector.allServices()
                           deployments <- whatsRunningWhereService.releasesForService(formObject.serviceName.asString).map(_.versions)
                           warnings    <- deployments
-                                          .foldLeftM[Future, Seq[(WhatsRunningWhereVersion, Seq[ServiceConfigsService.ConfigWarning])]](Seq.empty){
+                                          .foldLeftM[Future, Seq[(WhatsRunningWhereVersion, Seq[ServiceConfigsService.ConfigWarning])]](Seq.empty) {
                                             case (acc, deployment) =>
                                               serviceConfigsService
                                                 .configWarnings(formObject.serviceName.asString, deployment.environment, latest = true)
