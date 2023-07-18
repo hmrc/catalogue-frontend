@@ -105,7 +105,7 @@
     <tr>
         <td class="text-center">@popover(check)</td>
         <td>@check.title</td>
-        @Environment.values.map(e => (e -> check.checkResults.get(e))).sortBy(_._1).map{
+        @Environment.values.map(e => e -> check.checkResults.get(e)).sortBy(_._1).map{
             case (env, Some(result)) => {
                     <td>
                         <ul class="list-compact">
