@@ -44,9 +44,8 @@ class ServiceCommissioningStatusController @Inject() (
         .commissioningStatus(serviceName)
         .map{_.fold(NotFound(error_404_template())){
             result =>
-              val applicableEnvironments: List[Environment] = result.flatMap{
-                case check: Check.EnvCheck => Some(check.checkResults.keySet)
-                case _ => None
+              val applicableEnvironments: List[Environment] = result.collect {
+                case check: Check.EnvCheck => check.checkResults.keySet
               }.flatten.distinct
               Ok(serviceCommissioningStatusPage(serviceName, result, applicableEnvironments))
           }
