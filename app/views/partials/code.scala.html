@@ -36,7 +36,10 @@
 
 <div id="code">
     <div class="board">
-        <h3 class="board__heading">Code</h3>
+        <h3 class="board__heading">
+            Code
+            <span id="code-tour-btn" class="tour-btn glyphicon glyphicon-question-sign pull-right"></span>
+        </h3>
         <div class="board__body">
             @partials.branchProtection(repo, hasBranchProtectionAuth)
             <hr style="margin-top: 0px">

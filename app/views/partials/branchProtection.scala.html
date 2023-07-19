@@ -35,7 +35,7 @@
 }
 
 <h5 style="margin-left: 19.2px">Branch Protection</h5>
-<ul id="branch-protection" class="list list--minimal">
+<ul id="branch-protection-status" class="list list--minimal">
     <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresApprovingReviews)) Requires approving reviews</li>
     <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.dismissesStaleReviews)) Dismisses stale reviews</li>
     <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures)) Requires commit signatures</li>

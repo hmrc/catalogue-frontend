@@ -12806,3 +12806,7 @@ th .table-header-title {
   padding: 8px 0;
   margin: 8px 0;
 }
+
+.tour-btn {
+  cursor: pointer;
+}
