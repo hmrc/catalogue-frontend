@@ -28,7 +28,9 @@ import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.AsyncRequestId
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.Present
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector, routes}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
@@ -163,10 +165,13 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
+      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(List.empty[Check])))
+
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependencies)))
 
-      when(mockBDConnector.createAppConfigs(form, serviceName, ServiceType.Backend, true))
+      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, true))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
 
 
@@ -174,6 +179,7 @@ class CreateAppConfigsControllerSpec
         .createAppConfigs(serviceName)(
           FakeRequest(POST, "/create-app-configs")
             .withSession(SessionKeys.authToken -> "Token token")
+            .withFormUrlEncodedBody("appConfigBase" -> "true")
         )
 
       status(result) shouldBe 303
@@ -189,7 +195,10 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[String], any[ServiceType], any[Boolean]))
+      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(List.empty[Check])))
+
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean]))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
 
       val result = controller
@@ -201,8 +210,31 @@ class CreateAppConfigsControllerSpec
 
       contentAsString(result) should include("error.boolean")
       status(result) shouldBe 400
+    }
 
+    "return 400 when form is submitted with no configs selected" in new Setup {
 
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
+        .thenReturn(Future.successful(true))
+
+      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(gitRepository)))
+
+      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(List.empty[Check])))
+
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean]))
+        .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
+
+      val result = controller
+        .createAppConfigs(serviceName)(
+          FakeRequest(POST, "/create-app-configs")
+            .withSession(SessionKeys.authToken -> "Token token")
+            .withFormUrlEncodedBody("" -> "")
+        )
+
+      contentAsString(result) should include("No update requested")
+      status(result) shouldBe 400
     }
 
     "return 404 when service name is not found" in new Setup {
@@ -247,17 +279,20 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
+      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(List.empty)))
+
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependencies)))
 
-      when(mockBDConnector.createAppConfigs(form, serviceName, ServiceType.Backend, true))
+      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, true))
         .thenReturn(Future.successful(Left("Failed to connect with request id: 123")))
-
 
       val result = controller
         .createAppConfigs(serviceName)(
-          FakeRequest()
+          FakeRequest(POST, "/create-app-configs")
             .withSession(SessionKeys.authToken -> "Token token")
+            .withFormUrlEncodedBody("appConfigBase" -> "true")
         )
 
       status(result) shouldBe 500
@@ -319,8 +354,8 @@ class CreateAppConfigsControllerSpec
         dependencyDotCompile = Some(""" "test" "hmrc-mongo" """)
       )
 
-    val form =
-      CreateAppConfigsForm(
+    val form: CreateAppConfigsRequest =
+      CreateAppConfigsRequest(
         appConfigBase        = false,
         appConfigDevelopment = false,
         appConfigQA          = false,
@@ -328,5 +363,4 @@ class CreateAppConfigsControllerSpec
         appConfigProduction  = false
     )
   }
-
 }

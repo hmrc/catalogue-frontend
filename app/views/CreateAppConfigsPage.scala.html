@@ -30,8 +30,8 @@
   envConfigs   : Seq[Environment],
   envsToDisplay: Seq[Environment]
 )( implicit
-  messages: Messages,
-  request: RequestHeader
+  messages     : Messages,
+  request      : RequestHeader,
 )
 
 @standard_layout("Create App Configs", "create app configs") {
@@ -74,7 +74,7 @@
       } else {
         <div class="form-group row">
           <div class="col-md-6">
-            <input style="display:inline-block;" type="checkbox" id="appConfigBase" name="appConfigBase" value=true checked>
+            <input style="display:inline-block;" type="checkbox" id="appConfigBase" name="appConfigBase" value=true @if(form("appConfigBase").value) {checked}>
             <label style="display:inline-block" for="appConfigBase">App Config Base</label>
             <p class="grey">Create config in the app-config-base repository.</p>
             @form_fields_warnings(form,"appConfigBase")
@@ -93,7 +93,10 @@
   @envsToDisplay.map { env =>
     <div class="form-group row">
       <div class="col-md-6">
-        <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env" @if(envsConfig.contains(env)){disabled} value="@{!envsConfig.contains(env)}" checked>
+        <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env"
+          @if(envsConfig.contains(env)){checked disabled} value="@{!envsConfig.contains(env)}"
+          @if(form(s"appConfig$env").value) {checked}
+        >
         <label style="display:inline-block" for="appConfig@env">App Config @env</label>
         @if(!envsConfig.contains(env)) {
           <p class="grey">Create config in the app-config-@{env.asString} repository.</p>

@@ -27,6 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, GitRepo
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{CreateAppConfigsPage, error_404_template}
@@ -84,25 +85,38 @@ class CreateAppConfigsController @Inject()(
     ) .async { implicit request =>
       (
         for {
-          repo         <- EitherT.fromOptionF[Future, Result, GitRepository](
-                            teamsAndRepositoriesConnector.repositoryDetails(serviceName),
-                            NotFound(error_404_template())
-                          )
-          serviceType  <- EitherT.fromOption[Future](repo.serviceType, {
-                            logger.error(s"$serviceName is missing a Service Type")
-                            NotFound(error_404_template())
-                          })
-          configChecks <- EitherT.liftF[Future, Result, List[Check]](
-                            serviceCommissioningStatusConnector.commissioningStatus(serviceName)
-                              .map(_.getOrElse(List.empty[Check]))
-                          )
-          baseConfig    = checkAppConfigBaseExists(configChecks)
-          envsConfig    = checkAppConfigEnvExists(configChecks)
-          envsToDisplay = Environment.values.diff(envsToHide.toSeq)
-          hasPerm       = request.retrieval
-          form          = CreateAppConfigsForm.form.bindFromRequest()
-          form2         = if (!hasPerm) form.withGlobalError(s"You do not have permission to create App Configs for: $serviceName") else form
-        } yield Ok(createAppConfigsPage(form2, serviceName, serviceType, hasPerm, baseConfig, envsConfig, envsToDisplay))
+          repo          <- EitherT.fromOptionF[Future, Result, GitRepository](
+                             teamsAndRepositoriesConnector.repositoryDetails(serviceName),
+                             NotFound(error_404_template())
+                           )
+          serviceType   <- EitherT.fromOption[Future](repo.serviceType, {
+                             logger.error(s"$serviceName is missing a Service Type")
+                             NotFound(error_404_template())
+                           })
+          configChecks  <- EitherT.liftF[Future, Result, List[Check]](
+                             serviceCommissioningStatusConnector.commissioningStatus(serviceName)
+                               .map(_.getOrElse(List.empty[Check]))
+                           )
+          baseConfig    =  checkAppConfigBaseExists(configChecks)
+          envConfigs    =  checkAppConfigEnvExists(configChecks)
+          envsToDisplay =  Environment.values.diff(envsToHide.toSeq)
+          hasPerm       =  request.retrieval
+          form          =  { val f = CreateAppConfigsRequest.form
+                             if (!hasPerm) f.withGlobalError(s"You do not have permission to create App Configs for: $serviceName")
+                             else f.fill(CreateAppConfigsRequest(true, true, true, true, true))
+                           }
+        } yield
+            Ok(
+              createAppConfigsPage(
+                form          = form,
+                serviceName   = serviceName,
+                serviceType   = serviceType,
+                hasPerm       = hasPerm,
+                hasBaseConfig = baseConfig,
+                envConfigs    = envConfigs,
+                envsToDisplay = envsToDisplay
+              )
+            )
       ).merge
     }
 
@@ -118,7 +132,13 @@ class CreateAppConfigsController @Inject()(
                              NotFound(error_404_template())
                            )
           serviceType   <- EitherT.fromOption[Future](repo.serviceType, InternalServerError("No Service Type"))
-          form          <- EitherT.fromEither[Future](CreateAppConfigsForm.form.bindFromRequest().fold(
+          configChecks  <- EitherT.liftF[Future, Result, List[Check]](
+                             serviceCommissioningStatusConnector.commissioningStatus(serviceName)
+                               .map(_.getOrElse(List.empty[Check]))
+                           )
+          baseConfig    =  checkAppConfigBaseExists(configChecks)
+          envConfigs    =  checkAppConfigEnvExists(configChecks)
+          form          <- EitherT.fromEither[Future](CreateAppConfigsRequest.form.bindFromRequest().fold(
                              formWithErrors =>
                                Left(
                                  BadRequest(
@@ -127,9 +147,9 @@ class CreateAppConfigsController @Inject()(
                                      serviceName   = serviceName,
                                      serviceType   = serviceType,
                                      hasPerm       = true,
-                                     hasBaseConfig = false,
-                                     envConfigs    = Seq.empty,
-                                     envsToDisplay = Seq.empty
+                                     hasBaseConfig = baseConfig,
+                                     envConfigs    = envConfigs,
+                                     envsToDisplay = Environment.values.diff(envsToHide.toSeq)
                                    )
                                  )
                                ),
@@ -144,13 +164,13 @@ class CreateAppConfigsController @Inject()(
                              logger.info(s"createAppConfigs failed with: $errMsg")
                              InternalServerError(
                                createAppConfigsPage(
-                                 form          = CreateAppConfigsForm.form.bindFromRequest().withGlobalError(errMsg),
+                                 form          = CreateAppConfigsRequest.form.bindFromRequest().withGlobalError(errMsg),
                                  serviceName   = serviceName,
                                  serviceType   = serviceType,
                                  hasPerm       = true,
-                                 hasBaseConfig = false,
-                                 envConfigs    = Seq.empty,
-                                 envsToDisplay = Seq.empty
+                                 hasBaseConfig = baseConfig,
+                                 envConfigs    = envConfigs,
+                                 envsToDisplay = Environment.values.diff(envsToHide.toSeq)
                                )
                              )
                            }
@@ -161,7 +181,7 @@ class CreateAppConfigsController @Inject()(
     }
 }
 
-case class CreateAppConfigsForm(
+case class CreateAppConfigsRequest(
   appConfigBase        : Boolean,
   appConfigDevelopment : Boolean,
   appConfigQA          : Boolean,
@@ -169,14 +189,23 @@ case class CreateAppConfigsForm(
   appConfigProduction  : Boolean
 )
 
-object CreateAppConfigsForm {
-  val form: Form[CreateAppConfigsForm] = Form(
+object CreateAppConfigsRequest {
+  val form: Form[CreateAppConfigsRequest] = Form(
     mapping(
       "appConfigBase"         -> boolean,
       "appConfigDevelopment"  -> boolean,
       "appConfigQA"           -> boolean,
       "appConfigStaging"      -> boolean,
-      "appConfigProduction"   -> boolean,
-    )(CreateAppConfigsForm.apply)(CreateAppConfigsForm.unapply)
+      "appConfigProduction"   -> boolean
+    )(CreateAppConfigsRequest.apply)(CreateAppConfigsRequest.unapply)
+      .verifying("No update requested", form =>
+        Seq(
+          form.appConfigBase,
+          form.appConfigDevelopment,
+          form.appConfigQA,
+          form.appConfigStaging,
+          form.appConfigProduction
+        ).contains(true)
+      )
   )
 }
