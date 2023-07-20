@@ -17,17 +17,16 @@
 package uk.gov.hmrc.cataloguefrontend.createappconfigs
 
 import cats.data.EitherT
-import play.api.{Configuration, Logger}
 import play.api.data.Form
 import play.api.data.Forms.{boolean, mapping}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, GitRepository, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{CreateAppConfigsPage, error_404_template}
@@ -45,6 +44,7 @@ class CreateAppConfigsController @Inject()(
   teamsAndRepositoriesConnector      : TeamsAndRepositoriesConnector,
   serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector,
   serviceDependenciesConnector       : ServiceDependenciesConnector,
+  gitHubProxyConnector               : GitHubProxyConnector,
   configuration                      : Configuration
 )(implicit
   override val ec: ExecutionContext
@@ -156,10 +156,14 @@ class CreateAppConfigsController @Inject()(
                              validForm => Right(validForm)
                            ))
           _             <- EitherT.liftF(auth.authorised(Some(createAppConfigsPermission(serviceName))))
-          requiresMongo <- EitherT.liftF[Future, Result, Boolean](
-                             serviceDependenciesConnector.getSlugInfo(serviceName)
-                               .map(_.exists(_.dependencyDotCompile.exists(_.contains("\"hmrc-mongo\""))))
-                           )
+          optSlugInfo   <- EitherT.liftF(serviceDependenciesConnector.getSlugInfo(serviceName))
+          requiresMongo <- optSlugInfo match {
+                             case Some(slugInfo) => EitherT.rightT[Future, Result](slugInfo.dependencyDotCompile.exists(_.contains("\"hmrc-mongo\"")))
+                             case None           => EitherT.liftF[Future, Result, Boolean](
+                                                      gitHubProxyConnector.getGitHubProxyRaw(s"/$serviceName/main/project/AppDependencies.scala")
+                                                        .map(_.exists(_.contains("mongo")))
+                                                    )
+                           }
           id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo)).leftMap { errMsg =>
                              logger.info(s"createAppConfigs failed with: $errMsg")
                              InternalServerError(
