@@ -23,11 +23,10 @@ import play.api.data.Forms.{boolean, mapping}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, GitRepository, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, GitRepository, ServiceDependenciesConnector, ServiceType, Tag, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{CreateAppConfigsPage, error_404_template}
@@ -99,6 +98,7 @@ class CreateAppConfigsController @Inject()(
                            )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
+          isApi         =  serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
           envsToDisplay =  Environment.values.diff(envsToHide.toSeq)
           hasPerm       =  request.retrieval
           form          =  { val f = CreateAppConfigsRequest.form
@@ -111,6 +111,7 @@ class CreateAppConfigsController @Inject()(
                 form          = form,
                 serviceName   = serviceName,
                 serviceType   = serviceType,
+                isApi         = isApi,
                 hasPerm       = hasPerm,
                 hasBaseConfig = baseConfig,
                 envConfigs    = envConfigs,
@@ -138,6 +139,7 @@ class CreateAppConfigsController @Inject()(
                            )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
+          isApi         = serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
           form          <- EitherT.fromEither[Future](CreateAppConfigsRequest.form.bindFromRequest().fold(
                              formWithErrors =>
                                Left(
@@ -146,6 +148,7 @@ class CreateAppConfigsController @Inject()(
                                      form          = formWithErrors,
                                      serviceName   = serviceName,
                                      serviceType   = serviceType,
+                                     isApi         = isApi,
                                      hasPerm       = true,
                                      hasBaseConfig = baseConfig,
                                      envConfigs    = envConfigs,
@@ -160,13 +163,14 @@ class CreateAppConfigsController @Inject()(
                              serviceDependenciesConnector.getSlugInfo(serviceName)
                                .map(_.exists(_.dependencyDotCompile.exists(_.contains("\"hmrc-mongo\""))))
                            )
-          id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo)).leftMap { errMsg =>
+          id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo, isApi)).leftMap { errMsg =>
                              logger.info(s"createAppConfigs failed with: $errMsg")
                              InternalServerError(
                                createAppConfigsPage(
                                  form          = CreateAppConfigsRequest.form.bindFromRequest().withGlobalError(errMsg),
                                  serviceName   = serviceName,
                                  serviceType   = serviceType,
+                                 isApi         = isApi,
                                  hasPerm       = true,
                                  hasBaseConfig = baseConfig,
                                  envConfigs    = envConfigs,

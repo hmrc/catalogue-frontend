@@ -81,8 +81,8 @@ sealed trait ServiceType extends WithAsString {val displayString: String;}
 
 object ServiceType extends Enum[ServiceType] {
 
-  case object Frontend extends ServiceType { val asString = "FrontendService"; val displayString = "Frontend"}
-  case object Backend  extends ServiceType { val asString = "BackendService";  val displayString = "Backend" }
+  case object Frontend extends ServiceType { val asString = "frontend"; val displayString = "Frontend"}
+  case object Backend  extends ServiceType { val asString = "backend";  val displayString = "Backend" }
 
   override val values: List[ServiceType] =
     List(Frontend, Backend)
