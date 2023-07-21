@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
@@ -37,11 +37,17 @@ class GitHubProxyConnector @Inject()(
 
   private lazy val gitHubProxyBaseURL = servicesConfig.baseUrl("platops-github-proxy")
 
-  def getGitHubProxyRaw(path: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
+  def getGitHubProxyRaw(path: String)(implicit hc: HeaderCarrier): Future[Option[String]] = {
+    val url = new URL(s"$gitHubProxyBaseURL/platops-github-proxy/github-raw$path")
     httpClientV2
-      .get(new URL(s"$gitHubProxyBaseURL/platops-github-proxy/github-raw$path"))
-      .execute[Option[HttpResponse]]
-      .map(response => response.map(_.body))
+      .get(url)
+      .execute[Either[UpstreamErrorResponse, HttpResponse]]
+      .flatMap {
+        case Right(res)                                      => Future.successful(Some(res.body))
+        case Left(UpstreamErrorResponse.WithStatusCode(404)) => Future.successful(None)
+        case Left(err)                                       => Future.failed(new RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
+      }
+  }
 }
 
 
