@@ -199,7 +199,7 @@ class CreateAppConfigsControllerSpec
       when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some("mongo")))
 
-      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, true))
+      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
 
       val result = controller
@@ -230,7 +230,7 @@ class CreateAppConfigsControllerSpec
       when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some("")))
 
-      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, false))
+      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = false, isApi = false))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
 
 

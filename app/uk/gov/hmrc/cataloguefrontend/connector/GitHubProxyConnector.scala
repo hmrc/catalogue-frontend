@@ -49,6 +49,3 @@ class GitHubProxyConnector @Inject()(
       }
   }
 }
-
-
-

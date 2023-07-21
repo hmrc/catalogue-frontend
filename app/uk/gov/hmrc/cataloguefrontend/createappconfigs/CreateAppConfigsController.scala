@@ -141,7 +141,7 @@ class CreateAppConfigsController @Inject()(
                            )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
-          isApi         = serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
+          isApi         =  serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
           form          <- EitherT.fromEither[Future](CreateAppConfigsRequest.form.bindFromRequest().fold(
                              formWithErrors =>
                                Left(
@@ -169,7 +169,7 @@ class CreateAppConfigsController @Inject()(
                                                         .map(_.exists(_.contains("mongo")))
                                                     )
                            }
-          id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo)).leftMap { errMsg =>
+          id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo, isApi)).leftMap { errMsg =>
                              logger.info(s"createAppConfigs failed with: $errMsg")
                              InternalServerError(
                                createAppConfigsPage(
