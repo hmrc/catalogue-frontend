@@ -153,7 +153,7 @@ class CreateAppConfigsControllerSpec
 
   "CreateAppConfigsController.createAppConfigs" should {
 
-    "return 303 and redirect to the service commissioning page when the form is submitted successfully" in new Setup {
+    "redirect to the service commissioning page when the form is submitted successfully" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.successful(true))
@@ -165,7 +165,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(serviceDependencies)))
+        .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
@@ -182,7 +182,9 @@ class CreateAppConfigsControllerSpec
       redirectLocation(result) shouldBe Some(routes.ServiceCommissioningStatusController.getCommissioningState(serviceName).url)
     }
 
-    "return 303 and redirect when service requires mongo but slug info is not found" in new Setup {
+    "redirect when service requires mongo but slug info is not found" in new Setup {
+
+      val appDependenciesIncludesMongo = Some("mongo")
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.successful(true))
@@ -197,7 +199,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(None))
 
       when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some("mongo")))
+        .thenReturn(Future.successful(appDependenciesIncludesMongo))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
@@ -213,7 +215,9 @@ class CreateAppConfigsControllerSpec
       redirectLocation(result) shouldBe Some(routes.ServiceCommissioningStatusController.getCommissioningState(serviceName).url)
     }
 
-    "return 303 and redirect when service does not require mongo" in new Setup {
+    "redirect when service does not require mongo" in new Setup {
+
+      val noMongoDependencies = ""
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.successful(true))
@@ -228,7 +232,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(None))
 
       when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some("")))
+        .thenReturn(Future.successful(Some(noMongoDependencies)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = false, isApi = false))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
@@ -341,7 +345,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(List.empty)))
 
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(serviceDependencies)))
+        .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
         .thenReturn(Future.successful(Left("Failed to connect with request id: 123")))
@@ -402,7 +406,7 @@ class CreateAppConfigsControllerSpec
         serviceType    = Some(ServiceType.Backend)
       )
 
-    val serviceDependencies =
+    val serviceDependenciesContainsMongo =
       ServiceDependencies(
         uri                  = "test",
         name                 = serviceName,

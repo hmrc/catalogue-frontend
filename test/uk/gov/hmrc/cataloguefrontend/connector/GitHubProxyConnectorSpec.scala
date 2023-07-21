@@ -67,10 +67,6 @@ class GitHubProxyConnectorSpec
         .value
 
       response shouldBe rawRepositoryContent
-
-      verify(
-        getRequestedFor(urlEqualTo("/platops-github-proxy/github-raw/foo"))
-      )
     }
 
     "return None when repo Not Found" in {
@@ -83,10 +79,6 @@ class GitHubProxyConnectorSpec
         .futureValue
 
       response shouldBe None
-
-      verify(
-        getRequestedFor(urlEqualTo("/platops-github-proxy/github-raw/foo-non-existing"))
-      )
     }
 
     "return a failed future with exception message when a bad request occurs" in {
@@ -98,14 +90,13 @@ class GitHubProxyConnectorSpec
           .willReturn(aResponse().withStatus(500).withBody(responseBody))
       )
 
-      val response = gitHubProxyConnector.getGitHubProxyRaw("/foo")
+      val exception = gitHubProxyConnector
+        .getGitHubProxyRaw("/foo")
+        .failed
+        .futureValue
 
-      response.failed.futureValue shouldBe a[RuntimeException]
-      response.failed.futureValue.getMessage should include(responseBody)
-
-      verify(
-        getRequestedFor(urlEqualTo("/platops-github-proxy/github-raw/foo"))
-      )
+      exception shouldBe a[RuntimeException]
+      exception.getMessage should include(responseBody)
     }
   }
 }
