@@ -16,11 +16,14 @@
 
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check
 @import uk.gov.hmrc.cataloguefrontend.routes
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 @this()
 
-@(serviceName: String,
-  checks     : List[Check]
+
+@(serviceName            : String,
+  checks                 : List[Check],
+  applicableEnvironments : List[Environment]
 )(implicit
   request    : RequestHeader
 )
@@ -98,18 +101,22 @@
     </tr>
 }
 
+
 @envCheck(check: Check.EnvCheck) = {
     <tr>
         <td class="text-center">@popover(check)</td>
         <td>@check.title</td>
-        @check.checkResults.toSeq.sortBy(_._1).map { case (env, result) =>
-            <td>
-                <ul class="list-compact">
-                    <li>@env.displayString</li>
-                    <li>@displayResult(createID(s"${check.title}-${env.displayString}"), result)</li>
-                </ul>
-            </td>
-        }
+        @applicableEnvironments.map(e => e -> check.checkResults.get(e)).sortBy(_._1).map{
+            case (env, Some(result)) => {
+                    <td>
+                        <ul class="list-compact">
+                            <li> @env.displayString </li>
+                            <li> @displayResult(createID(s"${check.title}-${env.displayString}"), result)</li>
+                        </ul>
+                    </td>
+           }
+           case (env,None) => { <td></td> }
+          }
     </tr>
 }
 
