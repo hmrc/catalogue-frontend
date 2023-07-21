@@ -175,10 +175,11 @@ class BuildDeployApiConnector @Inject() (
   }
 
 
-  def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean): Future[Either[String, AsyncRequestId]] = {
+  def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) = serviceType match {
-      case ServiceType.Frontend => ("Frontend microservice", "public")
-      case ServiceType.Backend  => ("Backend microservice", "protected")
+      case ServiceType.Frontend         => ( "Frontend microservice", "public"    )
+      case ServiceType.Backend if isApi => ( "API microservice"     , "protected" )
+      case ServiceType.Backend          => ( "Backend microservice" , "protected" )
     }
 
     val finalPayload =

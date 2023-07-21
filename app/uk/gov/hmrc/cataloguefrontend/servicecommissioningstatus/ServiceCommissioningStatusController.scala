@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
-import play.api.mvc.MessagesControllerComponents
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.error_404_template
@@ -37,10 +38,17 @@ class ServiceCommissioningStatusController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def getCommissioningState(serviceName: String) =
+  def getCommissioningState(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       serviceCommissioningStatusConnector
         .commissioningStatus(serviceName)
-        .map(_.fold(NotFound(error_404_template()))(result => Ok(serviceCommissioningStatusPage(serviceName, result))))
+        .map{_.fold(NotFound(error_404_template())){
+            result =>
+              val applicableEnvironments: List[Environment] = result.collect {
+                case check: Check.EnvCheck => check.checkResults.keySet
+              }.flatten.distinct
+              Ok(serviceCommissioningStatusPage(serviceName, result, applicableEnvironments))
+          }
+        }
     }
 }

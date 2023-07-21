@@ -167,7 +167,7 @@ class CreateAppConfigsControllerSpec
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependencies)))
 
-      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, true))
+      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
 
 
@@ -256,7 +256,7 @@ class CreateAppConfigsControllerSpec
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean]))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean], any[Boolean]))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
 
       val result = controller
@@ -281,7 +281,7 @@ class CreateAppConfigsControllerSpec
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean]))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean], any[Boolean]))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
 
       val result = controller
@@ -343,7 +343,7 @@ class CreateAppConfigsControllerSpec
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependencies)))
 
-      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, true))
+      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
         .thenReturn(Future.successful(Left("Failed to connect with request id: 123")))
 
       val result = controller

@@ -24,6 +24,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector._
+
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
@@ -99,6 +100,7 @@ class CreateAppConfigsController @Inject()(
                            )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
+          isApi         =  serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
           envsToDisplay =  Environment.values.diff(envsToHide.toSeq)
           hasPerm       =  request.retrieval
           form          =  { val f = CreateAppConfigsRequest.form
@@ -111,6 +113,7 @@ class CreateAppConfigsController @Inject()(
                 form          = form,
                 serviceName   = serviceName,
                 serviceType   = serviceType,
+                isApi         = isApi,
                 hasPerm       = hasPerm,
                 hasBaseConfig = baseConfig,
                 envConfigs    = envConfigs,
@@ -138,6 +141,7 @@ class CreateAppConfigsController @Inject()(
                            )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
+          isApi         = serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
           form          <- EitherT.fromEither[Future](CreateAppConfigsRequest.form.bindFromRequest().fold(
                              formWithErrors =>
                                Left(
@@ -146,6 +150,7 @@ class CreateAppConfigsController @Inject()(
                                      form          = formWithErrors,
                                      serviceName   = serviceName,
                                      serviceType   = serviceType,
+                                     isApi         = isApi,
                                      hasPerm       = true,
                                      hasBaseConfig = baseConfig,
                                      envConfigs    = envConfigs,
@@ -171,6 +176,7 @@ class CreateAppConfigsController @Inject()(
                                  form          = CreateAppConfigsRequest.form.bindFromRequest().withGlobalError(errMsg),
                                  serviceName   = serviceName,
                                  serviceType   = serviceType,
+                                 isApi         = isApi,
                                  hasPerm       = true,
                                  hasBaseConfig = baseConfig,
                                  envConfigs    = envConfigs,
