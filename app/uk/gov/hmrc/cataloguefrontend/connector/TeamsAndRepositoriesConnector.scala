@@ -67,12 +67,12 @@ sealed trait ServiceType {
 
 object ServiceType {
   case object Frontend extends ServiceType {
-    override val asString      = "FrontendService"
+    override val asString      = "frontend"
     override val displayString = "Service (Frontend)"
   }
 
   case object Backend extends ServiceType {
-    override val asString = "BackendService"
+    override val asString = "backend"
     override val displayString = "Service (Backend)"
   }
 
@@ -98,6 +98,43 @@ object ServiceType {
       }
 
     override def writes(o: ServiceType): JsValue = JsString(o.asString)
+  }
+}
+
+sealed trait Tag {
+  def asString: String
+  val displayString: String
+}
+
+object Tag {
+  case object AdminFrontend extends Tag {
+    def asString = "admin";
+    val displayString = "Admin Frontend"
+  }
+
+  case object Api extends Tag {
+    def asString = "api";
+    val displayString = "API"
+  }
+
+  case object Stub extends Tag {
+    def asString = "stub";
+    val displayString = "Stub"
+  }
+
+  val values =
+    Set(AdminFrontend, Api, Stub)
+
+  def parse(s: String): Either[String, Tag] =
+    values
+      .find(_.asString.equalsIgnoreCase(s))
+      .toRight(s"Invalid tag - should be one of: ${values.map(_.asString).mkString(", ")}")
+
+  val format: Format[Tag] = new Format[Tag] {
+    override def reads(json: JsValue): JsResult[Tag] =
+      json.validate[String].flatMap(s => parse(s).fold(msg => JsError(msg), t => JsSuccess(t)))
+
+    override def writes(o: Tag): JsValue = JsString(o.asString)
   }
 }
 
@@ -187,6 +224,7 @@ case class GitRepository(
   isPrivate           : Boolean                  = false,
   repoType            : RepoType                 = RepoType.Other,
   serviceType         : Option[ServiceType]      = None,
+  tags                : Option[Set[Tag]]         = None,
   digitalServiceName  : Option[String]           = None,
   owningTeams         : Seq[String]              = Nil,
   language            : Option[String],
@@ -204,9 +242,10 @@ case class GitRepository(
 
 object GitRepository {
   val apiFormat: OFormat[GitRepository] = {
-    implicit val rtf = RepoType.format
-    implicit val stf = ServiceType.stFormat
-    implicit val jjf = JenkinsJob.apiFormat
+    implicit val rtF : Format[RepoType]    = RepoType.format
+    implicit val stF : Format[ServiceType] = ServiceType.stFormat
+    implicit val jjF : Format[JenkinsJob]  = JenkinsJob.apiFormat
+    implicit val tagF: Format[Tag]         = Tag.format
 
     ( (__ \ "name"              ).format[String]
     ~ (__ \ "description"       ).format[String]
@@ -216,6 +255,7 @@ object GitRepository {
     ~ (__ \ "isPrivate"         ).formatWithDefault[Boolean](false)
     ~ (__ \ "repoType"          ).format[RepoType]
     ~ (__ \ "serviceType"       ).formatNullable[ServiceType]
+    ~ (__ \ "tags"              ).formatNullable[Set[Tag]]
     ~ (__ \ "digitalServiceName").formatNullable[String]
     ~ (__ \ "owningTeams"       ).formatWithDefault[Seq[String]](Nil)
     ~ (__ \ "language"          ).formatNullable[String]

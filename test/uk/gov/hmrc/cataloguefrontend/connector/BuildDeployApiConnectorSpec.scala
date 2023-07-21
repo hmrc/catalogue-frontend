@@ -360,7 +360,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
        )
 
        val result =
-         connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true)
+         connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
            .futureValue
 
        result shouldBe Right(AsyncRequestId(id = "1234"))
@@ -394,7 +394,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       )
 
       val result =
-        connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true)
+        connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
           .failed
           .futureValue
 
@@ -431,7 +431,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
        )
 
        val result =
-         connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true)
+         connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
            .futureValue
 
        result shouldBe Left("Some client error")

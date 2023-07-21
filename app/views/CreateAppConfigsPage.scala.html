@@ -18,13 +18,14 @@
 @import views.html.partials.{form_global_errors, form_fields_warnings}
 @import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.connector.Tag
 
 @this(viewMessages: ViewMessages)
-
 
 @(form: Form[_],
   serviceName  : String,
   serviceType  : ServiceType,
+  isApi        : Boolean,
   hasPerm      : Boolean,
   hasBaseConfig: Boolean,
   envConfigs   : Seq[Environment],
@@ -57,11 +58,14 @@
       <div class="form-group row">
         <div class="col-md-6">
           <label for="serviceType">Service type:</label>
-          <input class="form-control" type="text" id="serviceType" name="serviceType" value="@serviceType" readonly="true">
+          <input class="form-control" type="text" id="serviceType" name="serviceType" value="@serviceType @if(isApi) { (@Tag.Api.displayString) }" readonly="true">
           <p></p>
           <span class="grey">Service type that was selected when creating the repository - if incorrect please contact</span> <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"></span></a>
         </div>
       </div>
+
+      <hr>
+
       @if(hasBaseConfig){
         <div class="form-group row">
           <div class="col-md-6">
