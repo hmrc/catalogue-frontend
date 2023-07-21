@@ -4,6 +4,7 @@ let matchesDiv;
 let allValues = [];
 let autoCompleteAllowPartial;
 let autoCompleteIgnoreCase;
+let autoCompleteSubmitOnSelection;
 
 const minSearch = 3;
 let selectedIdx = -1; // Allow partial search
@@ -14,11 +15,12 @@ const matchesElemId      = "search-match-";
 const matchSelectedClass = "search-match-selected";
 
 // Changed outside of script
-function autoCompleteInit({formId, inputSearchId, matchesDivId, allowPartial, ignoreCase, values}) {
+function autoCompleteInit({formId, inputSearchId, matchesDivId, allowPartial, ignoreCase, values, submitOnSelection}) {
     form        = document.forms[formId];
     inputSearch = document.getElementById(inputSearchId);
     matchesDiv  = document.getElementById(matchesDivId);
     allValues   = values;
+    autoCompleteSubmitOnSelection = submitOnSelection != undefined && submitOnSelection;
 
     autoCompleteAllowPartial = allowPartial;
     if (allowPartial) {
@@ -80,6 +82,9 @@ function findMatches(rawInput) {
             btn.onclick = function() {
                 clearMatches();
                 inputSearch.value = match;
+                if (autoCompleteSubmitOnSelection) {
+                  submit();
+                }
             }
             matchesList.appendChild(btn);
             idx++;
@@ -140,6 +145,11 @@ function clearMatches() {
     matchesDiv.classList.add('hide');
 }
 
+function submit() {
+  form.dispatchEvent(new Event("submit")); // Call form listener
+  form.submit();
+}
+
 function disableDefaults(e) {
     if(e.keyCode === 38 || e.keyCode === 40 || e.keyCode === 13) {
         e.preventDefault();
@@ -156,8 +166,7 @@ function autoCompleteSearchInputListener(e) {
             if(selected != null) {
                 selected.click();
             } else {
-                form.dispatchEvent(new Event("submit")); // Call form listener
-                form.submit();
+                submit();
             }
         } else if (e.keyCode === 40) { //down arrow
             if(selectedIdx < matchesLen - 1) {

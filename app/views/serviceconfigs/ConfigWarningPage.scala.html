@@ -104,6 +104,7 @@
             matchesDivId:  "service-name-matches",
             allowPartial:  false,
             ignoreCase:    true,
+            submitOnSelection : true,
             values:        [@for(service <- allServices) {'@service.name',}]
         });
     </script>
