@@ -33,7 +33,7 @@ import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceC
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.internalauth.client.{IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
+import uk.gov.hmrc.internalauth.client._
 import views.html.CreateAppConfigsPage
 
 import java.time.Instant
@@ -84,7 +84,6 @@ class CreateAppConfigsControllerSpec
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
-
       val result = controller
         .createAppConfigsLanding(serviceName)(
           FakeRequest()
@@ -114,7 +113,6 @@ class CreateAppConfigsControllerSpec
 
       status(result) shouldBe 200
       contentAsString(result) should include(s"You do not have permission to create App Configs")
-
 
     }
 
@@ -155,7 +153,7 @@ class CreateAppConfigsControllerSpec
 
   "CreateAppConfigsController.createAppConfigs" should {
 
-    "return 303 and redirect to the service commissioning page when the form is submitted successfully" in new Setup {
+    "redirect to the service commissioning page when the form is submitted successfully" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.successful(true))
@@ -167,7 +165,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(serviceDependencies)))
+        .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
@@ -182,7 +180,73 @@ class CreateAppConfigsControllerSpec
 
       status(result) shouldBe 303
       redirectLocation(result) shouldBe Some(routes.ServiceCommissioningStatusController.getCommissioningState(serviceName).url)
+    }
 
+    "redirect when service requires mongo but slug info is not found" in new Setup {
+
+      val appDependenciesIncludesMongo = Some("mongo")
+
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
+        .thenReturn(Future.successful(true))
+
+      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(gitRepository)))
+
+      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(List.empty[Check])))
+
+      when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(None))
+
+      when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(appDependenciesIncludesMongo))
+
+      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
+        .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
+
+      val result = controller
+        .createAppConfigs(serviceName)(
+          FakeRequest(POST, "/create-app-configs")
+            .withSession(SessionKeys.authToken -> "Token token")
+            .withFormUrlEncodedBody("appConfigBase" -> "true")
+        )
+
+      status(result) shouldBe 303
+      redirectLocation(result) shouldBe Some(routes.ServiceCommissioningStatusController.getCommissioningState(serviceName).url)
+    }
+
+    "redirect when service does not require mongo" in new Setup {
+
+      val noMongoDependencies = ""
+
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
+        .thenReturn(Future.successful(true))
+
+      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(gitRepository)))
+
+      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(List.empty[Check])))
+
+      when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(None))
+
+      when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(noMongoDependencies)))
+
+      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = false, isApi = false))
+        .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
+
+
+      val result = controller
+        .createAppConfigs(serviceName)(
+          FakeRequest(POST, "/create-app-configs")
+            .withSession(SessionKeys.authToken -> "Token token")
+            .withFormUrlEncodedBody("appConfigBase" -> "true")
+        )
+
+      status(result) shouldBe 303
+      redirectLocation(result) shouldBe Some(routes.ServiceCommissioningStatusController.getCommissioningState(serviceName).url)
     }
 
     "return 400 when the form is submitted with errors" in new Setup {
@@ -281,7 +345,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(List.empty)))
 
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(serviceDependencies)))
+        .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
         .thenReturn(Future.successful(Left("Failed to connect with request id: 123")))
@@ -308,6 +372,7 @@ class CreateAppConfigsControllerSpec
     implicit val mcc      = app.injector.instanceOf[MessagesControllerComponents]
     val mockCACView       = app.injector.instanceOf[CreateAppConfigsPage]
     val mockTRConnector   = mock[TeamsAndRepositoriesConnector]
+    val mockGHConnector   = mock[GitHubProxyConnector]
     val mockBDConnector   = mock[BuildDeployApiConnector]
     val mockSCSConnector  = mock[ServiceCommissioningStatusConnector]
     val mockSDConnector   = mock[ServiceDependenciesConnector]
@@ -320,6 +385,7 @@ class CreateAppConfigsControllerSpec
         createAppConfigsPage                = mockCACView,
         buildDeployApiConnector             = mockBDConnector,
         teamsAndRepositoriesConnector       = mockTRConnector,
+        gitHubProxyConnector                = mockGHConnector,
         serviceCommissioningStatusConnector = mockSCSConnector,
         serviceDependenciesConnector        = mockSDConnector,
         configuration                       = config
@@ -340,7 +406,7 @@ class CreateAppConfigsControllerSpec
         serviceType    = Some(ServiceType.Backend)
       )
 
-    val serviceDependencies =
+    val serviceDependenciesContainsMongo =
       ServiceDependencies(
         uri                  = "test",
         name                 = serviceName,

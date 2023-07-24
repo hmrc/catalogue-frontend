@@ -93,8 +93,6 @@ class BuildDeployApiConnector @Inject() (
           case Left(other) => throw other
         }
 
-    if (configuration.get[Boolean]("bd.logging.enabled")) { logger.info(headers.map(h => s" -H \"${h._1}: ${h._2}\"").mkString(" ")) }
-
     httpClientV2
       .post(url)
       .withBody(body)
