@@ -248,19 +248,20 @@ class CatalogueController @Inject() (
 
       (for {
         hasBranchProtectionAuth <- EitherT.liftF[Future, Result, EnableBranchProtection.HasAuthorisation](hasEnableBranchProtectionAuthorisation(repoName))
-        repoDetails <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
-        newPassword <- ChangePrototypePassword
-                         .form()
-                         .bindFromRequest()
-                         .fold[EitherT[Future, Result, ChangePrototypePassword.PrototypePassword]](
-                           formWithErrors => EitherT.left(renderPrototype(repoDetails, hasBranchProtectionAuth, formWithErrors).map(BadRequest(_))),
-                           password => EitherT.rightT(password)
-                         )
-        user         = request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
-        _            = logger.info(s"User $user has triggered a password reset for prototype: $repoName")
-        response    <- EitherT(buildDeployApiConnector.changePrototypePassword(repoName, newPassword))
-                         .leftSemiflatMap(errorMsg => renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form().withGlobalError(errorMsg) , None).map(BadRequest(_)))
-        result      <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form() , Some(response)))
+        repoDetails     <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
+        newPassword     <- ChangePrototypePassword
+                             .form()
+                             .bindFromRequest()
+                             .fold[EitherT[Future, Result, ChangePrototypePassword.PrototypePassword]](
+                               formWithErrors => EitherT.left(renderPrototype(repoDetails, hasBranchProtectionAuth, formWithErrors).map(BadRequest(_))),
+                               password => EitherT.rightT(password)
+                             )
+        user            =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
+        _               =  logger.info(s"User $user has triggered a password reset for prototype: $repoName")
+        prototypeName   =  repoDetails.prototypeName.getOrElse(repoName)
+        response        <- EitherT(buildDeployApiConnector.changePrototypePassword(prototypeName, newPassword))
+                             .leftSemiflatMap(errorMsg => renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form().withGlobalError(errorMsg) , None).map(BadRequest(_)))
+        result          <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form() , Some(response)))
        } yield Ok(result)
       ).merge
     }
@@ -271,11 +272,19 @@ class CatalogueController @Inject() (
         continueUrl = routes.CatalogueController.repository(repoName),
         predicate = ChangePrototypePassword.permission(repoName)
       ).async { implicit request =>
-      val user: String = request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
-      logger.info(s"Setting prototype $repoName to status ${status.displayString}, triggered by User: $user")
-      buildDeployApiConnector
-        .setPrototypeStatus(repoName, status)
-        .map(_ => /* We redirect even if this returns a Left*/ Redirect(routes.CatalogueController.repository(repoName)))
+
+      (for {
+        repoDetails   <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
+        user          =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
+        _             =  logger.info(s"Setting prototype $repoName to status ${status.displayString}, triggered by User: $user")
+        prototypeName = repoDetails.prototypeName.getOrElse(repoName)
+        _             <- EitherT.liftF[Future, Result, Unit](
+                           buildDeployApiConnector.setPrototypeStatus(prototypeName, status)
+                             .map(_.leftMap(err =>
+                               logger.warn(s"Failed to set $prototypeName to ${status.displayString}: $err")
+                             ).merge)
+                         )
+      } yield Redirect(routes.CatalogueController.repository(repoName))).merge
     }
 
   private def hasChangePrototypePasswordAuthorisation(repoName: String)(
@@ -319,7 +328,8 @@ class CatalogueController @Inject() (
       urlIfLeaksFound       <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
       commenterReport       <- prCommenterConnector.report(repoDetails.name)
       hasPasswordChangeAuth <- hasChangePrototypePasswordAuthorisation(repoDetails.name)
-      prototypeStatus       <- buildDeployApiConnector.getPrototypeStatus(repoDetails.name)
+      prototypeName         =  repoDetails.prototypeName.getOrElse(repoDetails.name)
+      prototypeDetails      <- buildDeployApiConnector.getPrototypeDetails(prototypeName)
     } yield
       prototypeInfoPage(
         repoDetails,
@@ -329,7 +339,7 @@ class CatalogueController @Inject() (
         form,
         successMessage,
         commenterReport,
-        prototypeStatus
+        prototypeDetails
       )
 
   private def renderOther(

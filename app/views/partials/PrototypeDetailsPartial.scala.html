@@ -17,13 +17,14 @@
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
 @import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 
 
 @this()
 
 @(repo                  : GitRepository,
-  prototypeStatus       : PrototypeStatus,
+  prototypeDetails      : PrototypeDetails,
   hasPasswordChangeAuth : Boolean
 )(implicit
   request               : RequestHeader
@@ -45,7 +46,9 @@
                 </li>
                 <li id="description-url" class="col-xs-6">
                     <label>Url: </label>
-                    <a id="link-to-prototype" href="@{repo.prototypeUrl}" target="_blank" rel="noreferrer noopener">@{repo.prototypeUrl}<span class="glyphicon glyphicon-new-window"/></a>
+                    @prototypeDetails.url.fold(Html("Unknown")) { prototypeUrl =>
+                        <a id="link-to-prototype" href="@prototypeUrl" target="_blank" rel="noreferrer noopener">@prototypeUrl<span class="glyphicon glyphicon-new-window"/></a>
+                    }
                 </li>
                 <li id="last-active" class="col-xs-6">
                     <label>Last Active: </label>
@@ -53,15 +56,15 @@
                 </li>
                 <li id="prototype-status" class="col-xs-6">
                     <label>Status: </label>
-                    @prototypeStatus.displayString
+                    @prototypeDetails.status.displayString
                     @if(hasPasswordChangeAuth) {
-                        @if(prototypeStatus == PrototypeStatus.Stopped) {
+                        @if(prototypeDetails.status == PrototypeStatus.Stopped) {
                             <form id="start-prototype-form" action="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Running)" method="post">
                                 @csrfFormField
                             </form>
                             <button id="start-prototype-button" type="submit" form="start-prototype-form" class="btn btn-sm btn-primary">Start</button>
                         }
-                        @if(prototypeStatus == PrototypeStatus.Running) {
+                        @if(prototypeDetails.status == PrototypeStatus.Running) {
                             <form id="stop-prototype-form" action="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Stopped)" method="post">
                                 @csrfFormField
                             </form>

@@ -22,6 +22,7 @@
 @import views.partials.githubBadgeType
 @import partials.PrototypeDetailsPartial
 @import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
 @import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 
 @this(
@@ -36,7 +37,7 @@ viewMessages           : ViewMessages
   form                   : Form[_],
   successMessage         : Option[String],
   commenterReport        : Option[PrCommenterReport],
-  prototypeStatus        : PrototypeStatus
+  prototypeDetails       : PrototypeDetails
 )(implicit
   request                : RequestHeader,
   messages               : Messages
@@ -60,7 +61,7 @@ viewMessages           : ViewMessages
     <section class="section-wrapper">
         <div class="row">
             <div class="col-md-12">
-                @prototypeDetailsPartial(prototype, prototypeStatus, hasPasswordChangeAuth.value)
+                @prototypeDetailsPartial(prototype, prototypeDetails, hasPasswordChangeAuth.value)
             </div>
         </div>
 
@@ -77,7 +78,7 @@ viewMessages           : ViewMessages
         <div class="row">
             <div class="col-md-6">
                 <div style="margin-bottom: 1em">
-                    @if(hasPasswordChangeAuth.value && prototypeStatus == PrototypeStatus.Running) {
+                    @if(hasPasswordChangeAuth.value && prototypeDetails.status == PrototypeStatus.Running) {
                         <button id="reset-password-enabled" type="button" class="btn btn-primary">Reset Password</button>
                     } else {
                         <button id="reset-password-disabled" type="button" class="btn btn-primary" disabled>Reset Password</button>
@@ -87,7 +88,7 @@ viewMessages           : ViewMessages
                                 @messages("prototype.password.forbidden")
                             </div>
                         }
-                        @if(hasPasswordChangeAuth.value && prototypeStatus != PrototypeStatus.Running) {
+                        @if(hasPasswordChangeAuth.value && prototypeDetails.status != PrototypeStatus.Running) {
                             <div class="text-muted" style="margin-top: 0.8em">
                                 <i class="glyphicon glyphicon-info-sign"></i>
                                 @messages("prototype.password.not-running")

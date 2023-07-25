@@ -21,7 +21,7 @@ import play.api.Configuration
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus}
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus, PrototypeDetails}
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -44,12 +44,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       )
     )
 
-  private val configuration =
-    Configuration(
-      "bd.logging.enabled" -> false
-    )
-
-  private val connector = new BuildDeployApiConnector(httpClientV2, awsCredentialsProvider, config, configuration)
+  private val connector = new BuildDeployApiConnector(httpClientV2, awsCredentialsProvider, config)
 
   "changePrototypePassword" should {
     "return success=true when Build & Deploy respond with 200" in {
@@ -128,15 +123,16 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
               |  "message": "Successfully retrieved status",
               |  "details": {
               |    "prototype": "test-prototype",
-              |    "status": "running"
+              |    "status": "running",
+              |    "prototype_url": "https://test-prototype.herokuapp.com"
               |  }
               |}""".stripMargin
           ))
       )
 
-      val result = connector.getPrototypeStatus("test-prototype").futureValue
+      val result = connector.getPrototypeDetails("test-prototype").futureValue
 
-      result shouldBe PrototypeStatus.Running
+      result shouldBe PrototypeDetails(Some("https://test-prototype.herokuapp.com"), PrototypeStatus.Running)
     }
 
     "return a status of Undetermined when non 200" in {
@@ -159,9 +155,9 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
           ))
       )
 
-      val result = connector.getPrototypeStatus("test-prototype").futureValue
+      val result = connector.getPrototypeDetails("test-prototype").futureValue
 
-      result shouldBe PrototypeStatus.Undetermined
+      result shouldBe PrototypeDetails(None, PrototypeStatus.Undetermined)
     }
   }
 
