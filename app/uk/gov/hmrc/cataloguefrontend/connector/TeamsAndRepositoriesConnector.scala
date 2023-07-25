@@ -234,7 +234,7 @@ case class GitRepository(
   isDeprecated        : Boolean                  = false,
   teamNames           : Seq[String]              = Nil,
   jenkinsJobs         : Seq[JenkinsJob]          = Seq.empty[JenkinsJob],
-  prototypeUrl        : Option[String]           = None
+  prototypeName       : Option[String]           = None
 ) {
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
@@ -265,7 +265,7 @@ object GitRepository {
     ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
     ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Nil)
     ~ (__ \ "jenkinsJobs"       ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
-    ~ (__ \ "prototypeUrl"      ).formatNullable[String]
+    ~ (__ \ "prototypeName"     ).formatNullable[String]
     ) (apply, unlift(unapply))
   }
 }

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.google.inject.{Inject, Singleton}
-import play.api.{Configuration, Logging}
+import play.api.Logging
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
@@ -41,8 +41,7 @@ import scala.util.Try
 class BuildDeployApiConnector @Inject() (
   httpClientV2          : HttpClientV2,
   awsCredentialsProvider: AwsCredentialsProvider,
-  config                : BuildDeployApiConfig,
-  configuration         : Configuration
+  config                : BuildDeployApiConfig
 )(implicit
   ec                    : ExecutionContext
 ) extends Logging {
@@ -115,11 +114,11 @@ class BuildDeployApiConnector @Inject() (
     }
   }
 
-  def getPrototypeStatus(prototype: String): Future[PrototypeStatus] = {
-    implicit val psR: Reads[PrototypeStatus] = PrototypeStatus.reads
+  def getPrototypeDetails(prototypeName: String): Future[PrototypeDetails] = {
+    implicit val pdR: Reads[PrototypeDetails] = PrototypeDetails.reads
 
     val body = Json.obj(
-      "prototype" -> JsString(prototype)
+      "prototype" -> JsString(prototypeName)
     )
 
     signAndExecuteRequest(
@@ -127,11 +126,18 @@ class BuildDeployApiConnector @Inject() (
       body     = body
     ).map {
       case Left(errMsg) => logger.error(s"Call to GetPrototypeStatus failed with: $errMsg")
-                           PrototypeStatus.Undetermined
-      case Right(res)   => res.details.as[PrototypeStatus]
+                           PrototypeDetails(
+                             url    = None,
+                             status = PrototypeStatus.Undetermined
+                           )
+      case Right(res)   => res.details.as[PrototypeDetails]
     }.recover {
-      case e => logger.error(s"Call GetPrototypeStatus failed with: ${e.getMessage}", e)
-                PrototypeStatus.Undetermined
+      case e =>
+        logger.error(s"Call GetPrototypeStatus failed with: ${e.getMessage}", e)
+        PrototypeDetails(
+          url    = None,
+          status = PrototypeStatus.Undetermined
+        )
     }
   }
 
@@ -238,16 +244,14 @@ object BuildDeployApiConnector {
     def parse(s: String): Option[PrototypeStatus] =
       values.find(_.asString == s)
 
-    val reads: Reads[PrototypeStatus] =
-      Reads.at[PrototypeStatus](__ \ "status")(
-        _.validate[String]
+    val reads: Reads[PrototypeStatus] = json =>
+      json.validate[String]
           .flatMap(s =>
             PrototypeStatus
               .parse(s)
               .map(JsSuccess(_))
               .getOrElse(JsError("invalid prototype status"))
           )
-      )
 
     implicit val pathBindable: PathBindable[PrototypeStatus] =
       new PathBindable[PrototypeStatus] {
@@ -257,5 +261,16 @@ object BuildDeployApiConnector {
         override def unbind(key: String, value: PrototypeStatus): String =
           value.asString
       }
+  }
+
+  final case class PrototypeDetails(url: Option[String], status: PrototypeStatus)
+
+  object PrototypeDetails {
+    val reads: Reads[PrototypeDetails] = {
+      implicit val psR: Reads[PrototypeStatus] = PrototypeStatus.reads
+      ( (__ \ "prototype_url").readNullable[String]
+      ~ (__ \ "status").read[PrototypeStatus]
+      )(PrototypeDetails.apply _)
+    }
   }
 }
