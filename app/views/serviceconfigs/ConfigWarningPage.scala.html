@@ -45,27 +45,17 @@
         Symbol("class") -> "form-group"
     ) {
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-xs-2 col-md-1">
                 <label for="service-name">Service</label>
+            </div>
+            <div class="col-xs-8 col-md-4">
                 <input class="form-control" id="service-name" type="text" name="serviceName" value='@form("serviceName").value' autocomplete="off" required="required"/>
                 <div id="service-name-matches" class="search-matches-dropdown hide"></div>
             </div>
-            <div class="col-md-2">
-                <dl>
-                    <dt><label>Environments</label></dt>
-                    <dd>
-                        @for(env <-  Environment.values) {
-                            <div class="checkbox-group">
-                                <input name="showEnvironments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.showEnvironments.contains(env)) {checked} />
-                                <label for="@{env.asString}-checkbox">@env.displayString</label>
-                            </div>
-                        }
-                    </dd>
-                </dl>
+            <div class="col-xs-1 col-md-1">
+                <button id="config-search" class="btn btn-primary" type="submit">Search</button>
             </div>
         </div>
-
-        <button id="config-search" class="btn btn-primary" type="submit">Search</button>
     }
 
     @if(groupedByService.isEmpty) {
@@ -73,35 +63,37 @@
     } else if(groupedByService.exists(_.isEmpty)) {
         <p>No results found.</p>
     } else {
-        <table id="search-results" class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
-            <thead>
-                <tr>
-                    <th>Key</th>
-                    @for(env <- form.get.showEnvironments) {
-                        <th id="@{env.asString}-tr">@env.displayString</th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @groupedByService.map { res =>
-                    @for((serviceName, configByKey) <- res) {
-                        <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">
-                            <td colspan="@(form.get.showEnvironments.size + 1)">
-                                Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
-                            </td>
-                        </tr>
-                        @for((configKey, configByEnv) <- configByKey) {
-                            <tr>
-                                <td><code>@configKey.asString</code></td>
-                                @for(env <- form.get.showEnvironments) {
-                                    <td id="@{env.asString}-td">@displayConfigSourceValue(serviceName, configKey, env, configByEnv.get(env))</td>
-                                }
+        @defining(groupedByService.map(_.values.flatMap(_.values).flatMap(_.keys).toList).toList.flatten.distinct.sorted) { environments =>
+            <table id="search-results" class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        @for(env <- environments) {
+                            <th id="@{env.asString}-tr">@env.displayString</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @groupedByService.map { res =>
+                        @for((serviceName, configByKey) <- res) {
+                            <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">
+                                <td colspan="@(environments.size + 1)">
+                                    Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
+                                </td>
                             </tr>
+                            @for((configKey, configByEnv) <- configByKey) {
+                                <tr>
+                                    <td><code>@configKey.asString</code></td>
+                                    @for(env <- environments) {
+                                        <td id="@{env.asString}-td">@displayConfigSourceValue(serviceName, configKey, env, configByEnv.get(env))</td>
+                                    }
+                                </tr>
+                            }
                         }
                     }
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        }
     }
 
     <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
@@ -142,5 +134,5 @@
 
 @popoverContent(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
     <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
-    <strong>Value:</strong> @Html(warning.value.value)
+    <strong>Value:</strong> @warning.value.value
 }

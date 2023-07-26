@@ -136,7 +136,7 @@ class ServiceConfigsController @Inject()(
       for {
         allTeams    <- teamsAndReposConnector.allTeams()
         allServices <- teamsAndReposConnector.allServices()
-      } yield Ok(configWarningPage(ConfigWarning.form.fill(ConfigWarning.ConfigWarningForm()), allServices))
+      } yield Ok(configWarningPage(ConfigWarning.form, allServices))
     }
 
   def configWarningResults(): Action[AnyContent] =
@@ -150,7 +150,8 @@ class ServiceConfigsController @Inject()(
                         } yield Ok(configWarningPage(ConfigWarning.form, allServices, None))
         , formObject => for {
                           allServices      <- teamsAndReposConnector.allServices()
-                          results          <- serviceConfigsService.configWarnings(formObject.serviceName, formObject.showEnvironments, latest = true)
+                          deployments      <- whatsRunningWhereService.releasesForService(formObject.serviceName.asString).map(_.versions)
+                          results          <- serviceConfigsService.configWarnings(formObject.serviceName, deployments.map(_.environment), latest = true)
                           groupedByService =  serviceConfigsService.toServiceKeyEnvironmentWarningMap(results)
                         } yield Ok(configWarningPage(ConfigWarning.form.fill(formObject), allServices, Some(groupedByService)))
         )
@@ -183,20 +184,12 @@ class ServiceConfigsController @Inject()(
 import play.api.data.{Form, Forms}
 object ConfigWarning {
   case class ConfigWarningForm(
-    serviceName     : ServiceConfigsService.ServiceName = ServiceConfigsService.ServiceName("")
-  , showEnvironments: List[Environment]                 = Environment.values.filterNot(_ == Environment.Integration)
+    serviceName: ServiceConfigsService.ServiceName
   )
 
   lazy val form: Form[ConfigWarningForm] = Form(
     Forms.mapping(
-      "serviceName"      -> Forms.text.transform[ServiceConfigsService.ServiceName](ServiceConfigsService.ServiceName.apply, _.asString)
-    , "showEnvironments" -> Forms.list(Forms.text)
-                                 .transform[List[Environment]](
-                                   xs => { val ys = xs.map(Environment.parse).flatten
-                                           if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration) // populate environments for config explorer link
-                                         }
-                                 , x  => identity(x).map(_.asString)
-                                 )
+      "serviceName" -> Forms.text.transform[ServiceConfigsService.ServiceName](ServiceConfigsService.ServiceName.apply, _.asString)
     )(ConfigWarningForm.apply)(ConfigWarningForm.unapply)
   )
 }
