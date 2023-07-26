@@ -165,6 +165,7 @@ aside ul label {
 }
 
 .grid-row {
+  font-size: smaller;
   display: grid;
   grid-template-columns: repeat(15, auto);
   justify-content: start;
@@ -180,10 +181,6 @@ aside ul label {
 
 .grid-item {
   margin: 0;
-}
-
-.config-value {
-  font-size: 9pt;
 }
 
 .word-wrap .grid-item:not(.sticky-column) span {

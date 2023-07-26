@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
+import cats.implicits._
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
@@ -58,9 +60,6 @@ class ServiceConfigsService @Inject()(
                                  .view.mapValues(_.view.mapValues(_.lastOption.map(_.copy(source = "nextDeployment", sourceUrl = None)).toList).toMap)
     } yield (configByKey ++ newConfig)
 
-  def configWarnings(serviceName: String, environment: Environment, latest: Boolean)(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
-    serviceConfigsConnector.configWarnings(serviceName, environment, latest)
-
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
     configByKey(serviceName, latest = true)
       .map(
@@ -90,7 +89,6 @@ class ServiceConfigsService @Inject()(
   def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
     serviceConfigsConnector.getConfigKeys(teamName)
 
-
   def configSearch(
     teamName       : Option[TeamName]
   , environments   : Seq[Environment]
@@ -115,27 +113,31 @@ class ServiceConfigsService @Inject()(
       .groupBy(_.serviceName)
       .view
       .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(Ordering.by(_.asString))).toMap
+
+  def configWarnings(
+    serviceName : ServiceConfigsService.ServiceName
+  , environments: Seq[Environment]
+  , latest      : Boolean
+  )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
+    environments
+      .foldLeftM[Future, Seq[ServiceConfigsService.ConfigWarning]](Seq.empty) {
+        case (acc, environment) =>
+          serviceConfigsConnector
+            .configWarnings(serviceName, environment, latest)
+            .map(warnings => acc ++ warnings.map(_.copy(serviceName = serviceName, environment = environment)))
+      }
+
+  def toServiceKeyEnvironmentWarningMap(configWarnings: Seq[ConfigWarning]): Map[ServiceName, Map[KeyName, Map[Environment, Seq[ConfigWarning]]]] =
+    configWarnings
+      .groupBy(_.serviceName)
+      .view
+      .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.groupBy(_.environment)).toMap)(Ordering.by(_.asString))).toMap
 }
 
 object ServiceConfigsService {
 
   case class KeyName(asString: String) extends AnyVal
   case class ServiceName(asString: String) extends AnyVal
-
-  case class ConfigWarning(
-    key    : KeyName
-  , value  : ConfigSourceValue
-  , warning: String
-  )
-  object ConfigWarning {
-    val reads: Reads[ConfigWarning] = {
-      implicit val readVal = ConfigSourceValue.reads
-      ( (__ \ "key"    ).read[String].map(KeyName.apply)
-      ~ (__ \ "value"  ).read[ConfigSourceValue]
-      ~ (__ \ "warning").read[String]
-      )(ConfigWarning.apply _)
-    }
-  }
 
   trait ConfigEnvironment { def asString: String; def displayString: String }
   object ConfigEnvironment {
@@ -287,6 +289,27 @@ object ServiceConfigsService {
       ~ (__ \ "key"          ).read[String].map(KeyName.apply)
       ~ (__ \ "environments" ).read[Map[Environment, ConfigSourceValue]]
       )(AppliedConfig.apply _)
+    }
+  }
+
+  case class ConfigWarning(
+    serviceName: ServiceName
+  , environment: Environment
+  , key        : KeyName
+  , value      : ConfigSourceValue
+  , warning    : String
+  )
+
+  object ConfigWarning {
+    val reads: Reads[ConfigWarning] = {
+      implicit val readVal = ConfigSourceValue.reads
+      implicit val readEnv = Environment.format
+      ( (__ \ "serviceName").readWithDefault[String]("").map(ServiceName.apply)
+      ~ (__ \ "environment").readWithDefault[Environment](null)
+      ~ (__ \ "key"        ).read[String].map(KeyName.apply)
+      ~ (__ \ "value"      ).read[ConfigSourceValue]
+      ~ (__ \ "warning"    ).read[String]
+      )(ConfigWarning.apply _)
     }
   }
 }

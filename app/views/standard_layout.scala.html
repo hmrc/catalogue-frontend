@@ -148,7 +148,7 @@
                             <li><a id="link-to-search-by-url" href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
                             <li><a id="link-to-search-config" href="@serviceConfigsRoutes.ServiceConfigsController.searchLanding()">Search Config</a></li>
                             @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
-                                <li><a id="link-to-search-config" href="@serviceConfigsRoutes.ServiceConfigsController.configWarnings()">Config Warnings</a></li>
+                                <li><a id="link-to-search-config" href="@serviceConfigsRoutes.ServiceConfigsController.configWarningLanding()">Config Warnings</a></li>
                             }
                             <li><a id="link-to-deployment-timelines" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
 
@@ -207,6 +207,7 @@
             $(function () {
                 $('[data-toggle=tooltip]').tooltip({container: 'body'});
                 $('[data-toggle="tooltip"]').tooltip()
+                $('[data-toggle="popover"]').popover()
             })
         </script>
     </body>

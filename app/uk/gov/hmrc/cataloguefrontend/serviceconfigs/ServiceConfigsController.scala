@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhereService, WhatsRunningWhereVersion}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -58,39 +58,9 @@ class ServiceConfigsController @Inject()(
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey <- serviceConfigsService.configByKey(serviceName)
         warnings    <- if (CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
-                        deployments
-                          .map(d => ServiceConfigsService.ConfigEnvironment.ForEnvironment(d.environment))
-                          .foldLeftM[Future, Map[ServiceConfigsService.ConfigEnvironment, Seq[ServiceConfigsService.ConfigWarning]]](Map.empty) {
-                            case (acc, configEnv) =>
-                              serviceConfigsService
-                                .configWarnings(serviceName, configEnv.env, latest = true)
-                                .map(warnings => acc ++ Map(configEnv -> (acc.getOrElse(configEnv, Seq.empty) ++ warnings)))
-                              }
-                       } else Future.successful(Map.empty[ServiceConfigsService.ConfigEnvironment, Seq[ServiceConfigsService.ConfigWarning]])
+                         serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), latest = true)
+                       } else Future.successful(Seq.empty[ServiceConfigsService.ConfigWarning])
       } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings))
-    }
-
-  def configWarnings(): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      ConfigWarning
-        .form
-        .bindFromRequest()
-        .fold(
-          _          => for {
-                          allServices <- teamsAndReposConnector.allServices()
-                        } yield Ok(configWarningPage(ConfigWarning.form, allServices, None))
-        , formObject => for {
-                          allServices <- teamsAndReposConnector.allServices()
-                          deployments <- whatsRunningWhereService.releasesForService(formObject.serviceName.asString).map(_.versions)
-                          warnings    <- deployments
-                                          .foldLeftM[Future, Seq[(WhatsRunningWhereVersion, Seq[ServiceConfigsService.ConfigWarning])]](Seq.empty) {
-                                            case (acc, deployment) =>
-                                              serviceConfigsService
-                                                .configWarnings(formObject.serviceName.asString, deployment.environment, latest = true)
-                                                .map(warnings => acc :+ (deployment, warnings))
-                                          }
-                        } yield Ok(configWarningPage(ConfigWarning.form.fill(formObject), allServices, Some(warnings)))
-        )
     }
 
   def searchLanding(): Action[AnyContent] =
@@ -161,6 +131,31 @@ class ServiceConfigsController @Inject()(
         )
   }
 
+  def configWarningLanding(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      for {
+        allTeams    <- teamsAndReposConnector.allTeams()
+        allServices <- teamsAndReposConnector.allServices()
+      } yield Ok(configWarningPage(ConfigWarning.form.fill(ConfigWarning.ConfigWarningForm()), allServices))
+    }
+
+  def configWarningResults(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      ConfigWarning
+        .form
+        .bindFromRequest()
+        .fold(
+          _          => for {
+                          allServices <- teamsAndReposConnector.allServices()
+                        } yield Ok(configWarningPage(ConfigWarning.form, allServices, None))
+        , formObject => for {
+                          allServices      <- teamsAndReposConnector.allServices()
+                          results          <- serviceConfigsService.configWarnings(formObject.serviceName, formObject.showEnvironments, latest = true)
+                          groupedByService =  serviceConfigsService.toServiceKeyEnvironmentWarningMap(results)
+                        } yield Ok(configWarningPage(ConfigWarning.form.fill(formObject), allServices, Some(groupedByService)))
+        )
+    }
+
   private def toRows(
     results         : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
   , showEnvironments: Seq[Environment]
@@ -188,12 +183,20 @@ class ServiceConfigsController @Inject()(
 import play.api.data.{Form, Forms}
 object ConfigWarning {
   case class ConfigWarningForm(
-    serviceName: ServiceConfigsService.ServiceName
+    serviceName     : ServiceConfigsService.ServiceName = ServiceConfigsService.ServiceName("")
+  , showEnvironments: List[Environment]                 = Environment.values.filterNot(_ == Environment.Integration)
   )
 
   lazy val form: Form[ConfigWarningForm] = Form(
     Forms.mapping(
-      "serviceName" -> Forms.text.transform[ServiceConfigsService.ServiceName](ServiceConfigsService.ServiceName.apply, _.asString)
+      "serviceName"      -> Forms.text.transform[ServiceConfigsService.ServiceName](ServiceConfigsService.ServiceName.apply, _.asString)
+    , "showEnvironments" -> Forms.list(Forms.text)
+                                 .transform[List[Environment]](
+                                   xs => { val ys = xs.map(Environment.parse).flatten
+                                           if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration) // populate environments for config explorer link
+                                         }
+                                 , x  => identity(x).map(_.asString)
+                                 )
     )(ConfigWarningForm.apply)(ConfigWarningForm.unapply)
   )
 }

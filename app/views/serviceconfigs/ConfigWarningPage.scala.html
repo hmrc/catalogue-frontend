@@ -14,19 +14,17 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+@import uk.gov.hmrc.cataloguefrontend.connector.{Team, GitRepository}
 @import views.html.helper
 @import views.html.partials.form_global_errors
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigWarning, ServiceConfigsService, routes => serviceConfigsRoutes }
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
-
 @this()
 
-@(form          : Form[ConfigWarning.ConfigWarningForm],
-  allServices   : Seq[GitRepository],
-  configWarnings: Option[Seq[(WhatsRunningWhereVersion, Seq[ServiceConfigsService.ConfigWarning])]] = None
+@(form            : Form[ConfigWarning.ConfigWarningForm],
+  allServices     : Seq[GitRepository],
+  groupedByService: Option[Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, Seq[ServiceConfigsService.ConfigWarning]]]]] = None
 )(implicit
   messages: Messages,
   request : RequestHeader
@@ -39,47 +37,66 @@
         </h1>
     </header>
 
+    @form_global_errors(form)
+
     @helper.form(
-        action          =  serviceConfigsRoutes.ServiceConfigsController.configWarnings(),
+        action          =  serviceConfigsRoutes.ServiceConfigsController.configWarningResults(),
         Symbol("id")    -> "form",
         Symbol("class") -> "form-group"
     ) {
         <div class="row">
             <div class="col-md-6">
                 <label for="service-name">Service</label>
-                <input class="form-control" id="service-name" type="text" name="serviceName" value='@form("serviceName").value' autocomplete="off" />
+                <input class="form-control" id="service-name" type="text" name="serviceName" value='@form("serviceName").value' autocomplete="off" required="required"/>
                 <div id="service-name-matches" class="search-matches-dropdown hide"></div>
             </div>
+            <div class="col-md-2">
+                <dl>
+                    <dt><label>Environments</label></dt>
+                    <dd>
+                        @for(env <-  Environment.values) {
+                            <div class="checkbox-group">
+                                <input name="showEnvironments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.showEnvironments.contains(env)) {checked} />
+                                <label for="@{env.asString}-checkbox">@env.displayString</label>
+                            </div>
+                        }
+                    </dd>
+                </dl>
+            </div>
         </div>
+
+        <button id="config-search" class="btn btn-primary" type="submit">Search</button>
     }
 
-    @if(configWarnings.filter(_.nonEmpty).isEmpty) {
-        <p>No warnings.</p>
+    @if(groupedByService.isEmpty) {
+
+    } else if(groupedByService.exists(_.isEmpty)) {
+        <p>No results found.</p>
     } else {
-        <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+        <table id="search-results" class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
             <thead>
                 <tr>
                     <th>Key</th>
-                    <th>Value</th>
-                    <th>Message</th>
+                    @for(env <- form.get.showEnvironments) {
+                        <th id="@{env.asString}-tr">@env.displayString</th>
+                    }
                 </tr>
             </thead>
             <tbody>
-                @configWarnings.map { res =>
-                    @for((deployment, warnings) <- res.sortBy(_._1.environment)) {
-                        @if(warnings.nonEmpty) {
-                            <tr class="@if(warnings.size > 1) {sticky-row-caption} else {row-caption} ">
-                                <td colspan="3">
-                                    Warnings for <strong>@deployment.environment.displayString</strong> - including latest changes.
-                                </td>
+                @groupedByService.map { res =>
+                    @for((serviceName, configByKey) <- res) {
+                        <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">
+                            <td colspan="@(form.get.showEnvironments.size + 1)">
+                                Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
+                            </td>
+                        </tr>
+                        @for((configKey, configByEnv) <- configByKey) {
+                            <tr>
+                                <td><code>@configKey.asString</code></td>
+                                @for(env <- form.get.showEnvironments) {
+                                    <td id="@{env.asString}-td">@displayConfigSourceValue(serviceName, configKey, env, configByEnv.get(env))</td>
+                                }
                             </tr>
-                            @for(x <- warnings) {
-                                <tr>
-                                    <td><code>@x.key.asString</code></td>
-                                    <td id="@{deployment.environment.asString}-td">@displayConfigSourceValue(form.get.serviceName, x.key, deployment.environment, Some(x.value))</td>
-                                    <td>@x.warning</td>
-                                </tr>
-                            }
                         }
                     }
                 }
@@ -97,23 +114,33 @@
             ignoreCase:    true,
             values:        [@for(service <- allServices) {'@service.name',}]
         });
-
     </script>
 }
 
-@displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
+@displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[Seq[ServiceConfigsService.ConfigWarning]]) = {
     @result match {
         case None => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
-               title="Not deployed in environment - Link to Config Explorer">
-                <span class="glyphicon glyphicon-minus archived"></span>
-            </a
         }
-        case Some(envData) => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
-               title="@ServiceConfigsService.friendlySourceName(envData.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(configKey)) - Link to Config Explorer">
-                @envData.value
-            </a>
+        case Some(configWarnings) => {
+            @configWarnings.map { envData =>
+                <ul class="list-unstyled">
+                    <li>
+                        <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
+                           data-toggle="popover"
+                           data-trigger="hover"
+                           data-placement="bottom"
+                           data-html="true"
+                           data-content='@popoverContent(envData, env)'>
+                            @envData.warning
+                        </a>
+                    </li>
+                </ul>
+            }
         }
     }
+}
+
+@popoverContent(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
+    <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
+    <strong>Value:</strong> @Html(warning.value.value)
 }

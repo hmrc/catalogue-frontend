@@ -26,7 +26,7 @@
   configByKey   : ServiceConfigsService.ConfigByKey,
   deployments   : List[WhatsRunningWhereVersion],
   showWarnings  : Boolean,
-  configWarnings: Map[ServiceConfigsService.ConfigEnvironment, Seq[ServiceConfigsService.ConfigWarning]]
+  configWarnings: Seq[ServiceConfigsService.ConfigWarning]
 )(implicit
   request: RequestHeader
 )
@@ -73,7 +73,9 @@
                                     case 1 => <span class="undeployed small"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 undeployed change</span>
                                     case x => <span class="undeployed small"><span class="glyphicon glyphicon-exclamation-sign"></span> {x} undeployed changes</span>
                                 })
-                                @(configWarnings.getOrElse(env, Seq.empty).size match {
+                                @(configWarnings.collect {
+                                    case x if ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env => x.warning
+                                  }.size match {
                                     case _ if env == ServiceConfigsService.ConfigEnvironment.Local => <span></span>
                                     case 0 => <span></span>
                                     case 1 => <span class="warning small hide-warnings"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 warnings</span>
@@ -90,7 +92,11 @@
                         <div id="@{UrlUtils.encodeQueryParam(s"config-row-${key.asString}")}" class="grid-row @if(isRefconfOnly) {refconf-only}">
                             <div id="@{UrlUtils.encodeQueryParam(s"config-key-${key.asString}")}" class="grid-item sticky-column truncate-content" style="width:310px;">
                                 <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link float-start"></a>
-                                <code>@key.asString</code>
+                                @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+                                    <code>@key.asString</code>
+                                } else {
+                                    @key.asString
+                                }
                                 <a href="@{serviceConfigsRoutes.ServiceConfigsController.searchResults(Some(key.asString)).url}" class="glyphicon glyphicon-search pull-right"></a>
                             </div>
                             @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
@@ -111,7 +117,7 @@
                                             } else {
                                               @defining(
                                                 ( envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1
-                                                , configWarnings.getOrElse(env, Seq.empty).filter(_.key == key)
+                                                , configWarnings.filter(x => x.key == key && ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env  )
                                                 )
                                               ) { case (isStrikethrough, warnings) =>
                                                 <span class="truncate-content-overflow

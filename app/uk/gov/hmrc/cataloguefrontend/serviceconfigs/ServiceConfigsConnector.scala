@@ -53,11 +53,6 @@ class ServiceConfigsConnector @Inject() (
       .get(url"$serviceConfigsBaseUrl/service-configs/config-by-key/$service?latest=$latest")
       .execute[ConfigByKey]
 
-  def configWarnings(service: String, environment: Environment, latest: Boolean)(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
-    httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/warnings?serviceName=$service&environment=${environment.asString}&latest=$latest")
-      .execute[Seq[ConfigWarning]]
-
   def serviceRelationships(service: String)(implicit hc: HeaderCarrier): Future[ServiceRelationships] =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/service-relationships/$service")
@@ -115,4 +110,13 @@ class ServiceConfigsConnector @Inject() (
         case Right(xs)                          => Future.successful(Right(xs))
       }
   }
+
+  def configWarnings(
+    serviceName: ServiceConfigsService.ServiceName
+  , environment: Environment
+  , latest: Boolean
+  )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/service-configs/warnings?serviceName=${serviceName.asString}&environment=${environment.asString}&latest=$latest")
+      .execute[Seq[ConfigWarning]]
 }

@@ -177,7 +177,10 @@
         <textarea class="hidden" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
     }
 
-    @if(groupedByKey.filter(_.nonEmpty).isEmpty && groupedByService.filter(_.nonEmpty).isEmpty) {
+
+    @if(groupedByKey.isEmpty && groupedByService.isEmpty) {
+
+    } else if(groupedByKey.exists(_.isEmpty) || groupedByService.exists(_.isEmpty)) {
         <p>No results found.</p>
     } else {
         <table id="search-results" class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
