@@ -274,13 +274,21 @@
     @result match {
         case None => {
             <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
-               title="Not deployed in environment - Link to Config Explorer">
+               data-toggle="popover"
+               data-trigger="hover"
+               data-placement="bottom"
+               data-html="true"
+               data-content="Not deployed in environment">
                 <span class="glyphicon glyphicon-minus archived"></span>
             </a
         }
         case Some(envData) => {
             <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
-               title="@ServiceConfigsService.friendlySourceName(envData.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(configKey)) - Link to Config Explorer">
+               data-toggle="popover"
+               data-trigger="hover"
+               data-placement="bottom"
+               data-html="true"
+               data-content="@ServiceConfigsService.friendlySourceName(envData.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(configKey))">
                 @envData.value
             </a>
         }
