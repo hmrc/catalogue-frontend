@@ -16,9 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
+import cats.data.EitherT
+import cats.implicits._
+
 import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result, ResponseHeader}
 import play.api.http.HttpEntity
+import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -27,7 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.serviceconfigs.{ConfigExplorerPage, SearchConfigPage}
+import views.html.serviceconfigs.{ConfigExplorerPage, ConfigWarningPage, SearchConfigPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{Future, ExecutionContext}
@@ -41,18 +45,22 @@ class ServiceConfigsController @Inject()(
 , serviceConfigsService   : ServiceConfigsService
 , whatsRunningWhereService: WhatsRunningWhereService
 , configExplorerPage      : ConfigExplorerPage
+, configWarningPage       : ConfigWarningPage
 , searchConfigPage        : SearchConfigPage
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def configExplorer(serviceName: String): Action[AnyContent] =
+  def configExplorer(serviceName: String, showWarnings: Boolean): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey <- serviceConfigsService.configByKey(serviceName)
-      } yield Ok(configExplorerPage(serviceName, configByKey, deployments))
+        warnings    <- if (CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+                         serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), latest = true)
+                       } else Future.successful(Seq.empty[ServiceConfigsService.ConfigWarning])
+      } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings))
     }
 
   def searchLanding(): Action[AnyContent] =
@@ -63,8 +71,6 @@ class ServiceConfigsController @Inject()(
       } yield Ok(searchConfigPage(SearchConfig.form.fill(SearchConfig.SearchConfigForm()), allTeams, configKeys))
     }
 
-  import cats.data.EitherT
-  import cats.instances.future._
   def searchResults(
     configKey: Option[String] // For dependencyExplorer reverse route
   ): Action[AnyContent] =
@@ -125,6 +131,32 @@ class ServiceConfigsController @Inject()(
         )
   }
 
+  def configWarningLanding(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      for {
+        allTeams    <- teamsAndReposConnector.allTeams()
+        allServices <- teamsAndReposConnector.allServices()
+      } yield Ok(configWarningPage(ConfigWarning.form, allServices))
+    }
+
+  def configWarningResults(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      ConfigWarning
+        .form
+        .bindFromRequest()
+        .fold(
+          _          => for {
+                          allServices <- teamsAndReposConnector.allServices()
+                        } yield Ok(configWarningPage(ConfigWarning.form, allServices, None))
+        , formObject => for {
+                          allServices      <- teamsAndReposConnector.allServices()
+                          deployments      <- whatsRunningWhereService.releasesForService(formObject.serviceName.asString).map(_.versions)
+                          results          <- serviceConfigsService.configWarnings(formObject.serviceName, deployments.map(_.environment), latest = true)
+                          groupedByService =  serviceConfigsService.toServiceKeyEnvironmentWarningMap(results)
+                        } yield Ok(configWarningPage(ConfigWarning.form.fill(formObject), allServices, Some(groupedByService)))
+        )
+    }
+
   private def toRows(
     results         : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
   , showEnvironments: Seq[Environment]
@@ -148,9 +180,21 @@ class ServiceConfigsController @Inject()(
       showEnvironments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
 
 }
-object SearchConfig {
-  import play.api.data.{Form, Forms}
 
+import play.api.data.{Form, Forms}
+object ConfigWarning {
+  case class ConfigWarningForm(
+    serviceName: ServiceConfigsService.ServiceName
+  )
+
+  lazy val form: Form[ConfigWarningForm] = Form(
+    Forms.mapping(
+      "serviceName" -> Forms.text.transform[ServiceConfigsService.ServiceName](ServiceConfigsService.ServiceName.apply, _.asString)
+    )(ConfigWarningForm.apply)(ConfigWarningForm.unapply)
+  )
+}
+
+object SearchConfig {
   case class SearchConfigForm(
     teamName             : Option[TeamName]    = None
   , configKey            : Option[String]      = None

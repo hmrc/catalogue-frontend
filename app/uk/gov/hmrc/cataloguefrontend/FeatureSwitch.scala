@@ -38,4 +38,7 @@ object FeatureSwitch {
 object CatalogueFrontendSwitches {
   def requiresLogin: FeatureSwitch =
     FeatureSwitch.forName("requires-login")
+
+  def showConfigWarnings: FeatureSwitch =
+    FeatureSwitch.forName("show-config-warnings")
 }

@@ -1,0 +1,138 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+@import uk.gov.hmrc.cataloguefrontend.connector.{Team, GitRepository}
+@import views.html.helper
+@import views.html.partials.form_global_errors
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigWarning, ServiceConfigsService, routes => serviceConfigsRoutes }
+@this()
+
+@(form            : Form[ConfigWarning.ConfigWarningForm],
+  allServices     : Seq[GitRepository],
+  groupedByService: Option[Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, Seq[ServiceConfigsService.ConfigWarning]]]]] = None
+)(implicit
+  messages: Messages,
+  request : RequestHeader
+)
+
+@standard_layout("Config Warnings") {
+    <header>
+        <h1>
+            Config Warnings
+        </h1>
+    </header>
+
+    @form_global_errors(form)
+
+    @helper.form(
+        action          =  serviceConfigsRoutes.ServiceConfigsController.configWarningResults(),
+        Symbol("id")    -> "form",
+        Symbol("class") -> "form-group"
+    ) {
+        <div class="row">
+            <div class="col-xs-2 col-md-1">
+                <label for="service-name">Service</label>
+            </div>
+            <div class="col-xs-8 col-md-4">
+                <input class="form-control" id="service-name" type="text" name="serviceName" value='@form("serviceName").value' autocomplete="off" required="required"/>
+                <div id="service-name-matches" class="search-matches-dropdown hide"></div>
+            </div>
+            <div class="col-xs-1 col-md-1">
+                <button id="config-search" class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </div>
+    }
+
+    @if(groupedByService.isEmpty) {
+
+    } else if(groupedByService.exists(_.isEmpty)) {
+        <p>No results found.</p>
+    } else {
+        @defining(groupedByService.map(_.values.flatMap(_.values).flatMap(_.keys).toList).toList.flatten.distinct.sorted) { environments =>
+            <table id="search-results" class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        @for(env <- environments) {
+                            <th id="@{env.asString}-tr">@env.displayString</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @groupedByService.map { res =>
+                        @for((serviceName, configByKey) <- res) {
+                            <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">
+                                <td colspan="@(environments.size + 1)">
+                                    Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
+                                </td>
+                            </tr>
+                            @for((configKey, configByEnv) <- configByKey) {
+                                <tr>
+                                    <td><code>@configKey.asString</code></td>
+                                    @for(env <- environments) {
+                                        <td id="@{env.asString}-td">@displayConfigSourceValue(serviceName, configKey, env, configByEnv.get(env))</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+    <script @CSPNonce.attr>
+        autoCompleteInit({
+            formId:        "form",
+            inputSearchId: "service-name",
+            matchesDivId:  "service-name-matches",
+            allowPartial:  false,
+            ignoreCase:    true,
+            values:        [@for(service <- allServices) {'@service.name',}]
+        });
+    </script>
+}
+
+@displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[Seq[ServiceConfigsService.ConfigWarning]]) = {
+    @result match {
+        case None => {
+        }
+        case Some(configWarnings) => {
+            @configWarnings.map { envData =>
+                <ul class="list-unstyled">
+                    <li>
+                        <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
+                           data-toggle="popover"
+                           data-trigger="hover"
+                           data-placement="bottom"
+                           data-html="true"
+                           data-content='@popoverContent(envData, env)'>
+                            @envData.warning
+                        </a>
+                    </li>
+                </ul>
+            }
+        }
+    }
+}
+
+@popoverContent(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
+    <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
+    <strong>Value:</strong> @warning.value.value
+}

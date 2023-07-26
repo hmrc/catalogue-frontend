@@ -69,7 +69,13 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
     SearchTerm("page",     "defaultbranch",                catalogueRoutes.CatalogueController.allDefaultBranches().url,                1.0f),
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,               1.0f),
     SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,           1.0f),
-  )
+    ) ++ {
+      if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+        List(
+          SearchTerm("page",     "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,    1.0f),
+        )
+    } else Nil
+  }
 
   def updateIndexes(): Future[Unit] = {
     implicit val hc = HeaderCarrier()

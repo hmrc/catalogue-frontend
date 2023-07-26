@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
+import cats.implicits._
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
@@ -111,6 +113,25 @@ class ServiceConfigsService @Inject()(
       .groupBy(_.serviceName)
       .view
       .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(Ordering.by(_.asString))).toMap
+
+  def configWarnings(
+    serviceName : ServiceConfigsService.ServiceName
+  , environments: Seq[Environment]
+  , latest      : Boolean
+  )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
+    environments
+      .foldLeftM[Future, Seq[ServiceConfigsService.ConfigWarning]](Seq.empty) {
+        case (acc, environment) =>
+          serviceConfigsConnector
+            .configWarnings(serviceName, environment, latest)
+            .map(warnings => acc ++ warnings)
+      }
+
+  def toServiceKeyEnvironmentWarningMap(configWarnings: Seq[ConfigWarning]): Map[ServiceName, Map[KeyName, Map[Environment, Seq[ConfigWarning]]]] =
+    configWarnings
+      .groupBy(_.serviceName)
+      .view
+      .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.groupBy(_.environment)).toMap)(Ordering.by(_.asString))).toMap
 }
 
 object ServiceConfigsService {
@@ -268,6 +289,27 @@ object ServiceConfigsService {
       ~ (__ \ "key"          ).read[String].map(KeyName.apply)
       ~ (__ \ "environments" ).read[Map[Environment, ConfigSourceValue]]
       )(AppliedConfig.apply _)
+    }
+  }
+
+  case class ConfigWarning(
+    serviceName: ServiceName
+  , environment: Environment
+  , key        : KeyName
+  , value      : ConfigSourceValue
+  , warning    : String
+  )
+
+  object ConfigWarning {
+    val reads: Reads[ConfigWarning] = {
+      implicit val readVal = ConfigSourceValue.reads
+      implicit val readEnv = Environment.format
+      ( (__ \ "serviceName").read[String].map(ServiceName.apply)
+      ~ (__ \ "environment").read[Environment]
+      ~ (__ \ "key"        ).read[String].map(KeyName.apply)
+      ~ (__ \ "value"      ).read[ConfigSourceValue]
+      ~ (__ \ "warning"    ).read[String]
+      )(ConfigWarning.apply _)
     }
   }
 }

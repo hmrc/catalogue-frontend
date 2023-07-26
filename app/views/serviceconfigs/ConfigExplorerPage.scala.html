@@ -23,8 +23,10 @@
 @this(viewMessages: ViewMessages)
 
 @(serviceName: String,
-  configByKey: ServiceConfigsService.ConfigByKey,
-  deployments: List[WhatsRunningWhereVersion]
+  configByKey   : ServiceConfigsService.ConfigByKey,
+  deployments   : List[WhatsRunningWhereVersion],
+  showWarnings  : Boolean,
+  configWarnings: Seq[ServiceConfigsService.ConfigWarning]
 )(implicit
   request: RequestHeader
 )
@@ -40,16 +42,22 @@
 <html>
     <head>
         <title>Config - @serviceName</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="@routes.Assets.versioned("bootstrap.5.3.0.min.css")" />
+        <link rel="stylesheet" href="@routes.Assets.versioned("glyphicon-bootstrap.3.4.1.css")" />
         <link rel="stylesheet" href="@routes.Assets.versioned("config-explorer.css")" />
         <script @CSPNonce.attr src="@routes.Assets.versioned("split.js")"></script>
+        <script @CSPNonce.attr src="@routes.Assets.versioned("popper.2.11.8.min.js")"></script>
+        <script @CSPNonce.attr src="@routes.Assets.versioned("bootstrap.5.3.0.min.js")"></script>
         <script @CSPNonce.attr src="@routes.Assets.versioned("config-explorer.js")"></script>
     </head>
-    <body class="hide-refconf-only">
+    <body class="hide-refconf-only word-wrap @if(showWarnings){show-warnings}">
         <header class="opaque">
-            <h1 id="service-header">Config: @serviceName</h1>
+            <h1 class="capitalize" id="service-header">Config: @serviceName</h1>
             <i class="glyphicon glyphicon-question-sign help-icon"></i>
             <i class="glyphicon glyphicon-menu-hamburger menu-icon"></i>
         </header>
+
         <section>
             <div class="grid-container explorer-grid">
                 <div class="grid-header">
@@ -57,13 +65,22 @@
                     <div class="gutter gutter-horizontal"></div>
                     @for((env, index) <- ServiceConfigsService.ConfigEnvironment.values.zipWithIndex) {
                         <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!show(env)){hidden}" style="width:500px;">
-                            <div>@env.displayString
-                            @(configByKey.filter(_._2.get(env).exists(_.exists(_.nextDeployment))).size match {
-                                case _ if env == ServiceConfigsService.ConfigEnvironment.Local => <span></span>
-                                case 0 => <span></span>
-                                case 1 => <span class="undeployed small-text"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 undeployed change</span>
-                                case x => <span class="undeployed small-text"><span class="glyphicon glyphicon-exclamation-sign"></span> {x} undeployed changes</span>
-                            })
+                            <div>
+                                @env.displayString
+                                @(configByKey.filter(_._2.get(env).exists(_.exists(_.nextDeployment))).size match {
+                                    case _ if env == ServiceConfigsService.ConfigEnvironment.Local => <span></span>
+                                    case 0 => <span></span>
+                                    case 1 => <span class="undeployed small"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 undeployed change</span>
+                                    case x => <span class="undeployed small"><span class="glyphicon glyphicon-exclamation-sign"></span> {x} undeployed changes</span>
+                                })
+                                @(configWarnings.collect {
+                                    case x if ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env => x.warning
+                                  }.size match {
+                                    case _ if env == ServiceConfigsService.ConfigEnvironment.Local => <span></span>
+                                    case 0 => <span></span>
+                                    case 1 => <span class="warning small hide-warnings"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 warnings</span>
+                                    case x => <span class="warning small hide-warnings"><span class="glyphicon glyphicon-exclamation-sign"></span> {x} warnings</span>
+                                })
                             </div>
                             <div>@findDeployment(env).fold("")(_.versionNumber.asString)</div>
                         </div>
@@ -74,26 +91,42 @@
                     @defining(envSources.forall(_._2.map(_.source).forall(_ == "referenceConf"))) { isRefconfOnly =>
                         <div id="@{UrlUtils.encodeQueryParam(s"config-row-${key.asString}")}" class="grid-row @if(isRefconfOnly) {refconf-only}">
                             <div id="@{UrlUtils.encodeQueryParam(s"config-key-${key.asString}")}" class="grid-item sticky-column truncate-content" style="width:310px;">
-                                <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link"></a>
-                                @key.asString
+                                <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link float-start"></a>
+                                @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+                                    <code>@key.asString</code>
+                                } else {
+                                    @key.asString
+                                }
                                 <a href="@{serviceConfigsRoutes.ServiceConfigsController.searchResults(Some(key.asString)).url}" class="glyphicon glyphicon-search pull-right"></a>
                             </div>
                             @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
                                 <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
-                                    <ul>
+                                    <ul class="list-unstyled">
                                       @for((sourceValue: ServiceConfigsService.ConfigSourceValue, idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
-                                        <li class="config-value" title="@ServiceConfigsService.friendlySourceName(sourceValue.source, env, Some(key))">
+                                        <li class="config-value">
                                             @if(sourceValue.nextDeployment && sourceValue.value.trim.isEmpty) {
-                                              <span class="truncate-content-overflow undeployed"><span class="glyphicon glyphicon-exclamation-sign small-text"></span> << Deleted >>  </span>
-                                            } else if (sourceValue.nextDeployment) {
-                                              <span class="truncate-content-overflow undeployed"><span class="glyphicon glyphicon-exclamation-sign small-text"></span> @sourceValue.value </span>
-                                            } else {
-                                              <span class="truncate-content-overflow
-                                                           @if(sourceValue.isSuppressed) {suppressed}
-                                                           @if(envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1) {strikethrough}
-                                                           ">
-                                                @sourceValue.value
+                                              <span class="truncate-content-overflow undeployed">
+                                                <span class="glyphicon glyphicon-exclamation-sign small-text"></span>
+                                                @displayValue(sourceValue.copy(value ="<< Deleted >>"), env, key, warnings = Nil)
                                               </span>
+                                            } else if (sourceValue.nextDeployment) {
+                                              <span class="truncate-content-overflow undeployed">
+                                                <span class="glyphicon glyphicon-exclamation-sign small-text"></span>
+                                                @displayValue(sourceValue, env, key, warnings = Nil)
+                                              </span>
+                                            } else {
+                                              @defining(
+                                                ( envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1
+                                                , configWarnings.filter(x => x.key == key && ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env  )
+                                                )
+                                              ) { case (isStrikethrough, warnings) =>
+                                                <span class="truncate-content-overflow
+                                                            @if(sourceValue.isSuppressed) {suppressed}
+                                                            @if(isStrikethrough) {strikethrough} else if(warnings.nonEmpty){warning}">
+                                                  @if(!isStrikethrough && warnings.nonEmpty){ <span class="glyphicon glyphicon-exclamation-sign small-text hide-warnings"></span> }
+                                                  @displayValue(sourceValue, env, key, warnings)
+                                                </span>
+                                              }
                                             }
                                             @sourceValue.sourceUrl.map { url =>
                                               <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="@url"></a>
@@ -115,17 +148,17 @@
             </div>
         </section>
         <aside id="menu">
-            <h2>Columns</h2>
-            <ul>
+            <h5>Columns</h5>
+            <ul class="list-unstyled">
                 @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
                     <li>
                         <input class="column-filter" type="checkbox" id="show-@env.asString" @if(show(env)){checked="checked"} />
-                        <label for="show-@env.asString">@env.asString</label>
+                        <label for="show-@env.asString">@env.displayString</label>
                     </li>
                 }
             </ul>
-            <h2>Values</h2>
-            <ul>
+            <h5>Values</h5>
+            <ul class="list-unstyled">
                 <li>
                     <input type="checkbox" id="show-referenceConf" />
                     <label for="show-referenceConf">Show all reference.conf files</label>
@@ -138,19 +171,25 @@
                     <input type="checkbox" id="word-wrap" />
                     <label for="word-wrap">Word wrap</label>
                 </li>
+                @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+                    <li>
+                        <input type="checkbox" id="show-warnings" @if(showWarnings){checked="checked"} />
+                        <label for="show-warnings">Show warnings</label>
+                    </li>
+                }
             </ul>
         </aside>
         <aside id="help">
-            <h2>What am I seeing?</h2>
-            <ul class="bullets">
+            <h5>What am I seeing?</h5>
+            <ul>
                 <li>Configuration is composed from multiple sources in a hierarchy of precedence. This table shows the end result and hierarchical eviction for each configuration key and for each environment. See <a id="link-to-confluence" href="https://confluence.tools.tax.service.gov.uk/display/DTRG/Service+configuration+explained" target="_blank">Confluence</a> for more details on how configuration is composed.</li>
                 <li>Crossed out values indicate an eviction according to their precendence in the config hierarchy</li>
                 <li>Amber values show what the value will change to when redeployed</li>
                 <li>The Microservice <code>reference.conf</code> files and <code>application.conf</code> config are extracted from the build of the deployed slug. The version of the slug is shown under the environment.</li>
                 <li>The App-config environment (<code>app-config-$env</code>), common configuration (<code>app-config-common</code>) and <code>app-config-base</code> are applied at deployment time by looking up the latest config from github. The config shown is the config that was applied at the deployment. Any changes to config since then that will be applied at the next deployment is also shown in amber. Note, we don't detect changes to encoded (ENC[...]) secrets.</li>
             </ul>
-            <h2>How to use the config explorer</h2>
-            <ul class="bullets">
+            <h5>How to use the config explorer</h5>
+            <ul>
                 <li>Drag the handles to the left of column headers to re-size columns</li>
                 <li>Hover over a key and click the <span class="glyphicon glyphicon-link"></span> icon to copy bookmark url to clipboard</li>
                 <li>Hover over a config value to see it's source</li>
@@ -180,15 +219,25 @@
 
                 const body = document.querySelector("body");
                 document.querySelector(".menu-icon").addEventListener("click", e => {
+                    e.stopPropagation();
                     body.classList.remove("help-open");
                     body.classList.toggle("sidebar-open");
                 });
-
                 document.querySelectorAll(".help-icon").forEach(elmt => {
                     elmt.addEventListener("click", e => {
+                        e.stopPropagation();
                         body.classList.remove("sidebar-open");
                         body.classList.toggle("help-open");
                     });
+                });
+                document.querySelectorAll("aside").forEach(elmt => {
+                    elmt.addEventListener("click", e => {
+                        e.stopPropagation();
+                    });
+                });
+                document.body.addEventListener("click", e => {
+                    body.classList.remove("sidebar-open");
+                    body.classList.remove("help-open");
                 });
 
                 Array.from(document.querySelectorAll(".column-filter")).forEach(input => {
@@ -211,7 +260,31 @@
                 document.querySelector("#word-wrap").addEventListener("change", e => {
                     document.querySelector("body").classList.toggle("word-wrap");
                 });
+                @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+                    document.querySelector("#show-warnings").addEventListener("change", e => {
+                        document.querySelector("body").classList.toggle("show-warnings");
+                    });
+                }
+                // Activate bootstrap tooltips
+                const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+                const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
             });
         </script>
     </body>
 </html>
+
+@displayValue(sourceValue: ServiceConfigsService.ConfigSourceValue, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName, warnings: Seq[ServiceConfigsService.ConfigWarning]) = {
+    <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@popoverContent(sourceValue, env, key, warnings)'>
+        @sourceValue.value
+    </span>
+}
+
+@popoverContent(sourceValue: ServiceConfigsService.ConfigSourceValue, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName, warnings: Seq[ServiceConfigsService.ConfigWarning]) = {
+    <div>@ServiceConfigsService.friendlySourceName(sourceValue.source, env, Some(key))</div>
+    @if(warnings.nonEmpty) {
+		<div class="popover-warnings hide-warnings">
+			<strong>Warnings</strong>
+			<ul>@warnings.map { warning => <li>@warning.warning</li> }</ul>
+        </div>
+    }
+}
