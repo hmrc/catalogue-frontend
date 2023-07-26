@@ -124,7 +124,7 @@ class ServiceConfigsService @Inject()(
         case (acc, environment) =>
           serviceConfigsConnector
             .configWarnings(serviceName, environment, latest)
-            .map(warnings => acc ++ warnings.map(_.copy(serviceName = serviceName, environment = environment)))
+            .map(warnings => acc ++ warnings)
       }
 
   def toServiceKeyEnvironmentWarningMap(configWarnings: Seq[ConfigWarning]): Map[ServiceName, Map[KeyName, Map[Environment, Seq[ConfigWarning]]]] =
@@ -304,8 +304,8 @@ object ServiceConfigsService {
     val reads: Reads[ConfigWarning] = {
       implicit val readVal = ConfigSourceValue.reads
       implicit val readEnv = Environment.format
-      ( (__ \ "serviceName").readWithDefault[String]("").map(ServiceName.apply)
-      ~ (__ \ "environment").readWithDefault[Environment](null)
+      ( (__ \ "serviceName").read[String].map(ServiceName.apply)
+      ~ (__ \ "environment").read[Environment]
       ~ (__ \ "key"        ).read[String].map(KeyName.apply)
       ~ (__ \ "value"      ).read[ConfigSourceValue]
       ~ (__ \ "warning"    ).read[String]
