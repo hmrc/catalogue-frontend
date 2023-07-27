@@ -77,7 +77,7 @@ class CreateAppConfigsController @Inject()(
     }
 
   def createAppConfigsPermission(serviceName: String): Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", serviceName), IAAction("CREATE_APP_CONFIGS"))
+    Predicate.Permission(Resource.from("catalogue-frontend", s"services/$serviceName"), IAAction("CREATE_APP_CONFIGS"))
 
   def createAppConfigsLanding(serviceName: String): Action[AnyContent] =
     auth.authenticatedAction(

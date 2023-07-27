@@ -64,7 +64,7 @@ class CreateAppConfigsControllerSpec
         Permission(
           Resource(
             ResourceType("catalogue-frontend"),
-            ResourceLocation("test-service")
+            ResourceLocation("services/test-service")
           ),
           IAAction("CREATE_APP_CONFIGS")
         )
