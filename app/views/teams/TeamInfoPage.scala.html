@@ -15,22 +15,21 @@
  *@
 
 @import _root_.views.html.partials.DependenciesTeamPartial
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.{DisplayableTeamMember, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.connector.UserManagementPortalConnector.{UMPError, TeamDetails, SlackInfo}
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName}
+@import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, SlackInfo}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
 
-@this(dependenciesTeamPartial: views.html.partials.DependenciesTeamPartial, viewMessages: ViewMessages)
+@this(dependenciesTeamPartial: DependenciesTeamPartial, viewMessages: ViewMessages)
 
 @(teamName              : TeamName,
   repos                 : Map[RepoType, Seq[GitRepository]],
-  errorOrTeamMembers    : Either[UMPError, Seq[DisplayableTeamMember]],
-  errorOrTeamDetails    : Either[UMPError, TeamDetails],
+  maybeTeam             : Option[LdapTeam],
   umpMyTeamsUrl         : String,
   leaksFoundForTeam     : Boolean,
   hasLeaks              : String => Boolean,
@@ -63,53 +62,36 @@
                     <div class="board__body">
 
                         <ul class="list list--minimal" id="team_details">
-                            <li id="team-created">
-                            </li>
-                            <li id="team-last-active">
-                            </li>
-                            @errorOrTeamDetails match {
-                              case Right(teamDetails) => {
+                            @maybeTeam match {
+                              case Some(team) => {
                                 <li id="team-description">
                                   <label>Description: </label>
-                                  @teamDetails.description
+                                  @team.description.getOrElse("")
                                 </li>
                                 <li id="team-documentation">
                                   <label>Documentation: </label>
-                                  @teamDetails.documentation.map { d =>
+                                  @team.documentation.map { d =>
                                     <a href="@d" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
                                   }
-                                </li>
-                                <li id="team-organisation">
-                                  <label>Organisation: </label>
-                                  @teamDetails.organisation
                                 </li>
                                 <li id="team-slack-channels">
                                   <label>Slack: </label>
                                   <ul id="slack-channels" class="list list--minimal">
-                                    @teamDetails.slack.map(addSlackInfo("Team", _))
-                                    @teamDetails.slackNotification.map(addSlackInfo("Notification", _))
+                                    @team.slack.map(addSlackInfo("Team", _))
+                                    @team.slackNotification.map(addSlackInfo("Notification", _))
                                   </ul>
 
                                 </li>
-                                <li id="team-location">
-                                  <label>Location: </label>
-                                  @teamDetails.location
-                                </li>
                               }
-                              case Left(UMPError.HTTPError(404)) => {
+                              case None => {
                                 <li>
-                                  @teamName.asString is unknown to the User Management Portal. To add the team, please raise a TSR
-                                </li>
-                              }
-                              case Left(error) => {
-                                <li>
-                                    Sorry, the User Management Portal is not available
+                                  Unable to find details for team @teamName.asString.
                                 </li>
                               }
                             }
                         </ul>
 
-                        @if(errorOrTeamDetails.isRight) {
+                        @if(maybeTeam.isDefined) {
                             @umpUpdateLink(false)
                         }
                     </div>
@@ -123,41 +105,33 @@
                     <div class="board__body">
                         <div>
                             <ul class="list list--minimal" id="team_members">
-                              @errorOrTeamMembers match {
-                                case Right(teamMembers) if teamMembers.isEmpty => {
+                              @maybeTeam match {
+                                case Some(team) if team.members.isEmpty => {
                                   <li class="col-xs-6">
                                     @teamName.asString has no members
                                   </li>
                                 }
-                                case Right(teamMembers) => {
-                                  @for(teamMember <- teamMembers) {
+                                case Some(team) => {
+                                  @for(teamMember <- team.members) {
                                     <li class="col-xs-6">
-                                      <a href="@teamMember.umpLink" target="_blank" rel="noreferrer noopener">
+                                      <a href="@userRoutes.UsersController.user(teamMember.username)">
                                         @teamMember.displayName
-                                        <span class="glyphicon glyphicon-new-window"/>
                                       </a>
-                                      @teamMember.role match {
-                                        case Some("user") => {}
-                                        case Some(other)  => { <span class="badge">@other</span> }
-                                        case None         => {}
+                                      @if(teamMember.role.trim.nonEmpty && teamMember.role != "user") {
+                                        <span class="badge">@teamMember.role</span>
                                       }
                                     </li>
                                   }
                                 }
-                                case Left(UMPError.UnknownTeam) => {
+                                case None => {
                                   <li class="col-xs-6">
-                                    @teamName.asString is unknown to the User Management Portal. To add the team, please raise a TSR
-                                  </li>
-                                }
-                                case Left(error) => {
-                                  <li class="col-xs-6" id="linkToRectify">
-                                    Sorry, the User Management Portal is not available
+                                    Unable to find members for team @teamName.asString.
                                   </li>
                                 }
                               }
                             </ul>
 
-                            @if(errorOrTeamMembers.isRight) {
+                            @if(maybeTeam.isDefined) {
                                 @umpUpdateLink(true)
                             }
                         </div>

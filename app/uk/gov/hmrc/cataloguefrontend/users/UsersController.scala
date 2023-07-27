@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.users
 
-import play.api.mvc.MessagesControllerComponents
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -32,5 +32,7 @@ class UsersController @Inject()(
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
+
+  def user(username: String): Action[AnyContent] = ???
 
 }

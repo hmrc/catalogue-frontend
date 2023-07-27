@@ -110,3 +110,5 @@ POST       /audit                                                          uk.go
 GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.distinctVulnerabilitySummaries(vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, service: Option[String] ?= None, team: Option[String] ?= None, component: Option[String] ?= None)
 GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesCountForServices
 GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[String] ?= None, team: Option[String] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
+
+GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: String)

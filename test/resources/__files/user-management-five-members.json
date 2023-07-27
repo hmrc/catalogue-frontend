@@ -1,0 +1,30 @@
+{
+  "teamName": "CATO",
+  "members": [
+    {
+      "username": "k.s",
+      "displayName": "K S",
+      "role": "user"
+    },
+    {
+      "username": "mx.p",
+      "displayName": "Mx P",
+      "role": "user"
+    },
+    {
+      "username": "ma.b",
+      "displayName": "Ma B",
+      "role": "user"
+    },
+    {
+      "username": "m.q",
+      "displayName": "M Q",
+      "role": "user"
+    },
+    {
+      "username": "s.m",
+      "displayName": "S M",
+      "role": "user"
+    }
+  ]
+}

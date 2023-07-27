@@ -19,42 +19,55 @@ package uk.gov.hmrc.cataloguefrontend.users
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 
-case class Member(
-  username: String
-, role    : String
+final case class Member(
+  username   : String
+, displayName: Option[String]
+, role       : String
 )
 
 object Member {
   val reads: Reads[Member] = {
-    ( (__ \ "username").read[String]
-    ~ (__ \ "role"    ).read[String]
+    ( (__ \ "username"   ).read[String]
+    ~ (__ \ "displayName").readNullable[String]
+    ~ (__ \ "role"       ).read[String]
     )(Member.apply _)
   }
 }
 
-case class LdapTeam(
+final case class SlackInfo(url: String) {
+  val name: String = url.split("/").lastOption.getOrElse(url)
+  val hasValidUrl: Boolean = url.startsWith("http://") || url.startsWith("https://")
+  val hasValidName: Boolean = "^[A-Z0-9]+$".r.findFirstIn(name).isEmpty
+}
+
+object SlackInfo {
+  val reads: Reads[SlackInfo] = Reads.StringReads.map(SlackInfo.apply)
+}
+
+final case class LdapTeam(
   members          : Seq[Member]
 , teamName         : String
 , description      : Option[String]
 , documentation    : Option[String]
-, slack            : Option[String]
-, slackNotification: Option[String]
+, slack            : Option[SlackInfo]
+, slackNotification: Option[SlackInfo]
 )
 
 object LdapTeam {
   val reads: Reads[LdapTeam] = {
     implicit val mR: Reads[Member] = Member.reads
+    implicit val siR: Reads[SlackInfo] = SlackInfo.reads
     ( (__ \ "members"          ).read[Seq[Member]]
     ~ (__ \ "teamName"         ).read[String]
     ~ (__ \ "description"      ).readNullable[String]
     ~ (__ \ "documentation"    ).readNullable[String]
-    ~ (__ \ "slack"            ).readNullable[String]
-    ~ (__ \ "slackNotification").readNullable[String]
+    ~ (__ \ "slack"            ).readNullable[SlackInfo]
+    ~ (__ \ "slackNotification").readNullable[SlackInfo]
     )(LdapTeam.apply _)
   }
 }
 
-case class TeamMembership(
+final case class TeamMembership(
   teamName: String
 , role    : String
 )
@@ -67,7 +80,7 @@ object TeamMembership {
   }
 }
 
-case class User(
+final case class User(
   displayName  : Option[String]
 , familyName   : String
 , givenName    : Option[String]
