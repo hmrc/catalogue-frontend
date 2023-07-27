@@ -202,6 +202,12 @@ aside ul label {
   overflow-wrap: break-word;
 }
 
+/* stops safari adding a tooltip */
+.truncate-content::after {
+  content: '';
+  display: block;
+}
+
 .hide-evictions {
   display: none;
 }
