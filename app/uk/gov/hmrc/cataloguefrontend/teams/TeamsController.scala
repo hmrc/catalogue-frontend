@@ -21,7 +21,7 @@ import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementPortalConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers
@@ -36,16 +36,16 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class TeamsController @Inject()(
-  userManagementConnector      : UserManagementConnector,
-  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  serviceDependenciesConnector : ServiceDependenciesConnector,
-  leakDetectionService         : LeakDetectionService,
-  umpConfig                    : UserManagementPortalConfig,
-  configuration                : Configuration,
-  teamInfoPage                 : TeamInfoPage,
-  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
-  override val mcc             : MessagesControllerComponents,
-  override val auth            : FrontendAuthComponents
+                                 userManagementConnector      : UserManagementPortalConnector,
+                                 teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+                                 serviceDependenciesConnector : ServiceDependenciesConnector,
+                                 leakDetectionService         : LeakDetectionService,
+                                 umpConfig                    : UserManagementPortalConfig,
+                                 configuration                : Configuration,
+                                 teamInfoPage                 : TeamInfoPage,
+                                 outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
+                                 override val mcc             : MessagesControllerComponents,
+                                 override val auth            : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)

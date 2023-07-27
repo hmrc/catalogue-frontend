@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementPortalConnector.TeamMember
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 object DisplayableTeamMembers {

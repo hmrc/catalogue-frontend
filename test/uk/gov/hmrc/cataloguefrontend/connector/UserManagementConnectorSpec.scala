@@ -17,202 +17,194 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, EitherValues, OptionValues}
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.{SlackInfo, TeamMember, UMPError}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, Member, TeamMembership, User}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.WireMockSupport
+import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class UserManagementConnectorSpec
   extends AnyWordSpec
      with Matchers
-     with BeforeAndAfterEach
-     with GuiceOneServerPerSuite
      with ScalaFutures
-     with IntegrationPatience
-     with EitherValues
-     with OptionValues
      with WireMockSupport
-     with MockitoSugar {
-
-  override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        "microservice.services.user-management.url"  -> wireMockUrl,
-        "microservice.services.user-management.myTeamsUrl" -> "http://some.ump.com/myTeams",
-        "play.http.requestHandler"                         -> "play.api.http.DefaultHttpRequestHandler",
-        "metrics.jvm"                                      -> false,
-        "ump.auth.enabled"                                 -> false
-      )
-      .build()
-
-  private lazy val userManagementConnector: UserManagementConnector =
-    app.injector.instanceOf[UserManagementConnector]
+     with HttpClientV2Support {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  "User management connector" should {
-    "should get the team members from the user-management service" in {
-      val teamMembers: Seq[TeamMember] =
-        callExternalMockedService(TeamName("team-chicken"), Some("user-management-response.json")).futureValue.right.value
-
-      teamMembers should have length 2
-
-      teamMembers.headOption.value shouldBe TeamMember(
-        displayName     = Some("Jim Willman"),
-        familyName      = Some("Willman"),
-        givenName       = Some("Jim"),
-        primaryEmail    = Some("jim.willman@digital.hmrc.gov.uk"),
-        username        = Some("jim.willman"),
-        role            = Some("user")
-      )
-
-      teamMembers(1) shouldBe TeamMember(
-        displayName     = Some("Karl GoJarvis"),
-        familyName      = Some("GoJarvis"),
-        givenName       = Some("Karl"),
-        primaryEmail    = Some("karl.gojarvis@hmrc.gsi.gov.uk"),
-        username        = Some("karl.gojarvis"),
-        role            = Some("user")
-      )
-    }
-
-    "have an empty members array in json" in {
-      val teamName = TeamName("team-chicken")
-
-      stubFor(
-        get(urlEqualTo(s"/v2/organisations/teams/${teamName.asString}/members"))
-          .willReturn(aResponse().withBodyFile("user-management-empty-members.json"))
-      )
-
-      val res = userManagementConnector.getTeamMembersFromUMP(teamName).futureValue
-      res shouldBe Right(Seq.empty)
-    }
-
-    "have no members field in json" in {
-      val res =
-        callExternalMockedService(TeamName("team-chicken"), Some("user-management-no-members.json")).futureValue
-      res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
-    }
-
-    "api returns an error code" in {
-      val error: UMPError = callExternalMockedService(TeamName("team-chicken"), None, 500).futureValue.left.value
-
-      error shouldBe UMPError.HTTPError(500)
-    }
-
-    "api returns not found" in {
-      val error: UMPError = callExternalMockedService(TeamName("team-chicken"), None, 404).futureValue.left.value
-
-      error shouldBe UMPError.UnknownTeam
-    }
-
-    "should get the team details from the user-management service" in {
-      stubFor(
-          get(urlEqualTo("/v2/organisations/teams/TEAM-A"))
-            .willReturn(aResponse().withBodyFile("user-management-team-details-response.json"))
-        )
-
-      val teamDetails = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))
-        .futureValue
-        .right
-        .value
-
-      teamDetails.description.value       shouldBe "TEAM-A is a great team"
-      teamDetails.location.value          shouldBe "STLPD"
-      teamDetails.organisation.value      shouldBe "ORGA"
-      teamDetails.slack.value             shouldBe SlackInfo("https://slack.host/messages/team-A")
-      teamDetails.slackNotification.value shouldBe SlackInfo("https://slack.host/messages/team-A-NOTIFICATION")
-      teamDetails.documentation.value     shouldBe "https://some.documentation.url"
-    }
-
-    "determine if SlackInfo hasValidURL is correct" in {
-      SlackInfo("https://slack.host/messages/team-A").hasValidUrl shouldBe true
-      SlackInfo("team-A").hasValidUrl shouldBe false
-    }
-
-    "determine if SlackInfo hasValidName is correct" in {
-      SlackInfo("https://slack.host/messages/team-A").hasValidName shouldBe true
-      SlackInfo("https://slack.host/messages/AAAAA").hasValidName shouldBe false
-      SlackInfo("https://slack.host/messages/11111").hasValidName shouldBe false
-      SlackInfo("https://slack.host/messages/ABC12345").hasValidName shouldBe false
-    }
-
-    "no organization/data field in json for team details" in {
-      stubFor(
-          get(urlEqualTo("/v2/organisations/teams/TEAM-A"))
-            .willReturn(aResponse().withBodyFile("user-management-team-details-nodata-response.json"))
-        )
-
-      val res = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A")).futureValue
-
-      res.left.get.isInstanceOf[UMPError.ConnectionError] shouldBe true
-    }
-
-    "api returns an error code for team details" in {
-      stubFor(
-          get(urlEqualTo("/v2/organisations/teams/TEAM-A"))
-            .willReturn(aResponse().withStatus(500))
-        )
-
-      val teamDetails = userManagementConnector
-        .getTeamDetails(TeamName("TEAM-A"))
-        .futureValue
-        .left
-        .value
-
-      teamDetails shouldBe UMPError.HTTPError(500)
-    }
-
-    "getAllUsersFromUMP" should {
-      "should get the users" in {
-        stubFor(
-          get(urlEqualTo("/v2/organisations/users"))
-            .willReturn(aResponse().withBodyFile("all-users.json"))
-        )
-
-        val allUsers = userManagementConnector.getAllUsersFromUMP.futureValue
-
-        allUsers.right.value.size shouldBe 3
-
-        def getMembersDetails(extractor: TeamMember => String): Iterable[String] =
-          allUsers.right.value.map(extractor)
-
-        getMembersDetails(_.displayName.value)  shouldBe Seq("Ricky Micky", "Aleks Malkes", "Anand Manand")
-        getMembersDetails(_.username.value)     shouldBe Seq("ricky.micky", "aleks.malkes", "anand.manand")
-        getMembersDetails(_.primaryEmail.value) shouldBe Seq(
-          "ricky.micky@gov.uk",
-          "aleks.malkes@gov.uk",
-          "anand.manand@gov.uk")
-      }
-    }
-  }
-
-  def callExternalMockedService(
-    teamName       : TeamName,
-    optJsonFileName: Option[String],
-    httpCode       : Int = 200
-  ): Future[Either[UMPError, Seq[TeamMember]]] = {
-
-    stubFor(
-      get(urlEqualTo(s"/v2/organisations/teams/${teamName.asString}/members"))
-        .willReturn(
-          optJsonFileName.foldLeft(aResponse().withStatus(httpCode))(_ withBodyFile _)
-        )
+  private val connector: UserManagementConnector =
+    new UserManagementConnector(
+      httpClientV2,
+      new ServicesConfig(Configuration(
+        "microservice.services.user-management.port" -> wireMockPort,
+        "microservice.services.user-management.host" -> wireMockHost
+      ))
     )
 
-    userManagementConnector
-      .getTeamMembersFromUMP(teamName)
+  "getTeam" should {
+    "return team when found" in {
+      val team = "test-team"
+
+      stubFor(
+        get(urlPathEqualTo(s"/user-management/team/$team"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                s"""
+                   |{
+                   |  "members": [],
+                   |  "teamName": "$team"
+                   |}
+                   |""".stripMargin
+              )
+          )
+      )
+
+      connector.getTeam(team).futureValue shouldBe
+        Some(
+          LdapTeam(Seq.empty[Member], team, None, None, None, None)
+        )
+    }
+
+    "return None when not found" in {
+      val team = "non-existent-team"
+
+      stubFor(
+        get(urlPathEqualTo(s"/user-management/team/$team"))
+          .willReturn(
+            aResponse()
+              .withStatus(404)
+          )
+      )
+
+      connector.getTeam(team).futureValue shouldBe None
+    }
   }
+
+  "getAllUsers" should {
+    "return a list of users" in {
+      stubFor(
+        get(urlPathEqualTo("/user-management/users"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                """
+                  |[
+                  |  {
+                  |	   "displayName" : "Joe Bloggs",
+                  |	   "familyName" : "Bloggs",
+                  |	   "givenName" : "Joe",
+                  |	   "organisation" : "MDTP",
+                  |	   "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
+                  |	   "username" : "joe.bloggs",
+                  |	   "github" : "https://github.com/joebloggs",
+                  |	   "phoneNumber" : "07123456789",
+                  |	   "teamsAndRoles" : [
+                  |	   	 {
+                  |	   	   "teamName" : "Test Team",
+                  |	   	   "role" : "user"
+                  |	   	 }
+                  |	   ]
+                  |  }
+                  |]
+                  |""".stripMargin)
+          )
+      )
+
+      connector.getAllUsers.futureValue should contain theSameElementsAs
+        Seq(
+          User(
+            displayName = Some("Joe Bloggs"),
+            familyName = "Bloggs",
+            givenName = Some("Joe"),
+            organisation = Some("MDTP"),
+            primaryEmail = "joe.bloggs@digital.hmrc.gov.uk",
+            username = "joe.bloggs",
+            github = Some("https://github.com/joebloggs"),
+            phoneNumber = Some("07123456789"),
+            teamsAndRoles = Some(Seq(TeamMembership(teamName = "Test Team", role = "user")))
+          )
+        )
+    }
+
+    "return empty list when encountered an error" in {
+      stubFor(
+        get(urlPathEqualTo("/user-management/users"))
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+          )
+      )
+
+      connector.getAllUsers.futureValue.isEmpty shouldBe true
+    }
+  }
+
+  "getUser" should {
+    "return user when found" in {
+      val username = "joe.bloggs"
+
+      stubFor(
+        get(urlPathEqualTo(s"/user-management/user/$username"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                """
+                  |{
+                  |  "displayName" : "Joe Bloggs",
+                  |  "familyName" : "Bloggs",
+                  |  "givenName" : "Joe",
+                  |  "organisation" : "MDTP",
+                  |  "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
+                  |  "username" : "joe.bloggs",
+                  |  "github" : "https://github.com/joebloggs",
+                  |  "phoneNumber" : "07123456789",
+                  |  "teamsAndRoles" : [
+                  |  	 {
+                  |  	   "teamName" : "Test Team",
+                  |  	   "role" : "user"
+                  |  	 }
+                  |  ]
+                  |}
+                  |""".stripMargin)
+          )
+      )
+
+      connector.getUser(username).futureValue shouldBe
+        Some(
+          User(
+            displayName = Some("Joe Bloggs"),
+            familyName = "Bloggs",
+            givenName = Some("Joe"),
+            organisation = Some("MDTP"),
+            primaryEmail = "joe.bloggs@digital.hmrc.gov.uk",
+            username = "joe.bloggs",
+            github = Some("https://github.com/joebloggs"),
+            phoneNumber = Some("07123456789"),
+            teamsAndRoles = Some(Seq(TeamMembership(teamName = "Test Team", role = "user")))
+          )
+        )
+    }
+
+    "return None when not found" in {
+      val username = "non.existent"
+
+      stubFor(
+        get(urlPathEqualTo(s"/user-management/user/$username"))
+          .willReturn(
+            aResponse()
+              .withStatus(404)
+          )
+      )
+
+      connector.getUser(username).futureValue shouldBe None
+    }
+  }
+
+
 }

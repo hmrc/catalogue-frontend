@@ -20,7 +20,7 @@ import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector.TeamMember
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementPortalConnector.TeamMember
 
 class DisplayableTeamMembersSpec extends AnyFunSpec with Matchers with TypeCheckedTripleEquals {
 
