@@ -34,15 +34,15 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class TeamsController @Inject()(
-                                 userManagementConnector      : UserManagementConnector,
-                                 teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-                                 serviceDependenciesConnector : ServiceDependenciesConnector,
-                                 leakDetectionService         : LeakDetectionService,
-                                 umpConfig                    : UserManagementPortalConfig,
-                                 teamInfoPage                 : TeamInfoPage,
-                                 outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
-                                 override val mcc             : MessagesControllerComponents,
-                                 override val auth            : FrontendAuthComponents
+  userManagementConnector      : UserManagementConnector,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  serviceDependenciesConnector : ServiceDependenciesConnector,
+  leakDetectionService         : LeakDetectionService,
+  umpConfig                    : UserManagementPortalConfig,
+  teamInfoPage                 : TeamInfoPage,
+  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
+  override val mcc             : MessagesControllerComponents,
+  override val auth            : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)

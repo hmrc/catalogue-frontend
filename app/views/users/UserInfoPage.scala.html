@@ -1,0 +1,95 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.users.User
+@import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+
+@this()
+
+@(
+  user: User
+)(implicit
+  request: RequestHeader
+)
+
+@standard_layout(user.username) {
+  <header>
+      <h1>@user.username</h1>
+  </header>
+
+  <section class="section-wrapper">
+      <div class="row">
+          <div class="col-md-4">
+              <div class="board">
+                  <h3 class="board__heading">
+                      Details
+                  </h3>
+
+                  <div class="board__body">
+                      <ul id="user-details" class="list list--minimal">
+                          <li id="user-name">
+                              <label>Name:</label>
+                              @user.displayName.getOrElse("")
+                          </li>
+                          <li id="user-email">
+                              <label>Email:</label>
+                              @user.primaryEmail
+                          </li>
+                          <li id="user-phone">
+                              <label>Phone:</label>
+                              @user.phoneNumber.getOrElse("")
+                          </li>
+                          <li id="user-github">
+                              <label>Github Username:</label>
+                              @user.github.getOrElse("")
+                          </li>
+                      </ul>
+                  </div>
+              </div>
+          </div>
+
+          <div class="col-md-8">
+              <div class="board">
+                  <h3 class="board__heading">
+                      Teams
+                  </h3>
+
+                  <div class="board__body">
+                      @if(user.teamsAndRoles.isEmpty) {
+                        @user.username does not belong to any teams.
+                      }
+
+                      @user.teamsAndRoles.map { teams =>
+                        <ul id="user-teams" class="list list--minimal">
+                            @for(team <- teams) {
+                              <li>
+                                <a href="@teamRoutes.TeamsController.team(TeamName(team.teamName))">
+                                  @team.teamName
+                                </a>
+                                @if(team.role.trim.nonEmpty && team.role != "user") {
+                                  <span class="badge">@team.role</span>
+                                }
+                              </li>
+                            }
+                        </ul>
+                      }
+                  </div>
+              </div>
+          </div>
+      </div>
+  </section>
+}

@@ -18,21 +18,33 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import views.html.error_404_template
+import views.html.users.UserInfoPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class UsersController @Inject()(
-  override val mcc : MessagesControllerComponents
-, override val auth: FrontendAuthComponents
+  userManagementConnector: UserManagementConnector
+, userInfoPage           : UserInfoPage
+, override val mcc       : MessagesControllerComponents
+, override val auth      : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def user(username: String): Action[AnyContent] = ???
+  def user(username: String): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      userManagementConnector.getUser(username)
+        .map {
+          case Some(user) => Ok(userInfoPage(user))
+          case None => NotFound(error_404_template())
+        }
+    }
 
 }

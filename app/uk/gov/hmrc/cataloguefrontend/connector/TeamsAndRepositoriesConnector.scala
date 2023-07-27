@@ -306,27 +306,6 @@ object Team {
   }
 }
 
-//object TeamsAndRepositoriesEnvironment {
-//  val format: Format[Environment] =
-//    new Format[Environment] {
-//      override def reads(json: JsValue) =
-//        json
-//          .validate[String]
-//          .flatMap {
-//            case "Production"    => JsSuccess(Environment.Production)
-//            case "External Test" => JsSuccess(Environment.ExternalTest)
-//            case "QA"            => JsSuccess(Environment.QA)
-//            case "Staging"       => JsSuccess(Environment.Staging)
-//            case "Integration"   => JsSuccess(Environment.Integration)
-//            case "Development"   => JsSuccess(Environment.Development)
-//            case s               => JsError(__, s"Invalid Environment '$s'")
-//          }
-//
-//      override def writes(e: Environment) =
-//        JsString(e.asString)
-//    }
-//}
-
 @Singleton
 class TeamsAndRepositoriesConnector @Inject()(
   httpClientV2  : HttpClientV2,
