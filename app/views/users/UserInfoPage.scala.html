@@ -21,7 +21,8 @@
 @this()
 
 @(
-  user: User
+  user: User,
+  umpProfileUrl: String
 )(implicit
   request: RequestHeader
 )
@@ -54,10 +55,14 @@
                               @user.phoneNumber.getOrElse("")
                           </li>
                           <li id="user-github">
-                              <label>Github Username:</label>
+                              <label>Github:</label>
                               @user.github.getOrElse("")
                           </li>
                       </ul>
+
+                      <div id="user-ump-link" class="list list--minimal">
+                          These details can be updated in <a href="@umpProfileUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+                      </div>
                   </div>
               </div>
           </div>
@@ -70,13 +75,15 @@
 
                   <div class="board__body">
                       @if(user.teamsAndRoles.isEmpty) {
-                        @user.username does not belong to any teams.
+                        <li class="col-xs-6">
+                            @user.username does not belong to any teams.
+                        </li>
                       }
 
                       @user.teamsAndRoles.map { teams =>
                         <ul id="user-teams" class="list list--minimal">
                             @for(team <- teams) {
-                              <li>
+                              <li class="col-xs-6">
                                 <a href="@teamRoutes.TeamsController.team(TeamName(team.teamName))">
                                   @team.teamName
                                 </a>

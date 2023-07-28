@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -31,6 +32,7 @@ import scala.concurrent.ExecutionContext
 class UsersController @Inject()(
   userManagementConnector: UserManagementConnector
 , userInfoPage           : UserInfoPage
+, umpConfig              : UserManagementPortalConfig
 , override val mcc       : MessagesControllerComponents
 , override val auth      : FrontendAuthComponents
 )(implicit
@@ -42,8 +44,11 @@ class UsersController @Inject()(
     BasicAuthAction.async { implicit request =>
       userManagementConnector.getUser(username)
         .map {
-          case Some(user) => Ok(userInfoPage(user))
-          case None => NotFound(error_404_template())
+          case Some(user) =>
+            val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
+            Ok(userInfoPage(user, umpProfileUrl))
+          case None =>
+            NotFound(error_404_template())
         }
     }
 
