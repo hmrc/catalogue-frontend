@@ -56,11 +56,8 @@ class ServiceConfigsController @Inject()(
     BasicAuthAction.async { implicit request =>
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-        configByKey <- serviceConfigsService.configByKey(serviceName)
-        warnings    <- if (CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
-                         serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), latest = true)
-                       } else Future.successful(Seq.empty[ServiceConfigsService.ConfigWarning])
-      } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings))
+        configByKey <- serviceConfigsService.configByKey(serviceName, showWarnings = CatalogueFrontendSwitches.showConfigWarnings.isEnabled)
+      } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings))
     }
 
   def searchLanding(): Action[AnyContent] =

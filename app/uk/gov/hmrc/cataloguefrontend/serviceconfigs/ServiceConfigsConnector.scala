@@ -48,9 +48,9 @@ class ServiceConfigsConnector @Inject() (
   implicit val cser = ConfigSourceEntries.reads
   implicit val srr  = ServiceRelationships.reads
 
-  def configByKey(service: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
+  def configByKey(service: String, latest: Boolean, showWarnings: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-key/$service?latest=$latest")
+      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-key/$service?latest=$latest&showWarnings=$showWarnings")
       .execute[ConfigByKey]
 
   def serviceRelationships(service: String)(implicit hc: HeaderCarrier): Future[ServiceRelationships] =

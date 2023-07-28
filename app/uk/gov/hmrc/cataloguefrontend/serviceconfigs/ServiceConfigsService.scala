@@ -38,19 +38,19 @@ class ServiceConfigsService @Inject()(
 ) {
   import ServiceConfigsService._
 
-  def configByKey(serviceName: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
-    serviceConfigsConnector.configByKey(serviceName, latest)
+  def configByKey(serviceName: String, latest: Boolean, showWarnings: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
+    serviceConfigsConnector.configByKey(serviceName, latest, showWarnings)
 
-  def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
+  def configByKey(serviceName: String, showWarnings: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     for {
-        latestConfigByKey   <- configByKey(serviceName, latest = true )
-        deployedConfigByKey <- configByKey(serviceName, latest = false)
+        latestConfigByKey   <- configByKey(serviceName, latest = true , showWarnings = showWarnings)
+        deployedConfigByKey <- configByKey(serviceName, latest = false, showWarnings = showWarnings)
         configByKey         =  deployedConfigByKey.map {
                                  case (k, m) => k -> m.map {
                                    case (e, vs) =>
                                      latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match {
-                                       case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = n.value))
-                                       case None    if vs.lastOption.isDefined                  => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = ""     ))
+                                       case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = n.value, warnings = n.warnings ))
+                                       case None    if vs.lastOption.isDefined                  => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = ""     , warnings = Nil))
                                        case _                                                   => e -> vs
                                      }
                                  }
@@ -61,7 +61,7 @@ class ServiceConfigsService @Inject()(
     } yield (configByKey ++ newConfig)
 
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
-    configByKey(serviceName, latest = true)
+    configByKey(serviceName, latest = true, showWarnings = false)
       .map(
         _.getOrElse(KeyName("artifact_name"), Map.empty)
           .view
@@ -207,7 +207,8 @@ object ServiceConfigsService {
   case class ConfigSourceValue(
     source   : String,
     sourceUrl: Option[String],
-    value    : String
+    value    : String,
+    warnings : Seq[String]
   ){
     def isSuppressed: Boolean =
       value == "<<SUPPRESSED>>"
@@ -221,6 +222,7 @@ object ServiceConfigsService {
       ( (__ \ "source"   ).read[String]
       ~ (__ \ "sourceUrl").readNullable[String]
       ~ (__ \ "value"    ).read[String]
+      ~ (__ \ "warnings" ).readWithDefault[Seq[String]](Nil)
       )(ConfigSourceValue.apply _)
   }
 

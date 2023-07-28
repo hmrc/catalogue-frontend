@@ -26,7 +26,6 @@
   configByKey   : ServiceConfigsService.ConfigByKey,
   deployments   : List[WhatsRunningWhereVersion],
   showWarnings  : Boolean,
-  configWarnings: Seq[ServiceConfigsService.ConfigWarning]
 )(implicit
   request: RequestHeader
 )
@@ -73,9 +72,7 @@
                                     case 1 => <span class="undeployed small"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 undeployed change</span>
                                     case x => <span class="undeployed small"><span class="glyphicon glyphicon-exclamation-sign"></span> {x} undeployed changes</span>
                                 })
-                                @(configWarnings.collect {
-                                    case x if ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env => x.warning
-                                  }.size match {
+                                @(configByKey.flatMap(_._2.get(env).flatMap(_.lastOption.map(_.warnings))).filter(_.nonEmpty).size match {
                                     case _ if env == ServiceConfigsService.ConfigEnvironment.Local => <span></span>
                                     case 0 => <span></span>
                                     case 1 => <span class="warning small hide-warnings"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 warnings</span>
@@ -109,24 +106,20 @@
                                             @if(sourceValue.nextDeployment && sourceValue.value.trim.isEmpty) {
                                               <span class="truncate-content-overflow undeployed">
                                                 <span class="glyphicon glyphicon-exclamation-sign small-text"></span>
-                                                @displayValue(sourceValue.copy(value ="<< Deleted >>"), env, key, warnings = Nil)
+                                                @displayValue(sourceValue.copy(value ="<< Deleted >>"), env, key)
                                               </span>
                                             } else if (sourceValue.nextDeployment) {
                                               <span class="truncate-content-overflow undeployed">
                                                 <span class="glyphicon glyphicon-exclamation-sign small-text"></span>
-                                                @displayValue(sourceValue, env, key, warnings = Nil)
+                                                @displayValue(sourceValue, env, key)
                                               </span>
                                             } else {
-                                              @defining(
-                                                ( envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1
-                                                , configWarnings.filter(x => x.key == key && ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env  )
-                                                )
-                                              ) { case (isStrikethrough, warnings) =>
+                                              @defining(envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1) { isStrikethrough =>
                                                 <span class="truncate-content-overflow
                                                             @if(sourceValue.isSuppressed) {suppressed}
-                                                            @if(isStrikethrough) {strikethrough} else if(warnings.nonEmpty){warning}">
-                                                  @if(!isStrikethrough && warnings.nonEmpty){ <span class="glyphicon glyphicon-exclamation-sign small-text hide-warnings"></span> }
-                                                  @displayValue(sourceValue, env, key, warnings)
+                                                            @if(isStrikethrough) {strikethrough} else if(sourceValue.warnings.nonEmpty){warning}">
+                                                  @if(!isStrikethrough && sourceValue.warnings.nonEmpty){ <span class="glyphicon glyphicon-exclamation-sign small-text hide-warnings"></span> }
+                                                  @displayValue(sourceValue, env, key)
                                                 </span>
                                               }
                                             }
@@ -275,18 +268,18 @@
     </body>
 </html>
 
-@displayValue(sourceValue: ServiceConfigsService.ConfigSourceValue, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName, warnings: Seq[ServiceConfigsService.ConfigWarning]) = {
-    <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@popoverContent(sourceValue, env, key, warnings)'>
+@displayValue(sourceValue: ServiceConfigsService.ConfigSourceValue, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName) = {
+    <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@popoverContent(sourceValue, env, key)'>
         @sourceValue.value
     </span>
 }
 
-@popoverContent(sourceValue: ServiceConfigsService.ConfigSourceValue, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName, warnings: Seq[ServiceConfigsService.ConfigWarning]) = {
+@popoverContent(sourceValue: ServiceConfigsService.ConfigSourceValue, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName) = {
     <div>@ServiceConfigsService.friendlySourceName(sourceValue.source, env, Some(key))</div>
-    @if(warnings.nonEmpty) {
+    @if(sourceValue.warnings.nonEmpty) {
 		<div class="popover-warnings hide-warnings">
 			<strong>Warnings</strong>
-			<ul>@warnings.map { warning => <li>@warning.warning</li> }</ul>
+			<ul>@sourceValue.warnings.map { warning => <li>@warning</li> }</ul>
         </div>
     }
 }
