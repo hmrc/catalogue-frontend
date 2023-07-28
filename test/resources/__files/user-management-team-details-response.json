@@ -1,9 +1,19 @@
 {
+  "teamName": "TEAM-A",
   "description": "TEAM-A is a great team",
-  "location": "STLPD",
-  "organisation": "ORGA",
+  "documentation": "https://some.documentation.url",
   "slack": "https://slack.host/messages/team-A",
   "slackNotification": "https://slack.host/messages/team-A-NOTIFICATION",
-  "team": "TEAM-A",
-  "documentation" : "https://some.documentation.url"
+  "members": [
+    {
+      "username": "a.b",
+      "displayName": "A B",
+      "role": "user"
+    },
+    {
+      "username": "c.d",
+      "displayName": "C D",
+      "role": "user"
+    }
+  ]
 }

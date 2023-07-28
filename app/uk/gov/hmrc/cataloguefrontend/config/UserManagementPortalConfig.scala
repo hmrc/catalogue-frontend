@@ -16,27 +16,20 @@
 
 package uk.gov.hmrc.cataloguefrontend.config
 
+import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class UserManagementPortalConfig @Inject() (servicesConfig: ServicesConfig) {
+class UserManagementPortalConfig @Inject() (config: Configuration) {
 
-  private def getConfString(key: String): String =
-    servicesConfig.getConfString(key, sys.error(s"Could not find config '$key'"))
-
-  def umpMyTeamsPageUrl(teamName: TeamName): String =
-    s"${getConfString(s"user-management.myTeamsUrl")}/${teamName.asString}?edit"
-
-  lazy val userManagementBaseUrl: String =
-    getConfString("user-management.url")
+  def umpMyTeamsPageUrl(teamName: TeamName): String = {
+    val baseUrl: String = config.get[String]("ump.teamBaseUrl")
+    s"$baseUrl/${teamName.asString}?edit"
+  }
 
   lazy val userManagementProfileBaseUrl: String =
-    getConfString("user-management.profileBaseUrl")
-
-  lazy val userManagementLoginUrl: String =
-    getConfString("user-management.loginUrl")
+    config.get[String]("ump.profileBaseUrl")
 
 }

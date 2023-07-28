@@ -17,14 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend.teams
 
 import cats.implicits._
-import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
-import uk.gov.hmrc.cataloguefrontend.DisplayableTeamMembers
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -41,7 +39,6 @@ class TeamsController @Inject()(
   serviceDependenciesConnector : ServiceDependenciesConnector,
   leakDetectionService         : LeakDetectionService,
   umpConfig                    : UserManagementPortalConfig,
-  configuration                : Configuration,
   teamInfoPage                 : TeamInfoPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
   override val mcc             : MessagesControllerComponents,
@@ -55,13 +52,11 @@ class TeamsController @Inject()(
     BasicAuthAction.async { implicit request =>
       teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)).flatMap {
         case Nil   => for {
-          teamMembers <- userManagementConnector.getTeamMembersFromUMP(teamName)
-          teamDetails <- userManagementConnector.getTeamDetails(teamName)
+          maybeTeam   <- userManagementConnector.getTeam(teamName.asString)
         } yield Ok( teamInfoPage(
             teamName           = teamName,
             repos              = Map.empty,
-            errorOrTeamMembers = teamMembers.map(tms => DisplayableTeamMembers(teamName, umpConfig.userManagementProfileBaseUrl, tms)),
-            errorOrTeamDetails = teamDetails,
+            maybeTeam          = maybeTeam,
             umpMyTeamsUrl      = "",
             leaksFoundForTeam  = false,
             hasLeaks           = _ => false,
@@ -70,13 +65,11 @@ class TeamsController @Inject()(
           ))
         case repos =>
           (
-            userManagementConnector.getTeamMembersFromUMP(teamName),
-            userManagementConnector.getTeamDetails(teamName),
+            userManagementConnector.getTeam(teamName.asString),
             leakDetectionService.repositoriesWithLeaks,
             serviceDependenciesConnector.dependenciesForTeam(teamName),
             serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
-            ).mapN { ( teamMembers,
-                       teamDetails,
+            ).mapN { ( maybeTeam,
                        reposWithLeaks,
                        masterTeamDependencies,
                        prodDependencies,
@@ -85,8 +78,7 @@ class TeamsController @Inject()(
               teamInfoPage(
                 teamName               = teamName,
                 repos                  = repos.groupBy(_.repoType),
-                errorOrTeamMembers     = teamMembers.map(tms => DisplayableTeamMembers(teamName, umpConfig.userManagementProfileBaseUrl, tms)),
-                errorOrTeamDetails     = teamDetails,
+                maybeTeam              = maybeTeam,
                 umpMyTeamsUrl          = umpConfig.umpMyTeamsPageUrl(teamName),
                 leaksFoundForTeam      = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name)),
                 hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),

@@ -21,7 +21,6 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.config.Constant
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -305,27 +304,6 @@ object Team {
     ~ (__ \ "repos"         ).format[Int]
     )(apply, unlift(unapply))
   }
-}
-
-object TeamsAndRepositoriesEnvironment {
-  val format: Format[Environment] =
-    new Format[Environment] {
-      override def reads(json: JsValue) =
-        json
-          .validate[String]
-          .flatMap {
-            case "Production"    => JsSuccess(Environment.Production)
-            case "External Test" => JsSuccess(Environment.ExternalTest)
-            case "QA"            => JsSuccess(Environment.QA)
-            case "Staging"       => JsSuccess(Environment.Staging)
-            case "Integration"   => JsSuccess(Environment.Integration)
-            case "Development"   => JsSuccess(Environment.Development)
-            case s               => JsError(__, s"Invalid Environment '$s'")
-          }
-
-      override def writes(e: Environment) =
-        JsString(e.asString)
-    }
 }
 
 @Singleton

@@ -25,7 +25,6 @@ import play.api.mvc._
 import play.api.{Configuration, Logger}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
-import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
@@ -65,7 +64,6 @@ class CatalogueController @Inject() (
   leakDetectionService         : LeakDetectionService,
   shutterService               : ShutterService,
   defaultBranchesService       : DefaultBranchesService,
-  userManagementPortalConfig   : UserManagementPortalConfig,
   configuration                : Configuration,
   override val mcc             : MessagesControllerComponents,
   whatsRunningWhereService     : WhatsRunningWhereService,
@@ -79,7 +77,6 @@ class CatalogueController @Inject() (
   prototypeInfoPage            : PrototypeInfoPage,
   repositoryInfoPage           : RepositoryInfoPage,
   defaultBranchListPage        : DefaultBranchListPage,
-  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
   costEstimationPage           : CostEstimationPage,
   override val auth            : FrontendAuthComponents
 )(implicit
