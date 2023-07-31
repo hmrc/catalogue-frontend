@@ -112,11 +112,11 @@ class ServiceConfigsConnector @Inject() (
   }
 
   def configWarnings(
-    serviceName: ServiceConfigsService.ServiceName
-  , environment: Environment
+    serviceName : ServiceConfigsService.ServiceName
+  , environments: Seq[Environment]
   , latest: Boolean
   )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/warnings?serviceName=${serviceName.asString}&environment=${environment.asString}&latest=$latest")
+      .get(url"$serviceConfigsBaseUrl/service-configs/warnings?serviceName=${serviceName.asString}&environment=${environments.map(_.asString)}&latest=$latest")
       .execute[Seq[ConfigWarning]]
 }

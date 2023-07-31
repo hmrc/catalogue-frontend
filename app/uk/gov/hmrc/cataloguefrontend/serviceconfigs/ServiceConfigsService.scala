@@ -129,13 +129,8 @@ class ServiceConfigsService @Inject()(
   , environments: Seq[Environment]
   , latest      : Boolean
   )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
-    environments
-      .foldLeftM[Future, Seq[ServiceConfigsService.ConfigWarning]](Seq.empty) {
-        case (acc, environment) =>
-          serviceConfigsConnector
-            .configWarnings(serviceName, environment, latest)
-            .map(warnings => acc ++ warnings)
-      }
+    serviceConfigsConnector
+      .configWarnings(serviceName, environments, latest)
 
   def toServiceKeyEnvironmentWarningMap(configWarnings: Seq[ConfigWarning]): Map[ServiceName, Map[KeyName, Map[Environment, Seq[ConfigWarning]]]] =
     configWarnings
