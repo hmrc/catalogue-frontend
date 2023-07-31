@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthRoutes}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
@@ -25,11 +25,12 @@ import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes =
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.{normalizeTerm, optimizeIndex}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ routes => serviceConfigsRoutes }
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
 import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
 import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
+import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
@@ -49,7 +50,11 @@ case class SearchTerm(
 }
 
 @Singleton
-class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector, prCommenterConnector: PrCommenterConnector)(implicit ec: ExecutionContext){
+class SearchIndex @Inject()(
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  prCommenterConnector         : PrCommenterConnector,
+  userManagementConnector      : UserManagementConnector
+)(implicit ec: ExecutionContext) {
 
   private[search] val cachedIndex = new AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
 
@@ -94,7 +99,9 @@ class SearchIndex @Inject()(teamsAndRepositoriesConnector: TeamsAndRepositoriesC
                             ))
       comments      <- prCommenterConnector.search(None, None, None)
       commentLinks  =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
-      allLinks = hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks
+      users         <- userManagementConnector.getAllUsers
+      userLinks     =  users.map(u => SearchTerm("users", u.username, userRoutes.UsersController.user(u.username).url, 0.5f))
+      allLinks      = hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
     } yield cachedIndex.set(optimizeIndex(allLinks))
   }
 

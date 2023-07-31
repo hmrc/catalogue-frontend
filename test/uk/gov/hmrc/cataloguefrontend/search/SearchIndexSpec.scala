@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.search
 import org.mockito.MockitoSugar.mock
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -63,7 +63,8 @@ class SearchIndexSpec extends AnyWordSpec with Matchers {
 
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
   private val mockPrCommenterConnector          = mock[PrCommenterConnector]
-  private val testIndex = new SearchIndex(mockTeamsAndRepositoriesConnector, mockPrCommenterConnector)
+  private val mockUserManagementConnector       = mock[UserManagementConnector]
+  private val testIndex = new SearchIndex(mockTeamsAndRepositoriesConnector, mockPrCommenterConnector, mockUserManagementConnector)
 
   //Populate index with mock data
   testIndex.cachedIndex.set(SearchIndex.optimizeIndex(index))
