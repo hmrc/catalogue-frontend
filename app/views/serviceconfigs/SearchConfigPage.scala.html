@@ -20,6 +20,7 @@
 @import views.html.partials.form_global_errors
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{GroupBy, SearchConfig, ServiceConfigsService, routes => serviceConfigsRoutes, FormValueFilterType }
+@import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 
 @this()
 
@@ -123,7 +124,7 @@
             <div class="col-md-2">
                 @helper.select(
                     field              = form("serviceType"),
-                    options            = List("FrontendService" -> "Frontend", "BackendService" -> "Backend"),
+                    options            = ServiceType.values.toSeq.map(st => st.asString -> st.displayString),
                     Symbol("_default") -> "All",
                     Symbol("_label")   -> "Service Type",
                     Symbol("class")    -> "form-control"
