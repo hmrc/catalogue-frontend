@@ -39,7 +39,17 @@ class ServiceConfigsService @Inject()(
   import ServiceConfigsService._
 
   def configByKey(serviceName: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
-    serviceConfigsConnector.configByKey(serviceName, latest)
+    serviceConfigsConnector
+      .configByEnv(serviceName, latest)
+      .map(_.foldLeft(Map.empty[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]) { case (acc, (e -> cses)) =>
+        cses.foldLeft(acc) { case (acc2, cse) =>
+          acc2 ++ cse.entries.map { case (key, value) =>
+            val envMap = acc2.getOrElse(key, Map.empty)
+            val values = envMap.getOrElse(e, Seq.empty)
+            key -> (envMap + (e -> (values :+ ConfigSourceValue(cse.source, cse.sourceUrl, value))))
+          }
+        }
+      }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString): _*)) // sort by keys
 
   def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     for {
@@ -119,13 +129,8 @@ class ServiceConfigsService @Inject()(
   , environments: Seq[Environment]
   , latest      : Boolean
   )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
-    environments
-      .foldLeftM[Future, Seq[ServiceConfigsService.ConfigWarning]](Seq.empty) {
-        case (acc, environment) =>
-          serviceConfigsConnector
-            .configWarnings(serviceName, environment, latest)
-            .map(warnings => acc ++ warnings)
-      }
+    serviceConfigsConnector
+      .configWarnings(serviceName, environments, latest)
 
   def toServiceKeyEnvironmentWarningMap(configWarnings: Seq[ConfigWarning]): Map[ServiceName, Map[KeyName, Map[Environment, Seq[ConfigWarning]]]] =
     configWarnings
@@ -193,14 +198,17 @@ object ServiceConfigsService {
   }
 
   case class ConfigSourceEntries(
-    source : String,
-    entries: Map[KeyName, String]
+    source   : String,
+    sourceUrl: Option[String],
+    entries  : Map[KeyName, String],
+
   )
 
   object ConfigSourceEntries {
     val reads: Reads[ConfigSourceEntries] =
-      ( (__ \ "source" ).read[String]
-      ~ (__ \ "entries").read[Map[String, String]].map(_.map { case (k, v) => KeyName(k) -> v }.toMap)
+      ( (__ \ "source"   ).read[String]
+      ~ (__ \ "sourceUrl").readNullable[String]
+      ~ (__ \ "entries"  ).read[Map[String, String]].map(_.map { case (k, v) => KeyName(k) -> v }.toMap)
       )(ConfigSourceEntries.apply _)
   }
 
