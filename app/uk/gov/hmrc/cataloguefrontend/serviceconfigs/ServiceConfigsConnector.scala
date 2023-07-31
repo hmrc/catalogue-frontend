@@ -48,10 +48,10 @@ class ServiceConfigsConnector @Inject() (
   implicit val cser = ConfigSourceEntries.reads
   implicit val srr  = ServiceRelationships.reads
 
-  def configByKey(service: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
+  def configByEnv(service: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]  =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-key/$service?latest=$latest")
-      .execute[ConfigByKey]
+      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/$service?latest=$latest")
+      .execute[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]
 
   def serviceRelationships(service: String)(implicit hc: HeaderCarrier): Future[ServiceRelationships] =
     httpClientV2
