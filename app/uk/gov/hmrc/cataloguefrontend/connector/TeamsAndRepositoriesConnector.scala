@@ -75,7 +75,7 @@ object ServiceType {
     override val displayString = "Service (Backend)"
   }
 
-  val serviceTypes =
+  val values =
     Set(
       Frontend,
       Backend
@@ -84,11 +84,11 @@ object ServiceType {
   def displayString = s"Service ($ServiceType)"
 
   def parse(s: String): Either[String, ServiceType] =
-    serviceTypes
+    values
       .find(_.asString.equalsIgnoreCase(s))
-      .toRight(s"Invalid serviceType - should be one of: ${serviceTypes.map(_.asString).mkString(", ")}")
+      .toRight(s"Invalid serviceType - should be one of: ${values.map(_.asString).mkString(", ")}")
 
-  def apply(value: String): Option[ServiceType] = serviceTypes.find(_.asString == value)
+  def apply(value: String): Option[ServiceType] = values.find(_.asString == value)
 
   val stFormat: Format[ServiceType] = new Format[ServiceType] {
     override def reads(json: JsValue): JsResult[ServiceType] =
