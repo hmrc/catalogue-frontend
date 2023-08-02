@@ -127,10 +127,7 @@
   serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
-  ["team-filter"]
-    .forEach(function(id) {
-      document.getElementById(id).addEventListener("change", function() {
-        document.getElementById("form").submit();
-      });
-    });
+  document.getElementById("team-filter").addEventListener("change", function() {
+    document.getElementById("form").submit();
+  });
 </script>
