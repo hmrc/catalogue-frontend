@@ -71,6 +71,7 @@ class SearchIndex @Inject()(
     SearchTerm("page",     "shutter-events",               shutterRoutes.ShutterEventsController.shutterEvents.url,                     1.0f),
     SearchTerm("page",     "teams",                        teamRoutes.TeamsController.allTeams().url,                                   1.0f),
     SearchTerm("page",     "repositories",                 reposRoutes.RepositoriesController.allRepositories().url,                    1.0f),
+    SearchTerm("page",     "users",                        userRoutes.UsersController.allUsers.url,                                     1.0f),
     SearchTerm("page",     "defaultbranch",                catalogueRoutes.CatalogueController.allDefaultBranches().url,                1.0f),
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,               1.0f),
     SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,           1.0f),
@@ -99,7 +100,7 @@ class SearchIndex @Inject()(
                             ))
       comments      <- prCommenterConnector.search(None, None, None)
       commentLinks  =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
-      users         <- userManagementConnector.getAllUsers
+      users         <- userManagementConnector.getAllUsers(None)
       userLinks     =  users.map(u => SearchTerm("users", u.username, userRoutes.UsersController.user(u.username).url, 0.5f))
       allLinks      = hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
     } yield cachedIndex.set(optimizeIndex(allLinks))

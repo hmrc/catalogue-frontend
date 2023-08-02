@@ -49,7 +49,7 @@ class UserManagementConnector @Inject()(
       .execute[Option[LdapTeam]]
   }
 
-  def getAllUsers(team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[User]] = {
+  def getAllUsers(team: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[User]] = {
     val url: URL = url"$baseUrl/user-management/users?team=$team"
 
     implicit val uR: Reads[User] = User.reads

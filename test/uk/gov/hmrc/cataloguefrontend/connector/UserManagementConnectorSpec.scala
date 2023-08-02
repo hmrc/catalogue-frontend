@@ -106,7 +106,7 @@ class UserManagementConnectorSpec
                   |	   "phoneNumber" : "07123456789",
                   |	   "teamsAndRoles" : [
                   |	   	 {
-                  |	   	   "teamName" : "Test Team",
+                  |	   	   "teamName" : "TestTeam",
                   |	   	   "role" : "user"
                   |	   	 }
                   |	   ]
@@ -116,7 +116,7 @@ class UserManagementConnectorSpec
           )
       )
 
-      connector.getAllUsers.futureValue should contain theSameElementsAs
+      connector.getAllUsers().futureValue should contain theSameElementsAs
         Seq(
           User(
             displayName = Some("Joe Bloggs"),
@@ -127,7 +127,79 @@ class UserManagementConnectorSpec
             username = "joe.bloggs",
             github = Some("https://github.com/joebloggs"),
             phoneNumber = Some("07123456789"),
-            teamsAndRoles = Some(Seq(TeamMembership(teamName = "Test Team", role = "user")))
+            teamsAndRoles = Some(Seq(TeamMembership(teamName = "TestTeam", role = "user")))
+          )
+        )
+    }
+
+    "return a list of users in a team" in {
+      stubFor(
+        get(urlEqualTo("/user-management/users?team=TestTeam"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                """
+                  |[
+                  |  {
+                  |	   "displayName" : "Joe Bloggs",
+                  |	   "familyName" : "Bloggs",
+                  |	   "givenName" : "Joe",
+                  |	   "organisation" : "MDTP",
+                  |	   "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
+                  |	   "username" : "joe.bloggs",
+                  |	   "github" : "https://github.com/joebloggs",
+                  |	   "phoneNumber" : "07123456789",
+                  |	   "teamsAndRoles" : [
+                  |	   	 {
+                  |	   	   "teamName" : "TestTeam",
+                  |	   	   "role" : "user"
+                  |	   	 }
+                  |	   ]
+                  |  },
+                  |  {
+                  |	   "displayName" : "Jane Doe",
+                  |	   "familyName" : "Doe",
+                  |	   "givenName" : "Jane",
+                  |	   "organisation" : "MDTP",
+                  |	   "primaryEmail" : "jane.doe@digital.hmrc.gov.uk",
+                  |	   "username" : "jane.doe",
+                  |	   "github" : "https://github.com/janedoe",
+                  |	   "phoneNumber" : "07123456789",
+                  |	   "teamsAndRoles" : [
+                  |	   	 {
+                  |	   	   "teamName" : "TestTeam",
+                  |	   	   "role" : "user"
+                  |	   	 }
+                  |	   ]
+                  |  }
+                  |]
+                  |""".stripMargin)
+          )
+      )
+
+      connector.getAllUsers(team = Some("TestTeam")).futureValue should contain theSameElementsAs
+        Seq(
+          User(
+            displayName = Some("Joe Bloggs"),
+            familyName = "Bloggs",
+            givenName = Some("Joe"),
+            organisation = Some("MDTP"),
+            primaryEmail = "joe.bloggs@digital.hmrc.gov.uk",
+            username = "joe.bloggs",
+            github = Some("https://github.com/joebloggs"),
+            phoneNumber = Some("07123456789"),
+            teamsAndRoles = Some(Seq(TeamMembership(teamName = "TestTeam", role = "user")))
+          ),
+          User(
+            displayName = Some("Jane Doe"),
+            familyName = "Doe",
+            givenName = Some("Jane"),
+            organisation = Some("MDTP"),
+            primaryEmail = "jane.doe@digital.hmrc.gov.uk",
+            username = "jane.doe",
+            github = Some("https://github.com/janedoe"),
+            phoneNumber = Some("07123456789"),
+            teamsAndRoles = Some(Seq(TeamMembership(teamName = "TestTeam", role = "user")))
           )
         )
     }
@@ -141,7 +213,7 @@ class UserManagementConnectorSpec
           )
       )
 
-      connector.getAllUsers.futureValue.isEmpty shouldBe true
+      connector.getAllUsers().futureValue.isEmpty shouldBe true
     }
   }
 
