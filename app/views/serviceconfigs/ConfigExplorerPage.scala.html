@@ -286,7 +286,7 @@
     @if(warnings.nonEmpty) {
 		<div class="popover-warnings hide-warnings">
 			<strong>Warnings</strong>
-			<ul>@warnings.map { warning => <li>@warning.warning</li> }</ul>
+			<ul>@warnings.map { warning => <li>@warning.warning: @ServiceConfigsService.warningDescription(warning.warning)</li> }</ul>
         </div>
     }
 }

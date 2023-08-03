@@ -34,8 +34,32 @@
     <header>
         <h1>
             Config Warnings
+            <a class="pull-right" role="button" data-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+                <i class="glyphicon glyphicon-question-sign" style="color: black;"></i>
+            </a>
         </h1>
     </header>
+
+    <div class="collapse" id="helpText">
+      <div class="well">
+        <h2>How to use this page?</h2>
+        <ul>
+          <li>Select a service to see any configuration warnings.</li>
+          <li>Click on the warning to see the value in context in the Config Explorer.</li>
+          <li>The warnings are not necessarily errors, but warrant a review.</li>
+          <li>The warning types currently detected are:</li>
+          <ul>
+            <li><code>NotOverriding</code> Config doesn't appear to override any existing key. This may be legitimate, e.g. dynamic keys. But if often an indicator of an unused key which can be cleaned up or a misspelling. Note, always try to provide a default value in <code>application.conf</code>.</li>
+            <li><code>TypeChange</code> Config value overrides a value with different a type. This will probably break deployment.</li>
+            <li><code>Localhost</code> Use of localhost in value.</li>
+            <li><code>Debug</code> Use of Debug log level. This should only be enabled briefly in Production.</li>
+            <li><code>TestOnlyRoutes</code> Use of test only routes. This should not be enabled in Production</li>
+            <li><code>ReactiveMongoConfig</code> Use of obsolete reactivemongo config. These will have no effect with the official mongo driver.</li>
+            <li><code>Unencrypted</code> Value looks like it should be encrypted</li>
+          </ul>
+        </ul>
+      </div>
+    </div>
 
     @form_global_errors(form)
 
@@ -136,4 +160,6 @@
 @popoverContent(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
     <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
     <strong>Value:</strong> @warning.value.value
+    <br/><br/>
+    <div>@warning.warning: @ServiceConfigsService.warningDescription(warning.warning)</div>
 }

@@ -271,6 +271,20 @@ object ServiceConfigsService {
       case _                            => source
     }
 
+  def warningDescription(
+    warningType: String
+  ): String =
+    warningType match {
+      case "NotOverriding"       => "Config doesn't appear to override any existing key"
+      case "TypeChange"          => "Config value overrides a value with different type"
+      case "Localhost"           => "Use of localhost in value"
+      case "Debug"               => "Use of Debug log level. This should only be enabled briefly in Production"
+      case "TestOnlyRoutes"      => "Use of test only routes. This should not be enabled in Production"
+      case "ReactiveMongoConfig" => "Use of obsolete reactivemongo config"
+      case "Unencrypted"         => "Value looks like it should be encrypted"
+      case _                     => ""
+    }
+
   sealed trait ArtifactNameResult
 
   object ArtifactNameResult {
