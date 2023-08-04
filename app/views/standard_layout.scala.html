@@ -171,7 +171,7 @@
                             <li><a id="link-to-default-branch-names" href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
                             <li><a id="link-to-deployment-timelines" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
                             <li>
-                                <a id="link-to-users-list-page" href="@uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.allUsers">
+                                <a id="link-to-users-list-page" href="@uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.allUsers()">
                                     Users
                                     @* TODO remove once date has elapsed *@
                                     @if(isNew) {

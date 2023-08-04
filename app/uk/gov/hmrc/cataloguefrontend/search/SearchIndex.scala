@@ -71,7 +71,7 @@ class SearchIndex @Inject()(
     SearchTerm("page",     "shutter-events",               shutterRoutes.ShutterEventsController.shutterEvents.url,                     1.0f),
     SearchTerm("page",     "teams",                        teamRoutes.TeamsController.allTeams().url,                                   1.0f),
     SearchTerm("page",     "repositories",                 reposRoutes.RepositoriesController.allRepositories().url,                    1.0f),
-    SearchTerm("page",     "users",                        userRoutes.UsersController.allUsers.url,                                     1.0f),
+    SearchTerm("page",     "users",                        userRoutes.UsersController.allUsers().url,                                     1.0f),
     SearchTerm("page",     "defaultbranch",                catalogueRoutes.CatalogueController.allDefaultBranches().url,                1.0f),
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,               1.0f),
     SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,           1.0f),
