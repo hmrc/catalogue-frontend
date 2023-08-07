@@ -64,12 +64,15 @@ class UsersController @Inject()(
           formWithErrors => Future.successful(BadRequest(userListPage(Seq.empty, Seq.empty, formWithErrors))),
           validForm      => for {
                               users <- userManagementConnector.getAllUsers(team = validForm.team)
-                                         .map(_.filter(_.teamsAndRoles.exists(_.nonEmpty)))
                               teams <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
                             }
           yield Ok(userListPage(users, teams, UsersListFilter.form.fill(validForm.copy(username = username))))
         )
     }
+}
+
+object UsersController {
+  val maxRows = 500
 }
 
 case class UsersListFilter(

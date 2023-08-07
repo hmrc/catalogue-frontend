@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.users.User
 @import uk.gov.hmrc.cataloguefrontend.users.UsersListFilter
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.users.UsersController.maxRows
 @import views.html.helper.select
 
 @this()
@@ -60,7 +61,7 @@
       <thead id="user-table-headings">
         <tr>
           <td colspan="6">
-            <span class="col-md-offset-4" id="maximum-records" style="color: #6f777b;">Only displaying 500 records - please refine your search</span>
+            <span class="col-md-offset-4" id="maximum-records" style="color: #6f777b;">Only displaying @maxRows records - please refine your search</span>
           </td>
         </tr>
         <tr>
@@ -118,16 +119,17 @@
 <!-- listjs configuration -->
 <script @CSPNonce.attr>
   function toggleMessage() {
-    const totalRows = document.getElementById('users-table').rows.length;
-    const noUsersMessageRow = document.getElementById('no-users-found');
-    const maxRecordsMessageRow = document.querySelector('#maximum-records');
+    const emptyRows = 2;
+    const rows = document.getElementById('users-table').rows.length;
+    const noUsersFound = document.getElementById('no-users-found');
+    const maxRecords = document.querySelector('#maximum-records');
 
-    if (noUsersMessageRow) {
-      noUsersMessageRow.style.display = totalRows === 2 ? 'block' : 'none';
+    if (noUsersFound) {
+      noUsersFound.style.display = rows === emptyRows ? 'block' : 'none';
     }
 
-    if (maxRecordsMessageRow) {
-      maxRecordsMessageRow.style.display = totalRows > 500 ? 'block' : 'none';
+    if (maxRecords) {
+      maxRecords.style.display = rows >= @maxRows + emptyRows ? 'block' : 'none';
     }
   }
 
@@ -137,7 +139,7 @@
     valueNames: ['username', 'given-name', 'family-name', 'github'],
     searchColumns: ['username', 'github'],
     searchDelay: 350,
-    page: 500,
+    page: @maxRows,
   };
 
   const usersList = new List('users-list', options)
