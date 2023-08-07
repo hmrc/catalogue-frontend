@@ -16,6 +16,11 @@ POST       /create-a-repository                         uk.gov.hmrc.cataloguefro
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
 
+GET        /deploy-service/1                            uk.gov.hmrc.cataloguefrontend.buildanddeploy.DeployServiceController.step1(serviceName: Option[String])
+POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.buildanddeploy.DeployServiceController.step2()
+POST       /deploy-service/3                            uk.gov.hmrc.cataloguefrontend.buildanddeploy.DeployServiceController.step3()
+GET        /deploy-service/console/:deployId            uk.gov.hmrc.cataloguefrontend.buildanddeploy.DeployServiceController.console(deployId: String)
+
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
 
