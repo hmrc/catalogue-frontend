@@ -25,15 +25,17 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 
 import java.net.URL
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, Instant}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -75,6 +77,8 @@ class BuildDeployApiConnector @Inject() (
     val url = buildUrl(endpoint, queryParams)
 
     val headers = signedHeaders(url.getPath, queryParams, body)
+
+    logger.info(s"Calling the $url with the following payload: $body")
 
     implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
 
@@ -170,13 +174,9 @@ class BuildDeployApiConnector @Inject() (
          |   "default_branch_name": "main"
          |}""".stripMargin
 
-    val body = Json.parse(finalPayload)
-
-    logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
-
     signAndExecuteRequest(
       endpoint = "CreateRepository",
-      body     = body
+      body     = Json.parse(finalPayload)
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
@@ -202,15 +202,58 @@ class BuildDeployApiConnector @Inject() (
          |   "zone": "$zone"
          |}""".stripMargin
 
-    val body = Json.parse(finalPayload)
-
-    logger.info(s"Calling the B&D Create App Configs API with the following payload: $body")
-
     signAndExecuteRequest(
       endpoint = "CreateAppConfigs",
-      body     = body
+      body     = Json.parse(finalPayload)
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
+
+  def triggerMicroserviceDeployment(serviceName: String, environment: Environment, version: Version, slugSource: String, deployerId: String): Future[Either[String, AsyncRequestId]] = {
+    val finalPayload =
+      s"""
+         |{
+         |   "service"        : "$serviceName",
+         |   "environment"    : "${environment.asString}",
+         |   "service_version": "${version.original}",
+         |   "slug_source"    : "$slugSource",
+         |   "deployer_id"    : "$deployerId"
+         |}""".stripMargin
+
+    signAndExecuteRequest(
+      endpoint = "TriggerMicroserviceDeployment",
+      body     = Json.parse(finalPayload)
+    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
+  }
+
+  // def getRequestState(requestId: AsyncRequestId): Future[Either[String, RequestState]] = {
+  //   implicit val r = RequestState.reads
+
+  //   val finalPayload =
+  //     s"""
+  //         |{
+  //         |   "bnd_api_request_id"          : "${requestId.id}",
+  //         |   "start_timestamp_milliseconds": ${java.time.Instant.now().getNano / 1000000 }
+  //         |}""".stripMargin
+
+  //   signAndExecuteRequest(
+  //     endpoint = "GetRequestState",
+  //     body     = Json.parse(finalPayload)
+  //   ).map(_.map(resp => resp.details.as[RequestState]))
+  // }
+  def getRequestState(requestId: AsyncRequestId): Future[Either[String, JsValue]] = {
+    val finalPayload =
+      s"""
+          |{
+          |   "bnd_api_request_id"          : "${requestId.id}",
+          |   "start_timestamp_milliseconds": ${java.time.Instant.now().getNano / 1000000 }
+          |}""".stripMargin
+
+    signAndExecuteRequest(
+      endpoint = "GetRequestState",
+      body     = Json.parse(finalPayload)
+    ).map(_.map(resp => resp.details))
+  }
+
 }
 
 object BuildDeployApiConnector {
@@ -273,4 +316,24 @@ object BuildDeployApiConnector {
       )(PrototypeDetails.apply _)
     }
   }
+
+  // final case class Log(attempt: Int, event: String, level: String, timestamp: Instant)
+  // final case class RequestState(attempt: Int, logs: Seq[Log], lastLogTimestamp: Instant)
+
+  // object RequestState {
+  //   val reads: Reads[RequestState] = {
+  //     implicit val readsLog: Reads[Log] =
+  //       ( (__ \ "bnd_api_request_attempt_number").read[Int]
+  //       ~ (__ \ "event"                         ).read[String]
+  //       ~ (__ \ "level"                         ).read[String]
+  //       ~ (__ \ "timestamp"                     ).read[Long].map(x => Instant.ofEpochMilli(x))
+  //       )(Log.apply _)
+
+  //     ( (__ \ "attempt_number"                 ).read[Int]
+  //     ~ (__ \ "logs"                           ).read[Seq[Log]]
+  //     ~ (__ \ "last_log_timestamp_milliseconds").read[Long].map(x => Instant.ofEpochMilli(x))
+  //     )(RequestState.apply _)
+  //   }
+  // }
+
 }

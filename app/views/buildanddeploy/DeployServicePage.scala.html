@@ -1,0 +1,269 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import views.html.partials.{form_global_errors, form_fields_warnings}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+@import uk.gov.hmrc.cataloguefrontend.buildanddeploy.{DeployServiceForm, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes }
+@import uk.gov.hmrc.cataloguefrontend.service.SlugVersionInfo
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, routes => vulnerabilitiesRoutes}
+@import views.html.vulnerabilities.VulnerabilityDetails
+
+@this(viewMessages: ViewMessages)
+
+@(form          : Form[DeployServiceForm]
+, allServices   : Seq[GitRepository]
+, environments  : Seq[Environment]
+, releases      : Seq[WhatsRunningWhereVersion]
+, latestVersion : Option[Version]
+, evaluations   : Option[(Seq[ServiceConfigsService.ConfigWarning], Seq[VulnerabilitySummary])]
+)( implicit
+  messages      : Messages
+, request       : uk.gov.hmrc.internalauth.client.AuthenticatedRequest[play.api.mvc.AnyContent,Boolean]
+)
+
+@standard_layout("Deploy Service", "deploy service") {
+  <section class="section-wrapper">
+    <h1>Deploy Service</h1>
+    <div class="row">
+      <div class="col-md-4">
+        @form_global_errors(form)
+
+        @helper.form(
+          action           =  appRoutes.DeployServiceController.step1(form("serviceName").value)
+        , Symbol("id")     -> "choose-service-name-form"
+        , Symbol("method") -> "GET",
+        ) {
+          <fieldset @if(evaluations.isDefined) {disabled}>
+            <dl>
+              <dt><label for="service-name">Service Name:</label></dt>
+              <dd>
+                <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
+                <div id="service-name-matches" class="search-matches-dropdown hide"></div>
+              </dd>
+            </dl>
+          </fieldset>
+        }
+
+        @if(form("serviceName").value.isDefined) {
+          @helper.form(
+            action             =  (if (evaluations.isEmpty) appRoutes.DeployServiceController.step2() else appRoutes.DeployServiceController.step3())
+          , Symbol("id")       -> "deploy-service-form"
+          , Symbol("method")   -> "POST"
+          ) {
+            @csrfFormField
+            <fieldset @if(evaluations.isDefined) {disabled}>
+              <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+
+              @helper.select(
+                field              =  form("environment")
+              , options            =  environments.map(t => t.asString -> t.displayString)
+              , Symbol("_label")   -> "Environment:"
+              , Symbol("_default") -> "Please choose"
+              , Symbol("id")       -> "environment"
+              , Symbol("class")    -> "form-control"
+              , Symbol("title")    -> "On change updates 'Config Key' autocomplete"
+              , Symbol("required") -> "required"
+              )
+
+              <dl>
+                <dt><label for="service-name">Version:</label></dt>
+                <dd>
+                  <div id="helpful-versions" class="list-group">
+                    @defining(
+                      ( latestVersion.map(x => (x, "Latest")) ++
+                        releases.map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
+                      ).groupBy { case (version, _) => version }
+                       .toList
+                       .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
+                       .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
+                    ) { xs => @xs.map { case (version, text) =>
+                      <a href="#" class="list-group-item" data-content="@version">
+                        <div class="row">
+                          <div class="col-xs-3 col-md-3">@version</div>
+                          <div class="col-xs-9 col-md-9">@text</div>
+                        </div>
+                      </a>
+                    }}
+                  </div>
+                  <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or selection one from above">
+                </dd>
+              </dl>
+            </fieldset>
+
+            <hr>
+
+            @if(evaluations.isEmpty) {
+              <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit" @if(!request.retrieval){disabled}>Evaluate</button>
+            } else {
+              <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+              <input type="hidden" name="environment" value='@form("environment").value' />
+              <input type="hidden" name="version" value='@form("version").value' />
+              <a href="@appRoutes.DeployServiceController.step1(form("serviceName").value)" class="btn btn-default">Edit</a>
+              <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit" @if(!request.retrieval){disabled}>Deploy</button>
+            }
+          }
+        }
+      </div>
+      <div class="col-md-8">
+        @evaluations.map { case (warnings, vulnerabilities) =>
+          <label>Please review before deploying:</label>
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="headingOne">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                  <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
+                </a>
+              </div>
+              <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false">
+                <div class="panel-body">
+                  <table class="table table-striped always-wrap sticky-header">
+                    <thead>
+                      <tr>
+                        <th>Key</th>
+                        <th>Warning</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for(x <- warnings) {
+                        <tr>
+                          <td><code>@x.key.asString</code></td>
+                          <td>@displayConfigSourceValue(ServiceConfigsService.ServiceName(form.get.serviceName), x.key, x.environment, Some(Seq(x)))</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="headingTwo">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
+                </a>
+              </div>
+              <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false" style="height: 0px;">
+                <div class="panel-body">
+                    <table style="word-break: break-word" class="table table-striped sticky-header">
+                      <thead>
+                          <tr>
+                              <th style="width:1px"></th>
+                              <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
+                              <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
+                              <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
+                              <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
+                              <th class="col-xs-1 text-right" style="width:90px"><button class="sort no-border" data-sort="score">Score</button></th>
+                          </tr>
+                      </thead>
+                      <tbody class="list">
+                          @vulnerabilities.map(vulnerabilitiesSummary)
+                      </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+  <script @CSPNonce.attr>
+    autoCompleteInit({
+      formId           : "choose-service-name-form",
+      inputSearchId    : "service-name",
+      matchesDivId     : "service-name-matches",
+      allowPartial     : false,
+      ignoreCase       : true,
+      submitOnSelection: true,
+      values           : [@for(service <- allServices) {'@service.name',}]
+    });
+
+    Array
+      .from(document.getElementById('helpful-versions').getElementsByTagName('a'))
+      .map(el => el.onclick = function() {document.getElementById('version').value = el.getAttribute('data-content');});
+  </script>
+}
+
+@displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[Seq[ServiceConfigsService.ConfigWarning]]) = {
+  @result match {
+      case None => {
+      }
+      case Some(evaluations) => {
+          @evaluations.map { envData =>
+              <ul class="list-unstyled">
+                  <li>
+                      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
+                         data-toggle="popover"
+                         data-trigger="hover"
+                         data-placement="bottom"
+                         data-html="true"
+                         data-content='@popoverContent(envData, env)'>
+                          @envData.warning
+                      </a>
+                  </li>
+              </ul>
+          }
+      }
+  }
+}
+
+@popoverContent(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
+  <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
+  <strong>Value:</strong> @warning.value.value
+}
+
+@vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
+  @defining(summary.distinctVulnerability.vulnerableComponentName.split("://")) { splitVulnerableComponent =>
+      <tr>
+          <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
+          <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
+          <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+          <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+          <td class="curation-status hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+          <td class="score hand-pointer text-right" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
+      </tr>
+      <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
+          @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
+          <td colspan="7">
+              <table>
+                  <tbody class="list">
+                      <tr>
+                          <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
+                          <td class="hide vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+                          <td class="hide assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+                          <td class="curation-status text-center hide"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+                          <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
+                          <td class="services text-center hide"><div>@summary.occurrences.groupBy(_.service).size</div></td>
+                      </tr>
+                      <tr>
+                          <td colspan="6">
+                              @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
+                          </td>
+                      </tr>
+                  </tbody>
+              </table>
+          </td>
+      </tr>
+  }
+}
