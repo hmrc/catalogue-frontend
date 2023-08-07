@@ -56,7 +56,7 @@ class UsersController @Inject()(
         }
     }
 
-  def allUsers(): Action[AnyContent] =
+  def allUsers(username: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       UsersListFilter.form
         .bindFromRequest()
@@ -66,19 +66,25 @@ class UsersController @Inject()(
                               users <- userManagementConnector.getAllUsers(team = validForm.team)
                               teams <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
                             }
-          yield Ok(userListPage(users, teams, UsersListFilter.form.fill(validForm)))
+          yield Ok(userListPage(users, teams, UsersListFilter.form.fill(validForm.copy(username = username))))
         )
     }
 }
 
+object UsersController {
+  val maxRows = 500
+}
+
 case class UsersListFilter(
   team    : Option[String] = None,
+  username: Option[String] = None
 )
 
 object UsersListFilter {
   lazy val form: Form[UsersListFilter] = Form(
     mapping(
-      "team"     -> optional(text)
+      "team"     -> optional(text),
+      "username" -> optional(text)
     )(UsersListFilter.apply)(UsersListFilter.unapply)
   )
 }

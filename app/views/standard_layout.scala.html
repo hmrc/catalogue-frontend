@@ -153,7 +153,7 @@
                             <li><a id="link-to-dependency-explorer" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
                             <li><a id="link-to-jdk-explorer" href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
                             <li><a id="link-to-sbt-explorer" href="@appRoutes.SBTVersionController.compareAllEnvironments()">SBT Explorer</a></li>
-                            <li role="separator" class="divider"></li>
+                            <li><a id="link-to-default-branch-names" href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
                             <li><a id="link-to-search-by-url" href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
                             <li>
                                 <a id="link-to-search-config" href="@serviceConfigsRoutes.ServiceConfigsController.searchLanding()">
@@ -167,11 +167,9 @@
                             @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
                                 <li><a id="link-to-search-config" href="@serviceConfigsRoutes.ServiceConfigsController.configWarningLanding()">Config Warnings</a></li>
                             }
-                            <li role="separator" class="divider"></li>
-                            <li><a id="link-to-default-branch-names" href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
                             <li><a id="link-to-deployment-timelines" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
                             <li>
-                                <a id="link-to-users-list-page" href="@uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.allUsers">
+                                <a id="link-to-users-list-page" href="@uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.allUsers()">
                                     Users
                                     @* TODO remove once date has elapsed *@
                                     @if(isNew) {

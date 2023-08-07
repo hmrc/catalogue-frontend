@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.users.User
 @import uk.gov.hmrc.cataloguefrontend.users.UsersListFilter
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.users.UsersController.maxRows
 @import views.html.helper.select
 
 @this()
@@ -35,13 +36,13 @@
   <header>
     <h1>Users</h1>
   </header>
-
   <div id="users-list">
     <form id="form" action="/users" method="get">
       <div id="users-form-row" class="form-group row">
         <div class="col-md-6">
-          <label for="search">Name</label>
-          <input class="search form-control" type="text" id="search" name="username">
+          <label for="search">Username or GitHub</label>
+          <input class="search form-control" type="text" id="username-search" name="username" value="@form("username").value" autofocus>
+
         </div>
         <div class="col-md-offset-6">
         @select(
@@ -56,8 +57,13 @@
       </div>
     </form>
 
-    <table class="table table-striped sticky-header">
+    <table class="table table-striped sticky-header" id="users-table">
       <thead id="user-table-headings">
+        <tr>
+          <td colspan="6">
+            <span class="col-md-offset-4" id="maximum-records" style="color: #6f777b;">Only displaying @maxRows records - please refine your search</span>
+          </td>
+        </tr>
         <tr>
           <th class="col-lg-2"><button role="button" id="username" data-sort="username" class="sort no-border">Username</button></th>
           <th class="col-lg-2"><button role="button" id="givenName" data-sort="given-name" class="sort no-border">Given Name</button></th>
@@ -105,29 +111,56 @@
         }
       </tbody>
     </table>
+    <div id="no-users-found">
+      <span class="col-md-offset-5" style="color: #6f777b;">No Users Found</span>
+    </div>
   </div>
 }
-
-  <!-- listjs configuration -->
+<!-- listjs configuration -->
 <script @CSPNonce.attr>
+  function toggleMessage() {
+    const emptyRows = 2;
+    const rows = document.getElementById('users-table').rows.length;
+    const noUsersFound = document.getElementById('no-users-found');
+    const maxRecords = document.querySelector('#maximum-records');
+
+    if (noUsersFound) {
+      noUsersFound.style.display = rows === emptyRows ? 'block' : 'none';
+    }
+
+    if (maxRecords) {
+      maxRecords.style.display = rows >= @maxRows + emptyRows ? 'block' : 'none';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', toggleMessage);
+
   const options = {
     valueNames: ['username', 'given-name', 'family-name', 'github'],
-    searchColumns: ['username'],
-    searchDelay: 350
+    searchColumns: ['username', 'github'],
+    searchDelay: 350,
+    page: @maxRows,
   };
 
-  let serviceList = new List('users-list', options);
+  const usersList = new List('users-list', options)
+  usersList.on('searchComplete', toggleMessage);
 
-  let searchBox = document.getElementById('search');
-  // set autofocus cursor to right of text in search box
-  let length = searchBox.value.length;
+  const searchBox = document.getElementById('username-search');
+  searchBox.addEventListener('change', () => usersList.search(searchBox.value));
   searchBox.focus();
-  searchBox.setSelectionRange(length, length);
-  // re-search the list upon page load.
-  serviceList.search(searchBox.value);
+
+  const queryParams = new URLSearchParams(window.location.search);
+  const usernameParam = queryParams.get('username');
+  if (usernameParam) {
+    searchBox.value = usernameParam;
+    usersList.search(usernameParam);
+  }
 </script>
+
+
 <script @CSPNonce.attr>
-  document.getElementById("team-filter").addEventListener("change", function() {
-    document.getElementById("form").submit();
+  document.getElementById('team-filter').addEventListener('change', function () {
+  document.getElementById('form').submit();
   });
 </script>
+
