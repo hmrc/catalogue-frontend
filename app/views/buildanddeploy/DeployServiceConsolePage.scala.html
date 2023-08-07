@@ -1,0 +1,51 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import views.html.partials.{form_global_errors, form_fields_warnings}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+@import uk.gov.hmrc.cataloguefrontend.buildanddeploy.{DeployServiceForm, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes }
+@import uk.gov.hmrc.cataloguefrontend.service.SlugVersionInfo
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, routes => vulnerabilitiesRoutes}
+@import views.html.vulnerabilities.VulnerabilityDetails
+
+@this(viewMessages: ViewMessages)
+
+@(formObject    : DeployServiceForm
+, deployId      : BuildDeployApiConnector.AsyncRequestId
+)( implicit
+  messages      : Messages
+, request       : uk.gov.hmrc.internalauth.client.AuthenticatedRequest[play.api.mvc.AnyContent,Boolean]
+)
+
+@standard_layout("Deploy Service", "deploy service") {
+
+  <div id="result"></div>
+
+  <script @CSPNonce.attr>
+    var source = new EventSource("@appRoutes.DeployServiceController.console(deployId.id)");
+    source.onmessage = function(event) {
+      document.getElementById("result").innerHTML += event.data + "<br>";
+    };
+  </script>
+
+}

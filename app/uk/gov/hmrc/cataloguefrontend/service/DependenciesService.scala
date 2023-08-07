@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunning
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject._
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -200,4 +201,22 @@ object ServiceDependencies {
     ~ (__ \ "dependencyDot" \ "build"   ).readNullable[String].map(_.filter(_.nonEmpty))
     )(ServiceDependencies.apply _)
   }
+}
+
+
+case class SlugVersionInfo(
+  version: Version,
+  latest : Boolean,
+  created: Instant
+)
+
+object SlugVersionInfo {
+  import play.api.libs.functional.syntax._
+  import play.api.libs.json.__
+
+  val reads: Reads[SlugVersionInfo] =
+    ( (__ \ "version").read[Version](Version.format)
+    ~ (__ \ "latest" ).readWithDefault[Boolean](false)
+    ~ (__ \ "created").read[Instant]
+    )(SlugVersionInfo.apply _)
 }

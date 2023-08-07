@@ -21,7 +21,7 @@ import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -127,10 +127,11 @@ class ServiceConfigsService @Inject()(
   def configWarnings(
     serviceName : ServiceConfigsService.ServiceName
   , environments: Seq[Environment]
+  , version     : Option[Version]
   , latest      : Boolean
   )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
     serviceConfigsConnector
-      .configWarnings(serviceName, environments, latest)
+      .configWarnings(serviceName, environments,  version, latest)
 
   def toServiceKeyEnvironmentWarningMap(configWarnings: Seq[ConfigWarning]): Map[ServiceName, Map[KeyName, Map[Environment, Seq[ConfigWarning]]]] =
     configWarnings

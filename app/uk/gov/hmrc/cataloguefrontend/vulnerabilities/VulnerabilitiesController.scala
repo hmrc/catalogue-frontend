@@ -60,7 +60,7 @@ class VulnerabilitiesController @Inject() (
           validForm =>
             for {
               teams     <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-              summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.curationStatus, validForm.service, validForm.team, validForm.component)
+              summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.curationStatus, validForm.service, version = None, validForm.team, validForm.component)
             } yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
           )
     }
