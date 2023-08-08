@@ -40,7 +40,7 @@ class UserManagementConnector @Inject()(
   private val baseUrl = servicesConfig.baseUrl("user-management")
 
   def getTeam(team: String)(implicit hc: HeaderCarrier): Future[Option[LdapTeam]] = {
-    val url: URL = url"$baseUrl/user-management/team/$team"
+    val url: URL = url"$baseUrl/user-management/teams/$team"
 
     implicit val ltR: Reads[LdapTeam] = LdapTeam.reads
 
@@ -65,7 +65,7 @@ class UserManagementConnector @Inject()(
   }
 
   def getUser(username: String)(implicit hc: HeaderCarrier): Future[Option[User]] = {
-    val url: URL = url"$baseUrl/user-management/user/$username"
+    val url: URL = url"$baseUrl/user-management/users/$username"
 
     implicit val uR: Reads[User] = User.reads
 

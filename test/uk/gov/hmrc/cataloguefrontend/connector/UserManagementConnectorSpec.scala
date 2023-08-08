@@ -51,7 +51,7 @@ class UserManagementConnectorSpec
       val team = "test-team"
 
       stubFor(
-        get(urlPathEqualTo(s"/user-management/team/$team"))
+        get(urlPathEqualTo(s"/user-management/teams/$team"))
           .willReturn(
             aResponse()
               .withBody(
@@ -75,7 +75,7 @@ class UserManagementConnectorSpec
       val team = "non-existent-team"
 
       stubFor(
-        get(urlPathEqualTo(s"/user-management/team/$team"))
+        get(urlPathEqualTo(s"/user-management/teams/$team"))
           .willReturn(
             aResponse()
               .withStatus(404)
@@ -222,7 +222,7 @@ class UserManagementConnectorSpec
       val username = "joe.bloggs"
 
       stubFor(
-        get(urlPathEqualTo(s"/user-management/user/$username"))
+        get(urlPathEqualTo(s"/user-management/users/$username"))
           .willReturn(
             aResponse()
               .withBody(
@@ -267,7 +267,7 @@ class UserManagementConnectorSpec
       val username = "non.existent"
 
       stubFor(
-        get(urlPathEqualTo(s"/user-management/user/$username"))
+        get(urlPathEqualTo(s"/user-management/users/$username"))
           .willReturn(
             aResponse()
               .withStatus(404)
