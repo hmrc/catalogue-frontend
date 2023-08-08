@@ -41,4 +41,7 @@ object CatalogueFrontendSwitches {
 
   def showConfigWarnings: FeatureSwitch =
     FeatureSwitch.forName("show-config-warnings")
+
+  def showUsers: FeatureSwitch =
+    FeatureSwitch.forName("show-users")
 }
