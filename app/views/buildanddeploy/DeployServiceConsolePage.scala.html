@@ -38,7 +38,7 @@
 )
 
 @standard_layout("Deploy Service", "deploy service") {
-
+  <h4 id="state"></h4>
   <div id="result"></div>
 
   @defining(appRoutes.DeployServiceController.console(
@@ -51,9 +51,21 @@
   ) { url =>
     <script @CSPNonce.attr>
       var source = new EventSource('@url'.replaceAll("&amp;", "&"));
+      var state  = document.getElementById("state");
+      var result = document.getElementById("result");
+
       source.onmessage = function(event) {
-        document.getElementById("result").innerHTML += event.data + "<br>";
+        state.innerHTML  = event.data.state;
+        result.innerHTML = event.data.logs.map(display).join("<br/>");
+
+        if (event.data.state != 'in-progress') {
+          source.close();
+        };
       };
+
+      function display(json) {
+        return new Date(json.timestamp * 1000).toString() + json.event;
+      }
     </script>
   }
 }
