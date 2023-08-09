@@ -241,7 +241,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
                 |  "details": {
                 |    "get_request_state_payload": {
                 |       "bnd_api_request_id": "1234",
-                |       "start_timestamp_milliseconds": "1687852118708"
+                |       "start_timestamp_milliseconds": 1687852118708
                 |    }
                 |  }
                 |}""".stripMargin
@@ -250,7 +250,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
         val result = connector.createARepository(payload = payload).futureValue
 
-        result shouldBe Right(RequestState.Id(id = "1234"))
+        result shouldBe Right(RequestState.Id(id = "1234", start = 1687852118708L))
       }
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
@@ -348,7 +348,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
                |  "details": {
                |    "get_request_state_payload": {
                |       "bnd_api_request_id": "1234",
-               |       "start_timestamp_milliseconds": "1687852118708"
+               |       "start_timestamp_milliseconds": 1687852118708
                |    }
                |  }
                |}""".stripMargin
@@ -359,7 +359,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
          connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
            .futureValue
 
-       result shouldBe Right(RequestState.Id(id = "1234"))
+       result shouldBe Right(RequestState.Id(id = "1234", start = 1687852118708L))
      }
 
 

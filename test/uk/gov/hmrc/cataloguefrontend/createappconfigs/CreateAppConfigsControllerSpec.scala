@@ -167,7 +167,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
-        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id("requestId"))))
+        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id(id = "requestId", start = 1234))))
 
 
       val result = controller
@@ -201,7 +201,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(appDependenciesIncludesMongo))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
-        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id("requestId"))))
+        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id(id = "requestId", start = 1234))))
 
       val result = controller
         .createAppConfigs(serviceName)(
@@ -234,7 +234,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(noMongoDependencies)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = false, isApi = false))
-        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id("requestId"))))
+        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id(id = "requestId", start = 1234))))
 
 
       val result = controller
@@ -260,7 +260,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
       when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean], any[Boolean]))
-        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id("requestId"))))
+        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id(id = "requestId", start = 1234))))
 
       val result = controller
         .createAppConfigs(serviceName)(
@@ -285,7 +285,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
       when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean], any[Boolean]))
-        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id("requestId"))))
+        .thenReturn(Future.successful(Right(BuildDeployApiConnector.RequestState.Id(id = "requestId", start = 1234))))
 
       val result = controller
         .createAppConfigs(serviceName)(
