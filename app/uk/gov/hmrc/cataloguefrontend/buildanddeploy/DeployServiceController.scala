@@ -184,7 +184,7 @@ class DeployServiceController @Inject()(
   import play.api.http.ContentTypes
   import play.api.libs.EventSource
   import play.api.libs.json.Json
-  def console(accountId: String, logGroupName: String, clusterName: String, logStreamNamePrefix: String, arn: String): Action[AnyContent] =
+  def console(accountId: String, logGroupName: String, clusterName: String, logStreamNamePrefix: String, arn: String, start: Long): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.DeployServiceController.step1(None),
       retrieval   = Retrieval.hasPredicate(predicate)
@@ -194,7 +194,7 @@ class DeployServiceController @Inject()(
           .tick(0.millis, 10.second, "TICK")
           .mapAsync(parallelism = 1) { _ =>
             buildDeployApiConnector
-              .getRequestState(BuildDeployApiConnector.RequestState.EcsTask(accountId, logGroupName, clusterName, logStreamNamePrefix, arn))
+              .getRequestState(BuildDeployApiConnector.RequestState.EcsTask(accountId, logGroupName, clusterName, logStreamNamePrefix, arn, start))
               .map {
                 case Left(error)    => Json.toJson(error)
                 // case Right(state) => Json.toJson(state)(Console.writes)

@@ -41,7 +41,14 @@
 
   <div id="result"></div>
 
-  @defining(appRoutes.DeployServiceController.console(ecsTask.accountId, ecsTask.logGroupName, ecsTask.clusterName, ecsTask.logStreamNamePrefix, ecsTask.arn)) { url =>
+  @defining(appRoutes.DeployServiceController.console(
+    ecsTask.accountId
+  , ecsTask.logGroupName
+  , ecsTask.clusterName
+  , ecsTask.logStreamNamePrefix
+  , ecsTask.arn
+  , ecsTask.start)
+  ) { url =>
     <script @CSPNonce.attr>
       var source = new EventSource('@url'.replaceAll("&amp;", "&"));
       source.onmessage = function(event) {

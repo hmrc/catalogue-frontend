@@ -209,7 +209,13 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(_.details.as[RequestState.Id](RequestState.Id.reads)))
   }
 
-  def triggerMicroserviceDeployment(serviceName: String, environment: Environment, version: Version, slugSource: String, deployerId: String): Future[Either[String, RequestState.EcsTask]] =
+  def triggerMicroserviceDeployment(
+    serviceName: String
+  , environment: Environment
+  , version: Version
+  , slugSource: String
+  , deployerId: String
+  ): Future[Either[String, RequestState.EcsTask]] =
     signAndExecuteRequest(
       endpoint = "TriggerMicroserviceDeployment",
       body     = Json.obj(
@@ -225,14 +231,8 @@ class BuildDeployApiConnector @Inject() (
     signAndExecuteRequest(
       endpoint = "GetRequestState",
       body     = state match {
-                   case s: RequestState.Id      => Json.obj(
-                                                     "bnd_api_request_id"           -> JsString(s.id)
-                                                   , "start_timestamp_milliseconds" -> JsNumber(Instant.now().toEpochMilli)
-                                                   )
-                   case s: RequestState.EcsTask => Json
-                                                     .toJson(s)(RequestState.EcsTask.writes)
-                                                     .as[JsObject]
-                                                     .deepMerge(Json.obj("start_timestamp_milliseconds" -> JsNumber(Instant.now().toEpochMilli)))
+                   case s: RequestState.Id      => Json.toJson(s)(RequestState.Id.writes)
+                   case s: RequestState.EcsTask => Json.toJson(s)(RequestState.EcsTask.writes)
                  }
     ).map(_.map(_.details))
 }
@@ -250,13 +250,20 @@ object BuildDeployApiConnector {
   sealed trait RequestState
 
   object RequestState {
-    final case class Id(id: String) extends RequestState
+    final case class Id(id: String, start: Long) extends RequestState
     object Id {
       val reads: Reads[Id] =
-         (__ \ "get_request_state_payload" \ "bnd_api_request_id").read[String].map(Id.apply)
+        ( (__ \ "get_request_state_payload" \ "bnd_api_request_id"          ).read[String]
+        ~ (__ \ "get_request_state_payload" \ "start_timestamp_milliseconds").read[Long]
+        )(Id.apply _)
+
+      val writes: Writes[Id] =
+      ( (__ \ "bnd_api_request_id"          ).write[String]
+      ~ (__ \ "start_timestamp_milliseconds").write[Long]
+      )(unlift(Id.unapply))
     }
 
-    final case class EcsTask(accountId: String, logGroupName: String, clusterName: String, logStreamNamePrefix: String, arn: String) extends RequestState
+    final case class EcsTask(accountId: String, logGroupName: String, clusterName: String, logStreamNamePrefix: String, arn: String, start: Long) extends RequestState
     object EcsTask {
       val reads: Reads[EcsTask] =
         ( (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "account_id"            ).read[String]
@@ -264,6 +271,7 @@ object BuildDeployApiConnector {
         ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "cluster_name"          ).read[String]
         ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "log_stream_name_prefix").read[String]
         ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "arn"                   ).read[String]
+        ~ (__ \ "get_request_state_payload" \ "start_timestamp_milliseconds"               ).read[Long]
         )(EcsTask.apply _)
 
       val writes: Writes[EcsTask] =
@@ -272,6 +280,7 @@ object BuildDeployApiConnector {
         ~ (__ \ "bnd_api_ecs_task" \ "cluster_name"          ).write[String]
         ~ (__ \ "bnd_api_ecs_task" \ "log_stream_name_prefix").write[String]
         ~ (__ \ "bnd_api_ecs_task" \ "arn"                   ).write[String]
+        ~ (__ \ "start_timestamp_milliseconds"               ).write[Long]
         )(unlift(EcsTask.unapply))
     }
   }
