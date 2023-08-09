@@ -81,30 +81,30 @@ object TeamMembership {
 }
 
 final case class User(
-  displayName  : Option[String]
-, familyName   : String
-, givenName    : Option[String]
-, organisation : Option[String]
-, primaryEmail : String
-, username     : String
-, github       : Option[String]
-, phoneNumber  : Option[String]
-, teamsAndRoles: Option[Seq[TeamMembership]]
+  displayName   : Option[String]
+, familyName    : String
+, givenName     : Option[String]
+, organisation  : Option[String]
+, primaryEmail  : String
+, username      : String
+, githubUsername: Option[String]
+, phoneNumber   : Option[String]
+, teamsAndRoles : Option[Seq[TeamMembership]]
 )
 
 object User {
   val reads: Reads[User] = {
     implicit val tmR: Reads[TeamMembership] = TeamMembership.reads
 
-    ( ( __ \ "displayName"  ).readNullable[String]
-    ~ ( __ \ "familyName"   ).read[String]
-    ~ ( __ \ "givenName"    ).readNullable[String]
-    ~ ( __ \ "organisation" ).readNullable[String]
-    ~ ( __ \ "primaryEmail" ).read[String]
-    ~ ( __ \ "username"     ).read[String]
-    ~ ( __ \ "github"       ).readNullable[String]
-    ~ ( __ \ "phoneNumber"  ).readNullable[String]
-    ~ ( __ \ "teamsAndRoles").readNullable[Seq[TeamMembership]]
+    ( ( __ \ "displayName"   ).readNullable[String]
+    ~ ( __ \ "familyName"    ).read[String]
+    ~ ( __ \ "givenName"     ).readNullable[String]
+    ~ ( __ \ "organisation"  ).readNullable[String]
+    ~ ( __ \ "primaryEmail"  ).read[String]
+    ~ ( __ \ "username"      ).read[String]
+    ~ ( __ \ "githubUsername").readNullable[String]
+    ~ ( __ \ "phoneNumber"   ).readNullable[String]
+    ~ ( __ \ "teamsAndRoles" ).readNullable[Seq[TeamMembership]]
     )(User.apply _)
   }
 }

@@ -56,7 +56,10 @@
                           </li>
                           <li id="user-github">
                               <label>Github:</label>
-                              @user.github.getOrElse("")
+                              @user.githubUsername match {
+                                case Some(url) => {<a href="https://github.com/@user.githubUsername" target="_blank" rel="noreferrer noopener">@user.githubUsername<span class="glyphicon glyphicon-new-window"/></a>}
+                                case None      => {}
+                              }
                           </li>
                       </ul>
 
