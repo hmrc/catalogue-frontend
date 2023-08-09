@@ -50,75 +50,73 @@
 
         @helper.form(
           action           =  appRoutes.DeployServiceController.step1(form("serviceName").value)
-        , Symbol("id")     -> "choose-service-name-form"
+        , Symbol("id")     -> "service-name-form"
         , Symbol("method") -> "GET",
         ) {
-          <fieldset @if(evaluations.isDefined) {disabled}>
-            <dl>
-              <dt><label for="service-name">Service Name:</label></dt>
-              <dd>
-                <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
-                <div id="service-name-matches" class="search-matches-dropdown hide"></div>
-              </dd>
-            </dl>
-          </fieldset>
+          <dl>
+            <dt><label for="service-name">Service Name:</label></dt>
+            <dd>
+              <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
+              <div id="service-name-matches" class="search-matches-dropdown hide"></div>
+            </dd>
+          </dl>
         }
 
         @if(form("serviceName").value.isDefined) {
           @helper.form(
-            action             =  (if (evaluations.isEmpty) appRoutes.DeployServiceController.step2() else appRoutes.DeployServiceController.step3())
-          , Symbol("id")       -> "deploy-service-form"
+            action             =  appRoutes.DeployServiceController.step2()
+          , Symbol("id")       -> "version-environment-form"
           , Symbol("method")   -> "POST"
           ) {
             @csrfFormField
-            <fieldset @if(evaluations.isDefined) {disabled}>
+            <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+
+            <dl>
+              <dt><label for="service-name">Version:</label></dt>
+              <dd>
+                <div id="helpful-versions" class="list-group">
+                  @defining(
+                    ( latestVersion.map(x => (x, "Latest")) ++
+                      releases.map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
+                    ).groupBy { case (version, _) => version }
+                      .toList
+                      .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
+                      .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
+                  ) { xs => @xs.map { case (version, text) =>
+                    <a href="#" class="list-group-item" data-content="@version">
+                      <div class="row">
+                        <div class="col-xs-3 col-md-3">@version</div>
+                        <div class="col-xs-9 col-md-9">@text</div>
+                      </div>
+                    </a>
+                  }}
+                </div>
+                <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or selection one from above">
+              </dd>
+            </dl>
+
+            @helper.select(
+              field              =  form("environment")
+            , options            =  environments.map(t => t.asString -> t.displayString)
+            , Symbol("_label")   -> "Environment:"
+            , Symbol("_default") -> "Please choose"
+            , Symbol("id")       -> "environment"
+            , Symbol("class")    -> "form-control"
+            , Symbol("title")    -> "On change updates 'Config Key' autocomplete"
+            , Symbol("required") -> "required"
+            )
+          }
+
+          @if(evaluations.isDefined){
+            @helper.form(
+              action           =  appRoutes.DeployServiceController.step3()
+            , Symbol("method") -> "POST"
+            ) {
+              @csrfFormField
+              <hr/>
               <input type="hidden" name="serviceName" value='@form("serviceName").value' />
-
-              @helper.select(
-                field              =  form("environment")
-              , options            =  environments.map(t => t.asString -> t.displayString)
-              , Symbol("_label")   -> "Environment:"
-              , Symbol("_default") -> "Please choose"
-              , Symbol("id")       -> "environment"
-              , Symbol("class")    -> "form-control"
-              , Symbol("title")    -> "On change updates 'Config Key' autocomplete"
-              , Symbol("required") -> "required"
-              )
-
-              <dl>
-                <dt><label for="service-name">Version:</label></dt>
-                <dd>
-                  <div id="helpful-versions" class="list-group">
-                    @defining(
-                      ( latestVersion.map(x => (x, "Latest")) ++
-                        releases.map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
-                      ).groupBy { case (version, _) => version }
-                       .toList
-                       .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
-                       .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
-                    ) { xs => @xs.map { case (version, text) =>
-                      <a href="#" class="list-group-item" data-content="@version">
-                        <div class="row">
-                          <div class="col-xs-3 col-md-3">@version</div>
-                          <div class="col-xs-9 col-md-9">@text</div>
-                        </div>
-                      </a>
-                    }}
-                  </div>
-                  <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or selection one from above">
-                </dd>
-              </dl>
-            </fieldset>
-
-            <hr>
-
-            @if(evaluations.isEmpty) {
-              <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit" @if(!request.retrieval){disabled}>Evaluate</button>
-            } else {
-              <input type="hidden" name="serviceName" value='@form("serviceName").value' />
-              <input type="hidden" name="environment" value='@form("environment").value' />
               <input type="hidden" name="version" value='@form("version").value' />
-              <a href="@appRoutes.DeployServiceController.step1(form("serviceName").value)" class="btn btn-default">Edit</a>
+              <input type="hidden" name="environment" value='@form("environment").value' />
               <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit" @if(!request.retrieval){disabled}>Deploy</button>
             }
           }
@@ -130,9 +128,13 @@
           <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
             <div class="panel panel-default">
               <div class="panel-heading" role="tab" id="headingOne">
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                @if(warnings.isEmpty) {
                   <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
-                </a>
+                } else {
+                  <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                    <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
+                  </a>
+                }
               </div>
               <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false">
                 <div class="panel-body">
@@ -157,9 +159,13 @@
             </div>
             <div class="panel panel-default">
               <div class="panel-heading" role="tab" id="headingTwo">
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
-                </a>
+                @if(vulnerabilities.isEmpty) {
+                  <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
+                } else {
+                  <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
+                  </a>
+                }
               </div>
               <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false" style="height: 0px;">
                 <div class="panel-body">
@@ -190,7 +196,7 @@
   <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
   <script @CSPNonce.attr>
     autoCompleteInit({
-      formId           : "choose-service-name-form",
+      formId           : "service-name-form",
       inputSearchId    : "service-name",
       matchesDivId     : "service-name-matches",
       allowPartial     : false,
@@ -199,9 +205,29 @@
       values           : [@for(service <- allServices) {'@service.name',}]
     });
 
-    Array
-      .from(document.getElementById('helpful-versions').getElementsByTagName('a'))
-      .map(el => el.onclick = function() {document.getElementById('version').value = el.getAttribute('data-content');});
+    @if(form("serviceName").value.isDefined) {
+      let form2           = document.forms['version-environment-form'];
+      let helpfulVersions = document.getElementById('helpful-versions')
+      let version         = document.getElementById('version');
+      let environment     = document.getElementById('environment');
+
+      Array
+        .from(helpfulVersions.getElementsByTagName('a'))
+        .map(el => el.onclick = function() {
+          version.value = el.getAttribute('data-content');
+          submitWhenReady();
+        });
+
+      version.onchange     = function() { submitWhenReady() }
+      environment.onchange = function() { submitWhenReady() }
+
+      function submitWhenReady() {
+        if (version.value && environment.value) {
+          form2.dispatchEvent(new Event("submit")); // Call form listener
+          form2.submit();
+        }
+      };
+    }
   </script>
 }
 

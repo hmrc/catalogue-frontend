@@ -31,7 +31,7 @@
 @this(viewMessages: ViewMessages)
 
 @(formObject    : DeployServiceForm
-, deployId      : BuildDeployApiConnector.AsyncRequestId
+, deploymentId  : BuildDeployApiConnector.AsyncDeploymentId
 )( implicit
   messages      : Messages
 , request       : uk.gov.hmrc.internalauth.client.AuthenticatedRequest[play.api.mvc.AnyContent,Boolean]
@@ -42,7 +42,7 @@
   <div id="result"></div>
 
   <script @CSPNonce.attr>
-    var source = new EventSource("@appRoutes.DeployServiceController.console(deployId.id)");
+    var source = new EventSource("@appRoutes.DeployServiceController.console(deploymentId.id)");
     source.onmessage = function(event) {
       document.getElementById("result").innerHTML += event.data + "<br>";
     };

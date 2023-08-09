@@ -81,10 +81,6 @@ class BuildDeployApiConnector @Inject() (
 
     logger.info(s"Calling the $url" + (if (logBody) { s" with the following payload: $body"} else { "" }))
 
-    if (endpoint == "TriggerMicroserviceDeployment") {
-      logger.info(s"Calling the $url with headers: $headers")
-    }
-
     implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
 
     implicit val hr: HttpReads[Either[String, BuildDeployResponse]] =
@@ -106,6 +102,7 @@ class BuildDeployApiConnector @Inject() (
       .withBody(body)
       .setHeader(headers.toSeq: _*)
       .execute[Either[String, BuildDeployResponse]]
+      .map { rsp => logger.info(s"$url response: $rsp"); rsp}
   }
 
   def changePrototypePassword(prototype: String, password: PrototypePassword): Future[Either[String, String]] = {
@@ -163,10 +160,9 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(_ => ()))
   }
 
-  private implicit val arr = AsyncRequestId.reads
 
   def createARepository(payload: CreateRepoForm): Future[Either[String, AsyncRequestId]] = {
-    val finalPayload =
+    val body =
       s"""
          |{
          |   "repository_name": "${payload.repositoryName}",
@@ -182,10 +178,9 @@ class BuildDeployApiConnector @Inject() (
 
     signAndExecuteRequest(
       endpoint = "CreateRepository",
-      body     = Json.parse(finalPayload)
-    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
+      body     = Json.parse(body)
+    ).map(_.map(_.details.as[AsyncRequestId](AsyncRequestId.reads)))
   }
-
 
   def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) = serviceType match {
@@ -194,7 +189,7 @@ class BuildDeployApiConnector @Inject() (
       case ServiceType.Backend          => ( "Backend microservice" , "protected" )
     }
 
-    val finalPayload =
+    val body =
       s"""
          |{
          |   "microservice_name": "$serviceName",
@@ -210,12 +205,12 @@ class BuildDeployApiConnector @Inject() (
 
     signAndExecuteRequest(
       endpoint = "CreateAppConfigs",
-      body     = Json.parse(finalPayload)
-    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
+      body     = Json.parse(body)
+    ).map(_.map(_.details.as[AsyncRequestId](AsyncRequestId.reads)))
   }
 
-  def triggerMicroserviceDeployment(serviceName: String, environment: Environment, version: Version, slugSource: String, deployerId: String): Future[Either[String, AsyncRequestId]] = {
-    val finalPayload =
+  def triggerMicroserviceDeployment(serviceName: String, environment: Environment, version: Version, slugSource: String, deployerId: String): Future[Either[String, AsyncDeploymentId]] = {
+    val body =
       s"""
          |{
          |   "service"        : "$serviceName",
@@ -227,37 +222,26 @@ class BuildDeployApiConnector @Inject() (
 
     signAndExecuteRequest(
       endpoint = "TriggerMicroserviceDeployment",
-      body     = Json.parse(finalPayload)
-    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
+      body     = Json.parse(body)
+    ).map(_.map(_.details.as[AsyncDeploymentId](AsyncDeploymentId.reads)))
   }
 
-  // def getRequestState(requestId: AsyncRequestId): Future[Either[String, RequestState]] = {
-  //   implicit val r = RequestState.reads
-
-  //   val finalPayload =
-  //     s"""
-  //         |{
-  //         |   "bnd_api_request_id"          : "${requestId.id}",
-  //         |   "start_timestamp_milliseconds": ${java.time.Instant.now().getNano / 1000000 }
-  //         |}""".stripMargin
-
-  //   signAndExecuteRequest(
-  //     endpoint = "GetRequestState",
-  //     body     = Json.parse(finalPayload)
-  //   ).map(_.map(resp => resp.details.as[RequestState]))
-  // }
-  def getRequestState(requestId: AsyncRequestId): Future[Either[String, JsValue]] = {
-    val finalPayload =
-      s"""
-          |{
-          |   "bnd_api_request_id"          : "${requestId.id}",
-          |   "start_timestamp_milliseconds": ${java.time.Instant.now().getNano / 1000000 }
-          |}""".stripMargin
+  def getRequestState[T <: Id](id: Id): Future[Either[String, JsValue]] = {
+    val body = id match {
+      case AsyncRequestId(id)    =>
+        s"""{  "bnd_api_request_id"          : "$id",
+            |  "start_timestamp_milliseconds": ${java.time.Instant.now().getNano / 1000000 }
+            |}""".stripMargin
+      case AsyncDeploymentId(id) =>
+        s"""{  "bnd_api_microservice_deployment_id": "$id",
+            |  "start_timestamp_milliseconds"      : ${java.time.Instant.now().getNano / 1000000 }
+            |}""".stripMargin
+    }
 
     signAndExecuteRequest(
       endpoint = "GetRequestState",
-      body     = Json.parse(finalPayload)
-    ).map(_.map(resp => resp.details))
+      body     = Json.parse(body)
+    ).map(_.map(_.details))
   }
 
 }
@@ -272,12 +256,21 @@ object BuildDeployApiConnector {
       )(BuildDeployResponse.apply _)
   }
 
-  final case class AsyncRequestId(id: String) extends AnyVal
+
+  sealed trait Id {def id: String}
+  final case class AsyncRequestId(id: String) extends Id
+  final case class AsyncDeploymentId(id: String) extends Id
 
   object AsyncRequestId {
     val reads: Reads[AsyncRequestId] =
       ( (__ \ "get_request_state_payload" \ "bnd_api_request_id").read[String]
         ).map(AsyncRequestId.apply)
+  }
+
+  object AsyncDeploymentId {
+    val reads: Reads[AsyncDeploymentId] =
+      ( (__ \ "get_request_state_payload" \ "bnd_api_microservice_deployment_id").read[String]
+        ).map(AsyncDeploymentId.apply)
   }
 
   sealed trait PrototypeStatus { def asString: String; def displayString: String }

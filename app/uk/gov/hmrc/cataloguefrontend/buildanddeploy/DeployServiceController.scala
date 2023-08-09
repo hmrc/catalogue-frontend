@@ -116,15 +116,24 @@ class DeployServiceController @Inject()(
                             formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, allServices, Nil, Nil, None, evaluations = None)))
                           , validForm      => Right(validForm)
                           ))
-        environments =  Seq(formObject.environment)
+        environments <- EitherT
+                          .right[Result](serviceCommissioningConnector.commissioningStatus(formObject.serviceName))
+                          .map(_.getOrElse(Nil))
+                          .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
+                          .map(_.sorted)
         releases     <- EitherT
                           .right[Result](releasesConnector.releasesForService(formObject.serviceName))
                           .map(_.versions.toSeq)
         latest       <- EitherT
                           .right[Result](serviceDependenciesConnector.getSlugInfo(formObject.serviceName))
                           .map(_.map(_.version))
+        slugInfo     <- EitherT
+                          .fromOptionF(
+                            serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
+                          , BadRequest(deployServicePage(form.withGlobalError("Slug not found"), allServices, environments, releases, latest, evaluations = None))
+                          )
         warnings     <- EitherT
-                          .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), version = None, latest = true))
+                          .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), version = Some(formObject.version), latest = true))
         vulnerabils  <- EitherT
                           .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version)))
       } yield
@@ -155,7 +164,7 @@ class DeployServiceController @Inject()(
                             request.session.get(AuthController.SESSION_USERNAME)
                           , sys.error("Username not found"): Result
                           )
-        deployId     <- EitherT(buildDeployApiConnector.triggerMicroserviceDeployment(
+        deploymentId <- EitherT(buildDeployApiConnector.triggerMicroserviceDeployment(
                           serviceName = formObject.serviceName
                         , environment = formObject.environment
                         , version     = formObject.version
@@ -164,9 +173,9 @@ class DeployServiceController @Inject()(
                         )).leftMap { errMsg =>
                           sys.error(s"triggerMicroserviceDeployment failed with: $errMsg"): Result
                         }
-        // deployId = BuildDeployApiConnector.AsyncRequestId("1234")
+        // deployId = BuildDeployApiConnector.AsynDeploymentId("1234")
       } yield
-        Ok(deployServiceConsolePage(formObject, deployId))
+        Ok(deployServiceConsolePage(formObject, deploymentId))
       ).merge
     }
 
@@ -185,7 +194,7 @@ class DeployServiceController @Inject()(
           .tick(0.millis, 10.second, "TICK")
           .mapAsync(parallelism = 1) { _ =>
             buildDeployApiConnector
-              .getRequestState(BuildDeployApiConnector.AsyncRequestId(id))
+              .getRequestState(BuildDeployApiConnector.AsyncDeploymentId(id))
               .map {
                 case Left(error)    => Json.toJson(error)
                 // case Right(state) => Json.toJson(state)(Console.writes)
@@ -212,7 +221,7 @@ object DeployServiceForm {
     Forms.mapping(
       "serviceName" -> Forms.text
     , "environment" -> Forms.of[Environment](Environment.formFormat)
-    , "version"     -> Forms.text.transform[Version](Version.apply, _.original)  // TODO Version parse isn't safe
+    , "version"     -> Forms.of[Version](Version.formFormat)        //Forms.text.transform[Version](Version.apply, _.original)  // TODO Version parse isn't safe
     )(DeployServiceForm.apply)(DeployServiceForm.unapply)
   )
 }
