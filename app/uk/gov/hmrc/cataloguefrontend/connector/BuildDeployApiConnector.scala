@@ -72,13 +72,18 @@ class BuildDeployApiConnector @Inject() (
   private def signAndExecuteRequest(
     endpoint   : String,
     body       : JsValue,
-    queryParams: Map[String, String] = Map.empty[String, String]
+    queryParams: Map[String, String] = Map.empty[String, String],
+    logBody    : Boolean = true
   ): Future[Either[String, BuildDeployResponse]] = {
     val url = buildUrl(endpoint, queryParams)
 
     val headers = signedHeaders(url.getPath, queryParams, body)
 
-    logger.info(s"Calling the $url with the following payload: $body")
+    logger.info(s"Calling the $url" + (if (logBody) { s" with the following payload: $body"} else { "" }))
+
+    if (endpoint == "TriggerMicroserviceDeployment") {
+      logger.info(s"Calling the $url with headers: $headers")
+    }
 
     implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
 
@@ -111,7 +116,8 @@ class BuildDeployApiConnector @Inject() (
 
     signAndExecuteRequest(
       endpoint = "SetHerokuPrototypePassword",
-      body     = body
+      body     = body,
+      logBody  = false
     ).map {
       case Right(response) => Right(response.message)
       case Left(errorMsg)  => Left(errorMsg)
