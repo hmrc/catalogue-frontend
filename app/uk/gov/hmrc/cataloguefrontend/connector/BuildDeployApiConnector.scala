@@ -227,12 +227,12 @@ class BuildDeployApiConnector @Inject() (
       body     = state match {
                    case s: RequestState.Id      => Json.obj(
                                                      "bnd_api_request_id"           -> JsString(s.id)
-                                                   , "start_timestamp_milliseconds" -> JsNumber(java.time.Instant.now().toEpochMilli)
+                                                   , "start_timestamp_milliseconds" -> JsNumber(Instant.now().toEpochMilli)
                                                    )
                    case s: RequestState.EcsTask => Json
                                                      .toJson(s)(RequestState.EcsTask.format)
                                                      .as[JsObject]
-                                                     .deepMerge(Json.obj("start_timestamp_milliseconds" -> JsNumber(java.time.Instant.now().toEpochMilli)))
+                                                     .deepMerge(Json.obj("start_timestamp_milliseconds" -> JsNumber(Instant.now().toEpochMilli)))
                  }
     ).map(_.map(_.details))
 }
@@ -259,11 +259,11 @@ object BuildDeployApiConnector {
     final case class EcsTask(accountId: String, logGroupName: String, clusterName: String, logStreamNamePrefix: String, arn: String) extends RequestState
     object EcsTask {
       val format: Format[EcsTask] =
-        ( (__ \ "bnd_api_ecs_task" \ "account_id"            ).format[String]
-        ~ (__ \ "bnd_api_ecs_task" \ "log_group_name"        ).format[String]
-        ~ (__ \ "bnd_api_ecs_task" \ "cluster_name"          ).format[String]
-        ~ (__ \ "bnd_api_ecs_task" \ "log_stream_name_prefix").format[String]
-        ~ (__ \ "bnd_api_ecs_task" \ "arn"                   ).format[String]
+        ( (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "account_id"            ).format[String]
+        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "log_group_name"        ).format[String]
+        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "cluster_name"          ).format[String]
+        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "log_stream_name_prefix").format[String]
+        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "arn"                   ).format[String]
         )(EcsTask.apply, unlift(EcsTask.unapply))
     }
   }
