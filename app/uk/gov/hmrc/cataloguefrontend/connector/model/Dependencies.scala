@@ -19,6 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 import java.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.data.format.Formatter
+import play.api.data.FormError
 
 sealed trait VersionState
 object VersionState {
@@ -328,6 +330,17 @@ object Version {
 
     override def writes(v: Version) =
       JsString(v.original)
+  }
+
+  val formFormat: Formatter[Version] = new Formatter[Version] {
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Version] =
+      data
+        .get(key)
+        .flatMap(str => scala.util.Try(apply(str)).toOption )
+        .fold[Either[Seq[FormError], Version]](Left(Seq(FormError(key, "Invalid value"))))(Right.apply)
+
+    override def unbind(key: String, value: Version): Map[String, String] =
+      Map(key -> value.original)
   }
 }
 

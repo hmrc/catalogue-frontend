@@ -30,22 +30,23 @@
 
 @this(viewMessages: ViewMessages)
 
-@(formObject    : DeployServiceForm
-, deployId      : BuildDeployApiConnector.AsyncRequestId
+@(formObject: DeployServiceForm
+, ecsTask   : BuildDeployApiConnector.RequestState.EcsTask
 )( implicit
-  messages      : Messages
-, request       : uk.gov.hmrc.internalauth.client.AuthenticatedRequest[play.api.mvc.AnyContent,Boolean]
+  messages  : Messages
+, request   : uk.gov.hmrc.internalauth.client.AuthenticatedRequest[play.api.mvc.AnyContent,Boolean]
 )
 
 @standard_layout("Deploy Service", "deploy service") {
 
   <div id="result"></div>
 
-  <script @CSPNonce.attr>
-    var source = new EventSource("@appRoutes.DeployServiceController.console(deployId.id)");
-    source.onmessage = function(event) {
-      document.getElementById("result").innerHTML += event.data + "<br>";
-    };
-  </script>
-
+  @defining(appRoutes.DeployServiceController.console(ecsTask.accountId, ecsTask.logGroupName, ecsTask.clusterName, ecsTask.logStreamNamePrefix, ecsTask.arn)) { url =>
+    <script @CSPNonce.attr>
+      var source = new EventSource('@url'.replaceAll("&amp;", "&"));
+      source.onmessage = function(event) {
+        document.getElementById("result").innerHTML += event.data + "<br>";
+      };
+    </script>
+  }
 }

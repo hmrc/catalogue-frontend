@@ -21,7 +21,7 @@ import play.api.Configuration
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus, PrototypeDetails}
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{RequestState, PrototypeStatus, PrototypeDetails}
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -250,7 +250,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
         val result = connector.createARepository(payload = payload).futureValue
 
-        result shouldBe Right(AsyncRequestId(id = "1234"))
+        result shouldBe Right(RequestState.Id(id = "1234"))
       }
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
@@ -359,7 +359,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
          connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
            .futureValue
 
-       result shouldBe Right(AsyncRequestId(id = "1234"))
+       result shouldBe Right(RequestState.Id(id = "1234"))
      }
 
 
