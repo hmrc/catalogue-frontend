@@ -55,10 +55,11 @@
       var result = document.getElementById("result");
 
       source.onmessage = function(event) {
-        state.innerHTML  = event.data.state;
-        result.innerHTML = event.data.logs.map(display).join("<br/>");
+        var json         = JSON.parse(event.data);
+        state.innerHTML  = json.state;
+        result.innerHTML = json.logs.map(display).join("<br/>");
 
-        if (event.data.state != 'in-progress') {
+        if (json.state != 'in-progress') {
           source.close();
         };
       };
