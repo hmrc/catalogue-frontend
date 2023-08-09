@@ -65,7 +65,7 @@
           </td>
         </tr>
         <tr>
-          <th class="col-lg-2"><button role="button" id="username" data-sort="username" class="sort no-border">Username</button></th>
+          <th class="col-lg-2"><button role="button" id="username" data-sort="username" class="sort no-border username">Username</button></th>
           <th class="col-lg-2"><button role="button" id="givenName" data-sort="given-name" class="sort no-border">Given Name</button></th>
           <th class="col-lg-2"><button role="button" id="familyName" data-sort="family-name" class="sort no-border">Family Name</button></th>
           <th class="col-lg-3"><button role="button" id="github" data-sort="github" class="sort no-border">GitHub</button></th>
@@ -77,8 +77,9 @@
         @users.zipWithIndex.map{ case(user, i) =>
         <tr id="row@i">
           <td class="username" id="row@{i}_name">
-            <a href="/users/@user.username">@user.username</a>
+            <a class="ldap-username" href="/users/@user.username">@user.username</a>
           </td>
+
 
           <td class="given-name" id="row@{i}_teams">
             @user.givenName
@@ -89,9 +90,14 @@
           </td>
 
           <td class="github" id="row@{i}_name">
-            @user.github match {
-              case Some(url) => {<a href="@user.github" target="_blank" rel="noreferrer noopener">@url.split('/').last<span class="glyphicon glyphicon-new-window"/></a>}
-              case None      => {}
+            @user.githubUsername match {
+              case Some(url) => {
+                  <a class="github-username" href="https://github.com/@user.githubUsername" target="_blank" rel="noreferrer noopener">
+                    @user.githubUsername
+                    <span class="glyphicon glyphicon-new-window"/>
+                  </a>
+              }
+              case None => {}
             }
           </td>
 
@@ -136,8 +142,8 @@
   document.addEventListener('DOMContentLoaded', toggleMessage);
 
   const options = {
-    valueNames: ['username', 'given-name', 'family-name', 'github'],
-    searchColumns: ['username', 'github'],
+    valueNames: ['username', 'given-name', 'family-name', 'github', 'github-username', 'ldap-username'],
+    searchColumns: ['ldap-username', 'github-username'],
     searchDelay: 350,
     page: @maxRows,
   };
