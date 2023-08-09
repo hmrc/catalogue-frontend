@@ -219,7 +219,7 @@ class BuildDeployApiConnector @Inject() (
                  , "slug_source"     -> JsString(slugSource)
                  , "deployer_id"     -> JsString(deployerId)
                  )
-    ).map(_.map(_.details.as[RequestState.EcsTask](RequestState.EcsTask.format)))
+    ).map(_.map(_.details.as[RequestState.EcsTask](RequestState.EcsTask.reads)))
 
   def getRequestState[T <: RequestState](state: T): Future[Either[String, JsValue]] =
     signAndExecuteRequest(
@@ -230,7 +230,7 @@ class BuildDeployApiConnector @Inject() (
                                                    , "start_timestamp_milliseconds" -> JsNumber(Instant.now().toEpochMilli)
                                                    )
                    case s: RequestState.EcsTask => Json
-                                                     .toJson(s)(RequestState.EcsTask.format)
+                                                     .toJson(s)(RequestState.EcsTask.writes)
                                                      .as[JsObject]
                                                      .deepMerge(Json.obj("start_timestamp_milliseconds" -> JsNumber(Instant.now().toEpochMilli)))
                  }
@@ -258,13 +258,21 @@ object BuildDeployApiConnector {
 
     final case class EcsTask(accountId: String, logGroupName: String, clusterName: String, logStreamNamePrefix: String, arn: String) extends RequestState
     object EcsTask {
-      val format: Format[EcsTask] =
-        ( (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "account_id"            ).format[String]
-        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "log_group_name"        ).format[String]
-        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "cluster_name"          ).format[String]
-        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "log_stream_name_prefix").format[String]
-        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "arn"                   ).format[String]
-        )(EcsTask.apply, unlift(EcsTask.unapply))
+      val reads: Reads[EcsTask] =
+        ( (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "account_id"            ).read[String]
+        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "log_group_name"        ).read[String]
+        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "cluster_name"          ).read[String]
+        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "log_stream_name_prefix").read[String]
+        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "arn"                   ).read[String]
+        )(EcsTask.apply _)
+
+      val writes: Writes[EcsTask] =
+        ( (__ \ "bnd_api_ecs_task" \ "account_id"            ).write[String]
+        ~ (__ \ "bnd_api_ecs_task" \ "log_group_name"        ).write[String]
+        ~ (__ \ "bnd_api_ecs_task" \ "cluster_name"          ).write[String]
+        ~ (__ \ "bnd_api_ecs_task" \ "log_stream_name_prefix").write[String]
+        ~ (__ \ "bnd_api_ecs_task" \ "arn"                   ).write[String]
+        )(unlift(EcsTask.unapply))
     }
   }
 
