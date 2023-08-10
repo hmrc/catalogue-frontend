@@ -277,7 +277,7 @@
 
 @displayValue(sourceValue: ServiceConfigsService.ConfigSourceValue, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName, warnings: Seq[ServiceConfigsService.ConfigWarning]) = {
     <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@popoverContent(sourceValue, env, key, warnings)'>
-        @sourceValue.value
+        @sourceValue.displayString
     </span>
 }
 

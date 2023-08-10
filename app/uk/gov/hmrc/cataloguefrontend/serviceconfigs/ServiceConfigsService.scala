@@ -222,6 +222,10 @@ object ServiceConfigsService {
 
     def nextDeployment: Boolean =
       source == "nextDeployment"
+
+    def displayString: String =
+      if(value.trim.isEmpty) "<<BLANK>>"
+      else value
   }
 
   object ConfigSourceValue {
