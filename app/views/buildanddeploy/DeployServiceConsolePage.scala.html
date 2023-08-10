@@ -38,7 +38,28 @@
 )
 
 @standard_layout("Deploy Service", "deploy service") {
-  <h4 id="state"></h4>
+  <h4>Deploying @formObject.serviceName</h4>
+  <div>
+    <strong>Version:</strong>
+    @formObject.version.original
+  </div>
+
+  <div>
+    <strong>Environment:</strong>
+    @formObject.environment.displayString
+  </div>
+
+  <div>
+    <strong>Started</strong>
+    @ecsTask.start
+  </div>
+
+  <div>
+    <strong>State:</strong>
+    <span id="state"></span>
+  </div>
+
+  <hr/>
   <div id="result"></div>
 
   @defining(appRoutes.DeployServiceController.console(
@@ -57,7 +78,12 @@
       source.onmessage = function(event) {
         var json         = JSON.parse(event.data);
         state.innerHTML  = json.state;
-        result.innerHTML = json.logs.map(display).join("<br/>");
+
+        if (json.logs.isEmpty) {
+          result.innerHTML = 'Starting ....'
+        } else {
+          result.innerHTML = json.logs.map(display).join("<br/>");
+        }
 
         if (json.state != 'in-progress') {
           source.close();
@@ -65,7 +91,17 @@
       };
 
       function display(json) {
-        return new Date(json.timestamp * 1000).toString() + json.event;
+        var d = new Date(json.timestamp * 1000).toString();
+
+        if (json.event.startsWith('[INFO]')) {
+          var msg = `<span style="color: blue">[INFO]</span>${json.event.replace("[INFO]", "")}`;
+        } else if (json.event.startsWith('[ERROR]')) {
+          var msg = `<span style="color: red">[ERROR]</span>${json.event.replace("[ERROR]", "")}`;
+        } else {
+          var msg = json.event
+        }
+
+        return `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()} ${msg}`;
       }
     </script>
   }
