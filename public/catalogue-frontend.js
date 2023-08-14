@@ -1,6 +1,6 @@
 $(function() { //document ready event
 
-  // Controls the expand/collapse of the what's new and blog post sections on the front page
+  // Controls the expand/collapse of the blog post section on the front page
   $('.recent-box-expand-link').on('click',function(event) {
     event.preventDefault();
     let self = $(this);
@@ -21,7 +21,7 @@ $(function() { //document ready event
     }
   });
 
-  // Controls the expand/collapse of the what's new and blog post sections on the front page
+  // Controls the expand/collapse of the boards on repository pages.
   $('.board-expand-link').on('click',function(event) {
     event.preventDefault();
     let self = $(this);
