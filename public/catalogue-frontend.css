@@ -12789,7 +12789,8 @@ table.always-wrap {
   background-color: #f5f5f5;
 }
 
-table.sticky-header thead {
+table.sticky-header thead,
+.sticky-row {
   position: sticky;
   top: 0px;
   background: white;

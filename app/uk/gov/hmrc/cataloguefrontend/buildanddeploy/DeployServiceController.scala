@@ -28,6 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
+import uk.gov.hmrc.cataloguefrontend.util.{GithubLink, TelemetryLinks}
 
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 // import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
@@ -100,6 +101,8 @@ class DeployServiceController @Inject()(
       ).merge
     }
 
+  private val githubDiffLinkTemplate    = configuration.get[String]("github.templates.diff")
+
   // Display service info - config warnings, vulnerabilities, etc
   def step2(): Action[AnyContent] =
     auth.authenticatedAction(
@@ -139,14 +142,16 @@ class DeployServiceController @Inject()(
                               .find(_.source == "nextDeployment")
                               .map(v => (k -> v))
                           })
-                          // .map(_.map     { case (k, envData)                                => (k -> envData.getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil))})
-                          // .map(_.collect { case (k, _ :+ v) if v.source == "nextDeployment" => (k -> v)})
         confWarnings <- EitherT
                           .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), Some(formObject.version), latest = true))
         vulnerabils  <- EitherT
                           .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version)))
+        current      =  releases
+                          .find(_.environment == formObject.environment)
+                          .fold(Version("0.0.0"))(_.versionNumber.asVersion)
+        githubDiffLink = GithubLink.create(formObject.serviceName, githubDiffLinkTemplate, current, formObject.version)
       } yield
-        Ok(deployServicePage(form, allServices, environments, releases, latest, Some((confUpdates, confWarnings, vulnerabils))))
+        Ok(deployServicePage(form, allServices, environments, releases, latest, Some((confUpdates, confWarnings, vulnerabils, githubDiffLink))))
       ).merge
     }
 
@@ -186,8 +191,8 @@ class DeployServiceController @Inject()(
       ).merge
     }
 
-  private lazy val telemetryLogsLinkTemplate    = configuration.get[String]("telemetry.templates.logs")
-  private lazy val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
+  private val telemetryLogsLinkTemplate    = configuration.get[String]("telemetry.templates.logs")
+  private val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
 
   // Display progress and useful links
   def step4(serviceName: String, environment: String, version: String, queueUrl: String, buildUrl: Option[String]): Action[AnyContent] =
@@ -201,7 +206,9 @@ class DeployServiceController @Inject()(
                               .getSlugInfo(formObject.serviceName, Some(formObject.version))
                               .map {
                                 case None    => NotFound(error_404_template())
-                                case Some(_) => Ok(deployServiceStep4Page(formObject, queueUrl, buildUrl, telemetryLogsLinkTemplate, telemetryMetricsLinkTemplate))
+                                case Some(_) => val grafanaLink = TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
+                                                val kibanaLink  = TelemetryLinks.create("Kibana", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
+                                                Ok(deployServiceStep4Page(formObject, queueUrl, buildUrl, grafanaLink, kibanaLink))
                               }
         )
     }

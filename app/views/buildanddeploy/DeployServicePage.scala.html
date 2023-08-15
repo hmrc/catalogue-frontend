@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import views.html.partials.{form_global_errors, form_fields_warnings}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Link}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 @import uk.gov.hmrc.cataloguefrontend.buildanddeploy.{DeployServiceForm, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
@@ -39,6 +39,7 @@
                     Map[ServiceConfigsService.KeyName, ServiceConfigsService.ConfigSourceValue]
                   , Seq[ServiceConfigsService.ConfigWarning]
                   , Seq[VulnerabilitySummary]
+                  , Link
                   )]
 )( implicit
   messages      : Messages
@@ -46,187 +47,187 @@
 )
 
 @standard_layout("Deploy Service", "deploy service") {
-  <section class="section-wrapper">
-    <h1>Deploy Service</h1>
-    <div class="row">
-      <div class="col-md-4">
-        @form_global_errors(form)
+  <h1>Deploy Service</h1>
+  <div class="row">
+    <div class="col-md-4 sticky-row">
+      @form_global_errors(form)
 
+      @helper.form(
+        action           =  appRoutes.DeployServiceController.step1(form("serviceName").value)
+      , Symbol("id")     -> "service-name-form"
+      , Symbol("method") -> "GET",
+      ) {
+        <dl>
+          <dt><label for="service-name">Service Name:</label></dt>
+          <dd>
+            <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
+            <div id="service-name-matches" class="search-matches-dropdown hide"></div>
+          </dd>
+        </dl>
+      }
+
+      @if(form("serviceName").value.isDefined) {
         @helper.form(
-          action           =  appRoutes.DeployServiceController.step1(form("serviceName").value)
-        , Symbol("id")     -> "service-name-form"
-        , Symbol("method") -> "GET",
+          action             =  appRoutes.DeployServiceController.step2()
+        , Symbol("id")       -> "version-environment-form"
+        , Symbol("method")   -> "POST"
         ) {
+          @csrfFormField
+          <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+
           <dl>
-            <dt><label for="service-name">Service Name:</label></dt>
+            <dt><label for="service-name">Version:</label></dt>
             <dd>
-              <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
-              <div id="service-name-matches" class="search-matches-dropdown hide"></div>
+              <div id="helpful-versions" class="list-group">
+                @defining(
+                  ( latestVersion.map(x => (x, "Latest")) ++
+                    releases
+                      .sortBy(_.environment)
+                      .map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
+                  ).groupBy { case (version, _) => version }
+                    .toList
+                    .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
+                    .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
+                ) { xs => @xs.map { case (version, text) =>
+                  <a href="#" class="list-group-item"2 data-content="@version" style="color: #008770;">
+                    <div class="row">
+                      <div class="col-xs-3 col-md-3">@version</div>
+                      <div class="col-xs-9 col-md-9">@text</div>
+                    </div>
+                  </a>
+                }}
+              </div>
+              <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or selection one from above">
             </dd>
           </dl>
+
+          @helper.select(
+            field              =  form("environment")
+          , options            =  environments.map(t => t.asString -> t.displayString)
+          , Symbol("_label")   -> "Environment:"
+          , Symbol("_default") -> "Please choose"
+          , Symbol("id")       -> "environment"
+          , Symbol("class")    -> "form-control"
+          , Symbol("title")    -> "On change updates 'Config Key' autocomplete"
+          , Symbol("required") -> "required"
+          )
         }
-
-        @if(form("serviceName").value.isDefined) {
-          @helper.form(
-            action             =  appRoutes.DeployServiceController.step2()
-          , Symbol("id")       -> "version-environment-form"
-          , Symbol("method")   -> "POST"
-          ) {
-            @csrfFormField
-            <input type="hidden" name="serviceName" value='@form("serviceName").value' />
-
-            <dl>
-              <dt><label for="service-name">Version:</label></dt>
-              <dd>
-                <div id="helpful-versions" class="list-group">
-                  @defining(
-                    ( latestVersion.map(x => (x, "Latest")) ++
-                      releases
-                        .sortBy(_.environment)
-                        .map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
-                    ).groupBy { case (version, _) => version }
-                      .toList
-                      .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
-                      .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
-                  ) { xs => @xs.map { case (version, text) =>
-                    <a href="#" class="list-group-item"2 data-content="@version" style="color: #008770;">
-                      <div class="row">
-                        <div class="col-xs-3 col-md-3">@version</div>
-                        <div class="col-xs-9 col-md-9">@text</div>
-                      </div>
-                    </a>
-                  }}
-                </div>
-                <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or selection one from above">
-              </dd>
-            </dl>
-
-            @helper.select(
-              field              =  form("environment")
-            , options            =  environments.map(t => t.asString -> t.displayString)
-            , Symbol("_label")   -> "Environment:"
-            , Symbol("_default") -> "Please choose"
-            , Symbol("id")       -> "environment"
-            , Symbol("class")    -> "form-control"
-            , Symbol("title")    -> "On change updates 'Config Key' autocomplete"
-            , Symbol("required") -> "required"
-            )
-          }
-        }
-      </div>
-      <div class="col-md-8">
-        @evaluations.map { case (updates, warnings, vulnerabilities) =>
-          <label>Please review before deploying:</label>
-          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-            <div class="panel panel-default">
-              <div class="panel-heading" role="tab">
-                @if(updates.isEmpty) {
+      }
+    </div>
+    <div class="col-md-8">
+      @evaluations.map { case (updates, warnings, vulnerabilities, githubDiffLink) =>
+        <label>Please review before deploying:</label>
+        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab">
+              @if(updates.isEmpty) {
+                <h4 class="panel-title">Config Changes<span class="pull-right">@updates.size</span></h4>
+              } else {
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeConfigUpdates" aria-expanded="false" aria-controls="collaspeConfigUpdates">
                   <h4 class="panel-title">Config Changes<span class="pull-right">@updates.size</span></h4>
-                } else {
-                  <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeConfigUpdates" aria-expanded="false" aria-controls="collaspeConfigUpdates">
-                    <h4 class="panel-title">Config Changes<span class="pull-right">@updates.size</span></h4>
-                  </a>
-                }
-              </div>
-              <div id="collaspeConfigUpdates" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false">
-                <div class="panel-body">
-                  <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
-                    <thead>
-                      <tr>
-                        <th>Key</th>
-                        <th>Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for((key, configSourceValue) <- updates) {
-                        <tr>
-                          <td><code>@key.asString</code></td>
-                          <td>@displayConfigSourceValue(ServiceConfigsService.ServiceName(form.get.serviceName), key, form.get.environment, configSourceValue)</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                </a>
+              }
             </div>
-            <div class="panel panel-default">
-              <div class="panel-heading" role="tab">
-                @if(warnings.isEmpty) {
-                  <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
-                } else {
-                  <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeConfigWarnings" aria-expanded="false" aria-controls="collaspeConfigWarnings">
-                    <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
-                  </a>
-                }
-              </div>
-              <div id="collaspeConfigWarnings" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false">
-                <div class="panel-body">
-                  <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
-                    <thead>
+            <div id="collaspeConfigUpdates" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false">
+              <div class="panel-body">
+                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for((key, configSourceValue) <- updates) {
                       <tr>
-                        <th>Key</th>
-                        <th>Warning</th>
+                        <td><code>@key.asString</code></td>
+                        <td>@displayConfigSourceValue(ServiceConfigsService.ServiceName(form.get.serviceName), key, form.get.environment, configSourceValue)</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      @for(x <- warnings) {
-                        <tr>
-                          <td><code>@x.key.asString</code></td>
-                          <td>@displayConfigWarning(ServiceConfigsService.ServiceName(form.get.serviceName), x.key, x.environment, x)</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <div class="panel panel-default">
-              <div class="panel-heading" role="tab">
-                @if(vulnerabilities.isEmpty) {
-                  <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
-                } else {
-                  <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeVulnerabilities" aria-expanded="false" aria-controls="collaspeVulnerabilities">
-                    <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
-                  </a>
-                }
-              </div>
-              <div id="collaspeVulnerabilities" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false" style="height: 0px;">
-                <div class="panel-body">
-                  <table style="word-break: break-word" class="table table-striped sticky-header">
-                    <thead>
-                      <tr>
-                        <th style="width:1px"></th>
-                        <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
-                        <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
-                        <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
-                        <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
-                        <th class="col-xs-1 text-right" style="width:90px"><button class="sort no-border" data-sort="score">Score</button></th>
-                      </tr>
-                    </thead>
-                    <tbody class="list">
-                      @vulnerabilities.map(vulnerabilitiesSummary)
-                    </tbody>
-                  </table>
-                </div>
+                    }
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab">
+              @if(warnings.isEmpty) {
+                <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
+              } else {
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeConfigWarnings" aria-expanded="false" aria-controls="collaspeConfigWarnings">
+                  <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
+                </a>
+              }
+            </div>
+            <div id="collaspeConfigWarnings" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false">
+              <div class="panel-body">
+                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Warning</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for(x <- warnings) {
+                      <tr>
+                        <td><code>@x.key.asString</code></td>
+                        <td>@displayConfigWarning(ServiceConfigsService.ServiceName(form.get.serviceName), x.key, x.environment, x)</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab">
+              @if(vulnerabilities.isEmpty) {
+                <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
+              } else {
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeVulnerabilities" aria-expanded="false" aria-controls="collaspeVulnerabilities">
+                  <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
+                </a>
+              }
+            </div>
+            <div id="collaspeVulnerabilities" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false" style="height: 0px;">
+              <div class="panel-body">
+                <table style="word-break: break-word" class="table table-striped sticky-header">
+                  <thead>
+                    <tr>
+                      <th style="width:1px"></th>
+                      <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
+                      <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
+                      <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
+                      <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
+                      <th class="col-xs-1 text-right" style="width:90px"><button class="sort no-border" data-sort="score">Score</button></th>
+                    </tr>
+                  </thead>
+                  <tbody class="list">
+                    @vulnerabilities.map(vulnerabilitiesSummary)
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          @helper.form(
-            action           =  appRoutes.DeployServiceController.step3()
-          , Symbol("method") -> "POST"
-          ) {
-            @csrfFormField
-            <hr/>
-            <input type="hidden" name="serviceName" value='@form("serviceName").value' />
-            <input type="hidden" name="version" value='@form("version").value' />
-            <input type="hidden" name="environment" value='@form("environment").value' />
-            <button id="create-app-configs-submit-button" class="btn btn-primary pull-right" type="submit" @if(!request.retrieval){disabled}>Deploy</button>
-          }
+        <a target="_blank" href="@githubDiffLink.url">Github changes<span class="glyphicon glyphicon-new-window"/></a>
+
+        @helper.form(
+          action           =  appRoutes.DeployServiceController.step3()
+        , Symbol("method") -> "POST"
+        ) {
+          @csrfFormField
+          <hr/>
+          <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+          <input type="hidden" name="version" value='@form("version").value' />
+          <input type="hidden" name="environment" value='@form("environment").value' />
+          <button id="create-app-configs-submit-button" class="btn btn-primary pull-right" type="submit" @if(!request.retrieval){disabled}>Deploy</button>
         }
-      </div>
+      }
     </div>
-  </section>
+  </div>
 
   <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
   <script @CSPNonce.attr>

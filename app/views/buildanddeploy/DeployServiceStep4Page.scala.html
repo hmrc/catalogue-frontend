@@ -17,15 +17,15 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.buildanddeploy.{DeployServiceForm, routes => appRoutes}
 @import views.html.vulnerabilities.VulnerabilityDetails
-@import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
+@import uk.gov.hmrc.cataloguefrontend.connector.Link
 
 @this(viewMessages: ViewMessages)
 
-@(formObject                  : DeployServiceForm
-, queueUrl                    : String
-, buildUrl                    : Option[String]
-, telemetryLogsLinkTemplate   : String
-, telemetryMetricsLinkTemplate: String
+@(formObject : DeployServiceForm
+, queueUrl   : String
+, buildUrl   : Option[String]
+, grafanaLink: Link
+, kibanaLink : Link
 )( implicit
   messages  : RequestHeader
 )
@@ -56,17 +56,11 @@
       <span id="last-check-span"></span>
     </li>
     <li id="jenkins-console-ul" class="hide">
-      @defining(
-        ( TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
-        , TelemetryLinks.create("Kibana", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
-        )
-      ) { case (grafanaLink, kibanaLink) =>
-        Please use <span id="jenkins-console-span"></span>,
-        <a target="_blank" href="@grafanaLink.url">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
-        and
-        <a target="_blank" href="@kibanaLink.url">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
-        to monitor the deployment.
-      }
+      Please use <span id="jenkins-console-span"></span>,
+      <a target="_blank" href="@grafanaLink.url">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
+      and
+      <a target="_blank" href="@kibanaLink.url">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
+      to monitor the deployment.
     </li>
   </ul>
 
