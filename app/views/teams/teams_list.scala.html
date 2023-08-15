@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
 
 @(teams: Seq[Team],
   name : Option[String]
@@ -24,18 +25,14 @@
 )
 
     @standard_layout("Teams list", "teams") {
-        <header>
-            <h1>Teams</h1>
-        </header>
+        <h1 class="section-heading mt-4">Teams</h1>
 
         <div id="teams-list">
             <form action="/teams" method="get">
-                <div class="form-group row">
-                    <div class="col-md-1">
-                        <label for="search">Team:</label>
-                    </div>
+                <div class="row mb-3">
+                    <label for="search" class="col-md-1 col-form-label">Team:</label>
                     <div class="col-md-4">
-                        <input class="search form-control" id="search" type="text" name="name" value="@name.getOrElse("")" autofocus>
+                        <input id="search" type="text" name="name" class="search form-control" value="@name.getOrElse("")" autofocus>
                     </div>
                 </div>
             </form>
@@ -61,12 +58,12 @@
                 @teams.zipWithIndex.map { case (team, i) =>
                 <tr id="row@i">
                     <td class="team-name" id="row@{i}_name">
-                        <a href="/teams/@team.name.asString">@team.name.asString</a>
+                        <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@teamsRoutes.TeamsController.team(team.name)">@team.name.asString</a>
                     </td>
-                    <td class="created monospaced" id="row@{i}_created">
+                    <td class="created font-monospace" id="row@{i}_created">
                       @team.createdDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
                     </td>
-                    <td class="last-active monospaced" id="row@{i}_lastActive">
+                    <td class="last-active font-monospace" id="row@{i}_lastActive">
                       @team.lastActiveDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
                     </td>
                     <td class="repo-count" id="row@{i}_repos">
@@ -80,16 +77,16 @@
     }
 
     <script @CSPNonce.attr>
-        var options = {
+        let options = {
           valueNames: ['team-name', 'created', 'last-active', 'repo-count' ],
           searchColumns: ['team-name']
         };
 
-        var teamList = new List('teams-list', options);
+        let teamList = new List('teams-list', options);
 
-        var searchBox = document.getElementById('search');
+        let searchBox = document.getElementById('search');
         // set autofocus cursor to right of text in search box
-        var length = searchBox.value.length;
+        let length = searchBox.value.length;
         searchBox.focus();
         searchBox.setSelectionRange(length, length);
         // re-search the list upon page load.

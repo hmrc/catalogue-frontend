@@ -47,14 +47,17 @@
 .board {
     margin-bottom: 1em;
     border: 1px solid #dddddd;
-    overflow: hidden; }
+    overflow: hidden;
+}
 
 .board__heading {
     margin: 0;
     padding: .8em;
     background-color: #f5f5f5;
     border-bottom: 1px solid #dddddd;
-    color: #191717;}
+    color: #191717;
+}
+
 .board__heading a {
     font-weight: normal;
 }
@@ -62,20 +65,24 @@
 .sub__heading {
     margin-left: 1em;
     margin-bottom: 0;
-    margin-top: 1.2em; }
+    margin-top: 1.2em;
+}
 
 .board__body {
-    padding: 1em 0 .2em; }
+    padding: 1em 0 .2em;
+}
+
 .board__body p {
     margin: 0 1.2em 1.2em;
-    color: #434343; }
+    color: #434343;
+}
 
 .board__sub-heading {
     margin-top: 0;
     padding-left: 0.8em;
 }
 
-.board-grow .recent-box-grow {
+.content-grow {
     -moz-transition: height .5s;
     -ms-transition: height .5s;
     -o-transition: height .5s;
@@ -85,11 +92,11 @@
     height:120px; /* If you change this, change the corresponding smallHeight value in catalogue-frontend.css too */
 }
 
-.board-expand-link, .recent-box-expand-link {
+.content-grow-expand-link {
     text-decoration: none !important;
 }
 
-.board-gradient {
+.content-grow-gradient {
     mask: linear-gradient(#000 66%, #0000 100%);
     -webkit-mask: linear-gradient(#000 66%, #0000 100%);
 }
@@ -115,9 +122,23 @@
     min-width: 12em;
 }
 
+/*! override to make it appear as superscript */
 .glyphicon-new-window {
     padding-left: 4px;
     font-size: 9px;
     vertical-align: middle;
     margin-top: -3px;
+}
+
+/*! table column header sort buttons */
+.no-border {
+    border: none;
+    background-color: transparent;
+    outline: none;
+}
+
+table.sticky-header thead {
+    position: sticky;
+    top: 0;
+    z-index: 99999;
 }
