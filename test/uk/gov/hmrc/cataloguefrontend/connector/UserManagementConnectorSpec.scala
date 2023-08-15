@@ -102,7 +102,7 @@ class UserManagementConnectorSpec
                   |	   "organisation" : "MDTP",
                   |	   "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
                   |	   "username" : "joe.bloggs",
-                  |	   "github" : "https://github.com/joebloggs",
+                  |	   "githubUsername" : "joebloggs-github",
                   |	   "phoneNumber" : "07123456789",
                   |	   "teamsAndRoles" : [
                   |	   	 {
@@ -125,7 +125,7 @@ class UserManagementConnectorSpec
             organisation = Some("MDTP"),
             primaryEmail = "joe.bloggs@digital.hmrc.gov.uk",
             username = "joe.bloggs",
-            github = Some("https://github.com/joebloggs"),
+            githubUsername = Some("joebloggs-github"),
             phoneNumber = Some("07123456789"),
             teamsAndRoles = Some(Seq(TeamMembership(teamName = "TestTeam", role = "user")))
           )
@@ -186,7 +186,7 @@ class UserManagementConnectorSpec
             organisation = Some("MDTP"),
             primaryEmail = "joe.bloggs@digital.hmrc.gov.uk",
             username = "joe.bloggs",
-            github = Some("https://github.com/joebloggs"),
+            githubUsername = None,
             phoneNumber = Some("07123456789"),
             teamsAndRoles = Some(Seq(TeamMembership(teamName = "TestTeam", role = "user")))
           ),
@@ -197,7 +197,7 @@ class UserManagementConnectorSpec
             organisation = Some("MDTP"),
             primaryEmail = "jane.doe@digital.hmrc.gov.uk",
             username = "jane.doe",
-            github = Some("https://github.com/janedoe"),
+            githubUsername = None,
             phoneNumber = Some("07123456789"),
             teamsAndRoles = Some(Seq(TeamMembership(teamName = "TestTeam", role = "user")))
           )
@@ -234,7 +234,7 @@ class UserManagementConnectorSpec
                   |  "organisation" : "MDTP",
                   |  "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
                   |  "username" : "joe.bloggs",
-                  |  "github" : "https://github.com/joebloggs",
+                  |  "githubUsername" : "joebloggs-github",
                   |  "phoneNumber" : "07123456789",
                   |  "teamsAndRoles" : [
                   |  	 {
@@ -256,7 +256,7 @@ class UserManagementConnectorSpec
             organisation = Some("MDTP"),
             primaryEmail = "joe.bloggs@digital.hmrc.gov.uk",
             username = "joe.bloggs",
-            github = Some("https://github.com/joebloggs"),
+            githubUsername = Some("joebloggs-github"),
             phoneNumber = Some("07123456789"),
             teamsAndRoles = Some(Seq(TeamMembership(teamName = "Test Team", role = "user")))
           )
