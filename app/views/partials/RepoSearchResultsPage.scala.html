@@ -31,18 +31,18 @@
 @repositories.zipWithIndex.map{case (repo, i) =>
 <tr id="row@i">
     <td class="repo-name" id="row@{i}_name">
-        <a class="@if(repo.isDeprecated || repo.isArchived){deprecated} @if(repo.isArchived){archived}" id="link-to-@repo.name-info-page" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+        <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover @if(repo.isDeprecated || repo.isArchived){fst-italic} @if(repo.isArchived){text-info}" id="link-to-@repo.name-info-page" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
     </td>
 
     <td class="" id="row@{i}_repostatus">
         @if(repo.isArchived) {
-            <span class="repo-status badge">archived</span>
+            <span class="repo-status badge rounded-pill text-bg-info">archived</span>
         } else {
-            @if(repo.isDeprecated) { <span class="repo-status badge badge-warning">deprecated</span> }
+            @if(repo.isDeprecated) { <span class="repo-status badge rounded-pill text-bg-warning">deprecated</span> }
         }
     </td>
 
-    <td class="repo-type monospaced" id="row@{i}_repotype">
+    <td class="repo-type font-monospace" id="row@{i}_repotype">
         @repo.serviceType.map(_.displayString).getOrElse(repo.repoType.asString)
     </td>
 
@@ -51,10 +51,10 @@
         @repoTeamNames(repo.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
     </td>
 
-    <td class="repo-bp monospaced" id="row@{i}_branch-protection">
+    <td class="repo-bp font-monospace" id="row@{i}_branch-protection">
     @if(repo.branchProtection.exists(_.isProtected)) {
         <span class="glyphicon glyphicon-ok text-success"></span>
-        <span class="sr-only">Branch protection is enabled</span>
+        <span class="visually-hidden">Branch protection is enabled</span>
     } else {
         <abbr style="text-decoration: none; border-bottom: none;" title="@List(
             s"Requires approving reviews = ${repo.branchProtection.exists(_.requiresApprovingReviews)}",
@@ -63,13 +63,13 @@
         ).mkString("\n")">
             <span class="glyphicon glyphicon-remove text-danger"></span>
         </abbr>
-        <span class="sr-only">Branch protection is not enabled</span>
+        <span class="visually-hidden">Branch protection is not enabled</span>
     }
     </td>
-    <td class="created monospaced" id="row@{i}_created">
+    <td class="created font-monospace" id="row@{i}_created">
     @repo.createdDate.asPattern(`yyyy-MM-dd`)
     </td>
-    <td class="last-active monospaced" id="row@{i}_lastActive">
+    <td class="last-active font-monospace" id="row@{i}_lastActive">
     @repo.lastActiveDate.asPattern(`yyyy-MM-dd`)
 </td>
 </tr>

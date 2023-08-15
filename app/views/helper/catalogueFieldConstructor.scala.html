@@ -1,0 +1,39 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@**
+* Based on the defaultFieldConstructor:
+* https://github.com/playframework/playframework/blob/main/core/play/src/main/scala/views/helper/defaultFieldConstructor.scala.html
+*
+* Added the ability to specify class for the <label>
+*@
+@import views.html.helper.FieldElements
+
+@(elements: FieldElements)
+<dl class="@elements.args.get(Symbol("_class")) @if(elements.hasErrors) {error}" id="@elements.args.get(Symbol("_id")).getOrElse(elements.id + "_field")">
+    @if(elements.hasName) {
+        <dt>@elements.name</dt>
+    } else {
+        <dt><label for="@elements.id" class="@elements.args.get(Symbol("_labelClass"))">@elements.label</label></dt>
+    }
+    <dd>@elements.input</dd>
+    @elements.errors.map { error =>
+        <dd class="error">@error</dd>
+    }
+    @elements.infos.map { info =>
+        <dd class="info">@info</dd>
+    }
+</dl>
