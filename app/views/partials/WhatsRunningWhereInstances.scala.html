@@ -26,13 +26,13 @@
 @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
   <tr id="row@i">
     <td class="application-name" id="row@{i}_application">
-        <a id="link-to-info-page-for-@{sdcSummary.serviceName}" href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName}</a>
+        <a id="link-to-info-page-for-@{sdcSummary.serviceName}" class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName}</a>
     </td>
     @environments.map { env =>
       @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>
         <td id="row@{i}_version_@{env.asString}" style="background: rgba(246, 124, 27, @{sdc.slotsAndInstancesToMemory/maxMemory});">
             <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@sdc.instances slots:@sdc.slots">
-                <span class="@env.asString hidden">@sdc.slotsAndInstancesToMemory</span>
+                <span class="@env.asString visually-hidden">@sdc.slotsAndInstancesToMemory</span>
                 @sdc.instances x @{sdc.slotsToMemory}mb
             </abbr>
         </td>

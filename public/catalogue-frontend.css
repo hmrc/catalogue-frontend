@@ -142,3 +142,7 @@ table.sticky-header thead {
     top: 0;
     z-index: 99999;
 }
+
+.wrw-environment-head{
+    width: 12%;
+}
