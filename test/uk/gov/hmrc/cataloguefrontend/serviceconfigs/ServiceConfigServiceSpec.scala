@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{ScalaFutures, IntegrationPatience}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
@@ -32,7 +32,8 @@ class ServiceConfigsServiceSpec
      with Matchers
      with MockitoSugar
      with ArgumentMatchersSugar
-     with ScalaFutures {
+     with ScalaFutures
+     with IntegrationPatience {
   import ServiceConfigsService._
 
   "serviceConfigsService.configByKey" should {
@@ -54,10 +55,10 @@ class ServiceConfigsServiceSpec
           , ConfigSourceEntries(source = "appConfigEnvironment", sourceUrl = None, entries = Map(KeyName("k1") -> s"${e.asString}-b1"))
           )).toMap
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(config))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(config))
 
       serviceConfigsService.configByKey(serviceName).futureValue shouldBe deployedConfigByKey
@@ -79,10 +80,10 @@ class ServiceConfigsServiceSpec
       , ConfigSourceEntries(source = "appConfigEnvironment", sourceUrl = None, entries = Map(KeyName("k1") -> "new-val"))
       ))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
       serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
@@ -108,10 +109,10 @@ class ServiceConfigsServiceSpec
         ConfigSourceEntries(source = "appConfigEnvironment", sourceUrl = None, entries = Map(KeyName("k2") -> "new-val"))
       ))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
       serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
@@ -137,10 +138,10 @@ class ServiceConfigsServiceSpec
         ConfigSourceEntries(source = "appConfigEnvironment", sourceUrl = None, entries = Map(KeyName("k1") -> ""))
       ))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
       serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(

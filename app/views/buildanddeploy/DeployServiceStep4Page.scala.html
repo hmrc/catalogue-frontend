@@ -1,0 +1,145 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.buildanddeploy.{DeployServiceForm, routes => appRoutes}
+@import views.html.vulnerabilities.VulnerabilityDetails
+@import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
+
+@this(viewMessages: ViewMessages)
+
+@(formObject                  : DeployServiceForm
+, queueUrl                    : String
+, buildUrl                    : Option[String]
+, telemetryLogsLinkTemplate   : String
+, telemetryMetricsLinkTemplate: String
+)( implicit
+  messages  : RequestHeader
+)
+
+@standard_layout("Deploying Service", "deploying service") {
+  <h1>Deploying Service</h1>
+  <ul class="list-unstyled sub-text">
+    <li>
+      <label>Service:</label>
+      @formObject.serviceName
+    </li>
+    <li>
+      <label>Version:</label>
+      @formObject.version.original
+    </li>
+    <li>
+      <label>Environment:</label>
+      @formObject.environment.displayString
+    </li>
+    <li id="status-ul" class="hide">
+      <label>Status:</label>
+      <span id="status-span">
+        <span id="status-spinner"><span class="spinner-border text-secondary" role="status"><span class="sr-only">Loading...</span></span></span>
+      </span>
+    </li>
+    <li id="last-check-ul" class="hide">
+      <label>Last Check:</label>
+      <span id="last-check-span"></span>
+    </li>
+    <li id="jenkins-console-ul" class="hide">
+      @defining(
+        ( TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
+        , TelemetryLinks.create("Kibana", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
+        )
+      ) { case (grafanaLink, kibanaLink) =>
+        Please use <span id="jenkins-console-span"></span>,
+        <a target="_blank" href="@grafanaLink.url">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
+        and
+        <a target="_blank" href="@kibanaLink.url">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
+        to monitor the deployment.
+      }
+    </li>
+  </ul>
+
+  <script @CSPNonce.attr>
+    function displayStatus(status) {
+      document.getElementById('status-ul'  ).classList = '';
+      document.getElementById('status-span').innerHTML = status;
+
+      if (status == 'QUEUE-ID-NOT-FOUND' || status == 'BUILD-ID-NOT-FOUND' || status == 'FAILURE' || status == 'ABORTED') {
+        document.getElementById('status-span'   ).classList = 'text-danger';
+        document.getElementById('status-spinner').classList = 'hide';
+      } else if (status == 'SUCCESS') {
+        document.getElementById('status-span'   ).classList = 'text-success';
+        document.getElementById('status-spinner').classList = 'hide';
+      } else if (status == 'UNSTABLE') {
+        document.getElementById('status-span'   ).classList = 'text-warning';
+        document.getElementById('status-spinner').classList = 'hide';
+      } else {
+        document.getElementById('status-span'   ).classList = '';
+        document.getElementById('status-spinner').classList = '';
+      }
+    }
+    function displayLastCheck() {
+      document.getElementById('last-check-ul' ).classList = '';
+      document.getElementById('lastCheck-span').innerHTML = Date.now().toLocaleString();;
+    }
+    function displayLinks(url) {
+      document.getElementById('jenkins-console-ul'  ).classList = '';
+      document.getElementById('jenkins-console-span').innerHTML = `<a target="_blank" href="${url}">Jenkins<span class="glyphicon glyphicon-new-window"/></a>`;
+    }
+  </script>
+
+  @buildUrl match {
+    case None => {
+      <script @CSPNonce.attr>
+        var url  = '@appRoutes.DeployServiceController.step4sse(queueUrl, buildUrl)';
+        var sse  = new EventSource(url);
+
+        sse.onerror = function(event) {
+          displayStatus('QUEUE-ID-NOT-FOUND');
+        };
+
+        sse.onmessage = function(event) {
+          var json = JSON.parse(event.data);
+          displayStatus('IN-QUEUE');
+
+          if (json.queueStatus.executable) {
+            sse.close();
+            window.location.replace(`${window.location.href}&buildUrl=${encodeURIComponent(json.queueStatus.executable.url)}`);
+          };
+        };
+      </script>
+    }
+    case Some(_) => {
+      <script @CSPNonce.attr>
+        var sse = new EventSource('@appRoutes.DeployServiceController.step4sse(queueUrl, buildUrl)'.replaceAll('&amp;', '&'));
+        sse.onmessage = function(event) {
+          let json = JSON.parse(event.data);
+          displayLastcheck();
+          displayLinks(`${json.buildStatus.url}console`);
+
+          if (json.buildStatus.result) {
+            sse.close();
+            displayStatus(json.buildStatus.result);
+          } else {
+            displayStatus('IN-PROGRESS');
+          }
+        };
+
+        sse.onerror = function(event) {
+          displayStatus('BUILD-ID-NOT-FOUND');
+        };
+      </script>
+    }
+  }
+}

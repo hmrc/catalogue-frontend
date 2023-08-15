@@ -21,12 +21,11 @@ import cats.data.EitherT
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.{Configuration, Logger}
-import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
-import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, TeamsAndRepositoriesConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.service.SlugVersionInfo
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 
@@ -35,19 +34,18 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 // import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.buildanddeploy.{DeployServicePage, DeployServiceConsolePage}
+import views.html.buildanddeploy.{DeployServicePage, DeployServiceStep4Page}
+import views.html.error_404_template
 
 import javax.inject.{Inject, Singleton}
-import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
-
 
 @Singleton
 class DeployServiceController @Inject()(
   override val auth            : FrontendAuthComponents
 , override val mcc             : MessagesControllerComponents
 , configuration                : Configuration
-, buildDeployApiConnector      : BuildDeployApiConnector
+, buildJobsConnector           : BuildJobsConnector
 , teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
 , serviceDependenciesConnector : ServiceDependenciesConnector
 , serviceCommissioningConnector: ServiceCommissioningStatusConnector
@@ -55,7 +53,7 @@ class DeployServiceController @Inject()(
 , vulnerabilitiesConnector     : VulnerabilitiesConnector
 , serviceConfigsService        : ServiceConfigsService
 , deployServicePage            : DeployServicePage
-, deployServiceConsolePage     : DeployServiceConsolePage
+, deployServiceStep4Page       : DeployServiceStep4Page
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -65,9 +63,9 @@ class DeployServiceController @Inject()(
   private val logger = Logger(getClass)
 
   private val predicate: Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"services/platops-example-frontend-microservice"), IAAction("CREATE_APP_CONFIGS"))
-    // Predicate.Permission(Resource.from("catalogue-frontend", "*"), IAAction("DEPLOY_SERVICE"))
+    Predicate.Permission(Resource.from("catalogue-frontend", "*"), IAAction("DEPLOY_SERVICE"))
 
+  // Display form options
   def step1(serviceName: Option[String]): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.DeployServiceController.step1(serviceName),
@@ -102,6 +100,7 @@ class DeployServiceController @Inject()(
       ).merge
     }
 
+  // Display service info - config warnings, vulnerabilities, etc
   def step2(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.DeployServiceController.step1(None),
@@ -132,15 +131,26 @@ class DeployServiceController @Inject()(
                             serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                           , BadRequest(deployServicePage(form.withGlobalError("Slug not found"), allServices, environments, releases, latest, evaluations = None))
                           )
-        warnings     <- EitherT
-                          .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), version = Some(formObject.version), latest = true))
+        confUpdates  <- EitherT
+                          .right[Result](serviceConfigsService.configByKey(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
+                          .map(_.flatMap { case (k, envData) =>
+                            envData
+                              .getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil)
+                              .find(_.source == "nextDeployment")
+                              .map(v => (k -> v))
+                          })
+                          // .map(_.map     { case (k, envData)                                => (k -> envData.getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil))})
+                          // .map(_.collect { case (k, _ :+ v) if v.source == "nextDeployment" => (k -> v)})
+        confWarnings <- EitherT
+                          .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), Some(formObject.version), latest = true))
         vulnerabils  <- EitherT
                           .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version)))
       } yield
-        Ok(deployServicePage(form, allServices, environments, releases, latest, Some((warnings, vulnerabils))))
+        Ok(deployServicePage(form, allServices, environments, releases, latest, Some((confUpdates, confWarnings, vulnerabils))))
       ).merge
     }
 
+  // Deploy service and redirects (to avoid redeploying on refresh)
   def step3(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.DeployServiceController.step1(None),
@@ -159,24 +169,41 @@ class DeployServiceController @Inject()(
                             serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                           , BadRequest(deployServicePage(form.withGlobalError("Slug not found"), allServices, Nil, Nil, None, evaluations = None))
                           )
-        username     <- EitherT
-                          .fromOption[Future](
-                            request.session.get(AuthController.SESSION_USERNAME)
-                          , sys.error("Username not found"): Result
-                          )
-        ecsTask      <- EitherT(buildDeployApiConnector.triggerMicroserviceDeployment(
-                          serviceName = formObject.serviceName
-                        , environment = formObject.environment
-                        , version     = formObject.version
-                        , slugSource  = slugInfo.uri
-                        , deployerId  = username
-                        )).leftMap { errMsg =>
-                          sys.error(s"triggerMicroserviceDeployment failed with: $errMsg"): Result
-                        }
-        // ecsTask = BuildDeployApiConnector.RequestState.EcsTask("1", "2", "3", "4", "5")
+        queueUrl      <- EitherT
+                          .right[Result](buildJobsConnector.deployMicroservice(
+                            serviceName = formObject.serviceName
+                          , environment = formObject.environment
+                          , version     = formObject.version
+                          ))
+        // url = "https://build.tax.service.gov.uk/job/build-and-deploy/job/deploy-microservice/49895"
       } yield
-        Ok(deployServiceConsolePage(formObject, ecsTask))
+        Redirect(routes.DeployServiceController.step4(
+          serviceName = formObject.serviceName
+        , environment = formObject.environment.asString
+        , version     = formObject.version.original
+        , queueUrl    = queueUrl
+        ))
       ).merge
+    }
+
+  private lazy val telemetryLogsLinkTemplate    = configuration.get[String]("telemetry.templates.logs")
+  private lazy val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
+
+  // Display progress and useful links
+  def step4(serviceName: String, environment: String, version: String, queueUrl: String, buildUrl: Option[String]): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      DeployServiceForm
+        .form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => Future.successful(NotFound(error_404_template()))
+        , formObject     => serviceDependenciesConnector
+                              .getSlugInfo(formObject.serviceName, Some(formObject.version))
+                              .map {
+                                case None    => NotFound(error_404_template())
+                                case Some(_) => Ok(deployServiceStep4Page(formObject, queueUrl, buildUrl, telemetryLogsLinkTemplate, telemetryMetricsLinkTemplate))
+                              }
+        )
     }
 
   import scala.concurrent.duration._
@@ -184,29 +211,24 @@ class DeployServiceController @Inject()(
   import play.api.http.ContentTypes
   import play.api.libs.EventSource
   import play.api.libs.json.Json
-  def console(accountId: String, logGroupName: String, clusterName: String, logStreamNamePrefix: String, arn: String, start: Long): Action[AnyContent] =
-    auth.authenticatedAction(
-      continueUrl = routes.DeployServiceController.step1(None),
-      retrieval   = Retrieval.hasPredicate(predicate)
-    ) { implicit request =>
+  def step4sse(queueUrl: String, buildUrl: Option[String] ): Action[AnyContent] =
+    BasicAuthAction.apply { implicit request =>
+      implicit val w1 = BuildJobsConnector.QueueStatus.format
+      implicit val w2 = BuildJobsConnector.BuildStatus.format
       val flow =
         Source
-          .tick(0.millis, 10.second, "TICK")
+          .tick(1.millis, if (buildUrl.isEmpty) 1.second else 10.second, "TICK")
           .mapAsync(parallelism = 1) { _ =>
-            buildDeployApiConnector
-              .getRequestState(BuildDeployApiConnector.RequestState.EcsTask(accountId, logGroupName, clusterName, logStreamNamePrefix, arn, start))
-              .map {
-                case Left(error)    => Json.toJson(error)
-                // case Right(state) => Json.toJson(state)(Console.writes)
-                case Right(jsValue) => jsValue
-              }
+            (queueUrl, buildUrl) match {
+              case (u, None)    => buildJobsConnector.queueStatus(u).map(x => Json.obj("queueStatus" -> Json.toJson(x)).toString)
+              case (_, Some(u)) => buildJobsConnector.buildStatus(u).map(x => Json.obj("buildStatus" -> Json.toJson(x)).toString)
+            }
           }
           .via(EventSource.flow)
 
       Ok.chunked(flow)
         .as(ContentTypes.EVENT_STREAM)
     }
-
 }
 
 case class DeployServiceForm(
@@ -221,26 +243,7 @@ object DeployServiceForm {
     Forms.mapping(
       "serviceName" -> Forms.text
     , "environment" -> Forms.of[Environment](Environment.formFormat)
-    , "version"     -> Forms.of[Version](Version.formFormat)        //Forms.text.transform[Version](Version.apply, _.original)  // TODO Version parse isn't safe
+    , "version"     -> Forms.of[Version](Version.formFormat)
     )(DeployServiceForm.apply)(DeployServiceForm.unapply)
   )
 }
-
-// object Console {
-//   import play.api.libs.functional.syntax._
-//   import play.api.libs.json._
-
-//   val writes: Writes[BuildDeployApiConnector.RequestState] = {
-//     implicit val writeLog: Writes[BuildDeployApiConnector.Log] =
-//       ( (__ \ "bnd_api_request_attempt_number").write[Int]
-//       ~ (__ \ "event"                         ).write[String]
-//       ~ (__ \ "level"                         ).write[String]
-//       ~ (__ \ "timestamp"                     ).write[Instant]
-//       )(unlift(BuildDeployApiConnector.Log.unapply))
-
-//     ( (__ \ "attempt_number"                 ).write[Int]
-//     ~ (__ \ "logs"                           ).write[Seq[BuildDeployApiConnector.Log]]
-//     ~ (__ \ "last_log_timestamp_milliseconds").write[Instant]
-//     )(unlift(BuildDeployApiConnector.RequestState.unapply))
-//   }
-// }

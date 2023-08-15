@@ -38,9 +38,9 @@ class ServiceConfigsService @Inject()(
 ) {
   import ServiceConfigsService._
 
-  def configByKey(serviceName: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
+  private def configByKey(serviceName: String, environments: Seq[Environment], version: Option[Version], latest: Boolean)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     serviceConfigsConnector
-      .configByEnv(serviceName, latest)
+      .configByEnv(serviceName, environments, version, latest)
       .map(_.foldLeft(Map.empty[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]) { case (acc, (e -> cses)) =>
         cses.foldLeft(acc) { case (acc2, cse) =>
           acc2 ++ cse.entries.map { case (key, value) =>
@@ -51,27 +51,33 @@ class ServiceConfigsService @Inject()(
         }
       }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString): _*)) // sort by keys
 
-  def configByKey(serviceName: String)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
+  def configByKey(serviceName: String, environments: Seq[Environment] = Nil, version: Option[Version] = None)(implicit hc: HeaderCarrier): Future[ConfigByKey] =
     for {
-        latestConfigByKey   <- configByKey(serviceName, latest = true )
-        deployedConfigByKey <- configByKey(serviceName, latest = false)
-        configByKey         =  deployedConfigByKey.map {
-                                 case (k, m) => k -> m.map {
-                                   case (e, vs) =>
-                                     latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match {
-                                       case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = n.value))
-                                       case None    if vs.lastOption.isDefined                  => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = ""     ))
-                                       case _                                                   => e -> vs
-                                     }
-                                 }
+      latestConfigByKey   <- configByKey(serviceName, environments, version, latest = true )
+      deployedConfigByKey <- configByKey(serviceName, environments, None   , latest = false)
+      configByKey         =  deployedConfigByKey.map {
+                               case (k, m) => k -> m.map {
+                                 case (e, vs) =>
+                                   latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match {
+                                     case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = n.value))
+                                     case None    if vs.lastOption.isDefined                  => e -> (vs :+ ConfigSourceValue(source = "nextDeployment", sourceUrl = None, value = ""     ))
+                                     case _                                                   => e -> vs
+                                   }
                                }
-        newConfig           =  latestConfigByKey
-                                 .filter { case (k, _) => !deployedConfigByKey.contains(k) }
-                                 .view.mapValues(_.view.mapValues(_.lastOption.map(_.copy(source = "nextDeployment", sourceUrl = None)).toList).toMap)
-    } yield (configByKey ++ newConfig)
+                             }
+       newConfig         =   latestConfigByKey.map {
+                               case (k, m) => k -> m.flatMap {
+                                 case (e, vs) =>
+                                   configByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty) match {
+                                     case Nil => vs.lastOption.map(n => e -> Seq(n.copy(source = "nextDeployment", sourceUrl = None)))
+                                     case xs  => Some(e -> xs)
+                                   }
+                               }
+                             }
+    } yield (newConfig)
 
   def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
-    configByKey(serviceName, latest = true)
+    configByKey(serviceName, environments = Nil, version = None, latest = true)
       .map(
         _.getOrElse(KeyName("artifact_name"), Map.empty)
           .view
@@ -88,7 +94,7 @@ class ServiceConfigsService @Inject()(
         case list                => ArtifactNameResult.ArtifactNameError(s"Different artifact names found for service in different environments - [${list.mkString(",")}]")
       }
 
-  def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsWithHasRepo] =
+def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsWithHasRepo] =
     for {
       repos    <- teamsAndReposConnector.allRepositories()
       srs      <- serviceConfigsConnector.serviceRelationships(serviceName)
@@ -272,7 +278,7 @@ object ServiceConfigsService {
       case "appConfigCommonFixed"       => "App-config-common fixed settings"
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
       case "base64"                     => s"Base64 (decoded from config ${key.fold("'key'")(_.asString)}.base64)"
-      case "nextDeployment"             => "Used on next deployment"
+      case "nextDeployment"             => s"Used on next deployment changed in $source"
       case _                            => source
     }
 
