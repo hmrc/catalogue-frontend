@@ -32,9 +32,9 @@
 
 @(form          : Form[DeployServiceForm]
 , allServices   : Seq[GitRepository]
-, environments  : Seq[Environment]
-, releases      : Seq[WhatsRunningWhereVersion]
 , latestVersion : Option[Version]
+, releases      : Seq[WhatsRunningWhereVersion]
+, environments  : Seq[Environment]
 , evaluations   : Option[(
                     Map[ServiceConfigsService.KeyName, ServiceConfigsService.ConfigSourceValue]
                   , Seq[ServiceConfigsService.ConfigWarning]
@@ -66,7 +66,7 @@
         </dl>
       }
 
-      @if(form("serviceName").value.isDefined) {
+      @if(form("serviceName").value.isDefined && latestVersion.nonEmpty && environments.nonEmpty) {
         @helper.form(
           action             =  appRoutes.DeployServiceController.step2()
         , Symbol("id")       -> "version-environment-form"
@@ -74,7 +74,6 @@
         ) {
           @csrfFormField
           <input type="hidden" name="serviceName" value='@form("serviceName").value' />
-
           <dl>
             <dt><label for="service-name">Version:</label></dt>
             <dd>
@@ -128,9 +127,9 @@
                 </a>
               }
             </div>
-            <div id="collaspeConfigUpdates" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false">
+            <div id="collaspeConfigUpdates" class="panel-collapse collapse" role="tabpanel" aria-expanded="false">
               <div class="panel-body">
-                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                <table class="table table-striped always-wrap" style="table-layout:fixed">
                   <thead>
                     <tr>
                       <th>Key</th>
@@ -159,7 +158,7 @@
                 </a>
               }
             </div>
-            <div id="collaspeConfigWarnings" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false">
+            <div id="collaspeConfigWarnings" class="panel-collapse collapse" role="tabpanel" aria-expanded="false">
               <div class="panel-body">
                 <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
                   <thead>
@@ -190,7 +189,7 @@
                 </a>
               }
             </div>
-            <div id="collaspeVulnerabilities" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo" aria-expanded="false" style="height: 0px;">
+            <div id="collaspeVulnerabilities" class="panel-collapse collapse" role="tabpanel" aria-expanded="false" style="height: 0px;">
               <div class="panel-body">
                 <table style="word-break: break-word" class="table table-striped sticky-header">
                   <thead>
