@@ -36,6 +36,13 @@ class ServiceConfigsServiceSpec
      with IntegrationPatience {
   import ServiceConfigsService._
 
+  private def toNextDeploymentFalse(config: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]): Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] =
+    config.view.mapValues(_.view.mapValues(_.map(_ -> false)).toMap).toMap
+
+  private def update(config: Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]], k: KeyName, ce: ConfigEnvironment)
+                    (update: Seq[(ConfigSourceValue, Boolean)] => Seq[(ConfigSourceValue, Boolean)]): Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] =
+    config + (k -> (config.getOrElse(k, Map.empty) + (ce -> update(config.getOrElse(k, Map.empty).getOrElse(ce, Seq.empty)))))
+
   "serviceConfigsService.configByKey" should {
 
     val deployedConfigByKey = Map(
@@ -61,7 +68,7 @@ class ServiceConfigsServiceSpec
       when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(config))
 
-      serviceConfigsService.configByKey(serviceName).futureValue shouldBe deployedConfigByKey
+      serviceConfigsService.configByKeyWithNextDeployment(serviceName).futureValue shouldBe toNextDeploymentFalse(deployedConfigByKey)
     }
 
     "show undeployed changes" in new Setup {
@@ -86,11 +93,11 @@ class ServiceConfigsServiceSpec
       when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
-        deployedConfigByKey
-      )(KeyName("k1"), ConfigEnvironment.ForEnvironment(Environment.QA))(
-        _ :+ ConfigSourceValue("nextDeployment", None, "new-val")
-      )
+      serviceConfigsService.configByKeyWithNextDeployment(serviceName).futureValue shouldBe update(
+        toNextDeploymentFalse(deployedConfigByKey)
+      , KeyName("k1")
+      , ConfigEnvironment.ForEnvironment(Environment.QA)
+      )(_ :+ (ConfigSourceValue("appConfigEnvironment", None, "new-val") -> true))
     }
 
     "show new undeployed keys" in new Setup {
@@ -115,11 +122,11 @@ class ServiceConfigsServiceSpec
       when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
-        deployedConfigByKey
-      )(KeyName("k2"), ConfigEnvironment.ForEnvironment(Environment.QA))(
-        _ :+ ConfigSourceValue("nextDeployment", None, "new-val")
-      )
+      serviceConfigsService.configByKeyWithNextDeployment(serviceName).futureValue shouldBe update(
+        toNextDeploymentFalse(deployedConfigByKey)
+      , KeyName("k2")
+      , ConfigEnvironment.ForEnvironment(Environment.QA)
+      )(_ :+ (ConfigSourceValue("appConfigEnvironment", None, "new-val") -> true))
     }
 
     "show undeployed key removals" in new Setup {
@@ -135,7 +142,7 @@ class ServiceConfigsServiceSpec
 
       val latest = deployed ++ Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> (
         deployed(ConfigEnvironment.ForEnvironment(Environment.QA)) :+
-        ConfigSourceEntries(source = "appConfigEnvironment", sourceUrl = None, entries = Map(KeyName("k1") -> ""))
+        ConfigSourceEntries(source = "", sourceUrl = None, entries = Map(KeyName("k1") -> ""))
       ))
 
       when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
@@ -144,11 +151,11 @@ class ServiceConfigsServiceSpec
       when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      serviceConfigsService.configByKey(serviceName).futureValue shouldBe update(
-        deployedConfigByKey
-      )(KeyName("k1"), ConfigEnvironment.ForEnvironment(Environment.QA))(
-        _ :+ ConfigSourceValue("nextDeployment", None, "")
-      )
+      serviceConfigsService.configByKeyWithNextDeployment(serviceName).futureValue shouldBe update(
+        toNextDeploymentFalse(deployedConfigByKey)
+      , KeyName("k1")
+      , ConfigEnvironment.ForEnvironment(Environment.QA)
+      )(_ :+ (ConfigSourceValue("", None, "") -> true))
     }
   }
 
@@ -205,10 +212,5 @@ class ServiceConfigsServiceSpec
     val mockServiceConfigsConnector       = mock[ServiceConfigsConnector]
     val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     val serviceConfigsService             = new ServiceConfigsService(mockServiceConfigsConnector, mockTeamsAndRepositoriesConnector)
-
-    def update(config: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]])
-              (k: KeyName, ce: ConfigEnvironment)
-              (update: Seq[ConfigSourceValue] => Seq[ConfigSourceValue]): Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]] =
-      config + (k -> (config.getOrElse(k, Map.empty) + (ce -> update(config.getOrElse(k, Map.empty).getOrElse(ce, Seq.empty)))))
   }
 }

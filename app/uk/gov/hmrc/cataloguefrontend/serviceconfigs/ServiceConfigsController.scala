@@ -56,7 +56,7 @@ class ServiceConfigsController @Inject()(
     BasicAuthAction.async { implicit request =>
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-        configByKey <- serviceConfigsService.configByKey(serviceName)
+        configByKey <- serviceConfigsService.configByKeyWithNextDeployment(serviceName)
         warnings    <- if (CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
                          serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), version = None, latest = true)
                        } else Future.successful(Seq.empty[ServiceConfigsService.ConfigWarning])

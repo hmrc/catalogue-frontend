@@ -43,7 +43,6 @@ class ServiceConfigsConnector @Inject() (
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
 
   implicit val cber = ConfigByEnvironment.reads
-  implicit val cbkr = ConfigByKey.reads
   implicit val cwr  = ConfigWarning.reads
   implicit val cser = ConfigSourceEntries.reads
   implicit val srr  = ServiceRelationships.reads

@@ -141,11 +141,11 @@ class DeployServiceController @Inject()(
                             , BadRequest(deployServicePage(form.withGlobalError("Version not found"), allServices, latest, releases, environments, evaluations = None))
                           )
         confUpdates  <- EitherT
-                          .right[Result](serviceConfigsService.configByKey(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
+                          .right[Result](serviceConfigsService.configByKeyWithNextDeployment(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
                           .map(_.flatMap { case (k, envData) =>
                             envData
                               .getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil)
-                              .find(_.source == "nextDeployment")
+                              .collect { case (x, true) if !x.isReferenceConf => x }
                               .map(v => (k -> v))
                           })
         confWarnings <- EitherT

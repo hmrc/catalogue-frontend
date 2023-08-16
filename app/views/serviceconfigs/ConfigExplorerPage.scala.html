@@ -23,7 +23,7 @@
 @this(viewMessages: ViewMessages)
 
 @(serviceName: String,
-  configByKey   : ServiceConfigsService.ConfigByKey,
+  configByKey   : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ConfigEnvironment, Seq[(ServiceConfigsService.ConfigSourceValue, Boolean)]]],
   deployments   : List[WhatsRunningWhereVersion],
   showWarnings  : Boolean,
   configWarnings: Seq[ServiceConfigsService.ConfigWarning]
@@ -67,7 +67,7 @@
                         <div id="header-@{index + 1}" class="grid-item truncate-content column-@env.asString @if(!show(env)){hidden}" style="width:500px;">
                             <div>
                                 @env.displayString
-                                @(configByKey.filter(_._2.get(env).exists(_.exists(_.nextDeployment))).size match {
+                                @(configByKey.filter(_._2.get(env).exists(_.exists(_._2))).size match {
                                     case _ if env == ServiceConfigsService.ConfigEnvironment.Local => <span></span>
                                     case 0 => <span></span>
                                     case 1 => <span class="undeployed small"><span class="glyphicon glyphicon-exclamation-sign"></span> 1 undeployed change</span>
@@ -88,64 +88,57 @@
                     }
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
-                    @defining(envSources.forall(_._2.map(_.source).forall(_ == "referenceConf"))) { isRefconfOnly =>
-                        <div id="@{UrlUtils.encodeQueryParam(s"config-row-${key.asString}")}" class="grid-row @if(isRefconfOnly) {refconf-only}">
-                            <div id="@{UrlUtils.encodeQueryParam(s"config-key-${key.asString}")}" class="grid-item sticky-column truncate-content" style="width:310px;">
-                                <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link float-start"></a>
-                                <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@key.asString'>
-                                    @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
-                                        <code>@key.asString</code>
-                                    } else {
-                                        @key.asString
-                                    }
-                                </span>
-                                <a href="@{serviceConfigsRoutes.ServiceConfigsController.searchResults(Some(key.asString)).url}" class="glyphicon glyphicon-search pull-right"></a>
-                            </div>
-                            @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
-                                <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
-                                    <ul class="list-unstyled">
-                                      @for((sourceValue: ServiceConfigsService.ConfigSourceValue, idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
-                                        <li class="config-value">
-                                            @if(sourceValue.nextDeployment && sourceValue.value.trim.isEmpty) {
-                                              <span class="truncate-content-overflow undeployed">
-                                                <span class="glyphicon glyphicon-exclamation-sign small-text"></span>
-                                                @displayValue(sourceValue.copy(value ="<< Deleted >>"), env, key, warnings = Nil)
-                                              </span>
-                                            } else if (sourceValue.nextDeployment) {
-                                              <span class="truncate-content-overflow undeployed">
-                                                <span class="glyphicon glyphicon-exclamation-sign small-text"></span>
-                                                @displayValue(sourceValue, env, key, warnings = Nil)
-                                              </span>
-                                            } else {
-                                              @defining(
-                                                ( envSources.getOrElse(env, Seq.empty).filterNot(_.nextDeployment).size != idx+1
-                                                , configWarnings.filter(x => x.key == key && ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env  )
-                                                )
-                                              ) { case (isStrikethrough, warnings) =>
-                                                <span class="truncate-content-overflow
-                                                            @if(sourceValue.isSuppressed) {suppressed}
-                                                            @if(isStrikethrough) {strikethrough} else if(warnings.nonEmpty){warning}">
-                                                  @if(!isStrikethrough && warnings.nonEmpty){ <span class="glyphicon glyphicon-exclamation-sign small-text hide-warnings"></span> }
-                                                  @displayValue(sourceValue, env, key, warnings)
-                                                </span>
-                                              }
-                                            }
-                                            @sourceValue.sourceUrl.map { url =>
-                                              <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="@url"></a>
-                                            }
-                                        </li>
-                                      }
-                                    </ul>
-                                </div>
-                            }
+                    <div id="@{UrlUtils.encodeQueryParam(s"config-row-${key.asString}")}" class="grid-row @if(envSources.forall(_._2.map(_._1.isReferenceConf))) {refconf-only}">
+                        <div id="@{UrlUtils.encodeQueryParam(s"config-key-${key.asString}")}" class="grid-item sticky-column truncate-content" style="width:310px;">
+                            <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link float-start"></a>
+                            <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@key.asString'>
+                                @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+                                    <code>@key.asString</code>
+                                } else {
+                                    @key.asString
+                                }
+                            </span>
+                            <a href="@{serviceConfigsRoutes.ServiceConfigsController.searchResults(Some(key.asString)).url}" class="glyphicon glyphicon-search pull-right"></a>
                         </div>
-                        <script @CSPNonce.attr>
-                          var elmt = document.getElementById("@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}");
-                          elmt.addEventListener("click", function() {
-                            navigator.clipboard.writeText(elmt.href);
-                          });
-                        </script>
-                    }
+                        @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
+                            <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
+                                <ul class="list-unstyled">
+                                    @for(((sourceValue, nextDeployment), idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
+                                    <li class="config-value">
+                                        @if(nextDeployment) {
+                                            <span class="truncate-content-overflow undeployed">
+                                            <span class="glyphicon glyphicon-exclamation-sign small-text"></span>
+                                            @displayValue(sourceValue, nextDeployment, env, key, warnings = Nil)
+                                            </span>
+                                        } else {
+                                            @defining(
+                                            ( envSources.getOrElse(env, Seq.empty).filterNot(_._2).size != idx+1
+                                            , configWarnings.filter(x => x.key == key && ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env  )
+                                            )
+                                            ) { case (isStrikethrough, warnings) =>
+                                            <span class="truncate-content-overflow
+                                                        @if(sourceValue.isSuppressed) {suppressed}
+                                                        @if(isStrikethrough) {strikethrough} else if(warnings.nonEmpty){warning}">
+                                                @if(!isStrikethrough && warnings.nonEmpty){ <span class="glyphicon glyphicon-exclamation-sign small-text hide-warnings"></span> }
+                                                @displayValue(sourceValue, nextDeployment, env, key, warnings)
+                                            </span>
+                                            }
+                                        }
+                                        @sourceValue.sourceUrl.map { url =>
+                                            <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="@url"></a>
+                                        }
+                                    </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                    <script @CSPNonce.attr>
+                        var elmt = document.getElementById("@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}");
+                        elmt.addEventListener("click", function() {
+                        navigator.clipboard.writeText(elmt.href);
+                        });
+                    </script>
                 }
             </div>
         </section>
@@ -275,14 +268,17 @@
     </body>
 </html>
 
-@displayValue(sourceValue: ServiceConfigsService.ConfigSourceValue, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName, warnings: Seq[ServiceConfigsService.ConfigWarning]) = {
-    <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@popoverContent(sourceValue, env, key, warnings)'>
+@displayValue(sourceValue: ServiceConfigsService.ConfigSourceValue, nextDeployment: Boolean, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName, warnings: Seq[ServiceConfigsService.ConfigWarning]) = {
+    <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@popoverContent(sourceValue, nextDeployment, env, key, warnings)'>
         @sourceValue.displayString
     </span>
 }
 
-@popoverContent(sourceValue: ServiceConfigsService.ConfigSourceValue, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName, warnings: Seq[ServiceConfigsService.ConfigWarning]) = {
+@popoverContent(sourceValue: ServiceConfigsService.ConfigSourceValue, nextDeployment: Boolean, env: ServiceConfigsService.ConfigEnvironment, key: ServiceConfigsService.KeyName, warnings: Seq[ServiceConfigsService.ConfigWarning]) = {
     <div>@ServiceConfigsService.friendlySourceName(sourceValue.source, env, Some(key))</div>
+    @if(nextDeployment) {
+        <span class="undeployed">Used on next deployment</span>
+    }
     @if(warnings.nonEmpty) {
 		<div class="popover-warnings hide-warnings">
 			<strong>Warnings</strong>

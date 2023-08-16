@@ -113,7 +113,7 @@
         }
       }
     </div>
-    <div class="col-md-8">
+    <div class="col-md-8 sticky-row">
       @evaluations.map { case (updates, warnings, vulnerabilities, githubDiffLink) =>
         <label>Please review before deploying:</label>
         <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
@@ -129,7 +129,7 @@
             </div>
             <div id="collaspeConfigUpdates" class="panel-collapse collapse" role="tabpanel" aria-expanded="false">
               <div class="panel-body">
-                <table class="table table-striped always-wrap" style="table-layout:fixed">
+                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
                   <thead>
                     <tr>
                       <th>Key</th>
@@ -223,6 +223,7 @@
           <input type="hidden" name="version" value='@form("version").value' />
           <input type="hidden" name="environment" value='@form("environment").value' />
           <button id="create-app-configs-submit-button" class="btn btn-primary pull-right" type="submit" @if(!request.retrieval){disabled}>Deploy</button>
+          <br/><br/>
         }
       }
     </div>
@@ -276,7 +277,7 @@
          data-placement="bottom"
          data-html="true"
          data-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
-        @configSourceValue.value
+        @configSourceValue.displayString
       </a>
     </li>
   </ul>
@@ -304,7 +305,7 @@
 
 @popoverConfigWarning(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
   <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
-  <strong>Value:</strong> @warning.value.value
+  <strong>Value:</strong> @warning.value.displayString
 }
 
 @vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
