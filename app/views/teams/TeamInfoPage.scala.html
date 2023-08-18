@@ -40,7 +40,7 @@
 )
 
 @standard_layout(teamName.asString, active = "teams") {
-    <h1 class="section-heading mt-4">@teamName.asString</h1>
+    <h1 class="page-heading mt-4">@teamName.asString</h1>
     <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     @partials.team_leak_detection_banner(leaksFoundForTeam)

@@ -49,7 +49,7 @@ th {
     margin: 2em 0;
 }
 
-.section-heading {
+.page-heading {
     margin-bottom: 0.8em;
     padding-bottom: .2em;
     border-bottom: 3px solid var(--bs-heading-color);
@@ -78,44 +78,6 @@ th {
     height: 29em;
     z-index: 1000000;
     padding-left: 6px;
-}
-
-.board {
-    margin-bottom: 1em;
-    border: 1px solid #dddddd;
-    overflow: hidden;
-}
-
-.board__heading {
-    margin: 0;
-    padding: .8em;
-    background-color: #f5f5f5;
-    border-bottom: 1px solid #dddddd;
-    color: #191717;
-}
-
-.board__heading a {
-    font-weight: normal;
-}
-
-.sub__heading {
-    margin-left: 1em;
-    margin-bottom: 0;
-    margin-top: 1.2em;
-}
-
-.board__body {
-    padding: 1em 0 .2em;
-}
-
-.board__body p {
-    margin: 0 1.2em 1.2em;
-    color: #434343;
-}
-
-.board__sub-heading {
-    margin-top: 0;
-    padding-left: 0.8em;
 }
 
 .content-grow {
@@ -188,4 +150,21 @@ table.sticky-header thead {
 
 .medium-glyphicon {
     font-size: 13px;
+}
+
+.shuttered-row {
+    border-style: dashed;
+    border-width: 3px!important;
+    --bs-border-opacity: 1;
+    border-color: rgba(var(--bs-warning-rgb), var(--bs-border-opacity));
+}
+
+.shutter-link {
+    background: var(--bs-dark);
+    color: var(--bs-light);
+    --bs-link-color-rgb: var(--bs-light-rgb); /*! Gets used to set text-decoration-color (the colour of the underline) */
+    border-radius: 3px;
+    padding: 0 5px;
+    display: inline-block;
+    margin: 0;
 }

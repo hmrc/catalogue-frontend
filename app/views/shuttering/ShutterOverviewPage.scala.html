@@ -32,48 +32,45 @@
 
 @standard_layout(s"Shutter Overview - ${shutterType.asString.capitalize}") {
 
-  <header>
-      <h1>Shutter Overview - @{shutterType.asString.capitalize}</h1>
-  </header>
+    <h1 class="page-heading mt-4">Shutter Overview - @{shutterType.asString.capitalize}</h1>
 
-  @killSwitchLink.map { link =>
-    <section id="shutter-overview">
-      <div class="row panel panel-warning">
-        <div class="panel-heading">
+    @killSwitchLink.map { link =>
+      <div class="alert alert-warning">
           <span class="glyphicon glyphicon-warning-sign"></span>
-          In the unlikely event you need to shutter the whole platform, go to <a id="link-to-jenkins" href="@link">Jenkins</a>
-        </div>
+          In the unlikely event you need to shutter the whole platform, go to <a id="link-to-jenkins" class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@link">Jenkins</a>
       </div>
-      <div class="row">&nbsp;</div>
-    </section>
-  }
+    }
 
-  <section id="shutter-overview">
+    <section id="shutter-overview">
 
-    <ul id="environment" class="nav nav-tabs">
-        @Environment.values.map(envOption)
-    </ul>
-    <div class="shuttered-checkbox">
-      <input id="shuttered-only" type="checkbox" name="shuttered-only" value="false">
-      Only Show Shuttered @{shutterType}s
-    </div>
+        <div class="row mb-3">
+            <div class="col-12 position-relative">
+                <ul id="environment" class="nav nav-tabs mb2">
+                    @Environment.values.map(envOption)
+                </ul>
+                <div class="form-check form-switch position-absolute top-0 end-0 me-3">
+                    <input id="shuttered-only" class="form-check-input" type="checkbox" role="switch">
+                    <label class="form-check-label" for="shuttered-only">Only Show Shuttered @{shutterType}s</label>
+                </div>
+            </div>
+        </div>
 
-    <p class="shutter-info-link">
-      Select a service from the list below or <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)">
+    <p class="m-1">
+      Select a service from the list below or <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)">
         click here to go to the shutter wizard
       </a>.
     </p>
 
-    <div id="service-list">
+    <div id="service-list" class="mt-3">
         <table id="shutter-state-table" class="table table-striped sticky-header">
             <thead>
               <tr>
-                  <th id="service-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-service">Service</button></p></th>
-                  <th id="status-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-state">Status</button></p></th>
-                  <th id="last-update-by-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-user">Last Updated By</button></p></th>
-                  <th id="date-header"><p class="shutter-overview-header"><button role="button" class="sort no-border" data-sort="shutter-date">Date</button></p></th>
-                  <th id="events-link"><p class="shutter-overview-header">Events</p></th>
-                  <th id="update-header"><p class="shutter-overview-header">Update</p></th>
+                  <th id="service-header"><button role="button" class="sort no-border fw-bold" data-sort="shutter-service">Service</button></th>
+                  <th id="status-header"><button role="button" class="sort no-border fw-bold" data-sort="shutter-state">Status</button></th>
+                  <th id="last-update-by-header"><button role="button" class="sort no-border fw-bold" data-sort="shutter-user">Last Updated By</button></th>
+                  <th id="date-header"><button role="button" class="sort no-border fw-bold" data-sort="shutter-date">Date</button></th>
+                  <th id="events-link">Events</th>
+                  <th id="update-header">Update</th>
               </tr>
             </thead>
             <tbody class="list">
@@ -86,33 +83,37 @@
 
   <script @CSPNonce.attr>
     function filterUnshuttered() {
-        var checkBox = document.getElementById("shuttered-only");
-        var unshutteredServices = document.querySelectorAll("tr.unshuttered");
+        let checkBox = document.getElementById("shuttered-only");
+        let unshutteredServices = document.querySelectorAll("tr.unshuttered");
 
-        if (checkBox.checked == true) {
+        if (checkBox.checked === true) {
             unshutteredServices.forEach(function(element) {
-                  element.classList.add("hidden");
+                  element.classList.add("d-none");
             });
         } else {
             unshutteredServices.forEach(function(element) {
-                element.classList.remove("hidden");
+                element.classList.remove("d-none");
             });
         }
     }
 
-    document.getElementById("shuttered-only").addEventListener("click", function() {
-        filterUnshuttered()
+    document.getElementById("shuttered-only").addEventListener("change", function() {
+        filterUnshuttered();
     });
 
-    var options = { valueNames: [ 'shutter-service', 'shutter-state', 'shutter-user', 'shutter-date' ] };
-    var serviceList = new List('service-list', options);
+    let options = { valueNames: [ 'shutter-service', 'shutter-state', 'shutter-user', 'shutter-date' ] };
+    let serviceList = new List('service-list', options);
   </script>
 }
 
 @envOption(env: Environment) = {
-  <li id="tab-@env.asString" class="nav-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)" class="nav-link">@env.displayString (@shutteredCount(env) / @serviceCount(env))</a>
-  </li>
+  @defining(env == selectedEnv) { active =>
+    <li id="tab-@env.asString" class="nav-item">
+        <a class="nav-link @if(active) {active}" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)">
+            @env.displayString (@shutteredCount(env) / @serviceCount(env))
+        </a>
+    </li>
+  }
 }
 
 @serviceCount(env: Environment) = {
@@ -130,48 +131,43 @@
   }
 }
 
-@classFor(status: ShutterStatusValue) = {
-  @status match {
-    case ShutterStatusValue.Shuttered   => { shuttered_row }
-    case ShutterStatusValue.Unshuttered => { unshuttered }
-  }
-}
-
 @shutterRows(states: Seq[ShutterStateData]) = {
     @states.zipWithIndex.map{case (state, i) =>
-      <tr id="row@i" class="shutter-row @classFor(state.status.value)">
-          <td id="row@{i}_name" class="shutter-service">
-            <a class="shutter-row-link" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
-              @state.serviceName
-            </a>
-          </td>
-          <td id="row@{i}_state" class="shutter-state">
-            @state.status.value
-          </td>
-          <td id="row@{i}_user" class="shutter-user">
-            @usernameFor(state.lastEvent)
-          </td>
-          <td id="row@{i}_date" class="shutter-date">
-            @state.lastEvent.map(_.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
-          </td>
-          <td id="row@{i}_event">
-            @if(state.lastEvent.isDefined) {
-              <a id="event-history-link-@{state.serviceName}-@{state.environment.asString}"
-                 class="medium-glyphicon glyphicon glyphicon-list"
-                 data-toggle="tooltip"
-                 data-placement="right"
-                 title="@messages("shutter-event.history")"
-                 href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
-            } else {
-              @Html("No events")
-            }
-          </td>
-            <td id="row@{i}_update" class="shutter-update">
-              <a id="shutter-link-@{state.serviceName}-@{state.environment.asString}" class="shutter-row-link" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
-                @changeValueFor(state.status.value)
-              </a>
-            </td>
-      </tr>
+      @defining(state.status.value == ShutterStatusValue.Shuttered) { shuttered =>
+          <tr id="row@i" class="shutter-row @if(shuttered) {shuttered-row} else {unshuttered}">
+              <td id="row@{i}_name" class="shutter-service">
+                  <a class="shutter-link link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
+                  @state.serviceName
+                  </a>
+              </td>
+              <td id="row@{i}_state" class="shutter-state">
+              @state.status.value
+              </td>
+              <td id="row@{i}_user" class="shutter-user">
+              @usernameFor(state.lastEvent)
+              </td>
+              <td id="row@{i}_date" class="shutter-date font-monospace">
+              @state.lastEvent.map(_.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
+              </td>
+              <td id="row@{i}_event">
+              @if(state.lastEvent.isDefined) {
+                  <a id="event-history-link-@{state.serviceName}-@{state.environment.asString}"
+                  class="medium-glyphicon glyphicon glyphicon-list"
+                  data-toggle="tooltip"
+                  data-placement="right"
+                  title="@messages("shutter-event.history")"
+                  href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
+              } else {
+                  @Html("No events")
+              }
+              </td>
+              <td id="row@{i}_update" class="shutter-update">
+                  <a id="shutter-link-@{state.serviceName}-@{state.environment.asString}" class="shutter-link link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
+                      @changeValueFor(state.status.value)
+                  </a>
+              </td>
+          </tr>
+      }
     }
 }
 
