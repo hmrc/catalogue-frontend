@@ -24,62 +24,55 @@
 @defining(dependencies.groupBy(_.name).map(_._2.head).toSeq) { uniqueDependencies =>
     @defining(uniqueDependencies.filter(_.importBy.isDefined)) { transitiveDependencies =>
         @for(dependency <- uniqueDependencies.filter(_.importBy.isEmpty).sortBy(d => d.group + d.name)) {
-            <li>
-                <div class="">
-                    @dependencyRow(dependency)
-                </div>
 
-                <div class="">
-                    <ul class="list-unstyled">
-                    @for(transitiveDependency <- transitiveDependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))) {
-                        <li>
-                            @dependencyRow(transitiveDependency)
-                        </li>
-                    }
-                    </ul>
-                </div>
-            </li>
+            @dependencyRow(dependency)
+
+            @for(transitiveDependency <- transitiveDependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))) {
+                @dependencyRow(transitiveDependency)
+            }
         }
     }
 }
 
 @dependencyRow(dependency: Dependency) = {
-    <div class="@{getColourClass(dependency)} row" id="@{dependency.name}-@{rootId}">
-        <span class="col-xs-4 left-aligned">
-            <span class="@if(dependency.importBy.isDefined){transitive}">&nbsp;</span>
+    <div class="row @{getColourClass(dependency)}" id="@{dependency.name}-@{rootId}">
+        <div class="col-4">
+            @if(dependency.importBy.isDefined) {
+                <span class="transitive"></span>
+            }
             @icon(dependency)
             @if(!dependency.isExternal) {
-              <a id="link-to-@{dependency.name}-@{rootId}" href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
+              <a id="link-to-@{dependency.name}-@{rootId}" class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
                 <span class="dep-group">@dependency.group:</span>
                 <span class="dep-name">@dependency.name</span>
               </a>
             } else {
               <span class="dep-group">@dependency.group:</span><span class="dep-name">@dependency.name</span>
             }
-        </span>
-        <span id="@{dependency.name}-@{rootId}-current-version" class="col-xs-3">@dependency.currentVersion.toString</span>
-        <span id="@{dependency.name}-@{rootId}-latestVersion-version" class="col-xs-3">
+        </div>
+        <div id="@{dependency.name}-@{rootId}-current-version" class="col-3">@dependency.currentVersion.toString</div>
+        <div id="@{dependency.name}-@{rootId}-latestVersion-version" class="col-3">
             @dependency.latestVersion.map(lv => {
-                <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"></span>
+                <span class="glyphicon medium-glyphicon glyphicon-arrow-right pe-2"></span>
                 <span>{lv.toString}</span>
             }).getOrElse("")
-        </span>
-        <span id="@{dependency.name}-@{rootId}-bobbyrule" class="col-xs-2">
+        </div>
+        <div id="@{dependency.name}-@{rootId}-bobbyrule" class="col-2">
         @dependency.versionState match {
-            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
-            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
+            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
+            case Some(VersionState.BobbyRuleViolated(violation)) => { <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
             case _                                               => { }
         }
-        </span>
+        </div>
     </div>
 }
 
 @getColourClass(dependency: Dependency) = @{
     dependency.versionState match {
-        case Some(VersionState.NewVersionAvailable )  => "version-new-available"
-        case Some(_: VersionState.BobbyRuleViolated)  => "version-active-violation"
-        case Some(_: VersionState.BobbyRulePending )  => "version-pending-violation"
-        case _                                        => "version-ok"
+        case Some(VersionState.NewVersionAvailable )  => "text-info"
+        case Some(_: VersionState.BobbyRuleViolated)  => "text-danger"
+        case Some(_: VersionState.BobbyRulePending )  => "text-warning"
+        case _                                        => "text-success"
     }
 }
 
@@ -88,6 +81,6 @@
     case Some(VersionState.NewVersionAvailable )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-arrow-up" title="new version available"></span> }
     case Some(_: VersionState.BobbyRulePending )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-alert"    title="bobby rule pending"></span> }
     case Some(_: VersionState.BobbyRuleViolated)  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="bobby rule violated"></span> }
-    case _                                        => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon"                    title="">&nbsp;</span> }
+    case _                                        => { }
   }
 }

@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model._
 @import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
+@import uk.gov.hmrc.cataloguefrontend.teams.routes
 
 @this()
 
@@ -28,52 +29,66 @@
 @* value to show those where later versions are available? *@
 @defining(masterTeamDependencies.filter(_.dependencies.hasOutOfDateDependencies)) { outOfDateDependencies =>
 
-<div id="team-dependencies" class="board">
-    <h3 class="board__heading">Out of Date Platform Dependencies for Team @teamName.asString</h3>
-    <div class="board__body">
-
-      @if(masterTeamDependencies.isEmpty) {
-        <p>No out of date dependencies. Well done you!</p>
-        <p>Feel free to go and treat yourselves to a coffee and a biscuit.</p>
-      } else {
-        @if(showLink) {
-          <p>Click <a id="link-to-out-of-date-team-dependencies" href="/teams/@teamName.asString/out-of-date-dependencies">here</a> to open in dedicated window. (Useful for build monitors)</p>
-        }
-        <div class="col-xs-9">
-             @for(dependency <- masterTeamDependencies) {
-               @defining(prodDependencies.getOrElse(dependency.dependencies.repositoryName, Seq.empty)){ prodDependencies =>
-                 <ul class="list list--minimal list-group row" id="ood-@dependency.dependencies.repositoryName">
-
-                    <li>
-                      <h4>@dependency.dependencies.repositoryName @if(dependency.repo.isArchived){ <span class="archived">archived</span>} @if(dependency.repo.isDeprecated && !dependency.repo.isArchived){<span class="badge">deprecated</span>} </h4>
-                    </li>
-
-                     @bobby_alerts(prodDependencies, pending = false)
-                     @bobby_alerts(prodDependencies, pending = true )
-
-                     <li>
-                         <span class="col-xs-4"><label>Dependency</label></span>
-                         <span class="col-xs-3"><label>Current Version</label></span>
-                         <span class="col-xs-3"><label>Latest Version</label></span>
-                         <span class="col-xs-2"><label>Violation</label></span>
-
-                     </li>
-                     @partials.dependency_section(dependency.dependencies.libraryDependencies.filter(_.isOutOfDate).sortBy(_.scope), s"${teamName.asString}-libraries")
-                     @partials.dependency_section(dependency.dependencies.sbtPluginsDependencies.filter(_.isOutOfDate), s"${teamName.asString}-sbt-plugins")
-                     @partials.dependency_section(dependency.dependencies.otherDependencies.filter(_.isOutOfDate), s"${teamName.asString}-other")
-
-                 </ul>
-               }
-             }
-        </div>
-        @if(masterTeamDependencies.nonEmpty) {
-        <div class="col-xs-3">
-            @partials.dependency_legend(showNewVersionAvailable = true)
-        </div>
-        }
-      }
+<div id="team-dependencies" class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Out of Date Platform Dependencies for Team @teamName.asString</h4>
     </div>
+    <div class="card-body">
+        @if(masterTeamDependencies.isEmpty) {
+            <p class="card-text">No out of date dependencies. Well done you!</p>
+            <p class="card-text">Feel free to go and treat yourselves to a coffee and a biscuit.</p>
+        } else {
+            @if(showLink) {
+                <p class="card-text">Click <a id="link-to-out-of-date-team-dependencies" class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@routes.TeamsController.outOfDateTeamDependencies(teamName)">here</a> to open in dedicated window. (Useful for build monitors)</p>
+            }
+            <div class="row">
+                <div class="col-9">
+                    @for(dependency <- masterTeamDependencies) {
+                        @defining(prodDependencies.getOrElse(dependency.dependencies.repositoryName, Seq.empty)) { prodDependencies =>
+                          <div id="ood-@dependency.dependencies.repositoryName" class="row mb-3">
+                              <div class="col-12">
+                                  <h6 class="fw-bold mb-3">
+                                      @dependency.dependencies.repositoryName
+                                      @if(dependency.repo.isArchived) {
+                                          <span class="badge rounded-pill text-bg-info">archived</span>
+                                      }
+                                      @if(dependency.repo.isDeprecated && !dependency.repo.isArchived) {
+                                          <span class="badge rounded-pill text-bg-warning">deprecated</span>
+                                      }
+                                  </h6>
 
+                                  @bobby_alerts(prodDependencies, pending = false)
+                                  @bobby_alerts(prodDependencies, pending = true )
+
+                                  <div class="row">
+                                      <div class="col-4">
+                                          <p class="fw-bold">Dependency</p>
+                                      </div>
+                                      <div class="col-3">
+                                          <p class="fw-bold">Current Version</p>
+                                      </div>
+                                      <div class="col-3">
+                                          <p class="fw-bold">Latest Version</p>
+                                      </div>
+                                      <div class="col-2">
+                                          <p class="fw-bold">Violation</p>
+                                      </div>
+                                  </div>
+
+                                  @partials.dependency_section(dependency.dependencies.libraryDependencies.filter(_.isOutOfDate).sortBy(_.scope), s"${teamName.asString}-libraries")
+                                  @partials.dependency_section(dependency.dependencies.sbtPluginsDependencies.filter(_.isOutOfDate), s"${teamName.asString}-sbt-plugins")
+                                  @partials.dependency_section(dependency.dependencies.otherDependencies.filter(_.isOutOfDate), s"${teamName.asString}-other")
+                              </div>
+                          </div>
+                        }
+                    }
+                </div>
+                <div class="col-3">
+                    @partials.dependency_legend(showNewVersionAvailable = true)
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
 }
@@ -89,11 +104,11 @@
           .toSet
     ) { violations =>
       @if(violations.nonEmpty) {
-          <li class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-production-@if(pending) {pending} else {broken}-banner">
+          <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-production-@if(pending) {pending} else {broken}-banner">
               <strong>
                   This service has @if(pending) { upcoming } bobby violations in Production
               </strong>
-          </li>
+          </div>
       }
   }
 }
