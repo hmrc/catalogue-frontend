@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.buildanddeploy
+package uk.gov.hmrc.cataloguefrontend.deployservice
 
 import play.api.{Configuration, Logging}
 import play.mvc.Http.HeaderNames

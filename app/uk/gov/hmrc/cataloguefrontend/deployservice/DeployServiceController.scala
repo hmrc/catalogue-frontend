@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.buildanddeploy
+package uk.gov.hmrc.cataloguefrontend.deployservice
 
 import cats.data.EitherT
 
@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.util.{GithubLink, TelemetryLinks}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Retrieval, Resource}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.buildanddeploy.{DeployServicePage, DeployServiceStep4Page}
+import views.html.deployservice.{DeployServicePage, DeployServiceStep4Page}
 import views.html.error_404_template
 
 import javax.inject.{Inject, Singleton}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.buildanddeploy
+package uk.gov.hmrc.cataloguefrontend.deployservice
 
 import java.time.Instant
 import org.jsoup.Jsoup
@@ -40,7 +40,7 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
-import views.html.buildanddeploy.{DeployServicePage, DeployServiceStep4Page}
+import views.html.deployservice.{DeployServicePage, DeployServiceStep4Page}
 
 
 import scala.concurrent.ExecutionContext.Implicits.global
