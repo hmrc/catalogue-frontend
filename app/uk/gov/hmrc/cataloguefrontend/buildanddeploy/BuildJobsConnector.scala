@@ -27,7 +27,6 @@ import java.net.URL
 import javax.inject.{Inject, Singleton}
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.FiniteDuration
 
 @Singleton
 class BuildJobsConnector @Inject()(
@@ -47,8 +46,8 @@ class BuildJobsConnector @Inject()(
 
   def deployMicroservice(
     serviceName: String
-  , environment: Environment
   , version    : Version
+  , environment: Environment
   )(implicit hc: HeaderCarrier): Future[String] = {
     val url = new URL(s"https://build.tax.service.gov.uk/job/build-and-deploy/job/deploy-microservice/buildWithParameters")
     implicit val locationRead: HttpReads[String] = HttpReads[HttpResponse].map(_.header("Location").get.replace("http:", "https:"))
@@ -61,8 +60,8 @@ class BuildJobsConnector @Inject()(
       )
       .withBody(Map(
         "SERVICE"         -> Seq(serviceName)
-      , "ENVIRONMENT"     -> Seq(environment.asString)
       , "SERVICE_VERSION" -> Seq(version.original)
+      , "ENVIRONMENT"     -> Seq(environment.asString)
       ))
       .execute[Either[UpstreamErrorResponse, String]]
       .flatMap {

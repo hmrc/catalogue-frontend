@@ -136,7 +136,7 @@
                       <th>Value</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id="config-updates-rows">
                     @for((key, configSourceValue) <- updates) {
                       <tr>
                         <td><code>@key.asString</code></td>
@@ -167,7 +167,7 @@
                       <th>Warning</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id="config-warnings-rows">
                     @for(x <- warnings) {
                       <tr>
                         <td><code>@x.key.asString</code></td>
@@ -202,7 +202,7 @@
                       <th class="col-xs-1 text-right" style="width:90px"><button class="sort no-border" data-sort="score">Score</button></th>
                     </tr>
                   </thead>
-                  <tbody class="list">
+                  <tbody id="vulnerabilities-rows" class="list">
                     @vulnerabilities.map(vulnerabilitiesSummary)
                   </tbody>
                 </table>

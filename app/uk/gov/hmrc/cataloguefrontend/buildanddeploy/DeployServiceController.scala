@@ -20,7 +20,7 @@ import cats.data.EitherT
 
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import play.api.{Configuration, Logger}
+import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
@@ -29,11 +29,8 @@ import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceC
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.util.{GithubLink, TelemetryLinks}
-
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-// import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
-// import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Retrieval, Resource}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.buildanddeploy.{DeployServicePage, DeployServiceStep4Page}
 import views.html.error_404_template
@@ -60,8 +57,6 @@ class DeployServiceController @Inject()(
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders
   with I18nSupport {
-
-  private val logger = Logger(getClass)
 
   private val predicate: Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", "*"), IAAction("DEPLOY_SERVICE"))
@@ -183,15 +178,15 @@ class DeployServiceController @Inject()(
         queueUrl      <- EitherT
                           .right[Result](buildJobsConnector.deployMicroservice(
                             serviceName = formObject.serviceName
-                          , environment = formObject.environment
                           , version     = formObject.version
+                          , environment = formObject.environment
                           ))
         // url = "https://build.tax.service.gov.uk/job/build-and-deploy/job/deploy-microservice/49895"
       } yield
         Redirect(routes.DeployServiceController.step4(
           serviceName = formObject.serviceName
-        , environment = formObject.environment.asString
         , version     = formObject.version.original
+        , environment = formObject.environment.asString
         , queueUrl    = queueUrl
         ))
       ).merge
@@ -201,7 +196,7 @@ class DeployServiceController @Inject()(
   private val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
 
   // Display progress and useful links
-  def step4(serviceName: String, environment: String, version: String, queueUrl: String, buildUrl: Option[String]): Action[AnyContent] =
+  def step4(serviceName: String, version: String, environment: String, queueUrl: String, buildUrl: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       DeployServiceForm
         .form
@@ -246,8 +241,8 @@ class DeployServiceController @Inject()(
 
 case class DeployServiceForm(
   serviceName: String
-, environment: Environment
 , version    : Version
+, environment: Environment
 )
 
 import play.api.data.{Form, Forms}
@@ -255,8 +250,8 @@ object DeployServiceForm {
   val form: Form[DeployServiceForm] = Form(
     Forms.mapping(
       "serviceName" -> Forms.text
-    , "environment" -> Forms.of[Environment](Environment.formFormat)
     , "version"     -> Forms.of[Version](Version.formFormat)
+    , "environment" -> Forms.of[Environment](Environment.formFormat)
     )(DeployServiceForm.apply)(DeployServiceForm.unapply)
   )
 }
