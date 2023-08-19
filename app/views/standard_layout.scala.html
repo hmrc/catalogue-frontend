@@ -94,19 +94,19 @@
                 </a>
                 <ul id="main-menu-bar" class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a id="link-to-teams" class="nav-link @if(active == "teams") { active }" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams()">Teams</a>
+                        <a id="link-to-teams" class="nav-link @if(active == "teams") {active}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams()">Teams</a>
                     </li>
                     <li class="nav-item">
-                        <a id="link-to-repositories" class="nav-link @if(active=="repositories") { active }" href="@reposRoutes.RepositoriesController.allRepositories()">Repositories</a>
+                        <a id="link-to-repositories" class="nav-link @if(active == "repositories") {active}" href="@reposRoutes.RepositoriesController.allRepositories()">Repositories</a>
                     </li>
                     <li class="nav-item">
-                        <a id="link-to-whats-running-where" class="nav-link @if(active=="whats-running-where") { active }" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">What's Running Where</a>
+                        <a id="link-to-whats-running-where" class="nav-link @if(active == "whats-running-where") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">What's Running Where</a>
                     </li>
                     <li class="nav-item">
-                        <a id="link-to-deployments" class="nav-link @if(active=="deployments") { active }" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(Production)">Deployments</a>
+                        <a id="link-to-deployments" class="nav-link @if(active == "deployments") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(Production)">Deployments</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle @if(active == "shuttering") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Shuttering
                         </a>
                         <ul class="dropdown-menu">
@@ -117,7 +117,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Health
                         </a>
                         <ul class="dropdown-menu">
@@ -137,7 +137,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Explore
                         </a>
                         <ul class="dropdown-menu">
