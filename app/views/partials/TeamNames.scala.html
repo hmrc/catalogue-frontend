@@ -26,12 +26,12 @@
 
 @if(teamNames.length < Constant.sharedRepoTeamsCutOff ) {
     @teamNames.map { tn =>
-        <div class="repo-team" ><a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(tn)">@tn.asString</a></div>
+        <div class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(tn)">@tn.asString</a></div>
     }
 } else {
     @* Mapping the team name to string, otherwise the mkString gives a string with `TeamName(...)` since
        that is what the default toString outputs for the TeamName type, "TeamName(...contents...)" *@
     <div title="@teamNames.take(Constant.sharedRepoTeamsCutOff).map(tn => tn.asString).mkString("\n")" class="repo-team" >
-        <em><a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@controllerLinkHref">Shared by @teamNames.length teams</a></em>
+        <em><a href="@controllerLinkHref">Shared by @teamNames.length teams</a></em>
     </div>
 }

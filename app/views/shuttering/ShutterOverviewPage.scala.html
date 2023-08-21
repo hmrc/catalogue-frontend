@@ -37,7 +37,7 @@
     @killSwitchLink.map { link =>
       <div class="alert alert-warning">
           <span class="glyphicon glyphicon-warning-sign"></span>
-          In the unlikely event you need to shutter the whole platform, go to <a id="link-to-jenkins" class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@link">Jenkins</a>
+          In the unlikely event you need to shutter the whole platform, go to <a id="link-to-jenkins" href="@link">Jenkins</a>
       </div>
     }
 
@@ -56,7 +56,7 @@
         </div>
 
         <p class="m-1">
-          Select a service from the list below or <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)">
+          Select a service from the list below or <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)">
             click here to go to the shutter wizard
           </a>.
         </p>
@@ -135,7 +135,7 @@
       @defining(state.status.value == ShutterStatusValue.Shuttered) { shuttered =>
           <tr id="row@i" class="shutter-row @if(shuttered) {shuttered-row} else {unshuttered}">
               <td id="row@{i}_name" class="shutter-service">
-                  <a class="shutter-link link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
+                  <a class="shutter-link " href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
                   @state.serviceName
                   </a>
               </td>
@@ -161,7 +161,7 @@
               }
               </td>
               <td id="row@{i}_update" class="shutter-update">
-                  <a id="shutter-link-@{state.serviceName}-@{state.environment.asString}" class="shutter-link link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
+                  <a id="shutter-link-@{state.serviceName}-@{state.environment.asString}" class="shutter-link " href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
                       @changeValueFor(state.status.value)
                   </a>
               </td>

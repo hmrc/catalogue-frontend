@@ -42,7 +42,7 @@
             }
             @icon(dependency)
             @if(!dependency.isExternal) {
-              <a id="link-to-@{dependency.name}-@{rootId}" class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
+              <a id="link-to-@{dependency.name}-@{rootId}" href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
                 <span class="dep-group">@dependency.group:</span>
                 <span class="dep-name">@dependency.name</span>
               </a>
@@ -59,8 +59,8 @@
         </div>
         <div id="@{dependency.name}-@{rootId}-bobbyrule" class="col-2">
         @dependency.versionState match {
-            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
-            case Some(VersionState.BobbyRuleViolated(violation)) => { <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
+            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
+            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
             case _                                               => { }
         }
         </div>

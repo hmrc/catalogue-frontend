@@ -34,6 +34,17 @@
     --bs-body-color-rgb: 111, 119, 123;
 }
 
+a {
+    --bs-link-underline-opacity: 0;
+    text-decoration-color: rgba(var(--bs-link-color-rgb),var(--bs-link-underline-opacity,1))!important;
+    text-underline-offset: 0.25em!important;
+}
+
+a:hover {
+    --bs-link-underline-opacity: 100;
+    text-decoration-color: rgba(var(--bs-link-color-rgb),var(--bs-link-underline-opacity,1))!important;
+}
+
 /*! Make table headings black to match the sort buttons */
 th {
     --bs-table-color: #00000

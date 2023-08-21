@@ -31,7 +31,7 @@
 @repositories.zipWithIndex.map{case (repo, i) =>
 <tr id="row@i">
     <td class="repo-name" id="row@{i}_name">
-        <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover @if(repo.isDeprecated || repo.isArchived){fst-italic} @if(repo.isArchived){text-info}" id="link-to-@repo.name-info-page" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+        <a class="@if(repo.isDeprecated || repo.isArchived){fst-italic} @if(repo.isArchived){text-info}" id="link-to-@repo.name-info-page" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
     </td>
 
     <td class="" id="row@{i}_repostatus">

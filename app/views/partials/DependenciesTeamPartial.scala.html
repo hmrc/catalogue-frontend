@@ -39,7 +39,7 @@
             <p class="card-text">Feel free to go and treat yourselves to a coffee and a biscuit.</p>
         } else {
             @if(showLink) {
-                <p class="card-text">Click <a id="link-to-out-of-date-team-dependencies" class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@routes.TeamsController.outOfDateTeamDependencies(teamName)">here</a> to open in dedicated window. (Useful for build monitors)</p>
+                <p class="card-text">Click <a id="link-to-out-of-date-team-dependencies" href="@routes.TeamsController.outOfDateTeamDependencies(teamName)">here</a> to open in dedicated window. (Useful for build monitors)</p>
             }
             <div class="row">
                 <div class="col-9">

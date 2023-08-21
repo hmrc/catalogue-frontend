@@ -69,7 +69,7 @@
                                     <dt class="col-sm-4">Documentation:</dt>
                                     <dd class="col-sm-8">
                                         @team.documentation.map { docs =>
-                                          <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@docs" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
+                                          <a href="@docs" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
                                         }
                                     </dd>
                                 </dl>
@@ -109,7 +109,7 @@
                                 <ul id="team_members" class="list-unstyled card-columns" style="column-count: 2;">
                                     @for(teamMember <- team.members) {
                                       <li class="col-xs-6">
-                                          <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@userRoutes.UsersController.user(teamMember.username)">
+                                          <a href="@userRoutes.UsersController.user(teamMember.username)">
                                               @teamMember.displayName
                                           </a>
                                           @if(teamMember.role.trim.nonEmpty && teamMember.role != "user") {
@@ -155,21 +155,21 @@
         <dt class="col-sm-3 offset-1">@label:</dt>
         <dd class="col-sm-8">
             <p>@slackInfo.url <span class="glyphicon glyphicon-warning-sign" /></p>
-            <p>Please change to a URL via <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">UMP<span class="glyphicon glyphicon-new-window"/></a></p>
+            <p>Please change to a URL via <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">UMP<span class="glyphicon glyphicon-new-window"/></a></p>
         </dd>
     </dl>
   } else if (!slackInfo.hasValidName) {
     <dl id="slack-@label.toLowerCase" class="row">
         <dt class="col-sm-3 offset-1">@label:</dt>
         <dd class="col-sm-8">
-            <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@slackInfo.url" target="_blank" rel="noreferrer noopener">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window"/></a>
+            <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window"/></a>
         </dd>
     </dl>
   } else {
     <dl id="slack-@label.toLowerCase" class="row">
         <dt class="col-sm-3 offset-1">@label:</dt>
         <dd class="col-sm-8">
-            <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window"/></a>
+            <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window"/></a>
         </dd>
     </dl>
   }
@@ -178,9 +178,9 @@
 @umpUpdateLink(isMemberBox: Boolean) = {
     <p id="ump-correct-data-link" class="card-text"><small class="text-body-secondary">
         @if(isMemberBox) {
-            To update @teamName.asString team members, go to the <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+            To update @teamName.asString team members, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
         } else {
-            To update @teamName.asString team details, go to the <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+            To update @teamName.asString team details, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
         }
     </small></p>
 }
@@ -216,7 +216,7 @@
     @for(repo <- repos.sortBy(_.name.toLowerCase)) {
         <li id="@repo.name" class="mb-2">
             <div>
-                <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover @if(hasLeaks(repo.name)) {fw-bold} @if(repo.isDeprecated){fst-italic}" href="@appRoutes.CatalogueController.repository(repo.name)">
+                <a class="@if(hasLeaks(repo.name)) {fw-bold} @if(repo.isDeprecated){fst-italic}" href="@appRoutes.CatalogueController.repository(repo.name)">
                     @repo.name
                     @if(hasLeaks(repo.name)) {<span class="glyphicon glyphicon-warning-sign"></span>}
                     @if(repo.isDeprecated){ <span class="badge rounded-pill text-bg-warning">deprecated</span> }

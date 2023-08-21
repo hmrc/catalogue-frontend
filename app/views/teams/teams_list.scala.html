@@ -58,7 +58,7 @@
                 @teams.zipWithIndex.map { case (team, i) =>
                 <tr id="row@i">
                     <td class="team-name" id="row@{i}_name">
-                        <a class="link-underline link-offset-2 link-underline-opacity-0 link-underline-opacity-100-hover" href="@teamsRoutes.TeamsController.team(team.name)">@team.name.asString</a>
+                        <a href="@teamsRoutes.TeamsController.team(team.name)">@team.name.asString</a>
                     </td>
                     <td class="created font-monospace" id="row@{i}_created">
                       @team.createdDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
