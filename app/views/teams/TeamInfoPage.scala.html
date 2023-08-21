@@ -101,14 +101,14 @@
                     <div class="card-body">
                         @maybeTeam match {
                             case Some(team) if team.members.isEmpty => {
-                                <p class="card-text col-xs-6">
+                                <p class="card-text col-6">
                                     @teamName.asString has no members.
                                 </p>
                             }
                             case Some(team) => {
                                 <ul id="team_members" class="list-unstyled card-columns" style="column-count: 2;">
                                     @for(teamMember <- team.members) {
-                                      <li class="col-xs-6">
+                                      <li class="col-6">
                                           <a href="@userRoutes.UsersController.user(teamMember.username)">
                                               @teamMember.displayName
                                           </a>
