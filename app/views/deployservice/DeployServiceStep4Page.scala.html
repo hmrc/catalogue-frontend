@@ -47,8 +47,11 @@
     </li>
     <li id="status-ul" class="hide">
       <label>Status:</label>
-      <span id="status-span">
-        <span id="status-spinner"><span class="spinner-border text-secondary" role="status"><span class="sr-only">Loading...</span></span></span>
+      <span id="status-span"></span>
+      <span id="status-spinner">
+        <span class="spinner-border text-secondary" role="status">
+          <span class="sr-only">Loading...</span>
+        </span>
       </span>
     </li>
     <li id="last-check-ul" class="hide">
@@ -56,7 +59,7 @@
       <span id="last-check-span"></span>
     </li>
     <li id="jenkins-console-ul" class="hide">
-      Please use <span id="jenkins-console-span"></span>,
+      Please also use <span id="jenkins-console-span"></span>,
       <a target="_blank" href="@grafanaLink.url">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
       and
       <a target="_blank" href="@kibanaLink.url">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
@@ -65,27 +68,30 @@
   </ul>
 
   <script @CSPNonce.attr>
-    function displayStatus(status) {
-      document.getElementById('status-ul'  ).classList = '';
-      document.getElementById('status-span').innerHTML = status;
+    function displayStatus(status, message) {
+      document.getElementById('status-ul').classList = '';
+      const span    = document.getElementById('status-span');
+      const spinner = document.getElementById('status-spinner');
+
+      span.innerHTML = message;
 
       if (status == 'QUEUE-ID-NOT-FOUND' || status == 'BUILD-ID-NOT-FOUND' || status == 'FAILURE' || status == 'ABORTED') {
-        document.getElementById('status-span'   ).classList = 'text-danger';
-        document.getElementById('status-spinner').classList = 'hide';
+        span.classList    = 'text-danger';
+        spinner.classList = 'hide';
       } else if (status == 'SUCCESS') {
-        document.getElementById('status-span'   ).classList = 'text-success';
-        document.getElementById('status-spinner').classList = 'hide';
+        span.classList    = 'text-success';
+        spinner.classList = 'hide';
       } else if (status == 'UNSTABLE') {
-        document.getElementById('status-span'   ).classList = 'text-warning';
-        document.getElementById('status-spinner').classList = 'hide';
+        span.classList    = 'text-warning';
+        spinner.classList = 'hide';
       } else {
-        document.getElementById('status-span'   ).classList = '';
-        document.getElementById('status-spinner').classList = '';
+        span.classList    = '';
+        spinner.classList = '';
       }
     }
     function displayLastCheck() {
-      document.getElementById('last-check-ul' ).classList = '';
-      document.getElementById('lastCheck-span').innerHTML = Date.now().toLocaleString();;
+      document.getElementById('last-check-ul' ).classList  = '';
+      document.getElementById('last-check-span').innerHTML = new Date().toLocaleString();
     }
     function displayLinks(url) {
       document.getElementById('jenkins-console-ul'  ).classList = '';
@@ -96,16 +102,17 @@
   @buildUrl match {
     case None => {
       <script @CSPNonce.attr>
-        var url  = '@appRoutes.DeployServiceController.step4sse(queueUrl, buildUrl)';
-        var sse  = new EventSource(url);
+        const url  = '@appRoutes.DeployServiceController.step4sse(queueUrl, buildUrl)';
+        const sse  = new EventSource(url);
+        displayLastCheck();
 
         sse.onerror = function(event) {
-          displayStatus('QUEUE-ID-NOT-FOUND');
+          displayStatus('QUEUE-ID-NOT-FOUND', 'Could not find Jenkins queue. Deployment job may already have been started.');
         };
 
         sse.onmessage = function(event) {
-          var json = JSON.parse(event.data);
-          displayStatus('IN-QUEUE');
+          const json = JSON.parse(event.data);
+          displayStatus('IN-QUEUE', 'In Jenkins queue, waiting for deployment job to start. This page will update automatically.');
 
           if (json.queueStatus.executable) {
             sse.close();
@@ -116,22 +123,22 @@
     }
     case Some(_) => {
       <script @CSPNonce.attr>
-        var sse = new EventSource('@appRoutes.DeployServiceController.step4sse(queueUrl, buildUrl)'.replaceAll('&amp;', '&'));
+        const sse = new EventSource('@appRoutes.DeployServiceController.step4sse(queueUrl, buildUrl)'.replaceAll('&amp;', '&'));
         sse.onmessage = function(event) {
-          let json = JSON.parse(event.data);
-          displayLastcheck();
+          const json = JSON.parse(event.data);
+          displayLastCheck();
           displayLinks(`${json.buildStatus.url}console`);
 
           if (json.buildStatus.result) {
             sse.close();
-            displayStatus(json.buildStatus.result);
+            displayStatus(json.buildStatus.result, json.buildStatus.result);
           } else {
-            displayStatus('IN-PROGRESS');
+            displayStatus('IN-PROGRESS', 'Deployment job in progress. This page will update automatically.');
           }
         };
 
         sse.onerror = function(event) {
-          displayStatus('BUILD-ID-NOT-FOUND');
+          displayStatus('BUILD-ID-NOT-FOUND', 'Could not find Jenkins deployment job. Deployment may already have been completed.');
         };
       </script>
     }
