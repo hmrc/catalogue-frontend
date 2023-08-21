@@ -28,17 +28,15 @@
   request: RequestHeader
 )
 
-@standard_layout(s"Bobby rules") {
-    <header>
-        <h1>Bobby Rules</h1>
-    </header>
+@standard_layout(s"Bobby rules", active = "health") {
+    <h1 class="page-heading mt-4">Bobby Rules</h1>
     @bobbyRulesTimeSection(rules.upcoming, "Upcoming")
     @bobbyRulesTimeSection(rules.active  , "Active")
 }
 
 @bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String) = {
     @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
-        <div><h2>@heading</h2></div>
+        <h2 class="fw-bold">@heading</h2>
         @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true )
         @bobbyRulesArtifactTypeSection(rulesByTime.plugins  , "Plugin" , inclViewSlugsLink = false)
     }
@@ -46,7 +44,7 @@
 
 @bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
     @if(rulesByArtifactType.nonEmpty) {
-        <div>
+        <div class="row">
             <table class="@{artifactType.toLowerCase}-rules table table-striped sticky-header">
                 <thead>
 
@@ -56,9 +54,9 @@
                     </tr>
 
                     <tr>
-                        <th class="col-xs-3" colspan="1">@artifactType</th>
-                        <th class="col-xs-2" colspan="3"  style="text-align: center">Banned Versions</th>
-                        <th class="col-xs-4">Reason</th>
+                        <th class="col-3" colspan="1">@artifactType</th>
+                        <th class="col-2" colspan="3" style="text-align: center">Banned Versions</th>
+                        <th class="col-4">Reason</th>
                         <th class="">Active from</th>
                         <th class="">Latest</th>
                         <th class="">QA</th>
