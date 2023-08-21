@@ -17,16 +17,16 @@
 @()(implicit request: RequestHeader, messages: Messages)
 
 @standard_layout(Messages("global.error.pageNotFound404.title")) {
-    <div id="error_content">
-        <div id="error_video">
-            <video id="video" poster="@routes.Assets.versioned("videos/error.jpg")" autoplay muted loop>
+    <div class="row mt-4">
+        <div class="col position-relative">
+            <video id="video" class="img-fluid z-0" poster="@routes.Assets.versioned("videos/error.jpg")" autoplay muted loop>
                 <source src="@routes.Assets.versioned("videos/error.mp4")" type="video/mp4">
                 <source src="@routes.Assets.versioned("videos/error.ogv")" type="video/ogg">
                 <source src="@routes.Assets.versioned("videos/error.webm")" type="video/webm">
             </video>
-            <div class="overlay">
-                <h3>we are looking for your page... but we can't find it</h3>
-            </div>
+            <h1 class="text-light text-nowrap fw-bold position-absolute z-1 top-0 start-50 translate-middle mt-5">
+                we are looking for your page... but we can't find it
+            </h1>
         </div>
     </div>
 }

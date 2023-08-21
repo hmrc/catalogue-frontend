@@ -49,14 +49,14 @@
 
     <div id="service-list">
         <form id="repos-form" action="/repositories" method="get">
-            <div id="repos-form-row" class="form-group row">
+            <div id="repos-form-row" class="row">
                 <div class="col-md-6">
                     <dl id="search_field">
                         <dt>
                             <label for="search" class="form-label">Name</label>
                         </dt>
                         <dd>
-                            <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
+                            <input class="search form-control" id="search" type="search" name="name" value='@form("name").value' autofocus>
                         </dd>
                     </dl>
                 </div>

@@ -27,35 +27,44 @@
 , request            : RequestHeader
 )
 
-@standard_layout("Service Health Indicators", "health-indicators") {
-    <header>
-        <h1>Health Indicator Leaderboard</h1>
-    </header>
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
+@standard_layout("Service Health Indicators", active = "health") {
+
+    <h1 class="page-heading mt-4">Health Indicator Leaderboard</h1>
 
     <div id="leaderboard-display">
         <form id="form" method="get">
-            <div class="form-group row">
+            <div class="row">
                 <div class="col-md-6">
-                    <label for="repo-name-search">Repository</label>
-                    <input class="search form-control" id="repo-name-search" type="text" name="repoName" value='@form("repoName").value' autofocus/>
+                    <dl id="search_field">
+                        <dt>
+                            <label for="repo-name-search" class="form-label">Repository</label>
+                        </dt>
+                        <dd>
+                            <input class="search form-control" id="repo-name-search" type="search" name="name" value='@form("repoName").value' autofocus>
+                        </dd>
+                    </dl>
                 </div>
                 <div class="col-md-3">
                     @select(
-                        field              = form("team"),
-                        options            =  teams.map(t => t.name.asString -> t.name.asString),
-                        Symbol("_default") -> "All",
-                        Symbol("_label")   -> "Owning Team",
-                        Symbol("id")       -> "team-search",
-                        Symbol("class")    -> "form-control"
+                        field                 = form("team"),
+                        options               =  teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Owning Team",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "team-search",
+                        Symbol("class")       -> "form-select"
                     )
                 </div>
                 <div class="col-md-3">
                     @select(
-                        field              =  form("repoType"),
-                        options            =  repoTypes.map(r => r.asString -> r.asString),
-                        Symbol("_label")   -> "Repository Type",
-                        Symbol("id")       -> "repo-type-search",
-                        Symbol("class")    -> "form-control"
+                        field                 =  form("repoType"),
+                        options               =  repoTypes.map(r => r.asString -> r.asString),
+                        Symbol("_label")      -> "Repository Type",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "repo-type-search",
+                        Symbol("class")       -> "form-select"
                     )
                 </div>
             </div>
@@ -66,7 +75,7 @@
                 <th>Repository</th>
                 <th>Owning Teams</th>
                 <th>Repository Type</th>
-                <th><button role="button" class="sort no-border" data-sort="overallScore" id="overall-score-button">Score</button></th>
+                <th><button role="button" class="sort no-border fw-bold" data-sort="overallScore" id="overall-score-button">Score</button></th>
             </thead>
             <tbody class="list">
                 @indicatorsWithTeams.zipWithIndex.map { case (indicator, i) =>
@@ -97,13 +106,13 @@
 @*List.js configuration below >>>>> *@
     <script @CSPNonce.attr>
       @if(indicatorsWithTeams.nonEmpty) {
-        var options = {
+        let options = {
             valueNames: ['overallScore', 'repo-name'],
             searchColumns: ['repo-name'],
             searchDelay: 350
         };
 
-        var indicatorsList = new List('leaderboard-display', options);
+        let indicatorsList = new List('leaderboard-display', options);
 
         //Add a custom sorting function, as the default List.js sorting algorithm cannot handle negative numbers.
         //Note: A Listener is required, as the List.js custom 'sortFunction' only auto-fires on page load, not on button click.
@@ -111,17 +120,15 @@
             indicatorsList.sort('overallScore', {
                 order: e.target.classList.contains("desc") ? "desc" : "asc",
                 sortFunction: function(a, b) {
-                    var a = parseInt(a._values.overallScore)
-                    var b = parseInt(b._values.overallScore)
-                    return a - b;
+                    return parseInt(a._values.overallScore) - parseInt(b._values.overallScore);
                 }
             })
         });
       }
 
-      var searchBox = document.getElementById("repo-name-search");
+      let searchBox = document.getElementById("repo-name-search");
       // set autofocus cursor to right of text in search box
-      var length = searchBox.value.length;
+      let length = searchBox.value.length;
       searchBox.focus();
       searchBox.setSelectionRange(length, length);
       // re-search the list upon page load.

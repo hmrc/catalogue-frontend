@@ -67,7 +67,7 @@
             </ul>
             <div class="tab-content">
                 <div class="tab-pane show active in" role="tabpanel">
-                    <div class="form-group row">
+                    <div class="row">
                         <div class="col-md-2">
                             <select class="form-select" id="profile_name" name="profile_name">
                             @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
