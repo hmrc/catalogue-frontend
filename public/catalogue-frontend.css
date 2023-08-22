@@ -179,3 +179,7 @@ table.sticky-header thead {
     display: inline-block;
     margin: 0;
 }
+
+.cursor-pointer {
+    cursor: pointer;
+}

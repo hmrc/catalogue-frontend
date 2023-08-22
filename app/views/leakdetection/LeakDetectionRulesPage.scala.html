@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionRulesWithCounts
-@import uk.gov.hmrc.cataloguefrontend.{ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
 
 @this(viewMessages: ViewMessages)
@@ -25,49 +25,64 @@
   request  : RequestHeader
 )
 
-    @standard_layout(s"Leak detection rules") {
-        <header>
-            <h1>Leak Detection Rules</h1>
-        </header>
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
-        @if(summaries.nonEmpty) {
-            <div id="rules-list">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th class="col-xs-3"><button class="sort no-border" data-sort="rule-id">Rule id</button></th>
-                            <th class="col-xs-6"><button class="sort no-border" data-sort="description">Description</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="repo-count">Repositories</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="excluded">Exemptions</button></th>
-                            <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="unresolved">Violations</button></th>
-                        </tr>
-                    </thead>
-                    <tbody class="list">
-                    @summaries.map(leakDetectionRuleSummary)
-                    </tbody>
-                </table>
-            </div>
+@standard_layout(s"Leak detection rules", active = "health") {
+    <h1 class="page-heading mt-4">Leak Detection Rules</h1>
 
-            <script @CSPNonce.attr>
-                var options = {valueNames: ['rule-id', 'description', 'first-scanned', 'last-scanned', 'repo-count', 'excluded', 'unresolved']};
-                rulesList = new List('rules-list', options);
-            </script>
-        }
+    @if(summaries.nonEmpty) {
+        <div id="rules-list">
+            <table class="table table-striped accordion">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th class="col-xs-3"><button class="sort no-border fw-bold" data-sort="rule-id">Rule id</button></th>
+                        <th class="col-xs-6"><button class="sort no-border fw-bold" data-sort="description">Description</button></th>
+                        <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="repo-count">Repositories</button></th>
+                        <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="excluded">Exemptions</button></th>
+                        <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="unresolved">Violations</button></th>
+                    </tr>
+                </thead>
+                <tbody class="list">
+                @summaries.map(leakDetectionRuleSummary)
+                </tbody>
+            </table>
+        </div>
+
+        <script @CSPNonce.attr>
+            let options = {valueNames: ['rule-id', 'description', 'first-scanned', 'last-scanned', 'repo-count', 'excluded', 'unresolved']};
+            rulesList = new List('rules-list', options);
+
+            document.querySelectorAll('[data-bs-toggle="collapse"]').forEach( function(el) {
+                el.addEventListener('click', function() {
+                   let expanded = el.getAttribute('aria-expanded');
+                   let chevron = el.querySelector('.glyphicon');
+
+                   if(expanded === 'true') {
+                       chevron.classList.remove('glyphicon-chevron-right');
+                       chevron.classList.add('glyphicon-chevron-down');
+                   } else {
+                       chevron.classList.remove('glyphicon-chevron-down');
+                       chevron.classList.add('glyphicon-chevron-right');
+                   }
+                });
+            });
+        </script>
     }
+}
 
     @leakDetectionRuleSummary(summary: LeakDetectionRulesWithCounts) = {
-        <tr>
-            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id"/>
-            <td class="rule-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.id</td>
-            <td class="description hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.rule.id" aria-expanded="false" aria-controls="collapsible-area-@summary.rule.id">@summary.rule.description</td>
+        <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.rule.id" aria-expanded="false">
+            <td><span class="glyphicon glyphicon-chevron-right"></span></td>
+            <td class="rule-id">@summary.rule.id</td>
+            <td class="description">@summary.rule.description</td>
             @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount, false)
             @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, false)
             @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, false)
         </tr>
-        <tr id="collapsible-area-@summary.rule.id" class="collapse">
-            <td class="hide rule-id">@summary.rule.id</td>
-            <td class="hide description">@summary.rule.description</td>
+        <tr id="collapsible-area-@summary.rule.id" class="collapse accordion-collapse" data-bs-parent=".table">
+            <td class="d-none rule-id">@summary.rule.id</td>
+            <td class="d-none description">@summary.rule.description</td>
             @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount, true)
             @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, true)
             @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, true)
@@ -78,7 +93,7 @@
     }
 
     @countWithLinkCell(ruleId: String, name: String, count: Int, hidden: Boolean) = {
-        <td class="@name text-center @if(hidden) {hide}"><div class="hide">@count</div>
+        <td class="@name text-center @if(hidden) {d-none}"><div class="d-none">@count</div>
             @if(count > 0) {
                 <a id="@ruleId-@name-count" href="@appRoutes.LeakDetectionController.repoSummaries(false, name == "excluded", name == "unresolved" || name == "repo-count")&rule=@ruleId">@count</a>
             } else {

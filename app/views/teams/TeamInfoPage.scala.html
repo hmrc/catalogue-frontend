@@ -106,7 +106,7 @@
                                 </p>
                             }
                             case Some(team) => {
-                                <ul id="team_members" class="list-unstyled card-columns" style="column-count: 2;">
+                                <ul id="team_members" class="list-unstyled" style="column-count: 2;">
                                     @for(teamMember <- team.members) {
                                       <li class="col-6">
                                           <a href="@userRoutes.UsersController.user(teamMember.username)">
