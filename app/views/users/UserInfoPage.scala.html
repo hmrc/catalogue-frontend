@@ -82,21 +82,18 @@
                             @user.username does not belong to any teams.
                         </li>
                       }
-
-                      @user.teamsAndRoles.map { teams =>
                         <ul id="user-teams" class="list list--minimal">
-                            @for(team <- teams) {
-                              <li class="col-xs-6">
-                                <a href="@teamRoutes.TeamsController.team(TeamName(team.teamName))">
-                                  @team.teamName
-                                </a>
-                                @if(team.role.trim.nonEmpty && team.role != "user") {
-                                  <span class="badge">@team.role</span>
-                                }
-                              </li>
+                        @user.teamsAndRoles.map { team =>
+                          <li class="col-xs-6">
+                            <a href="@teamRoutes.TeamsController.team(TeamName(team.teamName))">
+                            @team.teamName
+                            </a>
+                            @if(team.role.trim.nonEmpty && team.role != "user") {
+                              <span class="badge">@team.role</span>
                             }
+                          </li>
+                        }
                         </ul>
-                      }
                   </div>
               </div>
           </div>
