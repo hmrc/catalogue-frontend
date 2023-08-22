@@ -99,9 +99,9 @@ class BuildDeployApiConnector @Inject() (
       .execute[Either[String, BuildDeployResponse]]
   }
 
-  def changePrototypePassword(prototype: String, password: PrototypePassword): Future[Either[String, String]] = {
+  def changePrototypePassword(repositoryName: String, password: PrototypePassword): Future[Either[String, String]] = {
     val body = Json.obj(
-      "repository_name" -> JsString(prototype),
+      "repository_name" -> JsString(repositoryName),
       "password"        -> JsString(password.value)
     )
 
