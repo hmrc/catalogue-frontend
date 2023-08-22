@@ -35,7 +35,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 
 import java.net.URL
-import java.time.{LocalDateTime, Instant}
+import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -327,24 +327,4 @@ object BuildDeployApiConnector {
       )(PrototypeDetails.apply _)
     }
   }
-
-  // final case class Log(attempt: Int, event: String, level: String, timestamp: Instant)
-  // final case class RequestState(attempt: Int, logs: Seq[Log], lastLogTimestamp: Instant)
-
-  // object RequestState {
-  //   val reads: Reads[RequestState] = {
-  //     implicit val readsLog: Reads[Log] =
-  //       ( (__ \ "bnd_api_request_attempt_number").read[Int]
-  //       ~ (__ \ "event"                         ).read[String]
-  //       ~ (__ \ "level"                         ).read[String]
-  //       ~ (__ \ "timestamp"                     ).read[Long].map(x => Instant.ofEpochMilli(x))
-  //       )(Log.apply _)
-
-  //     ( (__ \ "attempt_number"                 ).read[Int]
-  //     ~ (__ \ "logs"                           ).read[Seq[Log]]
-  //     ~ (__ \ "last_log_timestamp_milliseconds").read[Long].map(x => Instant.ofEpochMilli(x))
-  //     )(RequestState.apply _)
-  //   }
-  // }
-
 }
