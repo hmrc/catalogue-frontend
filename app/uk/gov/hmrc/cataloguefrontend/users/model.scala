@@ -89,7 +89,7 @@ final case class User(
 , username      : String
 , githubUsername: Option[String]
 , phoneNumber   : Option[String]
-, teamsAndRoles : Option[Seq[TeamMembership]]
+, teamsAndRoles : Seq[TeamMembership]
 )
 
 object User {
@@ -104,7 +104,7 @@ object User {
     ~ ( __ \ "username"      ).read[String]
     ~ ( __ \ "githubUsername").readNullable[String]
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
-    ~ ( __ \ "teamsAndRoles" ).readNullable[Seq[TeamMembership]]
+    ~ ( __ \ "teamsAndRoles" ).read[Seq[TeamMembership]]
     )(User.apply _)
   }
 }

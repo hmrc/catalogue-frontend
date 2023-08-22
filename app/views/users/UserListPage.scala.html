@@ -102,15 +102,13 @@
           </td>
 
           <td class="" id="row@{i}_teams">
-            @user.teamsAndRoles.map { optTeams =>
-              @optTeams.map { team =>
+            @user.teamsAndRoles.map { team =>
                 <div>
                   <a href="/teams/@TeamName(team.teamName).asString">@TeamName(team.teamName).asString</a>
                   @if(team.role == "team_admin") {
                     <span class="badge" style="font-weight: bold">@team.role</span>
                   }
                 </div>
-              }
             }
           </td>
         </tr>
