@@ -48,7 +48,8 @@ class ReleasesConnectorSpec
                        {
                          "environment": "integration",
                          "versionNumber": "1.57.0",
-                         "lastSeen": "2019-05-29T14:09:48Z"
+                         "lastSeen": "2019-05-29T14:09:48Z",
+                         "config": []
                        }
                      ]
                    },
@@ -58,7 +59,8 @@ class ReleasesConnectorSpec
                        {
                          "environment": "integration",
                          "versionNumber": "0.44.0",
-                         "lastSeen": "2019-05-29T14:09:46Z"
+                         "lastSeen": "2019-05-29T14:09:46Z",
+                         "config": []
                        }
                      ]
                    }
@@ -74,13 +76,13 @@ class ReleasesConnectorSpec
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"))
+            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"), Nil)
           )
         ),
         WhatsRunningWhere(
           ServiceName("api-documentation"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("0.44.0"))
+            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("0.44.0"), Nil)
           )
         )
       )
@@ -101,7 +103,8 @@ class ReleasesConnectorSpec
                      "versions": [
                        {
                          "environment": "integration",
-                         "versionNumber": "1.57.0"
+                         "versionNumber": "1.57.0",
+                         "config": []
                        }
                      ]
                    }
@@ -119,7 +122,7 @@ class ReleasesConnectorSpec
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"))
+            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"), Nil)
           )
         )
       )

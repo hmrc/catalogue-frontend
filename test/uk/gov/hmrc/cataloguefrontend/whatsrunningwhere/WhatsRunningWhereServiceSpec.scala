@@ -35,16 +35,16 @@ class WhatsRunningWhereServiceSpec
 
   private val release1 = WhatsRunningWhere(ServiceName("address-lookup"),
     List(
-      WhatsRunningWhereVersion(Environment.Development, VersionNumber("1.011")),
-      WhatsRunningWhereVersion(Environment.Production, VersionNumber("1.011"))
+      WhatsRunningWhereVersion(Environment.Development, VersionNumber("1.011"), Nil),
+      WhatsRunningWhereVersion(Environment.Production,  VersionNumber("1.011"), Nil)
     )
   )
 
   private val release2 = WhatsRunningWhere(ServiceName("health-indicators"),
     List(
-      WhatsRunningWhereVersion(Environment.QA, VersionNumber("1.011")),
-      WhatsRunningWhereVersion(Environment.Staging, VersionNumber("1.011")),
-      WhatsRunningWhereVersion(Environment.Production, VersionNumber("1.011"))
+      WhatsRunningWhereVersion(Environment.QA,         VersionNumber("1.011"), Nil),
+      WhatsRunningWhereVersion(Environment.Staging,    VersionNumber("1.011"), Nil),
+      WhatsRunningWhereVersion(Environment.Production, VersionNumber("1.011"), Nil)
     )
   )
 

@@ -140,7 +140,7 @@ class DeployServiceControllerSpec
       jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 1
       jsoupDocument.select("#config-warnings-rows").first.children.size shouldBe 1
       jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
-      jsoupDocument.select("#create-app-configs-submit-button").size shouldBe 1
+      jsoupDocument.select("#deploy-btn").size shouldBe 1
     }
   }
 
@@ -224,8 +224,8 @@ class DeployServiceControllerSpec
 
   private val someReleasesForService = WhatsRunningWhere(
     applicationName = uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName("some-service")
-  , versions        = WhatsRunningWhereVersion(Environment.QA        , uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.VersionNumber("0.2.0")) ::
-                      WhatsRunningWhereVersion(Environment.Production, uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.VersionNumber("0.1.0")) ::
+  , versions        = WhatsRunningWhereVersion(Environment.QA        , uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.VersionNumber("0.2.0"), Nil) ::
+                      WhatsRunningWhereVersion(Environment.Production, uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.VersionNumber("0.1.0"), Nil) ::
                       Nil
   )
 

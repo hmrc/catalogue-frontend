@@ -49,7 +49,8 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
                  |      {
                  |        "environment": "integration",
                  |        "versionNumber": "1.58.0",
-                 |        "lastSeen": "2019-05-29T14:09:48Z"
+                 |        "lastSeen": "2019-05-29T14:09:48Z",
+                 |        "config": []
                  |      }
                  |    ]
                  |  },
@@ -59,7 +60,8 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
                  |      {
                  |        "environment": "integration",
                  |        "versionNumber": "0.41.0",
-                 |        "lastSeen": "2019-05-29T14:09:46Z"
+                 |        "lastSeen": "2019-05-29T14:09:46Z",
+                 |        "config": []
                  |      }
                  |    ]
                  |  }
