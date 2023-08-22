@@ -185,6 +185,6 @@
     @if(username.asString.equalsIgnoreCase("remoterequest")) {
         <span>@{username.asString}</span>
     } else {
-        @userProfileBaseUrl.map { url => <a href= "@url/@{username.asString}" target="_blank" rel="noreferrer noopener">@{username.asString}<span class="glyphicon glyphicon-new-window"></span></a> }.getOrElse(<span>@{username.asString}</span>)
+        @userProfileBaseUrl.map { url => <a href= "@url/@{username.asString}" target="_blank" rel="noreferrer noopener">@{username.asString}<span class="glyphicon glyphicon-new-window"></span></a> }.getOrElse(<span>{username.asString}</span>)
     }
 }
