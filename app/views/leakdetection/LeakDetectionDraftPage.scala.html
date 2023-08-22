@@ -30,30 +30,33 @@
   request  : RequestHeader
 )
 
-@standard_layout(s"Leak detection draft results") {
-    <header>
-        <h1>Leak Detection - Draft Results</h1>
-    </header>
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
+@standard_layout(s"Leak detection draft results", active = "health") {
+    <h1 class="page-heading mt-4">Leak Detection - Draft Results</h1>
 
     <form id="form" method="get">
         <div class="form-group row">
             <div class="col-md-3">
             @select(
-                field              =  form("rule"),
-                options            =  rules.map(_.id).map(r => r -> r),
-                Symbol("_default") -> "All",
-                Symbol("_label")   -> "Draft rule",
-                Symbol("id")       -> "rule-dropdown",
-                Symbol("class")    -> "form-control"
+                field                 =  form("rule"),
+                options               =  rules.map(_.id).map(r => r -> r),
+                Symbol("_default")    -> "All",
+                Symbol("_label")      -> "Draft rule",
+                Symbol("_labelClass") -> "form-label",
+                Symbol("id")          -> "rule-dropdown",
+                Symbol("class")       -> "form-select"
             )
             </div>
         </div>
     </form>
 
     @if(form.data.contains("rule")) {
-        <div class="board">
-            <h3 class="board__heading">Rule Details</h3>
-            <div class="board__body">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0 fw-bold text-dark">Rule Details</h5>
+            </div>
+            <div class="card-body">
                 @RuleDetails(rules.filter(_.id == form.data("rule")).head)
             </div>
         </div>
@@ -63,10 +66,10 @@
         <table class="table table-striped sticky-header">
             <thead>
                 <tr>
-                    <th class="col-xs-7"><button class="sort no-border" data-sort="repository">Repository</button></th>
-                    <th class="col-xs-3"><button class="sort no-border" data-sort="scanned">Scanned</button></th>
-                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="exemptions">Exemptions</button></th>
-                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="violations">Violations</button></th>
+                    <th class="col-xs-7"><button class="sort no-border fw-bold" data-sort="repository">Repository</button></th>
+                    <th class="col-xs-3"><button class="sort no-border fw-bold" data-sort="scanned">Scanned</button></th>
+                    <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="exemptions">Exemptions</button></th>
+                    <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="violations">Violations</button></th>
                 </tr>
             </thead>
             <tbody class="list">

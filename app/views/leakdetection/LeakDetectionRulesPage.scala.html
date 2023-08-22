@@ -25,14 +25,12 @@
   request  : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
-
 @standard_layout(s"Leak detection rules", active = "health") {
     <h1 class="page-heading mt-4">Leak Detection Rules</h1>
 
     @if(summaries.nonEmpty) {
         <div id="rules-list">
-            <table class="table table-striped accordion">
+            <table class="table table-striped">
                 <thead>
                     <tr>
                         <th></th>
@@ -44,7 +42,7 @@
                     </tr>
                 </thead>
                 <tbody class="list">
-                @summaries.map(leakDetectionRuleSummary)
+                    @summaries.map(leakDetectionRuleSummary)
                 </tbody>
             </table>
         </div>
@@ -54,17 +52,18 @@
             rulesList = new List('rules-list', options);
 
             document.querySelectorAll('[data-bs-toggle="collapse"]').forEach( function(el) {
-                el.addEventListener('click', function() {
-                   let expanded = el.getAttribute('aria-expanded');
-                   let chevron = el.querySelector('.glyphicon');
+                let chevron = el.querySelector('.glyphicon');
+                let collapseId = el.getAttribute('data-bs-target');
+                let collapse = document.querySelector(collapseId);
 
-                   if(expanded === 'true') {
-                       chevron.classList.remove('glyphicon-chevron-right');
-                       chevron.classList.add('glyphicon-chevron-down');
-                   } else {
-                       chevron.classList.remove('glyphicon-chevron-down');
-                       chevron.classList.add('glyphicon-chevron-right');
-                   }
+                collapse.addEventListener('hidden.bs.collapse', () => {
+                    chevron.classList.remove('glyphicon-chevron-down');
+                    chevron.classList.add('glyphicon-chevron-right');
+                });
+
+                collapse.addEventListener('show.bs.collapse', () => {
+                    chevron.classList.remove('glyphicon-chevron-right');
+                    chevron.classList.add('glyphicon-chevron-down');
                 });
             });
         </script>
@@ -80,14 +79,14 @@
             @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, false)
             @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, false)
         </tr>
-        <tr id="collapsible-area-@summary.rule.id" class="collapse accordion-collapse" data-bs-parent=".table">
+        <tr id="collapsible-area-@summary.rule.id" class="collapse">
             <td class="d-none rule-id">@summary.rule.id</td>
             <td class="d-none description">@summary.rule.description</td>
             @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount, true)
             @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, true)
             @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, true)
             <td colspan="6">
-            @RuleDetails(summary.rule)
+                @RuleDetails(summary.rule)
             </td>
         </tr>
     }

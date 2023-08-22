@@ -27,12 +27,10 @@
   request         : RequestHeader
 )
 
-@standard_layout(s"Leak detection exemptions") {
-    <header>
-        <h1>Leak Detection Exemptions</h1>
-    </header>
+@standard_layout(s"Leak detection exemptions", active = "health") {
+    <h1 class="page-heading mt-4">Leak Detection Exemptions</h1>
 
-    <h2>@repoName - @branch</h2>
+    <h2 class="fw-bold">@repoName - @branch</h2>
 
     @if(exemptions.isEmpty && unusedExemptions.isEmpty) {
         <div class="alert alert-success">
@@ -42,20 +40,20 @@
 
     @if(exemptions.nonEmpty) {
         <div>
-            <h3>Exemptions</h3>
+            <h5 class="fw-bold">Exemptions</h5>
             @LeakDetectionLeaks(exemptions, "Exemptions")
         </div>
     }
 
     @if(unusedExemptions.nonEmpty) {
       <div id="unused-list">
-        <h3>Unused Exemptions</h3>
+        <h5 class="fw-bold">Unused Exemptions</h5>
         <table class="table table-striped sticky-header">
             <thead>
                 <tr>
-                    <th class="col-xs-4"><button class="sort no-border" data-sort="rule">Rule</button></th>
-                    <th class="col-xs-4"><button class="sort no-border" data-sort="filePath">File</button></th>
-                    <th class="col-xs-4"><button class="sort no-border" data-sort="text">Text</button></th>
+                    <th class="col-xs-4"><button class="sort no-border fw-bold" data-sort="rule">Rule</button></th>
+                    <th class="col-xs-4"><button class="sort no-border fw-bold" data-sort="filePath">File</button></th>
+                    <th class="col-xs-4"><button class="sort no-border fw-bold" data-sort="text">Text</button></th>
                 </tr>
             </thead>
             <tbody class="list">
@@ -72,7 +70,7 @@
     }
 
     <script @CSPNonce.attr>
-        var unusedOptions = {valueNames: ['rule', 'filePath', 'text']};
+        let unusedOptions = {valueNames: ['rule', 'filePath', 'text']};
         unusedList = new List('unused-list', unusedOptions);
     </script>
 }
