@@ -42,15 +42,20 @@ class BuildJobsConnector @Inject()(
     s"Basic ${java.util.Base64.getEncoder().encodeToString(s"$username:$token".getBytes("UTF-8"))}"
   }
 
-  val baseUrl               = config.get[String]("jenkins.buildjobs.url")
+  private val baseUrl = config.get[String]("jenkins.buildjobs.url")
 
   def deployMicroservice(
     serviceName: String
   , version    : Version
   , environment: Environment
   )(implicit hc: HeaderCarrier): Future[String] = {
-    val url = new URL(s"https://build.tax.service.gov.uk/job/build-and-deploy/job/deploy-microservice/buildWithParameters")
-    implicit val locationRead: HttpReads[String] = HttpReads[HttpResponse].map(_.header("Location").get.replace("http:", "https:"))
+    val url = new URL(s"$baseUrl/job/build-and-deploy/job/deploy-microservice/buildWithParameters")
+
+    implicit val locationRead: HttpReads[String] = HttpReads[HttpResponse].map(_.header("Location") match {
+      case Some(url) if baseUrl.startsWith("https:") => url.replace("http:", "https:") // Jenkins requires this switch
+      case Some(url)                                 => url                            // It should not happen for acceptance tests
+      case None                                      => sys.error(s"Could not find Location header for: $url")
+    })
 
     httpClientV2
       .post(url)
