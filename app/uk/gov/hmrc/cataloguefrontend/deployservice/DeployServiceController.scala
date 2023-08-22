@@ -86,14 +86,22 @@ class DeployServiceController @Inject()(
                             .right[Result](releasesConnector.releasesForService(sn))
                             .map(_.versions.toSeq)
                         )
+        _            <- serviceName match {
+                          case Some(_) => EitherT.fromOption[Future](releases.headOption, BadRequest(deployServicePage(form.withGlobalError("No versions found"), allServices, None, Nil, Nil, evaluations = None)))
+                          case None    => EitherT.right[Result](Future.unit)
+                        }
         environments <- serviceName.fold(EitherT.rightT[Future, Result](Seq.empty[Environment]))(sn =>
                           EitherT
                             .fromOptionF(
                               serviceCommissioningConnector.commissioningStatus(sn)
-                            , BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), allServices, None, Nil, Nil, evaluations = None))
+                            , BadRequest(deployServicePage(form.withGlobalError("Service Commissioning Status not found"), allServices, None, Nil, Nil, evaluations = None))
                             ).map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
                              .map(_.sorted)
                         )
+        _            <- serviceName match {
+                          case Some(_) => EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), allServices, None, Nil, Nil, evaluations = None)))
+                          case None    => EitherT.right[Result](Future.unit)
+                        }
       } yield
         Ok(deployServicePage(form, allServices, latest, releases, environments, evaluations = None))
       ).merge
@@ -124,12 +132,14 @@ class DeployServiceController @Inject()(
         releases     <- EitherT
                           .right[Result](releasesConnector.releasesForService(formObject.serviceName))
                           .map(_.versions.toSeq)
+        _            <- EitherT.fromOption[Future](releases.headOption, BadRequest(deployServicePage(form.withGlobalError("No releases found"), allServices, None, Nil, Nil, evaluations = None)))
         environments <- EitherT
                           .fromOptionF(
                             serviceCommissioningConnector.commissioningStatus(formObject.serviceName)
-                          , BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), allServices, None, Nil, Nil, evaluations = None))
+                            , BadRequest(deployServicePage(form.withGlobalError("Service Commissioning Status not found"), allServices, None, Nil, Nil, evaluations = None))
                           ).map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
                            .map(_.sorted)
+        _            <- EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), allServices, None, Nil, Nil, evaluations = None)))
         slugInfo     <- EitherT
                           .fromOptionF(
                             serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
@@ -150,9 +160,14 @@ class DeployServiceController @Inject()(
         current      =  releases
                           .find(_.environment == formObject.environment)
                           .fold(Version("0.0.0"))(_.versionNumber.asVersion)
-        githubDiffLink = GithubLink.create(formObject.serviceName, githubDiffLinkTemplate, current, formObject.version)
+        serviceLink  = (GithubLink.create(formObject.serviceName, githubDiffLinkTemplate, current, formObject.version), s"git diff v${current.original}")
+        configLinks  = releases
+                          .filter(_.environment == formObject.environment)
+                          .flatMap(_.config)
+                          .map(x => (GithubLink.create(x.repoName, githubDiffLinkTemplate, x.commitId), s"git diff ${x.commitId} ${x.filename}"))
+        gitHubLinks  = serviceLink :: configLinks
       } yield
-        Ok(deployServicePage(form, allServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils, githubDiffLink))))
+        Ok(deployServicePage(form, allServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils, gitHubLinks))))
       ).merge
     }
 
@@ -181,7 +196,6 @@ class DeployServiceController @Inject()(
                           , version     = formObject.version
                           , environment = formObject.environment
                           ))
-        // url = "https://build.tax.service.gov.uk/job/build-and-deploy/job/deploy-microservice/49895"
       } yield
         Redirect(routes.DeployServiceController.step4(
           serviceName = formObject.serviceName
@@ -205,12 +219,11 @@ class DeployServiceController @Inject()(
           formWithErrors => Future.successful(NotFound(error_404_template()))
         , formObject     => serviceDependenciesConnector
                               .getSlugInfo(formObject.serviceName, Some(formObject.version))
-                              .map {
-                                case None    => NotFound(error_404_template())
-                                case Some(_) => val grafanaLink = TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
-                                                val kibanaLink  = TelemetryLinks.create("Kibana", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
-                                                Ok(deployServiceStep4Page(formObject, queueUrl, buildUrl, grafanaLink, kibanaLink))
-                              }
+                              .map(_.fold(NotFound(error_404_template())){_ =>
+                                val grafanaLink = TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
+                                val kibanaLink  = TelemetryLinks.create("Kibana", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
+                                Ok(deployServiceStep4Page(formObject, queueUrl, buildUrl, grafanaLink, kibanaLink))
+                              })
         )
     }
 

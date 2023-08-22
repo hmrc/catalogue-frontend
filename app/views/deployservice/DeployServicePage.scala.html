@@ -39,7 +39,7 @@
                     Map[ServiceConfigsService.KeyName, ServiceConfigsService.ConfigSourceValue]
                   , Seq[ServiceConfigsService.ConfigWarning]
                   , Seq[VulnerabilitySummary]
-                  , Link
+                  , Seq[(Link, String)]
                   )]
 )( implicit
   messages      : Messages
@@ -68,9 +68,9 @@
 
       @if(form("serviceName").value.isDefined && latestVersion.nonEmpty && environments.nonEmpty) {
         @helper.form(
-          action             =  appRoutes.DeployServiceController.step2()
-        , Symbol("id")       -> "version-environment-form"
-        , Symbol("method")   -> "POST"
+          action           =  appRoutes.DeployServiceController.step2()
+        , Symbol("id")     -> "version-environment-form"
+        , Symbol("method") -> "POST"
         ) {
           @csrfFormField
           <input type="hidden" name="serviceName" value='@form("serviceName").value' />
@@ -114,7 +114,7 @@
       }
     </div>
     <div class="col-md-8 sticky-row">
-      @evaluations.map { case (updates, warnings, vulnerabilities, githubDiffLink) =>
+      @evaluations.map { case (updates, warnings, vulnerabilities, githubDiffLinks) =>
         <label>Please review before deploying:</label>
         <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
           <div class="panel panel-default">
@@ -209,9 +209,38 @@
               </div>
             </div>
           </div>
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab">
+              @if(githubDiffLinks.isEmpty) {
+                <h4 class="panel-title">Github Diffs<span class="pull-right">@githubDiffLinks.size</span></h4>
+              } else {
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeGithubDiffLinks" aria-expanded="false" aria-controls="collaspeGithubDiffLinks">
+                  <h4 class="panel-title">Github Diffs<span class="pull-right">@githubDiffLinks.size</span></h4>
+                </a>
+              }
+            </div>
+            <div id="collaspeGithubDiffLinks" class="panel-collapse collapse" role="tabpanel" aria-expanded="false" style="height: 0px;">
+              <div class="panel-body">
+                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                  <thead>
+                    <tr>
+                      <th>Link</th>
+                      <th>Command</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for((link, command) <- githubDiffLinks) {
+                      <tr>
+                        <td><a target="_blank" href="@link.url">@link.name<span class="glyphicon glyphicon-new-window"/></a></td>
+                        <td><code>@command</code></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <a target="_blank" href="@githubDiffLink.url">Github changes<span class="glyphicon glyphicon-new-window"/></a>
 
         @helper.form(
           action           =  appRoutes.DeployServiceController.step3()
@@ -222,7 +251,7 @@
           <input type="hidden" name="serviceName" value='@form("serviceName").value' />
           <input type="hidden" name="version" value='@form("version").value' />
           <input type="hidden" name="environment" value='@form("environment").value' />
-          <button id="create-app-configs-submit-button" class="btn btn-primary pull-right" type="submit" @if(!request.retrieval){disabled}>Deploy</button>
+          <button id="deploy-btn" class="btn btn-primary pull-right" type="submit" @if(!request.retrieval){disabled}>Deploy</button>
           <br/><br/>
         }
       }

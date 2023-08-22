@@ -27,7 +27,17 @@ object GithubLink {
     , displayName = repoName
     , url         = template
                       .replace(s"$${repoName}", UrlUtils.encodePathParam(repoName))
-                      .replace(s"$${version1}", UrlUtils.encodePathParam(version1.original))
-                      .replace(s"$${version2}", UrlUtils.encodePathParam(version2.original))
+                      .replace(s"$${diff1}", UrlUtils.encodePathParam("v" + version1.original))
+                      .replace(s"$${diff2}", UrlUtils.encodePathParam("v" + version2.original))
+    )
+
+  def create(repoName: String, template: String, commitId: String): Link =
+    Link(
+      name        = repoName
+    , displayName = repoName
+    , url         = template
+                      .replace(s"$${repoName}", UrlUtils.encodePathParam(repoName))
+                      .replace(s"$${diff1}", UrlUtils.encodePathParam(commitId))
+                      .replace(s"$${diff2}", UrlUtils.encodePathParam("main"))
     )
 }

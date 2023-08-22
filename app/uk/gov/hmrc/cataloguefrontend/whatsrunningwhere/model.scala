@@ -37,7 +37,14 @@ case class WhatsRunningWhere(
 
 case class WhatsRunningWhereVersion(
   environment  : Environment,
-  versionNumber: VersionNumber
+  versionNumber: VersionNumber,
+  config       : List[WhatsRunningWhereConfig]
+)
+
+case class WhatsRunningWhereConfig(
+  repoName: String,
+  filename: String,
+  commitId: String
 )
 
 object JsonCodecs {
@@ -75,8 +82,15 @@ object JsonCodecs {
   val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] = {
     implicit val wf  = environmentFormat
     implicit val vnf = versionNumberFormat
+    implicit val cnf: Reads[WhatsRunningWhereConfig] =
+      ( (__ \ "repoName").read[String]
+      ~ (__ \ "fileName").read[String]
+      ~ (__ \ "commitId").read[String]
+      )(WhatsRunningWhereConfig.apply _)
+
     ( (__ \ "environment"  ).read[Environment]
     ~ (__ \ "versionNumber").read[VersionNumber]
+    ~ (__ \ "config"       ).read[List[WhatsRunningWhereConfig]]
     )(WhatsRunningWhereVersion.apply _)
   }
 
