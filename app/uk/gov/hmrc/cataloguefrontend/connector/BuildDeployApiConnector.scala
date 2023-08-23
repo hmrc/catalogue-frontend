@@ -25,11 +25,9 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -72,14 +70,11 @@ class BuildDeployApiConnector @Inject() (
   private def signAndExecuteRequest(
     endpoint   : String,
     body       : JsValue,
-    queryParams: Map[String, String] = Map.empty[String, String],
-    logBody    : Boolean = true
+    queryParams: Map[String, String] = Map.empty[String, String]
   ): Future[Either[String, BuildDeployResponse]] = {
     val url = buildUrl(endpoint, queryParams)
 
     val headers = signedHeaders(url.getPath, queryParams, body)
-
-    logger.info(s"Calling the $url" + (if (logBody) { s" with the following payload: $body"} else { "" }))
 
     implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
 
@@ -102,19 +97,17 @@ class BuildDeployApiConnector @Inject() (
       .withBody(body)
       .setHeader(headers.toSeq: _*)
       .execute[Either[String, BuildDeployResponse]]
-      .map { rsp => logger.info(s"$url response: $rsp"); rsp}
   }
 
-  def changePrototypePassword(prototype: String, password: PrototypePassword): Future[Either[String, String]] = {
+  def changePrototypePassword(repositoryName: String, password: PrototypePassword): Future[Either[String, String]] = {
     val body = Json.obj(
-      "repository_name" -> JsString(prototype),
+      "repository_name" -> JsString(repositoryName),
       "password"        -> JsString(password.value)
     )
 
     signAndExecuteRequest(
       endpoint = "SetHerokuPrototypePassword",
-      body     = body,
-      logBody  = false
+      body     = body
     ).map {
       case Right(response) => Right(response.message)
       case Left(errorMsg)  => Left(errorMsg)
@@ -160,9 +153,10 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(_ => ()))
   }
 
+  private implicit val arr = AsyncRequestId.reads
 
-  def createARepository(payload: CreateRepoForm): Future[Either[String, RequestState.Id]] = {
-    val body =
+  def createARepository(payload: CreateRepoForm): Future[Either[String, AsyncRequestId]] = {
+    val finalPayload =
       s"""
          |{
          |   "repository_name": "${payload.repositoryName}",
@@ -176,20 +170,25 @@ class BuildDeployApiConnector @Inject() (
          |   "default_branch_name": "main"
          |}""".stripMargin
 
+    val body = Json.parse(finalPayload)
+
+    logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
+
     signAndExecuteRequest(
       endpoint = "CreateRepository",
-      body     = Json.parse(body)
-    ).map(_.map(_.details.as[RequestState.Id](RequestState.Id.reads)))
+      body     = body
+    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
-  def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, RequestState.Id]] = {
+
+  def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) = serviceType match {
       case ServiceType.Frontend         => ( "Frontend microservice", "public"    )
       case ServiceType.Backend if isApi => ( "API microservice"     , "protected" )
       case ServiceType.Backend          => ( "Backend microservice" , "protected" )
     }
 
-    val body =
+    val finalPayload =
       s"""
          |{
          |   "microservice_name": "$serviceName",
@@ -203,38 +202,15 @@ class BuildDeployApiConnector @Inject() (
          |   "zone": "$zone"
          |}""".stripMargin
 
+    val body = Json.parse(finalPayload)
+
+    logger.info(s"Calling the B&D Create App Configs API with the following payload: $body")
+
     signAndExecuteRequest(
       endpoint = "CreateAppConfigs",
-      body     = Json.parse(body)
-    ).map(_.map(_.details.as[RequestState.Id](RequestState.Id.reads)))
+      body     = body
+    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
-
-  def triggerMicroserviceDeployment(
-    serviceName: String
-  , environment: Environment
-  , version: Version
-  , slugSource: String
-  , deployerId: String
-  ): Future[Either[String, RequestState.EcsTask]] =
-    signAndExecuteRequest(
-      endpoint = "TriggerMicroserviceDeployment",
-      body     = Json.obj(
-                   "service"         -> JsString(serviceName)
-                 , "environment"     -> JsString(environment.asString)
-                 , "service_version" -> JsString(version.original)
-                 , "slug_source"     -> JsString(slugSource)
-                 , "deployer_id"     -> JsString(deployerId)
-                 )
-    ).map(_.map(_.details.as[RequestState.EcsTask](RequestState.EcsTask.reads)))
-
-  def getRequestState[T <: RequestState](state: T): Future[Either[String, JsValue]] =
-    signAndExecuteRequest(
-      endpoint = "GetRequestState",
-      body     = state match {
-                   case s: RequestState.Id      => Json.toJson(s)(RequestState.Id.writes)
-                   case s: RequestState.EcsTask => Json.toJson(s)(RequestState.EcsTask.writes)
-                 }
-    ).map(_.map(_.details))
 }
 
 object BuildDeployApiConnector {
@@ -247,42 +223,12 @@ object BuildDeployApiConnector {
       )(BuildDeployResponse.apply _)
   }
 
-  sealed trait RequestState
+  final case class AsyncRequestId(id: String) extends AnyVal
 
-  object RequestState {
-    final case class Id(id: String, start: Long) extends RequestState
-    object Id {
-      val reads: Reads[Id] =
-        ( (__ \ "get_request_state_payload" \ "bnd_api_request_id"          ).read[String]
-        ~ (__ \ "get_request_state_payload" \ "start_timestamp_milliseconds").read[Long]
-        )(Id.apply _)
-
-      val writes: Writes[Id] =
-      ( (__ \ "bnd_api_request_id"          ).write[String]
-      ~ (__ \ "start_timestamp_milliseconds").write[Long]
-      )(unlift(Id.unapply))
-    }
-
-    final case class EcsTask(accountId: String, logGroupName: String, clusterName: String, logStreamNamePrefix: String, arn: String, start: Long) extends RequestState
-    object EcsTask {
-      val reads: Reads[EcsTask] =
-        ( (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "account_id"            ).read[String]
-        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "log_group_name"        ).read[String]
-        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "cluster_name"          ).read[String]
-        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "log_stream_name_prefix").read[String]
-        ~ (__ \ "get_request_state_payload" \ "bnd_api_ecs_task" \ "arn"                   ).read[String]
-        ~ (__ \ "get_request_state_payload" \ "start_timestamp_milliseconds"               ).read[Long]
-        )(EcsTask.apply _)
-
-      val writes: Writes[EcsTask] =
-        ( (__ \ "bnd_api_ecs_task" \ "account_id"            ).write[String]
-        ~ (__ \ "bnd_api_ecs_task" \ "log_group_name"        ).write[String]
-        ~ (__ \ "bnd_api_ecs_task" \ "cluster_name"          ).write[String]
-        ~ (__ \ "bnd_api_ecs_task" \ "log_stream_name_prefix").write[String]
-        ~ (__ \ "bnd_api_ecs_task" \ "arn"                   ).write[String]
-        ~ (__ \ "start_timestamp_milliseconds"               ).write[Long]
-        )(unlift(EcsTask.unapply))
-    }
+  object AsyncRequestId {
+    val reads: Reads[AsyncRequestId] =
+      ( (__ \ "get_request_state_payload" \ "bnd_api_request_id").read[String]
+        ).map(AsyncRequestId.apply)
   }
 
   sealed trait PrototypeStatus { def asString: String; def displayString: String }
