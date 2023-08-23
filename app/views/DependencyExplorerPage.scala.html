@@ -39,11 +39,9 @@
   messagesProvider: MessagesProvider
 )
 
-@standard_layout("Dependency Explorer", "search") {
-    <header>
-        <h1 id="search-service-header">Dependency Explorer</h1>
-        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
-    </header>
+@standard_layout("Dependency Explorer", active = "explore") {
+    <h1 class="page-heading mt-4" id="search-service-header">Dependency Explorer</h1>
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     <div id="service-list">
 
@@ -53,37 +51,48 @@
             <div class="form-group">
                 <div class="row" style="margin-bottom: 20px;">
                     <div class="col-md-7">
-                        <label for="group-artefact-search">Group:Artefact</label>
-                        <input id="group-artefact-search" class="form-control" type="text" value="@DependencyExplorerController.groupArtefactFromForm(form)" autocomplete="off">
-                        <div id="group-artefact-matches" class="dependency-search-dropdown hide" style="padding-right: 30px"></div>
+                        <dl>
+                          <dt>
+                            <label for="group-artefact-search">Group:Artefact</label>
+                          </dt>
+                          <dd>
+                            <input id="group-artefact-search" class="form-control" type="text" value="@DependencyExplorerController.groupArtefactFromForm(form)" autocomplete="off">
+                            <div id="group-artefact-matches" class="dependency-search-dropdown hide" style="padding-right: 30px"></div>
+                          </dd>
+                        </dl>
                         <input id="group" name="group" value='@form("group").value' type="hidden">
                         <input id="artefact" name="artefact" value='@form("artefact").value' type="hidden">
                     </div>
                     <div class="col-md-5">
-                        <label for="lbValue">Version Range</label>
-                        <div class="input-group-multi">
-                            <div class="col-xs-3 col-md-3">
-                                <input class="form-control input-group-start" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)">
+                        <dl>
+                          <dt>
+                            <label for="lbValue">Version Range</label>
+                          </dt>
+                          <dd>
+                            <div class="input-group row">
+                              <div class="col-5 col-md-3 p-0">
+                                  <input class="form-control" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)">
+                              </div>
+                              <div class="col-2 col-md-2 p-0">
+                                  <select id="lbInclusive" class="form-select">
+                                      <option value="false" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
+                                      <option value="true" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
+                                  </select>
+                              </div>
+                              <div class="col-2 col-md-2">
+                                <input class="form-control form-control-plaintext" type="text" value="version" tabindex="-1" readonly>
+                              </div>
+                              <div class="col-2 col-md-2 p-0">
+                                  <select id="ubInclusive" class="form-select">
+                                      <option value="false" @if(versionRange.upperBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
+                                      <option value="true" @if(versionRange.upperBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
+                                  </select>
+                              </div>
+                              <div class="col-3 col-md-3 p-0">
+                                  <input class="form-control" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
+                              </div>
                             </div>
-                            <div class="col-xs-2 col-md-2">
-                                <select id="lbInclusive" class="form-control input-group-end">
-                                    <option value="false" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
-                                    <option value="true" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
-                                </select>
-                            </div>
-                            <div class="col-xs-2 col-md-2">
-                                <input class="form-control undecorated-text" type="text" value="version" tabindex="-1" readonly>
-                            </div>
-                            <div class="col-xs-2 col-md-2">
-                                <select id="ubInclusive" class="form-control input-group-start">
-                                    <option value="false" @if(versionRange.upperBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
-                                    <option value="true" @if(versionRange.upperBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
-                                </select>
-                            </div>
-                            <div class="col-xs-3 col-md-3">
-                                <input class="form-control input-group-end" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
-                            </div>
-                        </div>
+                          </dd>
                     </div>
                     <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">
                     <input type="hidden" id="asCsv" name="asCsv" value="false">
@@ -140,14 +149,14 @@
                 <table id="search-results" class="table table-striped">
                     <thead>
                         <tr>
-                            <th rowspan="2" class="wrw-table-head"><button class="sort no-border" data-sort="service">Service</button></th>
-                            <th rowspan="2" class="wrw-table-head">Version</th>
-                            <th rowspan="2" class="wrw-table-head"><button class="sort no-border" data-sort="teams">Team</button></th>
-                            <th colspan="2" class="wrw-table-head">
-                                <div class="text-center table-header-title">@{s"${searchResults.head.depGroup}.${searchResults.head.depArtefact}"}</div>
+                            <th rowspan="2" ><button class="sort no-border fw-bold" data-sort="service">Service</button></th>
+                            <th rowspan="2" >Version</th>
+                            <th rowspan="2" ><button class="sort no-border fw-bold" data-sort="teams">Team</button></th>
+                            <th colspan="2" >
+                                <div class="text-center border-bottom">@{s"${searchResults.head.depGroup}.${searchResults.head.depArtefact}"}</div>
                                 <div class="row">
                                     <div class="col-md-4">
-                                        <button class="sort no-border" data-sort="dep-version">Version</button>
+                                        <button class="sort no-border fw-bold" data-sort="dep-version">Version</button>
                                     </div>
                                     <div class="col-md-6">
                                         Scope
