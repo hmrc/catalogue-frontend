@@ -31,7 +31,7 @@ form   : Form[_]
 
 @implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
-@standard_layout("Vulnerabilities Timeline", "vulnerabilities-timeline") {
+@standard_layout("Vulnerabilities Timeline", active = "health") {
     <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script @CSPNonce.attr type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});
