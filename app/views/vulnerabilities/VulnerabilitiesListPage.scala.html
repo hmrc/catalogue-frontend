@@ -17,9 +17,9 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 @import views.html.vulnerabilities.VulnerabilityDetails
-@import views.html.helper.{form, select}
+@import views.html.helper.select
 
 @this(viewMessages: ViewMessages)
 
@@ -31,62 +31,84 @@
   request  : RequestHeader
 )
 
-@standard_layout(s"Vulnerabilities") {
-    <header>
-        <h1>Vulnerabilities</h1>
-    </header>
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
+@standard_layout(s"Vulnerabilities", active = "health") {
+    <h1 class="page-heading mt-4">Vulnerabilities</h1>
+
     <div id="vulnerabilities-list">
         <form id="vuln-form" action="/vulnerabilities" method="get">
-            <div class="form-group row">
+            <div class="row">
                 <div class="col-md-2">
-                    <label for="id-search">Vulnerability ID:</label>
-                    <input class="form-control" id="id-search" type="text" name="vulnerability" value='@form("vulnerability").value' autofocus>
+                    <dl>
+                        <dt>
+                            <label for="id-search" class="form-label">Vulnerability ID:</label>
+                        </dt>
+                        <dd>
+                            <input class="form-control" id="id-search" type="search" name="vulnerability" value='@form("vulnerability").value' autofocus>
+                        </dd>
+                    </dl>
                 </div>
                 <div class="col-md-2">
-                    <label for="component-search">Vulnerable Component:</label>
-                    <input class="form-control" id="component-search" type="text" name="component" value='@form("component").value'>
+                    <dl>
+                        <dt>
+                            <label for="component-search" class="form-label">Vulnerable Component:</label>
+                        </dt>
+                        <dd>
+                            <input class="form-control" id="component-search" type="search" name="component" value='@form("component").value'>
+                        </dd>
+                    </dl>
                 </div>
                 <div class="col-md-3">
-                    <label for="service-search">Service:</label>
-                    <input class="form-control" id="service-search" type="text" name="service" value='@form("service").value'>
+                    <dl>
+                        <dt>
+                            <label for="service-search" class="form-label">Service:</label>
+                        </dt>
+                        <dd>
+                            <input class="form-control" id="service-search" type="search" name="service" value='@form("service").value'>
+                        </dd>
+                    </dl>
                 </div>
                 <div class="col-md-3">
-                @select(
-                    field              =  form("team"),
-                    options            =  teams.map(t => t.name.asString -> t.name.asString),
-                    Symbol("_default") -> "All",
-                    Symbol("_label")   -> "Team:",
-                    Symbol("id")       -> "team-filter",
-                    Symbol("class")    -> "form-control"
-                )
+                    @select(
+                        field                 =  form("team"),
+                        options               =  teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Team:",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "team-filter",
+                        Symbol("class")       -> "form-select"
+                    )
                 </div>
                 <div class="col-md-2">
-                @select(
-                    field              =  form("curationStatus"),
-                    options            =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display),
-                    Symbol("_label")   -> "Curation status:",
-                    Symbol("id")       -> "curation-status-search",
-                    Symbol("class")    -> "form-control"
-                )
+                    @select(
+                        field                 =  form("curationStatus"),
+                        options               =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display),
+                        Symbol("_label")      -> "Curation status:",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "curation-status-search",
+                        Symbol("class")       -> "form-select"
+                    )
                 </div>
                 @*Hidden submit button required to allow form submission on an enter press,
                     when two search fields exist in the same form*@
-                <input style="visibility: hidden;" type="submit" />
+                <input class="d-none" type="submit" />
             </div>
         </form>
+
         @if(summaries.isEmpty) {
             No results found matching the search criteria.
         } else {
-            <table style="word-break: break-word" class="table table-striped sticky-header">
+            <table class="table table-striped sticky-header text-break">
                 <thead>
                     <tr>
                         <th></th>
-                        <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
-                        <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
-                        <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
-                        <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
-                        <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="score">Score</button></th>
-                        <th class="col-xs-1 text-right"><button class="sort no-border" data-sort="services">Services</button></th>
+                        <th class="col-2"><button class="sort no-border fw-bold" data-sort="vuln-id">Vulnerability ID</button></th>
+                        <th class="col-2">Vulnerable Component</th>
+                        <th class="col-4">Assessment</th>
+                        <th class="col-2"><button class="sort no-border fw-bold" data-sort="curation-status">Curation Status</button></th>
+                        <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="score">Score</button></th>
+                        <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="services">Services</button></th>
                     </tr>
                 </thead>
                 <tbody class="list">
@@ -98,45 +120,52 @@
 
     @if(summaries.nonEmpty) {
       <script @CSPNonce.attr>
-        var options = {
+        let options = {
             valueNames: ['vuln-id', 'score', 'curation-status', 'services']
         };
+
         new List('vulnerabilities-list', options);
+
+        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach( function(el) {
+            let chevron = el.querySelector('.glyphicon');
+            let collapseId = el.getAttribute('data-bs-target');
+            let collapse = document.querySelector(collapseId);
+
+            collapse.addEventListener('hidden.bs.collapse', () => {
+                chevron.classList.remove('glyphicon-chevron-down');
+                chevron.classList.add('glyphicon-chevron-right');
+            });
+
+            collapse.addEventListener('show.bs.collapse', () => {
+                chevron.classList.remove('glyphicon-chevron-right');
+                chevron.classList.add('glyphicon-chevron-down');
+            });
+        });
       </script>
     }
 }
 
 @vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
     @defining(summary.distinctVulnerability.vulnerableComponentName.split("://")) { splitVulnerableComponent =>
-        <tr>
-            <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
-            <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
-            <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
-            <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-            <td class="curation-status hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-            <td class="score hand-pointer text-right" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
-            <td class="services text-right hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.occurrences.groupBy(_.service).size</div></td>
+        <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">
+            <td><span class="glyphicon glyphicon-chevron-right"></span></td>
+            <td class="vuln-id">@summary.distinctVulnerability.id</td>
+            <td class="vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+            <td class="assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+            <td class="curation-status"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+            <td class="score text-end">@summary.distinctVulnerability.score.getOrElse("")</td>
+            <td class="services text-end">@summary.occurrences.groupBy(_.service).size</td>
         </tr>
         <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
             @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
+            <td class="vuln-id d-none">@summary.distinctVulnerability.id</td>
+            <td class="vulnerable-component-name d-none">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+            <td class="assessment d-none">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+            <td class="curation-status d-none"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+            <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
+            <td class="services d-none">@summary.occurrences.groupBy(_.service).size</td>
             <td colspan="7">
-                <table>
-                    <tbody class="list">
-                        <tr>
-                            <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
-                            <td class="hide vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
-                            <td class="hide assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-                            <td class="curation-status text-center hide"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-                            <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
-                            <td class="services text-center hide"><div>@summary.occurrences.groupBy(_.service).size</div></td>
-                        </tr>
-                        <tr>
-                            <td colspan="6">
-                                @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
             </td>
         </tr>
     }
