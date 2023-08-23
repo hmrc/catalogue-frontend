@@ -24,9 +24,9 @@ class WhatsRunningWhereControllerSpec extends UnitSpec{
     val versionNumberProd    = VersionNumber("0.0.0")
     val versionNumberNotProd = VersionNumber("1.1.1")
 
-    val wrwVersionProd                  = WhatsRunningWhereVersion(Environment.Production, versionNumberProd   )
-    val wrwVersionStagingMatchesProd    = WhatsRunningWhereVersion(Environment.Staging   , versionNumberProd   )
-    val wrwVersionStagingNotMatchesProd = WhatsRunningWhereVersion(Environment.Staging   , versionNumberNotProd)
+    val wrwVersionProd                  = WhatsRunningWhereVersion(Environment.Production, versionNumberProd   , Nil)
+    val wrwVersionStagingMatchesProd    = WhatsRunningWhereVersion(Environment.Staging   , versionNumberProd   , Nil)
+    val wrwVersionStagingNotMatchesProd = WhatsRunningWhereVersion(Environment.Staging   , versionNumberNotProd, Nil)
 
     val wrwMatchesProd    = WhatsRunningWhere(ServiceName("foo"), List(wrwVersionProd, wrwVersionStagingMatchesProd))
     val wrwNotMatchesProd = WhatsRunningWhere(ServiceName("foo"), List(wrwVersionProd, wrwVersionStagingNotMatchesProd))

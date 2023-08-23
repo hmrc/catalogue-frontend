@@ -56,9 +56,9 @@ class ServiceConfigsController @Inject()(
     BasicAuthAction.async { implicit request =>
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-        configByKey <- serviceConfigsService.configByKey(serviceName)
-        warnings    <- if (showWarnings || CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
-                         serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), latest = true)
+        configByKey <- serviceConfigsService.configByKeyWithNextDeployment(serviceName)
+        warnings    <- if (CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+                         serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), version = None, latest = true)
                        } else Future.successful(Seq.empty[ServiceConfigsService.ConfigWarning])
       } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings))
     }
@@ -151,7 +151,7 @@ class ServiceConfigsController @Inject()(
         , formObject => for {
                           allServices      <- teamsAndReposConnector.allServices()
                           deployments      <- whatsRunningWhereService.releasesForService(formObject.serviceName.asString).map(_.versions)
-                          results          <- serviceConfigsService.configWarnings(formObject.serviceName, deployments.map(_.environment), latest = true)
+                          results          <- serviceConfigsService.configWarnings(formObject.serviceName, deployments.map(_.environment), version = None, latest = true)
                           groupedByService =  serviceConfigsService.toServiceKeyEnvironmentWarningMap(results)
                         } yield Ok(configWarningPage(ConfigWarning.form.fill(formObject), allServices, Some(groupedByService)))
         )

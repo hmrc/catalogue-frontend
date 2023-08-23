@@ -6,7 +6,7 @@ let autoCompleteAllowPartial;
 let autoCompleteIgnoreCase;
 let autoCompleteSubmitOnSelection;
 
-const minSearch = 3;
+let _minSearch = 3;
 let selectedIdx = -1; // Allow partial search
 let matchesLen  = 0;
 
@@ -15,12 +15,14 @@ const matchesElemId      = "search-match-";
 const matchSelectedClass = "search-match-selected";
 
 // Changed outside of script
-function autoCompleteInit({formId, inputSearchId, matchesDivId, allowPartial, ignoreCase, values, submitOnSelection}) {
+function autoCompleteInit({formId, inputSearchId, matchesDivId, allowPartial, ignoreCase, values, submitOnSelection, minSearch}) {
     form        = document.forms[formId];
     inputSearch = document.getElementById(inputSearchId);
     matchesDiv  = document.getElementById(matchesDivId);
     allValues   = values;
     autoCompleteSubmitOnSelection = submitOnSelection != undefined && submitOnSelection;
+
+    if (minSearch) { _minSearch = minSearch;}
 
     autoCompleteAllowPartial = allowPartial;
     if (allowPartial) {
@@ -157,7 +159,7 @@ function disableDefaults(e) {
 }
 
 function autoCompleteSearchInputListener(e) {
-    if(e.target.value.length >= minSearch) {
+    if(e.target.value.length >= _minSearch) {
         if(e.keyCode > 46 || e.keyCode === 32 || e.keyCode === 8) { // alphanum, space and backspace
             clearMatches();
             findMatches(e.target.value);

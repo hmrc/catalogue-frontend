@@ -20,7 +20,7 @@ import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfig
@@ -43,14 +43,18 @@ class ServiceConfigsConnector @Inject() (
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
 
   implicit val cber = ConfigByEnvironment.reads
-  implicit val cbkr = ConfigByKey.reads
   implicit val cwr  = ConfigWarning.reads
   implicit val cser = ConfigSourceEntries.reads
   implicit val srr  = ServiceRelationships.reads
 
-  def configByEnv(service: String, latest: Boolean)(implicit hc: HeaderCarrier): Future[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]  =
+  def configByEnv(
+    service     : String
+  , environments: Seq[Environment]
+  , version     : Option[Version]
+  , latest      : Boolean
+  )(implicit hc: HeaderCarrier): Future[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]  =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/$service?latest=$latest")
+      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/$service?environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
       .execute[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]
 
   def serviceRelationships(service: String)(implicit hc: HeaderCarrier): Future[ServiceRelationships] =
@@ -114,9 +118,10 @@ class ServiceConfigsConnector @Inject() (
   def configWarnings(
     serviceName : ServiceConfigsService.ServiceName
   , environments: Seq[Environment]
-  , latest: Boolean
+  , version     : Option[Version]
+  , latest      : Boolean
   )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/warnings?serviceName=${serviceName.asString}&environment=${environments.map(_.asString)}&latest=$latest")
+      .get(url"$serviceConfigsBaseUrl/service-configs/warnings?serviceName=${serviceName.asString}&environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
       .execute[Seq[ConfigWarning]]
 }

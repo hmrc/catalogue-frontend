@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.json.Reads
+import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
@@ -36,19 +37,18 @@ class VulnerabilitiesConnector @Inject() (
 
   private val url: String = servicesConfig.baseUrl("vulnerabilities")
 
-  def vulnerabilitySummaries(vulnerability: Option[String] = None, curationStatus: Option[String] = None, service: Option[String] = None, team: Option[String] = None, component: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitySummary]] = {
+  def vulnerabilitySummaries(vulnerability: Option[String] = None, curationStatus: Option[String] = None, service: Option[String] = None, version: Option[Version] = None, team: Option[String] = None, component: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitySummary]] = {
     implicit val vsrs: Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
     httpClientV2
-      .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=$vulnerability&curationStatus=$curationStatus&service=$service&team=$team&component=$component")
+      .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=$vulnerability&curationStatus=$curationStatus&service=$service&version=${version.map(_.original)}&team=$team&component=$component")
       .execute[Seq[VulnerabilitySummary]]
   }
 
   def distinctVulnerabilities(service: String)(implicit hc: HeaderCarrier): Future[Option[Int]] = {
     httpClientV2
-      .get(url"$url/vulnerabilities/api/vulnerabilities/count?service=${service}")
+      .get(url"$url/vulnerabilities/api/vulnerabilities/count?service=$service")
       .execute[Option[Int]]
   }
-
 
   def vulnerabilityCounts(service: Option[String], team: Option[String], environment: Option[Environment])(implicit hc: HeaderCarrier): Future[Seq[TotalVulnerabilityCount]] = {
     implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
@@ -66,6 +66,4 @@ class VulnerabilitiesConnector @Inject() (
       .get(url"$url/vulnerabilities/api/vulnerabilities/timeline?service=$service&team=$team&vulnerability=$vulnerability&curationStatus=$curationStatus&from=$fromInstant&to=$toInstant")
       .execute[Seq[VulnerabilitiesTimelineCount]]
   }
-
-
 }

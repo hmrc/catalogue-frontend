@@ -1,0 +1,373 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import views.html.partials.{form_global_errors, form_fields_warnings}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Link}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+@import uk.gov.hmrc.cataloguefrontend.deployservice.{DeployServiceForm, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes }
+@import uk.gov.hmrc.cataloguefrontend.service.SlugVersionInfo
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, routes => vulnerabilitiesRoutes}
+@import views.html.vulnerabilities.VulnerabilityDetails
+
+@this(viewMessages: ViewMessages)
+
+@(form          : Form[DeployServiceForm]
+, allServices   : Seq[GitRepository]
+, latestVersion : Option[Version]
+, releases      : Seq[WhatsRunningWhereVersion]
+, environments  : Seq[Environment]
+, evaluations   : Option[(
+                    Map[ServiceConfigsService.KeyName, ServiceConfigsService.ConfigSourceValue]
+                  , Seq[ServiceConfigsService.ConfigWarning]
+                  , Seq[VulnerabilitySummary]
+                  , Seq[(Link, String)]
+                  )]
+)( implicit
+  messages      : Messages
+, request       : uk.gov.hmrc.internalauth.client.AuthenticatedRequest[play.api.mvc.AnyContent,Boolean]
+)
+
+@standard_layout("Deploy Service", "deploy service") {
+  <h1>Deploy Service</h1>
+  <div class="row">
+    <div class="col-md-4 sticky-row">
+      @form_global_errors(form)
+
+      @helper.form(
+        action           =  appRoutes.DeployServiceController.step1(form("serviceName").value)
+      , Symbol("id")     -> "service-name-form"
+      , Symbol("method") -> "GET",
+      ) {
+        <dl>
+          <dt><label for="service-name">Service Name:</label></dt>
+          <dd>
+            <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
+            <div id="service-name-matches" class="search-matches-dropdown hide"></div>
+          </dd>
+        </dl>
+      }
+
+      @if(form("serviceName").value.isDefined && latestVersion.nonEmpty && environments.nonEmpty) {
+        @helper.form(
+          action           =  appRoutes.DeployServiceController.step2()
+        , Symbol("id")     -> "version-environment-form"
+        , Symbol("method") -> "POST"
+        ) {
+          @csrfFormField
+          <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+          <dl>
+            <dt><label for="service-name">Version:</label></dt>
+            <dd>
+              <div id="helpful-versions" class="list-group">
+                @defining(
+                  ( latestVersion.map(x => (x, "Latest")) ++
+                    releases
+                      .sortBy(_.environment)
+                      .map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
+                  ).groupBy { case (version, _) => version }
+                    .toList
+                    .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
+                    .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
+                ) { xs => @xs.map { case (version, text) =>
+                  <a href="#" class="list-group-item"2 data-content="@version" style="color: #008770;">
+                    <div class="row">
+                      <div class="col-xs-3 col-md-3">@version</div>
+                      <div class="col-xs-9 col-md-9">@text</div>
+                    </div>
+                  </a>
+                }}
+              </div>
+              <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or selection one from above">
+            </dd>
+          </dl>
+
+          @helper.select(
+            field              =  form("environment")
+          , options            =  environments.map(t => t.asString -> t.displayString)
+          , Symbol("_label")   -> "Environment:"
+          , Symbol("_default") -> "Please choose"
+          , Symbol("id")       -> "environment"
+          , Symbol("class")    -> "form-control"
+          , Symbol("title")    -> "On change updates 'Config Key' autocomplete"
+          , Symbol("required") -> "required"
+          )
+        }
+      }
+    </div>
+    <div class="col-md-8 sticky-row">
+      @evaluations.map { case (updates, warnings, vulnerabilities, githubDiffLinks) =>
+        <label>Please review before deploying:</label>
+        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab">
+              @if(updates.isEmpty) {
+                <h4 class="panel-title">Config Changes<span class="pull-right">@updates.size</span></h4>
+              } else {
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeConfigUpdates" aria-expanded="false" aria-controls="collaspeConfigUpdates">
+                  <h4 class="panel-title">Config Changes<span class="pull-right">@updates.size</span></h4>
+                </a>
+              }
+            </div>
+            <div id="collaspeConfigUpdates" class="panel-collapse collapse" role="tabpanel" aria-expanded="false">
+              <div class="panel-body">
+                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="config-updates-rows">
+                    @for((key, configSourceValue) <- updates) {
+                      <tr>
+                        <td><code>@key.asString</code></td>
+                        <td>@displayConfigSourceValue(ServiceConfigsService.ServiceName(form.get.serviceName), key, form.get.environment, configSourceValue)</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab">
+              @if(warnings.isEmpty) {
+                <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
+              } else {
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeConfigWarnings" aria-expanded="false" aria-controls="collaspeConfigWarnings">
+                  <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
+                </a>
+              }
+            </div>
+            <div id="collaspeConfigWarnings" class="panel-collapse collapse" role="tabpanel" aria-expanded="false">
+              <div class="panel-body">
+                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Warning</th>
+                    </tr>
+                  </thead>
+                  <tbody id="config-warnings-rows">
+                    @for(x <- warnings) {
+                      <tr>
+                        <td><code>@x.key.asString</code></td>
+                        <td>@displayConfigWarning(ServiceConfigsService.ServiceName(form.get.serviceName), x.key, x.environment, x)</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab">
+              @if(vulnerabilities.isEmpty) {
+                <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
+              } else {
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeVulnerabilities" aria-expanded="false" aria-controls="collaspeVulnerabilities">
+                  <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
+                </a>
+              }
+            </div>
+            <div id="collaspeVulnerabilities" class="panel-collapse collapse" role="tabpanel" aria-expanded="false" style="height: 0px;">
+              <div class="panel-body">
+                <table style="word-break: break-word" class="table table-striped sticky-header">
+                  <thead>
+                    <tr>
+                      <th style="width:1px"></th>
+                      <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
+                      <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
+                      <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
+                      <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
+                      <th class="col-xs-1 text-right" style="width:90px"><button class="sort no-border" data-sort="score">Score</button></th>
+                    </tr>
+                  </thead>
+                  <tbody id="vulnerabilities-rows" class="list">
+                    @vulnerabilities.map(vulnerabilitiesSummary)
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab">
+              @if(githubDiffLinks.isEmpty) {
+                <h4 class="panel-title">Github Diffs<span class="pull-right">@githubDiffLinks.size</span></h4>
+              } else {
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeGithubDiffLinks" aria-expanded="false" aria-controls="collaspeGithubDiffLinks">
+                  <h4 class="panel-title">Github Diffs<span class="pull-right">@githubDiffLinks.size</span></h4>
+                </a>
+              }
+            </div>
+            <div id="collaspeGithubDiffLinks" class="panel-collapse collapse" role="tabpanel" aria-expanded="false" style="height: 0px;">
+              <div class="panel-body">
+                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                  <thead>
+                    <tr>
+                      <th>Link</th>
+                      <th>Command</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for((link, command) <- githubDiffLinks) {
+                      <tr>
+                        <td><a target="_blank" href="@link.url">@link.name<span class="glyphicon glyphicon-new-window"/></a></td>
+                        <td><code>@command</code></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @helper.form(
+          action           =  appRoutes.DeployServiceController.step3()
+        , Symbol("method") -> "POST"
+        ) {
+          @csrfFormField
+          <hr/>
+          <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+          <input type="hidden" name="version" value='@form("version").value' />
+          <input type="hidden" name="environment" value='@form("environment").value' />
+          <button id="deploy-btn" class="btn btn-primary pull-right" type="submit" @if(!request.retrieval){disabled}>Deploy</button>
+          <br/><br/>
+        }
+      }
+    </div>
+  </div>
+
+  <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+  <script @CSPNonce.attr>
+    autoCompleteInit({
+      formId           : "service-name-form",
+      inputSearchId    : "service-name",
+      matchesDivId     : "service-name-matches",
+      allowPartial     : false,
+      ignoreCase       : true,
+      submitOnSelection: true,
+      values           : [@for(service <- allServices) {'@service.name',}]
+    });
+
+    @if(form("serviceName").value.isDefined) {
+      let form2           = document.forms['version-environment-form'];
+      let helpfulVersions = document.getElementById('helpful-versions')
+      let version         = document.getElementById('version');
+      let environment     = document.getElementById('environment');
+
+      Array
+        .from(helpfulVersions.getElementsByTagName('a'))
+        .map(el => el.onclick = function() {
+          version.value = el.getAttribute('data-content');
+          submitWhenReady();
+        });
+
+      version.onchange     = function() { submitWhenReady() }
+      environment.onchange = function() { submitWhenReady() }
+
+      function submitWhenReady() {
+        if (version.value && environment.value) {
+          form2.dispatchEvent(new Event("submit")); // Call form listener
+          form2.submit();
+        }
+      };
+    }
+  </script>
+}
+
+@displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue) = {
+  <ul class="list-unstyled">
+    <li>
+      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
+         target="_blank"
+         data-toggle="popover"
+         data-trigger="hover"
+         data-placement="bottom"
+         data-html="true"
+         data-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
+        @configSourceValue.displayString
+      </a>
+    </li>
+  </ul>
+}
+
+@popoverConfigSourceValue(key: ServiceConfigsService.KeyName, sourceValue: ServiceConfigsService.ConfigSourceValue, env: Environment) = {
+  <div>@ServiceConfigsService.friendlySourceName(sourceValue.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(key))</div>
+}
+
+@displayConfigWarning(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configWarning: ServiceConfigsService.ConfigWarning) = {
+  <ul class="list-unstyled">
+    <li>
+      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
+         target="_blank"
+         data-toggle="popover"
+         data-trigger="hover"
+         data-placement="bottom"
+         data-html="true"
+         data-content='@popoverConfigWarning(configWarning, env)'>
+          @configWarning.warning
+      </a>
+    </li>
+  </ul>
+}
+
+@popoverConfigWarning(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
+  <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
+  <strong>Value:</strong> @warning.value.displayString
+}
+
+@vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
+  @defining(summary.distinctVulnerability.vulnerableComponentName.split("://")) { splitVulnerableComponent =>
+      <tr>
+          <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
+          <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
+          <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+          <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+          <td class="curation-status hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+          <td class="score hand-pointer text-right" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
+      </tr>
+      <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
+          @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
+          <td colspan="7">
+              <table>
+                  <tbody class="list">
+                      <tr>
+                          <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
+                          <td class="hide vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+                          <td class="hide assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+                          <td class="curation-status text-center hide"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+                          <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
+                          <td class="services text-center hide"><div>@summary.occurrences.groupBy(_.service).size</div></td>
+                      </tr>
+                      <tr>
+                          <td colspan="6">
+                              @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
+                          </td>
+                      </tr>
+                  </tbody>
+              </table>
+          </td>
+      </tr>
+  }
+}

@@ -122,8 +122,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
           s"""{
             "applicationName": "service-1",
             "versions": [
-              {"environment": "production", "platform": "heritage", "versionNumber": "0.0.1", "lastSeen": "2020-02-14T00:59:33Z" },
-              {"environment": "qa"        , "platform": "heritage", "versionNumber": "0.0.1", "lastSeen": "2020-02-14T01:00:14Z" }
+              {"environment": "production", "platform": "heritage", "versionNumber": "0.0.1", "lastSeen": "2020-02-14T00:59:33Z", "config": []},
+              {"environment": "qa"        , "platform": "heritage", "versionNumber": "0.0.1", "lastSeen": "2020-02-14T01:00:14Z", "config": [] }
             ]
           }"""
         ))

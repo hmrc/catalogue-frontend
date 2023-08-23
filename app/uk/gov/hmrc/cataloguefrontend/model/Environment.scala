@@ -18,6 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.model
 
 import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue}
 import play.api.mvc.{PathBindable, QueryStringBindable}
+import play.api.data.format.Formatter
+import play.api.data.FormError
 
 sealed trait Environment { def asString: String; def displayString: String }
 
@@ -71,6 +73,17 @@ object Environment {
       override def unbind(key: String, value: Environment): String =
         s"$Name=${value.asString}"
     }
+
+  val formFormat: Formatter[Environment] = new Formatter[Environment] {
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Environment] =
+      data
+        .get(key)
+        .flatMap(parse(_))
+        .fold[Either[Seq[FormError], Environment]](Left(Seq(FormError(key, "Invalid value"))))(Right.apply)
+
+    override def unbind(key: String, value: Environment): Map[String, String] =
+      Map(key -> value.asString)
+  }
 }
 
 trait SlugInfoFlag { def asString: String; def displayString: String }
