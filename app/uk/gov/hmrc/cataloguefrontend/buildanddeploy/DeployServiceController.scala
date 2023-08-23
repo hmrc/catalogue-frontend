@@ -197,7 +197,6 @@ class DeployServiceController @Inject()(
               .getRequestState(BuildDeployApiConnector.RequestState.EcsTask(accountId, logGroupName, clusterName, logStreamNamePrefix, arn, start))
               .map {
                 case Left(error)    => Json.toJson(error)
-                // case Right(state) => Json.toJson(state)(Console.writes)
                 case Right(jsValue) => jsValue
               }
           }
@@ -225,22 +224,3 @@ object DeployServiceForm {
     )(DeployServiceForm.apply)(DeployServiceForm.unapply)
   )
 }
-
-// object Console {
-//   import play.api.libs.functional.syntax._
-//   import play.api.libs.json._
-
-//   val writes: Writes[BuildDeployApiConnector.RequestState] = {
-//     implicit val writeLog: Writes[BuildDeployApiConnector.Log] =
-//       ( (__ \ "bnd_api_request_attempt_number").write[Int]
-//       ~ (__ \ "event"                         ).write[String]
-//       ~ (__ \ "level"                         ).write[String]
-//       ~ (__ \ "timestamp"                     ).write[Instant]
-//       )(unlift(BuildDeployApiConnector.Log.unapply))
-
-//     ( (__ \ "attempt_number"                 ).write[Int]
-//     ~ (__ \ "logs"                           ).write[Seq[BuildDeployApiConnector.Log]]
-//     ~ (__ \ "last_log_timestamp_milliseconds").write[Instant]
-//     )(unlift(BuildDeployApiConnector.RequestState.unapply))
-//   }
-// }

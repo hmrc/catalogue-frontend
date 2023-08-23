@@ -250,6 +250,7 @@ object BuildDeployApiConnector {
   sealed trait RequestState
 
   object RequestState {
+    // TODO check if we can change all requests to use EcsTask
     final case class Id(id: String, start: Long) extends RequestState
     object Id {
       val reads: Reads[Id] =
@@ -263,6 +264,7 @@ object BuildDeployApiConnector {
       )(unlift(Id.unapply))
     }
 
+    // TODO simplify treat as raw JSON - assumes every B&D returns json that can be feedback to GetRequestState
     final case class EcsTask(accountId: String, logGroupName: String, clusterName: String, logStreamNamePrefix: String, arn: String, start: Long) extends RequestState
     object EcsTask {
       val reads: Reads[EcsTask] =
