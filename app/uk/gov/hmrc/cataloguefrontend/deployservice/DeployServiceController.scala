@@ -59,7 +59,7 @@ class DeployServiceController @Inject()(
   with I18nSupport {
 
   private def predicate(serviceName: String): Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"service/$serviceName"), IAAction("DEPLOY_SERVICE"))
+    Predicate.Permission(Resource.from("catalogue-frontend", s"services/$serviceName"), IAAction("DEPLOY_SERVICE"))
 
   // Display form options
   def step1(serviceName: Option[String]): Action[AnyContent] =
