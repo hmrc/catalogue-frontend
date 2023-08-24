@@ -88,7 +88,7 @@
                     }
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
-                    <div id="@{UrlUtils.encodeQueryParam(s"config-row-${key.asString}")}" class="grid-row @if(envSources.forall(_._2.map(_._1.isReferenceConf))) {refconf-only}">
+                    <div id="@{UrlUtils.encodeQueryParam(s"config-row-${key.asString}")}" class="grid-row @if(envSources.forall(_._2.map(_._1).forall(_.isReferenceConf))) {refconf-only}">
                         <div id="@{UrlUtils.encodeQueryParam(s"config-key-${key.asString}")}" class="grid-item sticky-column truncate-content" style="width:310px;">
                             <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link float-start"></a>
                             <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@key.asString'>

@@ -31,6 +31,7 @@
 @this(viewMessages: ViewMessages)
 
 @(form          : Form[DeployServiceForm]
+, hasPerm       : Boolean
 , allServices   : Seq[GitRepository]
 , latestVersion : Option[Version]
 , releases      : Seq[WhatsRunningWhereVersion]
@@ -43,7 +44,7 @@
                   )]
 )( implicit
   messages      : Messages
-, request       : uk.gov.hmrc.internalauth.client.AuthenticatedRequest[play.api.mvc.AnyContent,Boolean]
+, request       : RequestHeader
 )
 
 @standard_layout("Deploy Service", "deploy service") {
@@ -251,7 +252,7 @@
           <input type="hidden" name="serviceName" value='@form("serviceName").value' />
           <input type="hidden" name="version" value='@form("version").value' />
           <input type="hidden" name="environment" value='@form("environment").value' />
-          <button id="deploy-btn" class="btn btn-primary pull-right" type="submit" @if(!request.retrieval){disabled}>Deploy</button>
+          <button id="deploy-btn" class="btn btn-primary pull-right" type="submit" @if(!hasPerm){disabled}>Deploy</button>
           <br/><br/>
         }
       }
