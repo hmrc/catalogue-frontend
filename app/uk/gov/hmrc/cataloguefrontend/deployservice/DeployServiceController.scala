@@ -61,6 +61,8 @@ class DeployServiceController @Inject()(
   private def predicate(serviceName: String): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"services/$serviceName"), IAAction("DEPLOY_SERVICE"))
 
+  private val failedPredicateMsg = "You do not have permission to deploy this service"
+
   // Display form options
   def step1(serviceName: Option[String]): Action[AnyContent] =
     auth.authenticatedAction(
@@ -76,7 +78,7 @@ class DeployServiceController @Inject()(
         _            <- EitherT
                           .fromOption[Future](
                             Option.when(hasPerm)(())
-                          , Forbidden(deployServicePage(form.withGlobalError("You do not have permission to deploy"), hasPerm, allServices, None, Nil, Nil, evaluations = None))
+                          , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, allServices, None, Nil, Nil, evaluations = None))
                           )
         latest       <- serviceName.fold(EitherT.rightT[Future, Result](Option.empty[Version]))(sn =>
                           EitherT
@@ -124,7 +126,7 @@ class DeployServiceController @Inject()(
         form         =  DeployServiceForm.form.bindFromRequest()
         formObject   <- EitherT
                           .fromEither[Future](form.fold(
-                            formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = true, allServices, None, Nil, Nil, evaluations = None)))
+                            formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, allServices, None, Nil, Nil, evaluations = None)))
                           , validForm      => Right(validForm)
                           ))
         hasPerm      <- EitherT
@@ -132,7 +134,7 @@ class DeployServiceController @Inject()(
         _            <- EitherT
                           .fromOption[Future](
                             Option.when(hasPerm)(())
-                          , Forbidden(deployServicePage(form.withGlobalError("You do not have permission to deploy"), hasPerm, allServices, None, Nil, Nil, evaluations = None))
+                          , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, allServices, None, Nil, Nil, evaluations = None))
                           )
         _            <- EitherT
                           .right[Result](auth.verify(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName))))
@@ -193,7 +195,7 @@ class DeployServiceController @Inject()(
         form         =  DeployServiceForm.form.bindFromRequest()
         formObject   <- EitherT
                           .fromEither[Future](form.fold(
-                            formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = true, allServices, None, Nil, Nil, evaluations = None)))
+                            formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, allServices, None, Nil, Nil, evaluations = None)))
                           , validForm      => Right(validForm)
                           ))
         hasPerm      <- EitherT
@@ -201,7 +203,7 @@ class DeployServiceController @Inject()(
         _            <- EitherT
                           .fromOption[Future](
                             Option.when(hasPerm)(())
-                          , Forbidden(deployServicePage(form.withGlobalError("You do not have permission to deploy"), hasPerm, allServices, None, Nil, Nil, evaluations = None))
+                          , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, allServices, None, Nil, Nil, evaluations = None))
                           )
         slugInfo     <- EitherT
                           .fromOptionF(
