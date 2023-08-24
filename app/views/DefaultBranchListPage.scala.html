@@ -30,103 +30,122 @@
   request        : RequestHeader
 )
 
-@standard_layout(s"Default Branches", "defaultbranch") {
-<header>
-    <h1>Default Branch Naming Progress</h1>
-</header>
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
-@if(form.hasErrors) {
-  <div class="alert alert-danger" role="alert">
-    <ul class="list">
-      @form.errors.map { error =>
-        <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
-      }
-    </ul>
-  </div>
-}
+@standard_layout(s"Default Branches", active = "explore") {
+    <h1 class="page-heading mt-4">Default Branch Naming Progress</h1>
 
-<div id="default-branches">
-    <form action="/defaultbranch" method="get">
-        <div class="form-group row">
-            <div class="col-md-3">
-                <label for="search">Name:</label>
-                <div>
-                    <input class="form-control" id="search" type="text" name="name" value='@form("name").value'>
+    @if(form.hasErrors) {
+        <div class="alert alert-danger" role="alert">
+            <ul class="list">
+                @form.errors.map { error =>
+                    <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div id="default-branches">
+        <form action="/defaultbranch" method="get">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>
+                            <label for="search" class="form-label">Name:</label>
+                        </dt>
+                        <dd>
+                            <input class="form-control" id="search" type="search" name="name" value='@form("name").value'>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    @select(
+                        field                 =  form("teamNames"),
+                        options               =  teams.map(t => t -> t),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Teams: ",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("name")        -> "teamNames",
+                        Symbol("value")       -> "form('teamNames').value",
+                        Symbol("id")          -> "teamNames",
+                        Symbol("class")       -> "form-select"
+                    )
+                    <div class="form-check form-switch">
+                        <input id="singleOwnership" name="singleOwnership" class="form-check-input" type="checkbox" role="switch" value="true" @if(singleOwnership){checked}>
+                        <label class="form-check-label" for="singleOwnership" data-toggle="tooltip" title="Return repositories that are owned solely by the selected team.">
+                            Single ownership
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>
+                            <label for="defaultBranch" class="form-label">Branch:</label>
+                        </dt>
+                        <dd>
+                            <input class="form-control" id="defaultBranch" type="search" name="defaultBranch" value='@form("defaultBranch").value'>
+                        </dd>
+                    </dl>
                 </div>
             </div>
-            <div class="col-md-3" style="padding-left: 15px; padding-right: 15px;">
-                @select(
-                    field              =  form("teamNames"),
-                    options            =  teams.map(t => t -> t),
-                    Symbol("_default") -> "All",
-                    Symbol("_label")   -> "Teams: ",
-                    Symbol("name")     -> "teamNames",
-                    Symbol("value")    -> "form('teamNames').value",
-                    Symbol("id")       -> "teamNames",
-                    Symbol("class")    -> "form-control"
-                )
-                <div>
-                    Single ownership
-                    <input class="checkbox" id="singleOwnership" name="singleOwnership" type="checkbox" data-toggle="tooltip" title="Return repositories that are owned solely by the selected team." value="true" @if(singleOwnership){checked}/>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <label for="defaultBranch">Branch:</label>
-                <input class="form-control" id="defaultBranch" type="text" name="defaultBranch" value='@form("defaultBranch").value'>
+            <button id="search-button" class="btn btn-success" type="submit" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.allDefaultBranches()">Search</button>
+        </form>
+
+        <div class="row mt-3">
+            <div class="col">
+                @defining(repositories.filter(_.defaultBranch != "master").length) { nonMasterCount =>
+                  @defining((nonMasterCount.toDouble / repositories.length) * 100) { progress =>
+                      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="@repositories.length" aria-valuenow="@nonMasterCount">
+                          <div class="progress-bar" style="width: @progress%;"></div>
+                      </div>
+                      Updated default branch names: @nonMasterCount/@repositories.length
+                  }
+                }
             </div>
         </div>
-        <button id="search-button" class="btn btn-primary" type="submit" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.allDefaultBranches()">Search</button>
-    </form>
 
-    <div style="margin-top: 15px;">
-        @defining(repositories.filter(_.defaultBranch != "master").length) { nonMasterCount =>
-            <progress class="progress" style="width: 100%;" id="nomenclature" max="@repositories.length" value='@nonMasterCount'> @@nonMasterCount </progress>
-            Updated default branch names: @nonMasterCount/@repositories.length
-        }
-    </div>
-
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="repo-name">Name</button></th>
-                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="teamNames">Team/s</button></th>
-                <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="defaultBranch">Default Branch</button></th>
+        <table class="table table-striped sticky-header">
+            <thead>
+                <tr>
+                    <th class="col-lg-6"><button role="button" class="sort no-border fw-bold" data-sort="repo-name">Name</button></th>
+                    <th class="col-lg-6"><button role="button" class="sort no-border fw-bold" data-sort="teamNames">Team/s</button></th>
+                    <th class="col-lg-6"><button role="button" class="sort no-border fw-bold" data-sort="defaultBranch">Default Branch</button></th>
+                    @if(includeArchived) {
+                        <th class="col-lg-6"><button role="button" class="sort no-border fw-bold" data-sort="isArchived">Archived</button></th>
+                    }
+                </tr>
+            </thead>
+            <tbody class="list">
+            @repositories.zipWithIndex.map{case (repo, i) =>
+            <tr id="row@i">
+                <td class="service-name" id="row@{i}_name">
+                    <a class="repo-name" id="link-to-@{repo.name}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+                </td>
+                <td class="teamNames font-monospace" id="row@{i}_teamNames">
+                    @if(repo.teamNames.length > 0 && repo.teamNames.length <= 10) {
+                        @repo.teamNames.mkString(", ")
+                    } else  {
+                        <i title="@repo.teamNames.mkString(", ")">Various Teams</i>
+                    }
+                </td>
+                <td class="defaultBranch font-monospace" id="row@{i}_defaultBranch">
+                    @repo.defaultBranch
+                </td>
                 @if(includeArchived) {
-                    <th class="col-lg-6"><button role="button" class="sort no-border" data-sort="isArchived">Archived</button></th>
+                  <td class="isArchived font-monospace" id="row@{i}_isArchived">
+                    @repo.isArchived
+                  </td>
                 }
             </tr>
-        </thead>
-        <tbody class="list">
-        @repositories.zipWithIndex.map{case (repo, i) =>
-        <tr id="row@i">
-            <td class="service-name" id="row@{i}_name">
-                <a class="repo-name" id="link-to-@{repo.name}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
-            </td>
-            <td class="teamNames monospaced" id="row@{i}_teamNames">
-                @if(repo.teamNames.length > 0 && repo.teamNames.length <= 10) {
-                    @repo.teamNames.mkString(", ")
-                } else  {
-                    <i title="@repo.teamNames.mkString(", ")">Various Teams</i>
-                }
-            </td>
-            <td class="defaultBranch monospaced" id="row@{i}_defaultBranch">
-                @repo.defaultBranch
-            </td>
-            @if(includeArchived) {
-              <td class="isArchived monospaced" id="row@{i}_isArchived">
-                @repo.isArchived
-              </td>
             }
-        </tr>
-        }
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 }
 
 <script @CSPNonce.attr>
-    var options = { valueNames: [ 'service-name', 'repo-name', 'teamNames', 'defaultBranch', 'isArchived'],
+    let options = { valueNames: [ 'service-name', 'repo-name', 'teamNames', 'defaultBranch', 'isArchived'],
                     searchColumns: ['repo-name', 'teamNames', 'defaultBranch', 'isArchived'] };
 
-    var serviceList = new List('default-branches', options);
+    let serviceList = new List('default-branches', options);
 </script>
