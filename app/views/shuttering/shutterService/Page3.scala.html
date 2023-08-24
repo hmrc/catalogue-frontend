@@ -34,96 +34,83 @@
  , messagesProvider     : MessagesProvider
  )
 
-@standard_layout(s"Shutter ${shutterType.asString.capitalize}") {
+@standard_layout(s"Shutter ${shutterType.asString.capitalize}", active = "shuttering") {
 
-  <header>
-    <h1>Shutter @{shutterType.asString.capitalize}: Confirm</h1>
-  </header>
-
-  <div>
+    <h1 class="page-heading mt-4">Shutter @{shutterType.asString.capitalize}: Confirm</h1>
 
     @form_global_errors(form)
 
-    <div class="board">
-      <div class="board__body">
-        @helper.form(
-            action          =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step3Post
-          , Symbol("id")    -> "shutter-service-form"
-          , Symbol("style") -> "padding-left: 20px; padding-right: 20px"
-          ) {
+    <div class="card">
+        <div class="card-body">
+            @helper.form(
+                action          =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step3Post
+              , Symbol("id")    -> "shutter-service-form"
+              , Symbol("class") -> "px-2"
+            ) {
+                @csrfFormField
 
-            @csrfFormField
+                <div class="card mb-3">
+                    <div class="card-header @if(env == Environment.Production) {bg-danger-subtle} else {bg-warning-subtle}">
+                        <span class="glyphicon glyphicon-warning-sign"></span>
+                        You are about to <b id="shutterStatus">@valueFor(step1Out.status)</b> the following frontends in <b>@env</b>:
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            @step1Out.serviceNames.map { serviceName =>
+                                <li>@serviceName</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
 
-          <div class="panel @if(env == Environment.Production) {panel-danger} else {panel-warning}">
-            <div class="panel-heading">
-              <span class="glyphicon glyphicon-warning-sign"></span>
-              You are about to <b id="shutterStatus">@valueFor(step1Out.status)</b> the following @{shutterType.asString}s in <b>@env</b>:
-            </div>
-            <div class="panel-body">
-                <ul id="service-list">
-                  @step1Out.serviceNames.map { serviceName =>
-                    <li>@serviceName</li>
-                  }
-                </ul>
-            </div>
-          </div>
+                <div class="row mb-3">
+                    @if(step1Out.status == ShutterStatusValue.Shuttered && step2Out.requiresOutageMessage) {
+                        @if(step2Out.useDefaultOutagePage) {
+                            <div class="col">
+                                <label>Outage message: </label> None - will use platform default outage page.
+                            </div>
+                        } else {
+                            <div class="col-8">
+                                <label for="outageMessage" class="form-label">
+                                    Outage message:
+                                </label>
+                                <textarea id="outageMessage" class="form-control" disabled>@Html(step2Out.outageMessage)</textarea>
+                            </div>
+                        }
+                    }
+                </div>
 
-          <table class="padded-table" style="width: 100%">
-            @if(step1Out.status == ShutterStatusValue.Shuttered && step2Out.requiresOutageMessage) {
-              <tr>
-                <td colspan="2">
-                  @if(step2Out.useDefaultOutagePage) {
-                    <label>Outage Message:</label> None - will use platform default outage page.
-                  } else {
-                    Outage Message:
-                    <div id="outageMessage" class="jumbotron">@Html(step2Out.outageMessage)</div>
-                  }
-                </td>
-              </tr>
+                @if(env == Environment.Production) {
+                    <div class="alert alert-danger">
+                        <span class="glyphicon glyphicon-warning-sign"></span>
+                        <b>Production</b> means it will impact real users!<br/>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="confirm" value="true" id="confirm">
+                            <label class="form-check-label" for="confirm">
+                                I confirm
+                            </label>
+                        </div>
+                    </div>
+                } else {
+                    <input type="hidden" name="confirm" value="true">
+                }
+
+                <div class="row">
+                    <div class="col-1">
+                        <a id="back-btn" href="@back" class="btn btn-outline-dark">
+                            <span class="glyphicon glyphicon-chevron-left"></span>
+                            Back
+                        </a>
+                    </div>
+                    <div class="col-1 offset-10">
+                        <button id="next-btn" class="btn btn-success" type="submit">
+                            Submit
+                        </button>
+                    </div>
+                </div>
             }
-            <tr><td colspan="2">&nbsp;</td></tr>
-            <tr>
-              <td>Please check this is correct before submitting.</td>
-            </tr>
-            <tr><td colspan="2">&nbsp;</td></tr>
-            @if(env == Environment.Production) {
-              <tr>
-                <td colspan="2">
-                  <div class="alert alert-danger" role="alert">
-                    <span class="glyphicon glyphicon-warning-sign"></span>
-                    <b>Production</b> means it will impact real users!<br/>
-                    <input type="checkbox" id="confirm" name="confirm" value="true">
-                    <label for="confirm">I confirm</label>
-                  </div>
-                </td>
-              </tr>
-            } else {
-              <tr>
-                <td colspan="2">
-                  <input type="hidden" name="confirm" value="true">
-                </td>
-              </tr>
-            }
-            <tr>
-              <td>
-                <a id="back-btn" href="@back" class="btn btn-default">
-                  <span class="glyphicon glyphicon-chevron-left"></span>
-                  Back
-                </a>
-              </td>
-              <td style="text-align:right;">
-                <button id="next-btn" class="btn btn-primary" type="submit">
-                  Submit
-                </button>
-              </td>
-            </tr>
-          </table>
-        }
-      </div>
+        </div>
     </div>
-
-  </div>
-
 }
 
 @valueFor(status: ShutterStatusValue) = {

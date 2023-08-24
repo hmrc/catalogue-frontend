@@ -210,11 +210,3 @@
     });
 </script>
 
-@collapseAttr(cssClasses: String, report: PrCommenterReport) = {
-  @if(report.comments.nonEmpty) {
-    class="@cssClasses hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@report.name" aria-expanded="false" aria-controls="collapsible-area-@report.name"
-  } else {
-    class="@cssClasses.replaceAll("accordion-toggle collapsed", "")"
-  }
-}
-

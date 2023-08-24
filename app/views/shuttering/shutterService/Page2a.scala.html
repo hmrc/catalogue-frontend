@@ -33,115 +33,97 @@
  , messagesProvider     : MessagesProvider
  )
 
-@standard_layout(s"Shutter Frontend") {
+@standard_layout("Shutter Frontend", active = "shuttering") {
 
-<header>
-    <h1>Shutter Frontend: Check Frontend Routes</h1>
-</header>
-
-<div id="service-list">
+    <h1 class="page-heading mt-4">Shutter Frontend: Check Frontend Routes</h1>
 
     @form_global_errors(form)
 
-    <div class="board">
-        <div class="board__body">
-
-            @helper.form(
+    <div class="card">
+        <div class="card-body">
+        @helper.form(
             action            =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step2aPost
-            , Symbol("class") -> "form-inline"
+            , Symbol("class") -> "px-2"
             , Symbol("id")    -> "shutter-service-form"
-            , Symbol("style") -> "padding-left: 20px; padding-right: 20px"
-            ) {
+        ) {
+            @csrfFormField
 
-              @csrfFormField
-
-            <div class="panel @if(env == Environment.Production) {panel-danger} else {panel-warning}">
-                <div class="panel-heading">
+            <div class="card mb-3">
+                <div class="card-header @if(env == Environment.Production) {bg-danger-subtle} else {bg-warning-subtle}">
                     <span class="glyphicon glyphicon-warning-sign"></span>
                     You are about to <b>Shutter</b> the following frontends in <b>@env</b>:
                 </div>
-                <div class="panel-body">
-                    <ul>
+                <div class="card-body">
+                    <ul class="mb-0">
                         @step1Out.serviceNames.map { serviceName =>
-                        <li>@serviceName</li>
+                            <li>@serviceName</li>
                         }
                     </ul>
                 </div>
             </div>
 
             @if(frontendRouteWarnings.nonEmpty) {
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="panel panel-warning">
-                        <div class="panel-heading"><span class="glyphicon glyphicon-warning-sign"></span>
-                            There were some (@{frontendRouteWarnings.map(_.warnings.size).sum}) warnings found with the
-                            Frontend Routes.
-                        </div>
-                        <div class="panel-body">
-                            Please review, you can still continue to shutter.
-                            <br/><br/>
-                            <table id="frontend-route-warnings" class="table table-bordered">
-                                <thead>
+                <div class="card mb-3">
+                    <div class="card-header bg-warning-subtle">
+                        <span class="glyphicon glyphicon-warning-sign"></span>
+                        There were some (@{frontendRouteWarnings.map(_.warnings.size).sum}) warnings found with the Frontend Routes.
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Please review, you can still continue to shutter.</p>
+                        <table id="frontend-route-warnings" class="table table-bordered">
+                            <thead>
                                 <tr>
                                     <td>Service</td>
                                     <td>Warning</td>
                                     <td>Description</td>
                                     <td>Consequence</td>
                                 </tr>
-                                </thead>
-                                @frontendRouteWarnings.map { frw =>
-                                  @frw.warnings.map { warning =>
-                                  <tr class="alert-warning">
-                                      <td>@frw.serviceName</td>
-                                      <td>@warning.name</td>
-                                      <td>@warning.message</td>
-                                      <td>@warning.consequence</td>
-                                  </tr>
-                                  }
+                            </thead>
+                            @frontendRouteWarnings.map { frw =>
+                                @frw.warnings.map { warning =>
+                                    <tr class="alert-warning">
+                                        <td>@frw.serviceName</td>
+                                        <td>@warning.name</td>
+                                        <td>@warning.message</td>
+                                        <td>@warning.consequence</td>
+                                    </tr>
                                 }
-                            </table>
-                        </div>
+                            }
+                        </table>
                     </div>
                 </div>
-            </div>
             }
 
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="panel panel-warning">
-                        <div class="panel-heading">
-                            <span class="glyphicon glyphicon-warning-sign"></span>
-                            Please confirm you have checked the above frontend route warnings:
-                        </div>
-                        <div class="panel-body">
-                            <input type="checkbox" id="confirm" name="confirm" value="true">
-                            <label for="confirm">I confirm</label>
-                        </div>
+            <div class="card mb-3">
+                <div class="card-header bg-warning-subtle">
+                    <span class="glyphicon glyphicon-warning-sign"></span>
+                    Please confirm you have checked the above frontend route warnings:
+                </div>
+                <div class="card-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="confirm" value="true" id="confirm">
+                        <label class="form-check-label" for="confirm">
+                            I confirm
+                        </label>
                     </div>
-                    </td>
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-sm-6">
-                    <a id="back-btn"
-                       href="@back"
-                       class="btn btn-default">
+                <div class="col-1">
+                    <a id="back-btn" href="@back" class="btn btn-outline-dark">
                         <span class="glyphicon glyphicon-chevron-left"></span>
                         Back
                     </a>
                 </div>
-                <div class="col-sm-6" style="text-align:right;">
-                    <button id="next-btn" class="btn btn-primary" type="submit">
+                <div class="col-1 offset-10">
+                    <button id="next-btn" class="btn btn-success" type="submit">
                         Next
                         <span class="glyphicon glyphicon-chevron-right"></span>
                     </button>
                 </div>
             </div>
-            }
+        }
         </div>
     </div>
-
-</div>
-
 }
