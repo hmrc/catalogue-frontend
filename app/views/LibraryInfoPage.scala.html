@@ -109,7 +109,9 @@
                   </button>
               </h2>
               <div id="module-@idx" class="accordion-collapse collapse">
+                <div class="accordion-body">
                   @modulesPartial(modules, displayBuildInfo = idx == 0, showLegend = false)
+                </div>
               </div>
             </div>
           }
@@ -117,8 +119,6 @@
       </section>
   }
   <div class="alert alert-success" role="alert" id="@library.name">
-    <p>
       @Html(viewMessages.informationalText)
-    </p>
   </div>
 }

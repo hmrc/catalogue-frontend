@@ -14,7 +14,8 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules, RepositoryModule}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, RepositoryModule}
+@import views.html.partials.DependenciesPartial
 
 @this(
   dependenciesPartial: DependenciesPartial
@@ -36,15 +37,15 @@
     @modulesSection(modules)
     @buildDependencies()
     @for((module, i) <- repositoryModules.modules.zipWithIndex) {
-      <div class="board">
-        <div class="board__heading">
-          <h4 class="environment-name" id="@module.name">@module.name</h4>
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4 class="mb-0" id="@module.name">@module.name</h4>
         </div>
-        <div class="board__body">
+        <div class="card-body">
 
           @if(module.crossScalaVersions.nonEmpty) {
             <div class="row">
-              <div class="col-md-12 sub_row">
+              <div class="col-md-12">
                 @moduleData(module)
               </div>
             </div>
@@ -52,10 +53,8 @@
 
           @if((module.dependenciesCompile ++ module.dependenciesProvided ++ module.dependenciesTest ++ module.dependenciesIt).isEmpty) {
             <div class="row">
-              <div class="col-md-12 sub_row">
-                <ul class="list list--minimal list-group row">
-                  <li>No dependencies available</li>
-                </ul>
+              <div class="col-md-12">
+                  <p>No dependencies available</p>
               </div>
             </div>
           } else {
@@ -68,22 +67,22 @@
 }
 
 @modulesSection(modules: Seq[RepositoryModule]) = {
-  <div class="row">
-    <div class="col-md-12">
-      <div id="modules">
-        <div class="board">
-          <h3 class="board__heading">Modules</h3>
-          <div class="board__body">
-            <ul class="list list--minimal">
-              @repositoryModules.modules.map { m =>
-                <li><a id="link-to-@{m.name}" href="#@{m.name}">@m.name</a></li>
-              }
-            </ul>
-          </div>
+<div class="row mb-3">
+    <div class="col-12">
+        <div id="modules" class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Modules</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    @repositoryModules.modules.map { m =>
+                        <li><a id="link-to-@{m.name}" href="#@{m.name}">@m.name</a></li>
+                    }
+                </ul>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
 }
 
 @buildDependencies() = {
@@ -169,14 +168,10 @@
 
 @moduleData(module: RepositoryModule) = {
   @if(module.crossScalaVersions.nonEmpty) {
-    <div class="board">
-      <div class="board__body">
-        <ul class="list list--minimal list-group row">
-          <li id="board-description-@{module.name}" class="col-xs-6">
-            <label>Scala Versions: </label>
-            @module.crossScalaVersions.map(_.toString).mkString(", ")
-          </li>
-        </ul>
+    <div class="card mb-3">
+      <div id="board-description-@{module.name}" class="card-body">
+          <label class="fw-bold">Scala Versions: </label>
+          @module.crossScalaVersions.map(_.toString).mkString(", ")
       </div>
     </div>
   }
