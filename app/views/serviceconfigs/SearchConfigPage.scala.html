@@ -34,15 +34,13 @@
   request : RequestHeader
 )
 
-@standard_layout("Search Config") {
-    <header>
-        <h1>
-            Search Config
-            <a class="pull-right" role="button" data-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
-                <i class="glyphicon glyphicon-question-sign" style="color: black;"></i>
-            </a>
-        </h1>
-    </header>
+@standard_layout("Search Config", active = "explore") {
+    <h1 class="page-heading mt-4">
+        Search Config
+        <a class="float-end" role="button" data-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+            <i class="glyphicon glyphicon-question-sign" style="color: black;"></i>
+        </a>
+    </h1>
 
     <div class="collapse" id="helpText">
         <div class="well">
@@ -94,11 +92,19 @@
                 <dl>
                     <dt>
                         <label for="config-key">Config Key</label>
-                        <div class="input-group-inline pull-right">
+                        <div class="float-end">
+                          <div>
                             @helper.checkbox(
                                 field            =  form("configKeyIgnoreCase"),
+                                Symbol("_class") -> "form-check form-check-inline",
                                 Symbol("_label") -> "Ignore Case",
                             )
+                            <div class="form-check-reverse form-check-inline">
+                                <label class="form-check-label" for="configKeyIgnoreCase">Ignore Case</label>
+                                <input class="form-check-input" type="checkbox" id="configKeyIgnoreCase" @if(form("configKeyIgnoreCase").value){checked="checked"}>
+                              </div>
+
+                          </div>
                         </div>
                     </dt>
                     <dd>
@@ -135,7 +141,7 @@
                 <dl class="clearfix">
                     <dt>
                         <label for="config-value">Config Value</label>
-                        <div class="input-group-inline pull-right">
+                        <div class="input-group-inline float-end">
                             @helper.checkbox(
                                 field            =  form("configValueIgnoreCase"),
                                 Symbol("_label") -> "Ignore Case",
@@ -165,7 +171,7 @@
         <input type="hidden" id="asCsv" name="asCsv" value="false" />
         <input type="button" id="export-as-csv-btn" class="btn btn-default" value="Export as CSV"/>
 
-        <div class="dl-horizontal pull-right">
+        <div class="dl-horizontal float-end">
             @helper.inputRadioGroup(
                 field              =  form("groupBy"),
                 options            =  GroupBy.values.map(t => t.asString -> t.displayString),
