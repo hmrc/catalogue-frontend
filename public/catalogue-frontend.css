@@ -34,6 +34,15 @@
     --bs-body-color-rgb: 111, 119, 123;
 }
 
+.card {
+    --bs-body-color: #6f777b;
+    --bs-body-color-rgb: 111, 119, 123;
+}
+
+.card-header {
+    --bs-heading-color: #191717;
+}
+
 a {
     --bs-link-underline-opacity: 0;
     text-decoration-color: rgba(var(--bs-link-color-rgb),var(--bs-link-underline-opacity,1))!important;
@@ -65,6 +74,17 @@ th {
     padding-bottom: .2em;
     border-bottom: 3px solid var(--bs-heading-color);
     font-weight: 700;
+}
+
+.page-heading span {
+    display: inline-block;
+    border: 1px solid var(--bs-heading-color);
+    border-radius: 2px;
+    padding: 4px;
+    font-size: 22px;
+    margin-left: 15px;
+    font-weight: lighter;
+    vertical-align: middle;
 }
 
 /*! Styling for global catalogue search */

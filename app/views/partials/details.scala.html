@@ -23,30 +23,30 @@
   version          : Option[Version]   = None
 )
 
-<div id="details" >
-    <div class="board">
-        <h3 class="board__heading">Details</h3>
-        <div class="board__body">
-            <ul class="list list--minimal list-group row">
-                <li id="repository-description" class="col-xs-6">
-                    <label>Description: </label>
-                    @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
-                </li>
-                <li id="repository-created-at" class="col-xs-6">
-                    <label>Created: </label>
-                    @repositoryDetails.createdDate.displayFormat
-                </li>
-                <li id="repository-last-active" class="col-xs-6">
-                    <label>Last Active: </label>
-                    @repositoryDetails.lastActiveDate.displayFormat
-                </li>
-                @version.map { version =>
-                    <li id="version" class="col-xs-6">
-                        <label>Latest Version: </label>
-                        @version.toString
-                    </li>
-                }
-            </ul>
+<div id="details" class="card">
+    <div class="card-header">
+      <h4 class="mb-0">Details</h4>
+    </div>
+    <div class="card-body">
+        <div class="row gy-3">
+            <div class="col-6">
+                <label class="fw-bold">Description: </label>
+                @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
+            </div>
+            <div class="col-6">
+                <label class="fw-bold">Created: </label>
+                @repositoryDetails.createdDate.displayFormat
+            </div>
+            <div class="col-6">
+                <label class="fw-bold">Last Active: </label>
+                @repositoryDetails.lastActiveDate.displayFormat
+            </div>
+            @version.map { version =>
+                <div class="col-6">
+                  <label class="fw-bold">Latest Version: </label>
+                  @version.toString
+                </div>
+            }
         </div>
     </div>
 </div>

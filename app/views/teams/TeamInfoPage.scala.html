@@ -61,11 +61,11 @@
                     <div class="card-body">
                         @maybeTeam match {
                             case Some(team) => {
-                                <dl id="team-description" class="row">
+                                <dl id="team-description" class="row mb-0">
                                     <dt class="col-sm-4">Description:</dt>
                                     <dd class="col-sm-8">@team.description.getOrElse("")</dd>
                                 </dl>
-                                <dl id="team-documentation" class="row">
+                                <dl id="team-documentation" class="row mb-0">
                                     <dt class="col-sm-4">Documentation:</dt>
                                     <dd class="col-sm-8">
                                         @team.documentation.map { docs =>
@@ -73,7 +73,7 @@
                                         }
                                     </dd>
                                 </dl>
-                                <dl id="team-slack-channels" class="row">
+                                <dl id="team-slack-channels" class="row mb-0">
                                     <dt class="col-sm-4">Slack:</dt>
                                     <dd class="col-sm-8"></dd>
                                 </dl>
@@ -151,7 +151,7 @@
 
 @addSlackInfo(label: String, slackInfo: SlackInfo) = {
   @if(!slackInfo.hasValidUrl) {
-    <dl id="slack-@label.toLowerCase" class="row">
+    <dl id="slack-@label.toLowerCase" class="row mb-0">
         <dt class="col-sm-3 offset-1">@label:</dt>
         <dd class="col-sm-8">
             <p>@slackInfo.url <span class="glyphicon glyphicon-warning-sign" /></p>
@@ -159,14 +159,14 @@
         </dd>
     </dl>
   } else if (!slackInfo.hasValidName) {
-    <dl id="slack-@label.toLowerCase" class="row">
+    <dl id="slack-@label.toLowerCase" class="row mb-0">
         <dt class="col-sm-3 offset-1">@label:</dt>
         <dd class="col-sm-8">
             <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window"/></a>
         </dd>
     </dl>
   } else {
-    <dl id="slack-@label.toLowerCase" class="row">
+    <dl id="slack-@label.toLowerCase" class="row mb-0">
         <dt class="col-sm-3 offset-1">@label:</dt>
         <dd class="col-sm-8">
             <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window"/></a>

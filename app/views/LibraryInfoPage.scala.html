@@ -38,16 +38,12 @@
 )
 
 @standard_layout(library.name,"libraries") {
-  <header class="header-with-github-badge">
-    <div>
-      <h1>
-        Library: @library.name
-        <span>@githubBadgeType(library)</span>
-        @if(library.isDeprecated) { <span>Deprecated</span> }
-        @if(library.isArchived) { <span>Archived</span> }
-      </h1>
-    </div>
-  </header>
+  <h1 class="page-heading mt-4">
+      Library: @library.name
+      <span>@githubBadgeType(library)</span>
+      @if(library.isDeprecated) { <span>Deprecated</span> }
+      @if(library.isArchived) { <span>Archived</span> }
+  </h1>
 
   @partials.leak_detection_banner(linkToLeakDetection)
   @defining(repositoryModules.headOption) { latestRepositoryModules =>
@@ -57,8 +53,8 @@
       }
 
       <section class="section-wrapper">
-        <div class="row">
-          <div class="col-md-12">
+        <div class="row mb-3">
+          <div class="col-12">
             @partials.details(
               repositoryDetails = library,
               version           = latestRepositoryModules.flatMap(_.version)
@@ -66,7 +62,7 @@
           </div>
         </div>
 
-        <div class="row">
+        <div class="row gy-3 mb-3">
           <div class="col-md-6">
             @partials.repo_owning_teams(library)
           </div>
