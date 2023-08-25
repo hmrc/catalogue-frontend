@@ -30,10 +30,10 @@
 
 @standard_layout("Commissioning-State") {
     <header>
-        <h1>Commissioning State</h1>
+        <h1 class="page-heading mt-4">Commissioning State</h1>
     </header>
 
-    <h2><a href="@routes.CatalogueController.service(serviceName)">@serviceName</a></h2>
+    <h2><a class="fw-bold" href="@routes.CatalogueController.service(serviceName)">@serviceName</a></h2>
 
     <p>Guidance for creating a microservice can be found in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a></p>
 
@@ -109,7 +109,7 @@
         @applicableEnvironments.map(e => e -> check.checkResults.get(e)).sortBy(_._1).map{
             case (env, Some(result)) => {
                     <td>
-                        <ul class="list-compact">
+                        <ul class="list-unstyled">
                             <li> @env.displayString </li>
                             <li> @displayResult(createID(s"${check.title}-${env.displayString}"), result)</li>
                         </ul>
