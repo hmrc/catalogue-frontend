@@ -27,69 +27,75 @@
 
 @standard_layout(s"Dependencies: $serviceName", "dependencies") {
     <header>
-        <h1 id="dependencies-header">Dependencies: @serviceName</h1>
+        <h1 id="dependencies-header" class="page-heading mt-4">Dependencies: @serviceName</h1>
     </header>
-    <div>
+    <div class="accordion">
         @serviceDependencies.zipWithIndex.map { case (serviceDependency, index) =>
             @defining(serviceDependencies.length > 1) { collapsable =>
-                <div @if(collapsable){class="hand-pointer accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@index" aria-expanded="false" aria-controls="collapsible-area"}>
-                    <label @if(collapsable){class="hand-pointer"}>
-                        Version: @serviceDependency.version.toString
-                        @serviceDependency.environment.fold("")(_.displayString)
-                    </label>
-                </div>
-                <div id="collapsible-area-@index" class="@if(collapsable) {collapse}">
-                    <span class="jdk-version">@{serviceDependency.java.kind}: @{serviceDependency.java.version} @{serviceDependency.java.vendor}</span>
+                <div class="accordion-item">
+                    <div>
+                        <h2 class="accordion-header">
+                            <button @if(collapsable){class="accordion-button fw-bold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@index" aria-expanded="true" aria-controls="collapsible-area-@index"}>
+                            Version: @serviceDependency.version.toString
+                            @serviceDependency.environment.fold("")(_.displayString)
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="collapsible-area-@index" class="@if(collapsable) {accordion-collapse collapse}">
+                        <div class="accordion-body">
+                            <span class="jdk-version">@{serviceDependency.java.kind}: @{serviceDependency.java.version} @{serviceDependency.java.vendor}</span>
 
-                    @defining(DependenciesService.sortAndSeparateDependencies(serviceDependency)) { dependencies =>
-                        <table id="dependencies-list" class="table table-condensed table-striped">
-                            <thead>
-                                <tr>
-                                    <th class="col-lg-4">Group ID</th>
-                                    <th class="col-lg-4">Artefact ID</th>
-                                    <th class="col-lg-4">Version</th>
-                                </tr>
-                            </thead>
-                            <tbody class="list">
-                            @for(dependency <- dependencies._1) {
-                                <tr>
-                                    <td><span>@dependency.group</span></td>
-                                    <td><span>@dependency.artifact</span></td>
-                                    <td><span>@dependency.version</span></td>
-                                </tr>
-                            }
-                            </tbody>
-                        </table>
+                            @defining(DependenciesService.sortAndSeparateDependencies(serviceDependency)) { dependencies =>
+                                <table id="dependencies-list" class="table table-condensed table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-lg-4">Group ID</th>
+                                            <th class="col-lg-4">Artefact ID</th>
+                                            <th class="col-lg-4">Version</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="list">
+                                    @for(dependency <- dependencies._1) {
+                                        <tr>
+                                            <td><span>@dependency.group</span></td>
+                                            <td><span>@dependency.artifact</span></td>
+                                            <td><span>@dependency.version</span></td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
 
-                        @if(dependencies._2.nonEmpty){
-                        <table id="transitive-dependencies-list" class="table table-condensed table-striped">
-                            <thead>
-                                <tr>
-                                    <th class="col-lg-4">Transitive Dependencies</th>
-                                    <th>
-                                        <a id="view-dependency-graph-@serviceDependency.version.toString" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, serviceDependency.version.toString)">View Graph</a>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th class="col-lg-4">Group ID</th>
-                                    <th class="col-lg-2">Artefact ID</th>
-                                    <th class="col-lg-2">Version</th>
-                                    <th class="col-lg-4">Imported by</th>
-                                </tr>
-                            </thead>
-                            <tbody class="list">
-                            @for(transient <- dependencies._2) {
-                                <tr>
-                                    <td><em>@transient.dependency.group</em></td>
-                                    <td><em>@transient.dependency.artifact</em></td>
-                                    <td><em>@transient.dependency.version</em></td>
-                                    <td><em>@transient.importedBy.group:@transient.importedBy.artifact</em></td>
-                                </tr>
+                                @if(dependencies._2.nonEmpty){
+                                <table id="transitive-dependencies-list" class="table table-condensed table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-lg-4">Transitive Dependencies</th>
+                                            <th>
+                                                <a id="view-dependency-graph-@serviceDependency.version.toString" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, serviceDependency.version.toString)">View Graph</a>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th class="col-lg-4">Group ID</th>
+                                            <th class="col-lg-2">Artefact ID</th>
+                                            <th class="col-lg-2">Version</th>
+                                            <th class="col-lg-4">Imported by</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="list">
+                                    @for(transient <- dependencies._2) {
+                                        <tr>
+                                            <td><em>@transient.dependency.group</em></td>
+                                            <td><em>@transient.dependency.artifact</em></td>
+                                            <td><em>@transient.dependency.version</em></td>
+                                            <td><em>@transient.importedBy.group:@transient.importedBy.artifact</em></td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
                             }
-                            </tbody>
-                        </table>
-                       }
-                    }
+                            }
+                        </div>
+                    </div>
                 </div>
             }
         }
