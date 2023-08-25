@@ -80,34 +80,40 @@
             </div>
         </div>
 
-        @repositoryModules.zipWithIndex.map { case (modules, idx) =>
-            <details>
-                <summary>Version @modules.version.get
-
-                @if(
+        <div class="accordion">
+          @for((modules, idx) <- repositoryModules.zipWithIndex) {
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#module-@idx" aria-expanded="false" aria-controls="module-@idx">
+                    Version @modules.version.get
+                        @if(
                             modules.modules.exists(_.pendingBobbyRules.nonEmpty) ||
-                            modules.allDependencies
-                            .flatMap { dependency => dependency.pendingBobbyRuleViolations }
-                            .toSet.nonEmpty
-                ) {
-                    <span id="bobby-violation-pending-badge" class="environment-badge bobby-violation-pending-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule pending" style="
-                        float: right;
-                    "></span>
-                }
-                @if(
-                    modules.modules.exists(_.activeBobbyRules.nonEmpty) ||
-                    modules.allDependencies
-                            .flatMap { dependency => dependency.activeBobbyRuleViolations }
-                            .toSet.nonEmpty
-                ) {
-                    <span id="bobby-violation-active-badge" class="environment-badge bobby-violation-active-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule violated" style="
-                        float: right;
-                    "></span>
-                }
-                </summary>
-                @modulesPartial(modules, displayBuildInfo = idx == 0, showLegend = false)
-            </details>
-        }
+                                    modules.allDependencies
+                                            .flatMap { dependency => dependency.pendingBobbyRuleViolations }
+                                            .toSet.nonEmpty
+                        ) {
+                            <span id="bobby-violation-pending-badge" class="badge text-bg-warning ms-3" data-toggle="tooltip" data-placement="top" title="Bobby rule pending">
+                                &nbsp;
+                            </span>
+                        }
+                        @if(
+                            modules.modules.exists(_.activeBobbyRules.nonEmpty) ||
+                                    modules.allDependencies
+                                            .flatMap { dependency => dependency.activeBobbyRuleViolations }
+                                            .toSet.nonEmpty
+                        ) {
+                            <span id="bobby-violation-active-badge" class="badge text-bg-danger ms-3" data-toggle="tooltip" data-placement="top" title="Bobby rule violated">
+                                &nbsp;&nbsp;
+                            </span>
+                        }
+                  </button>
+              </h2>
+              <div id="module-@idx" class="accordion-collapse collapse">
+                  @modulesPartial(modules, displayBuildInfo = idx == 0, showLegend = false)
+              </div>
+            </div>
+          }
+        </div>
       </section>
   }
   <div class="alert alert-success" role="alert" id="@library.name">

@@ -23,58 +23,54 @@
   commenterReport        : Option[PrCommenterReport]
 )
 
-<div id="builds">
-    <div class="board">
-        <h3 class="board__heading">Builds</h3>
-        <div class="board__body">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Jenkins Job</th>
-                        @if(repo.repoType == RepoType.Test) {
-                            <th>Description</th>
-                        }
-                        <th>Latest Result</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for(ciLink <- repo.jenkinsJobs.filterNot(_.name.endsWith("-pr-builder")).sortBy(job => (job.jobType, job.name))) {
-                        <tr>
-                            <td>
-                                <a id="link-to-build-@{ciLink.name}" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{ciLink.name}<span class="glyphicon glyphicon-new-window"/></a>
-                            </td>
-                            @if(ciLink.latestBuild.nonEmpty) {
-                                @if(repo.repoType == RepoType.Test) {
-                                    <td>
-                                        @{ciLink.latestBuild.get.description}
-                                    </td>
-                                }
-                                @defining({
-                                    ciLink.latestBuild.get.result match {
-                                        case Some(value) if value.equals("SUCCESS") => "result-success"
-                                        case Some(value) if value.equals("FAILURE") => "result-danger"
-                                        case Some(value) if value.equals("UNSTABLE") => "result-warning"
-                                        case _ => "result-muted"
-                                    }
-                                }) { tagColour =>
-                                    <td>
-                                        <strong class="@tagColour">
-                                        @{ciLink.latestBuild.get.result}
-                                        </strong>
-                                    </td>
-                                }
-                            } else {
-                                <td></td>
-                                <td>
-                                    <strong class="result-muted">
-                                        NOT BUILT
-                                    </strong>
-                                </td>
-                            }
-                        </tr>
+<div id="build" class="card">
+  <div class="card-header">
+    <h4 class="mb-0">Builds</h4>
+  </div>
+  <div class="card-body">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Jenkins Job</th>
+          @if(repo.repoType == RepoType.Test) {
+            <th>Description</th>
+          }
+          <th>Latest Result</th>
+        </tr>
+      </thead>
+        <tbody>
+        @for(ciLink <- repo.jenkinsJobs.filterNot(_.name.endsWith("-pr-builder")).sortBy(job => (job.jobType, job.name))) {
+            <tr>
+                <td>
+                    <a id="link-to-build-@{ciLink.name}" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{ciLink.name}<span class="glyphicon glyphicon-new-window"/></a>
+                </td>
+                @if(ciLink.latestBuild.nonEmpty) {
+                    @if(repo.repoType == RepoType.Test) {
+                        <td>
+                        @{ciLink.latestBuild.get.description}
+                        </td>
                     }
-                </tbody>
-            </table>
-        </div>
-    </div>
+                    @defining({
+                        ciLink.latestBuild.get.result match {
+                            case Some(value) if value.equals("SUCCESS") => "text-bg-success"
+                            case Some(value) if value.equals("FAILURE") => "text-bg-danger"
+                            case Some(value) if value.equals("UNSTABLE") => "text-bg-warning"
+                            case _ => "text-bg-secondary"
+                        }
+                    }) { badgeColour =>
+                        <td>
+                            <span class="badge fs-6 @badgeColour">@{ciLink.latestBuild.get.result}</span>
+                        </td>
+                    }
+                } else {
+                    <td></td>
+                    <td>
+                        <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
+                    </td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+  </div>
 </div>
