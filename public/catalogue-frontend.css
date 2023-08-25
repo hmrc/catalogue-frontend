@@ -121,7 +121,7 @@ th {
     position: absolute;
     overflow-y: scroll;
     height: 29em;
-    z-index: 1000000;
+    z-index: 10000;
     padding-left: 6px;
 }
 
@@ -129,7 +129,7 @@ th {
     position: absolute;
     overflow-y: scroll;
     height: 17em;
-    z-index: 1000000;
+    z-index: 10000;
     width: 100%;
     border-radius: 4px;
 }
@@ -222,6 +222,11 @@ table.sticky-header tbody tr.row-caption td {
     padding-top: 2em !important;
     background: var(--bs-body-bg);
     border-top: none;
+}
+
+table.always-wrap {
+    word-break: break-all;
+    word-wrap: break-word;
 }
 
 .wrw-environment-head{

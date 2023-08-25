@@ -30,35 +30,38 @@
   request : RequestHeader
 )
 
-@standard_layout("Config Warnings") {
-    <header>
-        <h1>
-            Config Warnings
-            <a class="pull-right" role="button" data-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
-                <i class="glyphicon glyphicon-question-sign" style="color: black;"></i>
-            </a>
-        </h1>
-    </header>
+@standard_layout("Config Warnings", active = "explore") {
+    <h1 class="page-heading mt-4">
+        Config Warnings
+        <a class="float-end" role="button" data-bs-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+            <i class="glyphicon glyphicon-question-sign text-black"></i>
+        </a>
+    </h1>
 
-    <div class="collapse" id="helpText">
-      <div class="well">
-        <h2>How to use this page?</h2>
-        <ul>
-          <li>Select a service to see any configuration warnings.</li>
-          <li>Click on the warning to see the value in context in the Config Explorer.</li>
-          <li>The warnings are not necessarily errors, but warrant a review.</li>
-          <li>The warning types currently detected are:</li>
-          <ul>
-            <li><code>NotOverriding</code> Config doesn't appear to override any existing key. This may be legitimate, e.g. dynamic keys. But if often an indicator of an unused key which can be cleaned up or a misspelling. Note, always try to provide a default value in <code>application.conf</code>.</li>
-            <li><code>TypeChange</code> Config value overrides a value with different a type. This will probably break deployment.</li>
-            <li><code>Localhost</code> Use of localhost in value.</li>
-            <li><code>Debug</code> Use of Debug log level. This should only be enabled briefly in Production.</li>
-            <li><code>TestOnlyRoutes</code> Use of test only routes. This should not be enabled in Production</li>
-            <li><code>ReactiveMongoConfig</code> Use of obsolete reactivemongo config. These will have no effect with the official mongo driver.</li>
-            <li><code>Unencrypted</code> Value looks like it should be encrypted</li>
-          </ul>
-        </ul>
-      </div>
+    <div class="collapse mb-3" id="helpText">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="fw-bold">How to use this page?</h4>
+
+                <ul>
+                    <li>Select a service to see any configuration warnings.</li>
+                    <li>Click on the warning to see the value in context in the Config Explorer.</li>
+                    <li>The warnings are not necessarily errors, but warrant a review.</li>
+                    <li>The warning types currently detected are:
+                        <ul>
+                            <li><code>NotOverriding</code> Config doesn't appear to override any existing key. This may be legitimate, e.g. dynamic keys. But if often an indicator of an unused key which can be cleaned up or a misspelling. Note, always try to provide a default value in <code>application.conf</code>.</li>
+                            <li><code>TypeChange</code> Config value overrides a value with different a type. This will probably break deployment.</li>
+                            <li><code>Localhost</code> Use of localhost in value.</li>
+                            <li><code>Debug</code> Use of Debug log level. This should only be enabled briefly in Production.</li>
+                            <li><code>TestOnlyRoutes</code> Use of test only routes. This should not be enabled in Production</li>
+                            <li><code>ReactiveMongoConfig</code> Use of obsolete reactivemongo config. These will have no effect with the official mongo driver.</li>
+                            <li><code>Unencrypted</code> Value looks like it should be encrypted</li>
+                        </ul>
+                    </li>
+                </ul>
+          </div>
+
+        </div>
     </div>
 
     @form_global_errors(form)
@@ -66,18 +69,15 @@
     @helper.form(
         action          =  serviceConfigsRoutes.ServiceConfigsController.configWarningResults(),
         Symbol("id")    -> "form",
-        Symbol("class") -> "form-group"
     ) {
-        <div class="row">
-            <div class="col-xs-2 col-md-1">
-                <label for="service-name">Service</label>
-            </div>
-            <div class="col-xs-8 col-md-4">
+        <div class="row mb-3">
+            <label for="service-name" class="col-1 col-form-label fw-bold">Service</label>
+            <div class="col-4 position-relative">
                 <input class="form-control" id="service-name" type="text" name="serviceName" value='@form("serviceName").value' autocomplete="off" required="required"/>
-                <div id="service-name-matches" class="search-matches-dropdown hide"></div>
+                <div id="service-name-matches" class="search-matches-dropdown d-none" style="padding-right: 24px"></div>
             </div>
-            <div class="col-xs-1 col-md-1">
-                <button id="config-search" class="btn btn-primary" type="submit">Search</button>
+            <div class="col-1">
+                <button id="config-search" class="btn btn-success" type="submit">Search</button>
             </div>
         </div>
     }
@@ -140,14 +140,14 @@
         }
         case Some(configWarnings) => {
             @configWarnings.map { envData =>
-                <ul class="list-unstyled">
+                <ul class="list-unstyled mb-0">
                     <li>
                         <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
-                           data-toggle="popover"
-                           data-trigger="hover"
-                           data-placement="bottom"
-                           data-html="true"
-                           data-content='@popoverContent(envData, env)'>
+                           data-bs-toggle="popover"
+                           data-bs-trigger="hover"
+                           data-bs-placement="bottom"
+                           data-bs-html="true"
+                           data-bs-content='@popoverContent(envData, env)'>
                             @envData.warning
                         </a>
                     </li>
