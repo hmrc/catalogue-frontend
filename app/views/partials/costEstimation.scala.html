@@ -27,9 +27,8 @@
   request: RequestHeader
 )
 
-<div id="cost-estimation">
-    <div class="card">
-        <h5 class="card-header fw-bold">Estimated Cost</h5>
+    <div id="cost-estimation" class="card mb-3">
+        <div class="card-header"><h4 class="mb-0">Estimated Cost</h4></div>
         <div class="card-body">
             <p>
                 @if(linkToCostsPage) {
@@ -52,7 +51,6 @@
             <div id="chart"></div>
         </div>
     </div>
-</div>
 
 <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script @CSPNonce.attr type="text/javascript">

@@ -18,17 +18,19 @@
 
 @(environmentRoute: EnvironmentRoute, isAdmin: Boolean)
 @defining(environmentRoute.routes.size > 3) { collapsable =>
-    <div id="service-urls-section" class="board">
-        <h3 class="board__heading" id="headingRSU">
-            <div class="@if(collapsable){accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseRSU" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseRSU">
+    <div id="service-urls-section" class="card mb-3">
+
+        <div class="card-header"><h4 id="headingRSU" class="m-0">
+            <div class="@if(collapsable) {accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseRSU" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseRSU">
                 @if(isAdmin) { Admin } Frontend Routing Configuration
             </div>
-        </h3>
-        <div class="board__body">
+        </h4></div>
+
+        <div class="card-body">
             <div id="collapseRSU" class="@if(collapsable) {collapse}" aria-labelledby="headingRSU">
-                <ul id="production-urls" class="list list--minimal">
+                <ul id="production-urls" class="list-unstyled">
                 @for((route, index) <- environmentRoute.routes.zipWithIndex) {
-                    <li id="route-rule-@index" class="list-item">
+                    <li id="route-rule-@index">
                         <a target="_blank" rel="noreferrer noopener" title="@route.frontendPath" href="@route.ruleConfigurationUrl">@route.frontendPath<span class="glyphicon glyphicon-new-window"/></a>
                     </li>
                 }
