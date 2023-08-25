@@ -32,44 +32,47 @@
 
 @standard_layout("Deploying Service", "deploying service") {
   <h1>Deploying Service</h1>
-  <ul class="list-unstyled sub-text">
-    <li>
-      <label>Service:</label>
-      @formObject.serviceName
-    </li>
-    <li>
-      <label>Version:</label>
-      @formObject.version.original
-    </li>
-    <li>
-      <label>Environment:</label>
-      @formObject.environment.displayString
-    </li>
-    <li id="status-ul" class="hide">
-      <label>Status:</label>
-      <span id="status-span"></span>
-      <span id="status-spinner">
-        <span class="spinner-border text-secondary" role="status">
-          <span class="sr-only">Loading...</span>
+  <table class="table">
+    <tr>
+      <th style="width: 150px">Service:</th>
+      <td><a target="_blank" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(formObject.serviceName)">@formObject.serviceName<span class="glyphicon glyphicon-new-window"/></a></td>
+    </tr>
+    <tr>
+      <th>Version:</th>
+      <td>@formObject.version.original</td>
+    </tr>
+    <tr>
+      <th>Environment:</th>
+      <td>@formObject.environment.displayString</td>
+    </tr>
+    <tr id="status-row" class="hide">
+      <th>Status:</th>
+      <td>
+        <span id="status-span"></span>
+        <span id="status-spinner">
+          <span class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </span>
         </span>
-      </span>
-    </li>
-    <li id="last-check-ul" class="hide">
-      <label>Last Check:</label>
-      <span id="last-check-span"></span>
-    </li>
-    <li id="jenkins-console-ul" class="hide">
-      Please also use <span id="jenkins-console-span"></span>,
-      <a target="_blank" href="@grafanaLink.url">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
-      and
-      <a target="_blank" href="@kibanaLink.url">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
-      to monitor the deployment.
-    </li>
-  </ul>
+      </td>
+    </tr>
+    <tr id="last-check-row" class="hide">
+      <th>Last Check:</th>
+      <td><span id="last-check-span"></span></td>
+    </tr>
+  </table>
+
+  <p id="jenkins-console-row" class="d-none">
+    Please also use <span id="jenkins-console-span"></span>,
+    <a target="_blank" href="@grafanaLink.url">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
+    and
+    <a target="_blank" href="@kibanaLink.url">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
+    to monitor the deployment.
+  </p>
 
   <script @CSPNonce.attr>
     function displayStatus(status, message) {
-      document.getElementById('status-ul').classList = '';
+      document.getElementById('status-row').classList = '';
       const span    = document.getElementById('status-span');
       const spinner = document.getElementById('status-spinner');
 
@@ -90,11 +93,11 @@
       }
     }
     function displayLastCheck() {
-      document.getElementById('last-check-ul' ).classList  = '';
-      document.getElementById('last-check-span').innerHTML = new Date().toLocaleString();
+      document.getElementById('last-check-row' ).classList  = '';
+      document.getElementById('last-check-span').innerHTML = new Date().toLocaleTimeString();
     }
     function displayLinks(url) {
-      document.getElementById('jenkins-console-ul'  ).classList = '';
+      document.getElementById('jenkins-console-row'  ).classList = '';
       document.getElementById('jenkins-console-span').innerHTML = `<a target="_blank" href="${url}">Jenkins<span class="glyphicon glyphicon-new-window"/></a>`;
     }
   </script>
