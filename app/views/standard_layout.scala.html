@@ -109,7 +109,7 @@
                         <a class="nav-link dropdown-toggle @if(active == "shuttering") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Shuttering
                         </a>
-                        <ul class="dropdown-menu">
+                        <ul id="shuttering-menu" class="dropdown-menu">
                             <li><a id="link-to-shutter-overview-frontend" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Frontend)">Shutter Overview - Frontend</a></li>
                             <li><a id="link-to-shutter-overview-api" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Api)">Shutter Overview - Api</a></li>
                             <li><a id="link-to-shutter-overview-rate" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Rate)">Shutter Overview - Rate</a></li>
@@ -120,7 +120,7 @@
                         <a class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Health
                         </a>
-                        <ul class="dropdown-menu">
+                        <ul id="health-menu" class="dropdown-menu">
                             <li><a id="link-to-health-indicators" class="dropdown-item" href="@healthIndRoutes.HealthIndicatorsController.indicatorsForRepoType()">Health-Indicators</a></li>
                             <li><a id="link-to-platform-initiatives" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
                             <li><hr class="dropdown-divider"></li>
@@ -140,7 +140,7 @@
                         <a class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Explore
                         </a>
-                        <ul class="dropdown-menu">
+                        <ul id="explore-menu" class="dropdown-menu">
                             <li><a id="link-to-dependency-explorer" class="dropdown-item" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
                             <li><a id="link-to-jdk-explorer" class="dropdown-item" href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
                             <li><a id="link-to-sbt-explorer" class="dropdown-item" href="@appRoutes.SBTVersionController.compareAllEnvironments()">SBT Explorer</a></li>

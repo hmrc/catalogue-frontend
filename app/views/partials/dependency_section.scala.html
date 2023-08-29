@@ -35,7 +35,7 @@
 }
 
 @dependencyRow(dependency: Dependency) = {
-    <div class="row @{getColourClass(dependency)}" id="@{dependency.name}-@{rootId}">
+    <div class="row dependency-row @{getColourClass(dependency)}" id="@{dependency.name}-@{rootId}">
         <div class="col-4">
             @if(dependency.importBy.isDefined) {
                 <span class="transitive"></span>

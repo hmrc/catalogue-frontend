@@ -44,7 +44,7 @@
                 }-pane" type="button" role="tab" aria-controls="@slugInfoFlag.asString-pane" >
                     <span>
                         <span>
-                            <h5 class="mb-0">@slugInfoFlag.displayString</h5>
+                            <h5 id="environment-name" class="mb-0">@slugInfoFlag.displayString</h5>
                             @renderVersion(optEnvData.map(_.version))
                         </span>
                         <span>
@@ -69,8 +69,8 @@
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
           @defining(optEnvData.flatMap(_.optTelemetryLinks).getOrElse(Seq.empty)){ telemetryLinks =>
-          <div class="card mb-3">
-                  <div id="@{slugInfoFlag.asString}-telemetry" class="card-header">
+          <div id="@{slugInfoFlag.asString}-telemetry" class="card mb-3">
+                  <div class="card-header">
                       <h3 class="mb-0">Telemetry</h3>
                   </div>
                       <div class="card-body">
