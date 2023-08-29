@@ -170,6 +170,7 @@ class CatalogueController @Inject() (
       commenterReport      <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
       serviceRelationships <- serviceConfigsService.serviceRelationships(serviceName)
+      deploymentConfig     <- serviceConfigsService.deploymentConfig(Environment.Production, serviceName)
       optLatestData        =  optLatestServiceInfo.map { latestServiceInfo =>
                                 SlugInfoFlag.Latest ->
                                   EnvData(
@@ -181,7 +182,7 @@ class CatalogueController @Inject() (
                               }
     } yield Ok(serviceInfoPage(
       serviceName                  = serviceName,
-      repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs),
+      repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = deploymentConfig.flatMap(_.zone)),
       costEstimate                 = costEstimate,
       costEstimateConfig           = serviceCostEstimateConfig,
       repositoryCreationDate       = repositoryDetails.createdDate,

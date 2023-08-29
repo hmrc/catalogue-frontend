@@ -19,7 +19,6 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import play.twirl.api.Html
-@import views.partials.githubBadgeType
 @import partials.PrototypeDetailsPartial
 @import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword
 @import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
@@ -48,7 +47,6 @@ viewMessages           : ViewMessages
         <div>
             <h1>
               Prototype: @prototype.name
-              <span>@githubBadgeType(prototype)</span>
               @if(prototype.isDeprecated) { <span>Deprecated</span> }
               @if(prototype.isArchived) { <span>Archived</span> }
             </h1>

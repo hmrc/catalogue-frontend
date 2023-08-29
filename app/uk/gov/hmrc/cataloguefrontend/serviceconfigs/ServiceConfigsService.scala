@@ -23,6 +23,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -106,6 +107,9 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
 
   def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
     serviceConfigsConnector.getConfigKeys(teamName)
+
+  def deploymentConfig(environment: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[DeploymentConfig]] =
+    serviceConfigsConnector.deploymentConfig(serviceName, environment)
 
   def configSearch(
     teamName       : Option[TeamName]

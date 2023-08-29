@@ -54,7 +54,7 @@ final class ServiceConfigsConnectorSpec
     "return the deployment configuration for a service in an environment" in {
       stubFor(
         get(urlEqualTo("/service-configs/deployment-config/production/some-service"))
-          .willReturn(aResponse().withBody("""{ "slots": 11, "instances": 3 }"""))
+          .willReturn(aResponse().withBody("""{ "slots": 11, "instances": 3, "zone": "protected" }"""))
       )
 
       val deploymentConfig =
@@ -62,7 +62,7 @@ final class ServiceConfigsConnectorSpec
           .deploymentConfig("some-service", Environment.Production)
           .futureValue
 
-      deploymentConfig shouldBe Some(DeploymentConfig(slots = 11, instances = 3))
+      deploymentConfig shouldBe Some(DeploymentConfig(slots = 11, instances = 3, zone = Some("protected")))
     }
 
     "return None when the deployment configuration cannot be found" in {

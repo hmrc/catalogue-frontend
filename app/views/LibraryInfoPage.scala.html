@@ -21,7 +21,6 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
-@import views.partials.githubBadgeType
 
 @this(
   viewMessages       : ViewMessages,
@@ -42,7 +41,6 @@
     <div>
       <h1>
         Library: @library.name
-        <span>@githubBadgeType(library)</span>
         @if(library.isDeprecated) { <span>Deprecated</span> }
         @if(library.isArchived) { <span>Archived</span> }
       </h1>

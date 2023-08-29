@@ -135,7 +135,8 @@ object CostEstimationService {
 
   final case class DeploymentConfig(
     slots    : Int,
-    instances: Int
+    instances: Int,
+    zone     : Option[String] = None,
   ) {
     def totalSlots: TotalSlots =
       TotalSlots(slots * instances)

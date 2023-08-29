@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+@import views.partials.githubBadgeType
 
 @(
   repositoryDetails: GitRepository,
@@ -32,6 +33,22 @@
                     <label>Description: </label>
                     @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
                 </li>
+                <li id="repository-visibility" class="col-xs-6">
+                    <label>Repository visibility: </label>
+                    @githubBadgeType(repositoryDetails)
+                </li>
+                @repositoryDetails.serviceType.map{ serviceType =>
+                    <li id="repository-service-type" class="col-xs-6">
+                        <label>Service type: </label>
+                        @serviceType
+                    </li>
+                }
+                @repositoryDetails.zone.map{ zone =>
+                    <li id="repository-zone" class="col-xs-6">
+                        <label>Zone: </label>
+                        @zone
+                    </li>
+                }
                 <li id="repository-created-at" class="col-xs-6">
                     <label>Created: </label>
                     @repositoryDetails.createdDate.displayFormat

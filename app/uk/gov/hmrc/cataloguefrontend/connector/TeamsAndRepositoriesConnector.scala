@@ -233,7 +233,8 @@ case class GitRepository(
   isDeprecated        : Boolean                  = false,
   teamNames           : Seq[String]              = Nil,
   jenkinsJobs         : Seq[JenkinsJob]          = Seq.empty[JenkinsJob],
-  prototypeName       : Option[String]           = None
+  prototypeName       : Option[String]           = None,
+  zone                : Option[String]           = None,
 ) {
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
@@ -265,6 +266,7 @@ object GitRepository {
     ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Nil)
     ~ (__ \ "jenkinsJobs"       ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
     ~ (__ \ "prototypeName"     ).formatNullable[String]
+    ~ (__ \ "zone"              ).formatNullable[String]
     ) (apply, unlift(unapply))
   }
 }
