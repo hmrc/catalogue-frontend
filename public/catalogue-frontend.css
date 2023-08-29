@@ -45,9 +45,12 @@
 }
 
 .card {
+    /*--bs-card-border-radius: 10;*/
     --bs-body-color: #6f777b;
     --bs-body-color-rgb: 111, 119, 123;
 }
+
+
 
 .card-header {
     --bs-heading-color: #191717;
@@ -264,4 +267,33 @@ table.always-wrap {
 
 .form-check-inline dl, .form-check-inline dt, .form-check-inline dd {
     display: inline-block;
+}
+
+/* From the Dependencies By Environment Partial */
+.environment-badge {
+    border-radius: 21%;
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    margin-top: 2px;
+    margin-right: 4px;
+}
+
+.shutter-badge {
+    background: repeating-linear-gradient(-45deg, #6d6d6d, #6d6d6d 2px, #d0a039a3 3px, #d0a039a3 5px);
+    border: 1px solid #666;
+}
+
+.no-badge {
+    border: none;
+}
+
+.bobby-violation-active-badge {
+    background-color: #ce312f;
+    border: 1px solid #ce312f;
+}
+
+.bobby-violation-pending-badge {
+    background-color: orange;
+    border: 1px solid orange;
 }

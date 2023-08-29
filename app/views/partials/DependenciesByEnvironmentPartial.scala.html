@@ -30,41 +30,49 @@
   envDatas   : Map[SlugInfoFlag, EnvData]
 )(implicit messages: Messages)
 
-<ul id="environmentTabs" class="nav nav-tabs environment-tabs" role="tablist">
-  @for(slugInfoFlag <- SlugInfoFlag.values) {
-    @defining(envDatas.get(slugInfoFlag)){ optEnvData =>
-      <li class="nav-item @if(slugInfoFlag == SlugInfoFlag.Latest) { active }">
-        <a id="@{slugInfoFlag.asString}-tab" class="nav-link" data-toggle="tab" href="#@{slugInfoFlag.asString}-pane" role="tab" aria-controls="@slugInfoFlag.asString" aria-selected="false">
-            <div class="board">
-                <div class="board__heading">
-                    <h4 class="environment-name">@slugInfoFlag.displayString</h4>
-                    @renderVersion(optEnvData.map(_.version))
-                </div>
-                <div class="board__body">
-                    @renderShutterStatusBadge(optEnvData.flatMap(_.optShutterState))
-                    @defining(optEnvData.toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)){ dependencies =>
-                      @renderActiveBobbyRuleViolationBadge(slugInfoFlag, dependencies)
-                      @renderPendingBobbyRuleViolationBadge(slugInfoFlag, dependencies)
-                    }
-                </div>
-            </div>
-        </a>
-      </li>
-    }
-  }
-</ul>
 
-<div id="environmentPanes" class="tab-content environment-panes">
+<div class="card"><div class="card-header">
+    <ul id="environmentTabs" class="nav nav-tabs card-header-tabs" role="tablist">
+        @for(slugInfoFlag <- SlugInfoFlag.values) {
+            @defining(envDatas.get(slugInfoFlag)) { optEnvData =>
+                <li class="nav-item" role="presentation">
+                    <button id="@{
+                        slugInfoFlag.asString
+                    }-tab" class="nav-link @if(slugInfoFlag == SlugInfoFlag.Latest) { active" aria-selected="true" } else {
+                    " aria-selected="false" } data-bs-toggle="tab" data-bs-target="#@{
+                    slugInfoFlag.asString
+                }-pane" type="button" role="tab" aria-controls="@slugInfoFlag.asString-pane" >
+                    <span>
+                        <span>
+                            <h4 class="mb-0">@slugInfoFlag.displayString</h4>
+                            @renderVersion(optEnvData.map(_.version))
+                        </span>
+                        <span>
+                            @renderShutterStatusBadge(optEnvData.flatMap(_.optShutterState))
+                            @defining(optEnvData.toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)) { dependencies =>
+                                @renderActiveBobbyRuleViolationBadge(slugInfoFlag, dependencies)
+                                @renderPendingBobbyRuleViolationBadge(slugInfoFlag, dependencies)
+                            }
+                        </span>
+                    </span>
+                    </button>
+                </li>
+            }
+        }
+    </ul>
+</div>
+
+<div id="environmentPanes" class="card-body tab-content">
   @for(slugInfoFlag <- SlugInfoFlag.values) {
     @defining(envDatas.get(slugInfoFlag)){ optEnvData: Option[EnvData] =>
-      <div id="@{slugInfoFlag.asString}-pane" class="tab-pane @if(slugInfoFlag == SlugInfoFlag.Latest) { active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab">
+      <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == SlugInfoFlag.Latest) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
           @defining(optEnvData.flatMap(_.optTelemetryLinks).getOrElse(Seq.empty)){ telemetryLinks =>
           <div class="row">
               <div class="col-md-12">
                   <div id="@{slugInfoFlag.asString}-telemetry" class="board">
-                      <h3 class="board__heading">Telemetry</h3>
+                      <h3 class="mb-0">Telemetry</h3>
                       <div class="board__body">
                           <ul class="list list--minimal">
                             @if(telemetryLinks.isEmpty) {
@@ -154,6 +162,7 @@
     }
   }
 </div>
+</div>
 
 @renderVersion(optVersion: Option[Version]) = {
   @optVersion match {
@@ -164,26 +173,26 @@
 
 @renderShutterStatusBadge(optShutterState: Option[ShutterState]) = {
   @if(optShutterState.exists(_.status.value == ShutterStatusValue.Shuttered)) {
-    <div class="environment-badge shutter-badge" data-toggle="tooltip" data-placement="top" title="@messages("shuttered.badge")"></div>
+    <span class="environment-badge shutter-badge" data-toggle="tooltip" data-placement="top" title="@messages("shuttered.badge")"></span>
   } else {
-    <div class="environment-badge no-badge"></div>
+    <span class="environment-badge no-badge"></span>
   }
 }
 
 @renderActiveBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
   @if(dependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
-    <div id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-active-badge"
-         data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.active.badge")"></div>
+    <span id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-active-badge"
+         data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.active.badge")"></span>
   } else {
-    <div id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></div>
+    <span id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></span>
   }
 }
 
 @renderPendingBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
   @if(dependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
-    <div id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-pending-badge"
-         data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.pending.badge")"></div>
+    <span id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-pending-badge"
+         data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.pending.badge")"></span>
   } else {
-    <div id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></div>
+    <span id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></span>
   }
 }
