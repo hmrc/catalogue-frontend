@@ -33,11 +33,11 @@
                 <label class="fw-bold">Description: </label>
                 @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
             </div>
-            <div class="col-6">
+            <div id="repository-created-at" class="col-6">
                 <label class="fw-bold">Created: </label>
                 @repositoryDetails.createdDate.displayFormat
             </div>
-            <div class="col-6">
+            <div id="repository-last-active" class="col-6">
                 <label class="fw-bold">Last Active: </label>
                 @repositoryDetails.lastActiveDate.displayFormat
             </div>

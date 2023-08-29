@@ -18,7 +18,7 @@
 
 @(environmentRoute: EnvironmentRoute, isAdmin: Boolean)
 @defining(environmentRoute.routes.size > 3) { collapsable =>
-    <div id="service-urls-section" class="card mb-3">
+    <div id="service-urls-section" class="card">
 
         <div class="card-header"><h4 id="headingRSU" class="m-0">
             <div class="@if(collapsable) {accordion-toggle collapsed}" data-toggle="@if(collapsable) {collapse}" data-target="#collapseRSU" aria-expanded="@if(collapsable) {false} else {true}" aria-controls="collapseRSU">

@@ -44,7 +44,7 @@
                 }-pane" type="button" role="tab" aria-controls="@slugInfoFlag.asString-pane" >
                     <span>
                         <span>
-                            <h4 class="mb-0">@slugInfoFlag.displayString</h4>
+                            <h5 class="mb-0">@slugInfoFlag.displayString</h5>
                             @renderVersion(optEnvData.map(_.version))
                         </span>
                         <span>
@@ -164,8 +164,8 @@
 
 @renderVersion(optVersion: Option[Version]) = {
   @optVersion match {
-    case Some(version) => { <p class="small">@version</p> }
-    case None          => { <p class="small">&nbsp;</p> <!-- needed to ensure each tab nav-item has the same height --> }
+    case Some(version) => { <p class="small mb-1">@version</p> }
+    case None          => { <p class="small mb-1">&nbsp;</p> <!-- needed to ensure each tab nav-item has the same height --> }
   }
 }
 
