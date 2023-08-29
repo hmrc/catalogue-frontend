@@ -135,6 +135,7 @@ th {
     z-index: 10000;
     width: 100%;
     border-radius: 4px;
+    padding-top: 5px;
 }
 
 .search-match-list {

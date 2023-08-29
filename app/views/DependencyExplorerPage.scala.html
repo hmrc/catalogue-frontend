@@ -39,6 +39,8 @@
   messagesProvider: MessagesProvider
 )
 
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
 @standard_layout("Dependency Explorer", active = "explore") {
     <h1 class="page-heading mt-4" id="search-service-header">Dependency Explorer</h1>
     <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
@@ -49,85 +51,87 @@
 
         <form id="search-by-dependency-form" action="@appRoutes.DependencyExplorerController.search().url" method="get">
             <div class="form-group">
-                <div class="row" style="margin-bottom: 20px;">
+                <div class="row">
                     <div class="col-md-7">
                         <dl>
-                          <dt>
-                            <label for="group-artefact-search">Group:Artefact</label>
-                          </dt>
-                          <dd>
-                            <input id="group-artefact-search" class="form-control" type="text" value="@DependencyExplorerController.groupArtefactFromForm(form)" autocomplete="off">
-                            <div id="group-artefact-matches" class="dependency-search-dropdown hide"></div>
+                          <dt><label class="form-label" for="group-artefact-search">Group:Artefact</label></dt>
+                          <dd class="position-relative">
+                            <input id="group-artefact-search" class="form-control" type="text" value="@DependencyExplorerController.groupArtefactFromForm(form)" autocomplete="off" />
+                            <div id="group-artefact-matches" class="search-matches-dropdown d-none"></div>
                           </dd>
                         </dl>
-                        <input id="group" name="group" value='@form("group").value' type="hidden">
-                        <input id="artefact" name="artefact" value='@form("artefact").value' type="hidden">
+                        <input id="group" name="group" value='@form("group").value' type="hidden" />
+                        <input id="artefact" name="artefact" value='@form("artefact").value' type="hidden" />
                     </div>
                     <div class="col-md-5">
                         <dl>
                           <dt>
-                            <label for="lbValue">Version Range</label>
+                            <label class="form-label" for="lbValue">Version Range</label>
                           </dt>
                           <dd>
-                            <div class="input-group row">
-                              <div class="col-5 col-md-3 p-0">
-                                  <input class="form-control border-end-0 rounded-end-0" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)">
+                            <div class="row">
+                              <div class="col-3 col-md-3 pe-0">
+                                  <input class="form-control border-end-0 rounded-end-0" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)" />
                               </div>
-                              <div class="col-2 col-md-2 p-0">
+                              <div class="col-2 col-md-2 ps-0">
                                   <select id="lbInclusive" class="form-select rounded-start-0">
                                       <option value="false" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
                                       <option value="true" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
                                   </select>
                               </div>
-                              <div class="col-2 col-md-2">
+                              <div class="col-2 col-md-2 p-0">
                                 <input class="form-control form-control-plaintext text-center" type="text" value="version" tabindex="-1" readonly>
                               </div>
-                              <div class="col-2 col-md-2 p-0">
+                              <div class="col-2 col-md-2 pe-0">
                                   <select id="ubInclusive" class="form-select border-end-0 rounded-end-0">
                                       <option value="false" @if(versionRange.upperBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
                                       <option value="true" @if(versionRange.upperBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
                                   </select>
                               </div>
-                              <div class="col-3 col-md-3 p-0">
+                              <div class="col-3 col-md-3 ps-0">
                                   <input class="form-control rounded-start-0" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
                               </div>
                             </div>
                           </dd>
+                        </dl>
                     </div>
-                    <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value">
-                    <input type="hidden" id="asCsv" name="asCsv" value="false">
+                    <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value" />
+                    <input type="hidden" id="asCsv" name="asCsv" value="false" />
                 </div>
                 <div class="row">
                     <div class="col-md-3">
                         @helper.select(
-                            field               = form("team"),
-                            options             = teams.map(t => (t.asString, t.asString)),
-                            Symbol("_default") -> "All teams",
-                            Symbol("_label")   -> "Team",
-                            Symbol("class")    -> "form-control"
+                            field                 = form("team"),
+                            options               = teams.map(t => (t.asString, t.asString)),
+                            Symbol("_default")    -> "All teams",
+                            Symbol("_label")      -> "Team",
+                            Symbol("_labelClass") -> "form-label",
+                            Symbol("class")       -> "form-control"
                         )
                     </div>
                     <div class="col-md-2">
                         @helper.select(
-                            field             = form("flag"),
-                            options           = flags.map(f => (f.asString, f.displayString)),
-                            Symbol("_label") -> "Flag",
-                            Symbol("class")  -> "form-control"
+                            field                 =  form("flag"),
+                            options               =  flags.map(f => (f.asString, f.displayString)),
+                            Symbol("_label")      -> "Flag",
+                            Symbol("_labelClass") -> "form-label",
+                            Symbol("class")       -> "form-control"
                         )
                     </div>
                     <div class="col-md-2">
                         @helper.select(
-                            field               = form("scope"),
-                            options             = scopes.map(s => (s.asString, s.displayString)),
-                            Symbol("_label")   -> "Scope",
-                            Symbol("class")    -> "form-control",
-                            Symbol("style")    -> "height: 115px",
-                            Symbol("multiple") -> None
+                            field                 =  form("scope"),
+                            options               =  scopes.map(s => (s.asString, s.displayString)),
+                            Symbol("_label")      -> "Scope",
+                            Symbol("_labelClass") -> "form-label",
+                            Symbol("class")       -> "form-control",
+                            Symbol("style")       -> "height: 115px",
+                            Symbol("multiple")    -> None
                         )
                     </div>
                 </div>
                 <div>
-                    <button id="search-button" class="btn btn-primary" type="submit">Search</button>
+                    <button id="search-button" class="btn btn-success" type="submit">Search</button>
                     <input type="button" id="export-button-1" class="btn btn-outline-secondary" value="Export as CSV"/>
                 </div>
             </div>
@@ -142,7 +146,7 @@
                 <ul class="list"/>
             }
             case Some(searchResults) => {
-                <p>Found @searchResults.size results</p>
+                <p class="mt-3">Found @searchResults.size results</p>
 
                 <div id="chart_div" align="center"></div>
 
