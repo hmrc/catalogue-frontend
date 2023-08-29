@@ -66,22 +66,18 @@
                 @ProfileType.values.map(profileTypeTab)
             </ul>
             <div class="tab-content">
-                <div class="tab-pane show active in" role="tabpanel">
-                    <div class="row">
-                        <div class="col-md-2">
-                            <select class="form-select" id="profile_name" name="profile_name">
-                            @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
-                                @options.map(selectOption(form("profile_name").value))
-                            }
-                            </select>
-                        </div>
-                    </div>
+                <div class="tab-pane show active in mb-4" role="tabpanel">
+                    <select class="form-select float-start mb-4" id="profile_name" name="profile_name" style="width: 200px">
+                        @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
+                            @options.map(selectOption(form("profile_name").value))
+                        }
+                    </select>
+                    <select class="form-select float-end mb-4" id="view_mode" name="view_mode" style="width: 200px">
+                        <option @if(viewMode.asString == "versions") {selected="selected"} value="versions">Versions</option>
+                        <option @if(viewMode.asString == "instances"){selected="selected"} value="instances">Instances</option>
+                    </select>
                 </div>
             </div>
-            <select class="form-select" id="view_mode" name="view_mode" style="float: right; width: 120px;">
-                <option @if(viewMode.asString == "versions") {selected="selected"} value="versions">versions</option>
-                <option @if(viewMode.asString == "instances"){selected="selected"} value="instances">instances</option>
-            </select>
         </form>
         <table class="table table-striped sticky-header" id="service-list">
             <thead>
