@@ -71,25 +71,25 @@
                           <dd>
                             <div class="input-group row">
                               <div class="col-5 col-md-3 p-0">
-                                  <input class="form-control" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)">
+                                  <input class="form-control border-end-0 rounded-end-0" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)">
                               </div>
                               <div class="col-2 col-md-2 p-0">
-                                  <select id="lbInclusive" class="form-select">
+                                  <select id="lbInclusive" class="form-select rounded-start-0">
                                       <option value="false" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
                                       <option value="true" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
                                   </select>
                               </div>
                               <div class="col-2 col-md-2">
-                                <input class="form-control form-control-plaintext" type="text" value="version" tabindex="-1" readonly>
+                                <input class="form-control form-control-plaintext text-center" type="text" value="version" tabindex="-1" readonly>
                               </div>
                               <div class="col-2 col-md-2 p-0">
-                                  <select id="ubInclusive" class="form-select">
+                                  <select id="ubInclusive" class="form-select border-end-0 rounded-end-0">
                                       <option value="false" @if(versionRange.upperBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
                                       <option value="true" @if(versionRange.upperBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
                                   </select>
                               </div>
                               <div class="col-3 col-md-3 p-0">
-                                  <input class="form-control" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
+                                  <input class="form-control rounded-start-0" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
                               </div>
                             </div>
                           </dd>
@@ -128,7 +128,7 @@
                 </div>
                 <div>
                     <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-                    <input type="button" id="export-button-1" class="btn btn-default" value="Export as CSV"/>
+                    <input type="button" id="export-button-1" class="btn btn-outline-secondary" value="Export as CSV"/>
                 </div>
             </div>
         </form>

@@ -34,38 +34,42 @@
   request : RequestHeader
 )
 
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
 @standard_layout("Search Config", active = "explore") {
     <h1 class="page-heading mt-4">
         Search Config
-        <a class="float-end" role="button" data-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
-            <i class="glyphicon glyphicon-question-sign" style="color: black;"></i>
+        <a class="float-end" role="button" data-bs-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+            <i class="glyphicon glyphicon-question-sign text-black"></i>
         </a>
     </h1>
 
-    <div class="collapse" id="helpText">
-        <div class="well">
-            <h2>How to use this page?</h2>
-            <ul>
-                <li>Search the latest deployed configs in each environment by:
-                    <ul>
-                        <li><code>Config Key</code></li>
-                        <li><code>Config Value</code></li>
-                        <li>Or both</li>
-                    </ul>
-                </li>
-                <li><code>Config Key</code> can be autocompleted once 3 characters or more have been entered</li>
-                <li>Autocompletion terms are updated on <code>Team</code> change. Select this first to see more relevant suggestions</li>
-                <li><code>Config Value</code> comparison can be altered using the drop down on the right hand-side of the textbox</li>
-                <li>By default searches are <strong>case insensitive</strong>. This can be turned off by clicking <code>Ignore Case</code></li>
-                <li>Searches returning too many results will fail. Refine your search to reduce the number of matches</li>
-                <li>Search Results:
-                    <ul>
-                        <li>Hover over a value to see where it was last defined</li>
-                        <li>Click on a value to see the hierarchical eviction in <code>Config Explorer</code></li>
-                    </ul>
-                </li>
-                <li>The results can be <code>Exported as CSV</code> using the button below</li>
-            </ul>
+    <div class="collapse mb-3" id="helpText">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="fw-bold">How to use this page?</h4>
+                <ul>
+                    <li>Search the latest deployed configs in each environment by:
+                        <ul>
+                            <li><code>Config Key</code></li>
+                            <li><code>Config Value</code></li>
+                            <li>Or both</li>
+                        </ul>
+                    </li>
+                    <li><code>Config Key</code> can be autocompleted once 3 characters or more have been entered</li>
+                    <li>Autocompletion terms are updated on <code>Team</code> change. Select this first to see more relevant suggestions</li>
+                    <li><code>Config Value</code> comparison can be altered using the drop down on the right hand-side of the textbox</li>
+                    <li>By default searches are <strong>case insensitive</strong>. This can be turned off by clicking <code>Ignore Case</code></li>
+                    <li>Searches returning too many results will fail. Refine your search to reduce the number of matches</li>
+                    <li>Search Results:
+                        <ul>
+                            <li>Hover over a value to see where it was last defined</li>
+                            <li>Click on a value to see the hierarchical eviction in <code>Config Explorer</code></li>
+                        </ul>
+                    </li>
+                    <li>The results can be <code>Exported as CSV</code> using the button below</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -79,37 +83,32 @@
         <div class="row">
             <div class="col-md-4">
                 @helper.select(
-                    field              = form("teamName"),
-                    options            = allTeams.map(t => t.name.asString -> t.name.asString),
-                    Symbol("_default") -> "All",
-                    Symbol("_label")   -> "Team",
-                    Symbol("id")       -> "team-filter",
-                    Symbol("class")    -> "form-control",
-                    Symbol("title")    -> "On change updates 'Config Key' autocomplete"
+                    field                 =  form("teamName"),
+                    options               =  allTeams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Team",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "team-filter",
+                    Symbol("class")       -> "form-select",
+                    Symbol("title")       -> "On change updates 'Config Key' autocomplete"
                 )
             </div>
             <div class="col-md-8">
                 <dl>
                     <dt>
-                        <label for="config-key">Config Key</label>
+                        <label clas="form-label" for="config-key">Config Key</label>
                         <div class="float-end">
-                          <div>
                             @helper.checkbox(
-                                field            =  form("configKeyIgnoreCase"),
-                                Symbol("_class") -> "form-check form-check-inline",
-                                Symbol("_label") -> "Ignore Case",
+                                field                 =  form("configKeyIgnoreCase"),
+                                Symbol("_class")      -> "form-check form-check-inline m-0",
+                                Symbol("_label")      -> "Ignore Case",
+                                Symbol("_labelClass") -> "form-check-label",
                             )
-                            <div class="form-check-reverse form-check-inline">
-                                <label class="form-check-label" for="configKeyIgnoreCase">Ignore Case</label>
-                                <input class="form-check-input" type="checkbox" id="configKeyIgnoreCase" @if(form("configKeyIgnoreCase").value){checked="checked"}>
-                              </div>
-
-                          </div>
                         </div>
                     </dt>
                     <dd>
                         <input class="form-control" id="config-key" type="text" name="configKey" value='@form("configKey").value' autocomplete="off" />
-                        <div id="config-search-matches" class="search-matches-dropdown hide"></div>
+                        <div id="config-search-matches" class="search-matches-dropdown d-none"></div>
                     </dd>
                 </dl>
             </div>
@@ -122,7 +121,7 @@
                         @for(env <-  Environment.values) {
                             <div class="checkbox-group">
                                 <input name="showEnvironments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.showEnvironments.contains(env)) {checked} />
-                                <label for="@{env.asString}-checkbox">@env.displayString</label>
+                                <label class="form-check-label" for="@{env.asString}-checkbox">@env.displayString</label>
                             </div>
                         }
                     </dd>
@@ -130,31 +129,34 @@
             </div>
             <div class="col-md-2">
                 @helper.select(
-                    field              = form("serviceType"),
-                    options            = ServiceType.values.toSeq.map(st => st.asString -> st.displayString),
-                    Symbol("_default") -> "All",
-                    Symbol("_label")   -> "Service Type",
-                    Symbol("class")    -> "form-control"
+                    field                 = form("serviceType"),
+                    options               = ServiceType.values.toSeq.map(st => st.asString -> st.displayString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Service Type",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("class")       -> "form-select"
                 )
             </div>
             <div class="col-md-8">
                 <dl class="clearfix">
                     <dt>
-                        <label for="config-value">Config Value</label>
+                        <label class="form-label" for="config-value">Config Value</label>
                         <div class="input-group-inline float-end">
                             @helper.checkbox(
-                                field            =  form("configValueIgnoreCase"),
-                                Symbol("_label") -> "Ignore Case",
+                                field                 =  form("configValueIgnoreCase"),
+                                Symbol("_class")      -> "form-check form-check-inline m-0",
+                                Symbol("_label")      -> "Ignore Case",
+                                Symbol("_labelClass") -> "form-check-label"
                             )
                         </div>
                     </dt>
                     <dd>
-                        <div class="input-group-multi">
-                            <div class="col-xs-9 col-md-9">
-                                <input class="form-control input-group-start" id="config-value" name="configValue" type="text" value='@form("configValue").value'>
+                        <div class="row">
+                            <div class="col-xs-9 col-md-9 pe-0">
+                                <input class="form-control border-end-0 rounded-end-0" id="config-value" name="configValue" type="text" value='@form("configValue").value'>
                             </div>
-                            <div class="col-xs-3 col-md-3">
-                                <select class="form-control input-group-end" name="valueFilterType">
+                            <div class="col-xs-3 col-md-3 ps-0">
+                                <select class="form-select rounded-start-0" name="valueFilterType">
                                     @for(x <- FormValueFilterType.values) {
                                         <option value="@x.asString" @if(form("valueFilterType").value.contains(x.asString)) {selected}>@x.displayString</option>
                                     }
@@ -166,23 +168,24 @@
             </div>
         </div>
 
-        <button id="config-search" class="btn btn-primary" type="submit">Search</button>
+        <button id="config-search" class="btn btn-success" type="submit">Search</button>
         <input type="hidden" id="teamChange" name="teamChange" value="false" />
         <input type="hidden" id="asCsv" name="asCsv" value="false" />
-        <input type="button" id="export-as-csv-btn" class="btn btn-default" value="Export as CSV"/>
+        <input type="button" id="export-as-csv-btn" class="btn btn-outline-secondary" value="Export as CSV"/>
 
         <div class="dl-horizontal float-end">
             @helper.inputRadioGroup(
-                field              =  form("groupBy"),
-                options            =  GroupBy.values.map(t => t.asString -> t.displayString),
-                Symbol("_label")   -> "Group By",
-                Symbol("id")       -> "group-by",
-                Symbol("class")    -> ""
+                field                 =  form("groupBy"),
+                options               =  GroupBy.values.map(t => t.asString -> t.displayString),
+                Symbol("_class")       -> "form-check form-check-inline m-0",
+                Symbol("_label")      -> "Group By",
+                Symbol("_labelClass") -> "form-check-label",
+                Symbol("id")          -> "group-by"
             )
         </div>
 
         @* Use a textarea to handle HTML encoding of values such as quotes *@
-        <textarea class="hidden" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
+        <textarea class="d-none" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
     }
 
 
@@ -191,7 +194,7 @@
     } else if(groupedByKey.exists(_.isEmpty) || groupedByService.exists(_.isEmpty)) {
         <p>No results found.</p>
     } else {
-        <table id="search-results" class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+        <table id="search-results" class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
             <thead>
                 <tr>
                     <th>@if(groupedByKey.isDefined) {Key} else {Service}</th>
@@ -203,7 +206,7 @@
             <tbody>
                 @groupedByKey.map { res =>
                     @for((configKey, configByService) <- res) {
-                        <tr class="@if(configByService.size > 1) {sticky-row-caption} else {row-caption} ">
+                        <tr class="@if(configByService.size > 1) {sticky-row-caption} else {row-caption}">
                             <td colspan="@(form.get.showEnvironments.size + 1)">
                                 Results for <code>@configKey.asString</code>
                             </td>

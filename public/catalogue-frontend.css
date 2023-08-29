@@ -213,15 +213,15 @@ table.sticky-header tbody tr.sticky-row-caption td {
     padding-top: 2em !important;
     position: sticky;
     top: 10px;
-    background: var(--bs-body-bg);
     border-top: none;
     z-index: 1;
+    --bs-table-bg-type: var(--bs-body-bg);
 }
 
 table.sticky-header tbody tr.row-caption td {
     padding-top: 2em !important;
-    background: var(--bs-body-bg);
     border-top: none;
+    --bs-table-bg-type: var(--bs-body-bg);
 }
 
 table.always-wrap {
@@ -260,4 +260,8 @@ table.always-wrap {
 
 .cursor-pointer {
     cursor: pointer;
+}
+
+.form-check-inline dl, .form-check-inline dt, .form-check-inline dd {
+    display: inline-block;
 }
