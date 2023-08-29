@@ -136,9 +136,17 @@
                             <li><a id="link-to-pr-commenter-recommendations" class="dropdown-item" href="@prcommenterRoutes.PrCommenterController.recommendations()">PR-Commenter Recommendations</a></li>
                         </ul>
                     </li>
+                    @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2023-10-01T00:00:00Z"))) { isNew =>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Explore
+                            @* TODO remove once date has elapsed *@
+                            @if(isNew) {
+                                <span style="color: violet;">
+                                    *
+                                    <span class="visually-hidden">new pages in dropdown</span>
+                                </span>
+                            }
                         </a>
                         <ul id="explore-menu" class="dropdown-menu">
                             <li><a id="link-to-dependency-explorer" class="dropdown-item" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
@@ -146,16 +154,28 @@
                             <li><a id="link-to-sbt-explorer" class="dropdown-item" href="@appRoutes.SBTVersionController.compareAllEnvironments()">SBT Explorer</a></li>
                             <li><a id="link-to-default-branch-names" class="dropdown-item" href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
                             <li><a id="link-to-search-by-url" class="dropdown-item" href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
-                            <li><a id="link-to-search-config" class="dropdown-item" href="@serviceConfigsRoutes.ServiceConfigsController.searchLanding()">Search Config</a></li>
+                            <li>
+                                <a id="link-to-search-config" class="dropdown-item" href="@serviceConfigsRoutes.ServiceConfigsController.searchLanding()">
+                                    Search Config
+                                    @* TODO remove once date has elapsed *@
+                                    @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
+                                </a>
+                            </li>
+
                             @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
                                 <li><a id="link-to-search-config" class="dropdown-item" href="@serviceConfigsRoutes.ServiceConfigsController.configWarningLanding()">Config Warnings</a></li>
                             }
                             <li><a id="link-to-deployment-timelines" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
-                            @if(CatalogueFrontendSwitches.showUsers.isEnabled) {
-                                <li><a id="link-to-users-list-page" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.allUsers()">Users</a></li>
-                            }
+                            <li>
+                                <a id="link-to-users-list-page" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.allUsers()">
+                                    Users
+                                    @* TODO remove once date has elapsed *@
+                                    @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
+                                </a>
+                            </li>
                         </ul>
                     </li>
+                    }
                 </ul>
 
                 <ul id="catalogue-search-bar" class="nav navbar-nav ms-auto d-none">
