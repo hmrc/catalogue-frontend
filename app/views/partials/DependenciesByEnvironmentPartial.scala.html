@@ -69,12 +69,12 @@
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
           @defining(optEnvData.flatMap(_.optTelemetryLinks).getOrElse(Seq.empty)){ telemetryLinks =>
-          <div class="row">
-              <div class="col-md-12">
-                  <div id="@{slugInfoFlag.asString}-telemetry" class="board">
+          <div class="card mb-3">
+                  <div id="@{slugInfoFlag.asString}-telemetry" class="card-header">
                       <h3 class="mb-0">Telemetry</h3>
-                      <div class="board__body">
-                          <ul class="list list--minimal">
+                  </div>
+                      <div class="card-body">
+                          <ul class="list-unstyled mb-0">
                             @if(telemetryLinks.isEmpty) {
                                <li class="list-item">
                                   Not deployed
@@ -90,8 +90,6 @@
                             }
                           </ul>
                       </div>
-                  </div>
-              </div>
           </div>
           }
         }
