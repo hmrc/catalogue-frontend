@@ -106,7 +106,7 @@
                         <a id="link-to-deployments" class="nav-link @if(active == "deployments") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(Production)">Deployments</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle @if(active == "shuttering") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a id="shuttering-dropdown" class="nav-link dropdown-toggle @if(active == "shuttering") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Shuttering
                         </a>
                         <ul id="shuttering-menu" class="dropdown-menu">
@@ -117,7 +117,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a id="health-dropdown" class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Health
                         </a>
                         <ul id="health-menu" class="dropdown-menu">
@@ -138,7 +138,7 @@
                     </li>
                     @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2023-10-01T00:00:00Z"))) { isNew =>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a id="explore-dropdown" class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Explore
                             @* TODO remove once date has elapsed *@
                             @if(isNew) {
