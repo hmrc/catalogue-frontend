@@ -30,40 +30,49 @@ class RouteRulesService @Inject() (
 
   def serviceRoutes(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRoutes] =
     for {
-      a <- routeRulesConnector.frontendRoutes(serviceName)
-      b <- routeRulesConnector.adminFrontendRoutes(serviceName)
-    } yield ServiceRoutes(a ++ b)
+      frontendRoutes <- routeRulesConnector.frontendRoutes(serviceName)
+      adminRoutes    <- routeRulesConnector.adminFrontendRoutes(serviceName)
+    } yield ServiceRoutes(frontendRoutes ++ adminRoutes)
 }
 
 @Singleton
 object RouteRulesService {
   case class ServiceRoutes(environmentRoutes: Seq[EnvironmentRoute]) {
-    private[service] val referenceEnvironmentRoutes: Option[EnvironmentRoute] =
+    private val normalisedEvironmentRoutes = // this should probably be a Map[Environment, Route] - we would need to move isAdmin onto the Route to remove EnvironmentRoute
       environmentRoutes
-        .find(environmentRoute => environmentRoute.environment == "production")
-        .orElse(environmentRoutes.headOption)
+        .groupBy(_.environment)
+        .map { case (env, routes) => EnvironmentRoute(
+                                       environment = env
+                                     , routes      = routes.flatMap(_.routes)
+                                     )
+        }.toSeq
+
+    private[service] val referenceEnvironmentRoutes: Option[EnvironmentRoute] =
+      normalisedEvironmentRoutes
+        .find(_.environment == "production")
+        .orElse(normalisedEvironmentRoutes.headOption)
         .orElse(None)
 
     private def hasDifferentRoutesToReferenceEnvironment(environmentRoute: EnvironmentRoute, referenceEnvironmentRoute: EnvironmentRoute) =
       environmentRoute.routes
-        .map(route => route.frontendPath)
-        .diff(referenceEnvironmentRoute.routes.map(route => route.frontendPath))
+        .map(_.frontendPath)
+        .diff(referenceEnvironmentRoute.routes.map(_.frontendPath))
         .nonEmpty
 
     private def filterRoutesToDifferences(environmentRoute: EnvironmentRoute, referenceEnvironmentRoute: EnvironmentRoute) =
       environmentRoute.routes
         .filter(r =>
           environmentRoute.routes
-            .map(route => route.frontendPath)
-            .diff(referenceEnvironmentRoute.routes.map(route => route.frontendPath))
+            .map(_.frontendPath)
+            .diff(referenceEnvironmentRoute.routes.map(_.frontendPath))
             .contains(r.frontendPath)
         )
 
     val inconsistentRoutes: Seq[EnvironmentRoute] =
       referenceEnvironmentRoutes
         .map { refEnvRoutes =>
-          environmentRoutes
-            .filter(environmentRoute => environmentRoute.environment != refEnvRoutes.environment)
+          normalisedEvironmentRoutes
+            .filter(_.environment != refEnvRoutes.environment)
             .filter(environmentRoute => hasDifferentRoutesToReferenceEnvironment(environmentRoute, refEnvRoutes))
             .map(environmentRoute => environmentRoute.copy(routes = filterRoutesToDifferences(environmentRoute, refEnvRoutes)))
         }

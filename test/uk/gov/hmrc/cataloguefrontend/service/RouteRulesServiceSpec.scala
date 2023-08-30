@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
   "Service" should {
-    "No result for inconsistency check when no environment routes" in {
+    "return no result for inconsistency check when no environment routes" in {
       val inconsistentRoutes = ServiceRoutes(Nil).inconsistentRoutes
       inconsistentRoutes.nonEmpty shouldBe false
     }
@@ -77,7 +77,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
       ServiceRoutes(environmentRoutes).inconsistentRoutes.nonEmpty shouldBe false
     }
 
-    "Is consistent when no routes" in {
+    "be consistent when no routes" in {
       val environmentRoutes = Seq(
         EnvironmentRoute("production", Nil),
         EnvironmentRoute("qa", Nil)
@@ -86,7 +86,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
       ServiceRoutes(environmentRoutes).inconsistentRoutes.nonEmpty shouldBe false
     }
 
-    "Production environment route is default reference route" in {
+    "return Production environment route as default reference route" in {
       val environmentRoutes = Seq(
         EnvironmentRoute("production", Seq(Route("frontendPath", "ruleConfigurationUrl"))),
         EnvironmentRoute("qa", Seq(Route("inconsistent", "ruleConfigurationUrl")))
@@ -95,7 +95,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
       ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe true
     }
 
-    "Next environment route is reference when no production" in {
+    "return next environment route as reference when no production" in {
       val environmentRoutes = Seq(
         EnvironmentRoute("development", Seq(Route("frontendPath", "ruleConfigurationUrl"))),
         EnvironmentRoute("qa", Seq(Route("inconsistent", "ruleConfigurationUrl")))
@@ -104,10 +104,89 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
       ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe true
     }
 
-    "No reference environment when no environment routes" in {
+    "return no reference environment when no environment routes" in {
       val environmentRoutes: Seq[EnvironmentRoute] = Nil
 
       ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe false
+    }
+
+    "handle Admin and Frontend routes" in {
+      val adminRoutes = Seq(
+        EnvironmentRoute(
+          environment = "qa",
+          routes      = Seq(Route(
+                          frontendPath         = "/fh-admin-page",
+                          ruleConfigurationUrl = "",
+                          isRegex              = false
+                        )),
+          isAdmin     = true
+        ),
+        EnvironmentRoute(
+          environment = "production",
+          routes      = Seq(Route(
+                          frontendPath         = "/fh-admin-page",
+                          ruleConfigurationUrl = "",
+                          isRegex              = false
+                        )),
+          isAdmin     = true
+        ),
+        EnvironmentRoute(
+          environment = "staging",
+          routes      = Seq(Route(
+                          frontendPath         = "/fh-admin-page",
+                          ruleConfigurationUrl = "",
+                          isRegex              = false
+                        )),
+          isAdmin     = true
+        ))
+
+      val frontendRoutes = Seq(
+        EnvironmentRoute(
+          environment = "qa",
+          routes      = Seq(Route(
+                          frontendPath         = "/fhdds",
+                          ruleConfigurationUrl = "",
+                          isRegex              = false
+                       )),
+          isAdmin     = false
+        ),
+        EnvironmentRoute(
+          environment = "staging",
+          routes      = Seq(Route(
+                          frontendPath         = "/fhdds",
+                          ruleConfigurationUrl = "",
+                          isRegex              = false
+                        )),
+        ),
+        EnvironmentRoute(
+        environment = "production",
+          routes    = Seq(Route(
+                        frontendPath         = "/fhdds",
+                        ruleConfigurationUrl = "",
+                        isRegex              = false
+                      )),
+        ),
+        EnvironmentRoute(
+        environment = "integration",
+          routes    = Seq(Route(
+                        frontendPath         = "/fhdds",
+                        ruleConfigurationUrl = "",
+                        isRegex              = false
+                      )),
+        ),
+        EnvironmentRoute(
+        environment = "development",
+          routes    = Seq(Route(
+                        frontendPath         = "/fhdds",
+                        ruleConfigurationUrl = "",
+                        isRegex              = false
+                      ))
+          )
+      )
+
+      val inconsistentRoutes = ServiceRoutes(adminRoutes ++ frontendRoutes).inconsistentRoutes
+      // we only show additional routes in lower envs, not missing routes (currently..)
+      inconsistentRoutes.nonEmpty shouldBe false
     }
   }
 }
