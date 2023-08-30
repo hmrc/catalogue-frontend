@@ -159,7 +159,6 @@
 
 @popoverContent(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
     <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
-    <strong>Value:</strong> @warning.value.displayString
-    <br/><br/>
-    <div>@warning.warning: @ServiceConfigsService.warningDescription(warning.warning)</div>
+    <div><strong>Value:</strong> @warning.value.displayString</div>
+    <div><strong>@warning.warning:</strong> @ServiceConfigsService.warningDescription(warning.warning)</div>
 }

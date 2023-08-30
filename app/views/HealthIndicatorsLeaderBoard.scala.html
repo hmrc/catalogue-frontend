@@ -86,8 +86,7 @@
                         <td id="row_@{i}_column_1">
                             <ul class="list-unstyled">
                                 @if(indicator.owningTeams.size > 10) {
-                                    <li title="@{indicator.owningTeams.map(_.asString).mkString(", ")}"
-                                    data-toggle="tooltip" data-placement="bottom">Multiple</li>
+                                    <li data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@{indicator.owningTeams.map(_.asString).mkString(", ")}">Multiple</li>
                                 } else {
                                     @for(team <- indicator.owningTeams) {
                                         <li><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(team)">@{team.asString}</a></li>

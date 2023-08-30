@@ -91,7 +91,7 @@
                                             .flatMap { dependency => dependency.pendingBobbyRuleViolations }
                                             .toSet.nonEmpty
                                 ) {
-                                    <span id="bobby-violation-pending-badge" class="environment-badge bobby-violation-pending-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule pending"></span>
+                                    <span id="bobby-violation-pending-badge" class="environment-badge bobby-violation-pending-badge" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Bobby rule pending"></span>
                                 } else {
                                     <span class="environment-badge no-badge"></span>
                                 }
@@ -101,7 +101,7 @@
                                             .flatMap { dependency => dependency.activeBobbyRuleViolations }
                                             .toSet.nonEmpty
                                 ) {
-                                    <span id="bobby-violation-active-badge" class="environment-badge bobby-violation-active-badge" data-toggle="tooltip" data-placement="top" title="Bobby rule violated"></span>
+                                    <span id="bobby-violation-active-badge" class="environment-badge bobby-violation-active-badge" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Bobby rule violated"></span>
                                 } else {
                                     <span class="environment-badge no-badge"></span>
                                 }

@@ -324,11 +324,11 @@
     <li>
       <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
          target="_blank"
-         data-toggle="popover"
-         data-trigger="hover"
-         data-placement="bottom"
-         data-html="true"
-         data-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
+         data-bs-toggle="popover"
+         data-bs-trigger="hover"
+         data-bs-placement="bottom"
+         data-bs-html="true"
+         data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
         @configSourceValue.displayString
       </a>
     </li>
@@ -344,11 +344,11 @@
     <li>
       <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
          target="_blank"
-         data-toggle="popover"
-         data-trigger="hover"
-         data-placement="bottom"
-         data-html="true"
-         data-content='@popoverConfigWarning(configWarning, env)'>
+         data-bs-toggle="popover"
+         data-bs-trigger="hover"
+         data-bs-placement="bottom"
+         data-bs-html="true"
+         data-bs-content='@popoverConfigWarning(configWarning, env)'>
           @configWarning.warning
       </a>
     </li>

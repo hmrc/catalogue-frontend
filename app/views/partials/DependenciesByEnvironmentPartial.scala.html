@@ -171,7 +171,7 @@
 
 @renderShutterStatusBadge(optShutterState: Option[ShutterState]) = {
   @if(optShutterState.exists(_.status.value == ShutterStatusValue.Shuttered)) {
-    <span class="environment-badge shutter-badge" data-toggle="tooltip" data-placement="top" title="@messages("shuttered.badge")"></span>
+    <span class="environment-badge shutter-badge" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("shuttered.badge")"></span>
   } else {
     <span class="environment-badge no-badge"></span>
   }
@@ -180,7 +180,7 @@
 @renderActiveBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
   @if(dependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
     <span id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-active-badge"
-         data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.active.badge")"></span>
+          data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("bobbyrules.active.badge")"></span>
   } else {
     <span id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></span>
   }
@@ -189,7 +189,7 @@
 @renderPendingBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
   @if(dependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
     <span id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-pending-badge"
-         data-toggle="tooltip" data-placement="top" title="@messages("bobbyrules.pending.badge")"></span>
+          data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("bobbyrules.pending.badge")"></span>
   } else {
     <span id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></span>
   }

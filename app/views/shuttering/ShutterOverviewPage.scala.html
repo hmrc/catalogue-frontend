@@ -152,9 +152,9 @@
               @if(state.lastEvent.isDefined) {
                   <a id="event-history-link-@{state.serviceName}-@{state.environment.asString}"
                   class="medium-glyphicon glyphicon glyphicon-list"
-                  data-toggle="tooltip"
-                  data-placement="right"
-                  title="@messages("shutter-event.history")"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="right"
+                  data-bs-title="@messages("shutter-event.history")"
                   href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
               } else {
                   @Html("No events")

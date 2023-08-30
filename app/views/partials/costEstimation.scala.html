@@ -42,10 +42,11 @@
 
             <p>This is based on a usage of @serviceCostEstimate.totalSlots.asInt slots across all environments, where
                each slot is estimated to cost
-               <em data-toggle="tooltip"
-                     title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
-                            @costEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
-                            services across all environments" style="border-bottom: dotted 1px">
+               <em data-bs-toggle="tooltip"
+                   data-bs-placement="bottom"
+                   data-bs-title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
+                                  @costEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
+                                  services across all environments" style="border-bottom: dotted 1px">
                    @formatGbp(costEstimateConfig.slotCostPerYear) per year
                </em>.</p>
             <div id="chart"></div>

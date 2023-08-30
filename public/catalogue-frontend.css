@@ -26,16 +26,6 @@
 
 }
 
-.accordion {
-    --bs-accordion-border-color: transparent;
-    --bs-accordion-active-color: var(--bs-body-color);
-    --bs-accordion-btn-focus-border-color: transparent;
-    --bs-accordion-btn-focus-box-shadow: transparent;
-    --bs-accordion-active-bg: transparent;
-    --bs-accordion-btn-icon-transform: rotate(0deg);
-    --bs-accordion-btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-chevron-right' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-}
-
 .container {
     max-width: 1570px;
 }

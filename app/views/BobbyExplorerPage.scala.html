@@ -82,16 +82,21 @@
   }
 }
 
-
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
     <tr id="rule-@rule.id" class="bobby-rule">
         <td>@rule.group:@rule.artefact</td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
-                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-right: 0; text-align: right">@lbDescr</td>
-                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range">x</td>
-                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-left: 0; text-align: left">@upDescr</td>
+                    <td class="bobby-range" style="white-space: nowrap; padding-right: 0; text-align: right">
+                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">@lbDescr</span>
+                    </td>
+                    <td class="bobby-range">
+                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">x</span>
+                    </td>
+                    <td class="bobby-range" style="white-space: nowrap; padding-left: 0; text-align: left">
+                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">upDescr</span>
+                    </td>
                 }
                 case None => {
                     <td colspan="3">@rule.range.range</td>
