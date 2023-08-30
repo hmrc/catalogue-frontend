@@ -172,7 +172,7 @@
                                     <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the ${src.serviceName} outage page for ${env.asString}.").getOrElse(""))</p>
                                 </div>
                                 <div class="col-4 my-auto">
-                                    <a id="revertToTemplate" class="btn btn-outline-dark">
+                                    <a id="revertToTemplate" class="btn btn-outline-secondary">
                                         Revert to template
                                     </a>
                                     <script @CSPNonce.attr>
@@ -191,7 +191,7 @@
 
                 <div class="row">
                     <div class="col-1">
-                        <a id="back-btn" href="@back" class="btn btn-outline-dark">
+                        <a id="back-btn" href="@back" class="btn btn-outline-secondary">
                             <span class="glyphicon glyphicon-chevron-left"></span>
                             Back
                         </a>
