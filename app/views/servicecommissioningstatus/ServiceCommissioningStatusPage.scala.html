@@ -117,12 +117,12 @@
             </a>
         }
         case Left(missing) if missing.addLink.isEmpty => {
-            <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
+            <span style="width: 32px" class="glyphicon glyphicon-minus text-secondary"></span>
         }
         case Left(missing) => {
-            <a id="@id-add-link" href="@missing.addLink" target="_blank" rel="noopener noreferrer">
-                <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
-                <span class="archived">add</span>
+            <a id="@id-add-link" class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" href="@missing.addLink" target="_blank" rel="noopener noreferrer">
+                <span style="width: 32px" class="glyphicon glyphicon-minus text-secondary"></span>
+                <span class="text-secondary">add</span>
             </a>
         }
     }
