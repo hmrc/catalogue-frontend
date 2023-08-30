@@ -67,10 +67,11 @@
 
     <table class="table table-striped sticky-header" id="users-table">
       <thead id="user-table-headings">
-        <tr style="height: 50px;">
-          <td colspan="6">
-            <span class="position-absolute start-50 translate-middle" id="maximum-records" style="color: #6f777b;">Only displaying @maxRows records - please refine your search</span>
+        <tr>
+          <td colspan="6" class="text-center">
+            Only displaying @maxRows records - please refine your search
           </td>
+        </tr>
         <tr>
           <th class="col-lg-2"><button role="button" id="username" data-sort="username" class="sort no-border fw-bold">Username</button></th>
           <th class="col-lg-2"><button role="button" id="givenName" data-sort="given-name" class="sort no-border fw-bold">Given Name</button></th>
@@ -98,9 +99,9 @@
 
           <td class="github" id="row@{i}_name">
             @user.githubUsername match {
-              case Some(url) => {
-                  <a class="github-username" href="https://github.com/@user.githubUsername" target="_blank" rel="noreferrer noopener">
-                    @user.githubUsername
+              case Some(username) => {
+                  <a class="github-username" href="https://github.com/@username" target="_blank" rel="noreferrer noopener">
+                    @username
                     <span class="glyphicon glyphicon-new-window"/>
                   </a>
               }
