@@ -70,13 +70,17 @@ class ServiceConfigsConnector @Inject() (
   }
 
   def deploymentConfig(
-    service    : String,
-    environment: Environment
-  )(implicit hc: HeaderCarrier): Future[Option[DeploymentConfig]] = {
+    service    : Option[String] = None,
+    environment: Option[Environment] = None,
+  )(implicit hc: HeaderCarrier): Future[Seq[DeploymentConfig]] = {
     implicit val dcr = DeploymentConfig.reads
+    val qsParams = Seq(
+      environment.map("environment" -> _.asString),
+      service.map("serviceName" -> _),
+    ).flatten.toMap
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config/${environment.asString}/$service")
-      .execute[Option[DeploymentConfig]]
+      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$qsParams")
+      .execute[Seq[DeploymentConfig]]
   }
 
   def allDeploymentConfig()(implicit hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfig]] = {

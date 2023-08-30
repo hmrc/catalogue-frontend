@@ -22,7 +22,7 @@ import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, ConfigSourceValue, KeyName, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -53,25 +53,30 @@ final class ServiceConfigsConnectorSpec
   "deploymentConfig" should {
     "return the deployment configuration for a service in an environment" in {
       stubFor(
-        get(urlEqualTo("/service-configs/deployment-config/production/some-service"))
-          .willReturn(aResponse().withBody("""{ "slots": 11, "instances": 3, "zone": "protected" }"""))
+        get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service"))
+          .willReturn(aResponse().withBody("""[{ "slots": 11, "instances": 3, "environment": "production", "zone": "protected" }]"""))
       )
 
       val deploymentConfig =
         serviceConfigsConnector
-          .deploymentConfig("some-service", Environment.Production)
+          .deploymentConfig(Some("some-service"), Some(Environment.Production))
           .futureValue
 
-      deploymentConfig shouldBe Some(DeploymentConfig(slots = 11, instances = 3, zone = Some("protected")))
+      deploymentConfig.headOption shouldBe Some(DeploymentConfig(DeploymentSize(slots = 11, instances = 3), environment = Environment.Production, zone = "protected"))
     }
 
     "return None when the deployment configuration cannot be found" in {
+      stubFor(
+        get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service"))
+          .willReturn(aResponse().withBody("""[]"""))
+      )
+      
       val deploymentConfig =
         serviceConfigsConnector
-          .deploymentConfig("some-service", Environment.Production)
+          .deploymentConfig(Some("some-service"), Some(Environment.Production))
           .futureValue
 
-      deploymentConfig shouldBe None
+      deploymentConfig.headOption shouldBe None
     }
   }
 

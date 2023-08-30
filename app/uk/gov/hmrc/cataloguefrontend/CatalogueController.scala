@@ -32,7 +32,6 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
@@ -129,10 +128,14 @@ class CatalogueController @Inject() (
 
     }
 
-  private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[String]] = 
-    Environment.values.reverse.foldLeftM[Future, Option[DeploymentConfig]](None){(deploymentConfigOpt, environment) =>
-      deploymentConfigOpt.fold(serviceConfigsService.deploymentConfig(environment, serviceName))(dc => Future.successful(Option(dc)))
-    }.map(_.flatMap(_.zone))
+  private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[String]] =
+    serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
+      .map{deploymentConfigs =>
+        val zones = deploymentConfigs.map(_.zone).distinct
+        if (zones.size > 1)
+          logger.warn(s"Service $serviceName is hosted on different zones: ${zones.mkString(", ")}")
+        zones.headOption
+      }
 
   private def renderServicePage(
     serviceName            : String,

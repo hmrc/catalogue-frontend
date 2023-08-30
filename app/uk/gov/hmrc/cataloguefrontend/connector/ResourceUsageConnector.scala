@@ -20,7 +20,7 @@ import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, __}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentSize
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -55,19 +55,19 @@ class ResourceUsageConnector @Inject() (
         (scala.collection.immutable.TreeMap.empty[Instant, List[RawResourceUsage]] ++ res.groupBy(_.date))
           .toList
           .foldLeft(List.empty[ResourceUsage]) { case (acc, (date, resourceUsages)) =>
-            val values: Map[Environment, DeploymentConfig] = acc.lastOption match {
+            val values: Map[Environment, DeploymentSize] = acc.lastOption match {
               case Some(previous) =>
                 Environment.values.map(env =>
                   env -> resourceUsages
-                           .find(_.environment == env).map(ru => DeploymentConfig(slots = ru.slots, instances = ru.instances))
+                           .find(_.environment == env).map(_.deploymentSize)
                            .orElse(previous.values.get(env))
-                           .getOrElse(DeploymentConfig.empty)
+                           .getOrElse(DeploymentSize.empty)
                 ).toMap
               case None =>
                 Environment.values.map(env =>
                   env -> resourceUsages
-                           .find(_.environment == env).map(ru => DeploymentConfig(slots = ru.slots, instances = ru.instances))
-                           .getOrElse(DeploymentConfig.empty)
+                           .find(_.environment == env).map(_.deploymentSize)
+                           .getOrElse(DeploymentSize.empty)
                 ).toMap
             }
             acc :+ ResourceUsage(date, serviceName, values)
@@ -89,18 +89,39 @@ object ResourceUsageConnector {
   final case class ResourceUsage(
     date       : Instant,
     serviceName: String,
-    values     : Map[Environment, DeploymentConfig]
+    values     : Map[Environment, DeploymentSize]
   )
 
   final case class RawResourceUsage(
     date       : Instant,
     serviceName: String,
     environment: Environment,
-    slots      : Int,
-    instances  : Int
+    deploymentSize: DeploymentSize,
   )
 
   object RawResourceUsage {
+    def apply(
+      date       : Instant,
+      serviceName: String,
+      environment: Environment,
+      slots      : Int,
+      instances  : Int,
+    ): RawResourceUsage = RawResourceUsage(
+      date,
+      serviceName,
+      environment,
+      DeploymentSize(slots, instances)
+    )
+
+    def unapply(rawResourceUsage: RawResourceUsage): Option[(Instant, String, Environment, Int, Int)] = 
+      Option((
+        rawResourceUsage.date,
+        rawResourceUsage.serviceName,
+        rawResourceUsage.environment,
+        rawResourceUsage.deploymentSize.slots,
+        rawResourceUsage.deploymentSize.instances,
+      ))
+
     val format: Format[RawResourceUsage] =
       ( (__ \ "date"        ).format[Instant]
       ~ (__ \ "serviceName" ).format[String]

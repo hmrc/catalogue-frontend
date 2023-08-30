@@ -300,6 +300,7 @@ object JsonData {
       ]
     """
 
+  val deploymentConfigsService1 = """[{"instances": 1, "slots": 1, "environment": "production", "zone": "protected"}]"""
 
   val dependenciesWithRuleViolation =
   """{

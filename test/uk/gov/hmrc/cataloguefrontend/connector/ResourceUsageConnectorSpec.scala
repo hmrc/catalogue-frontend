@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentSize
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -87,36 +87,36 @@ final class ResourceUsageConnectorSpec
             date        = Instant.parse("2022-01-01T00:00:00.0Z"),
             serviceName = "some-service",
             values      = Map(
-                            Environment.Integration  -> DeploymentConfig.empty,
-                            Environment.Development  -> DeploymentConfig.empty,
-                            Environment.ExternalTest -> DeploymentConfig.empty,
-                            Environment.Staging      -> DeploymentConfig.empty,
-                            Environment.Production   -> DeploymentConfig(1, 2),
-                            Environment.QA           -> DeploymentConfig.empty
+                            Environment.Integration  -> DeploymentSize.empty,
+                            Environment.Development  -> DeploymentSize.empty,
+                            Environment.ExternalTest -> DeploymentSize.empty,
+                            Environment.Staging      -> DeploymentSize.empty,
+                            Environment.Production   -> DeploymentSize(1, 2),
+                            Environment.QA           -> DeploymentSize.empty
                           )
           ),
           ResourceUsage(
             date        = Instant.parse("2022-01-02T00:00:00.0Z"),
             serviceName = "some-service",
             values      = Map(
-                            Environment.Integration  -> DeploymentConfig.empty,
-                            Environment.Development  -> DeploymentConfig.empty,
-                            Environment.ExternalTest -> DeploymentConfig.empty,
-                            Environment.Staging      -> DeploymentConfig.empty,
-                            Environment.Production   -> DeploymentConfig(1, 2),
-                            Environment.QA           -> DeploymentConfig.empty
+                            Environment.Integration  -> DeploymentSize.empty,
+                            Environment.Development  -> DeploymentSize.empty,
+                            Environment.ExternalTest -> DeploymentSize.empty,
+                            Environment.Staging      -> DeploymentSize.empty,
+                            Environment.Production   -> DeploymentSize(1, 2),
+                            Environment.QA           -> DeploymentSize.empty
                           )
           ),
           ResourceUsage(
             date        = Instant.parse("2022-01-02T00:00:00.0Z"),
             serviceName = "some-service",
             values      = Map(
-                            Environment.Integration  -> DeploymentConfig.empty,
-                            Environment.Development  -> DeploymentConfig.empty,
-                            Environment.ExternalTest -> DeploymentConfig.empty,
-                            Environment.Staging      -> DeploymentConfig.empty,
-                            Environment.Production   -> DeploymentConfig(5, 6),
-                            Environment.QA           -> DeploymentConfig(3, 4)
+                            Environment.Integration  -> DeploymentSize.empty,
+                            Environment.Development  -> DeploymentSize.empty,
+                            Environment.ExternalTest -> DeploymentSize.empty,
+                            Environment.Staging      -> DeploymentSize.empty,
+                            Environment.QA           -> DeploymentSize(3, 4),
+                            Environment.Production   -> DeploymentSize(5, 6),
                           )
           )
           ,
@@ -124,12 +124,12 @@ final class ResourceUsageConnectorSpec
             date        = today,
             serviceName = "some-service",
             values      = Map(
-                            Environment.Integration  -> DeploymentConfig.empty,
-                            Environment.Development  -> DeploymentConfig.empty,
-                            Environment.ExternalTest -> DeploymentConfig.empty,
-                            Environment.Staging      -> DeploymentConfig.empty,
-                            Environment.Production   -> DeploymentConfig(5, 6),
-                            Environment.QA           -> DeploymentConfig(3, 4)
+                            Environment.Integration  -> DeploymentSize.empty,
+                            Environment.Development  -> DeploymentSize.empty,
+                            Environment.ExternalTest -> DeploymentSize.empty,
+                            Environment.Staging      -> DeploymentSize.empty,
+                            Environment.Production   -> DeploymentSize(5, 6),
+                            Environment.QA           -> DeploymentSize(3, 4),
                           )
           )
         )
