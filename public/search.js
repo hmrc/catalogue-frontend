@@ -124,14 +124,14 @@ function disableArrowKeys(e) {
 function highlight(pos) {
     let item = document.getElementById("search-item-" + pos)
     if (item != null) {
-        item.parentElement.parentElement.classList.add("search-item-selected")
+        item.parentElement.parentElement.classList.add("search-match-selected")
     }
 }
 
 function unhighlight(pos) {
     let item = document.getElementById("search-item-" + pos)
     if (item != null) {
-        item.parentElement.parentElement.classList.remove("search-item-selected")
+        item.parentElement.parentElement.classList.remove("search-match-selected")
     }
 }
 
