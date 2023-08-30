@@ -55,7 +55,7 @@
                         You are about to <b id="shutterStatus">@valueFor(step1Out.status)</b> the following frontends in <b>@env</b>:
                     </div>
                     <div class="card-body">
-                        <ul class="mb-0">
+                        <ul id="service-list" class="mb-0">
                             @step1Out.serviceNames.map { serviceName =>
                                 <li>@serviceName</li>
                             }
