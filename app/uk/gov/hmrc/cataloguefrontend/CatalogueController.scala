@@ -32,6 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
@@ -128,6 +129,11 @@ class CatalogueController @Inject() (
 
     }
 
+  private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[String]] = 
+    Environment.values.reverse.foldLeftM[Future, Option[DeploymentConfig]](None){(deploymentConfigOpt, environment) =>
+      deploymentConfigOpt.fold(serviceConfigsService.deploymentConfig(environment, serviceName))(dc => Future.successful(Option(dc)))
+    }.map(_.flatMap(_.zone))
+
   private def renderServicePage(
     serviceName            : String,
     repositoryDetails      : GitRepository,
@@ -170,7 +176,7 @@ class CatalogueController @Inject() (
       commenterReport      <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
       serviceRelationships <- serviceConfigsService.serviceRelationships(serviceName)
-      deploymentConfig     <- serviceConfigsService.deploymentConfig(Environment.Production, serviceName)
+      zone                 <- retrieveZone(serviceName)
       optLatestData        =  optLatestServiceInfo.map { latestServiceInfo =>
                                 SlugInfoFlag.Latest ->
                                   EnvData(
@@ -182,7 +188,7 @@ class CatalogueController @Inject() (
                               }
     } yield Ok(serviceInfoPage(
       serviceName                  = serviceName,
-      repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = deploymentConfig.flatMap(_.zone)),
+      repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = zone),
       costEstimate                 = costEstimate,
       costEstimateConfig           = serviceCostEstimateConfig,
       repositoryCreationDate       = repositoryDetails.createdDate,
