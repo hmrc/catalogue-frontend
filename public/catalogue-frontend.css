@@ -306,3 +306,11 @@ table.always-wrap {
     background-color: var(--bs-warning);
     border: 1px solid var(--bs-warning);
 }
+
+.text-dimgrey {
+    color: dimgrey;
+}
+
+.link-dimgrey {
+    text-decoration-color: dimgrey;
+}

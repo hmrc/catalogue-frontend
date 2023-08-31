@@ -44,4 +44,7 @@ object CatalogueFrontendSwitches {
 
   def showUsers: FeatureSwitch =
     FeatureSwitch.forName("show-users")
+
+  def showCreateRepo: FeatureSwitch =
+    FeatureSwitch.forName("show-create-repo")
 }
