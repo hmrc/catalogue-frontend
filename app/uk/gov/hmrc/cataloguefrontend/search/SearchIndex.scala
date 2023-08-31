@@ -31,6 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
 import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
 import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
+import uk.gov.hmrc.cataloguefrontend.createarepository.{routes => createRepoRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
@@ -80,6 +81,12 @@ class SearchIndex @Inject()(
         List(
           SearchTerm("page",     "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,    1.0f),
         )
+    } else Nil
+  } ++ {
+    if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showCreateRepo.isEnabled) {
+      List(
+        SearchTerm("page", "create repository", createRepoRoutes.CreateARepositoryController.createARepositoryLanding().url, 1.0f)
+      )
     } else Nil
   }
 
