@@ -18,6 +18,8 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Team}
 @import views.html.helper.select
 @import views.html.partials.RepoSearchResultsPage
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.createarepository.{routes => repoRoutes}
 
 @this(
   viewMessages         : ViewMessages,
@@ -35,7 +37,14 @@
 @implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
 @standard_layout("Repositories", "repositories") {
-    <h1 class="page-heading mt-4">Repositories</h1>
+    @if(CatalogueFrontendSwitches.showCreateRepo.isEnabled) {
+        <h1 class="page-heading mt-4">
+            Repositories
+            <a class="float-end btn btn-success" href="@repoRoutes.CreateARepositoryController.createARepositoryLanding()">Create</a>
+        </h1>
+    } else {
+        <h1 class="page-heading mt-4">Repositories</h1>
+    }
 
     @if(form.hasErrors) {
         <div class="alert alert-danger" role="alert">

@@ -69,7 +69,7 @@
 
 @getColourClass(dependency: Dependency) = @{
     dependency.versionState match {
-        case Some(VersionState.NewVersionAvailable )  => "text-info"
+        case Some(VersionState.NewVersionAvailable )  => "text-dimgrey"
         case Some(_: VersionState.BobbyRuleViolated)  => "text-danger"
         case Some(_: VersionState.BobbyRulePending )  => "text-warning"
         case _                                        => "text-success"
@@ -78,7 +78,7 @@
 
 @getLinkColourClass(dependency: Dependency) = @{
     dependency.versionState match {
-        case Some(VersionState.NewVersionAvailable )  => "link-info"
+        case Some(VersionState.NewVersionAvailable )  => "link-dimgrey"
         case Some(_: VersionState.BobbyRuleViolated)  => "link-danger"
         case Some(_: VersionState.BobbyRulePending )  => "link-warning"
         case _                                        => "link-success"
