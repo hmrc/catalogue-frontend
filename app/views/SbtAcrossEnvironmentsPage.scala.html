@@ -29,21 +29,19 @@
   request     : RequestHeader
 )
 
-@standard_layout("SBT Versions") {
-    <header>
-        <h1 id="sbt-header">SBT Versions Across Environments</h1>
+@standard_layout("SBT Versions", active = "explore") {
+    <h1 id="sbt-header" class="page-heading mt-4">SBT Versions Across Environments</h1>
 
-        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
-    </header>
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     <div id="chart_div"></div>
 
     <hr>
     <form id="form" method="get">
-        <div class="form-group row">
+        <div class="row">
             <div class="col-md-3">
-                <label for="teamName">Team:</label>
-                <select class="form-control" id="teamName" name="teamName">
+                <label for="teamName" class="form-label fw-bold">Team:</label>
+                <select class="form-select" id="teamName" name="teamName">
                     <option value="" @{if(selectedTeam.isEmpty) "selected"}>All</option>
                     @teams.map { team =>
                         <option value="@{team.name.asString}" @{if(selectedTeam.contains(team)) "selected"}>
@@ -53,8 +51,8 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label>Graph Mode:</label>
-                <div><button type="button" id="chart-toggle" class="btn btn-default">show absolute</button></div>
+                <label class="form-label fw-bold">Graph Mode:</label>
+                <div><button type="button" id="chart-toggle" class="btn btn-outline-secondary">show absolute</button></div>
             </div>
         </div>
     </form>

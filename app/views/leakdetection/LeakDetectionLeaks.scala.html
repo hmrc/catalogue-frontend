@@ -23,39 +23,55 @@
 )
 
 <div id="leaks-list">
-    <div class="text-right">
-        <a id="expandLink" class="hand-pointer">expand all</a>
-        <a id="collapseLink" class="hand-pointer hidden">collapse all</a>
+    <div class="text-end">
+        <a id="expandLink" class="cursor-pointer">expand all</a>
+        <a id="collapseLink" class="cursor-pointer d-none">collapse all</a>
     </div>
 
     <table class="table table-striped">
         <thead>
             <tr>
                 <th/>
-                <th class="col-xs-7"><button class="sort no-border" data-sort="rule">Rule</button></th>
-                <th class="col-xs-2"><button class="sort no-border" data-sort="scope">Scope</button></th>
-                <th class="col-xs-2"><button class="sort no-border" data-sort="priority">Priority</button></th>
-                <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="total">@countHeader</button></th>
+                <th class="col-xs-7"><button class="sort no-border fw-bold" data-sort="rule">Rule</button></th>
+                <th class="col-xs-2"><button class="sort no-border fw-bold" data-sort="scope">Scope</button></th>
+                <th class="col-xs-2"><button class="sort no-border fw-bold" data-sort="priority">Priority</button></th>
+                <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="total">@countHeader</button></th>
             </tr>
         </thead>
         <tbody class="list">
-        @leaks.map(leakDetectionRuleViolations)
+            @leaks.map(leakDetectionRuleViolations)
         </tbody>
     </table>
 </div>
 <script @CSPNonce.attr>
-    var options = {valueNames: ['rule', 'scope', 'priority', 'total']};
+    let options = {valueNames: ['rule', 'scope', 'priority', 'total']};
     leaksList = new List('leaks-list', options);
 
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach( function(el) {
+        let chevron = el.querySelector('.glyphicon');
+        let collapseId = el.getAttribute('data-bs-target');
+        let collapse = document.querySelector(collapseId);
+
+        collapse.addEventListener('hidden.bs.collapse', () => {
+            chevron.classList.remove('glyphicon-chevron-down');
+            chevron.classList.add('glyphicon-chevron-right');
+        });
+
+        collapse.addEventListener('show.bs.collapse', () => {
+            chevron.classList.remove('glyphicon-chevron-right');
+            chevron.classList.add('glyphicon-chevron-down');
+        });
+    });
+
     function expandAll() {
-        $("#expandLink").addClass('hidden')
-        $("#collapseLink").removeClass('hidden')
+        $("#expandLink").addClass('d-none')
+        $("#collapseLink").removeClass('d-none')
         $(".multi-collapse").collapse('show')
     }
 
     function collapseAll() {
-        $("#expandLink").removeClass('hidden')
-        $("#collapseLink").addClass('hidden')
+        $("#expandLink").removeClass('d-none')
+        $("#collapseLink").addClass('d-none')
         $(".multi-collapse").collapse('hide')
     }
 
@@ -67,39 +83,45 @@
     });
 </script>
 
+@priorityStyle(priority: String) = {
+  @priority match {
+    case "low" => {text-success}
+    case "medium" => {text-warning}
+    case "high"   => {text-danger}
+    case _ => { }
+  }
+}
 
 @leakDetectionRuleViolations(leaksByRule: LeakDetectionLeaksByRule) = {
-    <tr class="hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId" aria-expanded="false" aria-controls="collapsible-area-@leaksByRule.ruleId">
-        <td class="accordion-toggle collapsed" data-toggle="collapse" data-target="#collapsible-area-@leaksByRule.ruleId" aria-expanded="false" aria-controls="collapsible-area-@leaksByRule.ruleId"/>
+    <tr id="collapse-toggle-@leaksByRule.ruleId" class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@leaksByRule.ruleId" aria-expanded="false" aria-controls="collapsible-area-@leaksByRule.ruleId">
+        <td><span class="glyphicon glyphicon-chevron-right"></span></td>
         <td class="rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
         <td class="scope">@leaksByRule.scope</td>
-        <td class="priority @leaksByRule.priority.name">@leaksByRule.priority</td>
+        <td class="priority @priorityStyle(leaksByRule.priority.name)">@leaksByRule.priority</td>
         <td class="total text-center">@leaksByRule.leaks.length</td>
     </tr>
     <tr id="collapsible-area-@leaksByRule.ruleId" class="collapse multi-collapse">
-        <td class="hide rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
-        <td class="hide scope">@leaksByRule.scope</td>
-        <td class="hide priority">@leaksByRule.priority</td>
-        <td class="hide total">@leaksByRule.leaks.length</td>
+        <td class="d-none rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
+        <td class="d-none scope">@leaksByRule.scope</td>
+        <td class="d-none priority">@leaksByRule.priority</td>
+        <td class="d-none total">@leaksByRule.leaks.length</td>
         <td colspan="6">
-        @leaksByRule.leaks.map(l => leakDetectionLeaks(leaksByRule.scope, l))
+            @leaksByRule.leaks.map(l => leakDetectionLeaks(leaksByRule.scope, l))
         </td>
     </tr>
 }
 
 @leakDetectionLeaks(scope: String, leak: LeakDetectionLeakDetails) = {
-    <div class="col-xs-12">
-        <ul class="list list--minimal list-group row">
-            <li>
-                <span class="col-xs-12">
-                    <a href="@leak.urlToSource" target="_blank" rel="noreferrer noopener">@leak.filePath @if(scope == "fileContent") { #@leak.lineNumber}</a>
-                </span>
-            </li>
-            <li>
-                <span class="col-xs-12">
-                    <p class="monospace" style="word-break: break-all">@views.leakdetection.LeakDetectionHighlighter(leak)</p>
-                </span>
-            </li>
-        </ul>
-    </div>
+    <ul class="list-unstyled m-3">
+        <li>
+            <a href="@leak.urlToSource" target="_blank" rel="noreferrer noopener">
+                @leak.filePath
+                @if(scope == "fileContent") {#@leak.lineNumber}
+                <span class="glyphicon glyphicon-new-window"></span>
+            </a>
+        </li>
+        <li class="font-monospace">
+            @views.leakdetection.LeakDetectionHighlighter(leak)
+        </li>
+    </ul>
 }

@@ -35,35 +35,37 @@
   request          : RequestHeader
 )
 
-@standard_layout(s"Leak detection repositories") {
-    <header>
-        <h1>Leak Detection Repositories</h1>
-    </header>
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
+@standard_layout(s"Leak detection repositories", active = "health") {
+    <h1 class="page-heading mt-4">Leak Detection Repositories</h1>
 
     <form id="form" method="get">
-        <div class="form-group row">
+        <div class="row mb-3">
             <div class="col-md-3">
             @select(
-                field              =  form("rule"),
-                options            =  rules.map(r => r -> r),
-                Symbol("_default") -> "All",
-                Symbol("_label")   -> "Rule",
-                Symbol("id")       -> "rule-dropdown",
-                Symbol("class")    -> "form-control"
+                field                 =  form("rule"),
+                options               =  rules.map(r => r -> r),
+                Symbol("_default")    -> "All",
+                Symbol("_label")      -> "Rule",
+                Symbol("_labelClass") -> "form-label",
+                Symbol("id")          -> "rule-dropdown",
+                Symbol("class")       -> "form-select"
             )
             </div>
             <div class="col-md-3">
             @select(
-                field              =  form("team"),
-                options            =  teams.map(t => t.name.asString -> t.name.asString),
-                Symbol("_default") -> "All",
-                Symbol("_label")   -> "Team",
-                Symbol("id")       -> "team-dropdown",
-                Symbol("class")    -> "form-control"
+                field                 =  form("team"),
+                options               =  teams.map(t => t.name.asString -> t.name.asString),
+                Symbol("_default")    -> "All",
+                Symbol("_label")      -> "Team",
+                Symbol("_labelClass") -> "form-label",
+                Symbol("id")          -> "team-dropdown",
+                Symbol("class")       -> "form-select"
             )
             </div>
             <div class="col-md-3">
-                <label>Show repositories with:</label>
+                <label class="form-label fw-bold">Show repositories with:</label>
                 <div>
                     <input name="includeWarnings" id="includeWarnings" type="checkbox" value="true"
                     @if(includeWarnings) {checked}> Warnings</input>
@@ -88,15 +90,15 @@
         <table class="table table-striped sticky-header">
             <thead>
                 <tr>
-                    <th class="col-xs-5"><button class="sort no-border" data-sort="repository">Repository</button></th>
-                    <th class="col-xs-1"><button class="sort no-border" data-sort="repo-status">Status</button></th>
-                    <th class="col-xs-2"><button class="sort no-border" data-sort="first-scanned">Earliest scan</button></th>
-                    <th class="col-xs-2 hide"></th>
-                    <th class="col-xs-2"><button class="sort no-border" data-sort="last-scanned">Latest scan</button></th>
-                    <th class="col-xs-2 hide"></th>
-                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="warnings">Warnings</button></th>
-                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="exemptions">Exemptions</button></th>
-                    <th class="col-xs-1 text-center"><button class="sort no-border" data-sort="violations">Violations</button></th>
+                    <th class="col-xs-5"><button class="sort no-border fw-bold" data-sort="repository">Repository</button></th>
+                    <th class="col-xs-1"><button class="sort no-border fw-bold" data-sort="repo-status">Status</button></th>
+                    <th class="col-xs-2"><button class="sort no-border fw-bold" data-sort="first-scanned">Earliest scan</button></th>
+                    <th class="col-xs-2 d-none"></th>
+                    <th class="col-xs-2"><button class="sort no-border fw-bold" data-sort="last-scanned">Latest scan</button></th>
+                    <th class="col-xs-2 d-none"></th>
+                    <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="warnings">Warnings</button></th>
+                    <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="exemptions">Exemptions</button></th>
+                    <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="violations">Violations</button></th>
                 </tr>
             </thead>
             <tbody class="list">
@@ -118,13 +120,13 @@
         <td class="repository"><a id="branch-summary-@{summary.repository}" href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository, includeNonIssues = true)">@summary.repository</a></td>
         <td class="">
             @if(summary.isArchived) {
-            <span class="repo-status badge">archived</span>
+            <span class="repo-status badge rounded-pill text-bg-secondary">archived</span>
             }
         </td>
         <td class="first-scanned-display">@summary.firstScannedAt.displayFormat</td>
-        <td class="first-scanned hide">@summary.firstScannedAt</td>
+        <td class="first-scanned d-none">@summary.firstScannedAt</td>
         <td class="last-scanned-display">@summary.lastScannedAt.displayFormat</td>
-        <td class="last-scanned hide">@summary.lastScannedAt</td>
+        <td class="last-scanned d-none">@summary.lastScannedAt</td>
         @countWithLinkCell(summary.repository, "warnings", summary.warningCount)
         @countWithLinkCell(summary.repository, "exemptions", summary.excludedCount)
         @countWithLinkCell(summary.repository, "violations", summary.unresolvedCount)
@@ -132,7 +134,7 @@
 }
 
 @countWithLinkCell(repository: String, name: String, count: Int) = {
-    <td class="@name text-center"><div class="hide">@count</div>
+    <td class="@name text-center"><div class="d-none">@count</div>
         @if(count > 0) {
             <a id="@repository-@name-count" href="@appRoutes.LeakDetectionController.branchSummaries(repository)">@count</a>
         } else {

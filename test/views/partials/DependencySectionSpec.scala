@@ -30,18 +30,15 @@ class DependencySectionSpec extends AnyWordSpec with Matchers {
 
     "display the version suffix when present" in {
       val res = views.html.partials.dependency_section(Seq(dependency1), rootId).body
-      res should include(s"""<span id="example-library-$rootId-current-version" class="col-xs-3">1.2.3-play-25</span>""")
-      res should include(
-        s"""<span id="example-library-$rootId-latestVersion-version" class="col-xs-3">
-          |            <span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"></span><span>1.2.3-play-26</span>
-          |        </span>""".stripMargin)
+      res should include(s"""<div id="example-library-$rootId-current-version" class="col-3">1.2.3-play-25</div>""")
+      res should include(s"""<div id="example-library-$rootId-latestVersion-version" class="col-3">""")
+      res should include(s"""<span class="glyphicon medium-glyphicon glyphicon-arrow-right pe-2"></span><span>1.2.3-play-26</span>""")
     }
 
     "not display the version suffix when missing" in {
       val res = views.html.partials.dependency_section(Seq(dependency2), rootId).body
-      res should include(s"""<span id="library4j-$rootId-current-version" class="col-xs-3">4.0.1</span>""")
-      res should include(
-        """<span class="glyphicon glyphicon-arrow-right small-glyphicon" style="padding-right: 10px;"></span><span>4.2.0</span>""".stripMargin)
+      res should include(s"""<div id="library4j-$rootId-current-version" class="col-3">4.0.1</div>""")
+      res should include("""<span class="glyphicon medium-glyphicon glyphicon-arrow-right pe-2"></span><span>4.2.0</span>""")
     }
   }
 }

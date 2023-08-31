@@ -38,7 +38,7 @@
 @standard_layout("Create App Configs", "create app configs") {
 
   <section class="section-wrapper">
-    <h1>Create App Configs</h1>
+    <h1 class="page-heading mt-4">Create App Configs</h1>
     <p>Use the below form to create new app configs. Make sure to follow the guidance for each field!</p>
 
     @form_global_errors(form)
@@ -49,18 +49,17 @@
     ) {
       @csrfFormField
 
-      <div class="form-group row">
-        <div class="col-md-6">
-          <label for="serviceName">Service name:</label>
-          <input class="form-control" type="text" id="serviceName" name="serviceName" value="@serviceName" readonly="true">
+      <div class="form-group row d-grid gap-2">
+        <div class="col-md-6 d-grid gap-2">
+            <label for="serviceName" class="fw-bold">Service name:</label>
+            <input class="form-control" type="text" id="serviceName" name="serviceName" value="@serviceName" disabled readonly="true">
         </div>
-      </div>
-      <div class="form-group row">
-        <div class="col-md-6">
-          <label for="serviceType">Service type:</label>
-          <input class="form-control" type="text" id="serviceType" name="serviceType" value="@serviceType @if(isApi) { (@Tag.Api.displayString) }" readonly="true">
-          <p></p>
-          <span class="grey">Service type that was selected when creating the repository - if incorrect please contact</span> <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"></span></a>
+        <div class="col-md-6 d-grid gap-2">
+            <label for="serviceType" class="fw-bold">Service type:</label>
+            <input class="form-control" type="text" id="serviceType" name="serviceType" value="@serviceType @if(isApi) { (@Tag.Api.displayString) }" disabled readonly="true">
+          <span class="text-muted">
+            Service type that was selected when creating the repository - if incorrect please contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<i class="glyphicon glyphicon-new-window"></i></a>
+          </span> 
         </div>
       </div>
 
@@ -70,17 +69,17 @@
         <div class="form-group row">
           <div class="col-md-6">
             <input style="display:inline-block;" type="checkbox" id="appConfigBase" name="appConfigBase" value="false"  checked disabled>
-            <label style="display:inline-block" for="appConfigBase">App Config Base</label>
-            <p class="grey">Service has config in the app-config-base repository.</p>
+            <label style="display:inline-block" class="fw-bold" for="appConfigBase">App Config Base</label>
+            <p class="text-muted">Service has config in the app-config-base repository.</p>
             @form_fields_warnings(form,"appConfigBase")
           </div>
         </div>
       } else {
         <div class="form-group row">
           <div class="col-md-6">
-            <input style="display:inline-block;" type="checkbox" id="appConfigBase" name="appConfigBase" value=true @if(form("appConfigBase").value) {checked}>
-            <label style="display:inline-block" for="appConfigBase">App Config Base</label>
-            <p class="grey">Create config in the app-config-base repository.</p>
+            <input type="checkbox" id="appConfigBase" name="appConfigBase" value=true @if(form("appConfigBase").value) {checked}>
+            <label class="fw-bold" for="appConfigBase">App Config Base</label>
+            <p class="text-muted">Create config in the app-config-base repository.</p>
             @form_fields_warnings(form,"appConfigBase")
           </div>
         </div>
@@ -88,7 +87,7 @@
 
       @createAppConfigEnv(envConfigs)
 
-      <button id="create-app-configs-submit-button" class="btn btn-primary" type="submit" @if(!hasPerm){disabled}>Build</button>
+      <button id="create-app-configs-submit-button" class="btn btn-success" type="submit" @if(!hasPerm){disabled}>Build</button>
     }
   </section>
 }
@@ -97,15 +96,15 @@
   @envsToDisplay.map { env =>
     <div class="form-group row">
       <div class="col-md-6">
-        <input style="display:inline-block;" type="checkbox" id="appConfig@env" name="appConfig@env"
+        <input type="checkbox" id="appConfig@env" name="appConfig@env"
           @if(envsConfig.contains(env)){checked disabled} value="@{!envsConfig.contains(env)}"
           @if(form(s"appConfig$env").value) {checked}
         >
-        <label style="display:inline-block" for="appConfig@env">App Config @env</label>
+        <label class="fw-bold" for="appConfig@env">App Config @env</label>
         @if(!envsConfig.contains(env)) {
-          <p class="grey">Create config in the app-config-@{env.asString} repository.</p>
+          <p class="text-muted">Create config in the app-config-@{env.asString} repository.</p>
         } else {
-          <p class="grey">Service has app-config-@{env.asString} repository.</p>
+          <p class="text-muted">Service has app-config-@{env.asString} repository.</p>
         }
         @form_fields_warnings(form, s"appConfig${env.displayString}")
       </div>

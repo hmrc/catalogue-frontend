@@ -35,133 +35,140 @@
  , messagesProvider: MessagesProvider
  )
 
-@standard_layout(s"Shutter ${shutterType.asString.capitalize}") {
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
-  <header>
-    <h1>Shutter @{shutterType.asString.capitalize}</h1>
-  </header>
+@standard_layout(s"Shutter ${shutterType.asString.capitalize}", active = "shuttering") {
 
-  <div id="service-list">
+    <h1 class="page-heading mt-4">Shutter @{shutterType.asString.capitalize}</h1>
 
     @form_global_errors(form)
 
-    <div class="board">
-      <div class="board__body">
-        @helper.form(
-            action          =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step1Post
-          , Symbol("class") -> "form-inline"
-          , Symbol("id")    -> "shutter-service-form"
-          , Symbol("style") -> "padding-left: 20px; padding-right: 20px"
-          ) {
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0 text-dark"><span class="fw-bold">Environment:</span> @env</h5>
+        </div>
+        <div class="card-body">
+            @helper.form(
+                action            =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step1Post
+                , Symbol("class") -> "px-2"
+                , Symbol("id")    -> "shutter-service-form"
+            ) {
 
-            @csrfFormField
+                @csrfFormField
 
-          <div class="row">
-            <div class="col-sm-12">
-              <label>Environment:</label> @env
-            </div>
-          </div>
-          <div class="row" style="display: table;">
-            <div class="col-sm-5" style="display:table-cell; float:none;">
-              @select(
-                  field              =  form("allServices")
-                , options            =  shutterStates.map(s => (s.name, s.name))
-                , Symbol("_label")   -> s"Available ${shutterType}s"
-                , Symbol("multiple") -> "multiple"
-                , Symbol("size")     -> 10
-                , Symbol("style")    -> "min-width: 100%;"
-                )
-            </div>
-            <div class="col-sm-2" style="display:table-cell; float:none; text-align: center; display:table-cell; vertical-align: middle;">
-              <input type="button" id="btnRight" value="&gt;" class="btn btn-default" /><br />
-              <input type="button" id="btnLeft" value="&lt;" class="btn btn-default" /><br />
-              @if(shutterGroups.nonEmpty) {
-                @select(
-                    field              =  form("shutterGroup")
-                  , options            =  Seq("" -> "Add from Group") ++ shutterGroups.map(s => (s.name, s.name))
-                  , Symbol("_label")   -> ""
-                  , Symbol("id")       -> "shutter-group"
-                  )
-              }
-            </div>
-            <div class="col-sm-5" style="display:table-cell; float:none;">
-              @select(
-                  field              =  form("serviceName")
-                , options            =  form("serviceName").indexes.map(i => form("serviceName")("[%s]".format(i)).value).collect { case Some(v) => (v, v) }
-                , Symbol("_label")   -> s"Selected ${shutterType}s"
-                , Symbol("multiple") -> "multiple"
-                , Symbol("size")     -> 10
-                , Symbol("style")    -> "min-width: 100%;"
-                )
-            </div>
-          </div>
-          <div id="group-warning-row" class="row" style="visibility: hidden;">
-            <div class="col-sm-12">
-              <div class="alert alert-warning" role="alert">
-                <span class="glyphicon glyphicon-warning-sign"></span>
-                <span id="group-warning"></span>
-                <ul id="missing-services"></ul>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-sm-12">
-              @select(
-                  field              =  form("status")
-                , options            =  Seq("" -> "Please select") ++ statusValues.map {
-                                           case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
-                                           case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
-                                        }
-                , Symbol("_label")   -> "Status"
-                )
-            </div>
-          </div>
-
-          <div class="row">
-              <div class="col-sm-6">
-                  <a id="back-btn" href="@back" class="btn btn-default">
-                      <span class="glyphicon glyphicon-chevron-left"></span>
-                      Back
-                  </a>
-              </div>
-              <div class="col-sm-6" style="text-align:right;">
-                  <button id="next-btn" class="btn btn-primary" type="submit">
-                      Next
-                      <span class="glyphicon glyphicon-chevron-right"></span>
-                  </button>
-              </div>
-          </div>
-        }
-      </div>
+                <div class="row">
+                    <div class="col-2">
+                        @select(
+                              field                 =  form("status")
+                            , options               =  Seq("" -> "Please select") ++ statusValues.map {
+                                                         case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
+                                                         case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
+                                                       }
+                            , Symbol("_label")      -> "Status"
+                            , Symbol("_labelClass") -> "form-label"
+                            , Symbol("class")       -> "form-select"
+                        )
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-5">
+                        @select(
+                              field                 =  form("allServices")
+                            , options               =  shutterStates.map(s => (s.name, s.name))
+                            , Symbol("_label")      -> s"Available ${shutterType}s"
+                            , Symbol("_labelClass") -> "form-label"
+                            , Symbol("multiple")    -> "multiple"
+                            , Symbol("size")        -> 10
+                            , Symbol("class")       -> "form-select"
+                        )
+                    </div>
+                    <div class="col-2 my-auto"> @* class my-auto is a bootstrap utility class to vertically centre the content `margin y auto` *@
+                        <div class="row">
+                            <div class="col d-flex justify-content-center">
+                                <div class="btn-group-vertical" role="group">
+                                    <button id="btnRight" type="button" class="btn btn-outline-secondary">&gt;</button>
+                                    <button id="btnLeft" type="button" class="btn btn-outline-secondary">&lt;</button>
+                                </div>
+                            </div>
+                        </div>
+                        @if(shutterGroups.nonEmpty) {
+                            <div class="row">
+                                <div class="col d-flex justify-content-center">
+                                    @select(
+                                          field              =  form("shutterGroup")
+                                        , options            =  Seq("" -> "Add from Group") ++ shutterGroups.map(s => (s.name, s.name))
+                                        , Symbol("_label")   -> ""
+                                        , Symbol("id")       -> "shutter-group"
+                                        , Symbol("class")    -> "form-select"
+                                    )
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-5">
+                        @select(
+                              field                 =  form("serviceName")
+                            , options               =  form("serviceName").indexes.map(i => form("serviceName")("[%s]".format(i)).value).collect { case Some(v) => (v, v) }
+                            , Symbol("_label")      -> s"Selected ${shutterType}s"
+                            , Symbol("_labelClass") -> "form-label"
+                            , Symbol("multiple")    -> "multiple"
+                            , Symbol("size")        -> 10
+                            , Symbol("class")       -> "form-select"
+                        )
+                    </div>
+                </div>
+                <div id="group-warning-row" class="row d-none">
+                    <div class="col">
+                        <div class="alert alert-warning" role="alert">
+                            <span class="glyphicon glyphicon-warning-sign"></span>
+                            <span id="group-warning"></span>
+                            <ul id="missing-services"></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-1">
+                        <a id="back-btn" href="@back" class="btn btn-outline-secondary">
+                            <span class="glyphicon glyphicon-chevron-left"></span>
+                            Back
+                        </a>
+                    </div>
+                    <div class="col-1 offset-10">
+                        <button id="next-btn" class="btn btn-success" type="submit">
+                            Next
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
-
-  </div>
 
   <script @CSPNonce.attr type="text/javascript">
     function onChangeGroup(selectElmt) {
-      var group = selectElmt.options[selectElmt.selectedIndex].value;
+      let group = selectElmt.options[selectElmt.selectedIndex].value;
 
-      var groupData = @Html(shutterGroups.map { g =>
+      let groupData = @Html(shutterGroups.map { g =>
                          defining(g.services.map("\"" + _ + "\"").mkString("[", ",", "]")){ values =>
                            "\"" + g.name + "\": " + values
                          }
                        }.mkString("{", ",", "}"));
 
 
-      var selectedServices = groupData[group];
+      let selectedServices = groupData[group];
 
-      var allServices = document.getElementById('allServices');
-      var serviceName = document.getElementById('serviceName');
-      var missingServices = [];
+      let allServices = document.getElementById('allServices');
+      let serviceName = document.getElementById('serviceName');
+      let missingServices = [];
       for (let selectedService of selectedServices) {
-        var i = indexOf(allServices, selectedService);
-        if (i == -1) {
-          var j = indexOf(serviceName, selectedService);
-          if (j == -1) {
+        let i = indexOf(allServices, selectedService);
+        if (i === -1) {
+          let j = indexOf(serviceName, selectedService);
+          if (j === -1) {
             missingServices.push(selectedService);
           }
         } else {
-          var option = document.createElement("option");
+          let option = document.createElement("option");
           option.text = selectedService;
           serviceName.add(option);
 
@@ -199,9 +206,9 @@
     }
 
     function indexOf(selectElement, value) {
-      var options = selectElement.options;
+      let options = selectElement.options;
       for (var i = 0, optionsLength = options.length; i < optionsLength; i++) {
-        if (options[i].value == value) {
+        if (options[i].value === value) {
           return i;
         }
       }
@@ -209,8 +216,8 @@
     }
 
     function move(e, from, to) {
-      var selectedOpts = $('#' + from + ' option:selected');
-      if (selectedOpts.length == 0) {
+      let selectedOpts = $('#' + from + ' option:selected');
+      if (selectedOpts.length === 0) {
         alert("Nothing to move.");
         e.preventDefault();
       }
@@ -221,7 +228,7 @@
     };
 
     function sort(listId) {
-      var selectList = $('#' + listId + ' option');
+      let selectList = $('#' + listId + ' option');
       selectList.sort(function(a,b){
         return a.value > b.value ? 1 : -1;
      });
@@ -230,27 +237,27 @@
 
     function addGroupWarning(group, missingServices) {
       $('#group-warning').text('The following services in group \'' + group + '\' could not be added since they do not exist: ');
-      var out = '';
+      let out = '';
       for (let missingService of missingServices) {
         out += "<li>" + missingService + "</li>";
-      };
+      }
       $('#missing-services').html(out);
-      $('#group-warning-row').css("visibility", "visible");
+      $('#group-warning-row').toggleClass('d-none');
     }
 
     $(document).ready(function() {
       // remove options in serviceName from allServices
-      var selectedOpts = $('#serviceName option');
+      let selectedOpts = $('#serviceName option');
       selectedOpts.prop('selected', false);
 
-      var allServices = document.getElementById('allServices');
+      let allServices = document.getElementById('allServices');
       sort('allServices');
       sort('serviceName');
 
       selectedOpts.each(function()
       {
-        var value = $(this).val();
-        var i = indexOf(allServices, value);
+        let value = $(this).val();
+        let i = indexOf(allServices, value);
         allServices.remove(i);
       });
     });

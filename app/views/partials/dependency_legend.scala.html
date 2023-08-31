@@ -15,13 +15,32 @@
  *@
 
 @(showNewVersionAvailable: Boolean) @* currently always true *@
-<div id="legend">
-    <label>Legend:</label>
-    <ul class="list list--minimal list-group legend" >
-        @if(showNewVersionAvailable) {
-        <li><span class="version-new-available"><span class="glyphicon medium-glyphicon glyphicon-arrow-up" title="new version available"></span> New version available</span></li>
-            }
-        <li><span class="version-pending-violation"><span class="glyphicon medium-glyphicon glyphicon-alert" title="bobby rule pending"> </span> Bobby rule pending</span></li>
-        <li><span class="version-active-violation"><span class="glyphicon medium-glyphicon glyphicon-remove" title="bobby rule violation"> </span> Bobby rule violation</span></li>
+<div id="legend" class="card">
+  <div class="card-header">
+    <h6 class="mb-0">Legend</h6>
+  </div>
+  <div class="card-body">
+    <ul class="list-unstyled mb-0">
+      @if(showNewVersionAvailable) {
+        <li>
+            <span class="card-text text-info">
+                <span class="glyphicon medium-glyphicon glyphicon-arrow-up" title="new version available"></span>
+                New version available
+            </span>
+        </li>
+      }
+      <li>
+        <span class="card-text text-warning">
+          <span class="glyphicon medium-glyphicon glyphicon-alert" title="bobby rule pending"></span>
+          Bobby rule pending
+        </span>
+      </li>
+      <li>
+        <span class="card-text text-danger">
+          <span class="glyphicon medium-glyphicon glyphicon-remove" title="bobby rule violation"></span>
+          Bobby rule violation
+        </span>
+      </li>
     </ul>
+  </div>
 </div>

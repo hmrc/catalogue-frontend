@@ -27,23 +27,26 @@
   request   : RequestHeader
 )
 
-@standard_layout("Service Health Indicators", "health-indicators"){
+@standard_layout("Service Health Indicators", active = "health"){
 
-  <header>
-    <p id="repo-score-number" class=@HealthIndicatorsController.getScoreColour(indicator.overallScore)>
-      @indicator.overallScore
-    </p>
-    <h1>Service Health Indicators:  @indicator.repoName
-        <a href="https://github.com/hmrc/health-indicators" title="What is this?">?</a>
-    </h1>
-  </header>
+    <div class="row">
+        <div class="col-12 position-relative">
+            <h1 class="page-heading mt-4">
+                Service Health Indicators: @indicator.repoName
+                <a href="https://github.com/hmrc/health-indicators" title="What is this?">?</a>
+                <span class="badge bg-secondary position-absolute end-0 me-3">
+                    @indicator.overallScore
+                </span>
+            </h1>
+        </div>
+    </div>
 
     <div id="history">
       @optHistory.map(history => HealthIndicatorsHistory(history, optAverage))
     </div>
 
   <div id="health-indicators-display">
-    <h2>Score Breakdown:</h2>
+    <h2 class="fw-bold">Score Breakdown:</h2>
     <br />
     <table class="table table-striped" id="service-list">
         <thead>

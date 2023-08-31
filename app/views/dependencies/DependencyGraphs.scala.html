@@ -28,23 +28,29 @@
 
 @standard_layout(postContent = graph) {
 
-  <div class="row">
-      <div class="col-sm-12">
-          <h2>Dependency Graph: @serviceName - @scope.displayString</h2>
-          <hr/>
+    <h1 class="page-heading mt-4">
+        Dependency Graph: @serviceName - @scope.displayString
+    </h1>
 
-          @DependencyScope.values.map { value =>
+    <div class="row">
+        <ul class="nav nav-tabs mb-2">
+            @DependencyScope.values.map { value =>
               @if(value == scope) {
-                  <u>@value.displayString</u>
+                <li class="nav-item">
+                    <a id="@scope.displayString-graph" class="nav-link active" href='?scope=@{
+                        value.asString
+                    }'>@value.displayString</a>
+                </li>
               } else {
-                  <a id="@scope.displayString-graph" href='?scope=@{
-                      value.asString
-                  }'>@value.displayString</a>
+                  <li class="nav-item">
+                      <a id="@scope.displayString-graph" class="nav-link" href='?scope=@{
+                          value.asString
+                      }'>@value.displayString</a>
+                  </li>
               }
-          }
-
-      </div>
-  </div>
+            }
+        </ul>
+    </div>
 
   <div class="row">
       <div class="col-sm-12">

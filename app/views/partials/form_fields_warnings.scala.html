@@ -20,8 +20,8 @@
 )
 
 @if(form.errors(fieldName).nonEmpty) {
-    <div class="alert alert-danger" style="margin-top: 5px;" role="alert">
-        <ul class="list">
+    <div class="alert alert-danger" role="alert">
+        <ul class="list-unstyled mb-0">
             @form.errors(fieldName).map { error =>
                 <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
             }

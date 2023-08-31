@@ -28,34 +28,32 @@
 )
 
 @standard_layout(user.username) {
-  <header>
-      <h1>@user.username</h1>
-  </header>
+  <h1 class="page-heading mt-4">@user.username</h1>
 
   <section class="section-wrapper">
       <div class="row">
           <div class="col-md-4">
-              <div class="board">
-                  <h3 class="board__heading">
-                      Details
-                  </h3>
+              <div class="card">
+                  <div class="card-header">
+                      <h4 class="mb-0">Details</h4>
+                  </div>
 
-                  <div class="board__body">
-                      <ul id="user-details" class="list list--minimal">
+                  <div class="card-body">
+                      <ul id="user-details" class="list-unstyled">
                           <li id="user-name">
-                              <label>Name:</label>
+                              <label class="fw-bold">Name:</label>
                               @user.displayName.getOrElse("")
                           </li>
                           <li id="user-email">
-                              <label>Email:</label>
+                              <label class="fw-bold">Email:</label>
                               @user.primaryEmail
                           </li>
                           <li id="user-phone">
-                              <label>Phone:</label>
+                              <label class="fw-bold">Phone:</label>
                               @user.phoneNumber.getOrElse("")
                           </li>
                           <li id="user-github">
-                              <label>Github:</label>
+                              <label class="fw-bold">Github:</label>
                               @user.githubUsername match {
                                 case Some(url) => {<a href="https://github.com/@user.githubUsername" target="_blank" rel="noreferrer noopener">@user.githubUsername<span class="glyphicon glyphicon-new-window"/></a>}
                                 case None      => {}
@@ -63,7 +61,7 @@
                           </li>
                       </ul>
 
-                      <div id="user-ump-link" class="list list--minimal">
+                      <div id="user-ump-link" class="list-unstyled">
                           These details can be updated in <a href="@umpProfileUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
                       </div>
                   </div>
@@ -71,22 +69,22 @@
           </div>
 
           <div class="col-md-8">
-              <div class="board">
-                  <h3 class="board__heading">
-                      Teams
-                  </h3>
+              <div class="card">
+                <div class="card-header">
+                  <h4 class="mb-0">Teams</h4>
+                </div>
 
-                  <div class="board__body">
+                  <div class="card-body">
                       @if(user.teamsAndRoles.isEmpty) {
-                        <li class="col-xs-6">
+                        <p class="card-text col-6">
                             @user.username does not belong to any teams.
-                        </li>
+                        </p>
                       }
-                        <ul id="user-teams" class="list list--minimal">
+                        <ul id="user-teams" class="list-unstyled" style="column-count: 2;">
                         @user.teamsAndRoles.map { team =>
-                          <li class="col-xs-6">
+                          <li class="col-6">
                             <a href="@teamRoutes.TeamsController.team(TeamName(team.teamName))">
-                            @team.teamName
+                              @team.teamName
                             </a>
                             @if(team.role.trim.nonEmpty && team.role != "user") {
                               <span class="badge">@team.role</span>

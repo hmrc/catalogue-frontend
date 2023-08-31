@@ -46,7 +46,7 @@
     }
 }
 
-@standard_layout("Deployment Timeline", "deployment-timeline") {
+@standard_layout("Deployment Timeline", active = "explore") {
 
     <style>
         .timeline-tooltip {
@@ -101,39 +101,57 @@
                 return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
             }
             return `<div class="timeline-tooltip" style="width:250px">
-                        <table class="table table-striped" style="margin-bottom:0px">
-                            <tr><th>${ver}</th><td>Deployed for ${days} days</td></tr>
-                            <tr><th>By</th><td>${user}</td></tr>
-                            <tr><th>From</th><td>${start} UTC</td></tr>
-                            <tr><th>To</th><td>${end} UTC</td></tr>
-                            <tr><th>Java</th><td>${java}</td></tr>
+                        <table class="table table-striped mb-0">
+                            <tr><th class="text-dark">${ver}</th><td>Deployed for ${days} days</td></tr>
+                            <tr><th class="text-dark">By</th><td>${user}</td></tr>
+                            <tr><th class="text-dark">From</th><td>${start} UTC</td></tr>
+                            <tr><th class="text-dark">To</th><td>${end} UTC</td></tr>
+                            <tr><th class="text-dark">Java</th><td>${java}</td></tr>
                         </table>
                     </div>`
         }
     </script>
-    <header>
-        <h1>Deployment Timeline @if(service != ""){<a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service</a>}</h1>
-    </header>
+
+    <h1 class="page-heading mt-4">Deployment Timeline @if(service != ""){<a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service</a>}</h1>
+
     <form id="form" action="" method="get">
         <div class="form-group row">
             <div class="col-md-6">
-                <label for="service" title="Search by service name" data-toggle="tooltip">Service</label>
-                <select name="service" id="service" class="form-control">
-                    <option value=""></option>
-                    @services.map { s => <option value="@s" @if(service.equalsIgnoreCase(s)) { selected="true" } >@s</option> }
-                </select>
+                <dl>
+                    <dt>
+                        <label for="service" class="form-label">Service</label>
+                    </dt>
+                    <dd>
+                        <select name="service" id="service" class="form-select">
+                            <option value=""></option>
+                            @services.map { s => <option value="@s" @if(service.equalsIgnoreCase(s)) { selected="true" } >@s</option> }
+                        </select>
+                    </dd>
+                </dl>
             </div>
 
             <div class="col-md-2">
-                <label for="start" title="From the start of this day" data-toggle="tooltip">Date From</label>
-                <input type="date" id="start" name="start" value="@start.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
+                <dl>
+                    <dt>
+                        <label for="start" class="form-label">Date From</label>
+                    </dt>
+                    <dd>
+                        <input type="date" id="start" name="start" value="@start.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
+                    </dd>
+                </dl>
             </div>
             <div class="col-md-2">
-                <label for="end" title="To the end of this day" data-toggle="tooltip" >Date To</label>
-                <input type="date" id="end" name="end" value="@end.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
+                <dl>
+                    <dt>
+                        <label for="end" class="form-label">Date To</label>
+                    </dt>
+                    <dd>
+                        <input type="date" id="end" name="end" value="@end.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
+                    </dd>
+                </dl>
             </div>
-            <div class="col-md-2" style="padding-top: 40px;">
-                <input id="form-submit-button" type="submit" value="Submit" class="form-control btn btn-primary">
+            <div class="col-md-2" style="padding-top: 30px;">
+                <button id="form-submit-button" type="submit" value="Submit" class="btn btn-success">Submit</button>
             </div>
         </div>
     </form>

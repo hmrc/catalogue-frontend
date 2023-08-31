@@ -36,10 +36,10 @@
   request                : RequestHeader
 )
 
-@standard_layout(repository.name, "repositories") {
+@standard_layout(repository.name, active = "repositories") {
   <header class="header-with-github-badge">
     <div>
-      <h1>
+      <h1 class="page-heading mt-4">
         Repository: @repository.name
         <span>@githubBadgeType(repository)</span>
         @if(repository.isDeprecated) { <span>Deprecated</span> }
@@ -54,7 +54,7 @@
       @partials.bobby_violations_banner(environment = None, dependencies, pending = true )
   }
 
-  <section class="section-wrapper">
+  <section class="section-wrapper d-grid gap-3">
     <div class="row">
       <div class="col-md-12">
         @partials.details(

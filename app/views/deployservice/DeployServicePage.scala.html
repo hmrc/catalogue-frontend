@@ -47,90 +47,95 @@
 , request       : RequestHeader
 )
 
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
 @standard_layout("Deploy Service", "deploy service") {
-  <h1>Deploy Service</h1>
+  <h1 class="page-heading mt-4">Deploy Service</h1>
   <div class="row">
-    <div class="col-md-4 sticky-row">
-      @form_global_errors(form)
+    <div class="col-md-4">
+      <div class="sticky-container">
+        @form_global_errors(form)
 
-      @helper.form(
-        action           =  appRoutes.DeployServiceController.step1(form("serviceName").value)
-      , Symbol("id")     -> "service-name-form"
-      , Symbol("method") -> "GET",
-      ) {
-        <dl>
-          <dt><label for="service-name">Service Name:</label></dt>
-          <dd>
-            <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
-            <div id="service-name-matches" class="search-matches-dropdown hide"></div>
-          </dd>
-        </dl>
-      }
-
-      @if(form("serviceName").value.isDefined && latestVersion.nonEmpty && environments.nonEmpty) {
         @helper.form(
-          action           =  appRoutes.DeployServiceController.step2()
-        , Symbol("id")     -> "version-environment-form"
-        , Symbol("method") -> "POST"
+          action           =  appRoutes.DeployServiceController.step1(form("serviceName").value)
+        , Symbol("id")     -> "service-name-form"
+        , Symbol("method") -> "GET",
         ) {
-          @csrfFormField
-          <input type="hidden" name="serviceName" value='@form("serviceName").value' />
           <dl>
-            <dt><label for="service-name">Version:</label></dt>
+            <dt><label class="form-label" for="service-name">Service Name:</label></dt>
             <dd>
-              <div id="helpful-versions" class="list-group">
-                @defining(
-                  ( latestVersion.map(x => (x, "Latest")) ++
-                    releases
-                      .sortBy(_.environment)
-                      .map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
-                  ).groupBy { case (version, _) => version }
-                    .toList
-                    .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
-                    .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
-                ) { xs => @xs.map { case (version, text) =>
-                  <a href="#" class="list-group-item"2 data-content="@version" style="color: #008770;">
-                    <div class="row">
-                      <div class="col-xs-3 col-md-3">@version</div>
-                      <div class="col-xs-9 col-md-9">@text</div>
-                    </div>
-                  </a>
-                }}
-              </div>
-              <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or select one from above">
+              <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
+              <div id="service-name-matches" class="search-matches-dropdown d-none"></div>
             </dd>
           </dl>
-
-          @helper.select(
-            field              =  form("environment")
-          , options            =  environments.map(t => t.asString -> t.displayString)
-          , Symbol("_label")   -> "Environment:"
-          , Symbol("_default") -> "Please choose"
-          , Symbol("id")       -> "environment"
-          , Symbol("class")    -> "form-control"
-          , Symbol("title")    -> "On change updates 'Config Key' autocomplete"
-          , Symbol("required") -> "required"
-          )
         }
-      }
+
+        @if(form("serviceName").value.isDefined && latestVersion.nonEmpty && environments.nonEmpty) {
+          @helper.form(
+            action           =  appRoutes.DeployServiceController.step2()
+          , Symbol("id")     -> "version-environment-form"
+          , Symbol("method") -> "POST"
+          ) {
+            @csrfFormField
+            <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+            <dl>
+              <dt><label class="form-label" class="form-label" for="service-name">Version:</label></dt>
+              <dd>
+                <div id="helpful-versions" class="list-group mb-2">
+                  @defining(
+                    ( latestVersion.map(x => (x, "Latest")) ++
+                      releases
+                        .sortBy(_.environment)
+                        .map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
+                    ).groupBy { case (version, _) => version }
+                      .toList
+                      .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
+                      .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
+                  ) { xs => @xs.map { case (version, text) =>
+                    <a href="#" class="list-group-item list-group-item-action" data-content="@version">
+                      <div class="row">
+                        <div class="col-xs-3 col-md-3">@version</div>
+                        <div class="col-xs-9 col-md-9">@text</div>
+                      </div>
+                    </a>
+                  }}
+                </div>
+                <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or select one from above">
+              </dd>
+            </dl>
+
+            @helper.select(
+              field                 =  form("environment")
+            , options               =  environments.map(t => t.asString -> t.displayString)
+            , Symbol("_label")      -> "Environment:"
+            , Symbol("_labelClass") -> "form-label"
+            , Symbol("_default")    -> "Please choose"
+            , Symbol("id")          -> "environment"
+            , Symbol("class")       -> "form-control"
+            , Symbol("title")       -> "On change updates 'Config Key' autocomplete"
+            , Symbol("required")    -> "required"
+            )
+          }
+        }
+      </div>
     </div>
-    <div class="col-md-8 sticky-row">
+    <div class="col-md-8">
       @evaluations.map { case (updates, warnings, vulnerabilities, githubDiffLinks) =>
-        <label>Please review before deploying:</label>
-        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-          <div class="panel panel-default">
-            <div class="panel-heading" role="tab">
-              @if(updates.isEmpty) {
-                <h4 class="panel-title">Config Changes<span class="pull-right">@updates.size</span></h4>
-              } else {
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeConfigUpdates" aria-expanded="false" aria-controls="collaspeConfigUpdates">
-                  <h4 class="panel-title">Config Changes<span class="pull-right">@updates.size</span></h4>
-                </a>
-              }
+        <label class="form-label fw-bold">Please review before deploying:</label>
+        <div class="accordion" id="accordion">
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingConfigUpdates">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeConfigUpdates" aria-expanded="false" aria-controls="collaspeConfigUpdates" @if(updates.isEmpty) {disabled} >
+                Config Updates
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info z-3">
+                  @updates.size
+                  <span class="visually-hidden">Number of config changes</span>
+                </span>
+              </button>
             </div>
-            <div id="collaspeConfigUpdates" class="panel-collapse collapse" role="tabpanel" aria-expanded="false">
-              <div class="panel-body">
-                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+            <div id="collaspeConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+              <div class="accordion-body">
+                <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
                   <thead>
                     <tr>
                       <th>Key</th>
@@ -149,19 +154,19 @@
               </div>
             </div>
           </div>
-          <div class="panel panel-default">
-            <div class="panel-heading" role="tab">
-              @if(warnings.isEmpty) {
-                <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
-              } else {
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeConfigWarnings" aria-expanded="false" aria-controls="collaspeConfigWarnings">
-                  <h4 class="panel-title">Config Warnings<span class="pull-right">@warnings.size</span></h4>
-                </a>
-              }
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingConfigUpdates">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeConfigWarnings" aria-expanded="false" aria-controls="collaspeConfigWarnings" @if(warnings.isEmpty) {disabled}>
+                Config Warnings
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info z-3">
+                  @warnings.size
+                  <span class="visually-hidden">Number of config warnings</span>
+                </span>
+              </button>
             </div>
-            <div id="collaspeConfigWarnings" class="panel-collapse collapse" role="tabpanel" aria-expanded="false">
-              <div class="panel-body">
-                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+            <div id="collaspeConfigWarnings" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+              <div class="accordion-body">
+                <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
                   <thead>
                     <tr>
                       <th>Key</th>
@@ -180,49 +185,66 @@
               </div>
             </div>
           </div>
-          <div class="panel panel-default">
-            <div class="panel-heading" role="tab">
-              @if(vulnerabilities.isEmpty) {
-                <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
-              } else {
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeVulnerabilities" aria-expanded="false" aria-controls="collaspeVulnerabilities">
-                  <h4 class="panel-title">Vulnerabilities<span class="pull-right">@vulnerabilities.size</span></h4>
-                </a>
-              }
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingVulnerabilities">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeVulnerabilities" aria-expanded="false" aria-controls="collaspeVulnerabilities" @if(vulnerabilities.isEmpty) {disabled}>
+                Vulnerabilities
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info z-3">
+                  @vulnerabilities.size
+                  <span class="visually-hidden">Number of vulnerabilities</span>
+                </span>
+              </button>
             </div>
-            <div id="collaspeVulnerabilities" class="panel-collapse collapse" role="tabpanel" aria-expanded="false" style="height: 0px;">
-              <div class="panel-body">
-                <table style="word-break: break-word" class="table table-striped sticky-header">
+            <div id="collaspeVulnerabilities" class="accordion-collapse collapse" aria-labelledby="headingVulnerabilities" data-bs-parent="#accordion">
+              <div class="accordion-body">
+                <table class="table table-striped sticky-header text-break">
                   <thead>
                     <tr>
-                      <th style="width:1px"></th>
-                      <th class="col-xs-2"><button class="sort no-border" data-sort="vuln-id">Vulnerability ID</button></th>
-                      <th class="col-xs-2"><button class="no-border" data-sort="vulnerable-component-name">Vulnerable Component</button></th>
-                      <th class="col-xs-4"><button class="no-border" data-sort="assessment">Assessment</button></th>
-                      <th class="col-xs-2"><button class="sort no-border" data-sort="curation-status">Curation Status</button></th>
-                      <th class="col-xs-1 text-right" style="width:90px"><button class="sort no-border" data-sort="score">Score</button></th>
+                      <th></th>
+                      <th class="col-2"><button class="sort no-border fw-bold" data-sort="vuln-id">Vulnerability ID</button></th>
+                      <th class="col-2">Vulnerable Component</th>
+                      <th class="col-4">Assessment</th>
+                      <th class="col-2"><button class="sort no-border fw-bold" data-sort="curation-status">Curation Status</button></th>
+                      <th class="col-1 text-right" style="width: 90px;"><button class="sort no-border fw-bold" data-sort="score">Score</button></th>
                     </tr>
                   </thead>
                   <tbody id="vulnerabilities-rows" class="list">
                     @vulnerabilities.map(vulnerabilitiesSummary)
                   </tbody>
                 </table>
+                <script @CSPNonce.attr>
+                  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach( function(el) {
+                    let chevron = el.querySelector('.glyphicon');
+                    let collapseId = el.getAttribute('data-bs-target');
+                    let collapse = document.querySelector(collapseId);
+
+                    collapse.addEventListener('hidden.bs.collapse', () => {
+                      chevron.classList.remove('glyphicon-chevron-down');
+                      chevron.classList.add('glyphicon-chevron-right');
+                    });
+
+                    collapse.addEventListener('show.bs.collapse', () => {
+                      chevron.classList.remove('glyphicon-chevron-right');
+                      chevron.classList.add('glyphicon-chevron-down');
+                    });
+                  });
+                </script>
               </div>
             </div>
           </div>
-          <div class="panel panel-default">
-            <div class="panel-heading" role="tab">
-              @if(githubDiffLinks.isEmpty) {
-                <h4 class="panel-title">Github Diffs<span class="pull-right">@githubDiffLinks.size</span></h4>
-              } else {
-                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collaspeGithubDiffLinks" aria-expanded="false" aria-controls="collaspeGithubDiffLinks">
-                  <h4 class="panel-title">Github Diffs<span class="pull-right">@githubDiffLinks.size</span></h4>
-                </a>
-              }
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingGithubDiffLinks">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeGithubDiffLinks" aria-expanded="false" aria-controls="collaspeGithubDiffLinks">
+                Github Diffs
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info z-3">
+                  @githubDiffLinks.size
+                  <span class="visually-hidden">Number of Github diff links</span>
+                </span>
+              </button>
             </div>
-            <div id="collaspeGithubDiffLinks" class="panel-collapse collapse" role="tabpanel" aria-expanded="false" style="height: 0px;">
-              <div class="panel-body">
-                <table class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+            <div id="collaspeGithubDiffLinks" class="accordion-collapse collapse" aria-labelledby="headingGithubDiffLinks" data-bs-parent="#accordion">
+              <div class="accordion-body">
+                <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
                   <thead>
                     <tr>
                       <th>Link</th>
@@ -232,7 +254,7 @@
                   <tbody>
                     @for((link, command) <- githubDiffLinks) {
                       <tr>
-                        <td><a target="_blank" href="@link.url">@link.name<span class="glyphicon glyphicon-new-window"/></a></td>
+                        <td><a target="_blank" href="@link.url"rel="noreferrer noopener">@link.name<span class="glyphicon glyphicon-new-window"/></a></td>
                         <td><code>@command</code></td>
                       </tr>
                     }
@@ -252,7 +274,7 @@
           <input type="hidden" name="serviceName" value='@form("serviceName").value' />
           <input type="hidden" name="version" value='@form("version").value' />
           <input type="hidden" name="environment" value='@form("environment").value' />
-          <button id="deploy-btn" class="btn btn-primary pull-right" type="submit" @if(!hasPerm){disabled}>Deploy</button>
+          <button id="deploy-btn" class="btn btn-success float-end" type="submit" @if(!hasPerm){disabled}>Deploy</button>
           <br/><br/>
         }
       }
@@ -302,11 +324,11 @@
     <li>
       <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
          target="_blank"
-         data-toggle="popover"
-         data-trigger="hover"
-         data-placement="bottom"
-         data-html="true"
-         data-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
+         data-bs-toggle="popover"
+         data-bs-trigger="hover"
+         data-bs-placement="bottom"
+         data-bs-html="true"
+         data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
         @configSourceValue.displayString
       </a>
     </li>
@@ -322,11 +344,11 @@
     <li>
       <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
          target="_blank"
-         data-toggle="popover"
-         data-trigger="hover"
-         data-placement="bottom"
-         data-html="true"
-         data-content='@popoverConfigWarning(configWarning, env)'>
+         data-bs-toggle="popover"
+         data-bs-trigger="hover"
+         data-bs-placement="bottom"
+         data-bs-html="true"
+         data-bs-content='@popoverConfigWarning(configWarning, env)'>
           @configWarning.warning
       </a>
     </li>
@@ -340,34 +362,23 @@
 
 @vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
   @defining(summary.distinctVulnerability.vulnerableComponentName.split("://")) { splitVulnerableComponent =>
-      <tr>
-          <td class="accordion-toggle collapsed hand-pointer " data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"/>
-          <td class="vuln-id hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.id</td>
-          <td class="vulnerable-component-name hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
-          <td class="assessment hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-          <td class="curation-status hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-          <td class="score hand-pointer text-right" data-toggle="collapse" data-target="#collapsible-area-@summary.distinctVulnerability.id" aria-controls="collapsible-area-@summary.distinctVulnerability.id">@summary.distinctVulnerability.score.getOrElse("")</td>
+      <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">
+          <td><span class="glyphicon glyphicon-chevron-right"></span></td>
+          <td class="vuln-id">@summary.distinctVulnerability.id</td>
+          <td class="vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+          <td class="assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+          <td class="curation-status"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+          <td class="score text-end">@summary.distinctVulnerability.score.getOrElse("")</td>
       </tr>
       <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
           @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
-          <td colspan="7">
-              <table>
-                  <tbody class="list">
-                      <tr>
-                          <td class="hide vuln-id">@summary.distinctVulnerability.id</td>
-                          <td class="hide vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
-                          <td class="hide assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-                          <td class="curation-status text-center hide"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-                          <td class="hide score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
-                          <td class="services text-center hide"><div>@summary.occurrences.groupBy(_.service).size</div></td>
-                      </tr>
-                      <tr>
-                          <td colspan="6">
-                              @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
-                          </td>
-                      </tr>
-                  </tbody>
-              </table>
+          <td class="vuln-id d-none">@summary.distinctVulnerability.id</td>
+          <td class="vulnerable-component-name d-none">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+          <td class="assessment d-none">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+          <td class="curation-status d-none"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+          <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
+          <td colspan="6">
+              @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
           </td>
       </tr>
   }

@@ -35,12 +35,10 @@
   request: RequestHeader
 )
 
-@standard_layout(s"JDK Versions", "dependencies") {
-    <header>
-        <h1 id="jdk-header">JDK Versions: @selectedFlag.asString</h1>
+@standard_layout(s"JDK Versions", active = "explore") {
+    <h1 id="jdk-header" class="page-heading mt-4">JDK Versions: @selectedFlag.displayString</h1>
 
-        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
-    </header>
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     <div class="row">
         <div class="col-sm-6" >
@@ -56,10 +54,10 @@
     <hr>
     <div>
         <form id="form" method="get" action="@selectedFlag.asString">
-            <div class="form-group row">
+            <div class="row mb-3">
                 <div class="col-md-3">
-                    <label for="flag">Environment:</label>
-                    <select class="form-control" id="flag" name="flag">
+                    <label for="flag" class="form-label fw-bold">Environment:</label>
+                    <select class="form-select" id="flag" name="flag">
                         @flags.map { flag =>
                             <option value="@{flag.asString}" @{if(flag == selectedFlag) "selected"}>
                                 @flag.displayString
@@ -68,8 +66,8 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label for="teamName">Team:</label>
-                    <select class="form-control" id="teamName" name="teamName">
+                    <label for="teamName" class="form-label fw-bold">Team:</label>
+                    <select class="form-select" id="teamName" name="teamName">
                         <option value="" @{if(selectedTeam.isEmpty) "selected"}>All</option>
                         @teams.map { team =>
                             <option value="@{team.name.asString}" @{if(Some(team) == selectedTeam) "selected"}>
@@ -110,7 +108,7 @@
         // draw jdk version chart
         function drawChart() {
 
-            var data = new google.visualization.DataTable();
+            let data = new google.visualization.DataTable();
             data.addColumn('string', 'Version');
             data.addColumn('number', 'Count');
             data.addRows([
@@ -119,7 +117,7 @@
               }
             ]);
 
-            var options = {
+            let options = {
                 'width'    : "40%",
                 'height'   : 200,
                 'chartArea': {
@@ -127,12 +125,12 @@
                     'height': '95%'
                 }
             };
-            var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+            let chart = new google.visualization.PieChart(document.getElementById('chart_div'));
             chart.draw(data, options);
         }
 
         function drawVendorChart() {
-            var data = new google.visualization.DataTable();
+            let data = new google.visualization.DataTable();
             data.addColumn('string', 'Version');
             data.addColumn('number', 'Count');
             data.addRows([
@@ -141,7 +139,7 @@
               }
             ].sort());
 
-            var options = {
+            let options = {
                 'width'    : "40%",
                 'height'   : 200,
                 'chartArea': {
@@ -149,7 +147,7 @@
                     'height': '95%'
                 }
             };
-            var chart = new google.visualization.PieChart(document.getElementById('chart_vendor_div'));
+            let chart = new google.visualization.PieChart(document.getElementById('chart_vendor_div'));
             chart.draw(data, options);
         }
     </script>

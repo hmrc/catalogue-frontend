@@ -12,13 +12,13 @@ const minSearchLen = 3
 
 input.onkeyup = e => {
     if (e.target.value.length >= minSearchLen) {
-        matches.classList.remove("hide")
+        matches.classList.remove("d-none")
         if (e.keyCode > 46 || e.keyCode === 32) { // exclude arrow keys
             search(e.target.value)
         }
     } else {
         matches.innerHTML = "";
-        matches.classList.add("hide")
+        matches.classList.add("d-none")
     }
 }
 
@@ -44,7 +44,7 @@ function search(q) {
 
 // show and hide the whole search bar
 function toggleSearch() {
-    if (bar.classList.contains("hide")) {
+    if (bar.classList.contains("d-none")) {
         showSearchBar()
     } else {
         hideSearchBar()
@@ -52,16 +52,16 @@ function toggleSearch() {
 }
 
 function showSearchBar() {
-    bar.classList.remove("hide")
-    mainmenu.classList.add("hide")
+    bar.classList.remove("d-none")
+    mainmenu.classList.add("d-none")
     input.focus()
     input.value = ""
 }
 
 function hideSearchBar() {
-    bar.classList.add("hide")
-    matches.classList.add("hide")
-    mainmenu.classList.remove("hide")
+    bar.classList.add("d-none")
+    matches.classList.add("d-none")
+    mainmenu.classList.remove("d-none")
     input.value = ""
     selectedItem = -1
     matches.innerHTML = ""
@@ -69,7 +69,7 @@ function hideSearchBar() {
 
 // hides the drop down part of the search
 function clearAutoComplete() {
-    matches.classList.add("hide")
+    matches.classList.add("d-none")
     input.value = ""
     selectedItem = -1
     matches.innerHTML = ""
@@ -102,11 +102,11 @@ function searchInputListener(e) {
         hideSearchBar()
     } else if (e.keyCode > 40 || e.keyCode < 33) { // trigger search
         if (e.target.value.length >= minSearchLen) {
-            matches.classList.remove("hide")
+            matches.classList.remove("d-none")
             search(e.target.value)
         } else {
             matches.innerHTML = "";
-            matches.classList.add("hide")
+            matches.classList.add("d-none")
         }
     }
 }
@@ -124,14 +124,14 @@ function disableArrowKeys(e) {
 function highlight(pos) {
     let item = document.getElementById("search-item-" + pos)
     if (item != null) {
-        item.parentElement.parentElement.classList.add("search-item-selected")
+        item.parentElement.parentElement.classList.add("search-match-selected")
     }
 }
 
 function unhighlight(pos) {
     let item = document.getElementById("search-item-" + pos)
     if (item != null) {
-        item.parentElement.parentElement.classList.remove("search-item-selected")
+        item.parentElement.parentElement.classList.remove("search-match-selected")
     }
 }
 

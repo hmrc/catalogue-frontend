@@ -92,10 +92,10 @@ class PlatformInitiativesControllerSpec
         .apply(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
 
       status(result) shouldBe 200
-      contentAsString(result) should include("""<h3> Test initiative </h3>""")
+      contentAsString(result) should include("""Test initiative""")
       contentAsString(result) should include("""<div id="chart_div_Test initiative"></div>""")
       contentAsString(result) should include("""<p>Test initiative description</p>""")
-      contentAsString(result) should include("""<h3> Update Dependency </h3>""")
+      contentAsString(result) should include("""Update Dependency""")
       contentAsString(result) should include("""<div id="chart_div_Update Dependency"></div>""")
     }
   }

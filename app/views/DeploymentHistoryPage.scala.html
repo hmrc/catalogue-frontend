@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Username, DeploymentHistory, Pagination}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
@@ -33,10 +34,10 @@
   request           : RequestHeader
 )
 
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
 @standard_layout("Deployments", "deployments") {
-    <header>
-        <h1>Deployments</h1>
-    </header>
+    <h1 class="page-heading mt-4">Deployments</h1>
 
     @if(form.hasErrors) {
       <div class="alert alert-danger" role="alert">
@@ -50,35 +51,54 @@
 
     <div id="service-list">
         <form id="form">
-            <div class="form-group row">
+            <div class="row">
                 <input type="hidden" id="selected-environment" value="@selectedEnv.asString">
                 <div class="col-md-5">
-                    <label for="service" title="Search by service name" data-toggle="tooltip">Service</label>
-                    <input id="service" class="search form-control" type="text" name="service" value='@form("service").value' autofocus autocomplete="off">
+                    <dl id="service_field">
+                        <dt>
+                            <label for="service" class="form-label">Service</label>
+                        </dt>
+                        <dd>
+                            <input id="service" class="search form-control" type="text" name="service" value='@form("service").value' autofocus autocomplete="off">
+                        </dd>
+                    </dl>
                 </div>
                 <div class="col-md-3">
                     @select(
-                        field              =  form("team"),
-                        options            =  teams.map(t => t.name.asString -> t.name.asString),
-                        Symbol("_default") -> "All",
-                        Symbol("_label")   -> "Team",
-                        Symbol("id")       -> "team-search",
-                        Symbol("class")    -> "form-control"
+                        field                 =  form("team"),
+                        options               =  teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Team",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "team-search",
+                        Symbol("class")       -> "form-select"
                     )
                 </div>
                 <div class="col-md-2">
-                    <label for="from-search-input" title="From the start of this day" data-toggle="tooltip">Date From</label>
-                    <input id="from-search-input" class="form-control" type="date" name="from" value='@form("from").value' style="line-height: 20px">
+                    <dl id="from-search-input_field">
+                        <dt>
+                            <label for="from-search-input" class="form-label">Date From</label>
+                        </dt>
+                        <dd>
+                            <input id="from-search-input" class="form-control" type="date" name="from" value='@form("from").value'>
+                        </dd>
+                    </dl>
                 </div>
                 <div class="col-md-2">
-                    <label for="to-search-input" title="To the end of this day" data-toggle="tooltip" >Date To</label>
-                    <input id="to-search-input" class="form-control" type="date" name="to" value='@form("to").value' style="line-height: 20px">
+                    <dl id="to-search-input_field">
+                        <dt>
+                            <label for="to-search-input" class="form-label">Date To</label>
+                        </dt>
+                        <dd>
+                            <input id="to-search-input" class="form-control" type="date" name="to" value='@form("to").value'>
+                        </dd>
+                    </dl>
                 </div>
             </div>
         </form>
 
         <div class="row container">
-            <ul id="environment" class="nav nav-tabs" role="tablist">
+            <ul id="environment" class="nav nav-tabs mb-2">
                 @Environment.values.map(envOption)
             </ul>
         </div>
@@ -87,29 +107,29 @@
             <thead>
                 @pageNavigation()
                 <tr>
-                    <th class="col-lg-3"><button role="button" class="no-border" data-sort="service-name">Service</button></th>
-                    <th class="col-lg-2"><button role="button" class="no-border" data-sort="team">Teams</button></th>
-                    <th class="col-lg-2"><button role="button" class="no-border" data-sort="version">Version</button></th>
-                    <th class="col-lg-3"><button role="button" class="no-border" data-sort="deploy-time">Deploy Time</button></th>
-                    <th class="col-lg-2"><button role="button" class="no-border" data-sort="deployer">Deployer</button></th>
+                    <th class="col-lg-3">Service</th>
+                    <th class="col-lg-2">Teams</th>
+                    <th class="col-lg-2">Version</th>
+                    <th class="col-lg-3">Deploy Time</th>
+                    <th class="col-lg-2">Deployer</th>
                 </tr>
             </thead>
             <tbody class="list">
               @deployments.zipWithIndex.map{case (d, i) =>
                 <tr id="row@i">
-                  <td id="row@{i}_name" class="service-name">
-                      <a class="service-name-link" id="link-to-@{d.name.asString}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString)">@{d.name.asString}</a>
+                  <td id="row@{i}_name">
+                      <a id="link-to-@{d.name.asString}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString)">@{d.name.asString}</a>
                   </td>
-                  <td id="row@{i}_team" class="team">
+                  <td id="row@{i}_team">
                     <ul class="list-unstyled">
                     @for(team <- d.teams) {
                       <li><a id="link-to-team-page-for-@{team.asString.replace(" ", "-")}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(team)">@{team.asString}</a></li>
                     }
                     </ul>
                   </td>
-                  <td id="row@{i}_version"    class="version">@{d.version.asString}</td>
-                  <td id="row@{i}_deploytime" class="deploy-time monospaced">@{d.time.time.asPattern(`yyyy-MM-dd HH:mm:ss z`)}</td>
-                  <td id="row@{i}_deployer"   class="deployer">@userLink(d.username)</td>
+                  <td id="row@{i}_version">@{d.version.asString}</td>
+                  <td id="row@{i}_deploytime" class="font-monospace">@{d.time.time.asPattern(`yyyy-MM-dd HH:mm:ss z`)}</td>
+                  <td id="row@{i}_deployer">@userLink(d.username)</td>
                 </tr>
               }
             </tbody>
@@ -128,16 +148,13 @@
       });
     });
 
-  function selectEnvironment(e, environment) {
-    // Stop the default link action. Instead we will fire the form to change page
-    e.preventDefault();
-
+  function selectEnvironment(environment) {
     // Update the hidden environment field with what was selected
     $('#selected-environment').value = environment;
 
-    // Post the form back to the the chosen environment endpoint
+    // Post the form back to the chosen environment endpoint
     $('#form').attr('action', "/deployments/" + environment).submit();
-  };
+  }
 
   document.getElementById("team-search").addEventListener("change", function() {
     document.getElementById("form").submit();
@@ -145,23 +162,28 @@
 </script>
 
 @envOption(env: Environment) = {
-  <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-    <a href="/deployments/@{env.asString}" class="navbar-link" id="@{env.asString}-tab" role="tab">@env.displayString</a>
-  </li>
-  <script @CSPNonce.attr>
-    document.getElementById("@{env.asString}-tab").addEventListener("click", function() {
-      selectEnvironment(event, '@{env.asString}')
-    });
-  </script>
+  @defining(env == selectedEnv) { active =>
+      <li id="tab-@env.asString" class="nav-item">
+          <a id="@env.asString-tab" class="nav-link @if(active){active}" href="@routes.DeploymentHistoryController.history(env)">
+              @env.displayString
+          </a>
+      </li>
+      <script @CSPNonce.attr>
+          document.getElementById("@{env.asString}-tab").addEventListener("click", function(e) {
+              e.preventDefault() // prevent following the href as we submit the form via js.
+              selectEnvironment('@{env.asString}')
+          });
+      </script>
+  }
 }
 
 @pageNavigation() = {
   <tr>
       <td>
           @if(pagination.page <= 0) {
-              <a class="btn btn-default" href="#">Prev</a>
+              <a class="btn btn-outline-secondary" href="#">Prev</a>
           }else {
-              <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page - 1)}">Prev</a>
+              <a class="btn btn-outline-secondary" href="@{Pagination.uriForPage(request.uri, pagination.page - 1)}">Prev</a>
           }
       </td>
       <td colspan="3">
@@ -173,9 +195,9 @@
       </td>
       <td style="text-align: right">
           @if( (pagination.page * pagination.pageSize) + deployments.length >= pagination.total) {
-              <a class="btn btn-default" href="#">Next</a>
+              <a class="btn btn-outline-secondary" href="#">Next</a>
           } else {
-              <a class="btn btn-default" href="@{Pagination.uriForPage(request.uri, pagination.page + 1) }">Next</a>
+              <a class="btn btn-outline-secondary" href="@{Pagination.uriForPage(request.uri, pagination.page + 1) }">Next</a>
           }
       </td>
   </tr>
@@ -185,6 +207,6 @@
     @if(username.asString.equalsIgnoreCase("remoterequest")) {
         <span>@{username.asString}</span>
     } else {
-        @userProfileBaseUrl.map { url => <a href= "@url/@{username.asString}" target="_blank" rel="noreferrer noopener">@{username.asString}<span class="glyphicon glyphicon-new-window"></span></a> }.getOrElse(<span>{username.asString}</span>)
+        @userProfileBaseUrl.map { url => <a href= "@url/@{username.asString}" target="_blank" rel="noreferrer noopener">@{username.asString}<span class="glyphicon glyphicon-new-window"></span></a> }.getOrElse(username.asString)
     }
 }

@@ -103,7 +103,7 @@ function findMatches(rawInput) {
 
     updateScroll();
     highlightMatch(selectedIdx, true);
-    matchesDiv.classList.remove('hide');
+    matchesDiv.classList.remove('d-none');
 }
 
 function highlightMatch(idx, toggle) {
@@ -144,7 +144,7 @@ function updateScroll() {
 
 function clearMatches() {
     matchesDiv.innerHTML = '';
-    matchesDiv.classList.add('hide');
+    matchesDiv.classList.add('d-none');
 }
 
 function submit() {
@@ -189,6 +189,6 @@ function autoCompleteSearchInputListener(e) {
         }
     } else {
         matchesDiv.innerHTML = '';
-        matchesDiv.classList.add('hide');
+        matchesDiv.classList.add('d-none');
     }
 }

@@ -112,13 +112,13 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       document.select("#team-description").asScala.head.text()   shouldBe "Description: TEAM-A is a great team"
       document.select("#team-documentation").asScala.head.text() shouldBe "Documentation: Go to Confluence space"
       document.select("#team-documentation").asScala.head.toString() should include(
-        """<a href="https://some.documentation.url" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"""")
+        """href="https://some.documentation.url" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"""")
 
-      document.select("#team-slack-channels").toString() should include(
-        """<a href="https://slack.host/messages/team-A" target="_blank" rel="noreferrer noopener">#team-A<span class="glyphicon glyphicon-new-window"></span></a>""")
+      document.select("#slack-team").toString() should include(
+        """href="https://slack.host/messages/team-A" target="_blank" rel="noreferrer noopener">#team-A<span class="glyphicon glyphicon-new-window"></span></a>""")
 
-      document.select("#team-slack-channels").toString() should include(
-        """<a href="https://slack.host/messages/team-A-NOTIFICATION" target="_blank" rel="noreferrer noopener">#team-A-NOTIFICATION<span class="glyphicon glyphicon-new-window"></span></a>""")
+      document.select("#slack-notification").toString() should include(
+        """href="https://slack.host/messages/team-A-NOTIFICATION" target="_blank" rel="noreferrer noopener">#team-A-NOTIFICATION<span class="glyphicon glyphicon-new-window"></span></a>""")
     }
   }
 

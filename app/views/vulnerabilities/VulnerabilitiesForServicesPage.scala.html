@@ -14,7 +14,6 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
 @import uk.gov.hmrc.cataloguefrontend.model.Environment.Integration
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -34,34 +33,44 @@
   request        : RequestHeader
 )
 
-@standard_layout(s"service vulnerabilities") {
-    <header>
-        <h1>Service Vulnerabilities</h1>
-    </header>
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
+@standard_layout(s"service vulnerabilities", active = "health") {
+
+    <h1 class="page-heading mt-4">Service Vulnerabilities</h1>
+
     <div id="service-list">
         <form id="form" method="get">
-            <div class="form-group row">
+            <div class="row">
                 <div class="col-md-6">
-                    <label for="search">Service</label>
-                    <input class="search form-control" type="text" id="search" name="service" value="@form("service").value">
+                    <dl>
+                        <dt>
+                            <label for="search" class="form-label">Service</label>
+                        </dt>
+                        <dd>
+                            <input class="search form-control" type="search" id="search" name="service" value="@form("service").value">
+                        </dd>
+                    </dl>
                 </div>
                 <div class="col-md-3">
                     @select(
-                        field   = form("team"),
-                        options = teams.map(t => t.name.asString -> t.name.asString),
-                        Symbol("_default") -> "All",
-                        Symbol("_label")   -> "Team",
-                        Symbol("id")       -> "team-filter",
-                        Symbol("class")    -> "form-control"
+                        field                 =  form("team"),
+                        options               =  teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Team",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "team-filter",
+                        Symbol("class")       -> "form-select"
                     )
                 </div>
                 <div class="col-md-3">
                     @select(
-                        field   = form("environment"),
-                        options = Environment.values.filterNot(Set(Integration)).map(env => env.asString -> env.displayString),
-                        Symbol("_label")    -> "Environment",
-                        Symbol("id")        -> "environment-filter",
-                        Symbol("class")     -> "form-control"
+                        field                 =  form("environment"),
+                        options               =  Environment.values.filterNot(Set(Integration)).map(env => env.asString -> env.displayString),
+                        Symbol("_label")      -> "Environment",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "environment-filter",
+                        Symbol("class")       -> "form-select"
                     )
                 </div>
             </div>
@@ -69,15 +78,15 @@
         <table class="table table-striped sticky-header">
             <thead>
                 <tr>
-                    <th class="col-xs-6"><button class="sort no-border" data-sort="service">Service</button></th>
-                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="action-required">Action Required</button></th>
-                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="investigation-ongoing">Investigation Ongoing</button></th>
-                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="no-action-required">No Action Required</button></th>
-                    <th class="col-xs-2 text-center"><button class="sort no-border" data-sort="uncurated">Uncurated</button></th>
+                    <th class="col-6"><button class="sort no-border fw-bold" data-sort="service">Service</button></th>
+                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="action-required">Action Required</button></th>
+                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="investigation-ongoing">Investigation Ongoing</button></th>
+                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="no-action-required">No Action Required</button></th>
+                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="uncurated">Uncurated</button></th>
                 </tr>
             </thead>
             <tbody class="list">
-            @vulnerabilities.map(vulnerabilitiesCountForService)
+                @vulnerabilities.map(vulnerabilitiesCountForService)
             </tbody>
         </table>
     </div>
@@ -96,16 +105,16 @@
 
 <!-- listjs configuration -->
 <script @CSPNonce.attr>
-    var options = {
+    let options = {
         valueNames: [ 'service', 'action-required', 'investigation-ongoing', 'no-action-required', 'uncurated' ],
         searchColumns: ['service'],
         searchDelay: 350
     };
     serviceList = new List('service-list', options);
 
-    var searchBox = document.getElementById("search");
+    let searchBox = document.getElementById("search");
     // set autofocus cursor to right of text in search box
-    var length = searchBox.value.length;
+    let length = searchBox.value.length;
     searchBox.focus();
     searchBox.setSelectionRange(length, length);
     // re-search the list upon page load.

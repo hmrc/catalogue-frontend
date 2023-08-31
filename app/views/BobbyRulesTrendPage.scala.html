@@ -33,39 +33,29 @@
 )
 
 @standard_layout("Bobby Rules Trend", "search") {
-    <header>
-        <h1 id="search-service-header">Bobby Rules Trend</h1>
-        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
-    </header>
+    <h1 class="page-heading mt-4">Bobby Rules Trend</h1>
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     <div id="service-list">
 
         @form_global_errors(form)
 
-        <div class="board">
-            <div class="board__body">
+        <div class="card">
+            <div class="card-body">
                 @helper.form(
                     action          =  appRoutes.BobbyRulesTrendController.display(),
                     Symbol("class") -> "form-inline",
                     Symbol("id")    -> "bobby-rules-trend-form"
                 ) {
-                    <table class="padded-table">
-                        <tr>
-                            <td style="vertical-align: top;">
-                                @select(
-                                    field              =  form("rules"),
-                                    options            =  allRules.map(r => (s"${r.group}:${r.artefact}:${r.range.range}", s"${r.group}:${r.artefact}:${r.range.range} ${r.reason}")),
-                                    Symbol("_class")   -> "bobbyrules",
-                                    Symbol("_label")   -> "",
-                                    Symbol("multiple") -> "multiple"
-                                )
-                            </td>
-
-                            <td style="vertical-align: bottom">
-                                <button id="search-button" class="btn btn-primary" type="submit">Display</button>
-                            </td>
-                        </tr>
-                    </table>
+                    @select(
+                        field              =  form("rules"),
+                        options            =  allRules.map(r => (s"${r.group}:${r.artefact}:${r.range.range}", s"${r.group}:${r.artefact}:${r.range.range} ${r.reason}")),
+                        Symbol("_class")   -> "bobbyrules",
+                        Symbol("class")    -> "w-100",
+                        Symbol("_label")   -> "",
+                        Symbol("multiple") -> "multiple"
+                    )
+                    <button id="search-button" class="btn btn-success" type="submit">Display</button>
                 }
 
                 @for(flag <- flags) {

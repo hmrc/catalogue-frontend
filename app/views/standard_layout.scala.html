@@ -17,8 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
-@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType
-@import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthIndRoutes}
 @import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
@@ -34,9 +33,11 @@
   postContent: Html   = Html("")
 )(content: Html)(implicit request: RequestHeader)
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>Tax Platform Catalogue - @title</title>
+        <link rel="stylesheet" href="@routes.Assets.versioned("bootstrap.5.3.0.min.css")" />
+        <link rel="stylesheet" href="@routes.Assets.versioned("glyphicon-bootstrap.3.4.1.css")" />
         <link rel="stylesheet" href="@routes.Assets.versioned("catalogue-frontend.css")" />
         <link rel="shortcut icon" href="@routes.Assets.versioned("favicon.ico")" type="image/x-icon">
         <script @CSPNonce.attr src="@routes.Assets.versioned("jquery.3.5.1.min.js")"></script>
@@ -54,8 +55,8 @@
 
         *@
         <script @CSPNonce.attr src="@routes.Assets.versioned("list-2.3.0-patched.min.js")"></script>
-        <script @CSPNonce.attr src="@routes.Assets.versioned("popper.1.12.9.min.js")"></script>
-        <script @CSPNonce.attr src="@routes.Assets.versioned("bootstrap.3.4.1.min.js")"></script>
+        <script @CSPNonce.attr src="@routes.Assets.versioned("popper.2.11.8.min.js")"></script>
+        <script @CSPNonce.attr src="@routes.Assets.versioned("bootstrap.5.3.0.min.js")"></script>
         <script @CSPNonce.attr src="@routes.Assets.versioned("catalogue-frontend.js")"></script>
         @head
         <style>
@@ -85,135 +86,131 @@
 
     </head>
     <body>
-        <nav class="navbar navbar-default">
-            <div class="container" id="navbar">
-                <header class="navbar-header">
-                    <a id="mdtp-navbar-brand" href="/" class="navbar-brand">
-                        MDTP
-                    </a>
-                </header>
-                <ul id="main-menu-bar" class="nav navbar-nav">
-                    <li>
-                        <a id="link-to-teams" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams()" class="@if(active=="teams") {active}">Teams</a>
-                    </li>
-                    <li>
-                        <a id="link-to-repositories" href="@reposRoutes.RepositoriesController.allRepositories()" class="@if(active=="repositories") {active}">Repositories</a>
-                    </li>
 
-                    <li>
-                        <a id="link-to-whats-running-where" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()" class="@if(active=="whats-running-where") {active}">What's Running Where</a>
+        <nav class="navbar navbar-expand-md navbar-dark bg-black">
+            <div class="container">
+                <a href="/" class="navbar-brand">
+                    MDTP
+                </a>
+                <ul id="main-menu-bar" class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a id="link-to-teams" class="nav-link @if(active == "teams") {active}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams()">Teams</a>
                     </li>
-                    <li>
-                        <a id="link-to-deployments" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(Production)" class="@if(active=="deployments") {active}">Deployments</a>
+                    <li class="nav-item">
+                        <a id="link-to-repositories" class="nav-link @if(active == "repositories") {active}" href="@reposRoutes.RepositoriesController.allRepositories()">Repositories</a>
                     </li>
-
-
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Shuttering<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a id="link-to-shutter-overview-frontend" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Frontend)">Shutter Overview - Frontend</a></li>
-                            <li><a id="link-to-shutter-overview-api" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Api)">Shutter Overview - Api</a></li>
-                            <li><a id="link-to-shutter-overview-rate" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Rate)">Shutter Overview - Rate</a></li>
-                            <li><a id="link-to-shutter-events" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEvents">Shutter Events</a></li>
+                    <li class="nav-item">
+                        <a id="link-to-whats-running-where" class="nav-link @if(active == "whats-running-where") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">What's Running Where</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="link-to-deployments" class="nav-link @if(active == "deployments") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(Production)">Deployments</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a id="shuttering-dropdown" class="nav-link dropdown-toggle @if(active == "shuttering") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Shuttering
+                        </a>
+                        <ul id="shuttering-menu" class="dropdown-menu">
+                            <li><a id="link-to-shutter-overview-frontend" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Frontend)">Shutter Overview - Frontend</a></li>
+                            <li><a id="link-to-shutter-overview-api" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Api)">Shutter Overview - Api</a></li>
+                            <li><a id="link-to-shutter-overview-rate" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStates(ShutterType.Rate)">Shutter Overview - Rate</a></li>
+                            <li><a id="link-to-shutter-events" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEvents">Shutter Events</a></li>
                         </ul>
                     </li>
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Health<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li><a id="link-to-health-indicators" href="@HealthIndicatorsController.indicatorsForRepoType()">Health-Indicators</a></li>
-                            <li><a id="link-to-platform-initiatives" href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a id="link-to-bobby-explorer" href="@appRoutes.BobbyExplorerController.list()">Bobby Explorer</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a id="link-to-leak-detection-rules" href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.ruleSummaries">Leak Detection - Rules</a></li>
-                            <li><a id="link-to-leak-detection-repositories" href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), None, None)">
-                                Vulnerabilities</a></li>
-                            <li><a id="link-to-vulnerabilities-services" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesCountForServices">
-                                Vulnerabilities - Services</a></li>
-                            <li><a href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesTimeline(None, None, None, curationStatus = Some(CurationStatus.ActionRequired.asString))">
-                                Vulnerabilities - Timeline</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a id="link-to-pr-commenter-recommendations" href="@prcommenterRoutes.PrCommenterController.recommendations()">PR-Commenter Recommendations</a></li>
+                    <li class="nav-item dropdown">
+                        <a id="health-dropdown" class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Health
+                        </a>
+                        <ul id="health-menu" class="dropdown-menu">
+                            <li><a id="link-to-health-indicators" class="dropdown-item" href="@healthIndRoutes.HealthIndicatorsController.indicatorsForRepoType()">Health-Indicators</a></li>
+                            <li><a id="link-to-platform-initiatives" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a id="link-to-bobby-explorer" class="dropdown-item" href="@appRoutes.BobbyExplorerController.list()">Bobby Explorer</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a id="link-to-leak-detection-rules" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.ruleSummaries">Leak Detection - Rules</a></li>
+                            <li><a id="link-to-leak-detection-repositories" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a id="link-to-vulnerabilities" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), None, None)">Vulnerabilities</a></li>
+                            <li><a id="link-to-vulnerabilities-services" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesCountForServices">Vulnerabilities - Services</a></li>
+                            <li><a id="link-to-vulnerabilities-timeline" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesTimeline(None, None, None, curationStatus = Some(CurationStatus.ActionRequired.asString))">Vulnerabilities - Timeline</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a id="link-to-pr-commenter-recommendations" class="dropdown-item" href="@prcommenterRoutes.PrCommenterController.recommendations()">PR-Commenter Recommendations</a></li>
                         </ul>
                     </li>
-
                     @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2023-10-01T00:00:00Z"))) { isNew =>
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    <li class="nav-item dropdown">
+                        <a id="explore-dropdown" class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Explore
                             @* TODO remove once date has elapsed *@
-                            @if(CatalogueFrontendSwitches.showUsers.isEnabled && isNew) {
-                                <span style="color: violet; font-size: large;">*</span>
+                            @if(isNew) {
+                                <span style="color: violet;">
+                                    *
+                                    <span class="visually-hidden">new pages in dropdown</span>
+                                </span>
                             }
-                            <span class="caret"></span>
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a id="link-to-dependency-explorer" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
-                            <li><a id="link-to-jdk-explorer" href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
-                            <li><a id="link-to-sbt-explorer" href="@appRoutes.SBTVersionController.compareAllEnvironments()">SBT Explorer</a></li>
-                            <li><a id="link-to-default-branch-names" href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
-                            <li><a id="link-to-search-by-url" href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
+                        <ul id="explore-menu" class="dropdown-menu">
+                            <li><a id="link-to-dependency-explorer" class="dropdown-item" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
+                            <li><a id="link-to-jdk-explorer" class="dropdown-item" href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
+                            <li><a id="link-to-sbt-explorer" class="dropdown-item" href="@appRoutes.SBTVersionController.compareAllEnvironments()">SBT Explorer</a></li>
+                            <li><a id="link-to-default-branch-names" class="dropdown-item" href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
+                            <li><a id="link-to-search-by-url" class="dropdown-item" href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
                             <li>
-                                <a id="link-to-search-config" href="@serviceConfigsRoutes.ServiceConfigsController.searchLanding()">
+                                <a id="link-to-search-config" class="dropdown-item" href="@serviceConfigsRoutes.ServiceConfigsController.searchLanding()">
                                     Search Config
                                     @* TODO remove once date has elapsed *@
-                                    @if(CatalogueFrontendSwitches.showUsers.isEnabled && isNew) {
-                                        <span class="new-feature-badge">New</span>
-                                    }
+                                    @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
                                 </a>
                             </li>
+
                             @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
-                                <li><a id="link-to-search-config" href="@serviceConfigsRoutes.ServiceConfigsController.configWarningLanding()">Config Warnings</a></li>
+                                <li><a id="link-to-search-config" class="dropdown-item" href="@serviceConfigsRoutes.ServiceConfigsController.configWarningLanding()">Config Warnings</a></li>
                             }
-                            <li><a id="link-to-deployment-timelines" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
-                            @if(CatalogueFrontendSwitches.showUsers.isEnabled) {
-                              <li>
-                                <a id="link-to-users-list-page" href="@uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.allUsers()">
+                            <li><a id="link-to-deployment-timelines" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
+                            <li>
+                                <a id="link-to-users-list-page" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.allUsers()">
                                     Users
                                     @* TODO remove once date has elapsed *@
-                                    @if(isNew) {
-                                        <span class="new-feature-badge">New</span>
-                                    }
+                                    @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
                                 </a>
-                              </li>
-                            }
+                            </li>
                         </ul>
                     </li>
                     }
                 </ul>
 
-                <ul class="nav navbar-nav navbar-right">
-                    <li><a id="searchicon" href="#" title="Search"><span class="glyphicon glyphicon-search"></span></a></li>
-                    <li class="dropdown">
-                        @partials.with_username { username =>
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                @username <span class="caret"></span>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a id="sign-out" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signOut">Sign out</a></li>
-                            </ul>
-                        }{
-                          <a id="sign-in" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signIn(targetUrl = if (request.target.uriString == "/") None else Some(RedirectUrl(request.target.uriString)))" class="@if(active=="sign-in") {active}">
-                            Sign in
+                <ul id="catalogue-search-bar" class="nav navbar-nav ms-auto d-none">
+                    <li class="search-width catalogue-search position-relative">
+                        <input id="catalogue-search" class="form-control" type="text" placeholder="Search (shortcut ctrl+space)" autocomplete="off" />
+                        <div id="catalogue-search-matches" class="navbar-search-matches-dropdown d-none"></div>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a id="searchicon" class="nav-link" href="#" title="Search">
+                            <span class="glyphicon glyphicon-search"></span>
+                        </a>
+                    </li>
+                    @partials.with_username { username =>
+                      <li class="nav-item dropdown">
+                          <a id="logged-in-user" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                              @username
                           </a>
-                        }
-                    </li>
+                          <ul class="dropdown-menu">
+                              <li><a id="sign-out" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signOut">Sign out</a></li>
+                          </ul>
+                      </li>
+                    }{
+                      <li class="nav-item">
+                          <a id="sign-in" class="nav-link" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signIn(targetUrl = if (request.target.uriString == "/") None else Some(RedirectUrl(request.target.uriString)))">Sign in</a>
+                      </li>
+                    }
                 </ul>
-
-                <ul id="catalogue-search-bar" class="nav navbar-nav navbar-right hide">
-                    <li class="search-width catalogue-search">
-                        <input id="catalogue-search" class="search-input" type="text" placeholder="Search (shortcut ctrl+space)">
-                        <div id="catalogue-search-matches" class="search-dropdown search-width hide">
-                    </div>
-                    </li>
-                </ul>
-
             </div>
         </nav>
 
         @preContent
+
         <div id="standard-layout-container">
             <section class="container">
             @content
@@ -232,11 +229,11 @@
             ga('send', 'pageview');
 
             // Activate bootstrap tooltips
-            $(function () {
-                $('[data-toggle=tooltip]').tooltip({container: 'body'});
-                $('[data-toggle="tooltip"]').tooltip()
-                $('[data-toggle="popover"]').popover()
-            })
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+            // Activate bootstrap popovers
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+            const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
         </script>
     </body>
 

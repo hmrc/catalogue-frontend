@@ -28,17 +28,15 @@
   request: RequestHeader
 )
 
-@standard_layout(s"Bobby rules") {
-    <header>
-        <h1>Bobby Rules</h1>
-    </header>
+@standard_layout(s"Bobby rules", active = "health") {
+    <h1 class="page-heading mt-4">Bobby Rules</h1>
     @bobbyRulesTimeSection(rules.upcoming, "Upcoming")
     @bobbyRulesTimeSection(rules.active  , "Active")
 }
 
 @bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String) = {
     @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
-        <div><h2>@heading</h2></div>
+        <h2 class="fw-bold">@heading</h2>
         @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true )
         @bobbyRulesArtifactTypeSection(rulesByTime.plugins  , "Plugin" , inclViewSlugsLink = false)
     }
@@ -46,31 +44,29 @@
 
 @bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
     @if(rulesByArtifactType.nonEmpty) {
-        <div>
-            <table class="@{artifactType.toLowerCase}-rules table table-striped sticky-header">
-                <thead>
+        <table class="@{artifactType.toLowerCase}-rules table table-striped sticky-header">
+            <thead>
 
-                    <tr>
-                        <th colspan="6"></th>
-                        <th colspan="4" style="text-align: center;">Services Affected</th>
-                    </tr>
+                <tr>
+                    <th colspan="6"></th>
+                    <th colspan="4" class="text-center border-bottom">Services Affected</th>
+                </tr>
 
-                    <tr>
-                        <th class="col-xs-3" colspan="1">@artifactType</th>
-                        <th class="col-xs-2" colspan="3"  style="text-align: center">Banned Versions</th>
-                        <th class="col-xs-4">Reason</th>
-                        <th class="">Active from</th>
-                        <th class="">Latest</th>
-                        <th class="">QA</th>
-                        <th class="">Prod</th>
-                        <th class=""></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
-                </tbody>
-            </table>
-        </div>
+                <tr>
+                    <th class="col-3" colspan="1">@artifactType</th>
+                    <th class="col-2" colspan="3" style="text-align: center">Banned Versions</th>
+                    <th class="col-4">Reason</th>
+                    <th class="">Active from</th>
+                    <th class="">Latest</th>
+                    <th class="">QA</th>
+                    <th class="">Prod</th>
+                    <th class=""></th>
+                </tr>
+            </thead>
+            <tbody>
+                @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
+            </tbody>
+        </table>
     }
 }
 
@@ -86,16 +82,21 @@
   }
 }
 
-
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
     <tr id="rule-@rule.id" class="bobby-rule">
         <td>@rule.group:@rule.artefact</td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
-                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-right: 0; text-align: right">@lbDescr</td>
-                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range">x</td>
-                    <td class="bobby-range" data-toggle="tooltip" title="@rule.range.range" style="white-space: nowrap; padding-left: 0; text-align: left">@upDescr</td>
+                    <td class="bobby-range" style="white-space: nowrap; padding-right: 0; text-align: right">
+                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">@lbDescr</span>
+                    </td>
+                    <td class="bobby-range">
+                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">x</span>
+                    </td>
+                    <td class="bobby-range" style="white-space: nowrap; padding-left: 0; text-align: left">
+                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">upDescr</span>
+                    </td>
                 }
                 case None => {
                     <td colspan="3">@rule.range.range</td>

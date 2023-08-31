@@ -27,10 +27,9 @@
   request: RequestHeader
 )
 
-<div id="cost-estimation">
-    <div class="board">
-        <h3 class="board__heading">Estimated Cost</h3>
-        <div class="board__body">
+    <div id="cost-estimation" class="card">
+        <div class="card-header"><h4 class="mb-0">Estimated Cost</h4></div>
+        <div class="card-body">
             <p>
                 @if(linkToCostsPage) {
                     <a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)">
@@ -43,16 +42,16 @@
 
             <p>This is based on a usage of @serviceCostEstimate.totalSlots.asInt slots across all environments, where
                each slot is estimated to cost
-               <em data-toggle="tooltip"
-                     title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
-                            @costEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
-                            services across all environments" style="border-bottom: dotted 1px">
+               <em data-bs-toggle="tooltip"
+                   data-bs-placement="bottom"
+                   data-bs-title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
+                                  @costEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
+                                  services across all environments" style="border-bottom: dotted 1px">
                    @formatGbp(costEstimateConfig.slotCostPerYear) per year
                </em>.</p>
             <div id="chart"></div>
         </div>
     </div>
-</div>
 
 <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script @CSPNonce.attr type="text/javascript">

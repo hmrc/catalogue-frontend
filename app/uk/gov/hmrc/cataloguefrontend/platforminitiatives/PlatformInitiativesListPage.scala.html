@@ -35,120 +35,122 @@
 ,  request     : RequestHeader
 )
 
-@standard_layout(s"Platform Initiatives", "platforminitiatives") {
-<header>
-    <h1>@team match {
-        case None       => {Platform Initiatives}
-        case Some(team) => {Platform Initiatives: @team.asString}
-    }</h1>
+@standard_layout(s"Platform Initiatives", active = "health") {
+
+    <h1 class="page-heading mt-4">
+        @team match {
+            case Some(team) if team.asString.nonEmpty => {Platform Initiatives: @team.asString}
+            case _ => {Platform Initiatives}
+        }
+    </h1>
     <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
-</header>
 
-@if(form.hasErrors) {
-  <div class="alert alert-danger" role="alert">
-    <ul class="list">
-      @form.errors.map { error =>
-        <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
-      }
-    </ul>
-  </div>
-}
-
-<div id="platform-initiatives">
-    <form id="form" action="/platform-initiatives" method="get">
-        <div class="col-xs-1 padding-reset-right">
-            <label for="search">Search:</label>
-        </div>
-        <div class="col-xs-3">
-            <input class="search form-control" id="search" type="text">
-        </div>
-        <div class="right padding-reset-right" style="line-height:2.2em;">
-            @Seq(DisplayType.Chart, DisplayType.Progress).zipWithIndex.map { case (dt, i) =>
-                @if(i != 0){ | }
-                <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt,team)">
-                  @if(display == dt){ <strong>@dt.asString </strong> } else { @dt.asString }
-                </a>
+    @if(form.hasErrors) {
+        <div class="alert alert-danger" role="alert">
+            <ul class="list">
+            @form.errors.map { error =>
+                <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
             }
-            <div style="float:right; margin-top:-1em;">
-            @select(
-                field              =  form("team")
-            ,   options            =  allTeams
-                                        .map(_.name.asString)
-                                        .map(t => t -> t)
-                                        .distinct
-                                        .sorted
-            ,   Symbol("_default") -> "All"
-            ,   Symbol("_label")   -> None
-            ,   Symbol("_value")   -> form("team").value
-            ,   Symbol("_id")      -> "teamName"
-            )
-            </div>
+            </ul>
         </div>
-        <br>
-        <div class="board">
-            <h3 id="info-box-header" class="board__heading"><img class="info-icon" src="assets/infoicon.svg"/> What are these?</h3>
-            <div class="board__body">
-                <p id="info-box-copy">The following shown here are platform-wide initiatives. They take two points:</p>
+    }
+
+    <div id="platform-initiatives">
+        <form id="form" action="/platform-initiatives" method="get">
+            <div class="row mb-4">
+                <label for="search" class="col-1 col-form-label fw-bold">Search:</label>
+                <div class="col-3">
+                    <input id="search" class="search form-control" type="search">
+                </div>
+                <div class="col-3 pt-2">
+                    @Seq(DisplayType.Chart, DisplayType.Progress).zipWithIndex.map { case (dt, i) =>
+                        @if(i != 0){ | }
+                        <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt,team)">
+                        @if(display == dt){ <strong>@dt.asString </strong> } else { @dt.asString }
+                    </a>
+                    }
+                </div>
+                <div class="col-2 offset-3">
+                    <select id="teamName" name="team" class="form-select">
+                        <option class="blank" value>All</option>
+                        @for(team <- allTeams.map(_.name.asString).distinct.sorted) {
+                            <option value="@team" @if(form("team").value.contains(team)) {selected="selected"}>@team</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <span class="glyphicon glyphicon-info-sign"></span>
+                    What are these?
+                </h4>
+            </div>
+            <div class="card-body">
+                <p id="info-box-copy" class="card-text">The following shown here are platform-wide initiatives. They take two points:</p>
+
                 <ul>
                     <li> How many repositories are affected by an initiative</li>
                     <li> How many repositories have met the initiatives requirements </li>
                 </ul>
-                <p>You can filter down to a teams compliance by choosing a team in the drop-down box to the top-right of this panel.</p>
-                <div class="row col-xs-12 ">
-                    <p>If you would like to suggest new initiatives, please provide an API we can consume and make some quantifiable calculations on.
-                        For more details, please see the <a href="https://github.com/hmrc/platform-initiatives">Platform Initiatives GitHub page.</a></p>
-                </div>
+
+                <p class="card-text">You can filter down to a teams compliance by choosing a team in the drop-down box to the top-right of this panel.</p>
+                <p class="card-text">
+                    If you would like to suggest new initiatives, please provide an API we can consume and make some quantifiable calculations on.
+                    For more details, please see the <a href="https://github.com/hmrc/platform-initiatives">Platform Initiatives GitHub page.</a>
+                </p>
             </div>
-        <table class="table table-striped">
-            <tbody class="list">
-            @initiatives.zipWithIndex.map{case (initiative, i) =>
-                <tr class="col-sm-6">
-                    <td>
-                        @display match{
-                            case DisplayType.Chart => {
-                                <div class="initiativeName" style="width:500px;">
-                                    <h3> @initiative.initiativeName </h3><br \>
-                                </div>
-                                <div id="chart_div_@initiative.initiativeName"></div>
-                                <br>
-                                <div style="max-width:500px; height:100px; word-wrap:break-word;">
-                                    @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
-                                        case Right(s) => {
-                                            @Html(s)
-                                        }
-                                        case Left(_) => {
-                                            @initiative.initiativeDescription
-                                        }
-                                    }
-                                </div>
-                            }
-                            case DisplayType.Progress => {
-                                <div class="initiativeName" style="width:500px;">
-                                    <h3> @initiative.initiativeName </h3>
-                                    <progress style="width: 75%;" class="progress" value="@initiative.progress.current"
-                                              max="@initiative.progress.target" data-toggle="tooltip" title="@initiative.progress.current/@initiative.progress.target @initiative.completedLegend">
-                                        @initiative.progress.current/@initiative.progress.target
-                                    </progress>
-                                    <span style="float: right;">@initiative.progress.percent% @initiative.completedLegend</span>
-                                    @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
-                                        case Right(s) => {
-                                            @Html(s)
-                                        }
-                                        case Left(_) => {
-                                            @initiative.initiativeDescription
-                                        }
-                                    }
-                                </div>
-                            }
-                        }
-                    </td>
-                </tr>
-                }
-            </tbody>
-        </table>
         </div>
-    </form>
-</div>
+
+        <div class="row list">
+            @for(initiative <- initiatives) {
+                <div class="col-6">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0 initiativeName">
+                                @initiative.initiativeName
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @display match {
+                                case DisplayType.Chart => {
+                                    <div id="chart_div_@initiative.initiativeName"></div>
+                                    <p class="card-text">
+                                        @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
+                                            case Right(s) => {@Html(s)}
+                                            case Left(_)  => {@initiative.initiativeDescription}
+                                        }
+                                    </p>
+                                }
+                                case DisplayType.Progress => {
+                                    @defining((initiative.progress.current.toDouble / initiative.progress.target) * 100) { progress =>
+                                        <div class="row">
+                                            <div class="col-9">
+                                                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="@initiative.progress.target" aria-valuenow="@initiative.progress.current">
+                                                    <div class="progress-bar" style="width: @progress%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                @initiative.progress.percent% @initiative.completedLegend
+                                            </div>
+                                        </div>
+                                        <p class="card-text">
+                                        @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
+                                            case Right(s) => {@Html(s)}
+                                            case Left(_)  => {@initiative.initiativeDescription}
+                                        }
+                                        </p>
+                                    }
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 }
 
 @if(display == DisplayType.Chart) {
@@ -179,7 +181,7 @@
 
 @if(initiatives.nonEmpty) {
   <script @CSPNonce.attr>
-    var options = { valueNames:     ['initiativeName'],
+    let options = { valueNames:     ['initiativeName'],
                     searchColumns:  ['initiativeName'] };
     new List('platform-initiatives', options);
   </script>
