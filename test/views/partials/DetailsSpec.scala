@@ -18,7 +18,7 @@ package views.partials
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, RouteRulesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, RouteRulesConnector, ServiceType}
 
 import java.time.Instant
 
@@ -36,7 +36,9 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     repoType       = RepoType.Other,
     isPrivate      = true,
     isArchived     = false,
-    defaultBranch  = "main"
+    defaultBranch  = "main",
+    zone           = Option("protected"),
+    serviceType    = Option(ServiceType.Backend),
   )
 
   val environmentRoute = RouteRulesConnector.EnvironmentRoute(
@@ -49,6 +51,24 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     "display description when available" in {
       val result = views.html.partials.details(repo).body
       result should include ("some description")
+    }
+
+    "display zone" in {
+      val result = views.html.partials.details(repo).body
+      result should include ("id=\"repository-zone\"")
+      result should include ("protected")
+    }
+
+    "display repository visibility" in {
+      val result = views.html.partials.details(repo).body
+      result should include ("id=\"repository-visibility\"")
+      result should include ("Private")
+    }
+
+    "display repository service type" in {
+      val result = views.html.partials.details(repo).body
+      result should include ("id=\"repository-service-type\"")
+      result should include ("Backend")
     }
 
     "should not display description when it is not available" in {

@@ -45,13 +45,13 @@ final class CostEstimationServiceSpec
   "Service" should {
     "produce a cost estimate for a service in all environments in which it's deployed" in {
       val stubs =
-        Map[Environment, DeploymentConfig](
-          (Environment.Development , DeploymentConfig(3, 1)),
-          (Environment.Integration , DeploymentConfig(3, 1)),
-          (Environment.QA          , DeploymentConfig(3, 1)),
-          (Environment.Staging     , DeploymentConfig(3, 1)),
-          (Environment.ExternalTest, DeploymentConfig(3, 1)),
-          (Environment.Production  , DeploymentConfig(11, 3))
+        Seq(
+          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.Development, zone = "protected"),
+          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.Integration, zone = "protected"),
+          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.QA, zone = "protected"),
+          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.Staging, zone = "protected"),
+          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.ExternalTest, zone = "protected"),
+          DeploymentConfig(DeploymentSize(11, 3), environment = Environment.Production, zone = "protected")
         )
 
       val serviceConfigsConnector =
@@ -88,7 +88,7 @@ final class CostEstimationServiceSpec
       val serviceConfigsConnector =
         stubConfigConnector(
           service = "some-service",
-          stubs   = Map.empty
+          stubs   = Seq.empty
         )
 
       val costEstimationService =
@@ -104,14 +104,14 @@ final class CostEstimationServiceSpec
 
   private def stubConfigConnector(
     service            : String,
-    stubs              : Map[Environment, DeploymentConfig]
+    stubs              : Seq[DeploymentConfig]
   ): ServiceConfigsConnector = {
-    val serviceConfigsConnector = mock[ServiceConfigsConnector]
+    val serviceConfigsConnector = mock[ServiceConfigsConnector](withSettings.lenient())
 
-    Environment.values.foreach { environment =>
-      when(serviceConfigsConnector.deploymentConfig(service, environment))
-        .thenReturn(Future.successful(stubs.get(environment)))
-    }
+    when(serviceConfigsConnector.deploymentConfig(Option(service))).thenReturn(Future.successful(stubs))
+    stubs.foreach(deploymentConfig =>
+      when(serviceConfigsConnector.deploymentConfig(Option(service), Some(deploymentConfig.environment))).thenReturn(Future.successful(Seq(deploymentConfig)))
+    )
 
     serviceConfigsConnector
   }

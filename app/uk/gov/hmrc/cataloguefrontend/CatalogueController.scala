@@ -128,6 +128,15 @@ class CatalogueController @Inject() (
 
     }
 
+  private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[String]] =
+    serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
+      .map{deploymentConfigs =>
+        val zones = deploymentConfigs.map(_.zone).distinct
+        if (zones.size > 1)
+          logger.warn(s"Service $serviceName is hosted on different zones: \n${deploymentConfigs.map(dc => s"${dc.environment}: ${dc.zone}").mkString("\n")}")
+        zones.headOption
+      }
+
   private def renderServicePage(
     serviceName            : String,
     repositoryDetails      : GitRepository,
@@ -170,6 +179,7 @@ class CatalogueController @Inject() (
       commenterReport      <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
       serviceRelationships <- serviceConfigsService.serviceRelationships(serviceName)
+      zone                 <- retrieveZone(serviceName)
       optLatestData        =  optLatestServiceInfo.map { latestServiceInfo =>
                                 SlugInfoFlag.Latest ->
                                   EnvData(
@@ -181,7 +191,7 @@ class CatalogueController @Inject() (
                               }
     } yield Ok(serviceInfoPage(
       serviceName                  = serviceName,
-      repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs),
+      repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = zone),
       costEstimate                 = costEstimate,
       costEstimateConfig           = serviceCostEstimateConfig,
       repositoryCreationDate       = repositoryDetails.createdDate,

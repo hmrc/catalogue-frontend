@@ -18,12 +18,14 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import cats.implicits._
 import play.api.Configuration
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs.environmentFormat
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -43,17 +45,13 @@ class CostEstimationService @Inject() (
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): Future[ServiceCostEstimate] =
-    Environment.values
-      .traverse(environment =>
-        serviceConfigsConnector
-          .deploymentConfig(serviceName, environment)
-          .map(deploymentConfig => (environment, deploymentConfig.getOrElse(DeploymentConfig.empty)))
-      )
+    serviceConfigsConnector
+      .deploymentConfig(Some(serviceName))
       .map { deploymentConfigByEnvironment =>
         val slotsByEnv =
           deploymentConfigByEnvironment
-            .collect { case (env, config) if config.totalSlots.asInt > 0 =>
-              env -> config.totalSlots
+            .collect { case config if config.deploymentSize.totalSlots.asInt > 0 =>
+              config.environment -> config.deploymentSize.totalSlots
             }
             .sortBy(_._1)
 
@@ -86,7 +84,7 @@ class CostEstimationService @Inject() (
   private def toChartDataTableByEnv(resourceUsages: List[ResourceUsage]): ChartDataTable = {
     val applicableEnvironments =
       resourceUsages
-        .foldLeft(Set.empty[Environment])((acc, ru) => acc ++ ru.values.collect { case (env, deploymentConfig) if deploymentConfig != DeploymentConfig.empty => env })
+        .foldLeft(Set.empty[Environment])((acc, ru) => acc ++ ru.values.collect { case (env, deploymentSize) if deploymentSize != DeploymentSize.empty => env })
         .toList
         .sorted
 
@@ -133,13 +131,28 @@ class CostEstimationService @Inject() (
 
 object CostEstimationService {
 
-  final case class DeploymentConfig(
-    slots    : Int,
-    instances: Int
+  final case class DeploymentSize(
+    slots       : Int,
+    instances   : Int,
   ) {
     def totalSlots: TotalSlots =
       TotalSlots(slots * instances)
   }
+
+  object DeploymentSize {
+    val empty = DeploymentSize(slots = 0, instances = 0)
+
+    val reads: Reads[DeploymentSize] =
+      ( (__ \ "slots").read[Int]
+      ~ (__ \ "instances").read[Int]
+      )(DeploymentSize.apply _)
+  }
+
+  final case class DeploymentConfig(
+    deploymentSize: DeploymentSize,
+    environment   : Environment,
+    zone          : String,
+  )
 
   case class TotalSlots(asInt: Int) extends AnyVal {
     def costGbp(costEstimateConfig: CostEstimateConfig) =
@@ -147,11 +160,27 @@ object CostEstimationService {
   }
 
   object DeploymentConfig {
-    val empty: DeploymentConfig =
-      DeploymentConfig(slots = 0, instances = 0)
+    implicit val ef  = environmentFormat
+    implicit val ds  = DeploymentSize.reads
+
+    def apply(
+      slots:       Int,
+      instances:   Int,
+      environment: Environment,
+      zone:        String,
+    ): DeploymentConfig =
+      DeploymentConfig(
+        DeploymentSize(slots, instances),
+        environment,
+        zone,
+      )
 
     val reads: Reads[DeploymentConfig] =
-      Json.reads[DeploymentConfig]
+      ( (__ \ "slots").read[Int]
+      ~ (__ \ "instances").read[Int]
+      ~ (__ \ "environment").read[Environment]
+      ~ (__ \ "zone").read[String]
+      )(DeploymentConfig.apply(_, _, _, _))
   }
 
   final case class HistoricEstimatedCostCharts(
