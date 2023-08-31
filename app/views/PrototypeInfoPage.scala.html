@@ -42,28 +42,26 @@ viewMessages           : ViewMessages
   messages               : Messages
 )
 
-@standard_layout(prototype.name, "prototypes") {
-    <header class="header-with-github-badge">
-        <div>
-            <h1>
-              Prototype: @prototype.name
-              @if(prototype.isDeprecated) { <span>Deprecated</span> }
-              @if(prototype.isArchived) { <span>Archived</span> }
-            </h1>
-        </div>
-        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
-    </header>
+@standard_layout(prototype.name, active = "repositories") {
+    <h1 class="page-heading mt-4">
+        Prototype: @prototype.name
+        <span>@githubBadgeType(prototype)</span>
+        @if(prototype.isDeprecated) { <span>Deprecated</span> }
+        @if(prototype.isArchived) { <span>Archived</span> }
+    </h1>
+
+    <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
 
     @partials.leak_detection_banner(linkToLeakDetection)
 
     <section class="section-wrapper">
-        <div class="row">
+        <div class="row mb-3">
             <div class="col-md-12">
                 @prototypeDetailsPartial(prototype, prototypeDetails, hasPasswordChangeAuth.value)
             </div>
         </div>
 
-        <div class="row">
+        <div class="row mb-3">
             <div class="col-md-6">
                 @partials.repo_owning_teams(prototype)
             </div>
@@ -73,21 +71,21 @@ viewMessages           : ViewMessages
             </div>
         </div>
 
-        <div class="row">
+        <div class="row mb-3">
             <div class="col-md-6">
-                <div style="margin-bottom: 1em">
+                <div class="mb-3">
                     @if(hasPasswordChangeAuth.value && prototypeDetails.status == PrototypeStatus.Running) {
-                        <button id="reset-password-enabled" type="button" class="btn btn-primary">Reset Password</button>
+                        <button id="reset-password-enabled" type="button" class="btn btn-success">Reset Password</button>
                     } else {
-                        <button id="reset-password-disabled" type="button" class="btn btn-primary" disabled>Reset Password</button>
+                        <button id="reset-password-disabled" type="button" class="btn btn-success" disabled>Reset Password</button>
                         @if(hasPasswordChangeAuth.value == false) {
-                            <div class="text-muted" style="margin-top: 0.8em">
+                            <div class="text-muted mt-2">
                                 <i class="glyphicon glyphicon-info-sign"></i>
                                 @messages("prototype.password.forbidden")
                             </div>
                         }
                         @if(hasPasswordChangeAuth.value && prototypeDetails.status != PrototypeStatus.Running) {
-                            <div class="text-muted" style="margin-top: 0.8em">
+                            <div class="text-muted mt-2">
                                 <i class="glyphicon glyphicon-info-sign"></i>
                                 @messages("prototype.password.not-running")
                             </div>

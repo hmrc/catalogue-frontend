@@ -27,73 +27,84 @@
   request: RequestHeader
 )
 
-@standard_layout("Service Search", "search") {
-    <header>
-        <h1 id="search-service-header">Search for a service by URL</h1>
-    </header>
-    <div id="service-list">
-        <div class="board">
-            <h3 id="info-box-header" class="board__heading"><img class="info-icon" src="assets/infoicon.svg" alt="How to find a service"/> How to find a service</h3>
-            <div class="board__body">
-                <p id="info-box-copy">Use this page to search for a Frontend service on the tax platform. Enter the URL into the box below and click on the service name to find out more about it.</p>
-                <p>
-                    <span class="glyphicon glyphicon-warning-sign alert-warning"></span>
-                    If you are looking for an API you can use the
-                    <a href="https://www.api.gov.uk" target="_blank" rel="noreferrer noopener">
-                        API Catalogue
-                        <span class="glyphicon glyphicon-new-window"></span>
-                    </a>
-                </p>
-                <div class="row col-xs-12 ">
-                    <p>Addresses beginning with the following are not tax platform services:</p>
-                    <ul class="list list--minimal">
-                        <li class="list-item">https://www.access.tax.service.gov.uk/ (Owned by Secure Credential Platform)</li>
-                        <li class="list-item">https://www.gov.uk/ (Owned by Government Digital Service)</li>
-                    </ul>
-                </div>
-            </div>
+@standard_layout("Service Search", active = "explore") {
+
+    <h1 id="search-service-header" class="page-heading mt-4">Search for a service by URL</h1>
+
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4 id="info-box-header" class="mb-0">
+                <span class="glyphicon glyphicon-info-sign"></span>
+                How to find a service
+            </h4>
         </div>
-        <div class="board">
-            <div class="board__body">
-                <form action="@uk.gov.hmrc.cataloguefrontend.routes.SearchByUrlController.searchUrl" method="post">
-                    @csrfFormField
-                    <div class="form-group row container">
-                        <div class="col-md-3"><label for="search-box">https://www.tax.service.gov.uk/</label></div>
-                        <div class="col-md-8"><input class="search form-control" id="search-box" type="text" name="name" value="@form("name").value" autofocus /></div>
-                        <div class="col-md-1"><button id="search-button" class="btn btn-primary" type="submit">Search</button></div>
-                    </div>
-                </form>
-                @if(searchResults.nonEmpty) {
-                    <table id="search-results" class="table table-striped">
+        <div class="card-body">
+            <p id="info-box-copy" class="card-text">
+                Use this page to search for a Frontend service on the tax platform. Enter the URL into the box below and click on the service name to find out more about it.
+            </p>
+
+            <p class="card-text">
+                <span class="glyphicon glyphicon-warning-sign text-warning"></span>
+                If you are looking for an API you can use the
+                <a href="https://www.api.gov.uk" target="_blank" rel="noreferrer noopener">
+                    API Catalogue
+                    <span class="glyphicon glyphicon-new-window"></span>
+                </a>
+            </p>
+
+            <p class="card-text">
+                Addresses beginning with the following are not tax platform services:
+            </p>
+            <ul class="list-unstyled">
+                <li>https://www.access.tax.service.gov.uk/ (Owned by Secure Credential Platform)</li>
+                <li>https://www.gov.uk/ (Owned by Government Digital Service)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form action="@uk.gov.hmrc.cataloguefrontend.routes.SearchByUrlController.searchUrl" method="post">
+                @csrfFormField
+                <div class="row mb-3">
+                    <label for="search-box" class="col-md-3 col-form-label fw-bold">https://www.tax.service.gov.uk/</label>
+                    <div class="col-md-8"><input class="search form-control" id="search-box" type="text" name="name" value="@form("name").value" autofocus /></div>
+                    <div class="col-md-1"><button id="search-button" class="btn btn-success" type="submit">Search</button></div>
+                </div>
+            </form>
+
+            @if(searchResults.nonEmpty) {
+                <table id="search-results" class="table table-striped">
+                    <thead>
                         <tr>
                             <th class="col-lg-3">Service</th>
                             <th class="col-lg-9">URL</th>
                         </tr>
-                        <tbody class="list">
-                        @for(result <- searchResults) {
-                            @for(route <- result.routes) {
-                                <tr>
-                                    <td><a id="link-to-@{result.service}" href="@{
-                                        serviceNameToUrl(result.service)
-                                    }">@result.service</a>
-                                    </td>
-                                    <td>
+                    </thead>
+                    <tbody class="list">
+                    @for(result <- searchResults) {
+                        @for(route <- result.routes) {
+                            <tr>
+                                <td>
+                                    <a id="link-to-@{result.service}" href="@serviceNameToUrl(result.service)">@result.service</a>
+                                </td>
+                                <td>
                                     @if(route.isRegex) {
                                         @route.frontendPath
                                     } else {
                                         <a href="https://www.tax.service.gov.uk@route.frontendPath" target="_blank" rel="noreferrer noopener">@route.frontendPath <span class="glyphicon glyphicon-new-window"/></a>
                                     }
-                                    </td>
-                                </tr>
-                            }
+                                </td>
+                            </tr>
                         }
-                        </tbody>
-                    </table>
-                }
-                @if(searchResults.isEmpty && form("name").value.nonEmpty) {
-                    <p id="search-results-empty">This search did not return any results.</p>
-                }
-            </div>
+                    }
+                    </tbody>
+                </table>
+            }
+            @if(searchResults.isEmpty && form("name").value.nonEmpty) {
+                <p id="search-results-empty">This search did not return any results.</p>
+            }
         </div>
     </div>
 }

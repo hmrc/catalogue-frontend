@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, ViewMode}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 @import views.html.partials.{WhatsRunningWhereVersions, WhatsRunningWhereInstances}
 
@@ -36,10 +37,8 @@
 , request             : RequestHeader
 )
 
-@standard_layout("What's Running Where?", "whats-running-where") {
-    <header>
-        <h1>What's Running Where?</h1>
-    </header>
+@standard_layout("What's Running Where?", active = "whats-running-where") {
+    <h1 class="page-heading mt-4">What's Running Where?</h1>
 
     @if(form.hasErrors) {
         <div class="alert alert-danger" role="alert">
@@ -57,45 +56,39 @@
             @if(showDiff) {
                 <input type="hidden" id="showDiff" name="showDiff" value="true" />
             }
-            <div class="form-group row">
-                <div class="col-md-2 padding-reset-right">
-                    <label for="search">Application name:</label>
-                </div>
+            <div class="row mb-3">
+                <label for="search" class="col-md-2 col-form-label fw-bold">Application name:</label>
                 <div class="col-md-4">
                     <input class="search form-control" id="search" type="text" name="application_name" value='@form("application_name").value' autofocus>
                 </div>
             </div>
-            <ul class="nav nav-tabs" id="nav-tab" role="tablist">
-            @ProfileType.values.map(profileTypeTab)
+            <ul class="nav nav-tabs mb-2">
+                @ProfileType.values.map(profileTypeTab)
             </ul>
-            <div class="tab-content" id="nav-tabContent">
-                <div class="tab-pane show active in" role="tabpanel">
-                    <div class="form-group row">
-                        <div class="col-md-2">
-                            <select class="form-control" id="profile_name" name="profile_name">
-                            @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
-                                @options.map(selectOption(form("profile_name").value))
-                            }
-                            </select>
-                        </div>
-                    </div>
+            <div class="tab-content">
+                <div class="tab-pane show active in mb-4" role="tabpanel">
+                    <select class="form-select float-start mb-4" id="profile_name" name="profile_name" style="width: 200px">
+                        @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
+                            @options.map(selectOption(form("profile_name").value))
+                        }
+                    </select>
+                    <select class="form-select float-end mb-4" id="view_mode" name="view_mode" style="width: 200px">
+                        <option @if(viewMode.asString == "versions") {selected="selected"} value="versions">Versions</option>
+                        <option @if(viewMode.asString == "instances"){selected="selected"} value="instances">Instances</option>
+                    </select>
                 </div>
             </div>
-            <select class="form-control" id="view_mode" name="view_mode" style="float: right; width: 120px;">
-                <option @if(viewMode.asString == "versions") {selected="selected"} value="versions">versions</option>
-                <option @if(viewMode.asString == "instances"){selected="selected"} value="instances">instances</option>
-            </select>
         </form>
-        <table class="table table-striped" id="service-list">
+        <table class="table table-striped sticky-header" id="service-list">
             <thead>
-                <th class="wrw-table-head"><button role="button" class="sort no-border" data-sort="application-name">Application Name</button></th>
+                <th><button role="button" class="sort no-border fw-bold" data-sort="application-name">Application Name</button></th>
                 @if(viewMode.asString == "versions") {
                     @environments.map { env =>
-                        <th class="wrw-table-head wrw-environment-head">@env.displayString</th>
+                        <th class="wrw-environment-head">@env.displayString</th>
                     }
                 } else {
                     @environments.map { env =>
-                        <th class="wrw-table-head wrw-environment-head"><button role="button" class="sort no-border order-desc" data-sort="@env.asString">@env.displayString</button></th>
+                        <th class="wrw-environment-head"><button role="button" class="sort no-border fw-bold" data-sort="@env.asString">@env.displayString</button></th>
                     }
                 }
             </thead>
@@ -145,12 +138,13 @@
 
 @profileTypeTab(profileType: ProfileType) = {
     @defining(profileType == selectedProfileType){ active =>
-        <li id="tab-@profileType.asString" class="nav-item @if(active){active}">
-            <a class="nav-link @if(active){active}" id="@profileType.asString-tab" role="tab">
+        <li id="tab-@profileType.asString" class="nav-item">
+            <a id="@profileType.asString-tab" class="nav-link @if(active){active}" href="@routes.WhatsRunningWhereController.releases()">
                 @profileType Profile
             </a>
             <script @CSPNonce.attr>
-              document.getElementById("@profileType.asString-tab").addEventListener("click", function() {
+              document.getElementById("@profileType.asString-tab").addEventListener("click", function(e) {
+                e.preventDefault() // prevent following the href as we submit the form via js.
                 selectProfileType('@profileType.asString')
               });
             </script>

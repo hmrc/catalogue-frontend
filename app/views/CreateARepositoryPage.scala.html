@@ -32,7 +32,7 @@ repoTypes: Seq[CreateRepositoryType])(implicit
 @standard_layout("Create a Repository", "create a repository") {
 
     <section class="section-wrapper">
-        <h1>Create A Repository</h1>
+        <h1 class="page-heading mt-4">Create A Repository</h1>
         <p>Use the below form to create a new repository. Make sure to follow the guidance for each field!</p>
 
         @form_global_errors(form)
@@ -44,11 +44,13 @@ repoTypes: Seq[CreateRepositoryType])(implicit
         ) {
             @csrfFormField
 
-            <div class="form-group row">
-                <div class="col-md-6">
-                <label for="repoNameInput">Repository name:</label>
-                    <p>
-                        You must comply with established naming conventions when naming your microservice:
+            <div class="form-group row mb-2">
+                <div class="col-md-6 d-grid gap-2">
+                    <label class="fw-bold" for="repoNameInput">Repository name:</label>
+                    <div class="mb-2">
+                        <div class="mb-2">
+                            You must comply with established naming conventions when naming your microservice:
+                        </div>
                         <ul>
                             <li>separate words with hyphens; don't use spaces</li>
                             <li>maximum 47 characters</li>
@@ -60,15 +62,15 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                             <li>avoid time-limited words, such as 'new'</li>
                             <li>avoid unnecessary words, such as 'service'</li>
                         </ul>
-                    </p>
-                    <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
+                        <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
+                    </div>
                     @form_fields_warnings(form,"repositoryName")
                 </div>
             </div>
-            <div class="form-group row">
+            <div class="form-group row mb-4">
                 <div class="col-md-6">
-                    <div style = "white-space: nowrap;">
-                        <label style="display:inline-block"for="makePrivateInput">Make Private: </label>
+                    <div style = "white-space: nowrap;" class="mb-2">
+                        <label class="fw-bold" for="makePrivateInput">Make Private: </label>
                         <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate" value=true
                             @form.data.get("makePrivate").map{ _ => checked }
                         >
@@ -80,16 +82,16 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                 </div>
             </div>
             <div class="form-group row">
-                <div class="col-md-6">
-                    <label for="teamInput">Team name:</label>
+                <div class="col-md-6 mb-3">
+                    <label class="fw-bold" for="teamInput">Team name:</label>
                     @if(teamNames.nonEmpty){
-                        <p>Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+                        <p class="mt-2">Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
                     } else {
-                        <p class="alert alert-danger">There are currently no teams that you have permissions to create a repository for. Ensure you are signed in to the Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
+                        <p class="alert alert-danger mt-2">There are currently no teams that you have permissions to create a repository for. Ensure you are signed in to the Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
                            If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
                         </p>
                     }
-                    <select class="form-control" id="teamInput" name="teamName">
+                    <select class="form-select" id="teamInput" name="teamName">
                         @teamNames.map { tn =>
                             <option value="@{tn}"
                                     @if(form.data.getOrElse("teamName", "").equals(tn)) { selected="selected" }
@@ -100,12 +102,12 @@ repoTypes: Seq[CreateRepositoryType])(implicit
 
                 </div>
             </div>
-            <div class="form-group row">
+            <div class="form-group row mb-3">
                 <div class="col-md-6">
-                    <label for="typeInput">Type:</label>
-                    <p>Repositories automatically include HMRC templating, depending on the type of microservice they support. Choose how you would like this repository to be set up.
+                    <label class="fw-bold" for="typeInput">Type:</label>
+                    <p class="mt-2">Repositories automatically include HMRC templating, depending on the type of microservice they support. Choose how you would like this repository to be set up.
                     </p>
-                    <select class="form-control" id="typeInput" name="repoType">
+                    <select class="form-select" id="typeInput" name="repoType">
                         @repoTypes.map { rt =>
                          <option value="@{rt.asString}"
                                  @if(form.data.getOrElse("repoType", "").equals(rt.asString)) { selected="selected" }
@@ -116,7 +118,7 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                 </div>
             </div>
             <div>
-                <button id="create-repository-submission-button" class="btn btn-primary" type="submit">Build</button>
+                <button id="create-repository-submission-button" class="btn btn-success" type="submit">Build</button>
             </div>
        }
     </section>

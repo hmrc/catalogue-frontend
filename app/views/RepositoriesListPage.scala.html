@@ -32,10 +32,10 @@
   request : RequestHeader
 )
 
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
 @standard_layout("Repositories", "repositories") {
-    <header>
-        <h1>Repositories</h1>
-    </header>
+    <h1 class="page-heading mt-4">Repositories</h1>
 
     @if(form.hasErrors) {
         <div class="alert alert-danger" role="alert">
@@ -49,37 +49,45 @@
 
     <div id="service-list">
         <form id="repos-form" action="/repositories" method="get">
-            <div id="repos-form-row" class="form-group row">
+            <div id="repos-form-row" class="row">
                 <div class="col-md-6">
-                    <label for="search">Name</label>
-                    <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
+                    <dl id="search_field">
+                        <dt>
+                            <label for="search" class="form-label">Name</label>
+                        </dt>
+                        <dd>
+                            <input class="search form-control" id="search" type="search" name="name" value='@form("name").value' autofocus>
+                        </dd>
+                    </dl>
                 </div>
                 <div class="col-md-3">
                 @select(
-                    field              = form("team"),
-                    options            = teams.map(t => t.name.asString -> t.name.asString),
-                    Symbol("_default") -> "All",
-                    Symbol("_label")   -> "Team",
-                    Symbol("id")       -> "team-filter",
-                    Symbol("class")    -> "form-control"
+                    field                 = form("team"),
+                    options               = teams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Team",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "team-filter",
+                    Symbol("class")       -> "form-select"
                 )
                 </div>
                 <div class="col-md-3">
                 @select(
-                    field              =  form("repoType"),
-                    options            =  Seq(
-                                             "Library"           -> "Library",
-                                             "Prototype"         -> "Prototype",
-                                             "Service"           -> "Service (All)",
-                                             "FrontendService"   -> "Service (Frontend)",
-                                             "BackendService"    -> "Service (Backend)",
-                                             "Test"              -> "Test",
-                                             "Other"             -> "Other"
-                                          ),
-                    Symbol("_default") -> "All",
-                    Symbol("_label")   -> "Type",
-                    Symbol("id")       -> "type-search",
-                    Symbol("class")    -> "form-control"
+                    field                 =  form("repoType"),
+                    options               =  Seq(
+                                                "Library"           -> "Library",
+                                                "Prototype"         -> "Prototype",
+                                                "Service"           -> "Service (All)",
+                                                "FrontendService"   -> "Service (Frontend)",
+                                                "BackendService"    -> "Service (Backend)",
+                                                "Test"              -> "Test",
+                                                "Other"             -> "Other"
+                                             ),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Type",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "type-search",
+                    Symbol("class")       -> "form-select"
                 )
                 </div>
             </div>
@@ -88,13 +96,13 @@
         <table class="table table-striped sticky-header">
             <thead id="repo-table-headings">
                 <tr>
-                    <th class="col-lg-3"><button role="button" id="name" data-sort="repo-name" class="sort no-border">Name</button></th>
-                    <th class="col-lg-1"><button role="button" id="status" data-sort="repo-status" class="sort no-border">Status</button></th>
-                    <th class="col-lg-2"><button role="button" id="repoType" data-sort="repo-type" class="sort no-border">Type</button></th>
-                    <th class="col-lg-2"><button role="button" id="teamNames" data-sort="repo-team" class="sort no-border">Team</button></th>
-                    <th class="col-lg-1"><button role="button" id="branchProtection" data-sort="repo-bp" class="sort no-border">Branch Protection</button></th>
-                    <th class="col-lg-2"><button role="button" id="createdDate" data-sort="created" class="sort no-border">First Active</button></th>
-                    <th class="col-lg-1"><button role="button" id="lastActiveDate" data-sort="last-active" class="sort no-border">Last Active</button></th>
+                    <th class="col-lg-3"><button role="button" id="name" data-sort="repo-name" class="fw-bold sort no-border">Name</button></th>
+                    <th class="col-lg-1"><button role="button" id="status" data-sort="repo-status" class="fw-bold sort no-border">Status</button></th>
+                    <th class="col-lg-2"><button role="button" id="repoType" data-sort="repo-type" class="fw-bold sort no-border">Type</button></th>
+                    <th class="col-lg-2"><button role="button" id="teamNames" data-sort="repo-team" class="fw-bold sort no-border">Team</button></th>
+                    <th class="col-lg-1"><button role="button" id="branchProtection" data-sort="repo-bp" class="fw-bold sort no-border">Branch Protection</button></th>
+                    <th class="col-lg-2"><button role="button" id="createdDate" data-sort="created" class="fw-bold sort no-border">First Active</button></th>
+                    <th class="col-lg-1"><button role="button" id="lastActiveDate" data-sort="last-active" class="fw-bold sort no-border">Last Active</button></th>
                 </tr>
             </thead>
             @repoSearchResultsPage(repositories)
@@ -103,17 +111,17 @@
 }
 <!-- listjs configuration -->
 <script @CSPNonce.attr>
-  var options = {
+  let options = {
       valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
       searchColumns: ['repo-name'],
       searchDelay: 350
   };
 
-  var serviceList = new List('service-list', options);
+  let serviceList = new List('service-list', options);
 
-  var searchBox = document.getElementById('search');
+  let searchBox = document.getElementById('search');
   // set autofocus cursor to right of text in search box
-  var length = searchBox.value.length;
+  let length = searchBox.value.length;
   searchBox.focus();
   searchBox.setSelectionRange(length, length);
   // re-search the list upon page load.

@@ -27,116 +27,109 @@
   request : RequestHeader
 )
 
-@standard_layout("Shutter Events", "shuttering") {
-  <header>
-    <h1>Shutter Events</h1>
-  </header>
+@standard_layout("Shutter Events", active = "shuttering") {
+    <h1 class="page-heading mt-4">Shutter Events</h1>
 
-  <div id="events">
+    <div id="events" class="row">
+        <div class="col-12">
 
-    <form id="shutter-events-form" action="/shutter-events/list" method="get">
-      <input id="environment" name="environment" type="hidden" value="@form("environment").value">
+            <form id="shutter-events-form" action="/shutter-events/list" method="get">
+                <input id="environment" name="environment" type="hidden" value="@form("environment").value">
 
-      <datalist id="servicenames">
-          @services.map { s: String => <option>@s</option> }
-      </datalist>
+                <datalist id="servicenames">
+                    @services.map { s: String => <option>@s</option> }
+                </datalist>
 
-      <div class="form-group row">
-        <div class="col-md-1">
-          <label for="serviceName">Service:</label>
+                <div class="row mb-4">
+                    <label for="serviceName" class="col-md-1 col-form-label fw-bold">Service:</label>
+                    <div class="col-md-4">
+                        <input class="search form-control" id="serviceName" name="serviceName" type="search" autofocus autocomplete="off" list="servicenames" value=@form("serviceName").value>
+                    </div>
+                    <div class="col-md-3">
+                        <button id="search-button" class="btn btn-success" type="submit">Search</button>
+                    </div>
+                </div>
+            </form>
+
+            <ul id="environmentTabs" class="nav nav-tabs mb-2" role="tablist">
+              @environments.map(envOption)
+            </ul>
+
+            <table class="table table-striped shutter-events" id="events-list">
+                <thead>
+                    <tr class="d-flex">
+                        <th class="service col-2">
+                            <button role="button" class="sort no-border fw-bold" data-sort="service">Service</button>
+                        </th>
+                        <th class="type col-1">
+                            <button role="button" class="sort no-border fw-bold" data-sort="type">Type</button>
+                        </th>
+                        <th class="status col-1">
+                            <button role="button" class="sort no-border fw-bold" data-sort="status">Status</button>
+                        </th>
+                        <th class="reason col-4">
+                            <button role="button" class="sort no-border fw-bold" data-sort="reason">Reason</button>
+                        </th>
+                        <th class="cause col-1">
+                            <button role="button" class="sort no-border fw-bold" data-sort="cause">Cause</button>
+                        </th>
+                        <th class="username col-1">
+                            <button role="button" class="sort no-border fw-bold" data-sort="username">Username</button>
+                        </th>
+                        <th class="timestamp col-2">
+                            <button role="button" class="sort no-border fw-bold" data-sort="timestamp">Timestamp</button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="list">
+                    @events.zipWithIndex.map { case (event, i) =>
+                        <tr id="row@i" class="d-flex">
+                            <td class="service col-2" id="row@{i}_service">@event.serviceName</td>
+                            <td class="type col-1" id="row@{i}_type">@event.shutterType.asString</td>
+                            <td class="status col-1" id="row@{i}_status">@event.status.value.asString</td>
+                            <td class="reason col-4" id="row@{i}_reason">@ShutterEventsView.reasonFor(event.status)</td>
+                            <td class="cause col-1" id="row@{i}_cause">@event.cause.asString</td>
+                            <td class="username col-1" id="row@{i}_username">@event.username</td>
+                            <td class="timestamp col-2 font-monospace" id="row@{i}_timestamp">@event.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-        <div class="col-md-4">
-          <input class="search form-control" id="serviceName" name="serviceName" type="search" autofocus  autocomplete="off" list="servicenames"  value=@form("serviceName").value>
-        </div>
-        <div class="col-md-3">
-          <a id="clear" class="btn btn-secondary" href="@clearTargetFor(environments.find(env => form("environment").value.contains(env.asString)).getOrElse(environments.head))">Clear</a>
-          <button id="search-button" class="btn btn-primary" type="submit">Search</button>
-        </div>
-      </div>
-    </form>
+    </div>
 
-    <ul id="environmentTabs" class="nav nav-tabs" role="tablist">
-      @environments.map(makeTab)
-    </ul>
+    <script @CSPNonce.attr>
+        let options = {
+            valueNames: ['service', 'status', 'reason', 'cause', 'username', 'timestamp'],
+            searchColumns: ['service'],
+            searchDelay: 350
+        };
 
-    <table class="table table-striped shutter-events" id="events-list">
-      <thead>
-        <tr>
-          <th class="service">
-            <button role="button" class="sort no-border" data-sort="service">Service</button>
-          </th>
-          <th class="type">
-            <button role="button" class="sort no-border" data-sort="type">Type</button>
-          </th>
-          <th class="status">
-            <button role="button" class="sort no-border" data-sort="status">Status</button>
-          </th>
-          <th class="reason">
-            <button role="button" class="sort no-border" data-sort="reason">Reason</button>
-          </th>
-          <th class="cause">
-            <button role="button" class="sort no-border" data-sort="cause">Cause</button>
-          </th>
-          <th class="username">
-            <button role="button" class="sort no-border" data-sort="username">Username</button>
-          </th>
-          <th class="timestamp">
-            <button role="button" class="sort no-border" data-sort="timestamp">Timestamp</button>
-          </th>
-        </tr>
-      </thead>
-      <tbody class="list">
-        @events.zipWithIndex.map { case (event, i) =>
-          <tr id="row@i">
-             <td class="service" id="row@{i}_service">@event.serviceName</td>
-             <td class="type" id="row@{i}_type">@event.shutterType.asString</td>
-             <td class="status" id="row@{i}_status">@event.status.value.asString</td>
-             <td class="reason" id="row@{i}_reason">@ShutterEventsView.reasonFor(event.status)</td>
-             <td class="cause" id="row@{i}_cause">@event.cause.asString</td>
-             <td class="username" id="row@{i}_username">@event.username</td>
-             <td class="timestamp" id="row@{i}_timestamp">@event.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+        let eventsList = new List('events', options);
+
+        let searchBox = document.getElementById("serviceName");
+        let length = searchBox.value.length;
+
+        searchBox.focus();
+        searchBox.setSelectionRange(length, length);
+
+        eventsList.search(searchBox.value);
+    </script>
 }
 
-@makeTab(env: Environment) = {
-  <li id="tab-@env.asString" class="nav-item @if(form("environment").value.contains(env.asString)) {active}">
-    <a href="" class="navbar-link" id="@{env.asString}-tab" role="tab">@env.displayString</a>
-  </li>
-  <script @CSPNonce.attr>
-    document.getElementById("@{env.asString}-tab").addEventListener("click", function() {
-      // Stop the default link action. Instead we will fire the form to change page
-      event.preventDefault();
-      // Update the hidden environment field with what was selected
-      document.getElementById('environment').value = '@{env.asString}';
-      // Post the form back to the the chosen environment endpoint
-      document.getElementById('shutter-events-form').submit();
-    });
-  </script>
+@envOption(env: Environment) = {
+    @defining(form("environment").value.contains(env.asString)) { active =>
+        <li id="tab-@env.asString" class="nav-item">
+            <a id="@env.asString-tab" class="nav-link @if(active){active}" href="#">
+                @env.displayString
+            </a>
+        </li>
+        <script @CSPNonce.attr>
+            document.getElementById("@{env.asString}-tab").addEventListener("click", function(e) {
+                e.preventDefault(); // prevent following the href as we submit the form via js.
+                document.getElementById('environment').value = '@{env.asString}';
+                document.getElementById('shutter-events-form').submit();
+            });
+        </script>
+    }
 }
-
-@clearTargetFor(env: Environment) = {
-  @uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterEventsController.shutterEventsList(env, None)
-}
-
-<script @CSPNonce.attr>
-  let options = {
-      valueNames: ['service', 'status', 'reason', 'cause', 'username', 'timestamp'],
-      searchColumns: ['service'],
-      searchDelay: 350
-  };
-
-  let eventsList = new List('events', options);
-
-  // force search after picking an auto-complete option
-  var searchBox = document.getElementById("serviceName");
-  // set autofocus cursor to right of text in search box
-  var length = searchBox.value.length;
-  searchBox.focus();
-  searchBox.setSelectionRange(length, length);
-  // re-search the list upon page load.
-  eventsList.search(searchBox.value);
-</script>

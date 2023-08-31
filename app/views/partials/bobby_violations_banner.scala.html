@@ -38,7 +38,7 @@
         .toSet
   ) { violations =>
     @if(violations.nonEmpty) {
-        <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-@{if(pending) "pending" else "broken"}-banner@{environment.fold("")(e => s"-${e.asString}")}">
+        <div class="alert @if(pending) {alert-warning} else {alert-danger}" id="bobby-rules-@{if(pending) "pending" else "broken"}-banner@{environment.fold("")(e => s"-${e.asString}")}">
             <strong>
                 @environment.fold{
                   @if(team) { One or more of your repositories } else { This "repository" }

@@ -50,10 +50,10 @@
 )
 
 
-@standard_layout(serviceName, "services") {
+@standard_layout(serviceName, active = "repositories") {
     <header class="header-with-github-badge">
         <div>
-            <h1 id="service-header">
+            <h1 id="service-header" class="page-heading mt-4">
               Service: @serviceName
                   @if(repositoryDetails.isDeprecated) { <span>Deprecated</span> }
                   @if(repositoryDetails.isArchived) { <span>Archived</span> }
@@ -71,7 +71,7 @@
 
     <section class="section-wrapper">
 
-        <div class="row">
+        <div class="row mb-3">
             <div class="col-md-6">
                 @partials.details(repositoryDetails)
             </div>
@@ -81,7 +81,7 @@
         </div>
 
         @serviceRoutes.environmentRoutes.find(er => er.environment == "production" && !er.isAdmin).map { envRoute =>
-            <div class="row">
+            <div class="row mb-3">
                 <div class="col-md-12">
                     @partials.serviceUrlDetails(envRoute, isAdmin = false)
                 </div>
@@ -89,7 +89,7 @@
         }
 
         @serviceRoutes.environmentRoutes.find(er => er.environment == "production" && er.isAdmin).map { envRoute =>
-            <div class="row">
+            <div class="row mb-3">
                 <div class="col-md-12">
                     @partials.serviceUrlDetails(envRoute, isAdmin = true)
                 </div>
@@ -97,7 +97,7 @@
         }
 
         @if(serviceRoutes.hasInconsistentRoutes) {
-            <div class="row">
+            <div class="row mb-3">
                 <div class="col-md-12">
                     @partials.serviceRouteRuleViolations(serviceRoutes)
                 </div>
@@ -105,17 +105,17 @@
         }
 
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-6 mb-3">
                 @partials.repo_owning_teams(repositoryDetails)
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-6 mb-3">
                 @partials.code(repositoryDetails, hasBranchProtectionAuth, commenterReport, distinctVulnerabilitiesCount)
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 mb-3">
                 @partials.service_relationships(serviceRelationships)
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 mb-3">
                 @partials.build(repositoryDetails, hasBranchProtectionAuth, commenterReport)
             </div>
         </div>

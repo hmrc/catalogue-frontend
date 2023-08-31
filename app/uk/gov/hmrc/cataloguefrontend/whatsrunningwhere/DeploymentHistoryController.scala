@@ -51,6 +51,7 @@ class DeploymentHistoryController @Inject() (
 
   import DeploymentHistoryController._
 
+  //TODO: link to users page in catalogue rather than UMP - this config has been deleted
   private val userProfileUrl = config.getOptional[String]("microservice.services.user-management.profileBaseUrl")
 
   def history(env: Environment = Production): Action[AnyContent] =

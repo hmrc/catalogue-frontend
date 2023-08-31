@@ -34,20 +34,18 @@
   request     : RequestHeader
 )
 
-@standard_layout(s"JDK Versions", "dependencies") {
-    <header>
-        <h1 id="jdk-header">JDK Versions Across Environments</h1>
+@standard_layout("JDK Versions", active = "explore") {
+    <h1 id="jdk-header" class="page-heading mt-4">JDK Versions Across Environments</h1>
 
-        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
-    </header>
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     <div id="chart_div"></div>
 
     <form id="form" method="get">
-        <div class="form-group row">
+        <div class="row">
             <div class="col-md-3">
-                <label for="teamName">Team:</label>
-                <select class="form-control" id="teamName" name="teamName">
+                <label for="teamName" class="form-label fw-bold">Team:</label>
+                <select class="form-select" id="teamName" name="teamName">
                     <option value="" @{if(selectedTeam.isEmpty) "selected"}>All</option>
                     @teams.map { team =>
                         <option value="@{team.name.asString}" @{if(Some(team) == selectedTeam) "selected"}>
@@ -57,8 +55,8 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label>Graph Mode:</label>
-                <div><button type="button" id="chart-toggle" class="btn btn-default">show absolute</button></div>
+                <label class="form-label fw-bold">Graph Mode:</label>
+                <div><button type="button" id="chart-toggle" class="btn btn-outline-secondary">show absolute</button></div>
             </div>
         </div>
     </form>
@@ -95,10 +93,10 @@
         google.charts.setOnLoadCallback(drawChart);
 
         // either true or "percent"
-        var drawMode = "percent";
+        let drawMode = "percent";
 
         function toggle() {
-            if (drawMode == "percent") {
+            if (drawMode === "percent") {
                 document.getElementById("chart-toggle").textContent = "show percent"
                 drawMode = "absolute"
             } else {
@@ -115,7 +113,7 @@
 
         function drawStackedChart(stack) {
 
-            var data = new google.visualization.DataTable();
+            let data = new google.visualization.DataTable();
             data.addColumn('string', 'Environment');
             @for(jdk <- jdks) {
                 data.addColumn('number','@{jdk.version} @{jdk.vendor}');
@@ -127,14 +125,14 @@
                 }
             ]);
 
-            var options = { 'title'    : 'JDK Usage',
+            let options = { 'title'    : 'JDK Usage',
                 'width'    : "100%",
                 'height'   : 400,
                 'isStacked': stack,
                 'legend': { 'position': 'top', 'maxLines': 3 }
             };
 
-            var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+            let chart = new google.visualization.BarChart(document.getElementById('chart_div'));
             chart.draw(data, options);
         }
 

@@ -35,7 +35,7 @@
 @standard_layout(serviceName, "services") {
     <header class="header-with-github-badge">
         <div>
-            <h1 id="service-header">Cost Estimation: @serviceName</h1>
+            <h1 id="service-header" class="page-heading mt-4">Cost Estimation: @serviceName</h1>
         </div>
         <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
@@ -52,9 +52,9 @@
         <div class="row">
             <div class="col-md-12">
                 <div id="cost-estimation-over-time">
-                    <div class="board">
-                        <h3 class="board__heading">Estimated cost over time</h3>
-                        <div class="board__body">
+                    <div class="card">
+                        <h5 class="card-header fw-bold">Estimated cost over time</h5>
+                        <div class="card-body">
                             <div id="estimated-cost-over-time-chart" style="height: 400px"/>
                         </div>
                     </div>
@@ -67,9 +67,9 @@
         <div class="row">
             <div class="col-md-12">
                 <div id="cost-estimation-over-time-by-env">
-                    <div class="board">
-                        <h3 class="board__heading">Estimated cost over time (by environment)</h3>
-                        <div class="board__body">
+                    <div class="card">
+                        <h5 class="card-header fw-bold">Estimated cost over time (by environment)</h5>
+                        <div class="card-body">
                             <div id="estimated-cost-over-time-per-env-chart" style="height: 400px"/>
                         </div>
                     </div>

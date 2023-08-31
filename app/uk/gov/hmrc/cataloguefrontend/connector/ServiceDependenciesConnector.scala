@@ -125,7 +125,7 @@ class ServiceDependenciesConnector @Inject() (
       .execute[List[SBTVersion]]
   }
 
-  def getBobbyRuleViolations(implicit hc: HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] = {
+  def getBobbyRuleViolations()(implicit hc: HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] = {
     implicit val brvr = BobbyRulesSummary.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/bobbyViolations")

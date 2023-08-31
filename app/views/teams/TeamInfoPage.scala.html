@@ -39,11 +39,9 @@
   request: RequestHeader
 )
 
-@standard_layout(teamName.asString, "teams") {
-    <header>
-        <h1>@teamName.asString</h1>
-        <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
-    </header>
+@standard_layout(teamName.asString, active = "teams") {
+    <h1 class="page-heading mt-4">@teamName.asString</h1>
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     @partials.team_leak_detection_banner(leaksFoundForTeam)
     @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true)
@@ -53,95 +51,89 @@
 
     <section class="section-wrapper">
 
-        <div class="row">
+        <div class="row mb-3">
 
             <div class="col-md-4">
-                <div class="board">
-                    <h3 class="board__heading">Details</h3>
-
-                    <div class="board__body">
-
-                        <ul class="list list--minimal" id="team_details">
-                            @maybeTeam match {
-                              case Some(team) => {
-                                <li id="team-description">
-                                  <label>Description: </label>
-                                  @team.description.getOrElse("")
-                                </li>
-                                <li id="team-documentation">
-                                  <label>Documentation: </label>
-                                  @team.documentation.map { d =>
-                                    <a href="@d" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
-                                  }
-                                </li>
-                                <li id="team-slack-channels">
-                                  <label>Slack: </label>
-                                  <ul id="slack-channels" class="list list--minimal">
-                                    @team.slack.map(addSlackInfo("Team", _))
-                                    @team.slackNotification.map(addSlackInfo("Notification", _))
-                                  </ul>
-
-                                </li>
-                              }
-                              case None => {
-                                <li>
-                                  Unable to find details for team @teamName.asString.
-                                </li>
-                              }
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Details</h4>
+                    </div>
+                    <div class="card-body">
+                        @maybeTeam match {
+                            case Some(team) => {
+                                <dl id="team-description" class="row mb-0">
+                                    <dt class="col-sm-4">Description:</dt>
+                                    <dd class="col-sm-8">@team.description.getOrElse("")</dd>
+                                </dl>
+                                <dl id="team-documentation" class="row mb-0">
+                                    <dt class="col-sm-4">Documentation:</dt>
+                                    <dd class="col-sm-8">
+                                        @team.documentation.map { docs =>
+                                          <a href="@docs" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
+                                        }
+                                    </dd>
+                                </dl>
+                                <dl id="team-slack-channels" class="row mb-0">
+                                    <dt class="col-sm-4">Slack:</dt>
+                                    <dd class="col-sm-8"></dd>
+                                </dl>
+                                @team.slack.map(addSlackInfo("Team", _))
+                                @team.slackNotification.map(addSlackInfo("Notification", _))
                             }
-                        </ul>
-
+                            case None => {
+                              <p class="card-text">
+                                  Unable to find details for team @teamName.asString.
+                              </p>
+                            }
+                        }
                         @if(maybeTeam.isDefined) {
-                            @umpUpdateLink(false)
+                            @umpUpdateLink(isMemberBox = false)
                         }
                     </div>
                 </div>
             </div>
 
             <div class="col-md-8">
-                <div class="board">
-                    <h3 class="board__heading">Team Members</h3>
-
-                    <div class="board__body">
-                        <div>
-                            <ul class="list list--minimal" id="team_members">
-                              @maybeTeam match {
-                                case Some(team) if team.members.isEmpty => {
-                                  <li class="col-xs-6">
-                                    @teamName.asString has no members
-                                  </li>
-                                }
-                                case Some(team) => {
-                                  @for(teamMember <- team.members) {
-                                    <li class="col-xs-6">
-                                      <a href="@userRoutes.UsersController.user(teamMember.username)">
-                                        @teamMember.displayName
-                                      </a>
-                                      @if(teamMember.role.trim.nonEmpty && teamMember.role != "user") {
-                                        <span class="badge">@teamMember.role</span>
-                                      }
-                                    </li>
-                                  }
-                                }
-                                case None => {
-                                  <li class="col-xs-6">
-                                    Unable to find members for team @teamName.asString.
-                                  </li>
-                                }
-                              }
-                            </ul>
-
-                            @if(maybeTeam.isDefined) {
-                                @umpUpdateLink(true)
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Team Members</h4>
+                    </div>
+                    <div class="card-body">
+                        @maybeTeam match {
+                            case Some(team) if team.members.isEmpty => {
+                                <p class="card-text col-6">
+                                    @teamName.asString has no members.
+                                </p>
                             }
-                        </div>
-
+                            case Some(team) => {
+                                <ul id="team_members" class="list-unstyled" style="column-count: 2;">
+                                    @for(teamMember <- team.members) {
+                                      <li class="col-6">
+                                          <a href="@userRoutes.UsersController.user(teamMember.username)">
+                                              @teamMember.displayName
+                                          </a>
+                                          @if(teamMember.role.trim.nonEmpty && teamMember.role != "user") {
+                                              <span class="badge rounded-pill text-bg-secondary">@teamMember.role</span>
+                                          }
+                                      </li>
+                                    }
+                                </ul>
+                            }
+                            case None => {
+                                <p class="card-text">
+                                    Unable to find members for team @teamName.asString.
+                                </p>
+                                }
+                        }
+                        @if(maybeTeam.isDefined) {
+                            @umpUpdateLink(isMemberBox = true)
+                        }
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
+        <div class="row mb-3">
             @showRepositories(repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")
             @showRepositories(repos.getOrElse(RepoType.Library  , Seq.empty), "Libraries"   , "library")
             @showRepositories(repos.getOrElse(RepoType.Prototype, Seq.empty), "Prototypes"  , "prototype")
@@ -150,53 +142,70 @@
         </div>
     </section>
 
-    @dependenciesTeamPartial(teamName, masterTeamDependencies, prodDependencies, showLink = true)
+    <div class="row">
+        <div class="col-12">
+            @dependenciesTeamPartial(teamName, masterTeamDependencies, prodDependencies, showLink = true)
+        </div>
+    </div>
 }
 
 @addSlackInfo(label: String, slackInfo: SlackInfo) = {
   @if(!slackInfo.hasValidUrl) {
-    <li class="list-item">
-      <strong>@label: </strong>
-      <span>@slackInfo.url <span class="glyphicon glyphicon-warning-sign" /></span>
-      <div>Please change to a URL via <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">UMP<span class="glyphicon glyphicon-new-window"/></a></div>
-    </li>
+    <dl id="slack-@label.toLowerCase" class="row mb-0">
+        <dt class="col-sm-3 offset-1">@label:</dt>
+        <dd class="col-sm-8">
+            <p>@slackInfo.url <span class="glyphicon glyphicon-warning-sign" /></p>
+            <p>Please change to a URL via <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">UMP<span class="glyphicon glyphicon-new-window"/></a></p>
+        </dd>
+    </dl>
   } else if (!slackInfo.hasValidName) {
-    <li class="list-item">
-      <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window"/></a>
-    </li>
+    <dl id="slack-@label.toLowerCase" class="row mb-0">
+        <dt class="col-sm-3 offset-1">@label:</dt>
+        <dd class="col-sm-8">
+            <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window"/></a>
+        </dd>
+    </dl>
   } else {
-    <li class="list-item">
-      <strong>@label: </strong>
-      <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window"/></a>
-    </li>
+    <dl id="slack-@label.toLowerCase" class="row mb-0">
+        <dt class="col-sm-3 offset-1">@label:</dt>
+        <dd class="col-sm-8">
+            <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window"/></a>
+        </dd>
+    </dl>
   }
 }
 
 @umpUpdateLink(isMemberBox: Boolean) = {
-  <div id="ump-correct-data-link" class="list list--minimal">
-    @if(isMemberBox) {
-        To update @teamName.asString team members, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
-    } else {
-        To update @teamName.asString team details, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
-    }
-  </div>
+    <p id="ump-correct-data-link" class="card-text"><small class="text-body-secondary">
+        @if(isMemberBox) {
+            To update @teamName.asString team members, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+        } else {
+            To update @teamName.asString team details, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+        }
+    </small></p>
 }
 
 @showRepositories(repos: Seq[GitRepository], headerName: String, typeName: String) = {
-  <div class="col-md-2 col-md-2-10">
-      <div id="@headerName" class="board">
-          <h3 class="board__heading">@headerName</h3>
-          <div class="board__body">
+  <div class="col">
+      <div class="card">
+          <div class="card-header">
+              <h4 class="mb-0">@headerName</h4>
+          </div>
+          <div class="card-body">
               @if(repos.isEmpty) {
-                  <p>@Html(viewMessages.noRepoOfTypeForTeam(typeName))</p>
+                <p class="card-text">
+                    @Html(viewMessages.noRepoOfTypeForTeam(typeName))
+                </p>
               } else {
-                  <ul class="list list--minimal">
+                <ul class="list-unstyled">
                     @defining(repos.partition(_.isShared)) { case (shared, nonShared) =>
-                        @repoListFor(nonShared)
-                        @if(shared.nonEmpty){<label style="padding-top: 5px">Shared</label>}
+                      @repoListFor(nonShared)
+                      @if(shared.nonEmpty){
+                        <li class="fw-bold mt-2">Shared</li>
                         @repoListFor(shared)
-                        }
-                  </ul>
+                      }
+                    }
+                </ul>
               }
           </div>
       </div>
@@ -205,13 +214,12 @@
 
 @repoListFor(repos: Seq[GitRepository]) = {
     @for(repo <- repos.sortBy(_.name.toLowerCase)) {
-        <li class="list-item" id="@repo.name">
+        <li id="@repo.name" class="mb-2">
             <div>
-                <a class="@if(hasLeaks(repo.name)) {leak-detected} @if(repo.isDeprecated){deprecated}" href="@appRoutes.CatalogueController.repository(repo.name)">
+                <a class="@if(hasLeaks(repo.name)) {fw-bold} @if(repo.isDeprecated){fst-italic}" href="@appRoutes.CatalogueController.repository(repo.name)">
                     @repo.name
                     @if(hasLeaks(repo.name)) {<span class="glyphicon glyphicon-warning-sign"></span>}
-                    @if(repo.isArchived){ <span class="glyphicon glyphicon-lock" title="archived"></span>}
-                    @if(repo.isDeprecated && !repo.isArchived){ <span class="badge">deprecated</span> }
+                    @if(repo.isDeprecated){ <span class="badge rounded-pill text-bg-secondary fst-normal">deprecated</span> }
                 </a>
             </div>
         </li>

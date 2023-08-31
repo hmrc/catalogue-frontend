@@ -31,27 +31,35 @@
   messages: Messages,
   request : RequestHeader
 )
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
-@standard_layout("Users", "users") {
-  <header>
-    <h1>Users</h1>
-  </header>
+@standard_layout("Users", active = "explore") {
+
+  <h1 class="page-heading mt-4">Users</h1>
+
   <div id="users-list">
     <form id="form" action="/users" method="get">
       <div id="users-form-row" class="form-group row">
         <div class="col-md-6">
-          <label for="search">Username or GitHub</label>
-          <input class="search form-control" type="text" id="username-search" name="username" value="@form("username").value" autofocus>
+          <dl id="search_field">
+            <dt>
+              <label for="search" class="form-label">Username or GitHub</label>
+            </dt>
+            <dd>
+              <input class="search form-control" type="search" id="username-search" name="username" value="@form("username").value" autofocus>
+            </dd>
+          </dl>
 
         </div>
-        <div class="col-md-offset-6">
+        <div class="col-md-6">
         @select(
-          field               = form("team"),
-          options             = teams.map(t => t.name.asString -> t.name.asString),
-          Symbol("_default") -> "All",
-          Symbol("_label")   -> "Team",
-          Symbol("id")       -> "team-filter",
-          Symbol("class")    -> "form-control"
+          field                  = form("team"),
+          options                = teams.map(t => t.name.asString -> t.name.asString),
+          Symbol("_default")    -> "All",
+          Symbol("_label")      -> "Team",
+          Symbol("_labelClass") -> "form-label",
+          Symbol("id")          -> "team-filter",
+          Symbol("class")       -> "form-select"
         )
         </div>
       </div>
@@ -60,16 +68,16 @@
     <table class="table table-striped sticky-header" id="users-table">
       <thead id="user-table-headings">
         <tr>
-          <td colspan="6">
-            <span class="col-md-offset-4" id="maximum-records" style="color: #6f777b;">Only displaying @maxRows records - please refine your search</span>
+          <td colspan="6" class="text-center">
+            Only displaying @maxRows records - please refine your search
           </td>
         </tr>
         <tr>
-          <th class="col-lg-2"><button role="button" id="username" data-sort="username" class="sort no-border username">Username</button></th>
-          <th class="col-lg-2"><button role="button" id="givenName" data-sort="given-name" class="sort no-border">Given Name</button></th>
-          <th class="col-lg-2"><button role="button" id="familyName" data-sort="family-name" class="sort no-border">Family Name</button></th>
-          <th class="col-lg-3"><button role="button" id="github" data-sort="github" class="sort no-border">GitHub</button></th>
-          <th class="col-lg-3">Teams</th>
+          <th class="col-lg-2"><button role="button" id="username" data-sort="username" class="sort no-border fw-bold">Username</button></th>
+          <th class="col-lg-2"><button role="button" id="givenName" data-sort="given-name" class="sort no-border fw-bold">Given Name</button></th>
+          <th class="col-lg-2"><button role="button" id="familyName" data-sort="family-name" class="sort no-border fw-bold">Family Name</button></th>
+          <th class="col-lg-3"><button role="button" id="github" data-sort="github" class="sort no-border fw-bold">GitHub</button></th>
+          <th class="col-lg-3"><button class="no-border fw-bold">Teams</button></th>
         </tr>
       </thead>
 
@@ -91,9 +99,9 @@
 
           <td class="github" id="row@{i}_name">
             @user.githubUsername match {
-              case Some(url) => {
-                  <a class="github-username" href="https://github.com/@user.githubUsername" target="_blank" rel="noreferrer noopener">
-                    @user.githubUsername
+              case Some(username) => {
+                  <a class="github-username" href="https://github.com/@username" target="_blank" rel="noreferrer noopener">
+                    @username
                     <span class="glyphicon glyphicon-new-window"/>
                   </a>
               }
@@ -106,7 +114,7 @@
                 <div>
                   <a href="/teams/@TeamName(team.teamName).asString">@TeamName(team.teamName).asString</a>
                   @if(team.role == "team_admin") {
-                    <span class="badge" style="font-weight: bold">@team.role</span>
+                    <span class="badge rounded-pill text-bg-secondary" style="font-weight: bold">@team.role</span>
                   }
                 </div>
             }
@@ -116,7 +124,7 @@
       </tbody>
     </table>
     <div id="no-users-found">
-      <span class="col-md-offset-5" style="color: #6f777b;">No Users Found</span>
+      <span class="position-absolute start-50 translate-middle" style="color: #6f777b;">No Users Found</span>
     </div>
   </div>
 }

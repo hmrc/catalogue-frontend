@@ -37,127 +37,165 @@
   request     : RequestHeader
 )
 
-@standard_layout("PR-Commenter Recommendations") {
-  <header>
-    <h1 id="search-service-header">PR-Commenter Recommendations</h1>
-  </header>
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
-  <div id="recommendations-list">
-    <form id="form" method="get">
-      <div class="form-group row">
-        <div class="col-md-6">
-          <label for="search">Name</label>
-          <input class="search form-control" id="search" type="text" name="name" value='@form("name").value' autofocus>
-        </div>
-        <div class="col-md-3">
-          @select(
-            field              =  form("teamName"),
-            options            =  teams.map(t => t.name.asString -> t.name.asString),
-            Symbol("_default") ->  "All",
-            Symbol("_label")   -> "Team",
-            Symbol("id")       -> "team-dropdown",
-            Symbol("class")    -> "form-control"
-          )
-        </div>
-        <div class="col-md-3">
-          @select(
-            field              =  form("commentType"),
-            options            =  commentTypes.map(x => x -> x).toSeq.sorted,
-            Symbol("_default") ->  "All",
-            Symbol("_label")   -> "Comment Type",
-            Symbol("id")       -> "comment-type-dropdown",
-            Symbol("class")    -> "form-control"
-          )
-        </div>
-      </div>
-    </form>
+@standard_layout("PR-Commenter Recommendations", active = "health") {
+    <h1 id="search-service-header" class="page-heading mt-4">PR-Commenter Recommendations</h1>
+
+    <div id="recommendations-list">
+        <form id="form" method="get">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl>
+                        <dt>
+                            <label for="search" class="form-label">Name</label>
+                        </dt>
+                        <dd>
+                          <input class="search form-control" id="search" type="search" name="name" value='@form("name").value' autofocus>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    @select(
+                        field                 =  form("teamName"),
+                        options               =  teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default")    ->  "All",
+                        Symbol("_label")      -> "Team",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "team-dropdown",
+                        Symbol("class")       -> "form-select"
+                    )
+                </div>
+                <div class="col-md-3">
+                    @select(
+                      field                 =  form("commentType"),
+                      options               =  commentTypes.map(x => x -> x).toSeq.sorted,
+                      Symbol("_default")    ->  "All",
+                      Symbol("_label")      -> "Comment Type",
+                      Symbol("_labelClass") -> "form-label",
+                      Symbol("id")          -> "comment-type-dropdown",
+                      Symbol("class")       -> "form-select"
+                    )
+                </div>
+            </div>
+        </form>
 
     @if(reports.nonEmpty) {
-      <div class="text-right">
-        <a id="expandLink" class="hand-pointer">expand all</a>
-        <a id="collapseLink" class="hand-pointer hidden">collapse all</a>
-      </div>
-      <table class="table table-striped sticky-header">
-        <thead>
-          <tr>
-            <th></th>
-            <th class="col-lg-8"><button class="sort no-border" data-sort="name">Repo</button></th>
-            <th class="col-lg-2"><button class="sort no-border" data-sort="teams">Teams</button></th>
-            <th class="col-lg-1"><button class="sort no-border" data-sort="recommendations">Recommendations</button></th>
-            <th class="col-lg-1"><button class="sort no-border" data-sort="lastrun">Last run</button></th>
-          </tr>
-        </thead>
-        <tbody class="list">
-          @reports.map { report =>
-            <tr>
-              <td @collapseAttr("accordion-toggle collapsed", report)></td>
-              <td @collapseAttr("name", report)>@report.name</td>
-              <td @collapseAttr("teams", report)>
-                @* TODO: change the report model to use TeamName types instead of String, then this mapping can be removed *@
-                @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
-              </td>
-              <td @collapseAttr("recommendations text-center", report)>@report.comments.size</td>
-              <td @collapseAttr("lastrun hide text-nowrap", report)>@report.created</td>
-              <td @collapseAttr("lastrun-display text-nowrap", report)>@report.created.displayFormat</td>
-            </tr>
-            <tr id="collapsible-area-@report.name" class="collapse multi-collapse @if(report.comments.isEmpty) { hide }">
-              <td class="hide name"><a href="@report.name">@report.name</a></td>
-              <td class="hide teams">
-                @* TODO: change the report model to use TeamName types instead of String, then this mapping can be removed *@
-                @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
-              </td>
-              <td class="hide recommendations">@report.comments.size<td>
-              <td class="hide lastrun">@report.created</td>
-              <td colspan="5" style="padding: 30px">
-                <ul class="list">
-                  @{report.comments.map {
-                    case x if form("commentType").value == Some(x.commentType) =>
-                      Html(s"""<li class="highlight-dotted">${MarkdownLoader.markdownFromString(x.message).getOrElse(s"Invalid markdown: ${x.message}")}</li>""")
-                    case x =>
-                      Html(s"""<li >${MarkdownLoader.markdownFromString(x.message).getOrElse(s"Invalid markdown: ${x.message}")}</li>""")
-                  }}
-                </ul>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+        <div class="text-end">
+            <a id="expandLink" class="cursor-pointer">expand all</a>
+            <a id="collapseLink" class="cursor-pointer d-none">collapse all</a>
+        </div>
+        <table class="table table-striped sticky-header">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th class="col-lg-8"><button class="sort no-border fw-bold" data-sort="name">Repo</button></th>
+                    <th class="col-lg-2"><button class="sort no-border fw-bold" data-sort="teams">Teams</button></th>
+                    <th class="col-lg-1"><button class="sort no-border fw-bold" data-sort="recommendations">Recommendations</button></th>
+                    <th class="col-lg-1"><button class="sort no-border fw-bold" data-sort="lastrun">Last run</button></th>
+                </tr>
+            </thead>
+            <tbody class="list">
+                @reports.map { report =>
+                    @if(report.comments.nonEmpty) {
+                        <tr id="collapse-toggle-@report.name" class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@report.name" aria-expanded="false" aria-controls="collapsible-area-@report.name">
+                            <td><span class="glyphicon glyphicon-chevron-right"></span></td>
+                    } else {
+                        <tr>
+                          <td></td>
+                    }
+                        <td class="name">@report.name</td>
+                        <td class="teams">
+                            @* TODO: change the report model to use TeamName types instead of String, then this mapping can be removed *@
+                            @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
+                        </td>
+                        <td class="recommendations text-center">@report.comments.size</td>
+                        <td class="lastrun d-none text-nowrap">@report.created</td>
+                        <td class="lastrun-display text-nowrap">@report.created.displayFormat</td>
+                    </tr>
+                    <tr id="collapsible-area-@report.name" class="collapse multi-collapse @if(report.comments.isEmpty) {d-none}">
+                        <td class="d-none name"><a href="@report.name">@report.name</a></td>
+                        <td class="d-none teams">
+                            @* TODO: change the report model to use TeamName types instead of String, then this mapping can be removed *@
+                            @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
+                        </td>
+                        <td class="d-none recommendations">@report.comments.size<td>
+                        <td class="d-none lastrun">@report.created</td>
+                        <td colspan="5">
+                            <div class="row m-3">
+                                <ul class="list">
+                                  @{report.comments.map {
+                                    case x if form("commentType").value == Some(x.commentType) =>
+                                      Html(s"""<li class="text-danger text-decoration-underline">${MarkdownLoader.markdownFromString(x.message).getOrElse(s"Invalid markdown: ${x.message}")}</li>""")
+                                    case x =>
+                                      Html(s"""<li >${MarkdownLoader.markdownFromString(x.message).getOrElse(s"Invalid markdown: ${x.message}")}</li>""")
+                                  }}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
       <script @CSPNonce.attr>
-        var options = {
+        let options = {
           searchDelay: 350,
           valueNames: ['name', 'teams', 'recommendations', 'lastrun'],
           searchColumns: ['name']
         }
 
-        var rulesList = new List('recommendations-list', options)
+        let rulesList = new List('recommendations-list', options)
 
-        function toggleExpandAll() {
-          document.getElementById("expandLink").classList.toggle("hidden")
-          document.getElementById("collapseLink").classList.toggle("hidden")
-          Array.from(document.getElementsByClassName("multi-collapse")).forEach(el => el.classList.toggle("collapse"))
+        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach( function(el) {
+          let chevron = el.querySelector('.glyphicon');
+          let collapseId = el.getAttribute('data-bs-target');
+          let collapse = document.querySelector(collapseId);
+
+          collapse.addEventListener('hidden.bs.collapse', () => {
+            chevron.classList.remove('glyphicon-chevron-down');
+            chevron.classList.add('glyphicon-chevron-right');
+          });
+
+          collapse.addEventListener('show.bs.collapse', () => {
+            chevron.classList.remove('glyphicon-chevron-right');
+            chevron.classList.add('glyphicon-chevron-down');
+          });
+        });
+
+        function expandAll() {
+          $("#expandLink").addClass('d-none')
+          $("#collapseLink").removeClass('d-none')
+          $(".multi-collapse").collapse('show')
         }
+
+        function collapseAll() {
+          $("#expandLink").removeClass('d-none')
+          $("#collapseLink").addClass('d-none')
+          $(".multi-collapse").collapse('hide')
+        }
+
+        document.getElementById("expandLink").addEventListener("click", function() {
+          expandAll()
+        });
+        document.getElementById("collapseLink").addEventListener("click", function() {
+          collapseAll()
+        });
 
         rulesList.on('updated', function(list) {
           const arr = Array.from(document.getElementsByClassName("multi-collapse"))
-          if (arr.length == 1 && arr[0].classList.contains("collapse")) {
-            toggleExpandAll()
+          if (arr.length === 1 && arr[0].classList.contains("collapse")) {
+            expandAll();
           }
         })
 
-        var searchBox = document.getElementById('search');
+        let searchBox = document.getElementById('search');
         // set autofocus cursor to right of text in search box
-        var length = searchBox.value.length;
+        let length = searchBox.value.length;
         searchBox.focus();
         searchBox.setSelectionRange(length, length);
         // re-search the list upon page load.
         rulesList.search(searchBox.value);
 
-        ["expandLink", "collapseLink"]
-          .forEach(function(id) {
-            document.getElementById(id).addEventListener("click", function() {
-              toggleExpandAll();
-            });
-          });
       </script>
     </div>
   }
@@ -171,12 +209,4 @@
       });
     });
 </script>
-
-@collapseAttr(cssClasses: String, report: PrCommenterReport) = {
-  @if(report.comments.nonEmpty) {
-    class="@cssClasses hand-pointer" data-toggle="collapse" data-target="#collapsible-area-@report.name" aria-expanded="false" aria-controls="collapsible-area-@report.name"
-  } else {
-    class="@cssClasses.replaceAll("accordion-toggle collapsed", "")"
-  }
-}
 

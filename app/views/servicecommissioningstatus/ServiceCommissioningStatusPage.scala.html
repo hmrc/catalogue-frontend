@@ -30,12 +30,13 @@
 
 @standard_layout("Commissioning-State") {
     <header>
-        <h1>Commissioning State</h1>
+        <h1 class="page-heading mt-4">Commissioning State</h1>
     </header>
 
-    <h2><a href="@routes.CatalogueController.service(serviceName)">@serviceName</a></h2>
+    <h2><a class="fw-bold" href="@routes.CatalogueController.service(serviceName)">@serviceName</a></h2>
 
     <p>Guidance for creating a microservice can be found in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a></p>
+
 
     <table class="table table-striped">
         <thead>
@@ -52,25 +53,6 @@
             })
         </tbody>
     </table>
-
-    <script @CSPNonce.attr>
-            $("[data-toggle=popover]")
-                    .popover({ html: true})
-                    .on("focus", function () {
-                        $(this).popover("show");
-                    }).on("focusout", function () {
-                let _this = this;
-                if (!$(".popover:hover").length) {
-                    $(this).popover("hide");
-                }
-                else {
-                    $('.popover').mouseleave(function() {
-                        $(_this).popover("hide");
-                        $(this).off('mouseleave');
-                    });
-                }
-            });
-    </script>
 }
 
 
@@ -88,7 +70,13 @@
 }
 
 @popover(check: Check) = {
-    <a id="@createID(check.title)-scs-popover" tabindex="0" class="scs-popover" role="button" data-toggle="popover" data-trigger="manual" data-content='@popoverContent(check)'>
+    <a href="#"
+       tabindex="0"
+       data-bs-toggle="popover"
+       data-bs-trigger="hover"
+       data-bs-placement="bottom"
+       data-bs-html="true"
+       data-bs-content='@popoverContent(check)'>
         <span class="glyphicon glyphicon-question-sign"/>
     </a>
 }
@@ -109,7 +97,7 @@
         @applicableEnvironments.map(e => e -> check.checkResults.get(e)).sortBy(_._1).map{
             case (env, Some(result)) => {
                     <td>
-                        <ul class="list-compact">
+                        <ul class="list-unstyled">
                             <li> @env.displayString </li>
                             <li> @displayResult(createID(s"${check.title}-${env.displayString}"), result)</li>
                         </ul>
@@ -129,12 +117,12 @@
             </a>
         }
         case Left(missing) if missing.addLink.isEmpty => {
-            <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
+            <span style="width: 32px" class="glyphicon glyphicon-minus text-secondary"></span>
         }
         case Left(missing) => {
-            <a id="@id-add-link" href="@missing.addLink" target="_blank" rel="noopener noreferrer">
-                <span style="width: 32px" class="glyphicon glyphicon-minus archived"></span>
-                <span class="archived">add</span>
+            <a id="@id-add-link" class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" href="@missing.addLink" target="_blank" rel="noopener noreferrer">
+                <span style="width: 32px" class="glyphicon glyphicon-minus text-secondary"></span>
+                <span class="text-secondary">add</span>
             </a>
         }
     }

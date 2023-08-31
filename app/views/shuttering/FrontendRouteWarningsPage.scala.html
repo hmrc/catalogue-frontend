@@ -29,9 +29,7 @@
 
 @standard_layout(s"Frontend Route Warnings: ${selectedEnv.asString}") {
 
-  <header>
-      <h1>Frontend Route Warnings for: @selectedService</h1>
-  </header>
+    <h1 class="page-heading mt-4">Frontend Route Warnings for: @selectedService</h1>
 
   <section>
 
@@ -41,7 +39,7 @@
       </ul>
   </div>
 
-  <div class="row tabs-bottom col-xs-12">
+  <div class="row tabs-bottom col-xs-12 p-3">
       @defining(warningsMap.get(selectedEnv).getOrElse(Seq.empty)) { warnings =>
 
           @if(warnings.nonEmpty) {
@@ -72,8 +70,8 @@
 }
 
 @envOption(env: Environment) = {
-  <li id="tab-@env.asString" class="navbar-item @if(env == selectedEnv){active}">
-      <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.frontendRouteWarnings(env, selectedService)" class="navbar-link">@env.toString (@envWarningCount(env))</a>
+  <li id="tab-@env.asString" class="nav-item">
+      <a class="nav-link @if(env == selectedEnv){active}" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.frontendRouteWarnings(env, selectedService)">@env.toString (@envWarningCount(env))</a>
   </li>
 }
 

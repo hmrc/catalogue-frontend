@@ -33,7 +33,7 @@ class StandardLayoutSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSu
       val request  = FakeRequest(GET, "/currentPage")
       val document = Jsoup.parse(standard_layout()(Html("n/a"))(request).toString())
 
-      val signInLink = document.select("nav ul.nav.navbar-nav.navbar-right > li > a#sign-in")
+      val signInLink = document.select("a#sign-in")
       signInLink.attr("href") shouldBe "/sign-in?targetUrl=%2FcurrentPage"
       signInLink.text         shouldBe "Sign in"
     }
@@ -44,7 +44,7 @@ class StandardLayoutSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSu
 
       val document = Jsoup.parse(standard_layout()(Html("n/a"))(request).toString())
 
-      val userName = document.select("nav ul.nav.navbar-nav.navbar-right > li.dropdown > a")
+      val userName = document.select("a#logged-in-user")
       userName.text shouldBe expectedDisplayName
     }
 
@@ -54,7 +54,7 @@ class StandardLayoutSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSu
 
       val document = Jsoup.parse(standard_layout()(Html("n/a"))(request).toString())
 
-      val signOutLink = document.select("nav ul.nav.navbar-nav.navbar-right > li.dropdown > ul > li > a")
+      val signOutLink = document.select("a#sign-out")
 
       signOutLink.text         shouldBe "Sign out"
       signOutLink.attr("href") shouldBe "/sign-out"

@@ -17,6 +17,13 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.ConfluenceConnector
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
+@import uk.gov.hmrc.cataloguefrontend.repository.{routes => repositoryRoutes}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => shutterRoutes}
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 
 @this(viewMessages: ViewMessages)
 
@@ -28,26 +35,26 @@
 @standard_layout() {
 
     <section class="section-wrapper">
-        <h1>Welcome to the Catalogue</h1>
+        <h1 class="page-heading">Welcome to the Catalogue</h1>
         <p>Here you can explore information about all the
-            <a id="link-to-services-list" href="./repositories?name=&type=Service">different services</a>
-            and <a id="link-to-libraries-list" href="./repositories?name=&type=Library">libraries</a> in use on the platform,
-            <a id="link-to-wrw-page" href="./whats-running-where">where they are running</a> and
-            their <a id="link-to-deployments-page" href="./deployments/production">recent deployments</a>,
-            what <a id="link-to-dependency-explorer-page" href="./dependencyexplorer">dependencies</a>
-            and config they use, and <a id="link-to-teams-page" href="./teams">who</a> maintains them.
-            You can also <a id="link-to-shuttering-overview-page" href="./shuttering-overview/frontend">shutter your service</a> to the outside world,
-            <a id="link-to-bobby-rules" href="./bobbyrules">view bobby rules</a>, see what
-            <a id="link-to-jdk-explorer-page" href="./jdkexplorer">JDK versions are in use</a>, discover
-            <a id="link-to-search-by-url-page" href="./search#">which service corresponds to a given URL</a>, and more to come!
+            <a id="link-to-services-list" href="@repositoryRoutes.RepositoriesController.allServices">different services</a>
+            and <a id="link-to-libraries-list" href="@repositoryRoutes.RepositoriesController.allLibraries">libraries</a> in use on the platform,
+            <a id="link-to-wrw-page" href="@wrwRoutes.WhatsRunningWhereController.releases()">where they are running</a> and
+            their <a id="link-to-deployments-page" href="@wrwRoutes.DeploymentHistoryController.history(Environment.Production)">recent deployments</a>,
+            what <a id="link-to-dependency-explorer-page" href="@appRoutes.DependencyExplorerController.landing">dependencies</a>
+            and config they use, and <a id="link-to-teams-page" href="@teamsRoutes.TeamsController.allTeams()">who</a> maintains them.
+            You can also <a id="link-to-shuttering-overview-page" href="@shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend)">shutter your service</a> to the outside world,
+            <a id="link-to-bobby-rules" href="@appRoutes.BobbyExplorerController.list()">view bobby rules</a>, see what
+            <a id="link-to-jdk-explorer-page" href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK versions are in use</a>, discover
+            <a id="link-to-search-by-url-page" href="@appRoutes.SearchByUrlController.searchLanding">which service corresponds to a given URL</a>, and more to come!
 
         @if(blogs.nonEmpty) {
             <h2>Blog Posts</h2>
             These are all the recent blog posts published by PlatOps, right here for your convenience!
 
             <div id="blog-posts" class="recent-box">
-                <div class="recent-box-grow board-gradient">
-                    <div class='recent-box-collapse'>
+                <div class="content-grow content-grow-gradient">
+                    <div class='content-grow-wrapper'>
                     <table>
                         @blogs.map { blog =>
                             <tr>
@@ -59,7 +66,7 @@
                     </div>
                 </div>
                 <div class="text-center">
-                    <a id="see-all-expand-box" href="#" title="See all" class="recent-box-expand-link glyphicon glyphicon-chevron-down">
+                    <a id="see-all-expand-box" href="#" title="See all" class="content-grow-expand-link glyphicon glyphicon-chevron-down">
                     </a>
                 </div>
             </div>
@@ -85,7 +92,6 @@
             <div class="neon-random"><span class="flicker">c</span>ol<span class="fast-flicker">i</span>n</div>
             <div class="neon-random"><span class="fast-flicker">jo</span>rd<span class="flicker">an</span></div>
             <div class="neon-random"><span class="fast-flicker">j</span>on<span class="flicker">n</span>y</div>
-            <div class="neon-random"><span class="flicker">fi</span>o<span class="fast-flicker">n</span>a</div>
             <div class="neon-random"><span class="fast-flicker">p</span>e<span class="flicker">t</span>e</div>
             <div class="neon-random"><span class="fast-flicker">s</span>un<span class="flicker">n</span>y</div>
             <div class="neon-random"><span class="flicker">vi</span>ct<span class="fast-flicker">or</span></div>

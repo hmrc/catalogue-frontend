@@ -29,62 +29,49 @@
   request      : RequestHeader
 )
 
-@standard_layout(s"Shutter ${shutterType.asString.capitalize}") {
+@standard_layout(s"Shutter ${shutterType.asString.capitalize}", active = "shuttering") {
 
-<header>
-    <h1>Shutter @{shutterType.asString.capitalize}: Confirmation</h1>
-</header>
+    <h1 class="page-heading mt-4">Shutter @{shutterType.asString.capitalize}: Confirmation</h1>
 
-<div id="service-list">
-
-    <div class="board">
-        <div class="board__body">
-
-            <div style="padding-left: 20px; padding-right: 20px">
-
-                <div class="alert alert-success" role="alert">
-                    <span class="glyphicon glyphicon-ok"></span>
-                    The following @{shutterType}s have been successfully @valueFor(step1Out.status) in <b>@env</b>:
-                </div>
-
-
-                @if(shutterType == ShutterType.Frontend && step1Out.status == ShutterStatusValue.Shuttered) {
-                    <ul>
-                        @serviceLinks.map { case (name, optUrl) =>
-                            <li>
-                                @optUrl match {
-                                    case Some(url) => { <a href="@url" target="_blank" rel="noreferrer noopener">@name</a> }
-                                    case _ => { @name }
-                                }
-                            </li>
-                        }
-                    </ul>
-
-                    <p>This may take a few minutes to be applied.</p>
-
-                    @if(serviceLinks.exists(_._2.isDefined)) {
-                        <p>Above links will not work until shuttering has been applied.</p>
-                    }
-                } else {
-                    <ul>
-                        @serviceLinks.keys.map { name =>
-                            <li>@name</li>
-                        }
-                    </ul>
-
-                    <p>This may take a few minutes to be applied.</p>
-                }
-
-                <p>Return to <a
-                        href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)">shuttering
-                    overview</a></p>
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-success" role="alert">
+                <span class="glyphicon glyphicon-ok"></span>
+                The following @{shutterType}s have been successfully @valueFor(step1Out.status) in <b>@env</b>:
             </div>
 
+            @if(shutterType == ShutterType.Frontend && step1Out.status == ShutterStatusValue.Shuttered) {
+                <ul>
+                @serviceLinks.map { case (name, optUrl) =>
+                <li>
+                    @optUrl match {
+                        case Some(url) => { <a href="@url" target="_blank" rel="noreferrer noopener">@name</a> }
+                        case _ => { @name }
+                    }
+                </li>
+                }
+                </ul>
+
+                <p class="card-text">This may take a few minutes to be applied.</p>
+
+                @if(serviceLinks.exists(_._2.isDefined)) {
+                    <p class="card-text">Above links will not work until shuttering has been applied.</p>
+                }
+            } else {
+                <ul>
+                    @serviceLinks.keys.map { name =>
+                        <li>@name</li>
+                    }
+                </ul>
+
+                <p class="card-text">This may take a few minutes to be applied.</p>
+            }
+
+            <p class="card-text">
+                Return to <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)">shuttering overview</a>
+            </p>
         </div>
     </div>
-
-</div>
-
 }
 
 @valueFor(status: ShutterStatusValue) = {

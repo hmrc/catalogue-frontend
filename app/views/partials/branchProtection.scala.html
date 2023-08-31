@@ -27,26 +27,26 @@
 @boolToGlyph(bool: Boolean) = {
   @if(bool) {
     <span class="glyphicon glyphicon-ok text-success"></span>
-    <span class="sr-only">enabled</span>
+    <span class="visually-hidden">enabled</span>
   } else {
     <span class="glyphicon glyphicon-remove text-danger"></span>
-    <span class="sr-only">not enabled</span>
+    <span class="visually-hidden">not enabled</span>
   }
 }
 
-<h5 style="margin-left: 19.2px">Branch Protection</h5>
-<ul class="list list--minimal">
-    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresApprovingReviews)) Requires approving reviews</li>
-    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.dismissesStaleReviews)) Dismisses stale reviews</li>
-    <li class="list-item">@boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures)) Requires commit signatures</li>
+<p class="fw-bold">Branch Protection</p>
+<ul class="list-unstyled">
+    <li>@boolToGlyph(repo.branchProtection.exists(_.requiresApprovingReviews)) Requires approving reviews</li>
+    <li>@boolToGlyph(repo.branchProtection.exists(_.dismissesStaleReviews)) Dismisses stale reviews</li>
+    <li>@boolToGlyph(repo.branchProtection.exists(_.requiresCommitSignatures)) Requires commit signatures</li>
 </ul>
 
 @if(hasBranchProtectionAuth.value && repo.branchProtection.forall(!_.isProtected)) {
     <button type="button"
-            class="btn btn-primary"
-            data-toggle="modal"
-            data-target="#enableBranchProtectionModal"
-            style="margin-left: 15px; margin-bottom: 15px">
+            class="btn btn-success"
+            data-bs-toggle="modal"
+            data-bs-target="#enableBranchProtectionModal"
+            >
         Enable
     </button>
 }
@@ -56,9 +56,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="enableBranchProtectionModalTitle">Enable Branch Protection</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 Are you sure you want to enable branch protection on the @{repo.name} repository?
@@ -67,8 +65,8 @@
                 <form id="enableBranchProtection" action="@{routes.CatalogueController.enableBranchProtection(repo.name)}" method="post">
                     @csrfFormField
                 </form>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="submit" form="enableBranchProtection" class="btn btn-primary">Yes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="enableBranchProtection" class="btn btn-success">Yes</button>
             </div>
         </div>
     </div>

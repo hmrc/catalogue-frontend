@@ -38,7 +38,6 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with FakeApplicationBuilder
 
       val response = wsClient.url(s"http://localhost:$port/frontend-route-warnings/development/abc-frontend").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
-      response.body.contains("""<li id="tab-development" class="navbar-item active">""") shouldBe true
       response.body.contains("""LegacyErrorPageMisconfigured""") shouldBe true
     }
   }

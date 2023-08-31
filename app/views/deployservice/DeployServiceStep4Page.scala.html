@@ -31,7 +31,7 @@
 )
 
 @standard_layout("Deploying Service", "deploying service") {
-  <h1>Deploying Service</h1>
+  <h1 class="page-heading mt-4">Deploying Service</h1>
   <table class="table">
     <tr>
       <th style="width: 150px">Service:</th>
@@ -45,18 +45,18 @@
       <th>Environment:</th>
       <td>@formObject.environment.displayString</td>
     </tr>
-    <tr id="status-row" class="hide">
+    <tr id="status-row" class="d-none">
       <th>Status:</th>
       <td>
         <span id="status-span"></span>
         <span id="status-spinner">
-          <span class="spinner-border" role="status">
+          <span class="spinner-border spinner-border-sm" role="status">
             <span class="visually-hidden">Loading...</span>
           </span>
         </span>
       </td>
     </tr>
-    <tr id="last-check-row" class="hide">
+    <tr id="last-check-row" class="d-none">
       <th>Last Check:</th>
       <td><span id="last-check-span"></span></td>
     </tr>
@@ -64,9 +64,9 @@
 
   <p id="jenkins-console-row" class="d-none">
     Please also use <span id="jenkins-console-span"></span>,
-    <a target="_blank" href="@grafanaLink.url">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
+    <a target="_blank" href="@grafanaLink.url" rel="noreferrer noopener">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
     and
-    <a target="_blank" href="@kibanaLink.url">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
+    <a target="_blank" href="@kibanaLink.url" rel="noreferrer noopener">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
     to monitor the deployment.
   </p>
 
@@ -80,13 +80,13 @@
 
       if (status == 'QUEUE-ID-NOT-FOUND' || status == 'BUILD-ID-NOT-FOUND' || status == 'FAILURE' || status == 'ABORTED') {
         span.classList    = 'text-danger';
-        spinner.classList = 'hide';
+        spinner.classList = 'd-none';
       } else if (status == 'SUCCESS') {
         span.classList    = 'text-success';
-        spinner.classList = 'hide';
+        spinner.classList = 'd-none';
       } else if (status == 'UNSTABLE') {
         span.classList    = 'text-warning';
-        spinner.classList = 'hide';
+        spinner.classList = 'd-none';
       } else {
         span.classList    = '';
         spinner.classList = '';
@@ -94,11 +94,11 @@
     }
     function displayLastCheck() {
       document.getElementById('last-check-row' ).classList  = '';
-      document.getElementById('last-check-span').innerHTML = new Date().toLocaleTimeString();
+      document.getElementById('last-check-span').innerHTML = new Date().toLocaleString();
     }
     function displayLinks(url) {
-      document.getElementById('jenkins-console-row'  ).classList = '';
-      document.getElementById('jenkins-console-span').innerHTML = `<a target="_blank" href="${url}">Jenkins<span class="glyphicon glyphicon-new-window"/></a>`;
+      document.getElementById('jenkins-console-row' ).classList = '';
+      document.getElementById('jenkins-console-span').innerHTML = `<a target="_blank" href="${url}" rel="noreferrer noopener">Jenkins<span class="glyphicon glyphicon-new-window"/></a>`;
     }
   </script>
 
