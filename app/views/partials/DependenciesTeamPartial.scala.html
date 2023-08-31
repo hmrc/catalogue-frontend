@@ -104,7 +104,7 @@
           .toSet
     ) { violations =>
       @if(violations.nonEmpty) {
-          <div class="alert @if(pending) {alert-info} else {alert-danger}" id="bobby-rules-production-@if(pending) {pending} else {broken}-banner">
+          <div class="alert @if(pending) {alert-warning} else {alert-danger}" id="bobby-rules-production-@if(pending) {pending} else {broken}-banner">
               <strong>
                   This service has @if(pending) { upcoming } bobby violations in Production
               </strong>

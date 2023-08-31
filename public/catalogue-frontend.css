@@ -298,11 +298,11 @@ table.always-wrap {
 }
 
 .bobby-violation-active-badge {
-    background-color: #ce312f;
-    border: 1px solid #ce312f;
+    background-color: var(--bs-danger);
+    border: 1px solid var(--bs-danger);
 }
 
 .bobby-violation-pending-badge {
-    background-color: orange;
-    border: 1px solid orange;
+    background-color: var(--bs-warning);
+    border: 1px solid var(--bs-warning);
 }
