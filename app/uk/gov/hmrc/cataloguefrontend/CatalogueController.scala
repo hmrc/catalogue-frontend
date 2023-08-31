@@ -133,7 +133,7 @@ class CatalogueController @Inject() (
       .map{deploymentConfigs =>
         val zones = deploymentConfigs.map(_.zone).distinct
         if (zones.size > 1)
-          logger.warn(s"Service $serviceName is hosted on different zones: ${zones.mkString(", ")}")
+          logger.warn(s"Service $serviceName is hosted on different zones: \n${deploymentConfigs.map(dc => s"${dc.environment}: ${dc.zone}").mkString("\n")}")
         zones.headOption
       }
 

@@ -50,8 +50,8 @@ class CostEstimationService @Inject() (
       .map { deploymentConfigByEnvironment =>
         val slotsByEnv =
           deploymentConfigByEnvironment
-            .collect { case config@DeploymentConfig(_, environment, _) if config.deploymentSize.totalSlots.asInt > 0 =>
-              environment -> config.deploymentSize.totalSlots
+            .collect { case config if config.deploymentSize.totalSlots.asInt > 0 =>
+              config.environment -> config.deploymentSize.totalSlots
             }
             .sortBy(_._1)
 
@@ -139,6 +139,15 @@ object CostEstimationService {
       TotalSlots(slots * instances)
   }
 
+  object DeploymentSize {
+    val empty = DeploymentSize(slots = 0, instances = 0)
+
+    val reads: Reads[DeploymentSize] =
+      ( (__ \ "slots").read[Int]
+      ~ (__ \ "instances").read[Int]
+      )(DeploymentSize.apply _)
+  }
+
   final case class DeploymentConfig(
     deploymentSize: DeploymentSize,
     environment   : Environment,
@@ -148,15 +157,6 @@ object CostEstimationService {
   case class TotalSlots(asInt: Int) extends AnyVal {
     def costGbp(costEstimateConfig: CostEstimateConfig) =
       asInt * costEstimateConfig.slotCostPerYear
-  }
-
-  object DeploymentSize {
-    val empty = DeploymentSize(slots = 0, instances = 0)
-
-    val reads: Reads[DeploymentSize] =
-      ( (__ \ "slots").read[Int]
-      ~ (__ \ "instances").read[Int]
-      )(DeploymentSize.apply _)
   }
 
   object DeploymentConfig {
