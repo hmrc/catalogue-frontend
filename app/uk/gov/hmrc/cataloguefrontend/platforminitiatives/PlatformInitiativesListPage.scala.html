@@ -114,13 +114,37 @@
                             </h5>
                         </div>
                         <div class="card-body">
-                            <div id="chart_div_@initiative.initiativeName"></div>
-                            <p class="card-text">
-                                @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
-                                    case Right(s) => {@Html(s)}
-                                    case Left(_)  => {@initiative.initiativeDescription}
+                            @display match {
+                                case DisplayType.Chart => {
+                                    <div id="chart_div_@initiative.initiativeName"></div>
+                                    <p class="card-text">
+                                        @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
+                                            case Right(s) => {@Html(s)}
+                                            case Left(_)  => {@initiative.initiativeDescription}
+                                        }
+                                    </p>
                                 }
-                            </p>
+                                case DisplayType.Progress => {
+                                    @defining((initiative.progress.current.toDouble / initiative.progress.target) * 100) { progress =>
+                                        <div class="row">
+                                            <div class="col-9">
+                                                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="@initiative.progress.target" aria-valuenow="@initiative.progress.current">
+                                                    <div class="progress-bar" style="width: @progress%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                @initiative.progress.percent% @initiative.completedLegend
+                                            </div>
+                                        </div>
+                                        <p class="card-text">
+                                        @MarkdownLoader.markdownFromString(initiative.initiativeDescription) match {
+                                            case Right(s) => {@Html(s)}
+                                            case Left(_)  => {@initiative.initiativeDescription}
+                                        }
+                                        </p>
+                                    }
+                                }
+                            }
                         </div>
                     </div>
                 </div>
