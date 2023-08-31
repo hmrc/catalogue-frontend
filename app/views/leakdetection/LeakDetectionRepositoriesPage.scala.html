@@ -120,7 +120,7 @@
         <td class="repository"><a id="branch-summary-@{summary.repository}" href="@appRoutes.LeakDetectionController.branchSummaries(summary.repository, includeNonIssues = true)">@summary.repository</a></td>
         <td class="">
             @if(summary.isArchived) {
-            <span class="repo-status badge rounded-pill text-bg-info">archived</span>
+            <span class="repo-status badge rounded-pill text-bg-secondary">archived</span>
             }
         </td>
         <td class="first-scanned-display">@summary.firstScannedAt.displayFormat</td>

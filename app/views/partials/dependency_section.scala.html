@@ -42,7 +42,7 @@
             }
             @icon(dependency)
             @if(!dependency.isExternal) {
-              <a id="link-to-@{dependency.name}-@{rootId}" href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
+              <a id="link-to-@{dependency.name}-@{rootId}" class="@getLinkColourClass(dependency) " href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
                 <span class="dep-group">@dependency.group:</span>
                 <span class="dep-name">@dependency.name</span>
               </a>
@@ -76,11 +76,20 @@
     }
 }
 
+@getLinkColourClass(dependency: Dependency) = @{
+    dependency.versionState match {
+        case Some(VersionState.NewVersionAvailable )  => "link-info"
+        case Some(_: VersionState.BobbyRuleViolated)  => "link-danger"
+        case Some(_: VersionState.BobbyRulePending )  => "link-warning"
+        case _                                        => "link-success"
+    }
+}
+
 @icon(dependency: Dependency) = {
   @dependency.versionState match {
     case Some(VersionState.NewVersionAvailable )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-arrow-up" title="new version available"></span> }
     case Some(_: VersionState.BobbyRulePending )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-alert"    title="bobby rule pending"></span> }
     case Some(_: VersionState.BobbyRuleViolated)  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="bobby rule violated"></span> }
-    case _                                        => { }
+    case _                                        => { <span style="margin-right: 10px;">&nbsp;</span> }
   }
 }

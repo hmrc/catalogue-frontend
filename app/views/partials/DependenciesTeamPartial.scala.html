@@ -50,7 +50,7 @@
                                   <h6 class="fw-bold mb-3">
                                       @dependency.dependencies.repositoryName
                                       @if(dependency.repo.isArchived) {
-                                          <span class="badge rounded-pill text-bg-info">archived</span>
+                                          <span class="badge rounded-pill text-bg-secondary">archived</span>
                                       }
                                       @if(dependency.repo.isDeprecated && !dependency.repo.isArchived) {
                                           <span class="badge rounded-pill text-bg-warning">deprecated</span>
