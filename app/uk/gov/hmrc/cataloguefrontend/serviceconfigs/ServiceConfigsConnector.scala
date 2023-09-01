@@ -85,10 +85,9 @@ class ServiceConfigsConnector @Inject() (
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$qsParams")
       .execute[Seq[DeploymentConfig]]
       .recover {
-        case NonFatal(ex) => {
-          logger.info(s"No deployments found for ${service.getOrElse("")} ${environment.getOrElse("")}: $ex")
+        case UpstreamErrorResponse.WithStatusCode(404) =>
+          logger.info(s"No deployments found for ${service.getOrElse("")} ${environment.getOrElse("")}")
           Seq.empty
-        }
       }
   }
 
