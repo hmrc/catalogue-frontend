@@ -37,7 +37,14 @@
 @implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
 @standard_layout("Deployments", "deployments") {
-    <h1 class="page-heading mt-4">Deployments</h1>
+    <h1 class="page-heading mt-4">
+        Deployments
+        @if(uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
+            <a class="float-end btn btn-success" role="button" href="@uk.gov.hmrc.cataloguefrontend.deployservice.routes.DeployServiceController.step1(None)" title="Link to the deploy service page">
+                Deploy
+            </a>
+        }
+    </h1>
 
     @if(form.hasErrors) {
       <div class="alert alert-danger" role="alert">

@@ -47,4 +47,7 @@ object CatalogueFrontendSwitches {
 
   def showCreateRepo: FeatureSwitch =
     FeatureSwitch.forName("show-create-repo")
+
+  def showDeployService: FeatureSwitch =
+    FeatureSwitch.forName("show-deploy-service")
 }
