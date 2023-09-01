@@ -32,6 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
 import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 import uk.gov.hmrc.cataloguefrontend.createarepository.{routes => createRepoRoutes}
+import uk.gov.hmrc.cataloguefrontend.deployservice.{routes => deployServiceRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
@@ -76,7 +77,7 @@ class SearchIndex @Inject()(
     SearchTerm("page",     "defaultbranch",                catalogueRoutes.CatalogueController.allDefaultBranches().url,                1.0f),
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,               1.0f),
     SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,           1.0f),
-    ) ++ {
+  ) ++ {
       if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
         List(
           SearchTerm("page",     "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,    1.0f),
@@ -86,6 +87,12 @@ class SearchIndex @Inject()(
     if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showCreateRepo.isEnabled) {
       List(
         SearchTerm("page", "create repository", createRepoRoutes.CreateARepositoryController.createARepositoryLanding().url, 1.0f)
+      )
+    } else Nil
+  } ++ {
+    if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
+      List(
+        SearchTerm("page", "deploy service", deployServiceRoutes.DeployServiceController.step1(None).url, 1.0f)
       )
     } else Nil
   }
@@ -101,15 +108,21 @@ class SearchIndex @Inject()(
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
-                            .flatMap(r => List(SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(r.name).url ),
+                            .flatMap(r => (if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
+                                            List(
+                                              SearchTerm("deploy", r.name, deployServiceRoutes.DeployServiceController.step1(Some(r.name)).url)
+                                            )
+                                          } else Nil) ++
+                                          List(SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(r.name).url ),
                                                SearchTerm("timeline",            r.name, wrwRoutes.DeploymentHistoryController.graph(r.name).url),
-                                               SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(r.name).url),
-                            ))
+                                               SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(r.name).url)
+                                          )
+                                    )
       comments      <- prCommenterConnector.search(None, None, None)
       commentLinks  =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
       users         <- userManagementConnector.getAllUsers(None)
       userLinks     =  users.map(u => SearchTerm("users", u.username, userRoutes.UsersController.user(u.username).url, 0.5f))
-      allLinks      = hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
+      allLinks      =  hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
     } yield cachedIndex.set(optimizeIndex(allLinks))
   }
 
