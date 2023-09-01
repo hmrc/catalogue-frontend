@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
+import play.api.Logger
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName, Version}
@@ -30,6 +31,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 @Singleton
 class ServiceConfigsConnector @Inject() (
@@ -41,6 +43,7 @@ class ServiceConfigsConnector @Inject() (
   import ServiceConfigsService._
 
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
+  private val logger = Logger(getClass)
 
   implicit val cber = ConfigByEnvironment.reads
   implicit val cwr  = ConfigWarning.reads
@@ -81,6 +84,12 @@ class ServiceConfigsConnector @Inject() (
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$qsParams")
       .execute[Seq[DeploymentConfig]]
+      .recover {
+        case NonFatal(ex) => {
+          logger.info(s"No deployments found for ${service.getOrElse("")} ${environment.getOrElse("")}: $ex")
+          Seq.empty
+        }
+      }
   }
 
   def allDeploymentConfig()(implicit hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfig]] = {
