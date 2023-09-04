@@ -21,6 +21,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.config.Constant
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.Zone
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -234,7 +235,7 @@ case class GitRepository(
   teamNames           : Seq[String]              = Nil,
   jenkinsJobs         : Seq[JenkinsJob]          = Seq.empty[JenkinsJob],
   prototypeName       : Option[String]           = None,
-  zone                : Option[String]           = None,
+  zone                : Option[Zone]             = None,
 ) {
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
@@ -242,10 +243,11 @@ case class GitRepository(
 
 object GitRepository {
   val apiFormat: OFormat[GitRepository] = {
-    implicit val rtF : Format[RepoType]    = RepoType.format
-    implicit val stF : Format[ServiceType] = ServiceType.stFormat
-    implicit val jjF : Format[JenkinsJob]  = JenkinsJob.apiFormat
-    implicit val tagF: Format[Tag]         = Tag.format
+    implicit val rtF  : Format[RepoType]    = RepoType.format
+    implicit val stF  : Format[ServiceType] = ServiceType.stFormat
+    implicit val jjF  : Format[JenkinsJob]  = JenkinsJob.apiFormat
+    implicit val tagF : Format[Tag]         = Tag.format
+    implicit val zoneF: Format[Zone]        = Zone.format
 
     ( (__ \ "name"              ).format[String]
     ~ (__ \ "description"       ).format[String]
@@ -266,7 +268,7 @@ object GitRepository {
     ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Nil)
     ~ (__ \ "jenkinsJobs"       ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
     ~ (__ \ "prototypeName"     ).formatNullable[String]
-    ~ (__ \ "zone"              ).formatNullable[String]
+    ~ (__ \ "zone"              ).formatNullable[Zone]
     ) (apply, unlift(unapply))
   }
 }

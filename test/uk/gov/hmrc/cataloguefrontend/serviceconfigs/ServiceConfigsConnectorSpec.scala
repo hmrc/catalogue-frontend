@@ -22,7 +22,7 @@ import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, ConfigSourceValue, KeyName, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize}
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -62,7 +62,7 @@ final class ServiceConfigsConnectorSpec
           .deploymentConfig(Some("some-service"), Some(Environment.Production))
           .futureValue
 
-      deploymentConfig.headOption shouldBe Some(DeploymentConfig(DeploymentSize(slots = 11, instances = 3), environment = Environment.Production, zone = "protected"))
+      deploymentConfig.headOption shouldBe Some(DeploymentConfig(DeploymentSize(slots = 11, instances = 3), environment = Environment.Production, zone = Zone.Protected))
     }
 
     "return None when the deployment configuration cannot be found" in {

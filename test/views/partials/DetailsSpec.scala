@@ -19,6 +19,7 @@ package views.partials
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, RouteRulesConnector, ServiceType}
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.Zone
 
 import java.time.Instant
 
@@ -37,7 +38,7 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     isPrivate      = true,
     isArchived     = false,
     defaultBranch  = "main",
-    zone           = Option("protected"),
+    zone           = Option(Zone.Protected),
     serviceType    = Option(ServiceType.Backend),
   )
 
@@ -56,7 +57,7 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     "display zone" in {
       val result = views.html.partials.details(repo).body
       result should include ("id=\"repository-zone\"")
-      result should include ("protected")
+      result should include ("Protected")
     }
 
     "display repository visibility" in {

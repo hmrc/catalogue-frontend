@@ -151,7 +151,7 @@ object CostEstimationService {
   final case class DeploymentConfig(
     deploymentSize: DeploymentSize,
     environment   : Environment,
-    zone          : String,
+    zone          : Zone,
   )
 
   case class TotalSlots(asInt: Int) extends AnyVal {
@@ -159,15 +159,39 @@ object CostEstimationService {
       asInt * costEstimateConfig.slotCostPerYear
   }
 
+  sealed trait Zone {
+    val name: String
+    val displayName: String = name.capitalize
+  }
+  
+  object Zone {
+    case object Protected extends Zone { val name: String = "protected" }
+    case object Public extends Zone { val name: String = "public" }
+
+    val values = Seq(Protected, Public)
+
+    def parse(zone: String): Either[String, Zone] = 
+      values.find(_.name == zone)
+        .toRight(s"Invalid deployment zone '$zone' - valid values are ${values.map(_.displayName).mkString(", ")}")
+
+    val format: Format[Zone] = new Format[Zone] {
+      override def reads(json: JsValue): JsResult[Zone] =
+        json.validate[String].flatMap(s => parse(s).fold(msg => JsError(msg.toString), t => JsSuccess(t)))
+
+      override def writes(z: Zone): JsValue = JsString(z.displayName)
+    }
+  }
+
   object DeploymentConfig {
     implicit val ef  = environmentFormat
     implicit val ds  = DeploymentSize.reads
+    implicit val zf  = Zone.format
 
     def apply(
       slots:       Int,
       instances:   Int,
       environment: Environment,
-      zone:        String,
+      zone:        Zone,
     ): DeploymentConfig =
       DeploymentConfig(
         DeploymentSize(slots, instances),
@@ -179,7 +203,7 @@ object CostEstimationService {
       ( (__ \ "slots").read[Int]
       ~ (__ \ "instances").read[Int]
       ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "zone").read[String]
+      ~ (__ \ "zone").read[Zone]
       )(DeploymentConfig.apply(_, _, _, _))
   }
 

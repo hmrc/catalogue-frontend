@@ -128,7 +128,7 @@ class CatalogueController @Inject() (
 
     }
 
-  private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[String]] =
+  private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[CostEstimationService.Zone]] =
     serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
       .map{deploymentConfigs =>
         val zones = deploymentConfigs.map(_.zone).distinct
