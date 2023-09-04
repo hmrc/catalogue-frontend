@@ -62,13 +62,14 @@
     </tr>
   </table>
 
-  <p id="jenkins-console-row" class="d-none">
-    Please also use <span id="jenkins-console-span"></span>,
-    <a target="_blank" href="@grafanaLink.url" rel="noreferrer noopener">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
-    and
-    <a target="_blank" href="@kibanaLink.url" rel="noreferrer noopener">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a>
-    to monitor the deployment.
-  </p>
+  <div id="deployment-links-row" class="mt-4 d-none">
+    How to monitor the deployment:
+    <ul class="mt-0">
+      <li><a target="_blank" id="jenkins-console-link" rel="noreferrer noopener">Console logs available via Jenkins<span class="glyphicon glyphicon-new-window"/></a></li>
+      <li><a target="_blank" href="@grafanaLink.url" rel="noreferrer noopener">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a></li>
+      <li><a target="_blank" href="@kibanaLink.url" rel="noreferrer noopener">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a></li>
+    </ul>
+  </div>
 
   <script @CSPNonce.attr>
     function displayStatus(status, message) {
@@ -97,8 +98,8 @@
       document.getElementById('last-check-span').innerHTML = new Date().toLocaleString();
     }
     function displayLinks(url) {
-      document.getElementById('jenkins-console-row' ).classList = '';
-      document.getElementById('jenkins-console-span').innerHTML = `<a target="_blank" href="${url}" rel="noreferrer noopener">Jenkins<span class="glyphicon glyphicon-new-window"/></a>`;
+      document.getElementById('deployment-links-row' ).classList = '';
+      document.getElementById('jenkins-console-link').setAttribute('href', url);
     }
   </script>
 
