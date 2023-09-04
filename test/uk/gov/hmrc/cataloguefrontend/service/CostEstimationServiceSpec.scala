@@ -46,12 +46,12 @@ final class CostEstimationServiceSpec
     "produce a cost estimate for a service in all environments in which it's deployed" in {
       val stubs =
         Seq(
-          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.Development, zone = "protected"),
-          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.Integration, zone = "protected"),
-          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.QA, zone = "protected"),
-          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.Staging, zone = "protected"),
-          DeploymentConfig(DeploymentSize(3, 1), environment = Environment.ExternalTest, zone = "protected"),
-          DeploymentConfig(DeploymentSize(11, 3), environment = Environment.Production, zone = "protected")
+          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.Development,  zone = Zone.Protected),
+          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.Integration,  zone = Zone.Protected),
+          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.QA,           zone = Zone.Protected),
+          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.Staging,      zone = Zone.Protected),
+          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.ExternalTest, zone = Zone.Protected),
+          DeploymentConfig(DeploymentSize(11, 3), environment = Environment.Production,   zone = Zone.Protected)
         )
 
       val serviceConfigsConnector =
