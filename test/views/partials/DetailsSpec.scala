@@ -56,7 +56,7 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     "display zone" in {
       val result = views.html.partials.details(repo).body
       result should include ("id=\"repository-zone\"")
-      result should include ("protected")
+      result should include ("Protected")
     }
 
     "display repository visibility" in {
