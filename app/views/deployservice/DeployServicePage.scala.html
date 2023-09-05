@@ -357,7 +357,7 @@
 
 @popoverConfigWarning(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
   <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
-  <strong>Value:</strong> @warning.value.displayString
+  <strong>Value:</strong> @play.twirl.api.XmlFormat.escape(warning.value.displayString)
 }
 
 @vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
