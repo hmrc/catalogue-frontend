@@ -102,6 +102,27 @@ final class CostEstimationServiceSpec
     }
   }
 
+  "Zone" should {
+    "parse the valid zone" when {
+      "it exists" in {
+        val zone = "public"
+
+        val result = Zone.parse(zone)
+
+        result shouldBe Right(Zone.Public)
+      }
+    }
+    "return an error message" when {
+      "zone doesn't exists" in {
+        val invalidZone = "invalid-zone"
+
+        val result = Zone.parse(invalidZone)
+
+        result shouldBe Left("Invalid deployment zone 'invalid-zone' - valid values are protected, public, protected-rate, public-monolith, public-rate, private")
+      }
+    }
+  }
+
   private def stubConfigConnector(
     service            : String,
     stubs              : Seq[DeploymentConfig]

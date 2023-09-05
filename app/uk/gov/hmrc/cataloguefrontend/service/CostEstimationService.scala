@@ -161,18 +161,22 @@ object CostEstimationService {
 
   sealed trait Zone {
     val name: String
-    val displayName: String = name.capitalize
+    def displayName: String = name.capitalize
   }
   
   object Zone {
     case object Protected extends Zone { val name: String = "protected" }
+    case object ProtectedRate extends Zone { val name: String = "protected-rate" }
     case object Public extends Zone { val name: String = "public" }
+    case object PublicMonolith extends Zone { val name: String = "public-monolith" }
+    case object PublicRate extends Zone { val name: String = "public-rate" }
+    case object Private extends Zone { val name: String = "private" }
 
-    val values = Seq(Protected, Public)
+    val values = Seq(Protected, Public, ProtectedRate, PublicMonolith, PublicRate, Private)
 
     def parse(zone: String): Either[String, Zone] = 
       values.find(_.name == zone)
-        .toRight(s"Invalid deployment zone '$zone' - valid values are ${values.map(_.displayName).mkString(", ")}")
+        .toRight(s"Invalid deployment zone '$zone' - valid values are ${values.map(_.name).mkString(", ")}")
 
     val format: Format[Zone] = new Format[Zone] {
       override def reads(json: JsValue): JsResult[Zone] =
