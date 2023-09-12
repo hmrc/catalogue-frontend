@@ -215,6 +215,7 @@ class DeployServiceController @Inject()(
       ).merge
     }
 
+  private val deploymentLogsLinkTemplate   = configuration.get[String]("telemetry.templates.deploymentLogs")
   private val telemetryLogsLinkTemplate    = configuration.get[String]("telemetry.templates.logs")
   private val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
 
@@ -229,9 +230,10 @@ class DeployServiceController @Inject()(
         , formObject     => serviceDependenciesConnector
                               .getSlugInfo(formObject.serviceName, Some(formObject.version))
                               .map(_.fold(NotFound(error_404_template())){_ =>
+                                val deploymentLogsLink = TelemetryLinks.create("Deployment Logs", deploymentLogsLinkTemplate, formObject.environment, formObject.serviceName)
                                 val grafanaLink = TelemetryLinks.create("Grafana Dashboard", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
                                 val kibanaLink  = TelemetryLinks.create("Kibana Dashboard", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
-                                Ok(deployServiceStep4Page(formObject, queueUrl, buildUrl, grafanaLink, kibanaLink))
+                                Ok(deployServiceStep4Page(formObject, queueUrl, buildUrl, deploymentLogsLink, grafanaLink, kibanaLink))
                               })
         )
     }

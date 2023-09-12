@@ -21,11 +21,12 @@
 
 @this(viewMessages: ViewMessages)
 
-@(formObject : DeployServiceForm
-, queueUrl   : String
-, buildUrl   : Option[String]
-, grafanaLink: Link
-, kibanaLink : Link
+@(formObject        : DeployServiceForm
+, queueUrl          : String
+, buildUrl          : Option[String]
+, deploymentLogsLink: Link
+, grafanaLink       : Link
+, kibanaLink        : Link
 )( implicit
   messages  : RequestHeader
 )
@@ -70,6 +71,7 @@
     How to monitor the deployment:
     <ul class="mt-0">
       <li><a target="_blank" id="jenkins-console-link" rel="noreferrer noopener">Console logs available via Jenkins<span class="glyphicon glyphicon-new-window"/></a></li>
+      <li><a target="_blank" href="@deploymentLogsLink.url" rel="noreferrer noopener">Application logs available in Kibana<span class="glyphicon glyphicon-new-window"/></a></li>
       <li><a target="_blank" href="@grafanaLink.url" rel="noreferrer noopener">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a></li>
       <li><a target="_blank" href="@kibanaLink.url" rel="noreferrer noopener">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a></li>
     </ul>
