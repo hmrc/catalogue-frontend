@@ -79,25 +79,27 @@
             @csrfFormField
             <input type="hidden" name="serviceName" value='@form("serviceName").value' />
             <dl>
-              <dt><label class="form-label" class="form-label" for="service-name">Version:</label></dt>
+              <dt><label class="form-label" for="service-name">Version:</label></dt>
               <dd>
                 <div id="helpful-versions" class="list-group mb-2">
                   @defining(
                     ( latestVersion.map(x => (x, "Latest")) ++
                       releases
                         .sortBy(_.environment)
-                        .map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
+                        .map(x => (x.versionNumber.asVersion, x.environment.displayString))
                     ).groupBy { case (version, _) => version }
                       .toList
                       .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
                       .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
                   ) { xs => @xs.map { case (version, text) =>
-                    <a href="#" class="list-group-item list-group-item-action" data-content="@version">
-                      <div class="row">
-                        <div class="col-xs-3 col-md-3">@version</div>
-                        <div class="col-xs-9 col-md-9">@text</div>
-                      </div>
-                    </a>
+                    @defining(form("version").value.contains(version.toString)) { isActive =>
+                      <a href="#" class="list-group-item list-group-item-action @if(isActive) {active}" data-content="@version">
+                        <div class="row">
+                          <div class="col-xs-3 col-md-3">@version</div>
+                          <div class="col-xs-9 col-md-9">@text</div>
+                        </div>
+                      </a>
+                    }
                   }}
                 </div>
                 <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or select one from above">
@@ -299,10 +301,19 @@
       let version         = document.getElementById('version');
       let environment     = document.getElementById('environment');
 
+      function setVersionActive(v) {
+        Array
+          .from(helpfulVersions.getElementsByTagName('a'))
+          .map(el => el.classList.remove('active'));
+
+        v.classList.add('active');
+      }
+
       Array
         .from(helpfulVersions.getElementsByTagName('a'))
         .map(el => el.onclick = function() {
           version.value = el.getAttribute('data-content');
+          setVersionActive(el)
           submitWhenReady();
         });
 
