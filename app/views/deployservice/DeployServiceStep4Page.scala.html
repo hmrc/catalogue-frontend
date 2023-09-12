@@ -21,11 +21,12 @@
 
 @this(viewMessages: ViewMessages)
 
-@(formObject : DeployServiceForm
-, queueUrl   : String
-, buildUrl   : Option[String]
-, grafanaLink: Link
-, kibanaLink : Link
+@(formObject        : DeployServiceForm
+, queueUrl          : String
+, buildUrl          : Option[String]
+, deploymentLogsLink: Link
+, grafanaLink       : Link
+, kibanaLink        : Link
 )( implicit
   messages  : RequestHeader
 )
@@ -34,7 +35,7 @@
   <h1 class="page-heading mt-4">Deploying Service</h1>
   <table class="table">
     <tr>
-      <th style="width: 150px">Service:</th>
+      <th style="width: 200px">Service:</th>
       <td><a target="_blank" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(formObject.serviceName)">@formObject.serviceName<span class="glyphicon glyphicon-new-window"/></a></td>
     </tr>
     <tr>
@@ -56,6 +57,10 @@
         </span>
       </td>
     </tr>
+    <tr id="deployment-started-row" class="d-none">
+      <th>Deployment Started:</th>
+      <td><span id="deployment-started-span"></span></td>
+    </tr>
     <tr id="last-check-row" class="d-none">
       <th>Last Check:</th>
       <td><span id="last-check-span"></span></td>
@@ -66,6 +71,7 @@
     How to monitor the deployment:
     <ul class="mt-0">
       <li><a target="_blank" id="jenkins-console-link" rel="noreferrer noopener">Console logs available via Jenkins<span class="glyphicon glyphicon-new-window"/></a></li>
+      <li><a target="_blank" href="@deploymentLogsLink.url" rel="noreferrer noopener">Application logs available in Kibana<span class="glyphicon glyphicon-new-window"/></a></li>
       <li><a target="_blank" href="@grafanaLink.url" rel="noreferrer noopener">@grafanaLink.name<span class="glyphicon glyphicon-new-window"/></a></li>
       <li><a target="_blank" href="@kibanaLink.url" rel="noreferrer noopener">@kibanaLink.name<span class="glyphicon glyphicon-new-window"/></a></li>
     </ul>
@@ -83,7 +89,7 @@
         span.classList    = 'text-danger';
         spinner.classList = 'd-none';
       } else if (status == 'SUCCESS') {
-        span.classList    = 'text-success';
+        span.classList    = 'badge fs-6 text-bg-success';
         spinner.classList = 'd-none';
       } else if (status == 'UNSTABLE') {
         span.classList    = 'text-warning';
@@ -92,6 +98,10 @@
         span.classList    = '';
         spinner.classList = '';
       }
+    }
+    function displayDeploymentStarted(timestamp) {
+      document.getElementById('deployment-started-row').classList = '';
+      document.getElementById('deployment-started-span').innerHTML = new Date(timestamp).toLocaleString();
     }
     function displayLastCheck() {
       document.getElementById('last-check-row' ).classList  = '';
@@ -130,6 +140,7 @@
         const sse = new EventSource('@appRoutes.DeployServiceController.step4sse(queueUrl, buildUrl)'.replaceAll('&amp;', '&'));
         sse.onmessage = function(event) {
           const json = JSON.parse(event.data);
+          displayDeploymentStarted(json.buildStatus.timestamp);
           displayLastCheck();
           displayLinks(`${json.buildStatus.url}console`);
 

@@ -40,7 +40,6 @@
                     Map[ServiceConfigsService.KeyName, ServiceConfigsService.ConfigSourceValue]
                   , Seq[ServiceConfigsService.ConfigWarning]
                   , Seq[VulnerabilitySummary]
-                  , Seq[(Link, String)]
                   )]
 )( implicit
   messages      : Messages
@@ -79,28 +78,31 @@
             @csrfFormField
             <input type="hidden" name="serviceName" value='@form("serviceName").value' />
             <dl>
-              <dt><label class="form-label" class="form-label" for="service-name">Version:</label></dt>
+              <dt><label class="form-label" for="version">Version:</label></dt>
               <dd>
-                <div id="helpful-versions" class="list-group mb-2">
+                <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="0.0.0">
+                <span class="form-text">Enter a version or select one from below</span>
+                <div id="helpful-versions" class="list-group mt-2">
                   @defining(
                     ( latestVersion.map(x => (x, "Latest")) ++
                       releases
                         .sortBy(_.environment)
-                        .map(x => (Version.apply(x.versionNumber.asString), x.environment.displayString))
+                        .map(x => (x.versionNumber.asVersion, x.environment.displayString))
                     ).groupBy { case (version, _) => version }
                       .toList
                       .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
                       .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
                   ) { xs => @xs.map { case (version, text) =>
-                    <a href="#" class="list-group-item list-group-item-action" data-content="@version">
-                      <div class="row">
-                        <div class="col-xs-3 col-md-3">@version</div>
-                        <div class="col-xs-9 col-md-9">@text</div>
-                      </div>
-                    </a>
+                    @defining(form("version").value.contains(version.toString)) { isActive =>
+                      <a href="#" class="list-group-item list-group-item-action @if(isActive) {active}" data-content="@version">
+                        <div class="row">
+                          <div class="col-xs-3 col-md-3">@version</div>
+                          <div class="col-xs-9 col-md-9">@text</div>
+                        </div>
+                      </a>
+                    }
                   }}
                 </div>
-                <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or select one from above">
               </dd>
             </dl>
 
@@ -120,9 +122,9 @@
       </div>
     </div>
     <div class="col-md-8">
-      @evaluations.map { case (updates, warnings, vulnerabilities, githubDiffLinks) =>
+      @evaluations.map { case (updates, warnings, vulnerabilities) =>
         <label class="form-label fw-bold">Please review before deploying:</label>
-        <div class="accordion" id="accordion">
+        <div class="accordion mb-3" id="accordion">
           <div class="accordion-item">
             <div class="accordion-header" id="headingConfigUpdates">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeConfigUpdates" aria-expanded="false" aria-controls="collaspeConfigUpdates" @if(updates.isEmpty) {disabled} >
@@ -232,38 +234,15 @@
               </div>
             </div>
           </div>
-          <div class="accordion-item">
-            <div class="accordion-header" id="headingGithubDiffLinks">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeGithubDiffLinks" aria-expanded="false" aria-controls="collaspeGithubDiffLinks">
-                Github Diffs
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info z-3">
-                  @githubDiffLinks.size
-                  <span class="visually-hidden">Number of Github diff links</span>
-                </span>
-              </button>
-            </div>
-            <div id="collaspeGithubDiffLinks" class="accordion-collapse collapse" aria-labelledby="headingGithubDiffLinks" data-bs-parent="#accordion">
-              <div class="accordion-body">
-                <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
-                  <thead>
-                    <tr>
-                      <th>Link</th>
-                      <th>Command</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for((link, command) <- githubDiffLinks) {
-                      <tr>
-                        <td><a target="_blank" href="@link.url"rel="noreferrer noopener">@link.name<span class="glyphicon glyphicon-new-window"/></a></td>
-                        <td><code>@command</code></td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
         </div>
+
+        @defining( (form("serviceName").value, form("version").value, form("environment").value.flatMap(Environment.parse) ) ) { deploying =>
+          @defining( deploying._3.contains(Environment.Production) ) { isProd =>
+            <div class="alert @if(isProd) {alert-danger} else {alert-warning}">
+              Deploying <strong>@deploying._1:@deploying._2</strong> into <strong>@deploying._3.map(_.displayString)</strong>
+            </div>
+          }
+        }
 
         @helper.form(
           action           =  appRoutes.DeployServiceController.step3()
@@ -299,14 +278,29 @@
       let version         = document.getElementById('version');
       let environment     = document.getElementById('environment');
 
+      function setVersionActive(v) {
+        Array
+          .from(helpfulVersions.getElementsByTagName('a'))
+          .map(el => el.classList.remove('active'));
+
+        if(v) {
+          v.classList.add('active');
+        }
+      }
+
       Array
         .from(helpfulVersions.getElementsByTagName('a'))
         .map(el => el.onclick = function() {
           version.value = el.getAttribute('data-content');
+          setVersionActive(el);
           submitWhenReady();
         });
 
-      version.onchange     = function() { submitWhenReady() }
+      version.onchange     = function() {
+        setVersionActive(null);
+        submitWhenReady();
+      }
+
       environment.onchange = function() { submitWhenReady() }
 
       function submitWhenReady() {
@@ -314,7 +308,7 @@
           form2.dispatchEvent(new Event("submit")); // Call form listener
           form2.submit();
         }
-      };
+      }
     }
   </script>
 }
