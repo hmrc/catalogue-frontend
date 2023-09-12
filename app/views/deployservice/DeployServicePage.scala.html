@@ -78,9 +78,11 @@
             @csrfFormField
             <input type="hidden" name="serviceName" value='@form("serviceName").value' />
             <dl>
-              <dt><label class="form-label" for="service-name">Version:</label></dt>
+              <dt><label class="form-label" for="version">Version:</label></dt>
               <dd>
-                <div id="helpful-versions" class="list-group mb-2">
+                <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="0.0.0">
+                <span class="form-text">Enter a version or select one from below</span>
+                <div id="helpful-versions" class="list-group mt-2">
                   @defining(
                     ( latestVersion.map(x => (x, "Latest")) ++
                       releases
@@ -101,7 +103,6 @@
                     }
                   }}
                 </div>
-                <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="Enter a version or select one from above">
               </dd>
             </dl>
 
@@ -123,7 +124,7 @@
     <div class="col-md-8">
       @evaluations.map { case (updates, warnings, vulnerabilities) =>
         <label class="form-label fw-bold">Please review before deploying:</label>
-        <div class="accordion" id="accordion">
+        <div class="accordion mb-3" id="accordion">
           <div class="accordion-item">
             <div class="accordion-header" id="headingConfigUpdates">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeConfigUpdates" aria-expanded="false" aria-controls="collaspeConfigUpdates" @if(updates.isEmpty) {disabled} >
@@ -235,6 +236,14 @@
           </div>
         </div>
 
+        @defining( (form("serviceName").value, form("version").value, form("environment").value.flatMap(Environment.parse) ) ) { deploying =>
+          @defining( deploying._3.contains(Environment.Production) ) { isProd =>
+            <div class="alert @if(isProd) {alert-danger} else {alert-warning}">
+              Deploying <strong>@deploying._1:@deploying._2</strong> into <strong>@deploying._3.map(_.displayString)</strong>
+            </div>
+          }
+        }
+
         @helper.form(
           action           =  appRoutes.DeployServiceController.step3()
         , Symbol("method") -> "POST"
@@ -274,18 +283,24 @@
           .from(helpfulVersions.getElementsByTagName('a'))
           .map(el => el.classList.remove('active'));
 
-        v.classList.add('active');
+        if(v) {
+          v.classList.add('active');
+        }
       }
 
       Array
         .from(helpfulVersions.getElementsByTagName('a'))
         .map(el => el.onclick = function() {
           version.value = el.getAttribute('data-content');
-          setVersionActive(el)
+          setVersionActive(el);
           submitWhenReady();
         });
 
-      version.onchange     = function() { submitWhenReady() }
+      version.onchange     = function() {
+        setVersionActive(null);
+        submitWhenReady();
+      }
+
       environment.onchange = function() { submitWhenReady() }
 
       function submitWhenReady() {
@@ -293,7 +308,7 @@
           form2.dispatchEvent(new Event("submit")); // Call form listener
           form2.submit();
         }
-      };
+      }
     }
   </script>
 }
