@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
-import uk.gov.hmrc.cataloguefrontend.util.{GithubLink, TelemetryLinks}
+import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Retrieval, Resource}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -113,8 +113,6 @@ class DeployServiceController @Inject()(
       ).merge
     }
 
-  private val githubDiffLinkTemplate = configuration.get[String]("github.templates.diff")
-
   // Display service info - config warnings, vulnerabilities, etc
   def step2(): Action[AnyContent] =
     auth.authenticatedAction(
@@ -171,17 +169,8 @@ class DeployServiceController @Inject()(
                           .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), Some(formObject.version), latest = true))
         vulnerabils  <- EitherT
                           .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version)))
-        current      =  releases
-                          .find(_.environment == formObject.environment)
-                          .fold(Version("0.0.0"))(_.versionNumber.asVersion)
-        serviceLink  = (GithubLink.create(formObject.serviceName, githubDiffLinkTemplate, current, formObject.version), s"git diff v${current.original}")
-        configLinks  = releases
-                          .filter(_.environment == formObject.environment)
-                          .flatMap(_.config)
-                          .map(x => (GithubLink.create(x.repoName, githubDiffLinkTemplate, x.commitId), s"git diff ${x.commitId} ${x.filename}"))
-        gitHubLinks  = serviceLink :: configLinks
       } yield
-        Ok(deployServicePage(form, hasPerm, allServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils, gitHubLinks))))
+        Ok(deployServicePage(form, hasPerm, allServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils))))
       ).merge
     }
 

@@ -40,7 +40,6 @@
                     Map[ServiceConfigsService.KeyName, ServiceConfigsService.ConfigSourceValue]
                   , Seq[ServiceConfigsService.ConfigWarning]
                   , Seq[VulnerabilitySummary]
-                  , Seq[(Link, String)]
                   )]
 )( implicit
   messages      : Messages
@@ -122,7 +121,7 @@
       </div>
     </div>
     <div class="col-md-8">
-      @evaluations.map { case (updates, warnings, vulnerabilities, githubDiffLinks) =>
+      @evaluations.map { case (updates, warnings, vulnerabilities) =>
         <label class="form-label fw-bold">Please review before deploying:</label>
         <div class="accordion" id="accordion">
           <div class="accordion-item">
@@ -231,37 +230,6 @@
                     });
                   });
                 </script>
-              </div>
-            </div>
-          </div>
-          <div class="accordion-item">
-            <div class="accordion-header" id="headingGithubDiffLinks">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeGithubDiffLinks" aria-expanded="false" aria-controls="collaspeGithubDiffLinks">
-                Github Diffs
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info z-3">
-                  @githubDiffLinks.size
-                  <span class="visually-hidden">Number of Github diff links</span>
-                </span>
-              </button>
-            </div>
-            <div id="collaspeGithubDiffLinks" class="accordion-collapse collapse" aria-labelledby="headingGithubDiffLinks" data-bs-parent="#accordion">
-              <div class="accordion-body">
-                <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
-                  <thead>
-                    <tr>
-                      <th>Link</th>
-                      <th>Command</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for((link, command) <- githubDiffLinks) {
-                      <tr>
-                        <td><a target="_blank" href="@link.url"rel="noreferrer noopener">@link.name<span class="glyphicon glyphicon-new-window"/></a></td>
-                        <td><code>@command</code></td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>
