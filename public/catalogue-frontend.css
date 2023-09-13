@@ -23,7 +23,6 @@
     --bs-link-hover-color: #003b31;
     --bs-link-hover-color-rgb: 0, 59, 49;
     --bs-heading-color: #008770;
-
 }
 
 .container {
@@ -85,6 +84,12 @@ a:hover {
 /*! Make table headings black to match the sort buttons */
 th {
     --bs-table-color: #00000
+}
+
+/*! Make list group active colour different from the default blue on deploy-service page */
+#helpful-versions {
+    --bs-list-group-active-bg: #6882a9;
+    --bs-list-group-active-border-color: #6882a9;
 }
 
 /*! END Bootstrap 5.3.0 overrides */
