@@ -123,13 +123,20 @@
     </div>
     <div class="col-md-8">
       @evaluations.map { case (updates, warnings, vulnerabilities) =>
+        @defining( (form("serviceName").value, form("version").value, form("environment").value.flatMap(Environment.parse) ) ) { deploying =>
+          @defining( deploying._3.contains(Environment.Production) ) { isProd =>
+            <div class="alert @if(isProd) {alert-danger} else {alert-warning}">
+              You are about to deploy <strong>@deploying._1:@deploying._2</strong> into <strong>@deploying._3.map(_.displayString)</strong>
+            </div>
+          }
+        }
         <label class="form-label fw-bold">Please review before deploying:</label>
         <div class="accordion mb-3" id="accordion">
           <div class="accordion-item">
             <div class="accordion-header" id="headingConfigUpdates">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeConfigUpdates" aria-expanded="false" aria-controls="collaspeConfigUpdates" @if(updates.isEmpty) {disabled} >
                 Config Updates
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info z-3">
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(updates.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
                   @updates.size
                   <span class="visually-hidden">Number of config changes</span>
                 </span>
@@ -160,7 +167,7 @@
             <div class="accordion-header" id="headingConfigUpdates">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeConfigWarnings" aria-expanded="false" aria-controls="collaspeConfigWarnings" @if(warnings.isEmpty) {disabled}>
                 Config Warnings
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info z-3">
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(warnings.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
                   @warnings.size
                   <span class="visually-hidden">Number of config warnings</span>
                 </span>
@@ -191,7 +198,7 @@
             <div class="accordion-header" id="headingVulnerabilities">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeVulnerabilities" aria-expanded="false" aria-controls="collaspeVulnerabilities" @if(vulnerabilities.isEmpty) {disabled}>
                 Vulnerabilities
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info z-3">
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(vulnerabilities.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
                   @vulnerabilities.size
                   <span class="visually-hidden">Number of vulnerabilities</span>
                 </span>
@@ -235,14 +242,6 @@
             </div>
           </div>
         </div>
-
-        @defining( (form("serviceName").value, form("version").value, form("environment").value.flatMap(Environment.parse) ) ) { deploying =>
-          @defining( deploying._3.contains(Environment.Production) ) { isProd =>
-            <div class="alert @if(isProd) {alert-danger} else {alert-warning}">
-              Deploying <strong>@deploying._1:@deploying._2</strong> into <strong>@deploying._3.map(_.displayString)</strong>
-            </div>
-          }
-        }
 
         @helper.form(
           action           =  appRoutes.DeployServiceController.step3()
