@@ -26,7 +26,7 @@ GET        /deploy-service/4                            uk.gov.hmrc.cataloguefro
 GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step4sse(queueUrl: String, buildUrl: Option[String] ?= None)
 
 
-GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name: String, infoMessage: Option[String] ?= None)
+GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name: String)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
 
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)

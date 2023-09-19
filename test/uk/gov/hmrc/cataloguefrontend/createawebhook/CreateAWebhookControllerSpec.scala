@@ -112,7 +112,7 @@ class CreateAWebhookControllerSpec
         )
 
       status(result) shouldBe 303
-      redirectLocation(result) shouldBe Some(s"${catalogueRoutes.CatalogueController.repository(serviceName).url}?infoMessage=A+new+webhook+has+been+created.")
+      redirectLocation(result) shouldBe Some(catalogueRoutes.CatalogueController.repository(serviceName).url)
     }
 
     "return 400 when the form is submitted with errors" in new Setup {

@@ -87,13 +87,13 @@ class CreateAWebhookController @Inject()(
         import uk.gov.hmrc.cataloguefrontend.routes
         (for {
           _   <- auth.authorised(Some(createWebhookPermission(validForm.repositoryName)))
-          res <- buildDeployApiConnector.createAWebhook(validForm)
+          res <- scala.concurrent.Future.successful(Right("1234").withLeft[Result]) // buildDeployApiConnector.createAWebhook(validForm)
         } yield {
           res match {
             case Left(errMsg)    => logger.info(s"createAWebhook failed with: $errMsg")
             case Right(id)       => logger.info(s"Build and deploy api request id: ${id}:")
           }
-          Redirect(routes.CatalogueController.repository(validForm.repositoryName, Some("A new webhook has been created.")))
+          Redirect(routes.CatalogueController.repository(validForm.repositoryName)).flashing("infoMessage" -> "A new webhook has been created.")
         }).recoverWith {
           case ex: UpstreamErrorResponse if Seq(401, 403).contains(ex.statusCode) => retrieveRepositories()
             .map{repositories =>

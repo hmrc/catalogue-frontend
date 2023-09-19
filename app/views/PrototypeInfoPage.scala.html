@@ -38,7 +38,6 @@ viewMessages           : ViewMessages
   successMessage         : Option[String],
   commenterReport        : Option[PrCommenterReport],
   prototypeDetails       : PrototypeDetails,
-  infoMessage            : Option[String] = None,
 )(implicit
   request                : RequestHeader,
   messages               : Messages
@@ -54,7 +53,6 @@ viewMessages           : ViewMessages
 
     <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
 
-    @infoMessage.map(partials.info_banner(_))
     @partials.leak_detection_banner(linkToLeakDetection)
 
     <section class="section-wrapper">

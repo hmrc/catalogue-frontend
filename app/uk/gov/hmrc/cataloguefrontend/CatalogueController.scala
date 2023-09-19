@@ -141,7 +141,6 @@ class CatalogueController @Inject() (
     serviceName            : String,
     repositoryDetails      : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-    infoMessage            : Option[String] = None,
   )(implicit
     request : Request[_]
   ): Future[Result] = {
@@ -203,7 +202,6 @@ class CatalogueController @Inject() (
       commenterReport              = commenterReport,
       distinctVulnerabilitiesCount = vulnerabilitiesCount,
       serviceRelationships         = serviceRelationships,
-      infoMessage                  = infoMessage,
     ))
   }
 
@@ -213,18 +211,18 @@ class CatalogueController @Inject() (
   def prototype(name: String): Action[AnyContent] =
     Action(Redirect(routes.CatalogueController.repository(name)))
 
-  def repository(name: String, infoMessage: Option[String]): Action[AnyContent] =
+  def repository(name: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(name)
         result <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
                     .foldF(Future.successful(notFound))(repoDetails =>
                       repoDetails.repoType match {
-                        case RepoType.Service   => renderServicePage(repoDetails.name, repoDetails, hasBranchProtectionAuth, infoMessage)
-                        case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth, infoMessage)
-                        case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth, infoMessage = infoMessage).map(Ok(_))
-                        case RepoType.Test      => renderOther(repoDetails, hasBranchProtectionAuth, infoMessage)
-                        case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth, infoMessage)
+                        case RepoType.Service   => renderServicePage(repoDetails.name, repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth).map(Ok(_))
+                        case RepoType.Test      => renderOther(repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
                       }
                     )
       } yield result
@@ -305,7 +303,6 @@ class CatalogueController @Inject() (
   def renderLibrary(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-    infoMessage            : Option[String] = None,
   )(implicit request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesAllVersions(repoDetails.name),
@@ -322,8 +319,7 @@ class CatalogueController @Inject() (
           repoModulesAllVersions.sorted(Ordering.by((_: RepositoryModules).version).reverse),
           urlIfLeaksFound,
           hasBranchProtectionAuth,
-          commenterReport,
-          infoMessage
+          commenterReport
         )
       )
     }
@@ -333,7 +329,6 @@ class CatalogueController @Inject() (
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
     form                   : Form[_]        = ChangePrototypePassword.form(),
     successMessage         : Option[String] = None,
-    infoMessage            : Option[String] = None,
   )(implicit request: Request[_]): Future[Html] =
     for {
       urlIfLeaksFound       <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
@@ -350,14 +345,12 @@ class CatalogueController @Inject() (
         form,
         successMessage,
         commenterReport,
-        prototypeDetails,
-        infoMessage
+        prototypeDetails
       )
 
   private def renderOther(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-    infoMessage            : Option[String] = None,
   )(implicit request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name),
@@ -379,8 +372,7 @@ class CatalogueController @Inject() (
           repoModules,
           urlIfLeaksFound,
           hasBranchProtectionAuth,
-          commenterReport,
-          infoMessage
+          commenterReport
         )
       )
     }

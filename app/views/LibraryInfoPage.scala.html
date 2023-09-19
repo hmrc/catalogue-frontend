@@ -31,8 +31,7 @@
   repositoryModules      : Seq[RepositoryModules],
   linkToLeakDetection    : Option[String],
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-  commenterReport        : Option[PrCommenterReport],
-  infoMessage            : Option[String]
+  commenterReport        : Option[PrCommenterReport]
 )(implicit
   request                : RequestHeader
 )
@@ -44,7 +43,6 @@
         @if(library.isArchived) { <span>Archived</span> }
     </h1>
 
-    @infoMessage.map(partials.info_banner(_))
     @partials.leak_detection_banner(linkToLeakDetection)
     @defining(repositoryModules.headOption) { latestRepositoryModules =>
         @defining(latestRepositoryModules.fold(Seq.empty[Dependency])(_.allDependencies)){ dependencies =>
