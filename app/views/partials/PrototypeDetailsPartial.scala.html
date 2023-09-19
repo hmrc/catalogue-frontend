@@ -25,7 +25,8 @@
 
 @(repo                  : GitRepository,
   prototypeDetails      : PrototypeDetails,
-  hasPasswordChangeAuth : Boolean
+  hasPasswordChangeAuth : Boolean,
+  infoMessage           : Option[String] = None
 )(implicit
   request               : RequestHeader
 )

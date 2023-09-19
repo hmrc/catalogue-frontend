@@ -29,6 +29,8 @@ import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.cataloguefrontend.createawebhook.WebhookEventType
+import uk.gov.hmrc.cataloguefrontend.createawebhook.CreateWebhookForm
 
 class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with WireMockSupport {
 
@@ -319,6 +321,68 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
         result shouldBe Left("Some client error")
       }
     }
+
+  "createAWebhook" should {
+    "return the Async request id when the request is accepted by the B&D async api" in {
+      val payload = CreateWebhookForm(
+        repositoryName = "test-repo", events = Seq(WebhookEventType.values.head.value()), webhookUrl = "http://url.com"
+      )
+
+      val expectedBody = s"""
+                            |{
+                            |   "repository_names": ["${payload.repositoryName}"],
+                            |   "events": ["${payload.events.mkString}"],
+                            |   "webhook_url": "${payload.webhookUrl}"
+                            |}""".stripMargin
+
+      stubFor(
+        post("/v1/CreateWebhooks")
+          .withRequestBody(equalToJson(expectedBody))
+          .willReturn(aResponse().withStatus(202).withBody(
+            """
+              |{
+              |  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
+              |  "details": {
+              |    "get_request_state_payload": {
+              |       "bnd_api_request_id": "1234",
+              |       "start_timestamp_milliseconds": "1687852118708"
+              |    }
+              |  }
+              |}""".stripMargin
+          ))
+      )
+
+      val result = connector.createAWebhook(payload = payload).futureValue
+
+      result shouldBe Right(AsyncRequestId(id = "1234"))
+    }
+
+    "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
+      val payload = CreateWebhookForm(
+          repositoryName = "test-repo", events = Seq(WebhookEventType.values.head.value()), webhookUrl = "http://url.com"
+        )
+
+        val expectedBody = s"""
+                              |{
+                              |   "repository_names": ["${payload.repositoryName}"],
+                              |   "events": ["${payload.events.mkString}"],
+                              |   "webhook_url": "${payload.webhookUrl}"
+                              |}""".stripMargin
+
+        stubFor(
+          post("/v1/CreateWebhooks")
+            .withRequestBody(equalToJson(expectedBody))
+            .willReturn(aResponse().withStatus(500)
+            .withBody(
+              """{ "code": "INTERNAL_SERVER_ERROR", "message": "Some server error" }"""
+            ))
+      )
+
+      val result = connector.createAWebhook(payload = payload).failed.futureValue
+
+      result shouldBe a [UpstreamErrorResponse]
+    }
+  }
 
   "CreateAppConfigs" should {
      "return the Async request id when the request is accepted by the B&D async api" in {

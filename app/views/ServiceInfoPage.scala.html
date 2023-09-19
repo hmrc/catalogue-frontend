@@ -43,7 +43,8 @@
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
   distinctVulnerabilitiesCount : Option[Int],
-  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsWithHasRepo
+  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsWithHasRepo,
+  infoMessage                  : Option[String] = None
 )(implicit
   messages                     : Messages,
   request                      : RequestHeader
@@ -63,6 +64,7 @@
         <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
+    @infoMessage.map(partials.info_banner(_))
     @partials.leak_detection_banner(linkToLeakDetection)
     @defining(envDatas.get(SlugInfoFlag.ForEnvironment(Environment.Production)).toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)){ dependencies =>
       @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = false)

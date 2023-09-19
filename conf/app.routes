@@ -16,6 +16,9 @@ POST       /create-a-repository                         uk.gov.hmrc.cataloguefro
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
 
+GET        /create-a-webhook                            uk.gov.hmrc.cataloguefrontend.createawebhook.CreateAWebhookController.createAWebhookLanding(repositoryName: Option[String])
+POST       /create-a-webhook                            uk.gov.hmrc.cataloguefrontend.createawebhook.CreateAWebhookController.createAWebhook()
+
 GET        /deploy-service/1                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step1(serviceName: Option[String])
 POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step2()
 POST       /deploy-service/3                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step3()
@@ -23,7 +26,7 @@ GET        /deploy-service/4                            uk.gov.hmrc.cataloguefro
 GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step4sse(queueUrl: String, buildUrl: Option[String] ?= None)
 
 
-GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
+GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name: String, infoMessage: Option[String] ?= None)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
 
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)

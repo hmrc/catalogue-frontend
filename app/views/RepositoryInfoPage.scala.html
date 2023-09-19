@@ -30,7 +30,8 @@
   repositoryModules      : Option[RepositoryModules],
   linkToLeakDetection    : Option[String],
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-  commenterReport        : Option[PrCommenterReport]
+  commenterReport        : Option[PrCommenterReport],
+  infoMessage            : Option[String] = None
 )(implicit
   request                : RequestHeader
 )
@@ -46,6 +47,7 @@
     </div>
   </header>
 
+  @infoMessage.map(partials.info_banner(_))
   @partials.leak_detection_banner(linkToLeakDetection)
   @defining(repositoryModules.fold(Seq.empty[Dependency])(_.allDependencies)){ dependencies =>
       @partials.bobby_violations_banner(environment = None, dependencies, pending = false)

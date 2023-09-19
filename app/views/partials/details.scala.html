@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+@import uk.gov.hmrc.cataloguefrontend.createawebhook.{routes => createawebhookRoutes}
 @import views.partials.githubBadgeType
 
 @(
@@ -64,6 +65,9 @@
                   @version.toString
                 </div>
             }
+            <div class="col-6">
+                <a class="btn btn-success" href="@createawebhookRoutes.CreateAWebhookController.createAWebhookLanding(Some(repositoryDetails.name))">Create Webhook</a>
+            </div>
         </div>
     </div>
 </div>
