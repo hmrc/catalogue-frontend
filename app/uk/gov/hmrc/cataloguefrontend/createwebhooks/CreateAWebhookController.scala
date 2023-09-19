@@ -87,7 +87,7 @@ class CreateAWebhookController @Inject()(
         import uk.gov.hmrc.cataloguefrontend.routes
         (for {
           _   <- auth.authorised(Some(createWebhookPermission(validForm.repositoryName)))
-          res <- scala.concurrent.Future.successful(Right("1234").withLeft[Result]) // buildDeployApiConnector.createAWebhook(validForm)
+          res <- buildDeployApiConnector.createAWebhook(validForm)
         } yield {
           res match {
             case Left(errMsg)    => logger.info(s"createAWebhook failed with: $errMsg")

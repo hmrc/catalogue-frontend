@@ -50,4 +50,7 @@ object CatalogueFrontendSwitches {
 
   def showDeployService: FeatureSwitch =
     FeatureSwitch.forName("show-deploy-service")
+
+  def showCreateWebhook: FeatureSwitch =
+    FeatureSwitch.forName("show-create-webhook")
 }

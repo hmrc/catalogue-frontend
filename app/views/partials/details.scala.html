@@ -65,9 +65,12 @@
                   @version.toString
                 </div>
             }
-            <div class="col-6">
-                <a class="btn btn-success" href="@createawebhookRoutes.CreateAWebhookController.createAWebhookLanding(Some(repositoryDetails.name))">Create Webhook</a>
-            </div>
+
+            @if(uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
+                <div class="col-6">
+                    <a class="btn btn-success" href="@createawebhookRoutes.CreateAWebhookController.createAWebhookLanding(Some(repositoryDetails.name))">Create Webhook</a>
+                </div>
+            }
         </div>
     </div>
 </div>
