@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
-import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
+import uk.gov.hmrc.cataloguefrontend.createarepository.{CreatePrototypeRepoForm, CreateRepoForm}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -176,7 +176,30 @@ class BuildDeployApiConnector @Inject() (
 
     signAndExecuteRequest(
       endpoint = "CreateRepository",
-      body     = body
+      body = body
+    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
+  }
+
+  def createAPrototypeRepository(payload: CreatePrototypeRepoForm): Future[Either[String, AsyncRequestId]] = {
+    val finalPayload =
+      s"""
+         |{
+         |   "push_template_repo": "true",
+         |   "repository_name": "${payload.repositoryName}",
+         |   "password": ${payload.password},
+         |   "team_name": "${payload.teamName}",
+         |   "init_webhook_version": "2.2.0",
+         |   "default_branch_name": "main",
+         |   "slack_notification_channels": "${payload.slackChannels}"
+         |}""".stripMargin
+
+    val body = Json.parse(finalPayload)
+
+    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: ${body}")
+
+    signAndExecuteRequest(
+      endpoint = "CreatePrototype",
+      body = body
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 

@@ -16,68 +16,73 @@
 
 package uk.gov.hmrc.cataloguefrontend.createarepository
 
+import play.api.data.validation.Invalid
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
-class CreateRepoFormTest extends UnitSpec {
+class CreateRepoFormSpec extends UnitSpec {
 
   "repoNameWhiteSpaceValidation" when {
     "The repo name contains a space" should {
       "return false" in {
-        CreateRepoForm.repoNameWhiteSpaceValidation("hello world") shouldBe false
-        CreateRepoForm.repoNameWhiteSpaceValidation(" helloworld") shouldBe false
-        CreateRepoForm.repoNameWhiteSpaceValidation("helloworld ") shouldBe false
+        assertRepoNameIsValid("hello world", 47) shouldBe false
+        assertRepoNameIsValid(" helloworld", 47) shouldBe false
+        assertRepoNameIsValid("helloworld ", 47) shouldBe false
       }
     }
 
     "The repo name contains multiple spaces" should {
       "return false" in {
-        CreateRepoForm.repoNameWhiteSpaceValidation("   hello world") shouldBe false
-        CreateRepoForm.repoNameWhiteSpaceValidation("hello         world") shouldBe false
-        CreateRepoForm.repoNameWhiteSpaceValidation("helloworld   ") shouldBe false
+        assertRepoNameIsValid("   hello world", 47) shouldBe false
+        assertRepoNameIsValid("hello         world", 47) shouldBe false
+        assertRepoNameIsValid("helloworld    ", 47) shouldBe false
       }
     }
 
     "The repo name contains a tab" should {
       "return false" in {
-        CreateRepoForm.repoNameWhiteSpaceValidation("\thello world") shouldBe false
+        assertRepoNameIsValid("\thello world", 47) shouldBe false
       }
     }
 
     "The repo name contains a newline" should {
       "return false" in {
-        CreateRepoForm.repoNameWhiteSpaceValidation("\nhello world") shouldBe false
+        assertRepoNameIsValid("\nhello world", 47) shouldBe false
       }
     }
 
     "The repo name contains no whitespace characters" should {
       "return true" in {
-        CreateRepoForm.repoNameWhiteSpaceValidation("helloworld") shouldBe true
+        assertRepoNameIsValid("helloworld", 47) shouldBe true
       }
     }
   }
 
   "repoNameLengthValidation" when {
-    "the repo name contains less than 48 characters" should {
+    "the repo name contains less than the allowed number of characters" should {
       "return false" in {
-        CreateRepoForm.repoNameLengthValidation("helloworld") shouldBe true
+        assertRepoNameIsValid("helloworld", 47) shouldBe true
+        assertRepoNameIsValid("helloworld", 30) shouldBe true
       }
     }
 
-    "the repo name contains exactly 47 characters" should {
+    "the repo name contains exactly the allowed number of characters" should {
       "return true" in {
-        CreateRepoForm.repoNameLengthValidation("helloworldhelloworldhelloworldhelloworldhellowo") shouldBe true
+        assertRepoNameIsValid("helloworldhelloworldhelloworldhelloworldhellowo", 47) shouldBe true
+        assertRepoNameIsValid("helloworldhelloworldhelloworld", 30) shouldBe true
       }
     }
 
-    "the repo name contains exactly 48 characters" should {
+    "the repo name contains exactly one more than the allowed number of characters" should {
       "return false" in {
-        CreateRepoForm.repoNameLengthValidation("helloworldhelloworldhelloworldhelloworldhellowor") shouldBe false
+        assertRepoNameIsValid("helloworldhelloworldhelloworldhelloworldhellowor", 47) shouldBe false
+        assertRepoNameIsValid("helloworldhelloworldhelloworldh", 30) shouldBe false
       }
     }
 
-    "the repo name contains more than 48 characters" should {
+    "the repo name contains significantly more than 48 characters" should {
       "return false" in {
-        CreateRepoForm.repoNameLengthValidation("helloworldhelloworldhelloworldhelloworldhelloworldhelloworld") shouldBe false
+        assertRepoNameIsValid("helloworldhelloworldhelloworldhelloworldhelloworldhelloworld", 47) shouldBe false
+        assertRepoNameIsValid("helloworldhelloworldhelloworldhelloworld", 30) shouldBe false
       }
     }
   }
@@ -85,15 +90,15 @@ class CreateRepoFormTest extends UnitSpec {
   "repoNameUnderscoreValidation" when {
     "the repo name contains underscores" should {
       "return false" in {
-        CreateRepoForm.repoNameUnderscoreValidation("hello_world") shouldBe false
-        CreateRepoForm.repoNameUnderscoreValidation("_helloworld") shouldBe false
-        CreateRepoForm.repoNameUnderscoreValidation("helloworld_") shouldBe false
+        assertRepoNameIsValid("hello_world", 47) shouldBe false
+        assertRepoNameIsValid("_helloworld", 47) shouldBe false
+        assertRepoNameIsValid("helloworld_", 47) shouldBe false
       }
     }
 
     "the repo name does not contain underscores" should {
       "return true" in {
-        CreateRepoForm.repoNameUnderscoreValidation("helloworld") shouldBe true
+        assertRepoNameIsValid("helloworld", 47) shouldBe true
       }
     }
   }
@@ -101,18 +106,23 @@ class CreateRepoFormTest extends UnitSpec {
   "repoNameLowercaseValidation" when {
     "the repo name contains an uppercase char" should {
       "return false" in {
-        CreateRepoForm.repoNameLowercaseValidation("hello-worLd") shouldBe false
-        CreateRepoForm.repoNameLowercaseValidation("H") shouldBe false
-        CreateRepoForm.repoNameLowercaseValidation("HELLO WORLD") shouldBe false
-        CreateRepoForm.repoNameLowercaseValidation("helloworlD") shouldBe false
+        assertRepoNameIsValid("hello-worLd", 47) shouldBe false
+        assertRepoNameIsValid("H", 47) shouldBe false
+        assertRepoNameIsValid("HELLO WORLD", 47) shouldBe false
+        assertRepoNameIsValid("helloworlD", 47) shouldBe false
       }
     }
 
     "the repo name contains no uppercase chars" should {
       "return true" in {
-        CreateRepoForm.repoNameLowercaseValidation("hello-world") shouldBe true
+        assertRepoNameIsValid("hello-world", 47) shouldBe true
       }
     }
+  }
+
+  private def assertRepoNameIsValid(repoName: String, length: Int) = {
+    val constraints = CreateRepoForm.createRepoNameConstraints(length)
+    !constraints.map(c => c(repoName)).exists(p => p.isInstanceOf[Invalid])
   }
 
   "repoTypeValidation" when {

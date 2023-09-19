@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.createarepository
 
 import play.api.Logger
 import play.api.data.Form
-import play.api.data.Forms.{boolean, mapping, nonEmptyText}
+import play.api.data.Forms.{boolean, mapping, nonEmptyText, text}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.CreateARepositoryPage
+import views.html.{CreateAPrototypePage, CreateARepositoryPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,6 +38,7 @@ class CreateARepositoryController @Inject()(
    override val auth            : FrontendAuthComponents,
    override val mcc             : MessagesControllerComponents,
    createARepositoryPage        : CreateARepositoryPage,
+   createAPrototypePage         : CreateAPrototypePage,
    buildDeployApiConnector      : BuildDeployApiConnector
 )(implicit
   override val ec: ExecutionContext
@@ -47,44 +48,79 @@ class CreateARepositoryController @Inject()(
 
   private val logger = Logger(getClass)
 
-  def createRepositoryPermission(teamName: String): Predicate =
+  private def createRepositoryPermission(teamName: String): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/$teamName"), IAAction("CREATE_REPOSITORY"))
 
   def createARepositoryLanding(): Action[AnyContent] = {
     auth.authenticatedAction(
       continueUrl = routes.CreateARepositoryController.createARepositoryLanding(),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
-        val userTeams = cleanseUserTeams(request.retrieval)
-        Ok(createARepositoryPage(CreateRepoForm.form, userTeams, CreateRepositoryType.values))
-      }
+      val userTeams = cleanseUserTeams(request.retrieval)
+      Ok(createARepositoryPage(CreateRepoForm.form, userTeams, CreateRepositoryType.values))
+    }
   }
 
   def createARepository(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateARepositoryController.createARepositoryLanding(),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
-    ) .async { implicit request =>
-    CreateRepoForm.form.bindFromRequest().fold(
-      formWithErrors => {
-        val userTeams = cleanseUserTeams(request.retrieval)
-        Future.successful(BadRequest(createARepositoryPage(formWithErrors, userTeams, CreateRepositoryType.values)))
-      },
-      validForm      => {
-        import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
-        for {
-          _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
-          res <- buildDeployApiConnector.createARepository(validForm)
-        } yield {
-          res match {
-            case Left(errMsg)    => logger.info(s"createARepository failed with: $errMsg")
-            case Right(id)       => logger.info(s"Bnd api request id: ${id}:")
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+    ).async { implicit request =>
+      CreateRepoForm.form.bindFromRequest().fold(
+        formWithErrors => {
+          val userTeams = cleanseUserTeams(request.retrieval)
+          Future.successful(BadRequest(createARepositoryPage(formWithErrors, userTeams, CreateRepositoryType.values)))
+        },
+        validForm => {
+          import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
+          for {
+            _ <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
+            res <- buildDeployApiConnector.createARepository(validForm)
+          } yield {
+            res match {
+              case Left(errMsg) => logger.info(s"createARepository failed with: $errMsg")
+              case Right(id) => logger.info(s"Bnd api request id: $id:")
+            }
+            Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
           }
-          Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
         }
-      }
-    )
+      )
+    }
+
+  def createAPrototypeLanding(): Action[AnyContent] = {
+    auth.authenticatedAction(
+      continueUrl = routes.CreateARepositoryController.createAPrototypeLanding(),
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+    ) { implicit request =>
+      val userTeams = cleanseUserTeams(request.retrieval)
+      Ok(createAPrototypePage(CreateRepoForm.form, userTeams))
+    }
   }
+  def createAPrototype(): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.CreateARepositoryController.createAPrototypeLanding(),
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+    ).async { implicit request =>
+      CreatePrototypeRepoForm.form.bindFromRequest().fold(
+        formWithErrors => {
+          val userTeams = cleanseUserTeams(request.retrieval)
+          Future.successful(BadRequest(createAPrototypePage(formWithErrors, userTeams)))
+        },
+        validForm => {
+          import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
+          for {
+            _ <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
+            res <- buildDeployApiConnector.createAPrototypeRepository(validForm)
+          } yield {
+            res match {
+              case Left(errMsg) => logger.info(s"createAPrototypeRepository failed with: $errMsg")
+              case Right(id) => logger.info(s"Bnd api request id: $id:")
+            }
+            Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+          }
+        }
+      )
+    }
 
   private def cleanseUserTeams(resources: Set[Resource]): Seq[String] =
     resources.map(_.resourceLocation.value.stripPrefix("teams/"))
@@ -113,41 +149,74 @@ object CreateRepoForm {
     Constraint(constraintName)({ toBeValidated => if(constraint(toBeValidated)) Valid else Invalid(error) })
   }
 
-  val repoNameWhiteSpaceValidation: (String => Boolean) = str => !str.matches(".*\\s.*")
-  val repoNameUnderscoreValidation: (String => Boolean) = str => !str.contains("_")
-  val repoNameLengthValidation:     (String => Boolean) = str => str.length < 48
-  val repoNameLowercaseValidation:  (String => Boolean) = str => str.toLowerCase.equals(str)
+  val repoTypeValidation           : String => Boolean = str => CreateRepositoryType.parse(str).nonEmpty
 
-  val repoTypeValidation:           (String => Boolean) = str => CreateRepositoryType.parse(str).nonEmpty
+  val conflictingFieldsValidation1 : CreateRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("backend")  && crf.repositoryName.toLowerCase.contains("frontend"))
+  val conflictingFieldsValidation2 : CreateRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
+  val frontendValidation1          : CreateRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("frontend")  && !crf.repositoryName.toLowerCase.contains("frontend"))
+  val frontendValidation2          : CreateRepoForm => Boolean = crf => !(crf.repositoryName.toLowerCase.contains("frontend") && !crf.repoType.toLowerCase.contains("frontend"))
 
-  val conflictingFieldsValidation1: (CreateRepoForm => Boolean) = crf => !(crf.repoType.toLowerCase.contains("backend")  && crf.repositoryName.toLowerCase.contains("frontend"))
-  val conflictingFieldsValidation2: (CreateRepoForm => Boolean) = crf => !(crf.repoType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
-  val frontendValidation1:           (CreateRepoForm => Boolean) = crf => !(crf.repoType.toLowerCase.contains("frontend")  && !crf.repositoryName.toLowerCase.contains("frontend"))
-  val frontendValidation2:           (CreateRepoForm => Boolean) = crf => !(crf.repositoryName.toLowerCase.contains("frontend") && !crf.repoType.toLowerCase.contains("frontend"))
 
-  val repoNameConstraints = Seq(
-    mkConstraint("constraints.repoNameWhitespaceCheck")(constraint = repoNameWhiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
-    mkConstraint("constraints.repoNameUnderscoreCheck")(constraint = repoNameUnderscoreValidation, error = "Repository name cannot include underscores, use hyphens instead"),
-    mkConstraint("constraints.repoNameLengthCheck")(constraint = repoNameLengthValidation, error = s"Repository name can have a maximum of 47 characters"),
-    mkConstraint("constraints.repoNameCaseCheck")(constraint = repoNameLowercaseValidation, error = "Repository name should only contain lowercase characters")
-  )
+  private val repoTypeConstraint: Constraint[String] = mkConstraint("constraints.repoTypeCheck")(constraint = repoTypeValidation, error = CreateRepositoryType.parsingError)
 
-  val repoTypeConstraint: Constraint[String] = mkConstraint("constraints.repoTypeCheck")(constraint = repoTypeValidation, error = CreateRepositoryType.parsingError)
-
-  val repoTypeAndNameConstraints = Seq(
+  private val repoTypeAndNameConstraints = Seq(
     mkConstraint("constraints.conflictingFields1")(constraint = conflictingFieldsValidation1, error = "You have chosen a backend repo type, but have included 'frontend' in your repo name. Change either the repo name or repo type"),
     mkConstraint("constraints.conflictingFields2")(constraint = conflictingFieldsValidation2, error = "You have chosen a frontend repo type, but have included 'backend' in your repo name. Change either the repo name or repo type"),
     mkConstraint("constraints.frontendCheck")(constraint = frontendValidation1, error = "Repositories with a frontend repo type require 'frontend' to be present in their repo name."),
     mkConstraint("constraints.frontendCheck")(constraint = frontendValidation2, error = "Repositories with 'frontend' in their repo name require a frontend repo type")
   )
 
+  def createRepoNameConstraints(length :Int): Seq[Constraint[String]] = {
+    val repoNameWhiteSpaceValidation : String => Boolean = str => !str.matches(".*\\s.*")
+    val repoNameUnderscoreValidation : String => Boolean = str => !str.contains("_")
+    val repoNameLengthValidation     : String => Boolean = str => str.length <= length
+    val repoNameLowercaseValidation  : String => Boolean = str => str.toLowerCase.equals(str)
+
+    Seq(
+      mkConstraint("constraints.repoNameWhitespaceCheck")(constraint = repoNameWhiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
+      mkConstraint("constraints.repoNameUnderscoreCheck")(constraint = repoNameUnderscoreValidation, error = "Repository name cannot include underscores, use hyphens instead"),
+      mkConstraint("constraints.repoNameLengthCheck")(constraint = repoNameLengthValidation, error = s"Repository name can have a maximum of $length characters"),
+      mkConstraint("constraints.repoNameCaseCheck")(constraint = repoNameLowercaseValidation, error = "Repository name should only contain lowercase characters")
+    )
+  }
+
   val form: Form[CreateRepoForm] = Form(
     mapping(
-      "repositoryName"      -> nonEmptyText.verifying(repoNameConstraints :_*),
+      "repositoryName"      -> nonEmptyText.verifying(createRepoNameConstraints(47) :_*),
       "makePrivate"         -> boolean,
       "teamName"            -> nonEmptyText,
       "repoType"            -> nonEmptyText.verifying(repoTypeConstraint),
     )(CreateRepoForm.apply)(CreateRepoForm.unapply)
       .verifying(repoTypeAndNameConstraints :_*)
+  )
+}
+
+
+case class CreatePrototypeRepoForm(
+  repositoryName     : String,
+  password           : String,
+  teamName           : String,
+  slackChannels      : String)
+
+
+object CreatePrototypeRepoForm {
+
+  implicit val writes: Writes[CreatePrototypeRepoForm] =
+    ( (__ \ "repositoryName"  ).write[String]
+      ~ (__ \ "password"      ).write[String]
+      ~ (__ \ "teamName"      ).write[String]
+      ~ (__ \ "slackChannels" ).write[String]
+      )(unlift(CreatePrototypeRepoForm.unapply))
+
+  private val passwordCharacterValidation: String => Boolean = str => str.matches("^[a-zA-Z0-9_]+$")
+  private val passwordConstraint = CreateRepoForm.mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
+
+  val form: Form[CreatePrototypeRepoForm] = Form(
+    mapping(
+      "repositoryName"      -> nonEmptyText.verifying(CreateRepoForm.createRepoNameConstraints(30) :_*),
+      "password"            -> nonEmptyText.verifying(passwordConstraint),
+      "teamName"            -> nonEmptyText,
+      "slackChannels"       -> text,
+    )(CreatePrototypeRepoForm.apply)(CreatePrototypeRepoForm.unapply)
   )
 }
