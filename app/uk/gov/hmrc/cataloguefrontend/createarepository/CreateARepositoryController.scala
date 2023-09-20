@@ -193,13 +193,6 @@ object CreatePrototypeRepoForm {
   private val passwordCharacterValidation: String => Boolean = str => str.matches("^[a-zA-Z0-9_]+$")
   private val passwordConstraint = mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
 
-  def ensureSuffix(data: Map[String, Seq[String]], suffix: String): Map[String, Seq[String]] = {
-    data.map{ case (key, values) =>
-      if(key == "repositoryName") (key, values.map(str => if ( str.endsWith(suffix)) str else str + suffix))
-      else (key, values)
-    }
-  }
-
   val form: Form[CreatePrototypeRepoForm] = Form(
     mapping(
       "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30) :_*),
@@ -215,6 +208,7 @@ object CreateRepoConstraints {
   def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] = {
     Constraint(constraintName)({ toBeValidated => if (constraint(toBeValidated)) Valid else Invalid(error) })
   }
+
   def createRepoNameConstraints(length: Int): Seq[Constraint[String]] = {
     val repoNameWhiteSpaceValidation: String => Boolean = str => !str.matches(".*\\s.*")
     val repoNameUnderscoreValidation: String => Boolean = str => !str.contains("_")
@@ -227,6 +221,13 @@ object CreateRepoConstraints {
       mkConstraint("constraints.repoNameLengthCheck")(constraint = repoNameLengthValidation, error = s"Repository name can have a maximum of $length characters"),
       mkConstraint("constraints.repoNameCaseCheck")(constraint = repoNameLowercaseValidation, error = "Repository name should only contain lowercase characters")
     )
+  }
+
+  def ensureSuffix(data: Map[String, Seq[String]], suffix: String): Map[String, Seq[String]] = {
+    data.map { case (key, values) =>
+      if (key == "repositoryName") (key, values.map(str => if (str.endsWith(suffix)) str else str + suffix))
+      else (key, values)
+    }
   }
 }
 
