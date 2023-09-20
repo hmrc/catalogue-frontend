@@ -76,7 +76,7 @@ class CreateARepositoryController @Inject()(
           import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
           for {
             _ <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
-            res <- buildDeployApiConnector.createARepository(validForm)
+            res <- buildDeployApiConnector.createAServiceRepository(validForm)
           } yield {
             res match {
               case Left(errMsg) => logger.info(s"createARepository failed with: $errMsg")
@@ -93,7 +93,7 @@ class CreateARepositoryController @Inject()(
       continueUrl = routes.CreateARepositoryController.createAPrototypeRepositoryLanding(),
       retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
-      val userTeams = cleanseUserTeams(request.retrieval)
+      val userTeams = Seq("Platops") // TODO restore cleanseUserTeams(request.retrieval)
       Ok(createAPrototypePage(CreateServiceRepoForm.form, userTeams))
     }
   }

@@ -155,7 +155,7 @@ class BuildDeployApiConnector @Inject() (
 
   private implicit val arr = AsyncRequestId.reads
 
-  def createARepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
+  def createAServiceRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
     val finalPayload =
       s"""
          |{

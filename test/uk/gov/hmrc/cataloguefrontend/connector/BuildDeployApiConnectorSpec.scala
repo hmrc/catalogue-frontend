@@ -248,7 +248,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
             ))
         )
 
-        val result = connector.createARepository(payload = payload).futureValue
+        val result = connector.createAServiceRepository(payload = payload).futureValue
 
         result shouldBe Right(AsyncRequestId(id = "1234"))
       }
@@ -280,7 +280,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
             ))
       )
 
-      val result = connector.createARepository(payload = payload).failed.futureValue
+      val result = connector.createAServiceRepository(payload = payload).failed.futureValue
 
       result shouldBe a [UpstreamErrorResponse]
     }
@@ -314,7 +314,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
             ))
         )
 
-        val result = connector.createARepository(payload = payload).futureValue
+        val result = connector.createAServiceRepository(payload = payload).futureValue
 
         result shouldBe Left("Some client error")
       }
