@@ -186,16 +186,18 @@ class BuildDeployApiConnector @Inject() (
          |{
          |   "push_template_repo": "true",
          |   "repository_name": "${payload.repositoryName}",
-         |   "password": ${payload.password},
+         |   "password": "${payload.password}",
          |   "team_name": "${payload.teamName}",
          |   "init_webhook_version": "2.2.0",
          |   "default_branch_name": "main",
          |   "slack_notification_channels": "${payload.slackChannels}"
          |}""".stripMargin
 
-    val body = Json.parse(finalPayload)
+    val passwordRegex = """""password": ".+?"""".r
+    val passwordObfuscated = passwordRegex.replaceAllIn(finalPayload, """"password": "**********"""")
+    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: $passwordObfuscated")
 
-    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: ${body}")
+    val body = Json.parse(finalPayload)
 
     signAndExecuteRequest(
       endpoint = "CreatePrototype",
