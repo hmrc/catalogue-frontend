@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoConstraints.mkConstraint
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{CreateAPrototypePage, CreateARepositoryPage}
+import views.html.{CreateAPrototypeRepositoryPage, CreateAServiceRepositoryPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,8 +38,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class CreateARepositoryController @Inject()(
    override val auth            : FrontendAuthComponents,
    override val mcc             : MessagesControllerComponents,
-   createARepositoryPage        : CreateARepositoryPage,
-   createAPrototypePage         : CreateAPrototypePage,
+   createARepositoryPage        : CreateAServiceRepositoryPage,
+   createAPrototypePage         : CreateAPrototypeRepositoryPage,
    buildDeployApiConnector      : BuildDeployApiConnector
 )(implicit
   override val ec: ExecutionContext
@@ -102,8 +102,7 @@ class CreateARepositoryController @Inject()(
       continueUrl = routes.CreateARepositoryController.createAPrototypeRepositoryLanding(),
       retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ).async { implicit request =>
-      val withSuffixEnsured = CreateRepoConstraints.ensureSuffix(request.body.asFormUrlEncoded.get, "-prototype")
-      CreatePrototypeRepoForm.form.bindFromRequest(withSuffixEnsured).fold(
+      CreatePrototypeRepoForm.form.bindFromRequest().fold(
         formWithErrors => {
           val userTeams = cleanseUserTeams(request.retrieval)
           Future.successful(BadRequest(createAPrototypePage(formWithErrors, userTeams)))
@@ -166,7 +165,7 @@ object CreateServiceRepoForm {
 
   val form: Form[CreateServiceRepoForm] = Form(
     mapping(
-      "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47) :_*),
+      "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None) :_*),
       "makePrivate"         -> boolean,
       "teamName"            -> nonEmptyText,
       "repoType"            -> nonEmptyText.verifying(repoTypeConstraint),
@@ -195,7 +194,7 @@ object CreatePrototypeRepoForm {
 
   val form: Form[CreatePrototypeRepoForm] = Form(
     mapping(
-      "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30) :_*),
+      "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype")) :_*),
       "password"            -> nonEmptyText.verifying(passwordConstraint),
       "teamName"            -> nonEmptyText,
       "slackChannels"       -> text,
@@ -209,25 +208,20 @@ object CreateRepoConstraints {
     Constraint(constraintName)({ toBeValidated => if (constraint(toBeValidated)) Valid else Invalid(error) })
   }
 
-  def createRepoNameConstraints(length: Int): Seq[Constraint[String]] = {
-    val repoNameWhiteSpaceValidation: String => Boolean = str => !str.matches(".*\\s.*")
-    val repoNameUnderscoreValidation: String => Boolean = str => !str.contains("_")
-    val repoNameLengthValidation: String => Boolean = str => str.length <= length
-    val repoNameLowercaseValidation: String => Boolean = str => str.toLowerCase.equals(str)
+  def createRepoNameConstraints(length: Int, suffix: Option[String]): Seq[Constraint[String]] = {
+    val whiteSpaceValidation: String => Boolean = str => !str.matches(".*\\s.*")
+    val underscoreValidation: String => Boolean = str => !str.contains("_")
+    val lengthValidation: String => Boolean = str => str.length <= length
+    val lowercaseValidation: String => Boolean = str => str.toLowerCase.equals(str)
+    val suffixValidation: String => Boolean = str => if(suffix.isEmpty) true else str.endsWith(suffix.get)
 
     Seq(
-      mkConstraint("constraints.repoNameWhitespaceCheck")(constraint = repoNameWhiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
-      mkConstraint("constraints.repoNameUnderscoreCheck")(constraint = repoNameUnderscoreValidation, error = "Repository name cannot include underscores, use hyphens instead"),
-      mkConstraint("constraints.repoNameLengthCheck")(constraint = repoNameLengthValidation, error = s"Repository name can have a maximum of $length characters"),
-      mkConstraint("constraints.repoNameCaseCheck")(constraint = repoNameLowercaseValidation, error = "Repository name should only contain lowercase characters")
+      mkConstraint("constraints.repoNameWhitespaceCheck")(constraint = whiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
+      mkConstraint("constraints.repoNameUnderscoreCheck")(constraint = underscoreValidation, error = "Repository name cannot include underscores, use hyphens instead"),
+      mkConstraint("constraints.repoNameLengthCheck")(constraint = lengthValidation, error = s"Repository name can have a maximum of $length characters"),
+      mkConstraint("constraints.repoNameCaseCheck")(constraint = lowercaseValidation, error = "Repository name should only contain lowercase characters"),
+      mkConstraint("constraints.repoNameSuffixCheck")(constraint = suffixValidation, error = s"Repository name must end with ${if(suffix.nonEmpty) suffix.get else ""}")
     )
-  }
-
-  def ensureSuffix(data: Map[String, Seq[String]], suffix: String): Map[String, Seq[String]] = {
-    data.map { case (key, values) =>
-      if (key == "repositoryName") (key, values.map(str => if (str.endsWith(suffix)) str else str + suffix))
-      else (key, values)
-    }
   }
 }
 
