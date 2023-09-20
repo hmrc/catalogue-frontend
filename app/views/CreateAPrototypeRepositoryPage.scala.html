@@ -23,22 +23,21 @@
 @this(viewMessages: ViewMessages)
 
 @(form: Form[_],
-teamNames: Seq[String],
-repoTypes: Seq[CreateRepositoryType])(implicit
+teamNames: Seq[String])(implicit
  messages: Messages,
  request: RequestHeader
 )
 
-@standard_layout("Create a Repository", "create a repository") {
+@standard_layout("Create a Prototype", "create a prototype") {
 
     <section class="section-wrapper">
-        <h1 class="page-heading mt-4">Create A Repository</h1>
-        <p>Use the below form to create a new repository. Make sure to follow the guidance for each field!</p>
+        <h1 class="page-heading mt-4">Create A Prototype</h1>
+        <p>Use the below form to create a new prototype repository. Make sure to follow the guidance for each field!</p>
 
         @form_global_errors(form)
 
         @helper.form(
-            action           =  uk.gov.hmrc.cataloguefrontend.createarepository.routes.CreateARepositoryController.createARepository(),
+            action           =  uk.gov.hmrc.cataloguefrontend.createarepository.routes.CreateARepositoryController.createAPrototypeRepository(),
             Symbol("id")     -> "createRepoForm",
             Symbol("method") -> "post",
         ) {
@@ -53,11 +52,10 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                         </div>
                         <ul>
                             <li>separate words with hyphens; don't use spaces</li>
-                            <li>maximum 47 characters</li>
+                            <li>all prototype repositories are suffixed with '-prototype', if you don't provide this in the name it will be added automatically</li>
+                            <li>maximum 30 characters</li>
                             <li>lowercase only</li>
-                            <li>do not automatically name backend services after frontend services</li>
-                            <li>suffix frontend services with '-frontend'</li>
-                            <li>suffix stubs with '-stubs'</li>
+                            <li>First character must be a letter</li>
                             <li>describe the domain</li>
                             <li>avoid time-limited words, such as 'new'</li>
                             <li>avoid unnecessary words, such as 'service'</li>
@@ -67,20 +65,25 @@ repoTypes: Seq[CreateRepositoryType])(implicit
                     @form_fields_warnings(form,"repositoryName")
                 </div>
             </div>
-            <div class="form-group row mb-4">
-                <div class="col-md-6">
-                    <div style = "white-space: nowrap;" class="mb-2">
-                        <label class="fw-bold" for="makePrivateInput">Make Private: </label>
-                        <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate" value=true
-                            @form.data.get("makePrivate").map{ _ => checked }
-                        >
-                        @form_fields_warnings(form,"makePrivate")
+
+            <div class="form-group row mb-2">
+                <div class="col-md-6 d-grid gap-2">
+                    <label class="fw-bold" for="passwordInput">Password:</label>
+                    <div class="mb-2">
+                        <div class="mb-2">
+                            You must comply with the following password rules:
+                        </div>
+                        <ul>
+                            <li>Cannot be blank</li>
+                            <li>Should only contain the following characters</li>
+                            <ul><li>uppercase letters</li><li>lowercase letters</li><li> numbers</li><li>underscores</li></ul>
+                        </ul>
+                        <input class="form-control" type="text" id="passwordInput" name="password" value="@form.data.getOrElse("password", "")">
                     </div>
-                    <p>You must decide now if you will code in the open, or privately. If you select ‘MAKE_PRIVATE’ the GitHub repository you create will only be visible within HMRC.
-                        Private coding usually relates to data security. Open repositories are visible to the public.
-                        As a general rule, most services are open by default. If you’re unsure, talk to your architect or digital service manager (DSM).</p>
+                    @form_fields_warnings(form,"password")
                 </div>
             </div>
+
             <div class="form-group row">
                 <div class="col-md-6 mb-3">
                     <label class="fw-bold" for="teamInput">Team name:</label>
@@ -102,21 +105,20 @@ repoTypes: Seq[CreateRepositoryType])(implicit
 
                 </div>
             </div>
-            <div class="form-group row mb-3">
-                <div class="col-md-6">
-                    <label class="fw-bold" for="typeInput">Type:</label>
-                    <p class="mt-2">Repositories automatically include HMRC templating, depending on the type of microservice they support. Choose how you would like this repository to be set up.
-                    </p>
-                    <select class="form-select" id="typeInput" name="repoType">
-                        @repoTypes.map { rt =>
-                         <option value="@{rt.asString}"
-                                 @if(form.data.getOrElse("repoType", "").equals(rt.asString)) { selected="selected" }
-                         >@rt.asString</option>
-                        }
-                    </select>
-                    @form_fields_warnings(form,"repoType")
+
+            <div class="form-group row mb-2">
+                <div class="col-md-6 d-grid gap-2">
+                    <label class="fw-bold" for="slackChannelsInput">Slack Channels:</label>
+                    <div class="mb-2">
+                        <div class="mb-2">
+                            (Optional) A comma separated list of Slack channels for receiving prototype notifications. These channels can be added to and changed in the repository.yaml file in the prototype's repository.
+                        </div>
+                        <input class="form-control" type="text" id="slackChannelsInput" name="slackChannels" value="@form.data.getOrElse("slackChannels", "")">
+                    </div>
+                    @form_fields_warnings(form,"slackChannels")
                 </div>
             </div>
+
             <div>
                 <button id="create-repository-submission-button" class="btn btn-success" type="submit">Build</button>
             </div>

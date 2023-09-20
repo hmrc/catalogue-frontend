@@ -86,7 +86,8 @@ class SearchIndex @Inject()(
   } ++ {
     if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showCreateRepo.isEnabled) {
       List(
-        SearchTerm("page", "create repository", createRepoRoutes.CreateARepositoryController.createARepositoryLanding().url, 1.0f)
+        SearchTerm("page", "create service repository", createRepoRoutes.CreateARepositoryController.createAServiceRepositoryLanding().url, 1.0f),
+        SearchTerm("page", "create prototype repository", createRepoRoutes.CreateARepositoryController.createAPrototypeRepositoryLanding().url, 1.0f)
       )
     } else Nil
   } ++ {

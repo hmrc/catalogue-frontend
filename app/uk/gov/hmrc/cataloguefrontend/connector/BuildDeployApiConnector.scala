@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
-import uk.gov.hmrc.cataloguefrontend.createarepository.{CreatePrototypeRepoForm, CreateRepoForm}
+import uk.gov.hmrc.cataloguefrontend.createarepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -155,7 +155,7 @@ class BuildDeployApiConnector @Inject() (
 
   private implicit val arr = AsyncRequestId.reads
 
-  def createARepository(payload: CreateRepoForm): Future[Either[String, AsyncRequestId]] = {
+  def createARepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
     val finalPayload =
       s"""
          |{
