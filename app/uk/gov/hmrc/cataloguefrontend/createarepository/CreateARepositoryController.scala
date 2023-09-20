@@ -93,7 +93,7 @@ class CreateARepositoryController @Inject()(
       continueUrl = routes.CreateARepositoryController.createAPrototypeRepositoryLanding(),
       retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
-      val userTeams = cleanseUserTeams(request.retrieval)
+      val userTeams = Seq("Platops") // TODO restore cleanseUserTeams(request.retrieval)
       Ok(createAPrototypePage(CreateServiceRepoForm.form, userTeams))
     }
   }
@@ -102,7 +102,7 @@ class CreateARepositoryController @Inject()(
       continueUrl = routes.CreateARepositoryController.createAPrototypeRepositoryLanding(),
       retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ).async { implicit request =>
-      CreatePrototypeRepoForm.form.bindFromRequest().fold(
+      CreatePrototypeRepoForm.form.bindFromRequest(CreatePrototypeRepoForm.ensureSuffix(request.body.asFormUrlEncoded.get, "-prototype")).fold(
         formWithErrors => {
           val userTeams = cleanseUserTeams(request.retrieval)
           Future.successful(BadRequest(createAPrototypePage(formWithErrors, userTeams)))
@@ -191,7 +191,12 @@ object CreatePrototypeRepoForm {
 
   private val passwordCharacterValidation: String => Boolean = str => str.matches("^[a-zA-Z0-9_]+$")
   private val passwordConstraint = mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
-
+  def ensureSuffix(data: Map[String, Seq[String]], suffix: String): Map[String, Seq[String]] = {
+    data.map{ case (key, values) =>
+      if(key == "repositoryName") (key, values.map(str => if ( str.endsWith(suffix)) str else str + suffix))
+      else (key, values)
+    }
+  }
   val form: Form[CreatePrototypeRepoForm] = Form(
     mapping(
       "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30) :_*),
