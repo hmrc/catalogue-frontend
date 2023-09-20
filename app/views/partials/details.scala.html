@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+@import uk.gov.hmrc.cataloguefrontend.createawebhook.{routes => createawebhookRoutes}
 @import views.partials.githubBadgeType
 
 @(
@@ -62,6 +63,12 @@
                 <div class="col-6">
                   <label class="fw-bold">Latest Version: </label>
                   @version.toString
+                </div>
+            }
+
+            @if(uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
+                <div class="col-6">
+                    <a class="btn btn-success" href="@createawebhookRoutes.CreateAWebhookController.createAWebhookLanding(Some(repositoryDetails.name))">Create Webhook</a>
                 </div>
             }
         </div>

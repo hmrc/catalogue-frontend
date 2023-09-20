@@ -201,7 +201,7 @@ class CatalogueController @Inject() (
       hasBranchProtectionAuth      = hasBranchProtectionAuth,
       commenterReport              = commenterReport,
       distinctVulnerabilitiesCount = vulnerabilitiesCount,
-      serviceRelationships         = serviceRelationships
+      serviceRelationships         = serviceRelationships,
     ))
   }
 
@@ -302,7 +302,7 @@ class CatalogueController @Inject() (
 
   def renderLibrary(
     repoDetails: GitRepository,
-    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(implicit request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesAllVersions(repoDetails.name),
@@ -328,7 +328,7 @@ class CatalogueController @Inject() (
     repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
     form                   : Form[_]        = ChangePrototypePassword.form(),
-    successMessage         : Option[String] = None
+    successMessage         : Option[String] = None,
   )(implicit request: Request[_]): Future[Html] =
     for {
       urlIfLeaksFound       <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
@@ -350,7 +350,7 @@ class CatalogueController @Inject() (
 
   private def renderOther(
     repoDetails: GitRepository,
-    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(implicit request: Request[_]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name),

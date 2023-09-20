@@ -219,6 +219,7 @@
 
         <div id="standard-layout-container">
             <section class="container">
+            @request.flash.get("infoMessage").map(infoMessage => partials.info_banner(infoMessage))
             @content
             </section>
         </div>

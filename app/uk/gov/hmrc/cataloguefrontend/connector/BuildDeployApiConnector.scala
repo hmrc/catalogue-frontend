@@ -28,6 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
+import uk.gov.hmrc.cataloguefrontend.createawebhook.CreateWebhookForm
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -176,6 +177,25 @@ class BuildDeployApiConnector @Inject() (
 
     signAndExecuteRequest(
       endpoint = "CreateRepository",
+      body     = body
+    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
+  }
+
+  def createAWebhook(payload: CreateWebhookForm): Future[Either[String, AsyncRequestId]] = {
+    val finalPayload =
+      s"""
+         |{
+         |  "repository_names": ["${payload.repositoryName}"],
+         |  "events": ${payload.events.map("\""+_+"\"").mkString("[", ",", "]")},
+         |  "webhook_url": "${payload.webhookUrl}"
+         |}""".stripMargin
+
+    val body = Json.parse(finalPayload)
+
+    logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
+
+    signAndExecuteRequest(
+      endpoint = "CreateWebhooks",
       body     = body
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
