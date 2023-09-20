@@ -192,12 +192,14 @@ object CreatePrototypeRepoForm {
 
   private val passwordCharacterValidation: String => Boolean = str => str.matches("^[a-zA-Z0-9_]+$")
   private val passwordConstraint = mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
+
   def ensureSuffix(data: Map[String, Seq[String]], suffix: String): Map[String, Seq[String]] = {
     data.map{ case (key, values) =>
       if(key == "repositoryName") (key, values.map(str => if ( str.endsWith(suffix)) str else str + suffix))
       else (key, values)
     }
   }
+
   val form: Form[CreatePrototypeRepoForm] = Form(
     mapping(
       "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30) :_*),
