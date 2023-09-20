@@ -93,7 +93,7 @@ class CreateARepositoryController @Inject()(
       continueUrl = routes.CreateARepositoryController.createAPrototypeRepositoryLanding(),
       retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
-      val userTeams = Seq("Platops") // TODO restore cleanseUserTeams(request.retrieval)
+      val userTeams = cleanseUserTeams(request.retrieval)
       Ok(createAPrototypePage(CreateServiceRepoForm.form, userTeams))
     }
   }
