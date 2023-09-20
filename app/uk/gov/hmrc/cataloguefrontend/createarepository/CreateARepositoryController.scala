@@ -102,7 +102,7 @@ class CreateARepositoryController @Inject()(
       continueUrl = routes.CreateARepositoryController.createAPrototypeRepositoryLanding(),
       retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ).async { implicit request =>
-      val withSuffixEnsured = CreatePrototypeRepoForm.ensureSuffix(request.body.asFormUrlEncoded.get, "-prototype")
+      val withSuffixEnsured = CreateRepoConstraints.ensureSuffix(request.body.asFormUrlEncoded.get, "-prototype")
       CreatePrototypeRepoForm.form.bindFromRequest(withSuffixEnsured).fold(
         formWithErrors => {
           val userTeams = cleanseUserTeams(request.retrieval)
