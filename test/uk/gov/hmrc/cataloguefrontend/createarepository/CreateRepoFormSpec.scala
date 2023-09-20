@@ -24,35 +24,35 @@ class CreateRepoFormSpec extends UnitSpec {
   "repoNameWhiteSpaceValidation" when {
     "The repo name contains a space" should {
       "return false" in {
-        assertRepoNameIsValid("hello world", 47) shouldBe false
-        assertRepoNameIsValid(" helloworld", 47) shouldBe false
-        assertRepoNameIsValid("helloworld ", 47) shouldBe false
+        isRepoNameValid("hello world", 47) shouldBe false
+        isRepoNameValid(" helloworld", 47) shouldBe false
+        isRepoNameValid("helloworld ", 47) shouldBe false
       }
     }
 
     "The repo name contains multiple spaces" should {
       "return false" in {
-        assertRepoNameIsValid("   hello world", 47) shouldBe false
-        assertRepoNameIsValid("hello         world", 47) shouldBe false
-        assertRepoNameIsValid("helloworld    ", 47) shouldBe false
+        isRepoNameValid("   hello world", 47) shouldBe false
+        isRepoNameValid("hello         world", 47) shouldBe false
+        isRepoNameValid("helloworld    ", 47) shouldBe false
       }
     }
 
     "The repo name contains a tab" should {
       "return false" in {
-        assertRepoNameIsValid("\thello world", 47) shouldBe false
+        isRepoNameValid("\thello world", 47) shouldBe false
       }
     }
 
     "The repo name contains a newline" should {
       "return false" in {
-        assertRepoNameIsValid("\nhello world", 47) shouldBe false
+        isRepoNameValid("\nhello world", 47) shouldBe false
       }
     }
 
     "The repo name contains no whitespace characters" should {
       "return true" in {
-        assertRepoNameIsValid("helloworld", 47) shouldBe true
+        isRepoNameValid("helloworld", 47) shouldBe true
       }
     }
   }
@@ -60,29 +60,29 @@ class CreateRepoFormSpec extends UnitSpec {
   "repoNameLengthValidation" when {
     "the repo name contains less than the allowed number of characters" should {
       "return false" in {
-        assertRepoNameIsValid("helloworld", 47) shouldBe true
-        assertRepoNameIsValid("helloworld", 30) shouldBe true
+        isRepoNameValid("helloworld", 47) shouldBe true
+        isRepoNameValid("helloworld", 30) shouldBe true
       }
     }
 
     "the repo name contains exactly the allowed number of characters" should {
       "return true" in {
-        assertRepoNameIsValid("helloworldhelloworldhelloworldhelloworldhellowo", 47) shouldBe true
-        assertRepoNameIsValid("helloworldhelloworldhelloworld", 30) shouldBe true
+        isRepoNameValid("helloworldhelloworldhelloworldhelloworldhellowo", 47) shouldBe true
+        isRepoNameValid("helloworldhelloworldhelloworld", 30) shouldBe true
       }
     }
 
     "the repo name contains exactly one more than the allowed number of characters" should {
       "return false" in {
-        assertRepoNameIsValid("helloworldhelloworldhelloworldhelloworldhellowor", 47) shouldBe false
-        assertRepoNameIsValid("helloworldhelloworldhelloworldh", 30) shouldBe false
+        isRepoNameValid("helloworldhelloworldhelloworldhelloworldhellowor", 47) shouldBe false
+        isRepoNameValid("helloworldhelloworldhelloworldh", 30) shouldBe false
       }
     }
 
     "the repo name contains significantly more than 48 characters" should {
       "return false" in {
-        assertRepoNameIsValid("helloworldhelloworldhelloworldhelloworldhelloworldhelloworld", 47) shouldBe false
-        assertRepoNameIsValid("helloworldhelloworldhelloworldhelloworld", 30) shouldBe false
+        isRepoNameValid("helloworldhelloworldhelloworldhelloworldhelloworldhelloworld", 47) shouldBe false
+        isRepoNameValid("helloworldhelloworldhelloworldhelloworld", 30) shouldBe false
       }
     }
   }
@@ -90,15 +90,15 @@ class CreateRepoFormSpec extends UnitSpec {
   "repoNameUnderscoreValidation" when {
     "the repo name contains underscores" should {
       "return false" in {
-        assertRepoNameIsValid("hello_world", 47) shouldBe false
-        assertRepoNameIsValid("_helloworld", 47) shouldBe false
-        assertRepoNameIsValid("helloworld_", 47) shouldBe false
+        isRepoNameValid("hello_world", 47) shouldBe false
+        isRepoNameValid("_helloworld", 47) shouldBe false
+        isRepoNameValid("helloworld_", 47) shouldBe false
       }
     }
 
     "the repo name does not contain underscores" should {
       "return true" in {
-        assertRepoNameIsValid("helloworld", 47) shouldBe true
+        isRepoNameValid("helloworld", 47) shouldBe true
       }
     }
   }
@@ -106,21 +106,21 @@ class CreateRepoFormSpec extends UnitSpec {
   "repoNameLowercaseValidation" when {
     "the repo name contains an uppercase char" should {
       "return false" in {
-        assertRepoNameIsValid("hello-worLd", 47) shouldBe false
-        assertRepoNameIsValid("H", 47) shouldBe false
-        assertRepoNameIsValid("HELLO WORLD", 47) shouldBe false
-        assertRepoNameIsValid("helloworlD", 47) shouldBe false
+        isRepoNameValid("hello-worLd", 47) shouldBe false
+        isRepoNameValid("H", 47) shouldBe false
+        isRepoNameValid("HELLO WORLD", 47) shouldBe false
+        isRepoNameValid("helloworlD", 47) shouldBe false
       }
     }
 
     "the repo name contains no uppercase chars" should {
       "return true" in {
-        assertRepoNameIsValid("hello-world", 47) shouldBe true
+        isRepoNameValid("hello-world", 47) shouldBe true
       }
     }
   }
 
-  private def assertRepoNameIsValid(repoName: String, length: Int) = {
+  private def isRepoNameValid(repoName: String, length: Int) = {
     val constraints = CreateRepoForm.createRepoNameConstraints(length)
     !constraints.map(c => c(repoName)).exists(p => p.isInstanceOf[Invalid])
   }
