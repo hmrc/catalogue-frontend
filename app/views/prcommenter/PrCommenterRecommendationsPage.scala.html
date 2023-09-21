@@ -163,30 +163,45 @@
         });
 
         function expandAll() {
-          $("#expandLink").addClass('d-none')
-          $("#collapseLink").removeClass('d-none')
-          $(".multi-collapse").collapse('show')
+          document.getElementById("expandLink").classList.add("d-none");
+          document.getElementById("collapseLink").classList.remove("d-none");
+
+          Array.from(document.getElementsByClassName("glyphicon")).forEach(el => {
+            el.classList.add('glyphicon-chevron-down');
+            el.classList.remove('glyphicon-chevron-right');
+          });
+
+          Array.from(document.getElementsByClassName("multi-collapse")).forEach(el => {
+            el.classList.add("show");
+            el.classList.remove("collapse");
+          });
+
+          document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(el => el.setAttribute("aria-expanded", "true"));
         }
 
         function collapseAll() {
-          $("#expandLink").removeClass('d-none')
-          $("#collapseLink").addClass('d-none')
-          $(".multi-collapse").collapse('hide')
+          document.getElementById("expandLink").classList.remove("d-none");
+          document.getElementById("collapseLink").classList.add("d-none");
+
+          Array.from(document.getElementsByClassName("glyphicon")).forEach(el => {
+            el.classList.remove('glyphicon-chevron-down');
+            el.classList.add('glyphicon-chevron-right');
+          });
+
+          Array.from(document.getElementsByClassName("multi-collapse")).forEach(el => {
+            el.classList.remove("show");
+            el.classList.add("collapse");
+          });
+
+          document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(el => el.setAttribute("aria-expanded", "false"));
         }
 
-        document.getElementById("expandLink").addEventListener("click", function() {
-          expandAll()
-        });
-        document.getElementById("collapseLink").addEventListener("click", function() {
-          collapseAll()
-        });
-
         rulesList.on('updated', function(list) {
-          const arr = Array.from(document.getElementsByClassName("multi-collapse"))
-          if (arr.length === 1 && arr[0].classList.contains("collapse")) {
+          const arr = Array.from(document.getElementsByClassName("multi-collapse"));
+          if (arr.length == 1 && arr[0].classList.contains("collapse")) {
             expandAll();
           }
-        })
+        });
 
         let searchBox = document.getElementById('search');
         // set autofocus cursor to right of text in search box
@@ -196,6 +211,8 @@
         // re-search the list upon page load.
         rulesList.search(searchBox.value);
 
+        document.getElementById("expandLink"  ).addEventListener("click", function() { expandAll()   });
+        document.getElementById("collapseLink").addEventListener("click", function() { collapseAll() });
       </script>
     </div>
   }
