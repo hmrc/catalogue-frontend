@@ -166,7 +166,7 @@
           document.getElementById("expandLink").classList.add("d-none");
           document.getElementById("collapseLink").classList.remove("d-none");
 
-          Array.from(document.getElementsByClassName("glyphicon")).forEach(el => {
+          document.querySelectorAll('[data-bs-toggle="collapse"] > td > .glyphicon').forEach(el => {
             el.classList.add('glyphicon-chevron-down');
             el.classList.remove('glyphicon-chevron-right');
           });
@@ -183,7 +183,7 @@
           document.getElementById("expandLink").classList.remove("d-none");
           document.getElementById("collapseLink").classList.add("d-none");
 
-          Array.from(document.getElementsByClassName("glyphicon")).forEach(el => {
+          document.querySelectorAll('[data-bs-toggle="collapse"] > td > .glyphicon').forEach(el => {
             el.classList.remove('glyphicon-chevron-down');
             el.classList.add('glyphicon-chevron-right');
           });
