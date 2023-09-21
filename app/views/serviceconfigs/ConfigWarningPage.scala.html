@@ -159,6 +159,6 @@
 
 @popoverContent(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
     <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
-    <div><strong>Value:</strong> @warning.value.displayString</div>
+    <div><strong>Value:</strong> @play.twirl.api.XmlFormat.escape(warning.value.displayString)</div>
     <div><strong>@warning.warning:</strong> @ServiceConfigsService.warningDescription(warning.warning)</div>
 }
