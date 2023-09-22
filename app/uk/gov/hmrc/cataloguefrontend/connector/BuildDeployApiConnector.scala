@@ -205,6 +205,31 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
+  def createATestRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
+    val finalPayload =
+      s"""
+         |{
+         |   "repository_name": "${payload.repositoryName}",
+         |   "make_private": ${payload.makePrivate},
+         |   "allow_auto_merge": true,
+         |   "delete_branch_on_merge": true,
+         |   "team_name": "${payload.teamName}",
+         |   "repository_type": "${payload.repoType}",
+         |   "bootstrap_tag": "",
+         |   "init_webhook_version": "2.2.0",
+         |   "default_branch_name": "main"
+         |}""".stripMargin
+
+    val body = Json.parse(finalPayload)
+
+    logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
+
+    signAndExecuteRequest(
+      endpoint = "CreateRepository",
+      body = body
+    ).map(_.map(resp => resp.details.as[AsyncRequestId]))
+  }
+
 
   def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) = serviceType match {
