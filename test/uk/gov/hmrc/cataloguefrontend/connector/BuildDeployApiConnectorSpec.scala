@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus, PrototypeDetails}
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
-import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoForm
+import uk.gov.hmrc.cataloguefrontend.createarepository.CreateServiceRepoForm
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -214,7 +214,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
   "createARepository" should {
       "return the Async request id when the request is accepted by the B&D async api" in {
-        val payload = CreateRepoForm(
+        val payload = CreateServiceRepoForm(
           repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
         )
 
@@ -248,13 +248,13 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
             ))
         )
 
-        val result = connector.createARepository(payload = payload).futureValue
+        val result = connector.createAServiceRepository(payload = payload).futureValue
 
         result shouldBe Right(AsyncRequestId(id = "1234"))
       }
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
-      val payload = CreateRepoForm(
+      val payload = CreateServiceRepoForm(
         repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
       )
 
@@ -280,7 +280,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
             ))
       )
 
-      val result = connector.createARepository(payload = payload).failed.futureValue
+      val result = connector.createAServiceRepository(payload = payload).failed.futureValue
 
       result shouldBe a [UpstreamErrorResponse]
     }
@@ -288,7 +288,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     //NOTE: Currently the B&D async API will return a BuildDeployResponse when the client inputs are invalid, as it does not do any JSON validation/input validation up front prior to calling the lambda.
     //This may however change in the future, so we are testing the desired future behaviour below.
     "return an error message when the B&D async api returns a 4XX code" in {
-        val payload = CreateRepoForm(
+        val payload = CreateServiceRepoForm(
           repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
         )
 
@@ -314,7 +314,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
             ))
         )
 
-        val result = connector.createARepository(payload = payload).futureValue
+        val result = connector.createAServiceRepository(payload = payload).futureValue
 
         result shouldBe Left("Some client error")
       }

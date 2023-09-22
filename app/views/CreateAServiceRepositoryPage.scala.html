@@ -29,16 +29,16 @@ repoTypes: Seq[CreateRepositoryType])(implicit
  request: RequestHeader
 )
 
-@standard_layout("Create a Repository", "create a repository") {
+@standard_layout("Create a Service Repository", "create a service repository") {
 
     <section class="section-wrapper">
-        <h1 class="page-heading mt-4">Create A Repository</h1>
+        <h1 class="page-heading mt-4">Create A Service Repository</h1>
         <p>Use the below form to create a new repository. Make sure to follow the guidance for each field!</p>
 
         @form_global_errors(form)
 
         @helper.form(
-            action           =  uk.gov.hmrc.cataloguefrontend.createarepository.routes.CreateARepositoryController.createARepository(),
+            action           =  uk.gov.hmrc.cataloguefrontend.createarepository.routes.CreateARepositoryController.createAServiceRepository(),
             Symbol("id")     -> "createRepoForm",
             Symbol("method") -> "post",
         ) {

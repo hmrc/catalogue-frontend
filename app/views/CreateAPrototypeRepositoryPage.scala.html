@@ -1,0 +1,127 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepositoryType
+@import views.html.partials.{form_global_errors, form_fields_warnings}
+@import views.html.helper.select
+
+@this(viewMessages: ViewMessages)
+
+@(form: Form[_],
+teamNames: Seq[String])(implicit
+ messages: Messages,
+ request: RequestHeader
+)
+
+@standard_layout("Create a Prototype Repository", "create a prototype repository") {
+
+    <section class="section-wrapper">
+        <h1 class="page-heading mt-4">Create A Prototype Repository</h1>
+        <p>Use the below form to create a new repository. Make sure to follow the guidance for each field!</p>
+
+        @form_global_errors(form)
+
+        @helper.form(
+            action           =  uk.gov.hmrc.cataloguefrontend.createarepository.routes.CreateARepositoryController.createAPrototypeRepository(),
+            Symbol("id")     -> "createRepoForm",
+            Symbol("method") -> "post",
+        ) {
+            @csrfFormField
+
+            <div class="form-group row mb-2">
+                <div class="col-md-6 d-grid gap-2">
+                    <label class="fw-bold" for="repoNameInput">Repository name:</label>
+                    <div class="mb-2">
+                        <div class="mb-2">
+                            You must comply with established naming conventions when naming your microservice:
+                        </div>
+                        <ul>
+                            <li>separate words with hyphens; don't use spaces</li>
+                            <li>all prototype repositories are suffixed with '-prototype'</li>
+                            <li>maximum 30 characters</li>
+                            <li>lowercase only</li>
+                            <li>First character must be a letter</li>
+                            <li>describe the domain</li>
+                            <li>avoid time-limited words, such as 'new'</li>
+                            <li>avoid unnecessary words, such as 'service'</li>
+                        </ul>
+                        <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
+                    </div>
+                    @form_fields_warnings(form,"repositoryName")
+                </div>
+            </div>
+
+            <div class="form-group row mb-2">
+                <div class="col-md-6 d-grid gap-2">
+                    <label class="fw-bold" for="passwordInput">Password:</label>
+                    <div class="mb-2">
+                        <div class="mb-2">
+                            You must comply with the following password rules:
+                        </div>
+                        <ul>
+                            <li>Cannot be blank</li>
+                            <li>Should only contain the following characters</li>
+                            <ul><li>uppercase letters</li><li>lowercase letters</li><li> numbers</li><li>underscores</li></ul>
+                        </ul>
+                        <input class="form-control" type="text" id="passwordInput" name="password" value="@form.data.getOrElse("password", "")">
+                    </div>
+                    @form_fields_warnings(form,"password")
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-md-6 mb-3">
+                    <label class="fw-bold" for="teamInput">Team name:</label>
+                    @if(teamNames.nonEmpty){
+                        <p class="mt-2">Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+                    } else {
+                        <p class="alert alert-danger mt-2">There are currently no teams that you have permissions to create a repository for. Ensure you are signed in to the Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
+                           If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
+                        </p>
+                    }
+                    <select class="form-select" id="teamInput" name="teamName">
+                        @teamNames.map { tn =>
+                            <option value="@{tn}"
+                                    @if(form.data.getOrElse("teamName", "").equals(tn)) { selected="selected" }
+                            >@tn</option>
+                        }
+                    </select>
+                    @form_fields_warnings(form,"teamName")
+
+                </div>
+            </div>
+
+            <div class="form-group row mb-2">
+                <div class="col-md-6 d-grid gap-2">
+                    <label class="fw-bold" for="slackChannelsInput">Slack Channels:</label>
+                    <div class="mb-2">
+                        <div class="mb-2">
+                            (Optional) A comma separated list of Slack channels for receiving prototype notifications. These channels can be added to and changed in the repository.yaml file in the prototype's repository.
+                        </div>
+                        <input class="form-control" type="text" id="slackChannelsInput" name="slackChannels" value="@form.data.getOrElse("slackChannels", "")">
+                    </div>
+                    @form_fields_warnings(form,"slackChannels")
+                </div>
+            </div>
+
+            <div>
+                <button id="create-repository-submission-button" class="btn btn-success" type="submit">Build</button>
+            </div>
+       }
+    </section>
+}
