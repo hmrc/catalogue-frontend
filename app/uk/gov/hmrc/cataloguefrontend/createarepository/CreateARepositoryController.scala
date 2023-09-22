@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
 import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoConstraints.mkConstraint
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{CreateAPrototypeRepositoryPage, CreateAServiceRepositoryPage}
+import views.html.{CreateAPrototypeRepositoryPage, CreateAServiceRepositoryPage, CreateATestRepositoryPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,6 +40,7 @@ class CreateARepositoryController @Inject()(
    override val mcc             : MessagesControllerComponents,
    createARepositoryPage        : CreateAServiceRepositoryPage,
    createAPrototypePage         : CreateAPrototypeRepositoryPage,
+   createATestRepositoryPage    : CreateATestRepositoryPage,
    buildDeployApiConnector      : BuildDeployApiConnector
 )(implicit
   override val ec: ExecutionContext
@@ -58,7 +59,7 @@ class CreateARepositoryController @Inject()(
       retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
       val userTeams = cleanseUserTeams(request.retrieval)
-      Ok(createARepositoryPage(CreateServiceRepoForm.form, userTeams, CreateRepositoryType.values))
+      Ok(createARepositoryPage(CreateServiceRepoForm.form, userTeams, CreateServiceRepositoryType.values))
     }
   }
 
@@ -70,7 +71,7 @@ class CreateARepositoryController @Inject()(
       CreateServiceRepoForm.form.bindFromRequest().fold(
         formWithErrors => {
           val userTeams = cleanseUserTeams(request.retrieval)
-          Future.successful(BadRequest(createARepositoryPage(formWithErrors, userTeams, CreateRepositoryType.values)))
+          Future.successful(BadRequest(createARepositoryPage(formWithErrors, userTeams, CreateServiceRepositoryType.values)))
         },
         validForm => {
           import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
@@ -79,7 +80,7 @@ class CreateARepositoryController @Inject()(
             res <- buildDeployApiConnector.createAServiceRepository(validForm)
           } yield {
             res match {
-              case Left(errMsg) => logger.info(s"createARepository failed with: $errMsg")
+              case Left(errMsg) => logger.info(s"createAServiceRepository failed with: $errMsg")
               case Right(id) => logger.info(s"Bnd api request id: $id:")
             }
             Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
@@ -123,6 +124,42 @@ class CreateARepositoryController @Inject()(
       )
     }
 
+  def createATestRepositoryLanding(): Action[AnyContent] = {
+    auth.authenticatedAction(
+      continueUrl = routes.CreateARepositoryController.createATestRepositoryLanding(),
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+    ) { implicit request =>
+      val userTeams = cleanseUserTeams(request.retrieval)
+      Ok(createATestRepositoryPage(CreateTestRepoForm.form, userTeams, CreateTestRepositoryType.values))
+    }
+  }
+
+  def createATestRepository(): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.CreateARepositoryController.createATestRepositoryLanding(),
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+    ).async { implicit request =>
+      CreateTestRepoForm.form.bindFromRequest().fold(
+        formWithErrors => {
+          val userTeams = cleanseUserTeams(request.retrieval)
+          Future.successful(BadRequest(createATestRepositoryPage(formWithErrors, userTeams, CreateTestRepositoryType.values)))
+        },
+        validForm => {
+          import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
+          for {
+            _ <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
+            res <- buildDeployApiConnector.createATestRepository(validForm)
+          } yield {
+            res match {
+              case Left(errMsg) => logger.info(s"createATestRepository failed with: $errMsg")
+              case Right(id) => logger.info(s"Bnd api request id: $id:")
+            }
+            Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+          }
+        }
+      )
+    }
+
   private def cleanseUserTeams(resources: Set[Resource]): Seq[String] =
     resources.map(_.resourceLocation.value.stripPrefix("teams/"))
       .filterNot(_.contains("app_group_"))
@@ -146,7 +183,7 @@ object CreateServiceRepoForm {
     ~ (__ \ "repoType"      ).write[String]
     )(unlift(CreateServiceRepoForm.unapply))
 
-  val repoTypeValidation           : String => Boolean = str => CreateRepositoryType.parse(str).nonEmpty
+  val repoTypeValidation           : String => Boolean = str => CreateServiceRepositoryType.parse(str).nonEmpty
 
   val conflictingFieldsValidation1 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("backend")  && crf.repositoryName.toLowerCase.contains("frontend"))
   val conflictingFieldsValidation2 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
@@ -154,7 +191,7 @@ object CreateServiceRepoForm {
   val frontendValidation2          : CreateServiceRepoForm => Boolean = crf => !(crf.repositoryName.toLowerCase.contains("frontend") && !crf.repoType.toLowerCase.contains("frontend"))
 
 
-  private val repoTypeConstraint: Constraint[String] = mkConstraint("constraints.repoTypeCheck")(constraint = repoTypeValidation, error = CreateRepositoryType.parsingError)
+  private val repoTypeConstraint: Constraint[String] = mkConstraint("constraints.repoTypeCheck")(constraint = repoTypeValidation, error = CreateServiceRepositoryType.parsingError)
 
   private val repoTypeAndNameConstraints = Seq(
     mkConstraint("constraints.conflictingFields1")(constraint = conflictingFieldsValidation1, error = "You have chosen a backend repo type, but have included 'frontend' in your repo name. Change either the repo name or repo type"),
@@ -171,6 +208,22 @@ object CreateServiceRepoForm {
       "repoType"            -> nonEmptyText.verifying(repoTypeConstraint),
     )(CreateServiceRepoForm.apply)(CreateServiceRepoForm.unapply)
       .verifying(repoTypeAndNameConstraints :_*)
+  )
+}
+
+object CreateTestRepoForm {
+
+  private val repoTestTypeValidation: String => Boolean = str => CreateTestRepositoryType.parse(str).nonEmpty
+
+  private val repoTestTypeConstraint: Constraint[String] = mkConstraint("constraints.repoTypeCheck")(constraint = repoTestTypeValidation, error = CreateTestRepositoryType.parsingError)
+
+  val form: Form[CreateServiceRepoForm] = Form(
+    mapping(
+      "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, Some("-tests")): _*),
+      "makePrivate" -> boolean,
+      "teamName" -> nonEmptyText,
+      "repoType" -> nonEmptyText.verifying(repoTestTypeConstraint),
+    )(CreateServiceRepoForm.apply)(CreateServiceRepoForm.unapply)
   )
 }
 
