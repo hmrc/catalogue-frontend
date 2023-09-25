@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.createarepository
+package uk.gov.hmrc.cataloguefrontend.createrepository
 
 import play.api.data.validation.Invalid
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec

@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus, PrototypeDetails}
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
-import uk.gov.hmrc.cataloguefrontend.createarepository.CreateServiceRepoForm
+import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepoForm
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -248,7 +248,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
             ))
         )
 
-        val result = connector.createAServiceRepository(payload = payload).futureValue
+        val result = connector.createServiceRepository(payload = payload).futureValue
 
         result shouldBe Right(AsyncRequestId(id = "1234"))
       }
@@ -280,7 +280,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
             ))
       )
 
-      val result = connector.createAServiceRepository(payload = payload).failed.futureValue
+      val result = connector.createServiceRepository(payload = payload).failed.futureValue
 
       result shouldBe a [UpstreamErrorResponse]
     }
@@ -314,7 +314,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
             ))
         )
 
-        val result = connector.createAServiceRepository(payload = payload).futureValue
+        val result = connector.createServiceRepository(payload = payload).futureValue
 
         result shouldBe Left("Some client error")
       }

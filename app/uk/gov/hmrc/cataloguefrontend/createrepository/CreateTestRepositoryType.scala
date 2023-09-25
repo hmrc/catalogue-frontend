@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.createarepository
+package uk.gov.hmrc.cataloguefrontend.createrepository
 
 sealed trait CreateTestRepositoryType { def asString: String}
 

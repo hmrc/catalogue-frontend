@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.createarepository
+package uk.gov.hmrc.cataloguefrontend.createrepository
 
 
 import play.api.data.Form
@@ -22,7 +22,7 @@ import play.api.data.Forms.{boolean, mapping, nonEmptyText, text}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{Writes, __}
-import uk.gov.hmrc.cataloguefrontend.createarepository.CreateRepoConstraints.mkConstraint
+import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkConstraint
 
 case class CreateServiceRepoForm(
                                   repositoryName     : String,
