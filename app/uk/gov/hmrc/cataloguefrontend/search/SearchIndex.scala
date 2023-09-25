@@ -31,7 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
 import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
 import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
-import uk.gov.hmrc.cataloguefrontend.createarepository.{routes => createRepoRoutes}
+import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => createRepoRoutes}
 import uk.gov.hmrc.cataloguefrontend.deployservice.{routes => deployServiceRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -86,9 +86,9 @@ class SearchIndex @Inject()(
   } ++ {
     if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showCreateRepo.isEnabled) {
       List(
-        SearchTerm("page", "create service repository", createRepoRoutes.CreateARepositoryController.createAServiceRepositoryLanding().url, 1.0f),
-        SearchTerm("page", "create prototype repository", createRepoRoutes.CreateARepositoryController.createAPrototypeRepositoryLanding().url, 1.0f),
-        SearchTerm("page", "create test repository", createRepoRoutes.CreateARepositoryController.createATestRepository().url, 1.0f)
+        SearchTerm("page", "create service repository", createRepoRoutes.CreateRepositoryController.createServiceRepositoryLanding().url, 1.0f),
+        SearchTerm("page", "create prototype repository", createRepoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding().url, 1.0f),
+        SearchTerm("page", "create test repository", createRepoRoutes.CreateRepositoryController.createTestRepository().url, 1.0f)
       )
     } else Nil
   } ++ {

@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
-import uk.gov.hmrc.cataloguefrontend.createarepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
+import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -155,7 +155,7 @@ class BuildDeployApiConnector @Inject() (
 
   private implicit val arr = AsyncRequestId.reads
 
-  def createAServiceRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
+  def createServiceRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
     val finalPayload =
       s"""
          |{
@@ -180,7 +180,7 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
-  def createAPrototypeRepository(payload: CreatePrototypeRepoForm): Future[Either[String, AsyncRequestId]] = {
+  def createPrototypeRepository(payload: CreatePrototypeRepoForm): Future[Either[String, AsyncRequestId]] = {
     val finalPayload =
       s"""
          |{
@@ -193,11 +193,10 @@ class BuildDeployApiConnector @Inject() (
          |   "slack_notification_channels": "${payload.slackChannels}"
          |}""".stripMargin
 
-    val passwordRegex = """""password": ".+?"""".r
-    val passwordObfuscated = passwordRegex.replaceAllIn(finalPayload, """"password": "**********"""")
-    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: $passwordObfuscated")
 
     val body = Json.parse(finalPayload)
+    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: ${body + "password" -> "************"}")
+
 
     signAndExecuteRequest(
       endpoint = "CreatePrototype",
@@ -205,7 +204,7 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
-  def createATestRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
+  def createTestRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
     val finalPayload =
       s"""
          |{
