@@ -123,17 +123,10 @@
   @shutterStates.get(env).getOrElse(Seq.empty).filter(_.status.value == ShutterStatusValue.Shuttered).size
 }
 
-@changeValueFor(status: ShutterStatusValue) = {
-  @status match {
-    case ShutterStatusValue.Shuttered   => { Unshutter }
-    case ShutterStatusValue.Unshuttered => { Shutter   }
-  }
-}
-
 @shutterRows(states: Seq[ShutterStateData]) = {
     @states.zipWithIndex.map{case (state, i) =>
-      @defining(state.status.value == ShutterStatusValue.Shuttered) { shuttered =>
-          <tr id="row@i" class="shutter-row @if(shuttered) {shuttered-row} else {unshuttered}">
+      @defining(state.status.value == ShutterStatusValue.Shuttered) { isShuttered =>
+          <tr id="row@i" class="shutter-row @if(isShuttered) {shuttered-row} else {unshuttered}">
               <td id="row@{i}_name" class="shutter-service">
                   <a class="shutter-link " href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
                   @state.serviceName
@@ -162,7 +155,7 @@
               </td>
               <td id="row@{i}_update" class="shutter-update">
                   <a id="shutter-link-@{state.serviceName}-@{state.environment.asString}" class="shutter-link " href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
-                      @changeValueFor(state.status.value)
+                      @if(isShuttered) {Unshutter} else {Shutter}
                   </a>
               </td>
           </tr>
