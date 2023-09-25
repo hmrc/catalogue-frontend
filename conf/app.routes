@@ -16,6 +16,9 @@ POST       /create-a-repository                         uk.gov.hmrc.cataloguefro
 GET        /create-a-prototype                          uk.gov.hmrc.cataloguefrontend.createarepository.CreateARepositoryController.createAPrototypeRepositoryLanding()
 POST       /create-a-prototype                          uk.gov.hmrc.cataloguefrontend.createarepository.CreateARepositoryController.createAPrototypeRepository()
 
+GET        /create-a-test                               uk.gov.hmrc.cataloguefrontend.createarepository.CreateARepositoryController.createATestRepositoryLanding()
+POST       /create-a-test                               uk.gov.hmrc.cataloguefrontend.createarepository.CreateARepositoryController.createATestRepository()
+
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
 
