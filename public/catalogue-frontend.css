@@ -265,7 +265,7 @@ table.always-wrap {
     border-color: rgba(var(--bs-warning-rgb), var(--bs-border-opacity));
 }
 
-.shutter-link {
+.shuttered-row .shutter-link {
     background: var(--bs-dark);
     color: var(--bs-light);
     --bs-link-color-rgb: var(--bs-light-rgb); /*! Gets used to set text-decoration-color (the colour of the underline) */
