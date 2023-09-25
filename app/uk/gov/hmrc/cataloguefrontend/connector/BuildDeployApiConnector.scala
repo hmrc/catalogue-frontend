@@ -195,7 +195,8 @@ class BuildDeployApiConnector @Inject() (
 
 
     val body = Json.parse(finalPayload)
-    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: ${body + "password" -> "************"}")
+    val obfuscatedBody = body.as[JsObject] + ("password" -> JsString("**********************"))
+    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: $obfuscatedBody")
 
 
     signAndExecuteRequest(
