@@ -193,11 +193,10 @@ class BuildDeployApiConnector @Inject() (
          |   "slack_notification_channels": "${payload.slackChannels}"
          |}""".stripMargin
 
-    val passwordRegex = """""password": ".+?"""".r
-    val passwordObfuscated = passwordRegex.replaceAllIn(finalPayload, """"password": "**********"""")
-    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: $passwordObfuscated")
 
     val body = Json.parse(finalPayload)
+    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: ${body + "password" -> "************"}")
+
 
     signAndExecuteRequest(
       endpoint = "CreatePrototype",
