@@ -222,10 +222,10 @@ class BuildDeployApiConnector @Inject() (
 
     val body = Json.parse(finalPayload)
 
-    logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
+    logger.info(s"Calling the B&D Create Test Repository API with the following payload: ${body}")
 
     signAndExecuteRequest(
-      endpoint = "CreateRepository",
+      endpoint = "CreateTestRepository",
       body = body
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
