@@ -112,6 +112,16 @@ teamNames: Seq[String])(implicit
                         <div class="mb-2">
                             (Optional) A comma separated list of Slack channels for receiving prototype notifications. These channels can be added to and changed in the repository.yaml file in the prototype's repository.
                         </div>
+                        <div class="mb-2">
+                            Slack channel names can only contain the following characters:
+                        </div>
+                        <ul>
+                            <li>lowercase letters</li>
+                            <li> numbers</li>
+                            <li>underscores</li>
+                            <li>hyphens</li>
+                            <li>Can start with a '#' character but is not required to</li>
+                        </ul>
                         <input class="form-control" type="text" id="slackChannelsInput" name="slackChannels" value="@form.data.getOrElse("slackChannels", "")">
                     </div>
                     @form_fields_warnings(form,"slackChannels")
