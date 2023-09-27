@@ -156,21 +156,15 @@ class BuildDeployApiConnector @Inject() (
   private implicit val arr = AsyncRequestId.reads
 
   def createServiceRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
-    val finalPayload =
-      s"""
-         |{
-         |   "repository_name": "${payload.repositoryName}",
-         |   "make_private": ${payload.makePrivate},
-         |   "allow_auto_merge": true,
-         |   "delete_branch_on_merge": true,
-         |   "team_name": "${payload.teamName}",
-         |   "repository_type": "${payload.repoType}",
-         |   "bootstrap_tag": "",
-         |   "init_webhook_version": "2.2.0",
-         |   "default_branch_name": "main"
-         |}""".stripMargin
-
-    val body = Json.parse(finalPayload)
+    val body =
+      createRepoCommonBodyFields(payload.repositoryName, payload.teamName) ++
+        Json.obj( fields =
+          "make_private"           -> payload.makePrivate,
+          "repository_type"        -> payload.repoType,
+          "allow_auto_merge"       -> true,
+          "delete_branch_on_merge" -> true,
+          "bootstrap_tag"          -> ""
+        )
 
     logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
 
@@ -181,20 +175,15 @@ class BuildDeployApiConnector @Inject() (
   }
 
   def createPrototypeRepository(payload: CreatePrototypeRepoForm): Future[Either[String, AsyncRequestId]] = {
-    val finalPayload =
-      s"""
-         |{
-         |   "push_template_repo": "true",
-         |   "repository_name": "${payload.repositoryName}",
-         |   "password": "${payload.password}",
-         |   "team_name": "${payload.teamName}",
-         |   "init_webhook_version": "2.2.0",
-         |   "default_branch_name": "main",
-         |   "slack_notification_channels": "${payload.slackChannels}"
-         |}""".stripMargin
+    val body =
+      createRepoCommonBodyFields(payload.repositoryName, payload.teamName) ++
+        Json.obj(fields =
+          "password" -> payload.password,
+          "slack_notification_channels" -> payload.slackChannels,
+          "push_template_repo" -> true,
+          "init_prototype_version" -> "0.37.0"
+        )
 
-
-    val body = Json.parse(finalPayload)
     val obfuscatedBody = body.as[JsObject] + ("password" -> JsString("**********************"))
     logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: $obfuscatedBody")
 
@@ -206,21 +195,14 @@ class BuildDeployApiConnector @Inject() (
   }
 
   def createTestRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
-    val finalPayload =
-      s"""
-         |{
-         |   "repository_name": "${payload.repositoryName}",
-         |   "make_private": ${payload.makePrivate},
-         |   "allow_auto_merge": true,
-         |   "delete_branch_on_merge": true,
-         |   "team_name": "${payload.teamName}",
-         |   "repository_type": "${payload.repoType}",
-         |   "bootstrap_tag": "",
-         |   "init_webhook_version": "2.2.0",
-         |   "default_branch_name": "main"
-         |}""".stripMargin
-
-    val body = Json.parse(finalPayload)
+    val body =
+      createRepoCommonBodyFields(payload.repositoryName, payload.teamName) ++
+        Json.obj(fields =
+          "make_private" -> payload.makePrivate,
+          "repository_type" -> payload.repoType,
+          "allow_auto_merge" -> true,
+          "delete_branch_on_merge" -> true
+        )
 
     logger.info(s"Calling the B&D Create Test Repository API with the following payload: ${body}")
 
@@ -230,6 +212,13 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
+  private def createRepoCommonBodyFields(repositoryName: String, teamName: String) =
+    Json.obj( fields =
+      "repository_name"      -> repositoryName,
+      "team_name"            -> teamName,
+      "init_webhook_version" -> "2.2.0",
+      "default_branch_name"  -> "main"
+    )
 
   def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) = serviceType match {
