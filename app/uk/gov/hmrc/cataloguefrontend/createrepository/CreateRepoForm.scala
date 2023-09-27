@@ -24,7 +24,6 @@ import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{Writes, __}
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkConstraint
 
-
 case class CreateServiceRepoForm(
                                   repositoryName     : String,
                                   makePrivate        : Boolean,
