@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
-import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateRepoForm, CreateServiceRepoForm}
+import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -156,18 +156,15 @@ class BuildDeployApiConnector @Inject() (
   private implicit val arr = AsyncRequestId.reads
 
   def createServiceRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
-    val finalPayload =
-      s"""
-         |{
-         |${createRepoCommonBodyFields(payload)}
-         |   "make_private": ${payload.makePrivate},
-         |   "allow_auto_merge": true,
-         |   "delete_branch_on_merge": true,
-         |   "repository_type": "${payload.repoType}",
-         |   "bootstrap_tag": "",
-         |}""".stripMargin
-
-    val body = Json.parse(finalPayload)
+    val body =
+      createRepoCommonBodyFields(payload.repositoryName, payload.teamName) ++
+        Json.obj( fields =
+          "make_private"           -> payload.makePrivate,
+          "repository_type"        -> payload.repoType,
+          "allow_auto_merge"       -> true,
+          "delete_branch_on_merge" -> true,
+          "bootstrap_tag"          -> ""
+        )
 
     logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
 
@@ -178,18 +175,15 @@ class BuildDeployApiConnector @Inject() (
   }
 
   def createPrototypeRepository(payload: CreatePrototypeRepoForm): Future[Either[String, AsyncRequestId]] = {
-    val finalPayload =
-      s"""
-         |{
-         |${createRepoCommonBodyFields(payload)}
-         |   "push_template_repo": "true",
-         |   "password": "${payload.password}",
-         |   "slack_notification_channels": "${payload.slackChannels}",
-         |   "init_prototype_version": "0.37.0"
-         |}""".stripMargin
+    val body =
+      createRepoCommonBodyFields(payload.repositoryName, payload.teamName) ++
+        Json.obj(fields =
+          "password" -> payload.password,
+          "slack_notification_channels" -> payload.slackChannels,
+          "push_template_repo" -> true,
+          "init_prototype_version" -> "0.37.0"
+        )
 
-
-    val body = Json.parse(finalPayload)
     val obfuscatedBody = body.as[JsObject] + ("password" -> JsString("**********************"))
     logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: $obfuscatedBody")
 
@@ -201,17 +195,14 @@ class BuildDeployApiConnector @Inject() (
   }
 
   def createTestRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
-    val finalPayload =
-      s"""
-         |{
-         |${createRepoCommonBodyFields(payload)}
-         |   "make_private": ${payload.makePrivate},
-         |   "allow_auto_merge": true,
-         |   "delete_branch_on_merge": true,
-         |   "repository_type": "${payload.repoType}"
-         |}""".stripMargin
-
-    val body = Json.parse(finalPayload)
+    val body =
+      createRepoCommonBodyFields(payload.repositoryName, payload.teamName) ++
+        Json.obj(fields =
+          "make_private" -> payload.makePrivate,
+          "repository_type" -> payload.repoType,
+          "allow_auto_merge" -> true,
+          "delete_branch_on_merge" -> true
+        )
 
     logger.info(s"Calling the B&D Create Test Repository API with the following payload: ${body}")
 
@@ -221,14 +212,13 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
-  private def createRepoCommonBodyFields(payload: CreateRepoForm) = {
-    s"""
-       |   "repository_name": "${payload.repositoryName}",
-       |   "team_name": "${payload.teamName}",
-       |   "init_webhook_version": "2.2.0",
-       |   "default_branch_name": "main",
-       |""".stripMargin
-  }
+  private def createRepoCommonBodyFields(repositoryName: String, teamName: String) =
+    Json.obj( fields =
+      "repository_name"      -> repositoryName,
+      "team_name"            -> teamName,
+      "init_webhook_version" -> "2.2.0",
+      "default_branch_name"  -> "main"
+    )
 
   def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) = serviceType match {

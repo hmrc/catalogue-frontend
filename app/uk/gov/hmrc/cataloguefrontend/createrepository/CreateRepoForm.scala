@@ -24,17 +24,13 @@ import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{Writes, __}
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkConstraint
 
-sealed trait CreateRepoForm {
-  val repositoryName : String
-  val teamName       : String
-}
+
 case class CreateServiceRepoForm(
                                   repositoryName     : String,
                                   makePrivate        : Boolean,
                                   teamName           : String,
                                   repoType           : String
                                 )
-  extends CreateRepoForm
 
 object CreateServiceRepoForm {
 
@@ -105,7 +101,6 @@ case class CreatePrototypeRepoForm(
                                     password           : String,
                                     teamName           : String,
                                     slackChannels      : String)
-  extends CreateRepoForm
 
 object CreatePrototypeRepoForm {
 
