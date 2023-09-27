@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
-import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
+import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateRepoForm, CreateServiceRepoForm}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -159,15 +159,12 @@ class BuildDeployApiConnector @Inject() (
     val finalPayload =
       s"""
          |{
-         |   "repository_name": "${payload.repositoryName}",
+         |${createRepoCommonBodyFields(payload)}
          |   "make_private": ${payload.makePrivate},
          |   "allow_auto_merge": true,
          |   "delete_branch_on_merge": true,
-         |   "team_name": "${payload.teamName}",
          |   "repository_type": "${payload.repoType}",
          |   "bootstrap_tag": "",
-         |   "init_webhook_version": "2.2.0",
-         |   "default_branch_name": "main"
          |}""".stripMargin
 
     val body = Json.parse(finalPayload)
@@ -184,13 +181,11 @@ class BuildDeployApiConnector @Inject() (
     val finalPayload =
       s"""
          |{
+         |${createRepoCommonBodyFields(payload)}
          |   "push_template_repo": "true",
-         |   "repository_name": "${payload.repositoryName}",
          |   "password": "${payload.password}",
-         |   "team_name": "${payload.teamName}",
-         |   "init_webhook_version": "2.2.0",
-         |   "default_branch_name": "main",
-         |   "slack_notification_channels": "${payload.slackChannels}"
+         |   "slack_notification_channels": "${payload.slackChannels}",
+         |   "init_prototype_version": "0.37.0"
          |}""".stripMargin
 
 
@@ -209,15 +204,11 @@ class BuildDeployApiConnector @Inject() (
     val finalPayload =
       s"""
          |{
-         |   "repository_name": "${payload.repositoryName}",
+         |${createRepoCommonBodyFields(payload)}
          |   "make_private": ${payload.makePrivate},
          |   "allow_auto_merge": true,
          |   "delete_branch_on_merge": true,
-         |   "team_name": "${payload.teamName}",
-         |   "repository_type": "${payload.repoType}",
-         |   "bootstrap_tag": "",
-         |   "init_webhook_version": "2.2.0",
-         |   "default_branch_name": "main"
+         |   "repository_type": "${payload.repoType}"
          |}""".stripMargin
 
     val body = Json.parse(finalPayload)
@@ -230,6 +221,14 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
+  private def createRepoCommonBodyFields(payload: CreateRepoForm) = {
+    s"""
+       |   "repository_name": "${payload.repositoryName}",
+       |   "team_name": "${payload.teamName}",
+       |   "init_webhook_version": "2.2.0",
+       |   "default_branch_name": "main",
+       |""".stripMargin
+  }
 
   def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) = serviceType match {
