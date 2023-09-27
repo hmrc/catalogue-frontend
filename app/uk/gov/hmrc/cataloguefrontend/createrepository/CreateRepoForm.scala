@@ -113,12 +113,18 @@ object CreatePrototypeRepoForm {
   private val passwordCharacterValidation: String => Boolean = str => str.matches("^[a-zA-Z0-9_]+$")
   private val passwordConstraint = mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
 
+  private val slackChannelCharacterValidation: String => Boolean = str => str.matches("^#?[a-z0-9-_]*$")
+  private val slackChannelLengthValidation: String => Boolean = str => str.isEmpty || !str.split(',').exists(elem => elem.length > 80)
+  private val slackChannelConstraint = Seq(
+    mkConstraint("constraints.channelLengthCheck")(constraint = slackChannelLengthValidation, error = "Each slack channel name must be under 80 characters long"),
+    mkConstraint("constraints.channelCharacterCheck")(constraint = slackChannelCharacterValidation, error = "Each slack channel name Should only contain the following characters lowercase letters, numbers, underscores, dashes, hash character (#)")
+  )
   val form: Form[CreatePrototypeRepoForm] = Form(
     mapping(
       "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype")) :_*),
       "password"            -> nonEmptyText.verifying(passwordConstraint),
       "teamName"            -> nonEmptyText,
-      "slackChannels"       -> text,
+      "slackChannels"       -> text.verifying(slackChannelConstraint :_*),
     )(CreatePrototypeRepoForm.apply)(CreatePrototypeRepoForm.unapply)
   )
 }
