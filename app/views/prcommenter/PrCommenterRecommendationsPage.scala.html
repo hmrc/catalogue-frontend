@@ -126,7 +126,7 @@
                                 <ul class="list">
                                   @{report.comments.map {
                                     case x if form("commentType").value == Some(x.commentType) =>
-                                      Html(s"""<li class="text-danger text-decoration-underline">${MarkdownLoader.markdownFromString(x.message).getOrElse(s"Invalid markdown: ${x.message}")}</li>""")
+                                      Html(s"""<li class="highlight-dotted">${MarkdownLoader.markdownFromString(x.message).getOrElse(s"Invalid markdown: ${x.message}")}</li>""")
                                     case x =>
                                       Html(s"""<li >${MarkdownLoader.markdownFromString(x.message).getOrElse(s"Invalid markdown: ${x.message}")}</li>""")
                                   }}
