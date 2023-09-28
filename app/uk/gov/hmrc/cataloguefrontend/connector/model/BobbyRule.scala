@@ -17,11 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import java.time.LocalDate
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
 
-import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 
 case class BobbyRule(
   group   : String,
@@ -31,7 +29,7 @@ case class BobbyRule(
   from    : LocalDate
 ) {
   def id: String =
-    s"$group:$artefact:${UrlUtils.encodeQueryParam(range.range)}"
+    s"$group:$artefact:${range.range}:$from"
 }
 
 object BobbyRule {
