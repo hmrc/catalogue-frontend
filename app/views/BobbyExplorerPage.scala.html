@@ -19,6 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
+@import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 
 @this(viewMessages: ViewMessages)
 
@@ -67,6 +68,7 @@
                 @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
             </tbody>
         </table>
+
     }
 }
 
@@ -83,8 +85,11 @@
 }
 
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
-    <tr id="rule-@rule.id" class="bobby-rule">
-        <td>@rule.group:@rule.artefact</td>
+      <tr id="rule-@rule.id" class="bobby-rule grid-row">
+          <td class="grid-item">
+            <a  href="#@rule.id"  class="glyphicon glyphicon-link float-start" ></a>
+            @rule.group:@rule.artefact
+          </td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
@@ -137,13 +142,17 @@
     function ready() {
         (window.onhashchange = function () {
             const el = document.getElementById(location.hash.replace("#", "rule-"));
-            const highlighted = Array.from(document.getElementsByClassName("highlight"));
-            highlighted.forEach(e => e.classList.remove("highlight"));
+            const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
+            highlighted.forEach(e => e.classList.remove("highlight-amber"));
 
             if (el) {
                 el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
-                el.classList.add("highlight");
+                el.classList.add("highlight-amber");
             }
         })();
+
+        var links = Array.from(document.getElementsByClassName("glyphicon-link"));
+        links.forEach(l => l.addEventListener("click", function (){navigator.clipboard.writeText(l.href)}))
+
     };
 </script>

@@ -319,3 +319,18 @@ table.always-wrap {
 .link-dimgrey {
     text-decoration-color: dimgrey;
 }
+
+.grid-row>.grid-item>a.glyphicon {
+    color: #008770;
+    visibility: hidden;
+}
+
+.grid-row>.grid-item:hover>a {
+    visibility: visible;
+}
+
+.highlight-amber {
+    border: 2px solid #ffbf00;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
