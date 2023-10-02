@@ -103,7 +103,7 @@
 @exemptionsDetailRow(rule: BobbyRule) = {
 
        <tr id="rule-details-@rule.id" class="collapse bobby-rule grid-row">
-           <td colspan="10">
+           <td colspan="11">
                <b>@rule.group:@rule.artefact exempt services:</b>
                <ul>
                    @rule.exemptProjects.map(p =>Html(s"<li>$p</li>"))
