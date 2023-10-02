@@ -24,9 +24,9 @@
 @this(viewMessages: ViewMessages)
 
 @(rules: BobbyRulesView,
-  counts: Map[(BobbyRule, SlugInfoFlag), Int]
+        counts: Map[(BobbyRule, SlugInfoFlag), Int]
 )(implicit
-  request: RequestHeader
+        request: RequestHeader
 )
 
 @standard_layout(s"Bobby rules", active = "health") {
@@ -36,11 +36,11 @@
 }
 
 @bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String) = {
-    @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
-        <h2 class="fw-bold">@heading</h2>
-        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true )
-        @bobbyRulesArtifactTypeSection(rulesByTime.plugins  , "Plugin" , inclViewSlugsLink = false)
-    }
+@if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
+    <h2 class="fw-bold">@heading</h2>
+    @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true )
+    @bobbyRulesArtifactTypeSection(rulesByTime.plugins  , "Plugin" , inclViewSlugsLink = false)
+}
 }
 
 @bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
@@ -48,48 +48,76 @@
         <table class="@{artifactType.toLowerCase}-rules table table-striped sticky-header">
             <thead>
 
-                <tr>
-                    <th colspan="6"></th>
-                    <th colspan="4" class="text-center border-bottom">Services Affected</th>
-                </tr>
+            <tr>
+                <th colspan="6"></th>
+                <th colspan="4" class="text-center border-bottom">Services Affected</th>
+                <th></th>
+            </tr>
 
-                <tr>
-                    <th class="col-3" colspan="1">@artifactType</th>
-                    <th class="col-2" colspan="3" style="text-align: center">Banned Versions</th>
-                    <th class="col-4">Reason</th>
-                    <th class="">Active from</th>
-                    <th class="">Latest</th>
-                    <th class="">QA</th>
-                    <th class="">Prod</th>
-                    <th class=""></th>
-                </tr>
-            </thead>
-            <tbody>
-                @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
-            </tbody>
-        </table>
+            <tr>
+                <th class="col-3" colspan="1">@artifactType</th>
+                <th class="col-2" colspan="3" style="text-align: center">Banned Versions</th>
+                <th class="col-4">Reason</th>
+                <th class="">Active from</th>
+                <th class="">Latest</th>
+                <th class="">QA</th>
+                <th class="">Prod</th>
+                <th class=""></th>
+                <th class="">Exemptions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
+        </tbody>
+    </table>
 
-    }
+}
 }
 
 @bobbyViolationLink(rule: BobbyRule, env: SlugInfoFlag) = {
-  @defining(counts.getOrElse((rule, env), 0)){ count =>
+@defining(counts.getOrElse((rule, env), 0)){ count =>
     @if(count == 0) {
-       <span>0</span>
+        <span>0</span>
     } else {
-       <a href=@DependencyExplorerController.search(flag = env, scopes = Seq(DependencyScope.Compile), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
-       @{count}
-       </a>
+        <a href=@DependencyExplorerController.search(flag = env, scopes = Seq(DependencyScope.Compile), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
+        @{count}
+        </a>
     }
-  }
+}
 }
 
+@exemptionsTableData(rule: BobbyRule) = {
+@defining(s"rule-details-${rule.id}") { target =>
+    @if(rule.exemptProjects.isEmpty) {
+        <td></td>
+    } else {
+        <td>
+            <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#@target">
+                See Exemptions
+            </button>
+        </td>
+    }
+
+}
+}
+@exemptionsDetailRow(rule: BobbyRule) = {
+
+       <tr id="rule-details-@rule.id" class="collapse bobby-rule grid-row">
+           <td colspan="10">
+               <b>@rule.group:@rule.artefact exempt services:</b>
+               <ul>
+                   @rule.exemptProjects.map(p =>Html(s"<li>$p</li>"))
+               </ul>
+           </td>
+       </tr>
+       <tr class="collapse bobby-rule grid-row"></tr>
+}
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
-      <tr id="rule-@rule.id" class="bobby-rule grid-row">
-          <td class="grid-item">
+    <tr id="rule-@rule.id" class="bobby-rule grid-row">
+        <td class="grid-item">
             <a  href="#@rule.id"  class="glyphicon glyphicon-link float-start" ></a>
             @rule.group:@rule.artefact
-          </td>
+        </td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
@@ -118,41 +146,45 @@
         }</td>
         <td>@rule.from</td>
         @if(inclViewSlugsLink) {
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest                                )</td>
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA        ))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest)</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA))</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.Production))</td>
-            <td><a id="see-trend-@rule.group-@rule.artefact-@rule.range" href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See trend</a></td>
+            <td><a id="see-trend-@rule.group-@rule.artefact-@rule.range" href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">
+                See trend</a></td>
+            @exemptionsTableData(rule)
         } else {
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            @exemptionsTableData(rule)
         }
-
     </tr>
+    @exemptionsDetailRow(rule)
 }
 
 <script @CSPNonce.attr type="text/javascript">
-    if (document.readyState != 'loading'){
-        ready();
-    } else {
-        document.addEventListener('DOMContentLoaded', ready);
-    }
+        if (document.readyState != 'loading'){
+            ready();
+        } else {
+            document.addEventListener('DOMContentLoaded', ready);
+        }
 
-    function ready() {
-        (window.onhashchange = function () {
-            const el = document.getElementById(location.hash.replace("#", "rule-"));
-            const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
-            highlighted.forEach(e => e.classList.remove("highlight-amber"));
+        function ready() {
+            (window.onhashchange = function () {
+                const el = document.getElementById(location.hash.replace("#", "rule-"));
+                const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
+                highlighted.forEach(e => e.classList.remove("highlight-amber"));
 
-            if (el) {
-                el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
-                el.classList.add("highlight-amber");
-            }
-        })();
+                if (el) {
+                    el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
+                    el.classList.add("highlight-amber");
+                }
+            })();
 
-        var links = Array.from(document.getElementsByClassName("glyphicon-link"));
-        links.forEach(l => l.addEventListener("click", function (){navigator.clipboard.writeText(l.href)}))
+            var links = Array.from(document.getElementsByClassName("glyphicon-link"));
+            links.forEach(l => l.addEventListener("click", function (){navigator.clipboard.writeText(l.href)}))
 
-    };
+        };
 </script>

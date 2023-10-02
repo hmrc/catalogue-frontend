@@ -22,11 +22,12 @@ import play.api.libs.json.{Json, Reads, __}
 
 
 case class BobbyRule(
-  group   : String,
-  artefact: String,
-  range   : BobbyVersionRange,
-  reason  : String,
-  from    : LocalDate
+  group         : String,
+  artefact      : String,
+  range         : BobbyVersionRange,
+  reason        : String,
+  from          : LocalDate,
+  exemptProjects: Seq[String]
 ) {
   def id: String =
     s"$group:$artefact:${range.range}:$from"
@@ -40,6 +41,7 @@ object BobbyRule {
     ~ (__ \ "range"       ).read[BobbyVersionRange]
     ~ (__ \ "reason"      ).read[String]
     ~ (__ \ "from"        ).read[LocalDate]
+      ~(__ \ "exemptProjects").read[Seq[String]]
     )(BobbyRule.apply _)
   }
 }
