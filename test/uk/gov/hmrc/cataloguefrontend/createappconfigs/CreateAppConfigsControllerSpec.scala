@@ -156,7 +156,7 @@ class CreateAppConfigsControllerSpec
     "redirect to the service commissioning page when the form is submitted successfully" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -187,7 +187,7 @@ class CreateAppConfigsControllerSpec
       val appDependenciesIncludesMongo = Some("mongo")
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -220,7 +220,7 @@ class CreateAppConfigsControllerSpec
       val noMongoDependencies = ""
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -252,7 +252,7 @@ class CreateAppConfigsControllerSpec
     "return 400 when the form is submitted with errors" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -260,7 +260,7 @@ class CreateAppConfigsControllerSpec
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean], any[Boolean]))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[String], any[ServiceType], any[Boolean], any[Boolean]))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
 
       val result = controller
@@ -277,7 +277,7 @@ class CreateAppConfigsControllerSpec
     "return 400 when form is submitted with no configs selected" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -285,7 +285,7 @@ class CreateAppConfigsControllerSpec
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean], any[Boolean]))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[String], any[ServiceType], any[Boolean], any[Boolean]))
         .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
 
       val result = controller
@@ -336,7 +336,7 @@ class CreateAppConfigsControllerSpec
     "return 500 when POST to build and deploy api fails" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -418,8 +418,8 @@ class CreateAppConfigsControllerSpec
         dependencyDotCompile = Some(""" "test" "hmrc-mongo" """)
       )
 
-    val form: CreateAppConfigsRequest =
-      CreateAppConfigsRequest(
+    val form: CreateAppConfigsForm =
+      CreateAppConfigsForm(
         appConfigBase        = false,
         appConfigDevelopment = false,
         appConfigQA          = false,
