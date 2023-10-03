@@ -67,6 +67,8 @@ trait FakeApplicationBuilder
           "build-deploy-api.url"                               -> wireMockUrl,
           "build-deploy-api.host"                              -> wireMockHost,
           "build-deploy-api.aws-region"                        -> "eu-west-2",
+          "microservice.services.platops-bnd-api.port"         -> wireMockPort,
+          "microservice.services.platops-bnd-api.host"         -> wireMockHost,
           "github.open.api.rawurl"                             -> wireMockUrl,
           "github.open.api.token"                              -> "",
           "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",

@@ -103,9 +103,9 @@ class CreateAppConfigsController @Inject()(
           isApi         =  serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
           envsToDisplay =  Environment.values.diff(envsToHide.toSeq)
           hasPerm       =  request.retrieval
-          form          =  { val f = CreateAppConfigsRequest.form
+          form          =  { val f = CreateAppConfigsForm.form
                              if (!hasPerm) f.withGlobalError(s"You do not have permission to create App Configs for: $serviceName")
-                             else f.fill(CreateAppConfigsRequest(true, true, true, true, true))
+                             else f.fill(CreateAppConfigsForm(true, true, true, true, true))
                            }
         } yield
             Ok(
@@ -142,7 +142,7 @@ class CreateAppConfigsController @Inject()(
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
           isApi         =  serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
-          form          <- EitherT.fromEither[Future](CreateAppConfigsRequest.form.bindFromRequest().fold(
+          form          <- EitherT.fromEither[Future](CreateAppConfigsForm.form.bindFromRequest().fold(
                              formWithErrors =>
                                Left(
                                  BadRequest(
@@ -173,7 +173,7 @@ class CreateAppConfigsController @Inject()(
                              logger.info(s"createAppConfigs failed with: $errMsg")
                              InternalServerError(
                                createAppConfigsPage(
-                                 form          = CreateAppConfigsRequest.form.bindFromRequest().withGlobalError(errMsg),
+                                 form          = CreateAppConfigsForm.form.bindFromRequest().withGlobalError(errMsg),
                                  serviceName   = serviceName,
                                  serviceType   = serviceType,
                                  isApi         = isApi,
@@ -191,7 +191,7 @@ class CreateAppConfigsController @Inject()(
     }
 }
 
-case class CreateAppConfigsRequest(
+case class CreateAppConfigsForm(
   appConfigBase        : Boolean,
   appConfigDevelopment : Boolean,
   appConfigQA          : Boolean,
@@ -199,15 +199,15 @@ case class CreateAppConfigsRequest(
   appConfigProduction  : Boolean
 )
 
-object CreateAppConfigsRequest {
-  val form: Form[CreateAppConfigsRequest] = Form(
+object CreateAppConfigsForm {
+  val form: Form[CreateAppConfigsForm] = Form(
     mapping(
       "appConfigBase"         -> boolean,
       "appConfigDevelopment"  -> boolean,
       "appConfigQA"           -> boolean,
       "appConfigStaging"      -> boolean,
       "appConfigProduction"   -> boolean
-    )(CreateAppConfigsRequest.apply)(CreateAppConfigsRequest.unapply)
+    )(CreateAppConfigsForm.apply)(CreateAppConfigsForm.unapply)
       .verifying("No update requested", form =>
         Seq(
           form.appConfigBase,

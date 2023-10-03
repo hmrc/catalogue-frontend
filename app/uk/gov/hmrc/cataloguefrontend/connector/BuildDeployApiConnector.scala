@@ -21,26 +21,21 @@ import play.api.Logging
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
-import uk.gov.hmrc.cataloguefrontend.connector.signer.AwsSigner
-import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
+import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 
-import java.net.URL
-import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 @Singleton
 class BuildDeployApiConnector @Inject() (
   httpClientV2          : HttpClientV2,
-  awsCredentialsProvider: AwsCredentialsProvider,
   config                : BuildDeployApiConfig
 )(implicit
   ec                    : ExecutionContext
@@ -48,33 +43,12 @@ class BuildDeployApiConnector @Inject() (
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private def buildUrl(
-    endpoint   : String,
-    queryParams: Map[String, String]
-  ): URL = url"${config.baseUrl}/v1/$endpoint?$queryParams"
-
-  private def signedHeaders(
-    uri        : String,
-    queryParams: Map[String, String],
-    body       : JsValue
-  ): Map[String, String] =
-    AwsSigner(awsCredentialsProvider, config.awsRegion, "execute-api", () => LocalDateTime.now())
-      .getSignedHeaders(
-        uri         = uri,
-        method      = "POST",
-        queryParams = queryParams,
-        headers     = Map[String, String]("host" -> config.host),
-        payload     = Some(Json.toBytes(body))
-      )
-
-  private def signAndExecuteRequest(
+  private def executeRequest(
     endpoint   : String,
     body       : JsValue,
     queryParams: Map[String, String] = Map.empty[String, String]
   ): Future[Either[String, BuildDeployResponse]] = {
-    val url = buildUrl(endpoint, queryParams)
-
-    val headers = signedHeaders(url.getPath, queryParams, body)
+    val url = url"${config.platopsBndApiBaseUrl}/$endpoint?$queryParams"
 
     implicit val r: Reads[BuildDeployResponse] = BuildDeployResponse.reads
 
@@ -95,35 +69,26 @@ class BuildDeployApiConnector @Inject() (
     httpClientV2
       .post(url)
       .withBody(body)
-      .setHeader(headers.toSeq: _*)
       .execute[Either[String, BuildDeployResponse]]
   }
 
-  def changePrototypePassword(repositoryName: String, password: PrototypePassword): Future[Either[String, String]] = {
-    val body = Json.obj(
-      "repository_name" -> JsString(repositoryName),
-      "password"        -> JsString(password.value)
-    )
-
-    signAndExecuteRequest(
-      endpoint = "SetHerokuPrototypePassword",
-      body     = body
+  def changePrototypePassword(repositoryName: String, password: PrototypePassword): Future[Either[String, String]] =
+    executeRequest(
+      endpoint = "change-prototype-password",
+      body     = Json.toJson(ChangePrototypePasswordRequest(repositoryName, password.value))
     ).map {
       case Right(response) => Right(response.message)
       case Left(errorMsg)  => Left(errorMsg)
     }
-  }
 
   def getPrototypeDetails(prototypeName: String): Future[PrototypeDetails] = {
     implicit val pdR: Reads[PrototypeDetails] = PrototypeDetails.reads
 
-    val body = Json.obj(
-      "prototype" -> JsString(prototypeName)
-    )
+    val body = GetPrototypeStatusRequest(prototypeName)
 
-    signAndExecuteRequest(
-      endpoint = "GetPrototypeStatus",
-      body     = body
+    executeRequest(
+      endpoint = "get-prototype-details",
+      body     = Json.toJson(body)
     ).map {
       case Left(errMsg) => logger.error(s"Call to GetPrototypeStatus failed with: $errMsg")
                            PrototypeDetails(
@@ -141,112 +106,93 @@ class BuildDeployApiConnector @Inject() (
     }
   }
 
-  def setPrototypeStatus(prototype: String, status: PrototypeStatus): Future[Either[String, Unit]] = {
-    val body = Json.obj(
-      "prototype" -> JsString(prototype),
-      "status"    -> JsString(status.asString)
-    )
-
-    signAndExecuteRequest(
-      endpoint = "SetPrototypeStatus",
-      body     = body
+  def setPrototypeStatus(prototype: String, status: PrototypeStatus): Future[Either[String, Unit]] =
+    executeRequest(
+      endpoint = "set-prototype-status",
+      body     = Json.toJson(SetPrototypeStatusRequest(
+        prototype,
+        status.asString
+      ))
     ).map(_.map(_ => ()))
-  }
 
   private implicit val arr = AsyncRequestId.reads
 
   def createServiceRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
-    val body =
-      createRepoCommonBodyFields(payload.repositoryName, payload.teamName) ++
-        Json.obj( fields =
-          "make_private"           -> payload.makePrivate,
-          "repository_type"        -> payload.repoType,
-          "allow_auto_merge"       -> true,
-          "delete_branch_on_merge" -> true,
-          "bootstrap_tag"          -> ""
-        )
+    val body = Json.toJson(CreateServiceRepoRequest(
+      repositoryName = payload.repositoryName,
+      teamName       = payload.teamName,
+      makePrivate    = payload.makePrivate,
+      repositoryType = payload.repoType,
+    ))
 
     logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
 
-    signAndExecuteRequest(
-      endpoint = "CreateRepository",
+    executeRequest(
+      endpoint = "create-service-repository",
       body = body
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
   def createPrototypeRepository(payload: CreatePrototypeRepoForm): Future[Either[String, AsyncRequestId]] = {
-    val body =
-      createRepoCommonBodyFields(payload.repositoryName, payload.teamName) ++
-        Json.obj(fields =
-          "password" -> payload.password,
-          "slack_notification_channels" -> payload.slackChannels,
-          "push_template_repo" -> true,
-          "init_prototype_version" -> "0.37.0"
-        )
+    val body = Json.toJson(CreatePrototypeRepoRequest(
+        repositoryName            = payload.repositoryName,
+        teamName                  = payload.teamName,
+        password                  = payload.password,
+        slackNotificationChannels = payload.slackChannels,
+      ))
 
     val obfuscatedBody = body.as[JsObject] + ("password" -> JsString("**********************"))
     logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: $obfuscatedBody")
 
-
-    signAndExecuteRequest(
-      endpoint = "CreatePrototype",
+    executeRequest(
+      endpoint = "create-prototype-repository",
       body = body
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
   def createTestRepository(payload: CreateServiceRepoForm): Future[Either[String, AsyncRequestId]] = {
     val body =
-      createRepoCommonBodyFields(payload.repositoryName, payload.teamName) ++
-        Json.obj(fields =
-          "make_private" -> payload.makePrivate,
-          "repository_type" -> payload.repoType,
-          "allow_auto_merge" -> true,
-          "delete_branch_on_merge" -> true
-        )
+      Json.toJson(CreateTestRepoRequest(
+        repositoryName = payload.repositoryName,
+        teamName       = payload.teamName,
+        makePrivate    = payload.makePrivate,
+        repositoryType = payload.repoType,
+      ))
 
     logger.info(s"Calling the B&D Create Test Repository API with the following payload: ${body}")
 
-    signAndExecuteRequest(
-      endpoint = "CreateTestRepository",
+    executeRequest(
+      endpoint = "create-test-repository",
       body = body
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
 
-  private def createRepoCommonBodyFields(repositoryName: String, teamName: String) =
-    Json.obj( fields =
-      "repository_name"      -> repositoryName,
-      "team_name"            -> teamName,
-      "init_webhook_version" -> "2.2.0",
-      "default_branch_name"  -> "main"
-    )
-
-  def createAppConfigs(payload: CreateAppConfigsRequest, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
+  def createAppConfigs(payload: CreateAppConfigsForm, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) = serviceType match {
       case ServiceType.Frontend         => ( "Frontend microservice", "public"    )
       case ServiceType.Backend if isApi => ( "API microservice"     , "protected" )
       case ServiceType.Backend          => ( "Backend microservice" , "protected" )
     }
 
-    val finalPayload =
-      s"""
-         |{
-         |   "microservice_name": "$serviceName",
-         |   "microservice_type": "$st",
-         |   "microservice_requires_mongo": $requiresMongo,
-         |   "app_config_base": ${payload.appConfigBase},
-         |   "app_config_development": ${payload.appConfigDevelopment},
-         |   "app_config_qa": ${payload.appConfigQA},
-         |   "app_config_staging": ${payload.appConfigStaging},
-         |   "app_config_production": ${payload.appConfigProduction},
-         |   "zone": "$zone"
-         |}""".stripMargin
-
-    val body = Json.parse(finalPayload)
+    val appConfigEnvironments = Seq(
+      ("base", payload.appConfigBase),
+      ("development", payload.appConfigDevelopment),
+      ("qa", payload.appConfigQA),
+      ("staging", payload.appConfigStaging),
+      ("production", payload.appConfigProduction),
+    ).collect{ case (env, flag) if flag == true  => env}
+    val body = Json.toJson(CreateAppConfigsRequest(
+      serviceName,
+      st,
+      requiresMongo,
+      appConfigEnvironments,
+      zone
+    ))
 
     logger.info(s"Calling the B&D Create App Configs API with the following payload: $body")
 
-    signAndExecuteRequest(
-      endpoint = "CreateAppConfigs",
+    executeRequest(
+      endpoint = "create-app-configs",
       body     = body
     ).map(_.map(resp => resp.details.as[AsyncRequestId]))
   }
@@ -266,7 +212,7 @@ object BuildDeployApiConnector {
 
   object AsyncRequestId {
     val reads: Reads[AsyncRequestId] =
-      ( (__ \ "get_request_state_payload" \ "bnd_api_request_id").read[String]
+      ( (__ \ "id").read[String]
         ).map(AsyncRequestId.apply)
   }
 
@@ -307,9 +253,118 @@ object BuildDeployApiConnector {
   object PrototypeDetails {
     val reads: Reads[PrototypeDetails] = {
       implicit val psR: Reads[PrototypeStatus] = PrototypeStatus.reads
-      ( (__ \ "prototype_url").readNullable[String]
+      ( (__ \ "prototypeUrl").readNullable[String]
       ~ (__ \ "status").read[PrototypeStatus]
       )(PrototypeDetails.apply _)
     }
+  }
+
+  final case class ChangePrototypePasswordRequest(
+    prototype: String,
+    password : String,
+  )
+  
+  object ChangePrototypePasswordRequest {
+    implicit val write: Writes[ChangePrototypePasswordRequest] = 
+      ( (__ \ "repositoryName").write[String]
+      ~ (__ \ "password"      ).write[String]
+      )(unlift(ChangePrototypePasswordRequest.unapply))
+  }
+
+  case class GetPrototypeStatusRequest(
+    prototype: String,
+  )
+
+  object GetPrototypeStatusRequest {
+      val reads: Reads[GetPrototypeStatusRequest] = 
+        (__ \ "prototype").format[String].map(GetPrototypeStatusRequest.apply)
+      
+      val writes: Writes[GetPrototypeStatusRequest] = 
+        Writes[GetPrototypeStatusRequest](r => JsObject(Seq("prototype" -> JsString(r.prototype))))
+
+      implicit val format: Format[GetPrototypeStatusRequest] = Format(reads, writes)
+  }
+
+  case class SetPrototypeStatusRequest(
+    prototype: String,
+    status   : String
+  )
+
+  object SetPrototypeStatusRequest {
+      implicit val format: Format[SetPrototypeStatusRequest] = 
+        ( (__ \ "prototype").format[String]
+        ~ (__ \ "status"   ).format[String]
+      )(SetPrototypeStatusRequest.apply _, unlift(SetPrototypeStatusRequest.unapply _))
+  }
+
+  case class CreateServiceRepoRequest(
+    repositoryName            : String,
+    teamName                  : String,
+    makePrivate               : Boolean,
+    repositoryType            : String,
+    slackNotificationChannels : Seq[String] = Seq.empty,
+  )
+
+  object CreateServiceRepoRequest {
+
+    implicit val format: Format[CreateServiceRepoRequest] =
+      ( (__ \ "repositoryName"            ).format[String]
+      ~ (__ \ "teamName"                  ).format[String]
+      ~ (__ \ "makePrivate"               ).format[Boolean]
+      ~ (__ \ "repositoryType"            ).format[String]
+      ~ (__ \ "slackNotificationChannels").formatWithDefault[Seq[String]](Seq.empty)
+      )(CreateServiceRepoRequest.apply _, unlift(CreateServiceRepoRequest.unapply _))
+  }
+
+  case class CreatePrototypeRepoRequest(
+    repositoryName           : String,
+    teamName                 : String,
+    password                 : String,
+    slackNotificationChannels: String,
+  )
+
+  object CreatePrototypeRepoRequest {
+
+    implicit val format: Format[CreatePrototypeRepoRequest] =
+      ( (__ \ "repositoryName"           ).format[String]
+      ~ (__ \ "teamName"                 ).format[String]
+      ~ (__ \ "password"                 ).format[String]
+      ~ (__ \ "slackNotificationChannels").format[String]
+      )(CreatePrototypeRepoRequest.apply _, unlift(CreatePrototypeRepoRequest.unapply _))
+  }
+
+  case class CreateTestRepoRequest(
+    repositoryName       : String,
+    teamName             : String,
+    makePrivate          : Boolean,
+    repositoryType       : String,
+  )
+
+  object CreateTestRepoRequest {
+
+    implicit val format: Format[CreateTestRepoRequest] =
+      ( (__ \ "repositoryName"       ).format[String]
+      ~ (__ \ "teamName"             ).format[String]
+      ~ (__ \ "makePrivate"          ).format[Boolean]
+      ~ (__ \ "repositoryType"       ).format[String]
+      )(CreateTestRepoRequest.apply _, unlift(CreateTestRepoRequest.unapply _))
+  }
+
+  case class CreateAppConfigsRequest(
+    microserviceName: String,
+    microserviceType: String,
+    hasMongo        : Boolean,
+    environments    : Seq[String],
+    zone            : String,
+  )
+
+  object CreateAppConfigsRequest {
+      implicit val format: Format[CreateAppConfigsRequest] = 
+        ( (__ \ "microserviceName").format[String]
+        ~ (__ \ "microserviceType").format[String]
+        ~ (__ \ "hasMongo"        ).format[Boolean]
+        ~ (__ \ "environments"    ).format[Seq[String]]
+        ~ (__ \ "zone"            ).format[String]
+      )(CreateAppConfigsRequest.apply _, unlift(CreateAppConfigsRequest.unapply _))
   }
 }
