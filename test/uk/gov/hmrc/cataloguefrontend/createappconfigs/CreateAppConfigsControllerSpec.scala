@@ -21,6 +21,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
+import play.api.libs.json._
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
@@ -156,7 +157,7 @@ class CreateAppConfigsControllerSpec
     "redirect to the service commissioning page when the form is submitted successfully" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -168,7 +169,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
-        .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
+        .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
 
       val result = controller
@@ -187,7 +188,7 @@ class CreateAppConfigsControllerSpec
       val appDependenciesIncludesMongo = Some("mongo")
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -202,7 +203,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(appDependenciesIncludesMongo))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
-        .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
+        .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
       val result = controller
         .createAppConfigs(serviceName)(
@@ -220,7 +221,7 @@ class CreateAppConfigsControllerSpec
       val noMongoDependencies = ""
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -235,7 +236,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(noMongoDependencies)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = false, isApi = false))
-        .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
+        .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
 
       val result = controller
@@ -252,7 +253,7 @@ class CreateAppConfigsControllerSpec
     "return 400 when the form is submitted with errors" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -260,8 +261,8 @@ class CreateAppConfigsControllerSpec
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean], any[Boolean]))
-        .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[String], any[ServiceType], any[Boolean], any[Boolean]))
+        .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
       val result = controller
         .createAppConfigs(serviceName)(
@@ -277,7 +278,7 @@ class CreateAppConfigsControllerSpec
     "return 400 when form is submitted with no configs selected" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -285,8 +286,8 @@ class CreateAppConfigsControllerSpec
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsRequest], any[String], any[ServiceType], any[Boolean], any[Boolean]))
-        .thenReturn(Future.successful(Right(AsyncRequestId("requestId"))))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[String], any[ServiceType], any[Boolean], any[Boolean]))
+        .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
       val result = controller
         .createAppConfigs(serviceName)(
@@ -336,7 +337,7 @@ class CreateAppConfigsControllerSpec
     "return 500 when POST to build and deploy api fails" in new Setup {
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
-        .thenReturn(Future.successful(true))
+        .thenReturn(Future.successful(()))
 
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
@@ -418,13 +419,18 @@ class CreateAppConfigsControllerSpec
         dependencyDotCompile = Some(""" "test" "hmrc-mongo" """)
       )
 
-    val form: CreateAppConfigsRequest =
-      CreateAppConfigsRequest(
+    val form: CreateAppConfigsForm =
+      CreateAppConfigsForm(
         appConfigBase        = false,
         appConfigDevelopment = false,
         appConfigQA          = false,
         appConfigStaging     = false,
         appConfigProduction  = false
     )
+
+    val asyncRequestIdResponse = AsyncRequestId(JsObject(Seq(
+      "start_timestamp_milliseconds" -> JsNumber(1234L),
+      "bnd_api_request_id"           -> JsString("1234")
+    )))
   }
 }
