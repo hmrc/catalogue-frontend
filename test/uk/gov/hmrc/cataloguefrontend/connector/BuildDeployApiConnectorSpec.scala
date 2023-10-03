@@ -18,41 +18,43 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.Configuration
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus, PrototypeDetails}
-import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsRequest
+import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepoForm
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with WireMockSupport {
 
-  private val awsCredentialsProvider =
-    StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test"))
+  private val underlyingConfig = Configuration(
+        "build-deploy-api.url"                       -> wireMockUrl,
+        "build-deploy-api.host"                      -> wireMockHost,
+        "build-deploy-api.aws-region"                -> "eu-west-2",
+        "microservice.services.platops-bnd-api.port" -> wireMockPort,
+        "microservice.services.platops-bnd-api.host" -> wireMockHost,
+      )
 
   private val config =
     new BuildDeployApiConfig(
-      Configuration(
-        "build-deploy-api.url" -> wireMockUrl,
-        "build-deploy-api.host" -> wireMockHost,
-        "build-deploy-api.aws-region" -> "eu-west-2",
-      )
+      underlyingConfig,
+      new ServicesConfig(underlyingConfig)
     )
 
-  private val connector = new BuildDeployApiConnector(httpClientV2, awsCredentialsProvider, config)
+  private val connector = new BuildDeployApiConnector(httpClientV2, config)
 
   "changePrototypePassword" should {
     "return success=true when Build & Deploy respond with 200" in {
 
-      val requestJson = """{ "repository_name": "test", "password": "newpassword" }"""
+      val requestJson = """{ "repositoryName": "test", "password": "newpassword" }"""
 
       stubFor(
-        post("/v1/SetHerokuPrototypePassword")
+        post("/change-prototype-password")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(200).withBody(
             """{ "success": true, "message": "password changed" }"""
@@ -65,10 +67,10 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
     "return success=false when Build & Deploy respond with 400" in {
-      val requestJson = """{ "repository_name": "test", "password": "p4$$w02d" }"""
+      val requestJson = """{ "repositoryName": "test", "password": "p4$$w02d" }"""
 
       stubFor(
-        post("/v1/SetHerokuPrototypePassword")
+        post("/change-prototype-password")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(400).withBody(
             """{ "code": "INVALID_PASSWORD", "message": "Password was empty OR contained invalid characters. Valid characters: Alphanumeric and underscores." }"""
@@ -81,10 +83,10 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
     "return UpstreamErrorResponse when Build & Deploy respond with 400 without json/message" in {
-      val requestJson = """{ "repository_name": "test", "password": "p4$$w02d" }"""
+      val requestJson = """{ "repositoryName": "test", "password": "p4$$w02d" }"""
 
       stubFor(
-        post("/v1/SetHerokuPrototypePassword")
+        post("/change-prototype-password")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(400).withBody(""))
       )
@@ -95,10 +97,10 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
     "return UpstreamErrorResponse when Build & Deploy respond with 500" in {
-      val requestJson = """{ "repository_name": "test", "password": "p4$$w02d" }"""
+      val requestJson = """{ "repositoryName": "test", "password": "p4$$w02d" }"""
 
       stubFor(
-        post("/v1/SetHerokuPrototypePassword")
+        post("change-prototype-password")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(500))
       )
@@ -114,7 +116,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       val requestJson = """{ "prototype": "test-prototype" }"""
 
       stubFor(
-        post("/v1/GetPrototypeStatus")
+        post("/get-prototype-details")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(200).withBody(
             """
@@ -124,7 +126,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
               |  "details": {
               |    "prototype": "test-prototype",
               |    "status": "running",
-              |    "prototype_url": "https://test-prototype.herokuapp.com"
+              |    "prototypeUrl": "https://test-prototype.herokuapp.com"
               |  }
               |}""".stripMargin
           ))
@@ -139,7 +141,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       val requestJson = """{ "prototype": "test-prototype" }"""
 
       stubFor(
-        post("/v1/GetPrototypeStatus")
+        post("/get-prototype-details")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(400).withBody(
             """
@@ -166,7 +168,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       val requestJson = """{ "prototype": "test-prototype", "status": "running" }"""
 
       stubFor(
-        post("/v1/SetPrototypeStatus")
+        post("/set-prototype-status")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(200).withBody(
             """
@@ -190,7 +192,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       val requestJson = """{ "prototype": "test-prototype", "status": "running" }"""
 
       stubFor(
-        post("/v1/SetPrototypeStatus")
+        post("/set-prototype-status")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(400).withBody(
             """
@@ -220,29 +222,23 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
         val expectedBody = s"""
                               |{
-                              |   "repository_name": "${payload.repositoryName}",
-                              |   "make_private": ${payload.makePrivate},
-                              |   "allow_auto_merge": true,
-                              |   "delete_branch_on_merge": true,
-                              |   "team_name": "${payload.teamName}",
-                              |   "repository_type": "${payload.repoType}",
-                              |   "bootstrap_tag": "",
-                              |   "init_webhook_version": "2.2.0",
-                              |   "default_branch_name": "main"
+                              |   "repositoryName": "${payload.repositoryName}",
+                              |   "makePrivate": ${payload.makePrivate},
+                              |   "teamName": "${payload.teamName}",
+                              |   "repositoryType": "${payload.repoType}",
+                              |   "slackNotificationChannels" : ""
                               |}""".stripMargin
 
         stubFor(
-          post("/v1/CreateRepository")
+          post("/create-service-repository")
             .withRequestBody(equalToJson(expectedBody))
             .willReturn(aResponse().withStatus(202).withBody(
               """
                 |{
                 |  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
                 |  "details": {
-                |    "get_request_state_payload": {
-                |       "bnd_api_request_id": "1234",
-                |       "start_timestamp_milliseconds": "1687852118708"
-                |    }
+                |     "id": "1234",
+                |     "startTimestampMilliseconds": "1687852118708"
                 |  }
                 |}""".stripMargin
             ))
@@ -260,19 +256,14 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
       val expectedBody = s"""
                             |{
-                            |   "repository_name": "${payload.repositoryName}",
-                            |   "make_private": ${payload.makePrivate},
-                            |   "allow_auto_merge": true,
-                            |   "delete_branch_on_merge": true,
-                            |   "team_name": "${payload.teamName}",
-                            |   "repository_type": "${payload.repoType}",
-                            |   "bootstrap_tag": "",
-                            |   "init_webhook_version": "2.2.0",
-                            |   "default_branch_name": "main"
+                            |   "repositoryName": "${payload.repositoryName}",
+                            |   "makePrivate": ${payload.makePrivate},
+                            |   "teamName": "${payload.teamName}",
+                            |   "repositoryType": "${payload.repoType}"
                             |}""".stripMargin
 
       stubFor(
-        post("/v1/CreateRepository")
+        post("/create-service-repository")
           .withRequestBody(equalToJson(expectedBody))
           .willReturn(aResponse().withStatus(500)
             .withBody(
@@ -294,19 +285,15 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
         val expectedBody = s"""
                               |{
-                              |   "repository_name": "${payload.repositoryName}",
-                              |   "make_private": ${payload.makePrivate},
-                              |   "allow_auto_merge": true,
-                              |   "delete_branch_on_merge": true,
-                              |   "team_name": "${payload.teamName}",
-                              |   "repository_type": "${payload.repoType}",
-                              |   "bootstrap_tag": "",
-                              |   "init_webhook_version": "2.2.0",
-                              |   "default_branch_name": "main"
+                              |   "repositoryName": "${payload.repositoryName}",
+                              |   "makePrivate": ${payload.makePrivate},
+                              |   "teamName": "${payload.teamName}",
+                              |   "repositoryType": "${payload.repoType}",
+                              |   "slackNotificationChannels" : ""
                               |}""".stripMargin
 
         stubFor(
-          post("/v1/CreateRepository")
+          post("/create-service-repository")
             .withRequestBody(equalToJson(expectedBody))
             .willReturn(aResponse().withStatus(400)
             .withBody(
@@ -322,34 +309,28 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
   "CreateAppConfigs" should {
      "return the Async request id when the request is accepted by the B&D async api" in {
-       val payload = CreateAppConfigsRequest(appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+       val payload = CreateAppConfigsForm(appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
        )
 
        val expectedBody = s"""
                              |{
-                             |   "microservice_name": "test-service",
-                             |   "microservice_type": "Backend microservice",
-                             |   "microservice_requires_mongo": true,
-                             |   "app_config_base": ${payload.appConfigBase},
-                             |   "app_config_development": ${payload.appConfigDevelopment},
-                             |   "app_config_qa": ${payload.appConfigQA},
-                             |   "app_config_staging": ${payload.appConfigStaging},
-                             |   "app_config_production": ${payload.appConfigProduction},
+                             |   "microserviceName": "test-service",
+                             |   "microserviceType": "Backend microservice",
+                             |   "hasMongo": true,
+                             |   "environments": [],
                              |   "zone": "protected"
                              |}""".stripMargin
 
        stubFor(
-         post("/v1/CreateAppConfigs")
+         post("/create-app-configs")
            .withRequestBody(equalToJson(expectedBody))
            .willReturn(aResponse().withStatus(202).withBody(
              """
                |{
                |  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
                |  "details": {
-               |    "get_request_state_payload": {
-               |       "bnd_api_request_id": "1234",
-               |       "start_timestamp_milliseconds": "1687852118708"
-               |    }
+               |     "id": "1234",
+               |     "startTimestampMilliseconds": "1687852118708"
                |  }
                |}""".stripMargin
            ))
@@ -364,25 +345,21 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
-      val payload = CreateAppConfigsRequest(
+      val payload = CreateAppConfigsForm(
        appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
       )
 
       val expectedBody = s"""
                             |{
-                            |   "microservice_name": "test-service",
-                            |   "microservice_type": "Frontend microservice",
-                            |   "microservice_requires_mongo": true,
-                            |   "app_config_base": ${payload.appConfigBase},
-                            |   "app_config_development": ${payload.appConfigDevelopment},
-                            |   "app_config_qa": ${payload.appConfigQA},
-                            |   "app_config_staging": ${payload.appConfigStaging},
-                            |   "app_config_production": ${payload.appConfigProduction},
+                            |   "microserviceName": "test-service",
+                            |   "microserviceType": "Frontend microservice",
+                            |   "hasMongo": true,
+                            |   "environments": [],
                             |   "zone": "public"
                             |}""".stripMargin
 
       stubFor(
-        post("/v1/CreateAppConfigs")
+        post("/create-app-configs")
           .withRequestBody(equalToJson(expectedBody))
           .willReturn(aResponse().withStatus(500).withBody(
             """{ "code": "INTERNAL_SERVER_ERROR", "message": "Some server error" }"""
@@ -400,25 +377,21 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     //NOTE: Currently the B&D async API will return a BuildDeployResponse when the client inputs are invalid, as it does not do any JSON validation/input validation up front prior to calling the lambda.
     //This may however change in the future, so we are testing the desired future behaviour below.
     "return an error message when the B&D async api returns a 4XX code" in {
-       val payload = CreateAppConfigsRequest(
+       val payload = CreateAppConfigsForm(
          appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
        )
 
        val expectedBody = s"""
                              |{
-                             |   "microservice_name": "test-service",
-                             |   "microservice_type": "Backend microservice",
-                             |   "microservice_requires_mongo": true,
-                             |   "app_config_base": ${payload.appConfigBase},
-                             |   "app_config_development": ${payload.appConfigDevelopment},
-                             |   "app_config_qa": ${payload.appConfigQA},
-                             |   "app_config_staging": ${payload.appConfigStaging},
-                             |   "app_config_production": ${payload.appConfigProduction},
+                             |   "microserviceName": "test-service",
+                             |   "microserviceType": "Backend microservice",
+                             |   "hasMongo": true,
+                             |   "environments": [],
                              |   "zone": "protected"
                              |}""".stripMargin
 
        stubFor(
-         post("/v1/CreateAppConfigs")
+         post("/create-app-configs")
            .withRequestBody(equalToJson(expectedBody))
            .willReturn(aResponse().withStatus(400)
              .withBody(
