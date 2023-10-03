@@ -24,9 +24,9 @@
 @this(viewMessages: ViewMessages)
 
 @(rules: BobbyRulesView,
-  counts: Map[(BobbyRule, SlugInfoFlag), Int]
+    counts: Map[(BobbyRule, SlugInfoFlag), Int]
 )(implicit
-  request: RequestHeader
+    request: RequestHeader
 )
 
 @standard_layout(s"Bobby rules", active = "health") {
@@ -48,48 +48,71 @@
         <table class="@{artifactType.toLowerCase}-rules table table-striped sticky-header">
             <thead>
 
-                <tr>
-                    <th colspan="6"></th>
-                    <th colspan="4" class="text-center border-bottom">Services Affected</th>
-                </tr>
+            <tr>
+                <th colspan="6"></th>
+                <th colspan="4" class="text-center border-bottom">Services Affected</th>
+                <th></th>
+            </tr>
 
-                <tr>
-                    <th class="col-3" colspan="1">@artifactType</th>
-                    <th class="col-2" colspan="3" style="text-align: center">Banned Versions</th>
-                    <th class="col-4">Reason</th>
-                    <th class="">Active from</th>
-                    <th class="">Latest</th>
-                    <th class="">QA</th>
-                    <th class="">Prod</th>
-                    <th class=""></th>
-                </tr>
-            </thead>
-            <tbody>
-                @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
-            </tbody>
-        </table>
+            <tr>
+                <th class="col-3" colspan="1">@artifactType</th>
+                <th class="col-2" colspan="3" style="text-align: center">Banned Versions</th>
+                <th class="col-4">Reason</th>
+                <th class="">Exemptions</th>
+                <th class="col-1">Active from</th>
+                <th class="">Latest</th>
+                <th class="">QA</th>
+                <th class="">Prod</th>
+                <th class=""></th>
+            </tr>
+        </thead>
+        <tbody>
+        @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
+        </tbody>
+    </table>
 
     }
 }
 
 @bobbyViolationLink(rule: BobbyRule, env: SlugInfoFlag) = {
-  @defining(counts.getOrElse((rule, env), 0)){ count =>
-    @if(count == 0) {
-       <span>0</span>
-    } else {
-       <a href=@DependencyExplorerController.search(flag = env, scopes = Seq(DependencyScope.Compile), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
-       @{count}
-       </a>
+    @defining(counts.getOrElse((rule, env), 0)){ count =>
+        @if(count == 0) {
+            <span>0</span>
+        } else {
+            <a href=@DependencyExplorerController.search(flag = env, scopes = Seq(DependencyScope.Compile), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
+            @{count}
+            </a>
+        }
     }
-  }
 }
 
+@exemptionsTableData(rule: BobbyRule) = {
+    @if(rule.exemptProjects.isEmpty){
+        <td></td>
+    } else {
+        @defining(s"rule-exemptions-${rule.id}") { target =>
+            <td>
+                <a data-bs-toggle="collapse" data-bs-target="#@target" href="#@target">
+                    @rule.exemptProjects.size Exemptions
+                </a>
+                <div id="@target" class="collapse">
+                    <ul>
+                        @rule.exemptProjects.map(p => Html(s"<li>$p</li>"))
+                    </ul>
+                </div>
+            </td>
+        }
+    }
+}
+
+
+
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
-      <tr id="rule-@rule.id" class="bobby-rule grid-row">
-          <td class="grid-item">
+    <tr id="rule-@rule.id" class="bobby-rule grid-row">
+        <td class="grid-item">
             <a  href="#@rule.id"  class="glyphicon glyphicon-link float-start" ></a>
             @rule.group:@rule.artefact
-          </td>
+        </td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
@@ -116,43 +139,46 @@
                 @rule.reason
             }
         }</td>
+        @exemptionsTableData(rule)
         <td>@rule.from</td>
         @if(inclViewSlugsLink) {
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest                                )</td>
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA        ))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest)</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA))</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.Production))</td>
-            <td><a id="see-trend-@rule.group-@rule.artefact-@rule.range" href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">See trend</a></td>
+            <td><a id="see-trend-@rule.group-@rule.artefact-@rule.range" href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">
+                See trend</a></td>
         } else {
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
+            <td></td>
+            @exemptionsTableData(rule)
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
         }
-
     </tr>
 }
 
 <script @CSPNonce.attr type="text/javascript">
-    if (document.readyState != 'loading'){
-        ready();
-    } else {
-        document.addEventListener('DOMContentLoaded', ready);
-    }
+   if (document.readyState != 'loading'){
+       ready();
+   } else {
+       document.addEventListener('DOMContentLoaded', ready);
+   }
 
-    function ready() {
-        (window.onhashchange = function () {
-            const el = document.getElementById(location.hash.replace("#", "rule-"));
-            const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
-            highlighted.forEach(e => e.classList.remove("highlight-amber"));
+   function ready() {
+       (window.onhashchange = function () {
+           const el = document.getElementById(location.hash.replace("#", "rule-"));
+           const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
+           highlighted.forEach(e => e.classList.remove("highlight-amber"));
 
-            if (el) {
-                el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
-                el.classList.add("highlight-amber");
-            }
-        })();
+           if (el) {
+               el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
+               el.classList.add("highlight-amber");
+           }
+       })();
 
-        var links = Array.from(document.getElementsByClassName("glyphicon-link"));
-        links.forEach(l => l.addEventListener("click", function (){navigator.clipboard.writeText(l.href)}))
+       var links = Array.from(document.getElementsByClassName("glyphicon-link"));
+       links.forEach(l => l.addEventListener("click", function (){navigator.clipboard.writeText(l.href)}))
 
-    };
+   };
 </script>
