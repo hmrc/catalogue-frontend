@@ -26,5 +26,5 @@ object BobbyRuleFactory {
     reason      : String    = "No snapshot dependencies permitted",
     from        : LocalDate = LocalDate.of(2015, 3, 16)
   ) =
-    BobbyRule(organisation, name, BobbyVersionRange(range), reason, from)
+    BobbyRule(organisation, name, BobbyVersionRange(range), reason, from, Seq.empty)
 }
