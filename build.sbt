@@ -58,7 +58,4 @@ val test = Seq(
   ws
 )
 
-// tests using software.amazon.awssdk.core (e.g. PrototypePageSpec)
-Test / javaOptions := Seq("-Daws.accessKeyId=1111", "-Daws.secretAccessKey=2222")
-
 addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
