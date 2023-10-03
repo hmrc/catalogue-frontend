@@ -134,7 +134,7 @@
         <div class="accordion mb-3" id="accordion">
           <div class="accordion-item">
             <div class="accordion-header" id="headingConfigUpdates">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeConfigUpdates" aria-expanded="false" aria-controls="collaspeConfigUpdates" @if(updates.isEmpty) {disabled} >
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(updates.isEmpty) {disabled} >
                 Config Updates
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(updates.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
                   @updates.size
@@ -142,7 +142,7 @@
                 </span>
               </button>
             </div>
-            <div id="collaspeConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+            <div id="collapseConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
               <div class="accordion-body">
                 <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
                   <thead>
@@ -164,8 +164,8 @@
             </div>
           </div>
           <div class="accordion-item">
-            <div class="accordion-header" id="headingConfigUpdates">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeConfigWarnings" aria-expanded="false" aria-controls="collaspeConfigWarnings" @if(warnings.isEmpty) {disabled}>
+            <div class="accordion-header" id="headingConfigWarnings">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigWarnings" aria-expanded="false" aria-controls="collapseConfigWarnings" @if(warnings.isEmpty) {disabled}>
                 Config Warnings
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(warnings.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
                   @warnings.size
@@ -173,7 +173,7 @@
                 </span>
               </button>
             </div>
-            <div id="collaspeConfigWarnings" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+            <div id="collapseConfigWarnings" class="accordion-collapse collapse" aria-labelledby="headingConfigWarnings" data-bs-parent="#accordion">
               <div class="accordion-body">
                 <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
                   <thead>
@@ -196,7 +196,7 @@
           </div>
           <div class="accordion-item">
             <div class="accordion-header" id="headingVulnerabilities">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeVulnerabilities" aria-expanded="false" aria-controls="collaspeVulnerabilities" @if(vulnerabilities.isEmpty) {disabled}>
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVulnerabilities" aria-expanded="false" aria-controls="collapseVulnerabilities" @if(vulnerabilities.isEmpty) {disabled}>
                 Vulnerabilities
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(vulnerabilities.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
                   @vulnerabilities.size
@@ -204,7 +204,7 @@
                 </span>
               </button>
             </div>
-            <div id="collaspeVulnerabilities" class="accordion-collapse collapse" aria-labelledby="headingVulnerabilities" data-bs-parent="#accordion">
+            <div id="collapseVulnerabilities" class="accordion-collapse collapse" aria-labelledby="headingVulnerabilities" data-bs-parent="#accordion">
               <div class="accordion-body">
                 <table class="table table-striped sticky-header text-break">
                   <thead>
