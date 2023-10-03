@@ -164,7 +164,7 @@
             </div>
           </div>
           <div class="accordion-item">
-            <div class="accordion-header" id="headingConfigUpdates">
+            <div class="accordion-header" id="headingConfigWarnings">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collaspeConfigWarnings" aria-expanded="false" aria-controls="collaspeConfigWarnings" @if(warnings.isEmpty) {disabled}>
                 Config Warnings
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(warnings.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
@@ -173,7 +173,7 @@
                 </span>
               </button>
             </div>
-            <div id="collaspeConfigWarnings" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+            <div id="collaspeConfigWarnings" class="accordion-collapse collapse" aria-labelledby="headingConfigWarnings" data-bs-parent="#accordion">
               <div class="accordion-body">
                 <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
                   <thead>
