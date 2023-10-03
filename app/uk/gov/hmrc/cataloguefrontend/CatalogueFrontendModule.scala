@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.time.Clock
 import com.google.inject.AbstractModule
-import software.amazon.awssdk.auth.credentials.{AwsCredentialsProvider, DefaultCredentialsProvider}
 import uk.gov.hmrc.cataloguefrontend.search.IndexScheduler
 
 class CatalogueFrontendModule extends AbstractModule {
@@ -26,6 +25,5 @@ class CatalogueFrontendModule extends AbstractModule {
   override def configure(): Unit = {
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
     bind(classOf[IndexScheduler]).asEagerSingleton()
-    bind(classOf[AwsCredentialsProvider]).toInstance(DefaultCredentialsProvider.create())
   }
 }
