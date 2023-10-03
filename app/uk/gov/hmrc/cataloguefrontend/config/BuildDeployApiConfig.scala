@@ -15,11 +15,16 @@
  */
 
 package uk.gov.hmrc.cataloguefrontend.config
+
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class BuildDeployApiConfig @Inject()(configuration: Configuration) {
+class BuildDeployApiConfig @Inject()(
+  configuration: Configuration,
+  servicesConfig: ServicesConfig
+) {
   val baseUrl: String =
     configuration.get[String]("build-deploy-api.url")
 
@@ -28,4 +33,7 @@ class BuildDeployApiConfig @Inject()(configuration: Configuration) {
 
   val awsRegion: String =
     configuration.get[String]("build-deploy-api.aws-region")
+
+  val platopsBndApiBaseUrl: String =
+    servicesConfig.baseUrl("platops-bnd-api")
 }

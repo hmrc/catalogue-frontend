@@ -126,13 +126,13 @@ class PrototypePageSpec
       serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(TeamsAndRepositories.jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
 
-      val expectedMsg: String = "password change success"
+      val expectedMsg: String = "A password reset has been requested. This may take some time to take effect."
 
       serviceEndpoint(
         POST,
-        "/v1/SetHerokuPrototypePassword",
+        "/changePrototypePassword",
         willRespondWith = (200, Some(s"""{ "success": true, "message": "$expectedMsg" }""")),
-        givenJsonBody = Some("""{ "repository_name": "2fa-prototype", "password": "password" }""")
+        givenJsonBody = Some("""{ "repositoryName": "2fa-prototype", "password": "password" }""")
       )
 
       val response = wsClient
@@ -146,7 +146,7 @@ class PrototypePageSpec
       response.body should include("password-change-success-msg")
       response.body should include(expectedMsg)
 
-      wireMockServer.verify(1, postRequestedFor(urlPathEqualTo("/v1/SetHerokuPrototypePassword")))
+      wireMockServer.verify(1, postRequestedFor(urlPathEqualTo("/changePrototypePassword")))
     }
 
     "display error message when password change failed downstream" in {
@@ -161,9 +161,9 @@ class PrototypePageSpec
 
       serviceEndpoint(
         POST,
-        "/v1/SetHerokuPrototypePassword",
+        "/changePrototypePassword",
         willRespondWith = (400, Some(s"""{ "code": "INVALID_PASSWORD", "message": "$expectedError" }""")),
-        givenJsonBody = Some("""{ "repository_name": "2fa-prototype", "password": "password" }""")
+        givenJsonBody = Some("""{ "repositoryName": "2fa-prototype", "password": "password" }""")
       )
 
       val response = wsClient
