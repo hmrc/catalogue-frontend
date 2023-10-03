@@ -27,6 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepoForm
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -35,13 +36,18 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
   private val awsCredentialsProvider =
     StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test"))
 
+  private val underlyingConfig = Configuration(
+        "build-deploy-api.url"                       -> wireMockUrl,
+        "build-deploy-api.host"                      -> wireMockHost,
+        "build-deploy-api.aws-region"                -> "eu-west-2",
+        "microservice.services.platops-bnd-api.port" -> wireMockPort,
+        "microservice.services.platops-bnd-api.host" -> wireMockHost,
+      )
+
   private val config =
     new BuildDeployApiConfig(
-      Configuration(
-        "build-deploy-api.url" -> wireMockUrl,
-        "build-deploy-api.host" -> wireMockHost,
-        "build-deploy-api.aws-region" -> "eu-west-2",
-      )
+      underlyingConfig,
+      new ServicesConfig(underlyingConfig)
     )
 
   private val connector = new BuildDeployApiConnector(httpClientV2, awsCredentialsProvider, config)
@@ -49,10 +55,10 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
   "changePrototypePassword" should {
     "return success=true when Build & Deploy respond with 200" in {
 
-      val requestJson = """{ "repository_name": "test", "password": "newpassword" }"""
+      val requestJson = """{ "repositoryName": "test", "password": "newpassword" }"""
 
       stubFor(
-        post("/v1/SetHerokuPrototypePassword")
+        post("/changePrototypePassword")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(200).withBody(
             """{ "success": true, "message": "password changed" }"""
@@ -65,10 +71,10 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
     "return success=false when Build & Deploy respond with 400" in {
-      val requestJson = """{ "repository_name": "test", "password": "p4$$w02d" }"""
+      val requestJson = """{ "repositoryName": "test", "password": "p4$$w02d" }"""
 
       stubFor(
-        post("/v1/SetHerokuPrototypePassword")
+        post("/changePrototypePassword")
           .withRequestBody(equalToJson(requestJson))
           .willReturn(aResponse().withStatus(400).withBody(
             """{ "code": "INVALID_PASSWORD", "message": "Password was empty OR contained invalid characters. Valid characters: Alphanumeric and underscores." }"""
@@ -81,7 +87,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
     "return UpstreamErrorResponse when Build & Deploy respond with 400 without json/message" in {
-      val requestJson = """{ "repository_name": "test", "password": "p4$$w02d" }"""
+      val requestJson = """{ "repositoryName": "test", "password": "p4$$w02d" }"""
 
       stubFor(
         post("/v1/SetHerokuPrototypePassword")
@@ -95,7 +101,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
     "return UpstreamErrorResponse when Build & Deploy respond with 500" in {
-      val requestJson = """{ "repository_name": "test", "password": "p4$$w02d" }"""
+      val requestJson = """{ "repositoryName": "test", "password": "p4$$w02d" }"""
 
       stubFor(
         post("/v1/SetHerokuPrototypePassword")
