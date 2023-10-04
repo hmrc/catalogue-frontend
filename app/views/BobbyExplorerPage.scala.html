@@ -90,7 +90,7 @@
     @if(rule.exemptProjects.isEmpty){
         <td></td>
     } else {
-        @defining(s"rule-exemptions-${UrlUtils.encodeQueryParam(rule.id)}") { target =>
+        @defining(UrlUtils.encodeQueryParam(s"rule-exemptions-${rule.id}")) { target =>
             <td>
                 <a data-bs-toggle="collapse" data-bs-target="#@target" href="#@target">
                     @rule.exemptProjects.size Exemptions
@@ -109,6 +109,7 @@
 
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
         @defining(UrlUtils.encodeQueryParam(rule.id)) { target =>
+            @* element id and anchor must be different for page script to work *@
             <tr id="rule-@target" class="bobby-rule grid-row">
                 <td class="grid-item">
                     <a  href="#@target"  class="glyphicon glyphicon-link float-start" ></a>
