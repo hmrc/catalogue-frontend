@@ -164,7 +164,7 @@
             <td class="curation-status d-none"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
             <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
             <td class="services d-none">@summary.occurrences.groupBy(_.service).size</td>
-            <td colspan="7">
+            <td>
                 @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
             </td>
         </tr>

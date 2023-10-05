@@ -370,7 +370,7 @@
           <td class="assessment d-none">@summary.distinctVulnerability.assessment.getOrElse("")</td>
           <td class="curation-status d-none"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
           <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
-          <td colspan="6">
+          <td>
               @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
           </td>
       </tr>
