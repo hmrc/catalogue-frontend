@@ -109,6 +109,13 @@
                         <th class="col-2"><button class="sort no-border fw-bold" data-sort="curation-status">Curation Status</button></th>
                         <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="score">Score</button></th>
                         <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="services">Services</button></th>
+                        @* maintain the column count for accessibility *@
+                        <th class="d-none"></th>
+                        <th class="d-none"></th>
+                        <th class="d-none"></th>
+                        <th class="d-none"></th>
+                        <th class="d-none"></th>
+                        <th class="d-none"></th>
                     </tr>
                 </thead>
                 <tbody class="list">
@@ -155,6 +162,13 @@
             <td class="curation-status"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
             <td class="score text-end">@summary.distinctVulnerability.score.getOrElse("")</td>
             <td class="services text-end">@summary.occurrences.groupBy(_.service).size</td>
+            @* maintain the column count for accessibility *@
+            <td class="d-none"></td>
+            <td class="d-none"></td>
+            <td class="d-none"></td>
+            <td class="d-none"></td>
+            <td class="d-none"></td>
+            <td class="d-none"></td>
         </tr>
         <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
             @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
