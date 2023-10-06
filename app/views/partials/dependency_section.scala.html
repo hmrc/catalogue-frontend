@@ -59,8 +59,8 @@
         </div>
         <div id="@{dependency.name}-@{rootId}-bobbyrule" class="col-2">
         @dependency.versionState match {
-            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
-            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{dependency.group}:@{dependency.name}:@{UrlUtils.encodeQueryParam(violation.range.range)}">See rule</a> }
+            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{appRoutes.BobbyExplorerController.list()}#@{UrlUtils.encodeQueryParam(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}")}">See rule</a> }
+            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{appRoutes.BobbyExplorerController.list()}#@{UrlUtils.encodeQueryParam(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}")}">See rule</a> }
             case _                                               => { }
         }
         </div>
