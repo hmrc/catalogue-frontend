@@ -111,7 +111,7 @@
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
             <tr id="rule-@rule.id" class="bobby-rule grid-row">
                 <td class="grid-item">
-                    <a  href="@appRoutes.BobbyExplorerController.list(anchor = Some(rule.id))"  class="glyphicon glyphicon-link float-start" ></a>
+                    <a  href="@appRoutes.BobbyExplorerController.list(selector = Some(rule.id))"  class="glyphicon glyphicon-link float-start" ></a>
                     @rule.group:@rule.artefact
                 </td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
@@ -170,10 +170,10 @@
        (window.onhashchange = function () {
 
            const urlParams = new URLSearchParams(window.location.search);
-           const anchor = urlParams.get("anchor")
+           const selector = urlParams.get("selector")
 
-           if(anchor) {
-               const el = document.getElementById("rule-" + anchor.toString());
+           if(selector) {
+               const el = document.getElementById("rule-" + selector.toString());
                const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
                highlighted.forEach(e => e.classList.remove("highlight-amber"));
 

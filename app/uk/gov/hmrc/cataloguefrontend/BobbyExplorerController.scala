@@ -40,7 +40,7 @@ class BobbyExplorerController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def list(anchor: Option[String]): Action[AnyContent] =
+  def list(selector: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         rules  <- bobbyService.getRules()

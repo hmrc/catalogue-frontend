@@ -52,7 +52,7 @@ class ServiceConfigsController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def configExplorer(serviceName: String, showWarnings: Boolean, anchor: Option[String]): Action[AnyContent] =
+  def configExplorer(serviceName: String, showWarnings: Boolean, selector: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
