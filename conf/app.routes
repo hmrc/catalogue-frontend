@@ -78,7 +78,7 @@ GET        /config/search/results                       uk.gov.hmrc.cataloguefro
 GET        /config/warnings/search                      uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningLanding()
 GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningResults()
 
-GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list()
+GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list(anchor: Option[String] ?= None)
 
 GET        /pr-commenter/recommendations                uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterController.recommendations(name: Option[String] ?= None, teamName: Option[String] ?= None, commentType: Option[String] ?= None)
 
