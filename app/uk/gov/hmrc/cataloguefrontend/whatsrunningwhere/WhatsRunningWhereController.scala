@@ -55,7 +55,7 @@ class WhatsRunningWhereController @Inject() (
   private def distinctEnvironments(releases: Seq[WhatsRunningWhere]): Seq[Environment] =
     releases.flatMap(_.versions.map(_.environment)).distinct.sorted
 
-  def releases(showDiff: Boolean): Action[AnyContent] =
+  def releases(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val form                  = WhatsRunningWhereFilter.form.bindFromRequest()
       val profile               = profileFrom(form)
@@ -63,8 +63,8 @@ class WhatsRunningWhereController @Inject() (
       val selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
 
       selectedViewMode match {
-        case ViewMode.Instances => instancesPage(form, profile, selectedProfileType, selectedViewMode          ).map(page => Ok(page))
-        case ViewMode.Versions  => versionsPage (form, profile, selectedProfileType, selectedViewMode, showDiff).map(page => Ok(page))
+        case ViewMode.Instances => instancesPage(form, profile, selectedProfileType, selectedViewMode).map(page => Ok(page))
+        case ViewMode.Versions  => versionsPage (form, profile, selectedProfileType, selectedViewMode).map(page => Ok(page))
       }
     }
 
@@ -74,7 +74,6 @@ class WhatsRunningWhereController @Inject() (
     profile            : Option[Profile],
     selectedProfileType: ProfileType,
     selectedViewMode   : ViewMode,
-    showDiff           : Boolean
   )(implicit
     request: MessagesRequest[AnyContent
   ]) =
@@ -83,7 +82,7 @@ class WhatsRunningWhereController @Inject() (
       releases     <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
       environments =  distinctEnvironments(releases)
       profileNames =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-    } yield page(environments, releases, selectedProfileType, profileNames, form, showDiff, Seq.empty, config.maxMemoryAmount, selectedViewMode)
+    } yield page(environments, releases, selectedProfileType, profileNames, form, Seq.empty, config.maxMemoryAmount, selectedViewMode)
 
 
   private def instancesPage(
@@ -100,13 +99,7 @@ class WhatsRunningWhereController @Inject() (
       environments       =  distinctEnvironments(releases)
       serviceDeployments <- service.allDeploymentConfigs(releases)
       profileNames       =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-    } yield page(environments, Seq.empty, selectedProfileType, profileNames, form, showDiff = false, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
-}
-
-object WhatsRunningWhereController {
-  def matchesProduction(wrw: WhatsRunningWhere, prodVersion: WhatsRunningWhereVersion, comparedEnv: Environment): Boolean =
-    wrw.versions
-      .exists(wrw => wrw.environment == comparedEnv && wrw.versionNumber == prodVersion.versionNumber)
+    } yield page(environments, Seq.empty, selectedProfileType, profileNames, form, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
 }
 
 case class WhatsRunningWhereFilter(
@@ -120,7 +113,7 @@ object WhatsRunningWhereFilter {
   private def filterEmptyString(x: Option[String]) =
     x.filter(_.trim.nonEmpty)
 
-  lazy val form = Form(
+  lazy val form: Form[WhatsRunningWhereFilter] = Form(
     mapping(
       "profile_name" -> optional(text)
                           .transform[Option[ProfileName]](

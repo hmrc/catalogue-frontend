@@ -22,7 +22,6 @@
 
 @(whatsRunning: Seq[WhatsRunningWhere]
 , environments: Seq[Environment]
-, showDiff    : Boolean
 )
 
 <tbody class="list">
@@ -33,15 +32,11 @@
     </td>
     @environments.map { env =>
       @wrw.versions.find(_.environment == env).map { envVersion =>
-        <td id="row@{i}_version_@{env.asString}"
-            @if(showDiff && env == Environment.Production) {
-                @if(!WhatsRunningWhereController.matchesProduction(wrw, envVersion, Environment.Staging)){
-                    class="env-version-difference"
-                }
-            }
-        >@envVersion.versionNumber.asString</td>
+        <td id="row@{i}_version_@{env.asString}" class="@{env.asString} wrw-version">
+          @envVersion.versionNumber.asString
+        </td>
       }.getOrElse {
-        <td id="row@{i}_version_@{env.asString}"></td>
+        <td id="row@{i}_version_@{env.asString}" class="@{env.asString}"></td>
       }
     }
     <td>

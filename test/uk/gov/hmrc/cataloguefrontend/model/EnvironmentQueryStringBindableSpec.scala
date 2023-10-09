@@ -39,19 +39,19 @@ class EnvironmentQueryStringBindableSpec extends AnyWordSpec with Matchers with 
     "fail to be bound when there is no associated value" in {
       val params = Map("environment" -> Seq.empty)
 
-      Environment.queryStringBindable.bind(key = "env", params).value shouldBe 'Left
+      Environment.queryStringBindable.bind(key = "env", params).value shouldBe Symbol("Left")
     }
 
     "fail to be bound when there is more than one associated value" in {
       val params = Map("environment" -> Seq(Environment.Production.asString, Environment.QA.asString))
 
-      Environment.queryStringBindable.bind(key = "env", params).value shouldBe 'Left
+      Environment.queryStringBindable.bind(key = "env", params).value shouldBe Symbol("Left")
     }
 
     "fail to be bound when the value is unrecognised" in {
       val params = Map("environment" -> Seq("unknown"))
 
-      Environment.queryStringBindable.bind(key = "env", params).value shouldBe 'Left
+      Environment.queryStringBindable.bind(key = "env", params).value shouldBe Symbol("Left")
     }
   }
 }
