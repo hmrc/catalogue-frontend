@@ -14,7 +14,8 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, ViewMessages, routes => appRoutes}
+
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet, DependencyScope}
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
@@ -110,7 +111,7 @@
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
             <tr id="rule-@rule.id" class="bobby-rule grid-row">
                 <td class="grid-item">
-                    <a  href="?anchor=@UrlUtils.encodeQueryParam(rule.id)"  class="glyphicon glyphicon-link float-start" ></a>
+                    <a  href="@appRoutes.BobbyExplorerController.list(anchor = Some(rule.id))"  class="glyphicon glyphicon-link float-start" ></a>
                     @rule.group:@rule.artefact
                 </td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
