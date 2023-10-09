@@ -91,7 +91,7 @@
 
                     <div id="config-row-@key.asString" class="grid-row @if(envSources.forall(_._2.map(_._1).forall(_.isReferenceConf))) {refconf-only}">
                         <div id="config-key-@key.asString" class="grid-item sticky-column truncate-content" style="width:310px;">
-                            <a id="config-url-@key.asString" href="?anchor=@UrlUtils.encodeQueryParam(s"${key.asString}")" class="glyphicon glyphicon-link float-start"></a>
+                            <a id="config-url-@key.asString" href="?showWarnings=@showWarnings&anchor=@UrlUtils.encodeQueryParam(s"${key.asString}")" class="glyphicon glyphicon-link float-start"></a>
                             <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@key.asString'>
                                 @key.asString
                             </span>
@@ -134,6 +134,7 @@
                         var elmt = document.getElementById("config-url-" + "@key.asString");
                         if(elmt) {
                             elmt.addEventListener("click", function () {
+
                                 navigator.clipboard.writeText(elmt.href);
                             }
                           );

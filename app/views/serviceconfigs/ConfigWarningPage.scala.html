@@ -142,7 +142,7 @@
             @configWarnings.map { envData =>
                 <ul class="list-unstyled mb-0">
                     <li>
-                        <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true).url#@configKey.asString"
+                        <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey.asString)).url"
                            data-bs-toggle="popover"
                            data-bs-trigger="hover"
                            data-bs-placement="bottom"
