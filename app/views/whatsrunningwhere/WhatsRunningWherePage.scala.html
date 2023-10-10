@@ -76,13 +76,6 @@
                         }
                     </select>
 
-                    @if(viewMode == ViewMode.Versions) {
-                      <div class="form-check form-switch">
-                          <input id="showDiff" class="form-check-input" type="checkbox" role="switch">
-                          <label class="form-check-label" for="showDiff">Highlight version differences</label>
-                      </div>
-                    }
-
                     <select class="form-select" id="view_mode" name="view_mode" style="width: 200px">
                         <option @if(viewMode == ViewMode.Versions) {selected="selected"} value="versions">Versions</option>
                         <option @if(viewMode == ViewMode.Instances){selected="selected"} value="instances">Instances</option>
@@ -123,7 +116,6 @@
     }
 
     @if(viewMode == ViewMode.Versions) {
-        let showDiffSwitch = document.getElementById('showDiff');
 
         function compareVersions(v1, v2) {
             let [maj1, min1, pat1] = v1.split('.').map(Number);
@@ -168,20 +160,7 @@
             });
         }
 
-        function clearHighlights() {
-            document.querySelectorAll('.wrw-version-outdated').forEach( function (el) {
-                el.classList.remove('wrw-version-outdated');
-                el.removeAttribute('style');
-            });
-        }
-
-        showDiffSwitch.addEventListener('change', function() {
-            if(this.checked) {
-                highlightVersionDifferences();
-            } else {
-                clearHighlights();
-            }
-        });
+        highlightVersionDifferences();
     }
 
 
