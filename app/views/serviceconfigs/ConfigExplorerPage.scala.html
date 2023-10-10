@@ -88,9 +88,10 @@
                     }
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
-                    <div id="@{UrlUtils.encodeQueryParam(s"config-row-${key.asString}")}" class="grid-row @if(envSources.forall(_._2.map(_._1).forall(_.isReferenceConf))) {refconf-only}">
-                        <div id="@{UrlUtils.encodeQueryParam(s"config-key-${key.asString}")}" class="grid-item sticky-column truncate-content" style="width:310px;">
-                            <a id="@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}" href="#@key.asString" class="glyphicon glyphicon-link float-start"></a>
+
+                    <div id="config-row-@key.asString" class="grid-row @if(envSources.forall(_._2.map(_._1).forall(_.isReferenceConf))) {refconf-only}">
+                        <div id="config-key-@key.asString" class="grid-item sticky-column truncate-content" style="width:310px;">
+                            <a id="config-url-@key.asString" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings, selector = Some(key))" class="glyphicon glyphicon-link float-start"></a>
                             <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@key.asString'>
                                 @key.asString
                             </span>
@@ -130,10 +131,14 @@
                         }
                     </div>
                     <script @CSPNonce.attr>
-                        var elmt = document.getElementById("@{UrlUtils.encodeQueryParam(s"config-url-${key.asString}")}");
-                        elmt.addEventListener("click", function() {
-                        navigator.clipboard.writeText(elmt.href);
-                        });
+                        var elmt = document.getElementById("config-url-" + "@key.asString");
+                        if(elmt) {
+                            elmt.addEventListener("click", function () {
+
+                                navigator.clipboard.writeText(elmt.href);
+                            }
+                          );
+                        }
                     </script>
                 }
             </div>
@@ -194,14 +199,20 @@
         <script @CSPNonce.attr type="text/javascript">
             ready(function() {
                 (window.onhashchange = function () {
-                    const el = document.getElementById(location.hash.replace("#", "config-row-"));
-                    const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
-                    highlighted.forEach(e => e.classList.remove("highlight-amber"));
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const selector = urlParams.get("selector")
 
-                    if (el) {
-                        el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
-                        el.classList.add("highlight-amber");
+                    if(selector) {
+                        const el = document.getElementById("config-row-" + selector.toString());
+                        const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
+                        highlighted.forEach(e => e.classList.remove("highlight-amber"));
+
+                        if (el) {
+                            el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
+                            el.classList.add("highlight-amber");
+                        }
                     }
+
                 })();
 
                 Split(["#header-0", "#header-1", "#header-2", "#header-3", "#header-4", "#header-5", "#header-6", "#header-7"], {

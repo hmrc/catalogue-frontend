@@ -284,7 +284,7 @@
 @displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
     @result match {
         case None => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, false, Some(configKey) ).url"
                data-bs-toggle="popover"
                data-bs-trigger="hover"
                data-bs-placement="bottom"
@@ -294,7 +294,7 @@
             </a
         }
         case Some(envData) => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString).url#@configKey.asString"
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, false, Some(configKey)).url"
                data-bs-toggle="popover"
                data-bs-trigger="hover"
                data-bs-placement="bottom"

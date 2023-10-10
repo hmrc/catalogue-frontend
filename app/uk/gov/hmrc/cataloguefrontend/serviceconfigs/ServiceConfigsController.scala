@@ -18,15 +18,15 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import cats.data.EitherT
 import cats.implicits._
-
 import play.api.Configuration
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result, ResponseHeader}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import play.api.http.HttpEntity
 import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -34,7 +34,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.serviceconfigs.{ConfigExplorerPage, ConfigWarningPage, SearchConfigPage}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ServiceConfigsController @Inject()(
@@ -52,7 +52,7 @@ class ServiceConfigsController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def configExplorer(serviceName: String, showWarnings: Boolean): Action[AnyContent] =
+  def configExplorer(serviceName: String, showWarnings: Boolean, selector: Option[KeyName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)

@@ -14,7 +14,8 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, ViewMessages, routes => appRoutes}
+
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet, DependencyScope}
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
@@ -108,14 +109,11 @@
 
 
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
-        @defining(UrlUtils.encodeQueryParam(rule.id)) { target =>
-            @* element id and anchor must be different for page script to work *@
-            <tr id="rule-@target" class="bobby-rule grid-row">
+            <tr id="rule-@rule.id" class="bobby-rule grid-row">
                 <td class="grid-item">
-                    <a  href="#@target"  class="glyphicon glyphicon-link float-start" ></a>
+                    <a  href="@appRoutes.BobbyExplorerController.list(selector = Some(rule.id))"  class="glyphicon glyphicon-link float-start" ></a>
                     @rule.group:@rule.artefact
                 </td>
-            }
         @defining(rule.range.rangeDescr) { rangeDescr =>
             @rangeDescr match {
                 case Some((lbDescr, upDescr)) => {
@@ -170,14 +168,23 @@
 
    function ready() {
        (window.onhashchange = function () {
-           const el = document.getElementById(location.hash.replace("#", "rule-"));
-           const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
-           highlighted.forEach(e => e.classList.remove("highlight-amber"));
 
-           if (el) {
-               el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
-               el.classList.add("highlight-amber");
+           const urlParams = new URLSearchParams(window.location.search);
+           const selector = urlParams.get("selector")
+
+           if(selector) {
+               const el = document.getElementById("rule-" + selector.toString());
+               const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
+               highlighted.forEach(e => e.classList.remove("highlight-amber"));
+
+               if (el) {
+                   el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
+                   el.classList.add("highlight-amber");
+               }
            }
+
+
+
        })();
 
        var links = Array.from(document.getElementsByClassName("glyphicon-link"));
