@@ -22,7 +22,6 @@
 
 @(whatsRunning: Seq[WhatsRunningWhere]
 , environments: Seq[Environment]
-, showDiff    : Boolean
 )
 
 <tbody class="list">
@@ -31,17 +30,33 @@
     <td class="application-name" id="row@{i}_application">
         <a id="link-to-info-page-for-@{wrw.applicationName.asString}" href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
     </td>
-    @environments.map { env =>
-      @wrw.versions.find(_.environment == env).map { envVersion =>
-        <td id="row@{i}_version_@{env.asString}"
-            @if(showDiff && env == Environment.Production) {
-                @if(!WhatsRunningWhereController.matchesProduction(wrw, envVersion, Environment.Staging)){
-                    class="env-version-difference"
-                }
-            }
-        >@envVersion.versionNumber.asString</td>
-      }.getOrElse {
-        <td id="row@{i}_version_@{env.asString}"></td>
+    @* Highlight older version numbers, older == higher opacity (max 0.75) *@
+    @defining(environments.map(env => env -> wrw.versions.find(_.environment == env))) { versionMap =>
+      @defining(versionMap.map(_._2).collect{ case Some(v) => v.versionNumber.asVersion}.sorted) { sortedVersions =>
+        @defining(sortedVersions.distinct) { uniqueVersions =>
+          @defining(sortedVersions.reverse.head) { latestVersion =>
+              @versionMap.map { case (env, maybeVersion) =>
+                  @maybeVersion match {
+                      case Some(version) => {
+                        @if(version.versionNumber.asVersion == latestVersion) {
+                            <td id="row@{i}_version_@{env.asString}">@version.versionNumber.asString</td>
+                        } else {
+                          @defining(uniqueVersions.indexOf(version.versionNumber.asVersion)) { age =>
+                            @defining((1 - (age.toDouble / uniqueVersions.length)) * 0.75) { opacity =>
+                                <td id="row@{i}_version_@{env.asString}" class="wrw-version-outdated" style="--bs-bg-opacity: @opacity">
+                                    @version.versionNumber.asString
+                                </td>
+                            }
+                          }
+                        }
+                      }
+                      case None => {
+                          <td id="row@{i}_version_@{env.asString}"></td>
+                      }
+                  }
+              }
+          }
+        }
       }
     }
     <td>

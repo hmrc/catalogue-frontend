@@ -286,7 +286,7 @@ case class Version(
 
 object Version {
 
-  implicit val ordering = new Ordering[Version] {
+  implicit val ordering: Ordering[Version] = new Ordering[Version] {
     def compare(x: Version, y: Version): Int =
       x.compare(y)
   }

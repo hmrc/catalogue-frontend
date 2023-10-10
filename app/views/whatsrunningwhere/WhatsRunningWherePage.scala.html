@@ -28,7 +28,6 @@
  , selectedProfileType: ProfileType
  , profileNames       : Seq[ProfileName]
  , form               : Form[_]
- , showDiff           : Boolean
  , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
  , maxMemory          : Double
  , viewMode           : ViewMode
@@ -60,9 +59,6 @@
     <div id="whats-running-where-list">
         <form id="form" method="get">
             <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString" />
-            @if(showDiff) {
-                <input type="hidden" id="showDiff" name="showDiff" value="true" />
-            }
             <div class="row mb-3">
                 <label for="search" class="col-md-2 col-form-label fw-bold">Application name:</label>
                 <div class="col-md-4">
@@ -72,16 +68,17 @@
             <ul class="nav nav-tabs mb-2">
                 @ProfileType.values.map(profileTypeTab)
             </ul>
-            <div class="tab-content">
-                <div class="tab-pane show active in mb-4" role="tabpanel">
-                    <select class="form-select float-start mb-4" id="profile_name" name="profile_name" style="width: 200px">
+            <div class="tab-content mb-4">
+                <div class="tab-pane active d-flex justify-content-between align-items-center" role="tabpanel">
+                    <select class="form-select" id="profile_name" name="profile_name" style="width: 200px">
                         @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
                             @options.map(selectOption(form("profile_name").value))
                         }
                     </select>
-                    <select class="form-select float-end mb-4" id="view_mode" name="view_mode" style="width: 200px">
-                        <option @if(viewMode.asString == "versions") {selected="selected"} value="versions">Versions</option>
-                        <option @if(viewMode.asString == "instances"){selected="selected"} value="instances">Instances</option>
+
+                    <select class="form-select" id="view_mode" name="view_mode" style="width: 200px">
+                        <option @if(viewMode == ViewMode.Versions) {selected="selected"} value="versions">Versions</option>
+                        <option @if(viewMode == ViewMode.Instances){selected="selected"} value="instances">Instances</option>
                     </select>
                 </div>
             </div>
@@ -89,18 +86,19 @@
         <table class="table table-striped sticky-header" id="service-list">
             <thead>
                 <th><button role="button" class="sort no-border fw-bold" data-sort="application-name">Application Name</button></th>
-                @if(viewMode.asString == "versions") {
+                @if(viewMode == ViewMode.Versions) {
                     @environments.map { env =>
                         <th class="wrw-environment-head">@env.displayString</th>
                     }
+                    <th></th>
                 } else {
                     @environments.map { env =>
                         <th class="wrw-environment-head"><button role="button" class="sort no-border fw-bold" data-sort="@env.asString">@env.displayString</button></th>
                     }
                 }
             </thead>
-            @if(viewMode.asString == "versions") {
-                @WhatsRunningWhereVersions(whatsRunning, environments, showDiff)
+            @if(viewMode == ViewMode.Versions) {
+                @WhatsRunningWhereVersions(whatsRunning, environments)
             } else {
                 @WhatsRunningWhereInstances(serviceDeployments, environments, maxMemory)
             }
@@ -108,18 +106,17 @@
     </div>
 }
 <script @CSPNonce.attr>
-    var searchBox = document.getElementById("search");
+    let searchBox = document.getElementById("search");
 
-    @if((viewMode.asString == "versions" && whatsRunning.nonEmpty) || serviceDeployments.nonEmpty) {
-      var options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
-      var serviceList = new List('whats-running-where-list', options);
+    @if((viewMode == ViewMode.Versions && whatsRunning.nonEmpty) || serviceDeployments.nonEmpty) {
+      let options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
+      let serviceList = new List('whats-running-where-list', options);
       // re-search the list upon page load.
       serviceList.search(searchBox.value);
     }
 
-
     // set autofocus cursor to right of text in search box
-    var length = searchBox.value.length;
+    let length = searchBox.value.length;
     searchBox.focus();
     searchBox.setSelectionRange(length, length);
 
@@ -127,7 +124,7 @@
         document.getElementById('profile_type').value = profileType;
         document.getElementById('profile_name').value = '';
         document.getElementById('form').submit();
-    };
+    }
 
     ["profile_name", "view_mode"]
       .forEach(function(id) {

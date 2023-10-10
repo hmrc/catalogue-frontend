@@ -246,8 +246,12 @@ table.always-wrap {
     word-wrap: break-word;
 }
 
-.wrw-environment-head{
+.wrw-environment-head {
     width: 12%;
+}
+
+.wrw-version-outdated {
+    background-color: rgba(var(--bs-warning-rgb),var(--bs-bg-opacity))!important;
 }
 
 .transitive::before {
