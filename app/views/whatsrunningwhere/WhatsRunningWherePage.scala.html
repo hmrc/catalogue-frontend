@@ -115,55 +115,6 @@
       serviceList.search(searchBox.value);
     }
 
-    @if(viewMode == ViewMode.Versions) {
-
-        function compareVersions(v1, v2) {
-            let [maj1, min1, pat1] = v1.split('.').map(Number);
-            let [maj2, min2, pat2] = v2.split('.').map(Number);
-
-            if (maj1 !== maj2) {
-                return maj1 - maj2;
-            }
-
-            if (min1 !== min2) {
-                return min1 - min2;
-            }
-
-            return pat1 - pat2;
-        }
-
-        function highlightVersionDifferences() {
-            let rows = document.querySelectorAll('.list tr');
-
-            rows.forEach( function(el) {
-               let environments = el.querySelectorAll('.wrw-version');
-
-               // asc
-               let sortedVersions = Array.from(environments).map(ver => ver.textContent.trim()).sort(compareVersions);
-               let uniqueVersions = Array.from(new Set(sortedVersions));
-
-               // take last element of array as it's sorted asc
-               let latestVersion = sortedVersions.slice(-1)[0];
-
-               environments.forEach( function(env) {
-                   let envVersion = env.textContent.trim();
-
-                   if(envVersion !== latestVersion) {
-                       env.classList.add('wrw-version-outdated');
-
-                       let age = uniqueVersions.indexOf(envVersion);
-                       let opacity = (1 - age / (uniqueVersions.length)) * 0.75;
-
-                       env.style.setProperty('--bs-bg-opacity', opacity);
-                   }
-               });
-            });
-        }
-
-        highlightVersionDifferences();
-    }
-
-
     // set autofocus cursor to right of text in search box
     let length = searchBox.value.length;
     searchBox.focus();
