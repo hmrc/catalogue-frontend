@@ -320,7 +320,7 @@
 @displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue) = {
   <ul class="list-unstyled">
     <li>
-      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey.asString)).url"
+      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey)).url"
          target="_blank"
          data-bs-toggle="popover"
          data-bs-trigger="hover"
@@ -340,7 +340,7 @@
 @displayConfigWarning(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configWarning: ServiceConfigsService.ConfigWarning) = {
   <ul class="list-unstyled">
     <li>
-      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey.asString)).url"
+      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey)).url"
          target="_blank"
          data-bs-toggle="popover"
          data-bs-trigger="hover"
