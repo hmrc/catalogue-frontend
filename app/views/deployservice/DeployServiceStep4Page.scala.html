@@ -18,12 +18,13 @@
 @import uk.gov.hmrc.cataloguefrontend.deployservice.{DeployServiceForm, routes => appRoutes}
 @import views.html.vulnerabilities.VulnerabilityDetails
 @import uk.gov.hmrc.cataloguefrontend.connector.Link
+@import uk.gov.hmrc.play.bootstrap.binders.{SafeRedirectUrl, RedirectUrl}
 
 @this(viewMessages: ViewMessages)
 
 @(formObject        : DeployServiceForm
-, queueUrl          : String
-, buildUrl          : Option[String]
+, queueUrl          : SafeRedirectUrl
+, buildUrl          : Option[SafeRedirectUrl]
 , deploymentLogsLink: Link
 , grafanaLink       : Link
 , kibanaLink        : Link
@@ -116,7 +117,7 @@
   @buildUrl match {
     case None => {
       <script @CSPNonce.attr>
-        const url  = '@appRoutes.DeployServiceController.step4sse(queueUrl, buildUrl)';
+        const url  = '@appRoutes.DeployServiceController.step4sse(RedirectUrl(queueUrl.url), buildUrl.map(x => RedirectUrl(x.url)))';
         const sse  = new EventSource(url);
         displayLastCheck();
 
@@ -137,7 +138,7 @@
     }
     case Some(_) => {
       <script @CSPNonce.attr>
-        const sse = new EventSource('@appRoutes.DeployServiceController.step4sse(queueUrl, buildUrl)'.replaceAll('&amp;', '&'));
+        const sse = new EventSource('@appRoutes.DeployServiceController.step4sse(RedirectUrl(queueUrl.url), buildUrl.map(x => RedirectUrl(x.url)))'.replaceAll('&amp;', '&'));
         sse.onmessage = function(event) {
           const json = JSON.parse(event.data);
           displayDeploymentStarted(json.buildStatus.timestamp);
