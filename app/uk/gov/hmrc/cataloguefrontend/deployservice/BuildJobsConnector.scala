@@ -48,6 +48,7 @@ class BuildJobsConnector @Inject()(
     serviceName: String
   , version    : Version
   , environment: Environment
+  , user       : String
   )(implicit hc: HeaderCarrier): Future[String] = {
     val url = new URL(s"$baseUrl/job/build-and-deploy/job/deploy-microservice/buildWithParameters")
 
@@ -67,6 +68,7 @@ class BuildJobsConnector @Inject()(
         "SERVICE"         -> Seq(serviceName)
       , "SERVICE_VERSION" -> Seq(version.original)
       , "ENVIRONMENT"     -> Seq(environment.asString)
+      , "DEPLOYER_ID"     -> Seq(user)
       ))
       .execute[Either[UpstreamErrorResponse, String]]
       .flatMap {

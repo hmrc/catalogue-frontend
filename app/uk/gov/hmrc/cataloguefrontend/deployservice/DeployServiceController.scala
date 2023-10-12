@@ -21,7 +21,7 @@ import cats.data.EitherT
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
@@ -199,12 +199,18 @@ class DeployServiceController @Inject()(
                             serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                           , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, allServices, None, Nil, Nil, evaluations = None))
                           )
-        queueUrl      <- EitherT
+        user         <- EitherT
+                          .fromOption[Future](
+                            request.session.get(AuthController.SESSION_USERNAME)
+                          , sys.error("Username not found in auth session"): Result
+                          )
+        queueUrl     <- EitherT
                           .right[Result](buildJobsConnector.deployMicroservice(
                             serviceName = formObject.serviceName
                           , version     = formObject.version
                           , environment = formObject.environment
-                          ))
+                          , user        = user
+                           ))
       } yield
         Redirect(routes.DeployServiceController.step4(
           serviceName = formObject.serviceName
