@@ -25,8 +25,8 @@ POST       /create-app-configs                          uk.gov.hmrc.cataloguefro
 GET        /deploy-service/1                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step1(serviceName: Option[String])
 POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step2()
 POST       /deploy-service/3                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step3()
-GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: String, buildUrl: Option[String] ?= None)
-GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step4sse(queueUrl: String, buildUrl: Option[String] ?= None)
+GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
+GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 
 
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)

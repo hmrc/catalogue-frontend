@@ -31,12 +31,14 @@ import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Retrieval, Resource}
+import uk.gov.hmrc.play.bootstrap.binders.{RedirectUrl, AbsoluteWithHostnameFromAllowlist}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.deployservice.{DeployServicePage, DeployServiceStep4Page}
 import views.html.error_404_template
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
 
 @Singleton
 class DeployServiceController @Inject()(
@@ -216,7 +218,7 @@ class DeployServiceController @Inject()(
           serviceName = formObject.serviceName
         , version     = formObject.version.original
         , environment = formObject.environment.asString
-        , queueUrl    = queueUrl
+        , queueUrl    = RedirectUrl(queueUrl)
         ))
       ).merge
     }
@@ -225,23 +227,36 @@ class DeployServiceController @Inject()(
   private val telemetryLogsLinkTemplate    = configuration.get[String]("telemetry.templates.logs")
   private val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
 
+  private val redirectUrlPolicy = AbsoluteWithHostnameFromAllowlist(
+    new java.net.URL(configuration.get[String]("jenkins.buildjobs.url")).getHost
+  )
+
+  import RedirectUrl._
   // Display progress and useful links
-  def step4(serviceName: String, version: String, environment: String, queueUrl: String, buildUrl: Option[String]): Action[AnyContent] =
+  def step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      DeployServiceForm
-        .form
-        .bindFromRequest()
-        .fold(
-          formWithErrors => Future.successful(NotFound(error_404_template()))
-        , formObject     => serviceDependenciesConnector
-                              .getSlugInfo(formObject.serviceName, Some(formObject.version))
-                              .map(_.fold(NotFound(error_404_template())){_ =>
-                                val deploymentLogsLink = TelemetryLinks.create("Deployment Logs", deploymentLogsLinkTemplate, formObject.environment, formObject.serviceName)
-                                val grafanaLink = TelemetryLinks.create("Grafana Dashboard", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
-                                val kibanaLink  = TelemetryLinks.create("Kibana Dashboard", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
-                                Ok(deployServiceStep4Page(formObject, queueUrl, buildUrl, deploymentLogsLink, grafanaLink, kibanaLink))
-                              })
-        )
+      (for {
+        qUrl <- EitherT.fromEither[Future](queueUrl.getEither(redirectUrlPolicy))
+                       .leftMap(_ => BadRequest("Invalid queueUrl"))
+        bUrl <- EitherT.fromEither[Future](buildUrl.fold(Right(Option.empty[SafeRedirectUrl]): Either[String, Option[SafeRedirectUrl]])(_.getEither(redirectUrlPolicy).map(Option.apply)))
+                       .leftMap(_ => BadRequest("Invalid buildUrl"))
+        res  <- EitherT.right[Result](
+                  DeployServiceForm
+                    .form
+                    .bindFromRequest()
+                    .fold(
+                      formWithErrors => Future.successful(NotFound(error_404_template()))
+                    , formObject     => serviceDependenciesConnector
+                                          .getSlugInfo(formObject.serviceName, Some(formObject.version))
+                                          .map(_.fold(NotFound(error_404_template())){_ =>
+                                            val deploymentLogsLink = TelemetryLinks.create("Deployment Logs", deploymentLogsLinkTemplate, formObject.environment, formObject.serviceName)
+                                            val grafanaLink = TelemetryLinks.create("Grafana Dashboard", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
+                                            val kibanaLink  = TelemetryLinks.create("Kibana Dashboard", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
+                                            Ok(deployServiceStep4Page(formObject, qUrl, bUrl, deploymentLogsLink, grafanaLink, kibanaLink))
+                                          })
+                  )
+                )
+      } yield res).merge
     }
 
   import scala.concurrent.duration._
@@ -249,23 +264,30 @@ class DeployServiceController @Inject()(
   import play.api.http.ContentTypes
   import play.api.libs.EventSource
   import play.api.libs.json.Json
-  def step4sse(queueUrl: String, buildUrl: Option[String] ): Action[AnyContent] =
-    BasicAuthAction.apply { implicit request =>
-      implicit val w1 = BuildJobsConnector.QueueStatus.format
-      implicit val w2 = BuildJobsConnector.BuildStatus.format
-      val flow =
-        Source
-          .tick(1.millis, if (buildUrl.isEmpty) 1.second else 10.second, "TICK")
-          .mapAsync(parallelism = 1) { _ =>
-            (queueUrl, buildUrl) match {
-              case (u, None)    => buildJobsConnector.queueStatus(u).map(x => Json.obj("queueStatus" -> Json.toJson(x)).toString)
-              case (_, Some(u)) => buildJobsConnector.buildStatus(u).map(x => Json.obj("buildStatus" -> Json.toJson(x)).toString)
+  def step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      (for {
+        qUrl <- EitherT.fromEither[Future](queueUrl.getEither(redirectUrlPolicy))
+                       .leftMap(_ => BadRequest("Invalid queueUrl"))
+        bUrl <- EitherT.fromEither[Future](buildUrl.fold(Right(Option.empty[SafeRedirectUrl]): Either[String, Option[SafeRedirectUrl]])(_.getEither(redirectUrlPolicy).map(Option.apply)))
+                       .leftMap(_ => BadRequest("Invalid buildUrl"))
+      } yield {
+        implicit val w1 = BuildJobsConnector.QueueStatus.format
+        implicit val w2 = BuildJobsConnector.BuildStatus.format
+        val flow =
+          Source
+            .tick(1.millis, if (buildUrl.isEmpty) 1.second else 10.second, "TICK")
+            .mapAsync(parallelism = 1) { _ =>
+              (qUrl, bUrl) match {
+                case (u, None)    => buildJobsConnector.queueStatus(u).map(x => Json.obj("queueStatus" -> Json.toJson(x)).toString)
+                case (_, Some(u)) => buildJobsConnector.buildStatus(u).map(x => Json.obj("buildStatus" -> Json.toJson(x)).toString)
+              }
             }
-          }
-          .via(EventSource.flow)
+            .via(EventSource.flow)
 
-      Ok.chunked(flow)
-        .as(ContentTypes.EVENT_STREAM)
+        Ok.chunked(flow)
+          .as(ContentTypes.EVENT_STREAM)
+      }).merge
     }
 }
 

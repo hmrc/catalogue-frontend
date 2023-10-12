@@ -29,6 +29,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceDependenciesConnector, GitRepository}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
@@ -154,7 +155,7 @@ class DeployServiceControllerSpec
       when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockBuildJobsConnector.deployMicroservice(eqTo("some-service"), eqTo(Version("0.3.0")), eqTo(Environment.QA), eqTo("some-user") )(any[HeaderCarrier]))
-        .thenReturn(Future.successful("some-queue-url"))
+        .thenReturn(Future.successful("http://localhost:8461/some/queue/url"))
 
       val futResult = underTest.step3()(
         FakeRequest()
@@ -168,7 +169,7 @@ class DeployServiceControllerSpec
         serviceName = "some-service"
       , version     = "0.3.0"
       , environment = "qa"
-      , queueUrl    = "some-queue-url"
+      , queueUrl    = RedirectUrl("http://localhost:8461/some/queue/url")
       , buildUrl    = None).url
       )
     }
@@ -185,7 +186,7 @@ class DeployServiceControllerSpec
         serviceName = "" // taken from query params via form
       , version     = "" // same as above
       , environment = "" // same as above
-      , queueUrl    = "some-queue-url"
+      , queueUrl    = RedirectUrl("http://localhost:8461/some/queue/url")
       , buildUrl    = None
       )(FakeRequest(Helpers.GET, "/deploy-service/4?serviceName=some-service&version=0.3.0&environment=qa")
           .withSession(SessionKeys.authToken -> "Token token")

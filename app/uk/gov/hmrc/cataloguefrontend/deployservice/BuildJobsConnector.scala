@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.deployservice
 
 import play.api.{Configuration, Logging}
 import play.mvc.Http.HeaderNames
+import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, UpstreamErrorResponse, StringContextOps}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
@@ -77,8 +78,8 @@ class BuildJobsConnector @Inject()(
       }
   }
 
-  def queueStatus(queueUrl: String)(implicit hc: HeaderCarrier): Future[BuildJobsConnector.QueueStatus] = {
-    val url = url"${queueUrl}api/json?tree=cancelled,executable[number,url]"
+  def queueStatus(queueUrl: SafeRedirectUrl)(implicit hc: HeaderCarrier): Future[BuildJobsConnector.QueueStatus] = {
+    val url = url"${queueUrl.url}api/json?tree=cancelled,executable[number,url]"
     implicit val r = BuildJobsConnector.QueueStatus.format
 
     httpClientV2
@@ -91,8 +92,8 @@ class BuildJobsConnector @Inject()(
       }
   }
 
-  def buildStatus(buildUrl: String)(implicit hc: HeaderCarrier): Future[BuildJobsConnector.BuildStatus] = {
-    val url = url"${buildUrl}api/json?tree=number,url,timestamp,result"
+  def buildStatus(buildUrl: SafeRedirectUrl)(implicit hc: HeaderCarrier): Future[BuildJobsConnector.BuildStatus] = {
+    val url = url"${buildUrl.url}api/json?tree=number,url,timestamp,result"
     implicit val r = BuildJobsConnector.BuildStatus.format
     httpClientV2
       .post(url)
