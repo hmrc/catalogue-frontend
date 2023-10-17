@@ -82,12 +82,12 @@
                       }
                         <ul id="user-teams" class="list-unstyled" style="column-count: 2;">
                         @user.teamsAndRoles.map { team =>
-                          <li class="col-6">
+                          <li>
                             <a href="@teamRoutes.TeamsController.team(TeamName(team.teamName))">
                               @team.teamName
                             </a>
                             @if(team.role.trim.nonEmpty && team.role != "user") {
-                              <span class="badge">@team.role</span>
+                              <span class="badge rounded-pill text-bg-secondary">@team.role</span>
                             }
                           </li>
                         }
