@@ -22,7 +22,7 @@ import play.api.data.{Form, Forms}
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.mvc._
-import play.api.{Configuration, Logger}
+import play.api.Logger
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
@@ -64,13 +64,13 @@ class CatalogueController @Inject() (
   leakDetectionService         : LeakDetectionService,
   shutterService               : ShutterService,
   defaultBranchesService       : DefaultBranchesService,
-  configuration                : Configuration,
   override val mcc             : MessagesControllerComponents,
   whatsRunningWhereService     : WhatsRunningWhereService,
   prCommenterConnector         : PrCommenterConnector,
   vulnerabilitiesConnector     : VulnerabilitiesConnector,
   confluenceConnector          : ConfluenceConnector,
   buildDeployApiConnector      : BuildDeployApiConnector,
+  telemetryLinks               : TelemetryLinks,
   indexPage                    : IndexPage,
   serviceInfoPage              : ServiceInfoPage,
   libraryInfoPage              : LibraryInfoPage,
@@ -84,9 +84,6 @@ class CatalogueController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders
      with I18nSupport {
-
-  private lazy val telemetryLogsLinkTemplate = configuration.get[String]("telemetry.templates.logs")
-  private lazy val telemetryMetricsLinkTemplate = configuration.get[String]("telemetry.templates.metrics")
 
   private val logger = Logger(getClass)
 
@@ -163,8 +160,8 @@ class CatalogueController @Inject() (
                                                            repoModules       = repoModules.headOption,
                                                            optShutterState   = optShutterState,
                                                            optTelemetryLinks = Some(Seq(
-                                                             TelemetryLinks.grafana("Grafana", telemetryMetricsLinkTemplate, env, serviceName),
-                                                             TelemetryLinks.kibana("Kibana", telemetryLogsLinkTemplate, env, serviceName),
+                                                             telemetryLinks.grafanaDashboard(env, serviceName),
+                                                             telemetryLinks.kibanaDashboard(env, serviceName)
                                                            ))
                                                          )
                                     } yield Some(slugInfoFlag -> data)

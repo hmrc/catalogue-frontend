@@ -47,6 +47,7 @@ import views.html.deployservice.{DeployServicePage, DeployServiceStep4Page}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 
 class DeployServiceControllerSpec
   extends AnyWordSpec
@@ -289,6 +290,7 @@ class DeployServiceControllerSpec
                                             , releasesConnector             = mockReleasesConnector
                                             , vulnerabilitiesConnector      = mockVulnerabilitiesConnector
                                             , serviceConfigsService         = mockServiceConfigsService
+                                            , telemetryLinks                = new TelemetryLinks(app.injector.instanceOf[Configuration])
                                             , deployServicePage             = app.injector.instanceOf[DeployServicePage]
                                             , deployServiceStep4Page        = app.injector.instanceOf[DeployServiceStep4Page]
                                             )

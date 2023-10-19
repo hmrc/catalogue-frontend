@@ -16,13 +16,22 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
+import play.api.Configuration
+
 import uk.gov.hmrc.cataloguefrontend.connector.Link
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import java.security.MessageDigest
 
-object TelemetryLinks {
+import javax.inject.{Inject, Singleton}
 
-  // Same ashttps://github.com/hmrc/grafana-dashboards/blob/main/src/main/scala/uk/gov/hmrc/grafanadashboards/domain/dashboard/DashboardBuilder.scala#L49-L57
+@Singleton
+class TelemetryLinks @Inject()(configuration: Configuration) {
+
+  private val grafanaDashboardTemplate     = configuration.get[String]("telemetry.templates.metrics")
+  private val kibanaDashboardTemplate      = configuration.get[String]("telemetry.templates.logs")
+  private val kibanaDeploymentLogsTemplate = configuration.get[String]("telemetry.templates.deploymentLogs")
+
+  // Same as https://github.com/hmrc/grafana-dashboards/blob/main/src/main/scala/uk/gov/hmrc/grafanadashboards/domain/dashboard/DashboardBuilder.scala#L49-L57
   private def toDashBoardUid(name: String): String =
     if (name.length > 40)
       name.take(8) + MessageDigest
@@ -33,17 +42,27 @@ object TelemetryLinks {
     else
       name
 
-  def grafana(name: String, template: String, env: Environment, serviceName: String): Link = {
-    val url = template
-      .replace(s"$${env}", UrlUtils.encodePathParam(env.asString))
-      .replace(s"$${service}", UrlUtils.encodePathParam(toDashBoardUid(serviceName)))
-    Link(name, name, url)
-  }
+  def grafanaDashboard(env: Environment, serviceName: String) = Link(
+    name        = "Grafana Dashboard"
+  , displayName = "Grafana Dashboard"
+  , url        =  grafanaDashboardTemplate
+                    .replace(s"$${env}",     UrlUtils.encodePathParam(env.asString))
+                    .replace(s"$${service}", UrlUtils.encodePathParam(toDashBoardUid(serviceName)))
+  )
 
-  def kibana(name: String, template: String, env: Environment, serviceName: String): Link = {
-    val url = template
-      .replace(s"$${env}", UrlUtils.encodePathParam(env.asString))
-      .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
-    Link(name, name, url)
-  }
+  def kibanaDashboard(env: Environment, serviceName: String) = Link(
+    name        = "Kibana Dashboard"
+  , displayName = "Kibana Dashboard"
+  , url        =  kibanaDashboardTemplate
+                    .replace(s"$${env}",     UrlUtils.encodePathParam(env.asString))
+                    .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
+  )
+
+  def kibanaDeploymentLogs(env: Environment, serviceName: String) = Link(
+    name        = "Deployment Logs"
+  , displayName = "Deployment Logs"
+  , url        =  kibanaDeploymentLogsTemplate
+                    .replace(s"$${env}",     UrlUtils.encodePathParam(env.asString))
+                    .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
+  )
 }
