@@ -163,8 +163,8 @@ class CatalogueController @Inject() (
                                                            repoModules       = repoModules.headOption,
                                                            optShutterState   = optShutterState,
                                                            optTelemetryLinks = Some(Seq(
-                                                             TelemetryLinks.create("Grafana", telemetryMetricsLinkTemplate, env, serviceName),
-                                                             TelemetryLinks.create("Kibana", telemetryLogsLinkTemplate, env, serviceName),
+                                                             TelemetryLinks.grafana("Grafana", telemetryMetricsLinkTemplate, env, serviceName),
+                                                             TelemetryLinks.kibana("Kibana", telemetryLogsLinkTemplate, env, serviceName),
                                                            ))
                                                          )
                                     } yield Some(slugInfoFlag -> data)

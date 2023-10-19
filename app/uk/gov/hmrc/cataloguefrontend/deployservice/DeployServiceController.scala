@@ -249,9 +249,9 @@ class DeployServiceController @Inject()(
                     , formObject     => serviceDependenciesConnector
                                           .getSlugInfo(formObject.serviceName, Some(formObject.version))
                                           .map(_.fold(NotFound(error_404_template())){_ =>
-                                            val deploymentLogsLink = TelemetryLinks.create("Deployment Logs", deploymentLogsLinkTemplate, formObject.environment, formObject.serviceName)
-                                            val grafanaLink = TelemetryLinks.create("Grafana Dashboard", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
-                                            val kibanaLink  = TelemetryLinks.create("Kibana Dashboard", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
+                                            val deploymentLogsLink = TelemetryLinks.kibana("Deployment Logs", deploymentLogsLinkTemplate, formObject.environment, formObject.serviceName)
+                                            val grafanaLink = TelemetryLinks.grafana("Grafana Dashboard", telemetryMetricsLinkTemplate, formObject.environment, formObject.serviceName)
+                                            val kibanaLink  = TelemetryLinks.kibana("Kibana Dashboard", telemetryLogsLinkTemplate, formObject.environment, formObject.serviceName)
                                             Ok(deployServiceStep4Page(formObject, qUrl, bUrl, deploymentLogsLink, grafanaLink, kibanaLink))
                                           })
                   )

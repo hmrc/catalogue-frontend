@@ -18,10 +18,29 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 import uk.gov.hmrc.cataloguefrontend.connector.Link
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import java.security.MessageDigest
 
 object TelemetryLinks {
 
-  def create(name: String, template: String, env: Environment, serviceName: String): Link = {
+  // Same ashttps://github.com/hmrc/grafana-dashboards/blob/main/src/main/scala/uk/gov/hmrc/grafanadashboards/domain/dashboard/DashboardBuilder.scala#L49-L57
+  private def toDashBoardUid(name: String): String =
+    if (name.length > 40)
+      name.take(8) + MessageDigest
+                      .getInstance("MD5")
+                      .digest(name.getBytes)
+                      .map("%02x".format(_))
+                      .mkString
+    else
+      name
+
+  def grafana(name: String, template: String, env: Environment, serviceName: String): Link = {
+    val url = template
+      .replace(s"$${env}", UrlUtils.encodePathParam(env.asString))
+      .replace(s"$${service}", UrlUtils.encodePathParam(toDashBoardUid(serviceName)))
+    Link(name, name, url)
+  }
+
+  def kibana(name: String, template: String, env: Environment, serviceName: String): Link = {
     val url = template
       .replace(s"$${env}", UrlUtils.encodePathParam(env.asString))
       .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
