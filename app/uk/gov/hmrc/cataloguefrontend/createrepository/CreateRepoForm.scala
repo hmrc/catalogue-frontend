@@ -138,6 +138,7 @@ object CreateRepoConstraints {
   def createRepoNameConstraints(length: Int, suffix: Option[String]): Seq[Constraint[String]] = {
     val whiteSpaceValidation: String => Boolean = str => !str.matches(".*\\s.*")
     val underscoreValidation: String => Boolean = str => !str.contains("_")
+    val slashValidation: String => Boolean = str => !str.contains("/")
     val lengthValidation: String => Boolean = str => str.length <= length
     val lowercaseValidation: String => Boolean = str => str.toLowerCase.equals(str)
     val suffixValidation: String => Boolean = str => if(suffix.isEmpty) true else str.endsWith(suffix.get)
@@ -145,6 +146,7 @@ object CreateRepoConstraints {
     Seq(
       mkConstraint("constraints.repoNameWhitespaceCheck")(constraint = whiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
       mkConstraint("constraints.repoNameUnderscoreCheck")(constraint = underscoreValidation, error = "Repository name cannot include underscores, use hyphens instead"),
+      mkConstraint("constraints.repoNameSlashCheck")(constraint = slashValidation, error = "Repository name cannot include forward slashes. You do not need to specify the hmrc organisation"),
       mkConstraint("constraints.repoNameLengthCheck")(constraint = lengthValidation, error = s"Repository name can have a maximum of $length characters"),
       mkConstraint("constraints.repoNameCaseCheck")(constraint = lowercaseValidation, error = "Repository name should only contain lowercase characters"),
       mkConstraint("constraints.repoNameSuffixCheck")(constraint = suffixValidation, error = s"Repository name must end with ${if(suffix.nonEmpty) suffix.get else ""}")
