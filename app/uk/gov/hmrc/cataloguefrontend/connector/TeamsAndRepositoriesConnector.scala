@@ -141,7 +141,8 @@ object Tag {
 case class Link(
   name       : String,
   displayName: String,
-  url        : String
+  url        : String,
+  cls        : Option[String] = None
 ) {
   val id: String =
     displayName.toLowerCase.replaceAll(" ", "-")

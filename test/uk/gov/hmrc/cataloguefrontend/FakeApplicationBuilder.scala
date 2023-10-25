@@ -77,7 +77,9 @@ trait FakeApplicationBuilder
           "play.http.requestHandler"                           -> "play.api.http.DefaultHttpRequestHandler",
           "team.hideArchivedRepositories"                      -> true,
           "play.filters.csrf.header.bypassHeaders.X-Requested-With" -> "*",
-          "play.filters.csrf.header.bypassHeaders.Csrf-Token"  -> "nocheck"
+          "play.filters.csrf.header.bypassHeaders.Csrf-Token"  -> "nocheck",
+          "microservice.services.service-metrics.port"         -> wireMockPort,
+          "microservice.services.service-metrics.host"         -> wireMockHost,
         ))
       .build()
 

@@ -20,16 +20,18 @@ import play.api.Configuration
 
 import uk.gov.hmrc.cataloguefrontend.connector.Link
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import java.security.MessageDigest
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceMetricsConnector
 
+import java.security.MessageDigest
 import javax.inject.{Inject, Singleton}
 
 @Singleton
 class TelemetryLinks @Inject()(configuration: Configuration) {
 
-  private val grafanaDashboardTemplate     = configuration.get[String]("telemetry.templates.metrics")
-  private val kibanaDashboardTemplate      = configuration.get[String]("telemetry.templates.logs")
-  private val kibanaDeploymentLogsTemplate = configuration.get[String]("telemetry.templates.deploymentLogs")
+  private val grafanaDashboardTemplate           = configuration.get[String]("telemetry.templates.metrics")
+  private val kibanaDashboardTemplate            = configuration.get[String]("telemetry.templates.logs.dashBoard")
+  private val kibanaDeploymentLogsTemplate       = configuration.get[String]("telemetry.templates.logs.deploymentLogs")
+  private val telemetryLogsDiscoverLinkTemplates = configuration.get[Map[String, String]]("telemetry.templates.logs.discover")
 
   // Same as https://github.com/hmrc/grafana-dashboards/blob/main/src/main/scala/uk/gov/hmrc/grafanadashboards/domain/dashboard/DashboardBuilder.scala#L49-L57
   private def toDashBoardUid(name: String): String =
@@ -65,4 +67,22 @@ class TelemetryLinks @Inject()(configuration: Configuration) {
                     .replace(s"$${env}",     UrlUtils.encodePathParam(env.asString))
                     .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
   )
+
+  def kibanaNonPerformantQueries(
+    env        : Environment,
+    serviceName: String,
+    nonPerformantQueries: Seq[ServiceMetricsConnector.NonPerformantQueries] = Seq.empty
+  ): Seq[Link] = {
+    telemetryLogsDiscoverLinkTemplates.toSeq.map{ case (name, linkTemplate) =>
+      val `class` = nonPerformantQueries.collectFirst{ 
+        case npq if (npq.service == serviceName &&
+          npq.queryTypes.exists(_.contains(name)) &&
+          npq.environment == env) => "glyphicon glyphicon-exclamation-sign text-danger"
+      }
+      val url = linkTemplate.replace(s"$${env}", UrlUtils.encodePathParam(env.asString))
+      .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
+      Link(name, name, url, `class`)
+    }
+  }
+    
 }

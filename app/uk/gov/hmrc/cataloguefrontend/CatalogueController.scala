@@ -50,7 +50,7 @@ case class EnvData(
   version          : Version,
   repoModules      : Option[RepositoryModules],
   optShutterState  : Option[ShutterState],
-  optTelemetryLinks: Option[Seq[Link]]
+  optTelemetryLinks: Option[Seq[Seq[Link]]]
 )
 
 @Singleton
@@ -78,6 +78,7 @@ class CatalogueController @Inject() (
   repositoryInfoPage           : RepositoryInfoPage,
   defaultBranchListPage        : DefaultBranchListPage,
   costEstimationPage           : CostEstimationPage,
+  serviceMetricsConnector      : ServiceMetricsConnector,
   override val auth            : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
@@ -145,6 +146,7 @@ class CatalogueController @Inject() (
       deployments          <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
       repositoryName       =  repositoryDetails.name
       jenkinsJobs          <- teamsAndRepositoriesConnector.lookupLatestBuildJobs(repositoryName)
+      nonPerformantQueries <- serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
       envDatas             <- Environment.values.traverse { env =>
                                 val slugInfoFlag: SlugInfoFlag = SlugInfoFlag.ForEnvironment(env)
                                 val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
@@ -160,8 +162,11 @@ class CatalogueController @Inject() (
                                                            repoModules       = repoModules.headOption,
                                                            optShutterState   = optShutterState,
                                                            optTelemetryLinks = Some(Seq(
-                                                             telemetryLinks.grafanaDashboard(env, serviceName),
-                                                             telemetryLinks.kibanaDashboard(env, serviceName)
+                                                            Seq(
+                                                              telemetryLinks.grafanaDashboard(env, serviceName),
+                                                              telemetryLinks.kibanaDashboard(env, serviceName)
+                                                            ),
+                                                            telemetryLinks.kibanaNonPerformantQueries(env, serviceName, nonPerformantQueries)
                                                            ))
                                                          )
                                     } yield Some(slugInfoFlag -> data)

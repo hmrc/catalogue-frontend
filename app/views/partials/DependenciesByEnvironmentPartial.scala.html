@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
-@import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
@@ -38,7 +38,7 @@
                 <li class="nav-item" role="presentation">
                     <button id="@{
                         slugInfoFlag.asString
-                    }-tab" class="nav-link @if(slugInfoFlag == SlugInfoFlag.Latest) { active" aria-selected="true" } else {
+                    }-tab" class="nav-link @if(slugInfoFlag == SlugInfoFlag.ForEnvironment(Environment.Production)) { active" aria-selected="true" } else {
                     " aria-selected="false" } data-bs-toggle="tab" data-bs-target="#@{
                     slugInfoFlag.asString
                 }-pane" type="button" role="tab" aria-controls="@slugInfoFlag.asString-pane" >
@@ -65,7 +65,7 @@
 <div id="environmentPanes" class="card-body tab-content">
   @for(slugInfoFlag <- SlugInfoFlag.values) {
     @defining(envDatas.get(slugInfoFlag)){ optEnvData: Option[EnvData] =>
-      <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == SlugInfoFlag.Latest) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
+      <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == SlugInfoFlag.ForEnvironment(Environment.Production)) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
           @defining(optEnvData.flatMap(_.optTelemetryLinks).getOrElse(Seq.empty)){ telemetryLinks =>
@@ -73,18 +73,26 @@
                   <div class="card-header">
                       <h3 class="mb-0">Telemetry</h3>
                   </div>
-                      <div class="card-body">
-                          <ul class="list-unstyled mb-0">
+                      <div class="card-body container">
+                          <ul class="list-unstyled mb-0 row row-cols-4">
                             @if(telemetryLinks.isEmpty) {
                                <li class="list-item">
                                   Not deployed
                               </li>
                             } else {
-                              @for(tool <- telemetryLinks) {
-                                <li class="list-item col-xs-6">
-                                  <a id="link-to-@{tool.id}-@{slugInfoFlag.asString}" href="@{tool.url}" target="_blank" rel="noreferrer noopener">
-                                      @{tool.displayName}<span class="glyphicon glyphicon-new-window"></span>
-                                  </a>
+                              @for(tools <- telemetryLinks) {
+                                <li class="list-item col">
+                                  @for(tool <- tools) {
+                                    <div class="row">
+                                      <a id="link-to-@{tool.id}-@{slugInfoFlag.asString}" href="@{tool.url}" target="_blank" rel="noreferrer noopener">
+                                          @tool.cls.map{c =>
+                                            <span class="@c"></span>
+                                          }
+                                          @{tool.displayName} Queries
+                                          <span class="glyphicon glyphicon-new-window"></span>
+                                      </a>
+                                    </div>
+                                  }
                                 </li>
                               }
                             }
