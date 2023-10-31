@@ -14,11 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
+@import uk.gov.hmrc.cataloguefrontend.connector.Link
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, Version}
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
 
 @this(
   dependenciesPartial: DependenciesPartial,
@@ -80,32 +80,8 @@
                                   Not deployed
                               </li>
                             } else {
-                              @for(tool <- envData.telemetryLinks) {
-                                <li class="list-item col">
-                                  <div class="row">
-                                    <a id="link-to-@{tool.id}-@{slugInfoFlag.asString}" href="@{tool.url}" target="_blank" rel="noreferrer noopener">
-                                        @tool.cls.map{c =>
-                                          <span class="@c"></span>
-                                        }
-                                        @{tool.displayName} Queries
-                                        <span class="glyphicon glyphicon-new-window"></span>
-                                    </a>
-                                  </div>
-                                </li>
-                              }
-                              @for(nonPerformantQueryLink <- envData.nonPerformantQueryLinks) {
-                                <li class="list-item col">
-                                  <div class="row">
-                                    <a id="link-to-@{nonPerformantQueryLink.id}-@{slugInfoFlag.asString}" href="@{nonPerformantQueryLink.url}" target="_blank" rel="noreferrer noopener">
-                                        @nonPerformantQueryLink.cls.map{c =>
-                                          <span class="@c"></span>
-                                        }
-                                        @{nonPerformantQueryLink.displayName} Queries
-                                        <span class="glyphicon glyphicon-new-window"></span>
-                                    </a>
-                                  </div>
-                                </li>
-                              }
+                              @renderTelemetryLinks(envData.telemetryLinks, slugInfoFlag.asString)
+                              @renderTelemetryLinks(envData.nonPerformantQueryLinks, slugInfoFlag.asString)
                             }
                           </ul>
                       </div>
@@ -211,5 +187,21 @@
           data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("bobbyrules.pending.badge")"></span>
   } else {
     <span id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></span>
+  }
+}
+
+@renderTelemetryLinks(links: Seq[Link], slugInfoFlag: String) = {
+  @for(link <- links) {
+    <li class="list-item col">
+      <div class="row">
+        <a id="link-to-@{link.id}-@{slugInfoFlag}" href="@{link.url}" target="_blank" rel="noreferrer noopener">
+            @link.cls.map{c =>
+              <span class="@c"></span>
+            }
+            @{link.displayName}
+            <span class="glyphicon glyphicon-new-window"></span>
+        </a>
+      </div>
+    </li>
   }
 }

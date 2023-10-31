@@ -81,7 +81,7 @@ class TelemetryLinks @Inject()(configuration: Configuration) {
       }
       val url = linkTemplate.replace(s"$${env}", UrlUtils.encodePathParam(env.asString))
       .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
-      Link(name, name, url, `class`)
+      Link(name, s"$name Queries", url, `class`)
     }
   }
     
