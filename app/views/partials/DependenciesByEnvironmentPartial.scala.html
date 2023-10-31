@@ -14,11 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
-@import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.connector.Link
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, Version}
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
 
 @this(
   dependenciesPartial: DependenciesPartial,
@@ -38,7 +38,7 @@
                 <li class="nav-item" role="presentation">
                     <button id="@{
                         slugInfoFlag.asString
-                    }-tab" class="nav-link @if(slugInfoFlag == SlugInfoFlag.Latest) { active" aria-selected="true" } else {
+                    }-tab" class="nav-link @if(slugInfoFlag == SlugInfoFlag.ForEnvironment(Environment.Production)) { active" aria-selected="true" } else {
                     " aria-selected="false" } data-bs-toggle="tab" data-bs-target="#@{
                     slugInfoFlag.asString
                 }-pane" type="button" role="tab" aria-controls="@slugInfoFlag.asString-pane" >
@@ -65,28 +65,23 @@
 <div id="environmentPanes" class="card-body tab-content">
   @for(slugInfoFlag <- SlugInfoFlag.values) {
     @defining(envDatas.get(slugInfoFlag)){ optEnvData: Option[EnvData] =>
-      <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == SlugInfoFlag.Latest) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
+      <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == SlugInfoFlag.ForEnvironment(Environment.Production)) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
-          @defining(optEnvData.flatMap(_.optTelemetryLinks).getOrElse(Seq.empty)){ telemetryLinks =>
+          @optEnvData.map{envData =>
           <div id="@{slugInfoFlag.asString}-telemetry" class="card mb-3">
                   <div class="card-header">
                       <h3 class="mb-0">Telemetry</h3>
                   </div>
-                      <div class="card-body">
-                          <ul class="list-unstyled mb-0">
-                            @if(telemetryLinks.isEmpty) {
+                      <div class="card-body container">
+                          <ul class="list-unstyled mb-0 row row-cols-4">
+                            @if(envData.telemetryLinks.isEmpty) {
                                <li class="list-item">
                                   Not deployed
                               </li>
                             } else {
-                              @for(tool <- telemetryLinks) {
-                                <li class="list-item col-xs-6">
-                                  <a id="link-to-@{tool.id}-@{slugInfoFlag.asString}" href="@{tool.url}" target="_blank" rel="noreferrer noopener">
-                                      @{tool.displayName}<span class="glyphicon glyphicon-new-window"></span>
-                                  </a>
-                                </li>
-                              }
+                              @renderTelemetryLinks(envData.telemetryLinks, slugInfoFlag.asString)
+                              @renderTelemetryLinks(envData.nonPerformantQueryLinks, slugInfoFlag.asString)
                             }
                           </ul>
                       </div>
@@ -192,5 +187,21 @@
           data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("bobbyrules.pending.badge")"></span>
   } else {
     <span id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></span>
+  }
+}
+
+@renderTelemetryLinks(links: Seq[Link], slugInfoFlag: String) = {
+  @for(link <- links) {
+    <li class="list-item col">
+      <div class="row">
+        <a id="link-to-@{link.id}-@{slugInfoFlag}" href="@{link.url}" target="_blank" rel="noreferrer noopener">
+            @link.cls.map{c =>
+              <span class="@c"></span>
+            }
+            @{link.displayName}
+            <span class="glyphicon glyphicon-new-window"></span>
+        </a>
+      </div>
+    </li>
   }
 }
