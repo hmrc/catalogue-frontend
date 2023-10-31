@@ -68,25 +68,23 @@
       <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == SlugInfoFlag.ForEnvironment(Environment.Production)) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
-          @optEnvData.map{envData =>
           <div id="@{slugInfoFlag.asString}-telemetry" class="card mb-3">
-                  <div class="card-header">
-                      <h3 class="mb-0">Telemetry</h3>
-                  </div>
-                      <div class="card-body container">
-                          <ul class="list-unstyled mb-0 row row-cols-4">
-                            @if(envData.telemetryLinks.isEmpty) {
-                               <li class="list-item">
-                                  Not deployed
-                              </li>
-                            } else {
-                              @renderTelemetryLinks(envData.telemetryLinks, slugInfoFlag.asString)
-                              @renderTelemetryLinks(envData.nonPerformantQueryLinks, slugInfoFlag.asString)
-                            }
-                          </ul>
-                      </div>
+            <div class="card-header">
+                <h3 class="mb-0">Telemetry</h3>
+            </div>
+            <div class="card-body container">
+                <ul class="list-unstyled mb-0 row row-cols-4">
+                  @optEnvData.collect { case envData if envData.telemetryLinks.nonEmpty =>
+                    @renderTelemetryLinks(envData.telemetryLinks, slugInfoFlag.asString)
+                    @renderTelemetryLinks(envData.nonPerformantQueryLinks, slugInfoFlag.asString)
+                  }.getOrElse{
+                    <li class="list-item">
+                      Not deployed
+                    </li>
+                  }
+                </ul>
+            </div>
           </div>
-          }
         }
 
         @defining(optEnvData.toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)){ dependencies =>
