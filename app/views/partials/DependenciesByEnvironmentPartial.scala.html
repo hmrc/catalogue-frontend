@@ -68,31 +68,42 @@
       <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == SlugInfoFlag.ForEnvironment(Environment.Production)) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
-          @defining(optEnvData.flatMap(_.optTelemetryLinks).getOrElse(Seq.empty)){ telemetryLinks =>
+          @optEnvData.map{envData =>
           <div id="@{slugInfoFlag.asString}-telemetry" class="card mb-3">
                   <div class="card-header">
                       <h3 class="mb-0">Telemetry</h3>
                   </div>
                       <div class="card-body container">
                           <ul class="list-unstyled mb-0 row row-cols-4">
-                            @if(telemetryLinks.isEmpty) {
+                            @if(envData.telemetryLinks.isEmpty) {
                                <li class="list-item">
                                   Not deployed
                               </li>
                             } else {
-                              @for(tools <- telemetryLinks) {
+                              @for(tool <- envData.telemetryLinks) {
                                 <li class="list-item col">
-                                  @for(tool <- tools) {
-                                    <div class="row">
-                                      <a id="link-to-@{tool.id}-@{slugInfoFlag.asString}" href="@{tool.url}" target="_blank" rel="noreferrer noopener">
-                                          @tool.cls.map{c =>
-                                            <span class="@c"></span>
-                                          }
-                                          @{tool.displayName} Queries
-                                          <span class="glyphicon glyphicon-new-window"></span>
-                                      </a>
-                                    </div>
-                                  }
+                                  <div class="row">
+                                    <a id="link-to-@{tool.id}-@{slugInfoFlag.asString}" href="@{tool.url}" target="_blank" rel="noreferrer noopener">
+                                        @tool.cls.map{c =>
+                                          <span class="@c"></span>
+                                        }
+                                        @{tool.displayName} Queries
+                                        <span class="glyphicon glyphicon-new-window"></span>
+                                    </a>
+                                  </div>
+                                </li>
+                              }
+                              @for(nonPerformantQueryLink <- envData.nonPerformantQueryLinks) {
+                                <li class="list-item col">
+                                  <div class="row">
+                                    <a id="link-to-@{nonPerformantQueryLink.id}-@{slugInfoFlag.asString}" href="@{nonPerformantQueryLink.url}" target="_blank" rel="noreferrer noopener">
+                                        @nonPerformantQueryLink.cls.map{c =>
+                                          <span class="@c"></span>
+                                        }
+                                        @{nonPerformantQueryLink.displayName} Queries
+                                        <span class="glyphicon glyphicon-new-window"></span>
+                                    </a>
+                                  </div>
                                 </li>
                               }
                             }

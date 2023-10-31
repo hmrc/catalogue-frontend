@@ -47,10 +47,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class EnvData(
-  version          : Version,
-  repoModules      : Option[RepositoryModules],
-  optShutterState  : Option[ShutterState],
-  optTelemetryLinks: Option[Seq[Seq[Link]]]
+  version                : Version,
+  repoModules            : Option[RepositoryModules],
+  optShutterState        : Option[ShutterState],
+  telemetryLinks         : Seq[Link],
+  nonPerformantQueryLinks: Seq[Link],
 )
 
 @Singleton
@@ -158,16 +159,15 @@ class CatalogueController @Inject() (
                                       repoModules     <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
                                       optShutterState <- shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
                                       data            =  EnvData(
-                                                           version           = version,
-                                                           repoModules       = repoModules.headOption,
-                                                           optShutterState   = optShutterState,
-                                                           optTelemetryLinks = Some(Seq(
-                                                            Seq(
+                                                           version                 = version,
+                                                           repoModules             = repoModules.headOption,
+                                                           optShutterState         = optShutterState,
+                                                           telemetryLinks          = Seq(
                                                               telemetryLinks.grafanaDashboard(env, serviceName),
                                                               telemetryLinks.kibanaDashboard(env, serviceName)
-                                                            ),
+                                                           ),
+                                                           nonPerformantQueryLinks = 
                                                             telemetryLinks.kibanaNonPerformantQueries(env, serviceName, nonPerformantQueries)
-                                                           ))
                                                          )
                                     } yield Some(slugInfoFlag -> data)
                                   case None => Future.successful(None)
@@ -185,10 +185,11 @@ class CatalogueController @Inject() (
       optLatestData        =  optLatestServiceInfo.map { latestServiceInfo =>
                                 SlugInfoFlag.Latest ->
                                   EnvData(
-                                    version           = latestServiceInfo.version,
-                                    repoModules       = latestRepoModules,
-                                    optShutterState   = None,
-                                    optTelemetryLinks = None
+                                    version                 = latestServiceInfo.version,
+                                    repoModules             = latestRepoModules,
+                                    optShutterState         = None,
+                                    telemetryLinks          = Seq.empty,
+                                    nonPerformantQueryLinks = Seq.empty,
                                   )
                               }
     } yield Ok(serviceInfoPage(
