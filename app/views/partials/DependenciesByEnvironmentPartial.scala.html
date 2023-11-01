@@ -189,17 +189,17 @@
 }
 
 @renderTelemetryLinks(links: Seq[Link], slugInfoFlag: String) = {
-  @for(link <- links) {
-    <li class="list-item col">
-      <div class="row">
-        <a id="link-to-@{link.id}-@{slugInfoFlag}" href="@{link.url}" target="_blank" rel="noreferrer noopener">
-            @link.cls.map{c =>
-              <span class="@c"></span>
-            }
-            @{link.displayName}
-            <span class="glyphicon glyphicon-new-window"></span>
-        </a>
-      </div>
-    </li>
-  }
+  <li class="list-item col">
+    <div class="row">
+    @for(link <- links) {
+      <a id="link-to-@{link.id}-@{slugInfoFlag}" href="@{link.url}" target="_blank" rel="noreferrer noopener">
+          @link.cls.map{c =>
+            <span class="@c"></span>
+          }
+          @{link.displayName}
+          <span class="glyphicon glyphicon-new-window"></span>
+      </a>
+    }
+    </div>
+  </li>
 }
