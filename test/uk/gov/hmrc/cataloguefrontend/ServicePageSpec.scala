@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs
 
 import scala.io.Source
+import scala.jdk.CollectionConverters._
 
 class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
@@ -43,7 +44,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=repo1", willRespondWith = (200, Some(deploymentConfigsService1)))
     serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=service-1", willRespondWith = (200, Some(deploymentConfigsService1)))
-    serviceEndpoint(GET, "/service-metrics/service-1/non-performant-queries", willRespondWith = (200, Some("""[{"service": "service-1", "environment": "qa", "queryTypes": []}]""")))
+    serviceEndpoint(GET, "/service-metrics/service-1/non-performant-queries", willRespondWith = (200, Some("""[{"service": "service-1", "environment": "qa", "queryTypes": ["Slow Running"]}]""")))
+    serviceEndpoint(GET, "/service-metrics/service-1/collections", willRespondWith = (200, Some("""[{"database": "database-1", "service": "service-1", "sizeBytes": 1024, "date": "2023-11-06", "collection": "collection-1", "environment": "qa", "queryTypes": []}]""")))
   }
 
   implicit val wrwf = JsonCodecs.whatsRunningWhereReads
@@ -167,6 +169,18 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       val document = Jsoup.parse(response.body)
       document.select("#platform-dependencies-latest").size() should be > 0
     }
+
+    "not render mongodb related links" when {
+      "the service doesn't use mongo" in new Setup {
+        serviceEndpoint(GET, "/service-metrics/service-1/collections", willRespondWith = (200, Some("""[]""")))
+
+        val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get().futureValue
+        response.status shouldBe 200
+
+        val document = Jsoup.parse(response.body)
+        document.select("#production-telemetry").eachText().asScala.mkString should not include "Slow Running Queries"
+      }
+    } 
   }
 
   def readFile(jsonFilePath: String): String = {

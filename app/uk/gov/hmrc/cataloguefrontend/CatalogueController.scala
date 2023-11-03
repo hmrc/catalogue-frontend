@@ -147,7 +147,11 @@ class CatalogueController @Inject() (
       deployments          <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
       repositoryName       =  repositoryDetails.name
       jenkinsJobs          <- teamsAndRepositoriesConnector.lookupLatestBuildJobs(repositoryName)
-      nonPerformantQueries <- serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
+      hasMongo             <- serviceMetricsConnector.getCollections(serviceName).map(_.size > 0)
+      nonPerformantQueries <- if (hasMongo) 
+        serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
+        else
+          Future.successful(Seq.empty)
       envDatas             <- Environment.values.traverse { env =>
                                 val slugInfoFlag: SlugInfoFlag = SlugInfoFlag.ForEnvironment(env)
                                 val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
@@ -166,8 +170,10 @@ class CatalogueController @Inject() (
                                                               telemetryLinks.grafanaDashboard(env, serviceName),
                                                               telemetryLinks.kibanaDashboard(env, serviceName)
                                                            ),
-                                                           nonPerformantQueryLinks = 
+                                                           nonPerformantQueryLinks = if (hasMongo)
                                                             telemetryLinks.kibanaNonPerformantQueries(env, serviceName, nonPerformantQueries)
+                                                            else
+                                                              Seq.empty
                                                          )
                                     } yield Some(slugInfoFlag -> data)
                                   case None => Future.successful(None)
