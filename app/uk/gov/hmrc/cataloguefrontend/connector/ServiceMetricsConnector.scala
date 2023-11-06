@@ -24,10 +24,11 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-import ServiceMetricsConnector.NonPerformantQueries
+import ServiceMetricsConnector._
 
 @Singleton
 class ServiceMetricsConnector @Inject() (
@@ -47,6 +48,13 @@ class ServiceMetricsConnector @Inject() (
       .get(url"$serviceMetricsBaseUrl/service-metrics/$service/non-performant-queries")
       .execute[Seq[NonPerformantQueries]]
   }
+
+  def getCollections(service: String)(implicit hc: HeaderCarrier): Future[Seq[MongoCollectionSize]] = {
+    implicit val mcsR = MongoCollectionSize.reads
+    httpClientV2
+      .get(url"$serviceMetricsBaseUrl/service-metrics/$service/collections")
+      .execute[Seq[MongoCollectionSize]]
+  }
 }
 
 object ServiceMetricsConnector {
@@ -62,5 +70,27 @@ object ServiceMetricsConnector {
       ~ (__ \ "environment").read[Environment](Environment.format)
       ~ (__ \ "queryTypes" ).read[Seq[String]]
       )(NonPerformantQueries.apply _)
+  }
+
+  case class MongoCollectionSize(
+    database   : String,
+    collection : String,
+    sizeBytes  : BigDecimal,
+    date       : LocalDate,
+    environment: Environment,
+    service    : Option[String],
+  )
+
+  object MongoCollectionSize {
+    val reads: Reads[MongoCollectionSize] = {
+      implicit val envR = Environment.format
+      ( (__ \ "database"   ).read[String]
+      ~ (__ \ "collection" ).read[String]
+      ~ (__ \ "sizeBytes"  ).read[BigDecimal]
+      ~ (__ \ "date"       ).read[LocalDate]
+      ~ (__ \ "environment").read[Environment]
+      ~ (__ \ "service"    ).readNullable[String]
+      )(apply _)
+    }
   }
 }
