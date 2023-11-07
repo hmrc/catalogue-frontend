@@ -88,6 +88,7 @@ class VulnerabilitiesConnectorSpec
               |   "fixedVersions": ["2.5.2"],
               |   "references": ["http://test.com"],
               |   "publishedDate": "2019-08-20T10:53:37.00Z",
+              |   "firstDetected": "2019-08-20T10:53:37.00Z",
               |   "assessment": "Serious",
               |   "curationStatus": "ACTION_REQUIRED",
               |   "ticket": "ticket1"
@@ -115,6 +116,7 @@ class VulnerabilitiesConnectorSpec
             fixedVersions = Some(Seq("2.5.2")),
             references = Seq("http://test.com"),
             publishedDate = Instant.parse("2019-08-20T10:53:37.00Z"),
+            firstDetected = Some(Instant.parse("2019-08-20T10:53:37.00Z")),
             assessment = Some("Serious"),
             curationStatus = Some(ActionRequired),
             ticket = Some("ticket1")

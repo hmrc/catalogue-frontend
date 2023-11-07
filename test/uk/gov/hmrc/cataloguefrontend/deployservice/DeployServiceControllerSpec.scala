@@ -261,6 +261,7 @@ class DeployServiceControllerSpec
                             , fixedVersions              = None
                             , references                 = Seq("some-reference")
                             , publishedDate              = Instant.now
+                            , firstDetected              = Some(Instant.now)
                             , assessment                 = None
                             , curationStatus             = None
                             , ticket                     = None

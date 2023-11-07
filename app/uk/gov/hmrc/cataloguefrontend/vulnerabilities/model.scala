@@ -42,11 +42,10 @@ case class VulnerableComponent(
 }
 
 object VulnerableComponent {
-  val format: OFormat[VulnerableComponent] = {
+  val format: OFormat[VulnerableComponent] =
     ( (__ \ "component").format[String]
-      ~ (__ \ "version").format[String]
-      )(apply, unlift(unapply))
-  }
+    ~ (__ \ "version"  ).format[String]
+    )(apply, unlift(unapply))
 }
 
 case class DistinctVulnerability(
@@ -59,6 +58,7 @@ case class DistinctVulnerability(
     fixedVersions             : Option[Seq[String]],
     references                : Seq[String],
     publishedDate             : Instant,
+    firstDetected             : Option[Instant],
     assessment                : Option[String],
     curationStatus            : Option[CurationStatus],
     ticket                    : Option[String]
@@ -70,19 +70,20 @@ object DistinctVulnerability {
     implicit val csf = CurationStatus.format
     implicit val vcf = VulnerableComponent.format
 
-    ( (__ \ "vulnerableComponentName"     ).format[String]
-      ~ (__ \ "vulnerableComponentVersion").format[String]
-      ~ (__ \ "vulnerableComponents"      ).format[Seq[VulnerableComponent]]
-      ~ (__ \ "id"                        ).format[String]
-      ~ (__ \ "score"                     ).formatNullable[Double]
-      ~ (__ \ "description"               ).format[String]
-      ~ (__ \ "fixedVersions"             ).formatNullable[Seq[String]]
-      ~ (__ \ "references"                ).format[Seq[String]]
-      ~ (__ \ "publishedDate"             ).format[Instant]
-      ~ (__ \ "assessment"                ).formatNullable[String]
-      ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
-      ~ (__ \ "ticket"                    ).formatNullable[String]
-      )(apply, unlift(unapply))
+    ( (__ \ "vulnerableComponentName"   ).format[String]
+    ~ (__ \ "vulnerableComponentVersion").format[String]
+    ~ (__ \ "vulnerableComponents"      ).format[Seq[VulnerableComponent]]
+    ~ (__ \ "id"                        ).format[String]
+    ~ (__ \ "score"                     ).formatNullable[Double]
+    ~ (__ \ "description"               ).format[String]
+    ~ (__ \ "fixedVersions"             ).formatNullable[Seq[String]]
+    ~ (__ \ "references"                ).format[Seq[String]]
+    ~ (__ \ "publishedDate"             ).format[Instant]
+    ~ (__ \ "firstDetected"             ).formatNullable[Instant]
+    ~ (__ \ "assessment"                ).formatNullable[String]
+    ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
+    ~ (__ \ "ticket"                    ).formatNullable[String]
+    )(apply, unlift(unapply))
   }
 }
 
@@ -93,12 +94,11 @@ case class VulnerabilityOccurrence(
 )
 
 object VulnerabilityOccurrence {
-  val reads: OFormat[VulnerabilityOccurrence] = {
-    ( (__ \ "service"         ).format[String]
-      ~ (__ \ "serviceVersion").format[String]
-      ~ (__ \ "componentPathInSlug").format[String]
-      )(apply, unlift(unapply))
-  }
+  val reads: OFormat[VulnerabilityOccurrence] =
+    ( (__ \ "service"            ).format[String]
+    ~ (__ \ "serviceVersion"     ).format[String]
+    ~ (__ \ "componentPathInSlug").format[String]
+    )(apply, unlift(unapply))
 }
 
 case class VulnerabilitySummary(
@@ -112,10 +112,10 @@ object VulnerabilitySummary {
     implicit val dvf = DistinctVulnerability.apiFormat
     implicit val vof = VulnerabilityOccurrence.reads
 
-    ((__ \ "distinctVulnerability").format[DistinctVulnerability]
-      ~ (__ \ "occurrences"       ).format[Seq[VulnerabilityOccurrence]]
-      ~ (__ \ "teams"             ).format[Seq[String]]
-      ) (apply, unlift(unapply))
+    ( (__ \ "distinctVulnerability").format[DistinctVulnerability]
+    ~ (__ \ "occurrences"          ).format[Seq[VulnerabilityOccurrence]]
+    ~ (__ \ "teams"                ).format[Seq[String]]
+    ) (apply, unlift(unapply))
   }
 }
 
@@ -128,14 +128,13 @@ case class TotalVulnerabilityCount(
 )
 
 object TotalVulnerabilityCount {
-  val reads: Reads[TotalVulnerabilityCount] = {
-    ((__ \ "service"                ).read[String]
-      ~ (__ \ "actionRequired"      ).read[Int]
-      ~ (__ \ "noActionRequired"    ).read[Int]
-      ~ (__ \ "investigationOngoing").read[Int]
-      ~ (__ \ "uncurated"           ).read[Int]
-      )(apply _)
-  }
+  val reads: Reads[TotalVulnerabilityCount] =
+    ( (__ \ "service"               ).read[String]
+    ~ (__ \ "actionRequired"        ).read[Int]
+    ~ (__ \ "noActionRequired"      ).read[Int]
+    ~ (__ \ "investigationOngoing"  ).read[Int]
+    ~ (__ \ "uncurated"             ).read[Int]
+    )(apply _)
 }
 
 case class VulnerabilitiesTimelineCount(
@@ -144,9 +143,8 @@ case class VulnerabilitiesTimelineCount(
 )
 
 object VulnerabilitiesTimelineCount {
-  val reads: Reads[VulnerabilitiesTimelineCount] = {
+  val reads: Reads[VulnerabilitiesTimelineCount] =
     ( (__ \ "weekBeginning").read[Instant]
-      ~ (__ \ "count"      ).read[Int]
-      )(VulnerabilitiesTimelineCount.apply _)
-  }
+    ~ (__ \ "count"        ).read[Int]
+    )(VulnerabilitiesTimelineCount.apply _)
 }
