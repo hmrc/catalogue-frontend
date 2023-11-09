@@ -16,10 +16,10 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
-@import views.html.vulnerabilities.VulnerabilityDetails
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitySummary}
 @import views.html.helper.select
+@import views.html.vulnerabilities.VulnerabilityDetails
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 @this(viewMessages: ViewMessages)
 
@@ -105,10 +105,11 @@
                         <th></th>
                         <th class="col-2"><button class="sort no-border fw-bold" data-sort="vuln-id">Vulnerability ID</button></th>
                         <th class="col-2">Vulnerable Component</th>
-                        <th class="col-4">Assessment</th>
-                        <th class="col-2"><button class="sort no-border fw-bold" data-sort="curation-status">Curation Status</button></th>
+                        <th class="col-3">Assessment</th>
+                        <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="curation-status">Curation Status</button></th>
                         <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="score">Score</button></th>
                         <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="services">Services</button></th>
+                        <th class="col-1 text-center"><button class="sort no-border fw-bold" data-sort="first-detected">First Detected</button></th>
                         @* maintain the column count for accessibility *@
                         <th class="d-none"></th>
                         <th class="d-none"></th>
@@ -128,7 +129,7 @@
     @if(summaries.nonEmpty) {
       <script @CSPNonce.attr>
         let options = {
-            valueNames: ['vuln-id', 'score', 'curation-status', 'services']
+            valueNames: ['vuln-id', 'score', 'curation-status', 'services', 'first-detected']
         };
 
         new List('vulnerabilities-list', options);
@@ -159,9 +160,11 @@
             <td class="vuln-id">@summary.distinctVulnerability.id</td>
             <td class="vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
             <td class="assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-            <td class="curation-status"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
-            <td class="score text-end">@summary.distinctVulnerability.score.getOrElse("")</td>
-            <td class="services text-end">@summary.occurrences.groupBy(_.service).size</td>
+            <td class="curation-status text-center"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+            <td class="score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
+            <td class="services text-center">@summary.occurrences.groupBy(_.service).size</td>
+            <td class="first-detected text-center">@summary.distinctVulnerability.firstDetected.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")</td>
+
             @* maintain the column count for accessibility *@
             <td class="d-none"></td>
             <td class="d-none"></td>
@@ -178,7 +181,8 @@
             <td class="curation-status d-none"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
             <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
             <td class="services d-none">@summary.occurrences.groupBy(_.service).size</td>
-            <td colspan="7">
+            <td class="first-detected d-none">@summary.distinctVulnerability.firstDetected.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")</td>
+            <td colspan="8">
                 @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
             </td>
         </tr>
