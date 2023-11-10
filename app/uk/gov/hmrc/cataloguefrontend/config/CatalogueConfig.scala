@@ -29,4 +29,6 @@ class CatalogueConfig @Inject() (servicesConfig: ServicesConfig) {
 
   def killSwitchLink(shutterType: String, env: String) =
     s"${killswitchJenkinsUrl(env)}/job/${killswitchJenkinsJob(shutterType)}/"
+
+  val showNonPerformantQueries = servicesConfig.getBoolean("feature.show-non-performant-queries")
 }

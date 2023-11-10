@@ -17,6 +17,7 @@
 @import partials.DependenciesByEnvironmentPartial
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
@@ -43,7 +44,8 @@
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
   distinctVulnerabilitiesCount : Option[Int],
-  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsWithHasRepo
+  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsWithHasRepo,
+  config                       : CatalogueConfig,
 )(implicit
   messages                     : Messages,
   request                      : RequestHeader
@@ -120,7 +122,7 @@
             </div>
         </div>
 
-        @dependenciesByEnvironmentPartial(serviceName, envDatas)
+        @dependenciesByEnvironmentPartial(serviceName, envDatas, config)
     </section>
 
     <div class="alert alert-success" role="alert" id="@repositoryDetails.name">

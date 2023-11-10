@@ -14,6 +14,7 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 @import uk.gov.hmrc.cataloguefrontend.connector.Link
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, Version}
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
@@ -27,7 +28,8 @@
 
 @(
   serviceName: String,
-  envDatas   : Map[SlugInfoFlag, EnvData]
+  envDatas   : Map[SlugInfoFlag, EnvData],
+  config     : CatalogueConfig,
 )(implicit messages: Messages)
 
 
@@ -76,7 +78,9 @@
                 <ul class="list-unstyled mb-0 row row-cols-4">
                   @optEnvData.collect { case envData if envData.telemetryLinks.nonEmpty =>
                     @renderTelemetryLinks(envData.telemetryLinks, slugInfoFlag.asString)
-                    @renderTelemetryLinks(envData.nonPerformantQueryLinks, slugInfoFlag.asString)
+                    @if(config.showNonPerformantQueries) {
+                      @renderTelemetryLinks(envData.nonPerformantQueryLinks, slugInfoFlag.asString)
+                    }
                   }.getOrElse{
                     <li class="list-item">
                       Not deployed

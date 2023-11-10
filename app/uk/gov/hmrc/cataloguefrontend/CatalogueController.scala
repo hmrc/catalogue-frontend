@@ -25,6 +25,7 @@ import play.api.mvc._
 import play.api.Logger
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
+import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
@@ -80,7 +81,8 @@ class CatalogueController @Inject() (
   defaultBranchListPage        : DefaultBranchListPage,
   costEstimationPage           : CostEstimationPage,
   serviceMetricsConnector      : ServiceMetricsConnector,
-  override val auth            : FrontendAuthComponents
+  override val auth            : FrontendAuthComponents,
+  config                       : CatalogueConfig,
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -210,7 +212,8 @@ class CatalogueController @Inject() (
       hasBranchProtectionAuth      = hasBranchProtectionAuth,
       commenterReport              = commenterReport,
       distinctVulnerabilitiesCount = vulnerabilitiesCount,
-      serviceRelationships         = serviceRelationships
+      serviceRelationships         = serviceRelationships,
+      config                       = config,
     ))
   }
 
