@@ -31,9 +31,9 @@
     @environments.map { env =>
       @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>
         <td id="row@{i}_version_@{env.asString}" style="background: rgba(246, 124, 27, @{sdc.slotsAndInstancesToMemory/maxMemory});">
-            <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128mb) instances:@sdc.instances slots:@sdc.slots">
+            <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128MB) instances:@sdc.instances slots:@sdc.slots">
                 <span class="@env.asString visually-hidden">@sdc.slotsAndInstancesToMemory</span>
-                @sdc.instances x @{sdc.slotsToMemory}mb
+                @sdc.instances x @{sdc.slotsToMemory}MB
             </abbr>
         </td>
       }.getOrElse {
