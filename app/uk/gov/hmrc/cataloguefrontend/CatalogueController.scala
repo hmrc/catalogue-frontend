@@ -147,8 +147,8 @@ class CatalogueController @Inject() (
       deployments          <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
       repositoryName       =  repositoryDetails.name
       jenkinsJobs          <- teamsAndRepositoriesConnector.lookupLatestBuildJobs(repositoryName)
-      hasMongo             <- serviceMetricsConnector.getCollections(serviceName).map(_.size > 0)
-      nonPerformantQueries <- if (hasMongo) 
+      database             <- serviceMetricsConnector.getCollections(serviceName).map(_.headOption.map(_.database))
+      nonPerformantQueries <- if (database.isDefined) 
         serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
         else
           Future.successful(Seq.empty)
@@ -170,10 +170,9 @@ class CatalogueController @Inject() (
                                                               telemetryLinks.grafanaDashboard(env, serviceName),
                                                               telemetryLinks.kibanaDashboard(env, serviceName)
                                                            ),
-                                                           nonPerformantQueryLinks = if (hasMongo)
-                                                            telemetryLinks.kibanaNonPerformantQueries(env, serviceName, nonPerformantQueries)
-                                                            else
-                                                              Seq.empty
+                                                           nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]())(d =>
+                                                             telemetryLinks.kibanaNonPerformantQueries(env, d, nonPerformantQueries)
+                                                           )
                                                          )
                                     } yield Some(slugInfoFlag -> data)
                                   case None => Future.successful(None)
