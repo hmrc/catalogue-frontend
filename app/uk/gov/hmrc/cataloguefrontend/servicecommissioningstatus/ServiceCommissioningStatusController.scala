@@ -16,23 +16,31 @@
 
 package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.http.HttpEntity
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result, ResponseHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceType}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import views.html.error_404_template
-import views.html.servicecommissioningstatus.ServiceCommissioningStatusPage
+import views.html.servicecommissioningstatus.{ServiceCommissioningStatusPage, SearchServiceCommissioningStatusPage}
+
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
+
 @Singleton
 class ServiceCommissioningStatusController @Inject() (
-  serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector
-, serviceCommissioningStatusPage     : ServiceCommissioningStatusPage
-, override val mcc                   : MessagesControllerComponents
-, override val auth                  : FrontendAuthComponents
+  serviceCommissioningStatusConnector : ServiceCommissioningStatusConnector
+, teamsAndRepositoriesConnector       : TeamsAndRepositoriesConnector
+, serviceCommissioningStatusPage      : ServiceCommissioningStatusPage
+, searchServiceCommissioningStatusPage: SearchServiceCommissioningStatusPage
+, override val mcc                    : MessagesControllerComponents
+, override val auth                   : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -42,13 +50,111 @@ class ServiceCommissioningStatusController @Inject() (
     BasicAuthAction.async { implicit request =>
       serviceCommissioningStatusConnector
         .commissioningStatus(serviceName)
-        .map{_.fold(NotFound(error_404_template())){
-            result =>
-              val applicableEnvironments: List[Environment] = result.collect {
-                case check: Check.EnvCheck => check.checkResults.keySet
-              }.flatten.distinct
-              Ok(serviceCommissioningStatusPage(serviceName, result, applicableEnvironments))
-          }
-        }
+        .map(_.fold(NotFound(error_404_template()))(result => Ok(serviceCommissioningStatusPage(serviceName, result))))
     }
+
+  def searchLanding(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      for {
+        allTeams  <- teamsAndRepositoriesConnector.allTeams()
+        allChecks <- serviceCommissioningStatusConnector.allChecks()
+        form      =  SearchCommissioning.searchForm.fill(
+                       SearchCommissioning.SearchCommissioningForm(
+                         teamName      = None
+                       , serviceType   = None
+                       , checks        = allChecks.map(_._1).toList
+                       , environments  = Environment.values.filterNot(_ == Environment.Integration)
+                       )
+                     )
+      } yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
+    }
+
+  def searchResults(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      SearchCommissioning
+        .searchForm
+        .bindFromRequest()
+        .fold(
+          formWithErrors => for {
+                              allTeams  <- teamsAndRepositoriesConnector.allTeams()
+                              allChecks <- serviceCommissioningStatusConnector.allChecks()
+                            } yield BadRequest(searchServiceCommissioningStatusPage(formWithErrors, allTeams, allChecks))
+        , formObject     => for {
+                              allTeams  <- teamsAndRepositoriesConnector.allTeams()
+                              allChecks <- serviceCommissioningStatusConnector.allChecks()
+                              results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType)
+                            } yield if (formObject.asCsv) {
+                                val rows   = toRows(allChecks.filter { case (title, _) => formObject.checks.contains(title) }, formObject.environments, results)
+                                val csv    = CsvUtils.toCsv(rows)
+                                val source = akka.stream.scaladsl.Source.single(akka.util.ByteString(csv, "UTF-8"))
+                                Result(
+                                  header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"config-search.csv\"")),
+                                  body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+                                )
+                            } else {
+                              Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject), allTeams, allChecks, Some(results)))
+                            }
+        )
+    }
+
+  private def toRows(
+    checks      : Seq[(String, FormCheckType)]
+  , environments: Seq[Environment]
+  , results     : Seq[CachedServiceCheck]
+  ): Seq[Seq[(String, String)]] =
+    for {
+      result                 <- results
+    } yield {
+      Seq("service" -> result.serviceName.asString) ++ checks.flatMap { case (title, formCheckType) =>
+        result.checks.collect {
+          case c: Check.SimpleCheck if c.title == title => Seq(c.title -> displayResult(Some(c.checkResult)))
+          case c: Check.EnvCheck    if c.title == title => environments.flatMap { e => Seq(s"${c.title} - ${e.asString}" -> displayResult(c.checkResults.get(e))) }
+        }.flatten
+      }
+    }
+
+  private def displayResult(result: Option[Check.Result]) = result match {
+    case None                 => ""
+    case Some(Right(present)) => "Y"
+    case Some(Left(missing))  => "N"
+  }
+}
+
+import play.api.data.{Form, Forms}
+
+object SearchCommissioning {
+  case class SearchCommissioningForm(
+    teamName    : Option[TeamName]
+  , serviceType : Option[ServiceType]
+  , checks      : List[String]
+  , environments: List[Environment]
+  , asCsv       : Boolean = false
+  )
+
+  lazy val searchForm: Form[SearchCommissioningForm] = Form(
+    Forms.mapping(
+      "teamName"     -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+    , "serviceType"  -> Forms.text.transform[Option[ServiceType]](x => ServiceType.parse(x).toOption, _.fold("")(_.asString))
+    , "checks"       -> Forms.list(Forms.text)
+    , "environments" -> Forms.list(Forms.text)
+                             .transform[List[Environment]](
+                               xs => xs.map(Environment.parse).flatten
+                             , x  => identity(x).map(_.asString)
+                             )
+    , "asCsv"        -> Forms.boolean
+    )(SearchCommissioningForm.apply)(SearchCommissioningForm.unapply)
+  )
+
+  val allCheckTypes = ("global" -> "Global") :: Environment.values.map(x => (x.asString, x.displayString))
+
+  case class TeamCommissioningForm(
+    checkType: String
+  )
+
+  lazy val teamForm: Form[TeamCommissioningForm] = Form(
+    Forms.mapping(
+      "checkType" -> Forms.text
+    )(TeamCommissioningForm.apply)(TeamCommissioningForm.unapply)
+  )
+
 }

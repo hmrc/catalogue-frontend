@@ -21,9 +21,8 @@
 @this()
 
 
-@(serviceName            : String,
-  checks                 : List[Check],
-  applicableEnvironments : List[Environment]
+@(serviceName: String,
+  checks     : List[Check],
 )(implicit
   request    : RequestHeader
 )
@@ -55,9 +54,8 @@
     </table>
 }
 
-
-@createID(s: String) = @{
-    s.toLowerCase.replaceAll("\\s+", "-").replaceAll("-+", "-")
+@createID(check: Check) = @{
+    check.title.toLowerCase.replaceAll("\\s+", "-").replaceAll("-+", "-")
 }
 
 @popoverContent(check: Check) = {
@@ -65,7 +63,7 @@
 
     @check.linkToDocs.map { link =>
       <br><br>
-      <a id="link-to-@createID(check.title)-docs" href="@link" target="_blank" rel="noreferrer noopener">Find out more<span class="glyphicon glyphicon-new-window"/></a>
+      <a id="link-to-@createID(check)-docs" href="@link" target="_blank" rel="noreferrer noopener">Find out more<span class="glyphicon glyphicon-new-window"/></a>
     }
 }
 
@@ -85,7 +83,7 @@
     <tr>
         <td class="text-center">@popover(check)</td>
         <td>@check.title</td>
-        <td colspan="6">@displayResult(createID(check.title), check.checkResult)</td>
+        <td colspan="6">@displayResult(createID(check), check.checkResult)</td>
     </tr>
 }
 
@@ -94,17 +92,19 @@
     <tr>
         <td class="text-center">@popover(check)</td>
         <td>@check.title</td>
-        @applicableEnvironments.map(e => e -> check.checkResults.get(e)).sortBy(_._1).map{
-            case (env, Some(result)) => {
+        @defining(checks.collect { case check: Check.EnvCheck => check.checkResults.keySet }.flatten.distinct) { envs =>
+            @envs.map(e => e -> check.checkResults.get(e)).sortBy(_._1).map {
+                case (env, Some(result)) => {
                     <td>
                         <ul class="list-unstyled">
                             <li> @env.displayString </li>
-                            <li> @displayResult(createID(s"${check.title}-${env.displayString}"), result)</li>
+                            <li> @displayResult(s"${createID(check)}-${env.displayString}", result)</li>
                         </ul>
                     </td>
-           }
-           case (env,None) => { <td></td> }
-          }
+                }
+                case (env,None) => {<td></td>}
+            }
+        }
     </tr>
 }
 

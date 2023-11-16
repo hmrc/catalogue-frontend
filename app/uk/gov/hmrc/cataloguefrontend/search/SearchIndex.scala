@@ -97,6 +97,12 @@ class SearchIndex @Inject()(
         SearchTerm("page", "deploy service", deployServiceRoutes.DeployServiceController.step1(None).url, 1.0f)
       )
     } else Nil
+  } ++ {
+    if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showSearchCommissioningState.isEnabled) {
+      List(
+        SearchTerm("page", "search commissioning state  service", commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url, 1.0f)
+      )
+    } else Nil
   }
 
   def updateIndexes(): Future[Unit] = {
