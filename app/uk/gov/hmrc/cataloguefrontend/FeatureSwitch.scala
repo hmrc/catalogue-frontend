@@ -50,4 +50,8 @@ object CatalogueFrontendSwitches {
 
   def showDeployService: FeatureSwitch =
     FeatureSwitch.forName("show-deploy-service")
+
+  def showSearchCommissioningState: FeatureSwitch =
+    FeatureSwitch.forName("show-search-commissioning-state")
+
 }

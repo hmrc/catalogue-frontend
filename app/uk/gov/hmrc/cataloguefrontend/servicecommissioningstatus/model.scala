@@ -17,10 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsError
+
+import play.api.libs.json.{JsValue, JsSuccess, JsError, Reads, __}
+import play.api.libs.functional.syntax._
 
 sealed trait Check {
+  val id        : String = title.toLowerCase.replaceAll("\\s+", "-").replaceAll("-+", "-")
   val title     : String
   val helpText  : String
   val linkToDocs: Option[String]
@@ -46,8 +48,6 @@ object Check {
   , linkToDocs: Option[String]
   ) extends Check
 
-  import play.api.libs.functional.syntax.toFunctionalBuilderOps
-  import play.api.libs.json.{JsValue, Reads, __}
   val reads: Reads[Check] = new Reads[Check] {
 
     implicit val writesResult: Reads[Result] = new Reads[Result] {
@@ -85,4 +85,30 @@ object Check {
         .validate[SimpleCheck]
         .orElse(json.validate[EnvCheck])
   }
+}
+
+case class ServiceName(asString: String) extends AnyVal
+
+case class CachedServiceCheck(
+  serviceName: ServiceName
+, checks     : Seq[Check]
+)
+
+object CachedServiceCheck {
+  val reads: Reads[CachedServiceCheck] = {
+    implicit val readsCheck = Check.reads
+    ( (__ \ "serviceName").read[String].map(ServiceName.apply)
+    ~ (__ \ "checks"     ).read[Seq[Check]]
+    )(CachedServiceCheck.apply _)
+  }
+}
+
+import uk.gov.hmrc.cataloguefrontend.util.{Enum, WithAsString}
+
+sealed trait FormCheckType extends WithAsString
+object FormCheckType extends Enum[FormCheckType] {
+  case object Simple      extends FormCheckType { val asString = "simple"     }
+  case object Environment extends FormCheckType { val asString = "environment"}
+
+  override val values: List[FormCheckType] = List(Simple, Environment)
 }

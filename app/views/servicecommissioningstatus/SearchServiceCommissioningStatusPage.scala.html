@@ -1,0 +1,196 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import views.html.helper
+@import views.html.partials.form_global_errors
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{SearchCommissioning, routes, FormCheckType, Check, CachedServiceCheck }
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, ServiceType}
+
+@this()
+
+@(form     : Form[SearchCommissioning.SearchCommissioningForm],
+  allTeams : Seq[Team]
+, allChecks: Seq[(String, FormCheckType)]
+, results  : Option[List[CachedServiceCheck]] = None
+)(implicit
+  messages : Messages
+, request  : RequestHeader
+)
+
+@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+
+@standard_layout("Search Commissioning State", active = "explore") {
+    <h1 class="page-heading mt-4">
+        Search Commissioning State
+        <a class="float-end" role="button" data-bs-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+            <i class="glyphicon glyphicon-question-sign text-black"></i>
+        </a>
+    </h1>
+
+    <div class="collapse mb-3" id="helpText">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="fw-bold">How to use this page?</h4>
+                <ul>
+                    <li>Search the latest commissioning checks by:
+                        <ul>
+                            <li><code>Team</code></li>
+                            <li><code>Service Type</code></li>
+                            <li><code>Commissioning Checks</code>(multi select)</li>
+                            <li><code>Environments</code>(multi select)</li>
+                        </ul>
+                    </li>
+                    <li>Clicking <q>Service View</q> in the search results will show:</li>
+                    <ul>
+                        <li>More recent data - this page queries from a short cache for performance </li>
+                        <li>Help links for each <code>Commissioning Checks</code></li>
+                    </ul>
+                    <li>The results can be <code>Exported as CSV</code> using the button below</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    @form_global_errors(form)
+
+    @helper.form(
+        action           =  routes.ServiceCommissioningStatusController.searchResults(),
+        Symbol("method") -> "GET",
+        Symbol("id")     -> "form",
+        Symbol("class")  -> "form-group"
+    ) {
+        <div class="row">
+            <div class="col-md-4">
+                @helper.select(
+                    field                 =  form("teamName"),
+                    options               =  allTeams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Team",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "team-filter",
+                    Symbol("class")       -> "form-select",
+                    Symbol("title")       -> "On change updates 'Config Key' autocomplete"
+                )
+            </div>
+            <div class="col-md-2">
+                @helper.select(
+                    field                 = form("serviceType"),
+                    options               = ServiceType.values.toSeq.map(st => st.asString -> st.displayString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Service Type",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("class")       -> "form-select"
+                )
+            </div>
+            <div class="col-md-4">
+                @helper.select(
+                    field                 = form("checks"),
+                    options               = allChecks.map { case (title, _) => title -> title },
+                    Symbol("_label")      -> "Commissioning Checks",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("class")       -> "form-select",
+                    Symbol("multiple")    -> None,
+                    Symbol("size")        -> Environment.values.size
+                )
+            </div>
+
+            <div class="col-md-2">
+                <dl>
+                    <dt><label>Environments</label></dt>
+                    <dd>
+                        @defining(form.get.environments) { environments =>
+                            @for(env <-  Environment.values) {
+                                <div class="checkbox-group">
+                                    <input name="environments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(environments.contains(env)) {checked} />
+                                    <label class="form-check-label" for="@{env.asString}-checkbox">@env.displayString</label>
+                                </div>
+                            }
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <button id="config-search" class="btn btn-success" type="submit">Search</button>
+        <input type="hidden" id="teamChange" name="teamChange" value="false" />
+        <input type="hidden" id="asCsv" name="asCsv" value="false" />
+        <input type="button" id="export-as-csv-btn" class="btn btn-outline-secondary" value="Export as CSV"/>
+
+        @if(results.exists(_.isEmpty)) {
+            <span class="ms-2">No results found.</span>
+        } else if (results.nonEmpty) {
+            <span class="ms-2">Found @{results.getOrElse(Nil).size} results. Please note this page queries a 10 minute cache. Clicking <q>Service View</q>, on an individual service, will perform a live query.</span>
+            <table id="search-results" class="table table-sm table-sm-no-side-padding table-striped always-wrap sticky-header text-break">
+                <thead>
+                    <tr>
+                        <th class="ps-1">Service</th>
+                        @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
+                            @formCheckType match {
+                                case FormCheckType.Simple      => {
+                                    <th class="rotate"><div><span>@title</span></div></th>
+                                    <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                }
+                                case FormCheckType.Environment => {
+                                    <th class="rotate"><div><span>@title</span></div></th>
+                                    @form.get.environments.map { case env => <th class="rotate sub-heading text-success"><div><span>@env.displayString</span></div></th> }
+                                    <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                }
+                            }
+                        }
+                        <th style="width: 90px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @results.getOrElse(Nil).map { result =>
+                        <tr>
+                            <td class="ps-1"><a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a></td>
+                            @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
+                                @(result.checks.find(_.title == title), formCheckType) match {
+                                    case (Some(check: Check.SimpleCheck), _                        ) => {<td>@displayResult(Some(check.checkResult))</td><td></td>}
+                                    case (Some(check: Check.EnvCheck)   , _                        ) => {<td></td>@form.get.environments.map { e => <td style="padding: 0px;">@displayResult(check.checkResults.get(e))</td>}<td></td>}
+                                    case (None                          , FormCheckType.Simple     ) => {<td colspan="2"></td>}
+                                    case (None                          , FormCheckType.Environment) => {<td colspan="@(form.get.environments.size + 2)"></td>}
+                                }
+                            }
+                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName.asString).url" title="Link to Commissioning State Page">Service View</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <script @CSPNonce.attr>
+        document
+            .getElementById("export-as-csv-btn")
+            .addEventListener("click", () => {
+                document.getElementById('asCsv').value = true;
+                document.getElementById('form').submit();
+                document.getElementById('asCsv').value = false;   // fixes browser back button issue
+            });
+    </script>
+}
+
+@displayResult(result: Option[Check.Result]) = {
+    @result match {
+        case None                 => { }
+        case Some(Right(present)) => { <span class="glyphicon glyphicon-ok text-success low"></span> }
+        case Some(Left(missing))  => { <span class="glyphicon glyphicon-minus text-secondary"></span> }
+    }
+}

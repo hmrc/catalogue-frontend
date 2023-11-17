@@ -34,8 +34,10 @@ POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefro
 
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
 GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name)
-GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name)
 
+GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name)
+GET        /commissioning-state/search                  uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchLanding()
+GET        /commissioning-state/search/results          uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchResults()
 
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)

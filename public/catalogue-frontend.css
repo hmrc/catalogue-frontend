@@ -246,6 +246,27 @@ table.always-wrap {
     word-wrap: break-word;
 }
 
+
+table.table-sm-no-side-padding>:not(caption)>*>* {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+}
+
+th.rotate {
+    height: 160px;
+    white-space: nowrap;
+}
+
+th.rotate > div {
+    transform: translate(0px, 0px) rotate(315deg);
+    width: 16px;
+}
+
+th.sub-heading {
+    font-weight: normal;
+    font-size: small;
+}
+
 .wrw-environment-head {
     width: 12%;
 }
