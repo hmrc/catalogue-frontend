@@ -31,6 +31,12 @@
 )(implicit messages: Messages)
 
 
+@lastEnvironmentWithDeployments = @{
+  SlugInfoFlag.values.reverse.collectFirst {
+    case s if envDatas.get(s).isDefined => s
+  }.getOrElse(SlugInfoFlag.Latest)
+}
+
 <div class="card"><div class="card-header">
     <ul id="environmentTabs" class="nav nav-tabs card-header-tabs" role="tablist">
         @for(slugInfoFlag <- SlugInfoFlag.values) {
@@ -38,7 +44,7 @@
                 <li class="nav-item" role="presentation">
                     <button id="@{
                         slugInfoFlag.asString
-                    }-tab" class="nav-link @if(slugInfoFlag == SlugInfoFlag.ForEnvironment(Environment.Production)) { active" aria-selected="true" } else {
+                    }-tab" class="nav-link @if(slugInfoFlag == lastEnvironmentWithDeployments) { active" aria-selected="true" } else {
                     " aria-selected="false" } data-bs-toggle="tab" data-bs-target="#@{
                     slugInfoFlag.asString
                 }-pane" type="button" role="tab" aria-controls="@slugInfoFlag.asString-pane" >
@@ -65,7 +71,7 @@
 <div id="environmentPanes" class="card-body tab-content">
   @for(slugInfoFlag <- SlugInfoFlag.values) {
     @defining(envDatas.get(slugInfoFlag)){ optEnvData: Option[EnvData] =>
-      <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == SlugInfoFlag.ForEnvironment(Environment.Production)) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
+      <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == lastEnvironmentWithDeployments) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
           <div id="@{slugInfoFlag.asString}-telemetry" class="card mb-3">
