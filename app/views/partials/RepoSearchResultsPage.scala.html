@@ -51,9 +51,9 @@
         @repoTeamNames(repo.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
     </td>
 
-    <td class="repo-bp font-monospace" id="row@{i}_branch-protection">
+    <td class="repo-bp font-monospace text-center" id="row@{i}_branch-protection">
     @if(repo.branchProtection.exists(_.isProtected)) {
-        <span class="glyphicon glyphicon-ok text-success"></span>
+        <span class="text-right glyphicon glyphicon-ok text-success" style="position: relative; left:-8px;"></span>
         <span class="visually-hidden">Branch protection is enabled</span>
     } else {
         <abbr style="text-decoration: none; border-bottom: none;" title="@List(
@@ -61,7 +61,7 @@
             s"Dismisses stale reviews = ${repo.branchProtection.exists(_.dismissesStaleReviews)}",
             s"Requires commit signatures = ${repo.branchProtection.exists(_.requiresCommitSignatures)}"
         ).mkString("\n")">
-            <span class="glyphicon glyphicon-remove text-danger"></span>
+            <span class="glyphicon glyphicon-remove text-danger" style="position: relative; left:-8px;"></span>
         </abbr>
         <span class="visually-hidden">Branch protection is not enabled</span>
     }
