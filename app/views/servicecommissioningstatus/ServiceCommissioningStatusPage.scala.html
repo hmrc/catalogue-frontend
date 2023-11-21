@@ -28,9 +28,44 @@
 )
 
 @standard_layout("Commissioning-State") {
-    <header>
-        <h1 class="page-heading mt-4">Commissioning State</h1>
-    </header>
+    <h1 class="page-heading mt-4">
+        Commissioning State
+        <a class="float-end" role="button" data-bs-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+            <i class="glyphicon glyphicon-question-sign text-black"></i>
+        </a>
+    </h1>
+
+    <div class="collapse mb-3" id="helpText">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="fw-bold">How to use this page?</h4>
+                <ul>
+                    <li>This page should be used to:
+                        <ul>
+                            <li>commission new services</li>
+                            <li>decomission old services</li>
+                            <li>inspect/maintain existing services</li>
+                        </ul>
+                    </li>
+                    <li>Refresh this page, once a step has been completed and any builds have finished. This page does not update automatically.</li>
+                    <li>Clicking <span class="glyphicon glyphicon-question-sign text-success"></span> per step, provides a helpful summary and relevant MDTP Handbook links</li>
+                    <li>Steps are:
+                        <ul>
+                            <li>contextually sensitive to service type and <code>repository.yaml</code> definitions</li>
+                            <li>open to service team discretion</li>
+                        </ul>
+                    </li>
+                    <li>The following icons mean:
+                        <ul>
+                            <li><span class="glyphicon glyphicon-ok text-success"></span> found</li>
+                            <li><span class="glyphicon glyphicon-minus text-secondary"></span> not found</li>
+                        </ul>
+                    </li>
+                    <li>If possible each icon is accompanied by a link to <q>view</q> or <q>add</q> the step</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
     <h2><a class="fw-bold" href="@routes.CatalogueController.service(serviceName)">@serviceName</a></h2>
 
