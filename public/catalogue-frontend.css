@@ -267,6 +267,11 @@ th.sub-heading {
     font-size: small;
 }
 
+/* Doesn't colour headers and gives a tartan effect rather than 2 colour checks */
+table.table-striped-columns-custom > :not(caption) > tr > td:nth-child(even) {
+     background-color: var(--bs-table-striped-bg);
+ }
+
 .wrw-environment-head {
     width: 12%;
 }

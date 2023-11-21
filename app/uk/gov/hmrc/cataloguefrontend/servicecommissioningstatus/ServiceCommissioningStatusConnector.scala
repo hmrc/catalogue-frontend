@@ -50,7 +50,7 @@ class ServiceCommissioningStatusConnector @Inject() (
   private implicit val cscReads = CachedServiceCheck.reads
   def cachedCommissioningStatus(teamName: Option[TeamName], serviceType: Option[ServiceType])(implicit hc: HeaderCarrier): Future[List[CachedServiceCheck]] =
     httpClientV2
-      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType}")
+      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[List[CachedServiceCheck]]
 
 }

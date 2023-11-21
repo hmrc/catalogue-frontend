@@ -145,8 +145,6 @@ object SearchCommissioning {
     )(SearchCommissioningForm.apply)(SearchCommissioningForm.unapply)
   )
 
-  val allCheckTypes = ("global" -> "Global") :: Environment.values.map(x => (x.asString, x.displayString))
-
   case class TeamCommissioningForm(
     checkType: String
   )
