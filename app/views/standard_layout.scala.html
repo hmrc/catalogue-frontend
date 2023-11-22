@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
@@ -25,6 +25,7 @@
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 @import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 
 @(
   title      : String = "Home",
@@ -178,7 +179,7 @@
                             }
                             <li><a id="link-to-deployment-timelines" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
                             <li>
-                                <a id="link-to-users-list-page" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.allUsers()">
+                                <a id="link-to-users-list-page" class="dropdown-item" href="@userRoutes.UsersController.allUsers()">
                                     Users
                                 </a>
                             </li>
@@ -206,6 +207,7 @@
                               @username
                           </a>
                           <ul class="dropdown-menu">
+                              <li><a id="profile" class="dropdown-item" href="@userRoutes.UsersController.user(username)">Profile</a></li>
                               <li><a id="sign-out" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signOut">Sign out</a></li>
                           </ul>
                       </li>
