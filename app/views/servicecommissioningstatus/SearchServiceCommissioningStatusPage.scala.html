@@ -48,20 +48,20 @@
             <div class="card-body">
                 <h4 class="fw-bold">How to use this page?</h4>
                 <ul>
-                    <li>Search the latest commissioning checks by:
+                    <li>In the search results:
                         <ul>
-                            <li><code>Team</code></li>
-                            <li><code>Service Type</code></li>
-                            <li><code>Commissioning Checks</code>(multi select)</li>
-                            <li><code>Environments</code>(multi select)</li>
+                            <li><span class="glyphicon glyphicon-ok text-success"></span> means found.</li>
+                            <li><span class="glyphicon glyphicon-minus text-secondary"></span> means not found.</li>
+                            <li>Empty means not applicable for service type or deployment zone.</li>
+                            <li>Hovering over a check also provides these details.</li>
                         </ul>
                     </li>
-                    <li>Clicking <q>Service View</q> in the search results will show:</li>
+                    <li>Link <span class="glyphicon glyphicon-circle-arrow-right text-success"></span> goes to a single service commissioning page which has:</li>
                     <ul>
-                        <li>More recent data - this page queries from a short cache for performance </li>
-                        <li>Help links for each <code>Commissioning Checks</code></li>
+                        <li>More recent data - this search page queries from a short term cache for performance.</li>
+                        <li>Context relevant links on how to add or view each step plus MDTP Handbook guidance.</li>
                     </ul>
-                    <li>The results can be <code>Exported as CSV</code> using the button below</li>
+                    <li>The results can be <code>Exported as CSV</code> using the button below.</li>
                 </ul>
             </div>
         </div>
@@ -135,11 +135,12 @@
         @if(results.exists(_.isEmpty)) {
             <span class="ms-2">No results found.</span>
         } else if (results.nonEmpty) {
-            <span class="ms-2">Found @{results.getOrElse(Nil).size} results. Please note this page queries a 10 minute cache. Clicking <q>Service View</q>, on an individual service, will perform a live query.</span>
-            <table id="search-results" class="table table-sm table-sm-no-side-padding table-striped always-wrap sticky-header text-break">
+            <span class="ms-2">Found @{results.getOrElse(Nil).size} results.</span>
+            <p class="mt-2">Please note this page queries a 10 minute cache, for performance, whereas viewing per service uses live data.</p>
+            <table id="search-results" class="table table-sm table-sm-no-side-padding table-striped table-striped-columns-custom always-wrap sticky-header text-break">
                 <thead>
                     <tr>
-                        <th class="ps-1">Service</th>
+                        <th>Service</th>
                         @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
                             @formCheckType match {
                                 case FormCheckType.Simple      => {
@@ -148,27 +149,27 @@
                                 }
                                 case FormCheckType.Environment => {
                                     <th class="rotate"><div><span>@title</span></div></th>
-                                    @form.get.environments.map { case env => <th class="rotate sub-heading text-success"><div><span>@env.displayString</span></div></th> }
-                                    <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                    @availableEnvironments(title).map { case env => <th class="rotate sub-heading text-success"><div><span>@env.displayString</span></div></th> }
+                                    <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
                                 }
                             }
                         }
-                        <th style="width: 90px;"></th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     @results.getOrElse(Nil).map { result =>
                         <tr>
-                            <td class="ps-1"><a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a></td>
+                            <td><a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a></td>
                             @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
                                 @(result.checks.find(_.title == title), formCheckType) match {
-                                    case (Some(check: Check.SimpleCheck), _                        ) => {<td>@displayResult(Some(check.checkResult))</td><td></td>}
-                                    case (Some(check: Check.EnvCheck)   , _                        ) => {<td></td>@form.get.environments.map { e => <td style="padding: 0px;">@displayResult(check.checkResults.get(e))</td>}<td></td>}
-                                    case (None                          , FormCheckType.Simple     ) => {<td colspan="2"></td>}
-                                    case (None                          , FormCheckType.Environment) => {<td colspan="@(form.get.environments.size + 2)"></td>}
+                                    case (Some(check: Check.SimpleCheck), _                        ) => {<td>@displayResult(title, None, Some(check.checkResult))</td><td></td>}
+                                    case (None                          , FormCheckType.Simple     ) => {<td>@displayResult(title, None, None)</td><td></td>}
+                                    case (Some(check: Check.EnvCheck)   , _                        ) => {<td></td>@availableEnvironments(title).map { e => <td>@displayResult(title, Some(e), check.checkResults.get(e))</td>}<td></td>}
+                                    case (None                          , FormCheckType.Environment) => {<td></td>@availableEnvironments(title).map { e => <td>@displayResult(title, Some(e), None)</td>}<td></td>}
                                 }
                             }
-                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName.asString).url" title="Link to Commissioning State Page">Service View</a></td>
+                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName.asString).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
                         </tr>
                     }
                 </tbody>
@@ -187,10 +188,39 @@
     </script>
 }
 
-@displayResult(result: Option[Check.Result]) = {
-    @result match {
-        case None                 => { }
-        case Some(Right(present)) => { <span class="glyphicon glyphicon-ok text-success low"></span> }
-        case Some(Left(missing))  => { <span class="glyphicon glyphicon-minus text-secondary"></span> }
+@* TODO review how internal auth config works *@
+@availableEnvironments(title: String) = @{
+    if (title == "Internal Auth Configs") {
+        form.get.environments.filter(e => e == Environment.QA || e == Environment.Production)
+    } else {
+        form.get.environments
     }
+}
+
+@displayResult(title: String, env: Option[Environment], result: Option[Check.Result]) = {
+    <span
+        @result match {
+            case None                 => { class="glyphicon glyphicon-minus text-secondary" style="opacity: 0%"}
+            case Some(Left(missing))  => { class="glyphicon glyphicon-minus text-secondary" }
+            case Some(Right(present)) => { class="glyphicon glyphicon-ok text-success low"  }
+        }
+        data-bs-toggle="popover"
+        data-bs-trigger="hover"
+        data-bs-placement="bottom"
+        data-bs-html="true"
+        data-bs-content='@popoverContent(title, env, result)'
+    ></span>
+}
+
+@popoverContent(title: String, env: Option[Environment], result: Option[Check.Result]) = {
+    <div class="fs-5 fw-bold">@title</div>
+    @env.map { e => <div><strong>Environment:</strong> @e.displayString</div> }
+    <div>
+        <strong>State:</strong>
+        @result match {
+            case None                 => { Not applicable }
+            case Some(Left(missing))  => { Not found      }
+            case Some(Right(present)) => { Found          }
+        }
+    </div>
 }
