@@ -20,8 +20,9 @@ import play.api.http.HttpEntity
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result, ResponseHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceType}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, TeamsAndRepositoriesConnector, ServiceType}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
@@ -48,9 +49,11 @@ class ServiceCommissioningStatusController @Inject() (
 
   def getCommissioningState(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      serviceCommissioningStatusConnector
-        .commissioningStatus(serviceName)
-        .map(_.fold(NotFound(error_404_template()))(result => Ok(serviceCommissioningStatusPage(serviceName, result))))
+      for {
+        serviceDetails <- teamsAndRepositoriesConnector.repositoryDetails(serviceName)
+        checks         <- serviceCommissioningStatusConnector.commissioningStatus(serviceName)
+        filteredChecks =  filterChecks(serviceDetails, checks)
+      } yield filteredChecks.fold(NotFound(error_404_template()))(result => Ok(serviceCommissioningStatusPage(serviceName, result)))
     }
 
   def searchLanding(): Action[AnyContent] =
@@ -118,6 +121,35 @@ class ServiceCommissioningStatusController @Inject() (
     case Some(Right(present)) => "Y"
     case Some(Left(missing))  => "N"
   }
+
+  private[servicecommissioningstatus] def filterChecks(
+    serviceDetails: Option[GitRepository],
+    checks        : Option[List[Check]],
+  ): Option[List[Check]] = 
+    (serviceDetails, checks) match {
+      case (Some(d), Some(c)) =>
+        Some(filterUpscanChecksWhenNotSetAndNotFrontend(d, c))
+      case _                  => checks
+    }
+
+  private def filterUpscanChecksWhenNotSetAndNotFrontend(
+    serviceDetails: GitRepository,
+    checks        : List[Check],
+  ): List[Check] = {
+    val upscanCheck = checks
+      .find(_.title.toLowerCase().contains("upscan"))
+    val upscanNotConfigured = upscanCheck.collect{
+        case envCheck: Check.EnvCheck => envCheck.checkResults.forall{ case (_, result) => result.isLeft}
+        case _                        => false
+      }.getOrElse(false)
+    upscanCheck.map(uc =>
+      if (serviceDetails.serviceType != Some(ServiceType.Frontend) || upscanNotConfigured)
+            checks.filter(_ != uc)
+          else
+            checks
+    ).getOrElse(checks)
+  }
+
 }
 
 import play.api.data.{Form, Forms}
