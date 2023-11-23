@@ -25,7 +25,7 @@ final case class Role(asString: String) {
 }
 
 object Role {
-  implicit val roleReads: Reads[Role] = Reads.StringReads.map(Role.apply)
+  val reads: Reads[Role] = Reads.StringReads.map(Role.apply)
 }
 
 final case class Member(
@@ -37,6 +37,7 @@ final case class Member(
 object Member {
 
   val reads: Reads[Member] = {
+    implicit val rR : Reads[Role] = Role.reads
     ( (__ \ "username"   ).read[String]
     ~ (__ \ "displayName").readNullable[String]
     ~ (__ \ "role"       ).read[Role]
@@ -83,6 +84,7 @@ final case class TeamMembership(
 )
 
 object TeamMembership {
+  implicit val rR : Reads[Role] = Role.reads
   val reads: Reads[TeamMembership] = {
     ( (__ \ "teamName").read[String]
     ~ (__ \ "role"    ).read[Role]
