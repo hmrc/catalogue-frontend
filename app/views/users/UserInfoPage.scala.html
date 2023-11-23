@@ -87,7 +87,12 @@
                               @team.teamName
                             </a>
                             @if(team.role.trim.nonEmpty && team.role != "user") {
-                              <span class="badge rounded-pill text-bg-secondary">@team.role</span>
+                              @team.role match {
+                                case "team_admin" => {<span class="badge rounded-pill text-bg-secondary">Team Admin </span>}
+                                case "super_admin" => {<span class="badge rounded-pill text-bg-secondary">Super Admin </span>}
+                                case "all_team_admin" => {<span class="badge rounded-pill text-bg-secondary">All Team Admin </span>}
+                                case _ => {<span class="badge rounded-pill text-bg-secondary">@team.role</span>}
+                              }
                             }
                           </li>
                         }

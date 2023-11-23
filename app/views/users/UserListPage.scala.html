@@ -113,8 +113,13 @@
             @user.teamsAndRoles.map { team =>
                 <div>
                   <a href="/teams/@TeamName(team.teamName).asString">@TeamName(team.teamName).asString</a>
-                  @if(team.role == "team_admin") {
-                    <span class="badge rounded-pill text-bg-secondary" style="font-weight: bold">@team.role</span>
+                  @if(team.role.trim.nonEmpty && team.role != "user") {
+                    @team.role match {
+                      case "team_admin" => {<span class="badge rounded-pill text-bg-secondary">Team Admin </span>}
+                      case "super_admin" => {<span class="badge rounded-pill text-bg-secondary">Super Admin </span>}
+                      case "all_team_admin" => {<span class="badge rounded-pill text-bg-secondary">All Team Admin </span>}
+                      case _ => {<span class="badge rounded-pill text-bg-secondary">@team.role</span>}
+                    }
                   }
                 </div>
             }
