@@ -19,17 +19,28 @@ package uk.gov.hmrc.cataloguefrontend.users
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 
+final case class Role(asString: String) {
+  def displayName = asString.replace("_", " ").capitalize
+  def isUser: Boolean = asString == "user"
+}
+
+object Role {
+  val reads: Reads[Role] = Reads.StringReads.map(Role.apply)
+}
+
 final case class Member(
   username   : String
 , displayName: Option[String]
-, role       : String
+, role       : Role
 )
 
 object Member {
+
   val reads: Reads[Member] = {
+    implicit val rR : Reads[Role] = Role.reads
     ( (__ \ "username"   ).read[String]
     ~ (__ \ "displayName").readNullable[String]
-    ~ (__ \ "role"       ).read[String]
+    ~ (__ \ "role"       ).read[Role]
     )(Member.apply _)
   }
 }
@@ -69,13 +80,14 @@ object LdapTeam {
 
 final case class TeamMembership(
   teamName: String
-, role    : String
+, role    : Role
 )
 
 object TeamMembership {
+  implicit val rR : Reads[Role] = Role.reads
   val reads: Reads[TeamMembership] = {
     ( (__ \ "teamName").read[String]
-    ~ (__ \ "role"    ).read[String]
+    ~ (__ \ "role"    ).read[Role]
     )(TeamMembership.apply _)
   }
 }

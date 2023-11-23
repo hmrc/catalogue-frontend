@@ -112,8 +112,8 @@
                                           <a href="@userRoutes.UsersController.user(teamMember.username)">
                                               @teamMember.displayName
                                           </a>
-                                          @if(teamMember.role.trim.nonEmpty && teamMember.role != "user") {
-                                              <span class="badge rounded-pill text-bg-secondary">@teamMember.role</span>
+                                          @if(!teamMember.role.isUser) {
+                                            <span class="badge rounded-pill text-bg-secondary">@teamMember.role.displayName</span>
                                           }
                                       </li>
                                     }

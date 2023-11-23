@@ -86,8 +86,8 @@
                             <a href="@teamRoutes.TeamsController.team(TeamName(team.teamName))">
                               @team.teamName
                             </a>
-                            @if(team.role.trim.nonEmpty && team.role != "user") {
-                              <span class="badge rounded-pill text-bg-secondary">@team.role</span>
+                            @if(!team.role.isUser) {
+                              <span class="badge rounded-pill text-bg-secondary">@team.role.displayName</span>
                             }
                           </li>
                         }
