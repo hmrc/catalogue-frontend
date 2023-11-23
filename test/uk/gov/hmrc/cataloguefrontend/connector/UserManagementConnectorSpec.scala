@@ -21,7 +21,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, Member, TeamMembership, User}
+import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, Member, TeamMembership, User, Role}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -127,7 +127,7 @@ class UserManagementConnectorSpec
             username = "joe.bloggs",
             githubUsername = Some("joebloggs-github"),
             phoneNumber = Some("07123456789"),
-            teamsAndRoles = Seq(TeamMembership(teamName = "TestTeam", role = "user"))
+            teamsAndRoles = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
           )
         )
     }
@@ -188,7 +188,7 @@ class UserManagementConnectorSpec
             username = "joe.bloggs",
             githubUsername = None,
             phoneNumber = Some("07123456789"),
-            teamsAndRoles = Seq(TeamMembership(teamName = "TestTeam", role = "user"))
+            teamsAndRoles = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
           ),
           User(
             displayName = Some("Jane Doe"),
@@ -199,7 +199,7 @@ class UserManagementConnectorSpec
             username = "jane.doe",
             githubUsername = None,
             phoneNumber = Some("07123456789"),
-            teamsAndRoles = Seq(TeamMembership(teamName = "TestTeam", role = "user"))
+            teamsAndRoles = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
           )
         )
     }
@@ -258,7 +258,7 @@ class UserManagementConnectorSpec
             username = "joe.bloggs",
             githubUsername = Some("joebloggs-github"),
             phoneNumber = Some("07123456789"),
-            teamsAndRoles = Seq(TeamMembership(teamName = "Test Team", role = "user"))
+            teamsAndRoles = Seq(TeamMembership(teamName = "Test Team", role = Role("user")))
           )
         )
     }
