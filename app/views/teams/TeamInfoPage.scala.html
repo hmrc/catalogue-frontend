@@ -113,12 +113,7 @@
                                               @teamMember.displayName
                                           </a>
                                           @if(teamMember.role.trim.nonEmpty && teamMember.role != "user") {
-                                            @teamMember.role match {
-                                              case "team_admin" => {<span class="badge rounded-pill text-bg-secondary">Team Admin </span>}
-                                              case "super_admin" => {<span class="badge rounded-pill text-bg-secondary">Super Admin </span>}
-                                              case "all_team_admin" => {<span class="badge rounded-pill text-bg-secondary">All Team Admin </span>}
-                                              case _ => {<span class="badge rounded-pill text-bg-secondary">@teamMember.role</span>}
-                                            }
+                                            <span class="badge rounded-pill text-bg-secondary">@teamMember.role.split("_").map(_.capitalize).mkString(" ")</span>
                                           }
                                       </li>
                                     }
