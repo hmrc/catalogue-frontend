@@ -15,6 +15,7 @@
  *@
 
 @import _root_.views.html.partials.DependenciesTeamPartial
+@import _root_.views.html.partials.servicesAndDependencies
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName}
@@ -44,10 +45,6 @@
     <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     @partials.team_leak_detection_banner(leaksFoundForTeam)
-    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true)
-    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true)
-    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true)
-    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true)
 
     <section class="section-wrapper">
 
@@ -132,6 +129,14 @@
                 </div>
             </div>
         </div>
+
+      <div class="row mb-3">
+        <div class="col md-1">
+          <div class="card">
+            @partials.servicesAndDependencies(masterTeamDependencies, teamName)
+          </div>
+        </div>
+      </div>
 
         <div class="row mb-3">
             @showRepositories(repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")

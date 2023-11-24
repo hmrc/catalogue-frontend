@@ -1,1 +1,70 @@
-@()
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
+@*
+   * Copyright 2023 HM Revenue & Customs
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *     http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *@
+
+@import uk.gov.hmrc.cataloguefrontend.{ EnableBranchProtection, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => serviceRoutes}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
+@import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController
+@import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
+@import views.html.helper.CSRF
+
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@(masterTeamDependencies: Seq[RepoAndDependencies],
+  teamName              : TeamName
+)
+
+<div id="servicesAndDependencies" class="card">
+  <div class="card-header">
+    <h4 class="mb-0">Service & Dependency Status</h4>
+  </div>
+  <div class="card-body">
+    @partials.bobby_violations_simplified(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, teamName)
+    @partials.bobby_violations_simplified(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, teamName)
+    @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, teamName)
+    @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, teamName)
+
+    <ul class="list-unstyled" style="column-count: 5;">
+      <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName)"> Outdated @teamName.asString Dependencies </a></li>
+      <li><a id="link-to-team-services" href="@serviceRoutes.ServiceCommissioningStatusController.getCommissioningState()"> @teamName.asString's Services</a></li>
+      <li><a id="link-to-team-services" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName)"> Bobby Rules</a></li>
+    </ul>
+  </div>
+</div>
