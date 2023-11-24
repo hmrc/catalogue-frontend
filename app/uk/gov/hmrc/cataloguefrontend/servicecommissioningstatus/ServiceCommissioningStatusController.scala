@@ -103,13 +103,16 @@ class ServiceCommissioningStatusController @Inject() (
   , results     : Seq[CachedServiceCheck]
   ): Seq[Seq[(String, String)]] =
     for {
-      result                 <- results
+      result <- results
     } yield {
-      Seq("service" -> result.serviceName.asString) ++ checks.flatMap { case (title, formCheckType) =>
-        result.checks.collect {
-          case c: Check.SimpleCheck if c.title == title => Seq(c.title -> displayResult(Some(c.checkResult)))
-          case c: Check.EnvCheck    if c.title == title => environments.flatMap { e => Seq(s"${c.title} - ${e.asString}" -> displayResult(c.checkResults.get(e))) }
-        }.flatten
+      Seq("service" -> result.serviceName.asString) ++ checks.flatMap {case (title, formCheckType) =>
+        (formCheckType, result.checks.find(_.title == title)) match {
+          case (FormCheckType.Simple     , None)                       => Seq(title -> displayResult(None))
+          case (FormCheckType.Environment, None)                       => environments.flatMap { e => Seq(s"$title - ${e.asString}" -> displayResult(None)) }
+          case (FormCheckType.Simple     , Some(c: Check.SimpleCheck)) => Seq(title -> displayResult(Some(c.checkResult)))
+          case (FormCheckType.Environment, Some(c: Check.EnvCheck))    => environments.flatMap { e => Seq(s"$title - ${e.asString}" -> displayResult(c.checkResults.get(e))) }
+          case _                                                       => Nil
+        }
       }
     }
 
