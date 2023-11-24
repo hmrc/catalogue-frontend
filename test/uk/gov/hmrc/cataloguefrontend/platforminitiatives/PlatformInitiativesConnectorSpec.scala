@@ -40,12 +40,10 @@ class PlatformInitiativesConnectorSpec
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
-      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
         Map(
           "microservice.services.platform-initiatives.host" -> wireMockHost,
           "microservice.services.platform-initiatives.port" -> wireMockPort,
-          "metrics.jvm" -> false
         )).build()
 
   private val connector = app.injector.instanceOf[PlatformInitiativesConnector]

@@ -44,12 +44,10 @@ class TeamsAndRepositoriesConnectorSpec
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
-      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
         Map(
           "microservice.services.teams-and-repositories.host" -> wireMockHost,
           "microservice.services.teams-and-repositories.port" -> wireMockPort,
-          "metrics.jvm"            -> false
         ))
       .build()
 

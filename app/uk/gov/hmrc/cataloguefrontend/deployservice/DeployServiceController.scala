@@ -257,7 +257,7 @@ class DeployServiceController @Inject()(
     }
 
   import scala.concurrent.duration._
-  import akka.stream.scaladsl.Source
+  import org.apache.pekko.stream.scaladsl.Source
   import play.api.http.ContentTypes
   import play.api.libs.EventSource
   import play.api.libs.json.Json

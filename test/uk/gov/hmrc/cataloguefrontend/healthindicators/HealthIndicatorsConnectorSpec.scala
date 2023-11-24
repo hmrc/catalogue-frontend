@@ -41,12 +41,10 @@ class HealthIndicatorsConnectorSpec
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
-      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
         Map(
           "microservice.services.health-indicators.port" -> wireMockPort,
           "microservice.services.health-indicators.host" -> wireMockHost,
-          "metrics.jvm"                                  -> false
         )
       )
       .build()

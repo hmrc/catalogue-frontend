@@ -38,12 +38,10 @@ class ShutterGroupsConnectorSpec
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
-      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
         Map(
           "microservice.services.platops-github-proxy.port" -> wireMockPort,
           "microservice.services.platops-github-proxy.host" -> wireMockHost,
-          "metrics.jvm"                                     -> false
         ))
       .build()
 
