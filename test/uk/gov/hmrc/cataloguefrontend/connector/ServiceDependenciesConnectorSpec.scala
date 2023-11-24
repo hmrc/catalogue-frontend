@@ -43,12 +43,10 @@ class ServiceDependenciesConnectorSpec
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
-      .disable(classOf[com.kenshoo.play.metrics.PlayModule])
       .configure(
         Map(
           "microservice.services.service-dependencies.port" -> wireMockPort,
           "microservice.services.service-dependencies.host" -> wireMockHost,
-          "metrics.jvm"                                     -> false
         )
       )
       .build()

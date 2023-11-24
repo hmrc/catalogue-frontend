@@ -8,7 +8,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     majorVersion := 4,
-    scalaVersion := "2.13.10",
+    scalaVersion := "2.13.12",
     scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
@@ -33,28 +33,25 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "7.22.0"
-val hmrcMongoVersion     = "1.3.0"
+val bootstrapPlayVersion = "8.0.0"
+val hmrcMongoVersion     = "1.5.0"
 
 val compile = Seq(
   ehcache,
-  "uk.gov.hmrc"               %% "bootstrap-frontend-play-28"   % bootstrapPlayVersion,
-  "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-28"           % hmrcMongoVersion,
-  "uk.gov.hmrc"               %% "internal-auth-client-play-28" % "1.6.0",
-  "org.typelevel"             %% "cats-core"                    % "2.6.1",
-  "org.yaml"                  %  "snakeyaml"                    % "1.27",
-  "org.apache.httpcomponents" %  "httpclient"                   % "4.5.13",
-  "com.github.tototoshi"      %% "scala-csv"                    % "1.3.6",
-  "org.planet42"              %% "laika-core"                   % "0.15.0",
-  "software.amazon.awssdk"    %  "auth"                         % "2.18.21"
+  "uk.gov.hmrc"               %% "bootstrap-frontend-play-30"   % bootstrapPlayVersion,
+  "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-30"           % hmrcMongoVersion,
+  "uk.gov.hmrc"               %% "internal-auth-client-play-30" % "1.8.0",
+  "org.typelevel"             %% "cats-core"                    % "2.10.0",
+  "org.yaml"                  %  "snakeyaml"                    % "2.2",
+  "org.apache.httpcomponents" %  "httpclient"                   % "4.5.14",
+  "org.planet42"              %% "laika-core"                   % "0.19.5",
 )
 
 val test = Seq(
-  "uk.gov.hmrc"            %% "bootstrap-test-play-28"   % bootstrapPlayVersion % Test,
-  "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28"  % hmrcMongoVersion     % Test,
-  "org.scalatestplus"      %% "scalatestplus-scalacheck" % "3.1.0.0-RC2"        % Test,
-  "org.jsoup"              %  "jsoup"                    % "1.13.1"             % Test,
-  "org.mockito"            %% "mockito-scala-scalatest"  % "1.16.46"            % Test,
+  "uk.gov.hmrc"            %% "bootstrap-test-play-30"   % bootstrapPlayVersion % Test,
+  "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"  % hmrcMongoVersion     % Test,
+  "org.scalatestplus"      %% "scalacheck-1-17"          % "3.2.17.0"           % Test,
+  "org.mockito"            %% "mockito-scala-scalatest"  % "1.17.14"            % Test,
   ws
 )
 

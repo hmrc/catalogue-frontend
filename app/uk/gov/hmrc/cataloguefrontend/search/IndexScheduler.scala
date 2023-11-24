@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.search
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import play.api.Logger
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig

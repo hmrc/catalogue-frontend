@@ -120,7 +120,7 @@ class ServiceConfigsController @Inject()(
                                                case GroupBy.Service => toRows2(groupedByService.getOrElse(Map.empty), formObject.showEnvironments)
                                              }
                                 val csv    = CsvUtils.toCsv(rows)
-                                val source = akka.stream.scaladsl.Source.single(akka.util.ByteString(csv, "UTF-8"))
+                                val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
                                 Result(
                                   header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"config-search.csv\"")),
                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
