@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 
 final case class Role(asString: String) {
-  def displayName = asString.replace("_", " ").capitalize
+  def displayName = asString.split("_").map(_.capitalize).mkString(" ")
   def isUser: Boolean = asString == "user"
 }
 
