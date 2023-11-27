@@ -17,17 +17,16 @@
 package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
 import play.api.http.HttpEntity
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result, ResponseHeader}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceType}
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import views.html.error_404_template
-import views.html.servicecommissioningstatus.{ServiceCommissioningStatusPage, SearchServiceCommissioningStatusPage}
-
+import views.html.servicecommissioningstatus.{SearchServiceCommissioningStatusPage, ServiceCommissioningStatusPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -60,7 +59,7 @@ class ServiceCommissioningStatusController @Inject() (
         allChecks <- serviceCommissioningStatusConnector.allChecks()
         form      =  SearchCommissioning.searchForm.fill(
                        SearchCommissioning.SearchCommissioningForm(
-                         teamName      = None
+                         team      = None
                        , serviceType   = None
                        , checks        = allChecks.map(_._1).toList
                        , environments  = Environment.values.filterNot(_ == Environment.Integration)
@@ -70,10 +69,10 @@ class ServiceCommissioningStatusController @Inject() (
     }
 
   def searchResults(
-    teamName: Option[TeamName] = None,
+    team: Option[TeamName] = None,
     serviceType: Option[ServiceType] = None,
-    checks: List[String] = List.empty,
-    environments: List[Environment] = List.empty): Action[AnyContent] =
+    `checks[]`: List[String] = List.empty,
+    `environments[]`: List[String] = List.empty): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchCommissioning
         .searchForm
@@ -86,7 +85,7 @@ class ServiceCommissioningStatusController @Inject() (
         , formObject     => for {
                               allTeams  <- teamsAndRepositoriesConnector.allTeams()
                               allChecks <- serviceCommissioningStatusConnector.allChecks()
-                              results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType)
+                              results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.team, formObject.serviceType)
                             } yield if (formObject.asCsv) {
                                 val rows   = toRows(allChecks.filter { case (title, _) => formObject.checks.contains(title) }, formObject.environments, results)
                                 val csv    = CsvUtils.toCsv(rows)
@@ -131,7 +130,7 @@ import play.api.data.{Form, Forms}
 
 object SearchCommissioning {
   case class SearchCommissioningForm(
-    teamName    : Option[TeamName]
+    team        : Option[TeamName]
   , serviceType : Option[ServiceType]
   , checks      : List[String]
   , environments: List[Environment]
@@ -140,9 +139,10 @@ object SearchCommissioning {
 
   lazy val searchForm: Form[SearchCommissioningForm] = Form(
     Forms.mapping(
-      "teamName"     -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
-    , "serviceType"  -> Forms.text.transform[Option[ServiceType]](x => ServiceType.parse(x).toOption, _.fold("")(_.asString))
-    , "checks"       -> Forms.list(Forms.text)
+      "team"         -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+    , "serviceType"  -> Forms.optional(Forms.text.transform[ServiceType](x => {
+        ServiceType.parse(x).getOrElse(ServiceType.Backend)
+      }, _.asString)), "checks"       -> Forms.list(Forms.text)
     , "environments" -> Forms.list(Forms.text)
                              .transform[List[Environment]](
                                xs => xs.map(Environment.parse).flatten

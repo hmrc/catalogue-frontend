@@ -51,16 +51,17 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.SearchCommissioning.SearchCommissioningForm
 @(masterTeamDependencies: Seq[RepoAndDependencies],
-  teamName              : TeamName,
+  team                  : TeamName,
   allChecks             : Seq[String]
 )
 
 @serviceLink = @{
   serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(
-    teamName        = Some(teamName)
+    team            = Some(team)
     ,serviceType    = None
-    ,checks         = allChecks.toList
-    ,environments   = Environment.values)
+    ,`checks[]`     = allChecks.toList
+    ,`environments[]`= Environment.values.map(_.asString)
+  ).url
 }
 
 
@@ -69,14 +70,14 @@
     <h4 class="mb-0">Service & Dependency Status</h4>
   </div>
   <div class="card-body">
-    @partials.bobby_violations_simplified(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, teamName)
-    @partials.bobby_violations_simplified(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, teamName)
-    @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, teamName)
-    @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, teamName)
+    @partials.bobby_violations_simplified(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, team)
+    @partials.bobby_violations_simplified(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, team)
+    @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, team)
+    @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, team)
 
     <ul class="list-unstyled" style="column-count: 4;">
-      <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName)"> Outdated @teamName.asString Dependencies </a></li>
-      <li><a id="link-to-team-services" href="@serviceLink"> @teamName.asString's Services</a></li>
+      <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(team)"> Outdated @team.asString Dependencies </a></li>
+      <li><a id="link-to-team-services" href="@serviceLink"> @team.asString's Services</a></li>
       <li><a id="link-to-team-services" href="@appRoutes.BobbyExplorerController.list()"> Bobby Rules</a></li>
     </ul>
   </div>

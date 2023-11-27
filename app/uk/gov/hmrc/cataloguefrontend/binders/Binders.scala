@@ -47,8 +47,10 @@ object Binders {
   implicit def serviceTypeBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[ServiceType] =
     new QueryStringBindable[ServiceType] {
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ServiceType]] =
-        strBinder.bind(key, params)
-          .map(_.flatMap(s => ServiceType.parse(s)))
+        strBinder.bind(key, params) match {
+          case Some(Right(s)) if (s.nonEmpty)  => Some(ServiceType.parse(s))
+          case _                               => None
+        }
 
       override def unbind(key: String, value: ServiceType): String =
         strBinder.unbind(key, value.asString)

@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.teams.{TeamInfoPage, teams_list}
@@ -52,10 +53,7 @@ class TeamsController @Inject()(
 
   def team(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-        (for {
-          allChecks <- serviceCommissioningStatusConnector.allChecks().map(_.map(_._1))
-          repositories <- teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false))
-        } yield (allChecks, repositories)).flatMap{ case (allChecks, repositories) =>
+        commonData(teamName).flatMap{ case (allChecks, repositories) =>
         repositories match{
           case Nil => for {
             maybeTeam <- userManagementConnector.getTeam(teamName.asString)
@@ -98,6 +96,13 @@ class TeamsController @Inject()(
         }
       }
     }
+
+  private def commonData(teamName: TeamName)(implicit hc: HeaderCarrier) = {
+    (for {
+      allChecks <- serviceCommissioningStatusConnector.allChecks().map(_.map(_._1))
+      repositories <- teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false))
+    } yield (allChecks, repositories))
+  }
 
   def allTeams(name: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
