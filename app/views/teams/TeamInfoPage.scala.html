@@ -35,7 +35,8 @@
   leaksFoundForTeam     : Boolean,
   hasLeaks              : String => Boolean,
   masterTeamDependencies: Seq[RepoAndDependencies],
-  prodDependencies      : Map[String, Seq[Dependency]]
+  prodDependencies      : Map[String, Seq[Dependency]],
+  allChecks             : Seq[String]
 )(implicit
   request: RequestHeader
 )
@@ -133,7 +134,7 @@
       <div class="row mb-3">
         <div class="col md-1">
           <div class="card">
-            @partials.servicesAndDependencies(masterTeamDependencies, teamName)
+            @partials.servicesAndDependencies(masterTeamDependencies, teamName, allChecks)
           </div>
         </div>
       </div>
@@ -146,12 +147,6 @@
             @showRepositories(repos.getOrElse(RepoType.Other    , Seq.empty), "Repositories", "repository")
         </div>
     </section>
-
-    <div class="row">
-        <div class="col-12">
-            @dependenciesTeamPartial(teamName, masterTeamDependencies, prodDependencies, showLink = true)
-        </div>
-    </div>
 }
 
 @addSlackInfo(label: String, slackInfo: SlackInfo) = {

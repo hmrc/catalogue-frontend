@@ -69,7 +69,11 @@ class ServiceCommissioningStatusController @Inject() (
       } yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
     }
 
-  def searchResults(): Action[AnyContent] =
+  def searchResults(
+    teamName: Option[TeamName] = None,
+    serviceType: Option[ServiceType] = None,
+    checks: List[String] = List.empty,
+    environments: List[Environment] = List.empty): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchCommissioning
         .searchForm

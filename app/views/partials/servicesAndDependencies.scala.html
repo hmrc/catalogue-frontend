@@ -36,6 +36,8 @@
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => serviceCommissioningStatusRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => serviceRoutes}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
@@ -47,9 +49,20 @@
 @import views.html.helper.CSRF
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.SearchCommissioning.SearchCommissioningForm
 @(masterTeamDependencies: Seq[RepoAndDependencies],
-  teamName              : TeamName
+  teamName              : TeamName,
+  allChecks             : Seq[String]
 )
+
+@serviceLink = @{
+  serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(
+    teamName        = Some(teamName)
+    ,serviceType    = None
+    ,checks         = allChecks.toList
+    ,environments   = Environment.values)
+}
+
 
 <div id="servicesAndDependencies" class="card">
   <div class="card-header">
@@ -61,10 +74,10 @@
     @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, teamName)
     @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, teamName)
 
-    <ul class="list-unstyled" style="column-count: 5;">
+    <ul class="list-unstyled" style="column-count: 4;">
       <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName)"> Outdated @teamName.asString Dependencies </a></li>
-      <li><a id="link-to-team-services" href="@serviceRoutes.ServiceCommissioningStatusController.getCommissioningState()"> @teamName.asString's Services</a></li>
-      <li><a id="link-to-team-services" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName)"> Bobby Rules</a></li>
+      <li><a id="link-to-team-services" href="@serviceLink"> @teamName.asString's Services</a></li>
+      <li><a id="link-to-team-services" href="@appRoutes.BobbyExplorerController.list()"> Bobby Rules</a></li>
     </ul>
   </div>
 </div>
