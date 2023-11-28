@@ -50,9 +50,8 @@ class TeamsController @Inject()(
 
   def team(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)).flatMap{ repositories =>
-        repositories match{
-          case Nil => for {
+      teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)).flatMap {
+        case repo if repo.isEmpty => for {
             maybeTeam <- userManagementConnector.getTeam(teamName.asString)
           } yield Ok(teamInfoPage(
             teamName               = teamName,
@@ -64,30 +63,30 @@ class TeamsController @Inject()(
             masterTeamDependencies = Seq.empty,
             prodDependencies       = Map.empty
           ))
-          case repos =>
-            (
-              userManagementConnector.getTeam(teamName.asString),
-              leakDetectionService.repositoriesWithLeaks,
-              serviceDependenciesConnector.dependenciesForTeam(teamName),
-              serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
-            ).mapN { (maybeTeam,
-                      reposWithLeaks,
-                      masterTeamDependencies,
-                      prodDependencies,
-                     ) =>
-              Ok(
-                teamInfoPage(
-                  teamName               = teamName,
-                  repos                  = repos.groupBy(_.repoType),
-                  maybeTeam              = maybeTeam,
-                  umpMyTeamsUrl          = umpConfig.umpMyTeamsPageUrl(teamName),
-                  leaksFoundForTeam      = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name)),
-                  hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
-                  masterTeamDependencies = masterTeamDependencies.flatMap(mtd => repos.find(_.name == mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd))),
-                  prodDependencies       = prodDependencies
-                )
+        case repos =>
+          (
+            userManagementConnector.getTeam(teamName.asString),
+            leakDetectionService.repositoriesWithLeaks,
+            serviceDependenciesConnector.dependenciesForTeam(teamName),
+            serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
+          ).mapN { (maybeTeam,
+                    reposWithLeaks,
+                    masterTeamDependencies,
+                    prodDependencies,
+                   ) =>
+            Ok(
+              teamInfoPage(
+                teamName               = teamName,
+                repos                  = repos.groupBy(_.repoType),
+                maybeTeam              = maybeTeam,
+                umpMyTeamsUrl          = umpConfig.umpMyTeamsPageUrl(teamName),
+                leaksFoundForTeam      = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name)),
+                hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
+                masterTeamDependencies = masterTeamDependencies.flatMap(mtd => repos.find(_.name == mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd))),
+                prodDependencies       = prodDependencies
               )
-            }
+            )
+          }
         }
       }
     }

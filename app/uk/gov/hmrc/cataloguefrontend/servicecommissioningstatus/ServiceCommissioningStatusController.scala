@@ -58,13 +58,13 @@ class ServiceCommissioningStatusController @Inject() (
         allTeams  <- teamsAndRepositoriesConnector.allTeams()
         allChecks <- serviceCommissioningStatusConnector.allChecks()
         form      =  SearchCommissioning.searchForm.fill(
-          SearchCommissioning.SearchCommissioningForm(
-            teamName      = None
-          , serviceType   = None
-          , checks        = allChecks.map(_._1).toList
-          , environments  = Environment.values.filterNot(_ == Environment.Integration)
-          )
-        )
+                       SearchCommissioning.SearchCommissioningForm(
+                         teamName     = None
+                       , serviceType  = None
+                       , checks       = allChecks.map(_._1).toList
+                       , environments = Environment.values.filterNot(_ == Environment.Integration)
+                       )
+                     )
       } yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
     }
 
@@ -74,7 +74,7 @@ class ServiceCommissioningStatusController @Inject() (
     serviceType     : Option[ServiceType],
     `checks[]`      : List[String],
     `environments[]`: List[String]
-                   ): Action[AnyContent] =
+  ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchCommissioning
         .searchForm
@@ -134,19 +134,21 @@ import play.api.data.{Form, Forms}
 
 object SearchCommissioning {
   case class SearchCommissioningForm(
-    teamName        : Option[TeamName]
-    , serviceType : Option[ServiceType]
-    , checks      : List[String]
-    , environments: List[Environment]
-    , asCsv       : Boolean = false
+    teamName    : Option[TeamName]
+  , serviceType : Option[ServiceType]
+  , checks      : List[String]
+  , environments: List[Environment]
+  , asCsv       : Boolean = false
   )
 
   lazy val searchForm: Form[SearchCommissioningForm] = Form(
     Forms.mapping(
       "team"         -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
     , "serviceType"  -> Forms.optional(Forms.text.transform[ServiceType](x =>
-      ServiceType.parse(x).getOrElse(ServiceType.Backend)
-      , _.asString)), "checks"       -> Forms.list(Forms.text)
+                               ServiceType.parse(x).getOrElse(ServiceType.Backend)
+                             , _.asString
+                             ))
+    , "checks"       -> Forms.list(Forms.text)
     , "environments" -> Forms.list(Forms.text)
                              .transform[List[Environment]](
                                xs => xs.map(Environment.parse).flatten
