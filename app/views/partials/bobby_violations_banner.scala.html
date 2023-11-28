@@ -17,16 +17,23 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependency
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @( environment : Option[Environment]
  , dependencies: Seq[Dependency]
  , pending     : Boolean
- , team        : Boolean             = false
+ , teamName    : Option[TeamName] = None
  )
 
 @reviewLink(environment: Option[Environment], pending: Boolean) = {
-  Please review the lists below, and refer to <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
+  @if(teamName.isDefined) {
+    <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName.get)">View Now</a>.
+  } else {
+    Please review the lists below, and refer to <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
+  }
 }
+
 
 @defining(
     dependencies
@@ -41,11 +48,11 @@
         <div class="alert @if(pending) {alert-warning} else {alert-danger}" id="bobby-rules-@{if(pending) "pending" else "broken"}-banner@{environment.fold("")(e => s"-${e.asString}")}">
             <strong>
                 @environment.fold{
-                  @if(team) { One or more of your repositories } else { This "repository" }
+                  @if(Some(teamName)) { One or more of your repositories } else { This "repository" }
                   @if(pending) { will break } else { has broken }
                   Bobby Rules, and will fail to build in Jenkins.
                 }{ env =>
-                  @if(team) { One or more of your services } else { This service }
+                  @if(Some(teamName)) { One or more of your services } else { This service }
                   @if(pending) { will break } else { has broken }
                   Bobby Rules in @env.displayString.
                 }

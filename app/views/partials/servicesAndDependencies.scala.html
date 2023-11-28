@@ -14,7 +14,6 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
 @*
    * Copyright 2023 HM Revenue & Customs
    *
@@ -31,25 +30,12 @@
    * limitations under the License.
    *@
 
-@import uk.gov.hmrc.cataloguefrontend.{ EnableBranchProtection, routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
-@import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
+@import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => serviceCommissioningStatusRoutes}
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => serviceRoutes}
-@import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
-@import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController
-@import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
-@import views.html.helper.CSRF
 
-@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.SearchCommissioning.SearchCommissioningForm
 @(masterTeamDependencies: Seq[RepoAndDependencies],
   team                  : TeamName,
   allChecks             : Seq[String]
@@ -67,18 +53,12 @@
 
 <div id="servicesAndDependencies" class="card">
   <div class="card-header">
-    <h4 class="mb-0">Service & Dependency Status</h4>
+    <h4 class="mb-0">Team Service & Dependency Status</h4>
   </div>
   <div class="card-body">
-    @partials.bobby_violations_simplified(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, team)
-    @partials.bobby_violations_simplified(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, team)
-    @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, team)
-    @partials.bobby_violations_simplified(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, team)
-
-    <ul class="list-unstyled" style="column-count: 4;">
-      <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(team)"> Outdated @team.asString Dependencies </a></li>
-      <li><a id="link-to-team-services" href="@serviceLink"> @team.asString's Services</a></li>
-      <li><a id="link-to-team-services" href="@appRoutes.BobbyExplorerController.list()"> Bobby Rules</a></li>
+    <ul class="list-unstyled" style="column-count: 1;">
+      <li><a id="link-to-team-services" href="@serviceLink"> Service Commissioning State</a></li>
+      <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(team)"> Outdated Dependencies </a></li>
     </ul>
   </div>
 </div>
