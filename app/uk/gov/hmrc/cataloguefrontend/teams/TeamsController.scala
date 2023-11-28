@@ -24,8 +24,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, Te
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.teams.{TeamInfoPage, teams_list}
@@ -43,7 +41,6 @@ class TeamsController @Inject()(
   umpConfig                    : UserManagementPortalConfig,
   teamInfoPage                 : TeamInfoPage,
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
-  serviceCommissioningStatusConnector : ServiceCommissioningStatusConnector,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
 )(implicit
@@ -53,20 +50,19 @@ class TeamsController @Inject()(
 
   def team(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-        commonData(teamName).flatMap{ case (allChecks, repositories) =>
+      teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)).flatMap{ repositories =>
         repositories match{
           case Nil => for {
             maybeTeam <- userManagementConnector.getTeam(teamName.asString)
           } yield Ok(teamInfoPage(
-            teamName = teamName,
-            repos = Map.empty,
-            maybeTeam = maybeTeam,
-            umpMyTeamsUrl = "",
-            leaksFoundForTeam = false,
-            hasLeaks = _ => false,
+            teamName               = teamName,
+            repos                  = Map.empty,
+            maybeTeam              = maybeTeam,
+            umpMyTeamsUrl          = "",
+            leaksFoundForTeam      = false,
+            hasLeaks               = _ => false,
             masterTeamDependencies = Seq.empty,
-            prodDependencies = Map.empty,
-            allChecks = allChecks
+            prodDependencies       = Map.empty
           ))
           case repos =>
             (
@@ -81,28 +77,20 @@ class TeamsController @Inject()(
                      ) =>
               Ok(
                 teamInfoPage(
-                  teamName = teamName,
-                  repos = repos.groupBy(_.repoType),
-                  maybeTeam = maybeTeam,
-                  umpMyTeamsUrl = umpConfig.umpMyTeamsPageUrl(teamName),
-                  leaksFoundForTeam = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name)),
-                  hasLeaks = leakDetectionService.hasLeaks(reposWithLeaks),
+                  teamName               = teamName,
+                  repos                  = repos.groupBy(_.repoType),
+                  maybeTeam              = maybeTeam,
+                  umpMyTeamsUrl          = umpConfig.umpMyTeamsPageUrl(teamName),
+                  leaksFoundForTeam      = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name)),
+                  hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
                   masterTeamDependencies = masterTeamDependencies.flatMap(mtd => repos.find(_.name == mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd))),
-                  prodDependencies = prodDependencies,
-                  allChecks = allChecks
+                  prodDependencies       = prodDependencies
                 )
               )
             }
         }
       }
     }
-
-  private def commonData(teamName: TeamName)(implicit hc: HeaderCarrier) = {
-    (for {
-      allChecks <- serviceCommissioningStatusConnector.allChecks().map(_.map(_._1))
-      repositories <- teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false))
-    } yield (allChecks, repositories))
-  }
 
   def allTeams(name: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>

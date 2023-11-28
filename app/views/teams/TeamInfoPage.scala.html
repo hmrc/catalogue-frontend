@@ -34,8 +34,7 @@
   leaksFoundForTeam     : Boolean,
   hasLeaks              : String => Boolean,
   masterTeamDependencies: Seq[RepoAndDependencies],
-  prodDependencies      : Map[String, Seq[Dependency]],
-  allChecks             : Seq[String]
+  prodDependencies      : Map[String, Seq[Dependency]]
 )(implicit
   request: RequestHeader
 )
@@ -45,10 +44,10 @@
     <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     @partials.team_leak_detection_banner(leaksFoundForTeam)
-    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false,  Option(teamName))
-    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true ,  Option(teamName))
-    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false,  Option(teamName))
-    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true ,  Option(teamName))
+    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, teamName = Option(teamName))
+    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, teamName = Option(teamName))
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, teamName = Option(teamName))
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, teamName = Option(teamName))
 
     <section class="section-wrapper">
 
@@ -137,7 +136,7 @@
       <div class="row mb-3">
         <div class="col md-1">
           <div class="card">
-            @partials.servicesAndDependencies(masterTeamDependencies, teamName, allChecks)
+            @partials.servicesAndDependencies(masterTeamDependencies, teamName)
           </div>
         </div>
       </div>

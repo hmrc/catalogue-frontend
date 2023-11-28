@@ -58,21 +58,21 @@ class ServiceCommissioningStatusController @Inject() (
         allTeams  <- teamsAndRepositoriesConnector.allTeams()
         allChecks <- serviceCommissioningStatusConnector.allChecks()
         form      =  SearchCommissioning.searchForm.fill(
-                       SearchCommissioning.SearchCommissioningForm(
-                         team      = None
-                       , serviceType   = None
-                       , checks        = allChecks.map(_._1).toList
-                       , environments  = Environment.values.filterNot(_ == Environment.Integration)
-                       )
-                     )
+          SearchCommissioning.SearchCommissioningForm(
+            teamName      = None
+          , serviceType   = None
+          , checks        = allChecks.map(_._1).toList
+          , environments  = Environment.values.filterNot(_ == Environment.Integration)
+          )
+        )
       } yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
     }
 
   def searchResults(
-    team: Option[TeamName] = None,
-    serviceType: Option[ServiceType] = None,
-    `checks[]`: List[String] = List.empty,
-    `environments[]`: List[String] = List.empty): Action[AnyContent] =
+    teamName        : Option[TeamName]    = None,
+    serviceType     : Option[ServiceType] = None,
+    `checks[]`      : List[String]        = List.empty,
+    `environments[]`: List[String]        = List.empty): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchCommissioning
         .searchForm
@@ -85,9 +85,11 @@ class ServiceCommissioningStatusController @Inject() (
         , formObject     => for {
                               allTeams  <- teamsAndRepositoriesConnector.allTeams()
                               allChecks <- serviceCommissioningStatusConnector.allChecks()
-                              results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.team, formObject.serviceType)
-                            } yield if (formObject.asCsv) {
-                                val rows   = toRows(allChecks.filter { case (title, _) => formObject.checks.contains(title) }, formObject.environments, results)
+                              results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType)
+                              checks    =  if(formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
+
+                          } yield if (formObject.asCsv) {
+                                val rows   = toRows(allChecks.filter { case (title, _) => checks.contains(title) }, formObject.environments, results)
                                 val csv    = CsvUtils.toCsv(rows)
                                 val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
                                 Result(
@@ -95,7 +97,7 @@ class ServiceCommissioningStatusController @Inject() (
                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                                 )
                             } else {
-                              Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject), allTeams, allChecks, Some(results)))
+                              Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(results)))
                             }
         )
     }
@@ -130,19 +132,19 @@ import play.api.data.{Form, Forms}
 
 object SearchCommissioning {
   case class SearchCommissioningForm(
-    team        : Option[TeamName]
-  , serviceType : Option[ServiceType]
-  , checks      : List[String]
-  , environments: List[Environment]
-  , asCsv       : Boolean = false
+    teamName        : Option[TeamName]
+    , serviceType : Option[ServiceType]
+    , checks      : List[String]
+    , environments: List[Environment]
+    , asCsv       : Boolean = false
   )
 
   lazy val searchForm: Form[SearchCommissioningForm] = Form(
     Forms.mapping(
       "team"         -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
-    , "serviceType"  -> Forms.optional(Forms.text.transform[ServiceType](x => {
-        ServiceType.parse(x).getOrElse(ServiceType.Backend)
-      }, _.asString)), "checks"       -> Forms.list(Forms.text)
+    , "serviceType"  -> Forms.optional(Forms.text.transform[ServiceType](x =>
+      ServiceType.parse(x).getOrElse(ServiceType.Backend)
+      , _.asString)), "checks"       -> Forms.list(Forms.text)
     , "environments" -> Forms.list(Forms.text)
                              .transform[List[Environment]](
                                xs => xs.map(Environment.parse).flatten

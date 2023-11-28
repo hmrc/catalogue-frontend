@@ -23,12 +23,13 @@
 @( environment : Option[Environment]
  , dependencies: Seq[Dependency]
  , pending     : Boolean
- , teamName    : Option[TeamName] = None
+ , team        : Boolean              = false
+ , teamName    : Option[TeamName]     = None
  )
 
 @reviewLink(environment: Option[Environment], pending: Boolean) = {
   @if(teamName.isDefined) {
-    <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName.get)">View Now</a>.
+    <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName.get)">See Dependencies</a>.
   } else {
     Please review the lists below, and refer to <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
   }
@@ -48,11 +49,11 @@
         <div class="alert @if(pending) {alert-warning} else {alert-danger}" id="bobby-rules-@{if(pending) "pending" else "broken"}-banner@{environment.fold("")(e => s"-${e.asString}")}">
             <strong>
                 @environment.fold{
-                  @if(Some(teamName)) { One or more of your repositories } else { This "repository" }
+                  @if(team) { One or more of your repositories } else { This "repository" }
                   @if(pending) { will break } else { has broken }
                   Bobby Rules, and will fail to build in Jenkins.
                 }{ env =>
-                  @if(Some(teamName)) { One or more of your services } else { This service }
+                  @if(team) { One or more of your services } else { This service }
                   @if(pending) { will break } else { has broken }
                   Bobby Rules in @env.displayString.
                 }

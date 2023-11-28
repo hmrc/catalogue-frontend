@@ -14,42 +14,14 @@
  * limitations under the License.
  *@
 
-@*
-   * Copyright 2023 HM Revenue & Customs
-   *
-   * Licensed under the Apache License, Version 2.0 (the "License");
-   * you may not use this file except in compliance with the License.
-   * You may obtain a copy of the License at
-   *
-   *     http://www.apache.org/licenses/LICENSE-2.0
-   *
-   * Unless required by applicable law or agreed to in writing, software
-   * distributed under the License is distributed on an "AS IS" BASIS,
-   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   * See the License for the specific language governing permissions and
-   * limitations under the License.
-   *@
-
 @import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => serviceCommissioningStatusRoutes}
 
 @(masterTeamDependencies: Seq[RepoAndDependencies],
-  team                  : TeamName,
-  allChecks             : Seq[String]
+  team                  : TeamName
 )
-
-@serviceLink = @{
-  serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(
-    team            = Some(team)
-    ,serviceType    = None
-    ,`checks[]`     = allChecks.toList
-    ,`environments[]`= Environment.values.map(_.asString)
-  ).url
-}
-
 
 <div id="servicesAndDependencies" class="card">
   <div class="card-header">
@@ -57,7 +29,7 @@
   </div>
   <div class="card-body">
     <ul class="list-unstyled" style="column-count: 1;">
-      <li><a id="link-to-team-services" href="@serviceLink"> Service Commissioning State</a></li>
+      <li><a id="link-to-team-services" href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(Some(team))"> Service Commissioning State</a></li>
       <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(team)"> Outdated Dependencies </a></li>
     </ul>
   </div>
