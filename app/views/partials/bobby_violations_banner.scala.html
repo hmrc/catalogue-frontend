@@ -28,9 +28,9 @@
  )
 
 @reviewLink(environment: Option[Environment], pending: Boolean) = {
-  @if(teamName.isDefined) {
+  @teamName.map { name =>
     <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName.get)">See Dependencies</a>.
-  } else {
+  }.getOrElse {
     Please review the lists below, and refer to <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
   }
 }
