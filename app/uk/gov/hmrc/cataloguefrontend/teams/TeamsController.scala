@@ -51,17 +51,17 @@ class TeamsController @Inject()(
   def team(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)).flatMap {
-        case Nil   => for {
-          maybeTeam   <- userManagementConnector.getTeam(teamName.asString)
-        } yield Ok( teamInfoPage(
-            teamName           = teamName,
-            repos              = Map.empty,
-            maybeTeam          = maybeTeam,
-            umpMyTeamsUrl      = "",
-            leaksFoundForTeam  = false,
-            hasLeaks           = _ => false,
-            Seq.empty,
-            Map.empty
+        case repo if repo.isEmpty => for {
+            maybeTeam <- userManagementConnector.getTeam(teamName.asString)
+          } yield Ok(teamInfoPage(
+            teamName               = teamName,
+            repos                  = Map.empty,
+            maybeTeam              = maybeTeam,
+            umpMyTeamsUrl          = "",
+            leaksFoundForTeam      = false,
+            hasLeaks               = _ => false,
+            masterTeamDependencies = Seq.empty,
+            prodDependencies       = Map.empty
           ))
         case repos =>
           (
@@ -69,11 +69,11 @@ class TeamsController @Inject()(
             leakDetectionService.repositoriesWithLeaks,
             serviceDependenciesConnector.dependenciesForTeam(teamName),
             serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
-            ).mapN { ( maybeTeam,
-                       reposWithLeaks,
-                       masterTeamDependencies,
-                       prodDependencies,
-                     ) =>
+          ).mapN { (maybeTeam,
+                    reposWithLeaks,
+                    masterTeamDependencies,
+                    prodDependencies,
+                   ) =>
             Ok(
               teamInfoPage(
                 teamName               = teamName,

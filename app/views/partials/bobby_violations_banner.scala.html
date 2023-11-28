@@ -17,16 +17,24 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependency
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @( environment : Option[Environment]
  , dependencies: Seq[Dependency]
  , pending     : Boolean
- , team        : Boolean             = false
+ , team        : Boolean              = false
+ , teamName    : Option[TeamName]     = None
  )
 
 @reviewLink(environment: Option[Environment], pending: Boolean) = {
-  Please review the lists below, and refer to <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
+  @teamName.map { name =>
+    <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(name)">See Dependencies</a>.
+  }.getOrElse {
+    Please review the lists below, and refer to <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
+  }
 }
+
 
 @defining(
     dependencies

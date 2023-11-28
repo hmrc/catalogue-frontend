@@ -37,7 +37,8 @@ GET        /service/:name/costs                         uk.gov.hmrc.cataloguefro
 
 GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name)
 GET        /commissioning-state/search                  uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchLanding()
-GET        /commissioning-state/search/results          uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchResults()
+GET        /commissioning-state/search/results          uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchResults(team: Option[TeamName] ?= None, serviceType: Option[uk.gov.hmrc.cataloguefrontend.connector.ServiceType] ?= None, `checks[]`: List[String] ?= List.empty, `environments[]`: List[String] ?= List.empty)
+
 
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
 GET        /prototype/:name                             uk.gov.hmrc.cataloguefrontend.CatalogueController.prototype(name)

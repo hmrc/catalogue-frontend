@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.binders
 
 import play.api.mvc.QueryStringBindable
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 
 import java.time.{Instant, LocalDate}
 import scala.util.Try
@@ -41,5 +42,17 @@ object Binders {
 
       override def unbind(key: String, value: LocalDate): String =
         strBinder.unbind(key, value.toString)
+    }
+
+  implicit def serviceTypeBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[ServiceType] =
+    new QueryStringBindable[ServiceType] {
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ServiceType]] =
+        strBinder.bind(key, params) match {
+          case Some(Right(s)) if (s.nonEmpty)  => Some(ServiceType.parse(s))
+          case _                               => None
+        }
+
+      override def unbind(key: String, value: ServiceType): String =
+        strBinder.unbind(key, value.asString)
     }
 }
