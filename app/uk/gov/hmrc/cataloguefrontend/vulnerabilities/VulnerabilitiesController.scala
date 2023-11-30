@@ -73,18 +73,15 @@ class VulnerabilitiesController @Inject() (
     form
       .bindFromRequest()
       .fold(
-        formWithErrors => {
-          teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-            .map(sortedTeams => BadRequest(vulnerabilitiesForServicesPage(Seq.empty, sortedTeams, formWithErrors)))
-        },
+        formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
         validForm => {
           val updatedTeam = teamName.orElse(validForm.team)
           for {
             teams <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
             counts <- vulnerabilitiesConnector.vulnerabilityCounts(
-              service = None,
-              team = updatedTeam,
-              environment = validForm.environment
+              service = None // Use listjs filtering
+            , team = teamName.orElse(validForm.team)
+            , environment = validForm.environment
             )
           } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm.copy(team = updatedTeam))))
         }
