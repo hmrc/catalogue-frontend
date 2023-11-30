@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -65,21 +66,28 @@ class VulnerabilitiesController @Inject() (
           )
     }
 
-  def vulnerabilitiesCountForServices: Action[AnyContent] = Action.async { implicit request =>
+  def vulnerabilitiesCountForServices(
+      teamName: Option[String]
+    ): Action[AnyContent] = Action.async { implicit request =>
     import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
     form
       .bindFromRequest()
       .fold(
-        formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
-        validForm =>
-         for {
-           teams      <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-           counts     <- vulnerabilitiesConnector.vulnerabilityCounts(
-                            service     = None // Use listjs filtering
-                          , team        = validForm.team
-                          , environment = validForm.environment
-                          )
-         } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
+        formWithErrors => {
+          teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
+            .map(sortedTeams => BadRequest(vulnerabilitiesForServicesPage(Seq.empty, sortedTeams, formWithErrors)))
+        },
+        validForm => {
+          val updatedTeam = teamName.orElse(validForm.team)
+          for {
+            teams <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
+            counts <- vulnerabilitiesConnector.vulnerabilityCounts(
+              service = None,
+              team = updatedTeam,
+              environment = validForm.environment
+            )
+          } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm.copy(team = updatedTeam))))
+        }
       )
   }
 
