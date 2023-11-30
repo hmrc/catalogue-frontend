@@ -132,7 +132,7 @@
                             <li><a id="link-to-leak-detection-repositories" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(false, false, true)">Leak Detection - Repositories</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a id="link-to-vulnerabilities" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), None, None)">Vulnerabilities</a></li>
-                            <li><a id="link-to-vulnerabilities-services" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesCountForServices(None)">Vulnerabilities - Services</a></li>
+                            <li><a id="link-to-vulnerabilities-services" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesCountForServices()">Vulnerabilities - Services</a></li>
                             <li><a id="link-to-vulnerabilities-timeline" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesTimeline(None, None, None, curationStatus = Some(CurationStatus.ActionRequired.asString))">Vulnerabilities - Timeline</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a id="link-to-pr-commenter-recommendations" class="dropdown-item" href="@prcommenterRoutes.PrCommenterController.recommendations()">PR-Commenter Recommendations</a></li>

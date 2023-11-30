@@ -22,7 +22,6 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -67,24 +66,22 @@ class VulnerabilitiesController @Inject() (
     }
 
   def vulnerabilitiesCountForServices(
-      teamName: Option[String]
+      teamName: Option[String] = None //TeamName is read from form, this param only exists for reverse routes
     ): Action[AnyContent] = Action.async { implicit request =>
     import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
     form
       .bindFromRequest()
       .fold(
         formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
-        validForm => {
-          val updatedTeam = teamName.orElse(validForm.team)
-          for {
-            teams <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-            counts <- vulnerabilitiesConnector.vulnerabilityCounts(
-              service = None // Use listjs filtering
-            , team = teamName.orElse(validForm.team)
-            , environment = validForm.environment
-            )
-          } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm.copy(team = updatedTeam))))
-        }
+        validForm =>
+         for {
+           teams      <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
+           counts     <- vulnerabilitiesConnector.vulnerabilityCounts(
+                            service     = None // Use listjs filtering
+                          , team        = validForm.team
+                          , environment = validForm.environment
+                          )
+         } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
       )
   }
 
