@@ -65,7 +65,9 @@ class VulnerabilitiesController @Inject() (
           )
     }
 
-  def vulnerabilitiesCountForServices: Action[AnyContent] = Action.async { implicit request =>
+  def vulnerabilitiesCountForServices(
+      teamName: Option[String] = None //TeamName is read from form, this param only exists for reverse routes
+    ): Action[AnyContent] = Action.async { implicit request =>
     import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
     form
       .bindFromRequest()
