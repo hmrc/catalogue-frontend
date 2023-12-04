@@ -18,8 +18,12 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import helper._
+@import views.html.partials.TeamNamesPartial
 
-@this(viewMessages: ViewMessages)
+@this(
+  viewMessages    : ViewMessages,
+  teamNamesPartial: TeamNamesPartial
+)
 
 @(repositories   : Seq[GitRepository],
   teamNames      : Seq[TeamName],
@@ -122,12 +126,8 @@
                 <td class="service-name" id="row@{i}_name">
                     <a class="repo-name" id="link-to-@{repo.name}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
                 </td>
-                <td class="teamNames font-monospace" id="row@{i}_teamNames">
-                    @if(repo.teamNames.length > 0 && repo.teamNames.length <= 10) {
-                        @repo.teamNames.mkString(", ")
-                    } else  {
-                        <i title="@repo.teamNames.mkString(", ")">Various Teams</i>
-                    }
+                <td class="teams" id="row@{i}_teamNames">
+                  @teamNamesPartial(repo.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
                 </td>
                 <td class="defaultBranch font-monospace" id="row@{i}_defaultBranch">
                     @repo.defaultBranch

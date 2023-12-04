@@ -17,10 +17,10 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import views.html.partials.TeamNames
+@import views.html.partials.TeamNamesPartial
 
 @this(
-  repoTeamNames: TeamNames
+  teamNamesPartial: TeamNamesPartial
 )
 
 @(
@@ -47,7 +47,7 @@
     </td>
 
     <td id="row@{i}_team">
-        @repoTeamNames(repo.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
+        @teamNamesPartial(repo.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
     </td>
 
     <td class="repo-bp font-monospace text-center" id="row@{i}_branch-protection">
