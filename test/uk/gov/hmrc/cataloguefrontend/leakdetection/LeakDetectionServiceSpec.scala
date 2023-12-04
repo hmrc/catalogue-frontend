@@ -21,7 +21,7 @@ import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDateTime
+import java.time.Instant
 import java.time.temporal.ChronoUnit.HOURS
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -275,7 +275,7 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
     val service = new LeakDetectionService(connector, configuration)
 
-    val timestamp = LocalDateTime.now().minus(2, HOURS)
+    val timestamp = Instant.now().minus(2, HOURS)
 
     def aRule              = LeakDetectionRule("", "", "", "", List(), List(), List(), Priority.Low, false)
     def aRepositorySummary = LeakDetectionRepositorySummary("", true, timestamp, timestamp, 0, 0, 0, None)

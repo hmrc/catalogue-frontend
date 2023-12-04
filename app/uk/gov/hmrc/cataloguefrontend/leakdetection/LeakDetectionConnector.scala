@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.LocalDateTime
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -210,8 +210,8 @@ object LeakDetectionRule {
 final case class LeakDetectionRepositorySummary(
   repository     : String,
   isArchived     : Boolean,
-  firstScannedAt : LocalDateTime,
-  lastScannedAt  : LocalDateTime,
+  firstScannedAt : Instant,
+  lastScannedAt  : Instant,
   warningCount   : Int,
   excludedCount  : Int,
   unresolvedCount: Int,
@@ -226,8 +226,8 @@ object LeakDetectionRepositorySummary {
     implicit val ldbr: Reads[LeakDetectionBranchSummary]= LeakDetectionBranchSummary.reads
     ( (__ \ "repository"     ).read[String]
     ~ (__ \ "isArchived"     ).read[Boolean]
-    ~ (__ \ "firstScannedAt" ).read[LocalDateTime]
-    ~ (__ \ "lastScannedAt"  ).read[LocalDateTime]
+    ~ (__ \ "firstScannedAt" ).read[Instant]
+    ~ (__ \ "lastScannedAt"  ).read[Instant]
     ~ (__ \ "warningCount"   ).read[Int]
     ~ (__ \ "excludedCount"  ).read[Int]
     ~ (__ \ "unresolvedCount").read[Int]
@@ -239,7 +239,7 @@ object LeakDetectionRepositorySummary {
 final case class LeakDetectionBranchSummary(
   branch         : String,
   reportId       : String,
-  scannedAt      : LocalDateTime,
+  scannedAt      : Instant,
   warningCount   : Int,
   excludedCount  : Int,
   unresolvedCount: Int
@@ -268,7 +268,7 @@ final case class LeakDetectionReport(
   repoName        : String,
   branch          : String,
   id              : String,
-  timestamp       : LocalDateTime, // TODO Instant
+  timestamp       : Instant,
   author          : String,
   commitId        : String,
   rulesViolated   : Map[String, Int],
@@ -282,7 +282,7 @@ object LeakDetectionReport {
     ( (__ \ "repoName"        ).read[String]
     ~ (__ \ "branch"          ).read[String]
     ~ (__ \ "_id"             ).read[String]
-    ~ (__ \ "timestamp"       ).read[LocalDateTime]
+    ~ (__ \ "timestamp"       ).read[Instant]
     ~ (__ \ "author"          ).read[String]
     ~ (__ \ "commitId"        ).read[String]
     ~ (__ \ "rulesViolated"   ).read[Map[String, Int]]

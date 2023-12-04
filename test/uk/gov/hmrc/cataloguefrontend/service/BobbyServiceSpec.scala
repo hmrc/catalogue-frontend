@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time._
+import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -32,9 +32,9 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
   private val connector = mock[ServiceConfigsConnector]
 
-  private val today      = LocalDate.of(2000, Month.JANUARY, 1)
-  private val now        = LocalDateTime.of(today, LocalTime.of(1,1,1))
-  private val fixedClock = Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneId.systemDefault())
+  private val now        = Instant.parse("2000-01-01T01:01:01Z")
+  private val today      = now.atZone(ZoneId.of("UTC")).toLocalDate
+  private val fixedClock = Clock.fixed(now, ZoneId.of("UTC"))
 
   private val service = new BobbyService(connector, fixedClock)
 

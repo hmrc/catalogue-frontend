@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend
 
 import java.time._
 import java.time.format.DateTimeFormatter
-import java.util.Date
 
 object DateHelper {
   val utc = ZoneId.of("UTC")
@@ -33,11 +32,6 @@ object DateHelper {
   val `dd MMM uuuu`: DateTimeFormatter     = DateTimeFormatter.ofPattern("dd MMM uuuu")
 
 
-  implicit class JavaDateToLocalDateTime(d: Date) {
-    def toLocalDate: LocalDateTime =
-      LocalDateTime.ofInstant(d.toInstant, ZoneId.systemDefault())
-  }
-
   implicit class LocalDateImplicits(d: LocalDate) {
     def atStartOfDayEpochMillis: Long =
       d.atStartOfDay(utc).toInstant.toEpochMilli
@@ -46,19 +40,7 @@ object DateHelper {
       d.atTime(LocalTime.MAX).atZone(utc).toInstant.toEpochMilli
   }
 
-  implicit class LocalDateTimeImplicits(d: LocalDateTime) {
-    def epochMillis: Long =
-      d.atZone(utc).toInstant.toEpochMilli
-
-    def asPattern(pattern: String): String =
-      d.format(DateTimeFormatter.ofPattern(pattern))
-
-    def displayFormat: String =
-      d.format(`dd MMM uuuu HH:mm`)
-  }
-
   implicit class InstantImplicits(d: Instant) {
-
     def asPattern(pattern: String): String =
       d.atZone(utc).format(DateTimeFormatter.ofPattern(pattern))
 
