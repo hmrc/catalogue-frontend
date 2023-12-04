@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.scalatest.BeforeAndAfter
-import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositories
+import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositoriesJsonData
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 import scala.io.Source
@@ -49,7 +49,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show a list of libraries, services, prototypes and repositories" in {
       val teamName = "teamA"
 
-      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("team" -> teamName, "archived" -> "false"),  willRespondWith = (200, Some(TeamsAndRepositories.repositoriesTeamAData)))
+      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("team" -> teamName, "archived" -> "false"),  willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
 
       val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
@@ -91,7 +91,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
     "show error message if user-management is not available" in {
       val teamName = "teamA"
-      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("team" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositories.repositoriesData)))
+      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("team" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesData)))
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (404, None))
 
       val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
@@ -102,7 +102,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
     "show team details correctly" in {
       val teamName = "teamA"
-      serviceEndpoint(GET, s"/api/v2/repositories", queryParameters = Seq("team" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositories.repositoriesData)))
+      serviceEndpoint(GET, s"/api/v2/repositories", queryParameters = Seq("team" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesData)))
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
 
       val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get().futureValue

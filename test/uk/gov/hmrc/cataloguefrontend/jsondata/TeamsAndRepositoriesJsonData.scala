@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.jsondata
 
-import uk.gov.hmrc.cataloguefrontend.JsonData
-
-object TeamsAndRepositories {
-
-  val createdAt = JsonData.createdAt
-  val lastActiveAt = JsonData.lastActiveAt
+object TeamsAndRepositoriesJsonData {
+  private val createdAt = JsonData.createdAt
+  private val lastActiveAt = JsonData.lastActiveAt
 
   val teams = {
     s"""

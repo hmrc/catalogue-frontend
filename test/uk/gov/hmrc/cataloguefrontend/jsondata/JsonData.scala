@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.jsondata
 
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType}
