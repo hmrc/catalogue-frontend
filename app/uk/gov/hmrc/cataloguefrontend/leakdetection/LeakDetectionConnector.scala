@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Logger
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, Json, Reads, __}
+import play.api.libs.json.{Json, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.Priority.{High, Low, Medium}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -132,26 +132,32 @@ object RepositoryWithLeaks {
 }
 
 sealed trait Priority {
-  val name: String = this match {
-    case High   => "high"
-    case Medium => "medium"
-    case Low    => "low"
-  }
-  protected val ordering: Int = this match {
-    case High   => 1
-    case Medium => 2
-    case Low    => 3
-  }
+  val name: String =
+    this match {
+      case High   => "high"
+      case Medium => "medium"
+      case Low    => "low"
+    }
+
+  protected val ordering: Int =
+    this match {
+      case High   => 1
+      case Medium => 2
+      case Low    => 3
+    }
 }
 
 object Priority {
-  implicit val order: Ordering[Priority] = Ordering.by(_.ordering)
-  val reads: Reads[Priority] = Reads.StringReads.map {
-    case "high"   => High
-    case "medium" => Medium
-    case "low"    => Low
-    case p        => throw new RuntimeException(s"Priority type '$p' unknown")
-  }
+  implicit val order: Ordering[Priority] =
+    Ordering.by(_.ordering)
+
+  val reads: Reads[Priority] =
+    Reads.StringReads.map {
+      case "high"   => High
+      case "medium" => Medium
+      case "low"    => Low
+      case p        => throw new RuntimeException(s"Priority type '$p' unknown")
+    }
 
   case object High   extends Priority
   case object Medium extends Priority
@@ -164,9 +170,13 @@ final case class LeakDetectionSummary(
 )
 
 object LeakDetectionSummary {
-  implicit val ldrr : Reads[LeakDetectionRule]              = LeakDetectionRule.reads
-  implicit val ldrsr: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
-  val reads: Reads[LeakDetectionSummary] = Json.reads[LeakDetectionSummary]
+  val reads: Reads[LeakDetectionSummary] = {
+    implicit val ldrr : Reads[LeakDetectionRule]              = LeakDetectionRule.reads
+    implicit val ldrsr: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
+    ( (__ \ "rule" ).read[LeakDetectionRule]
+    ~ (__ \ "leaks").read[Seq[LeakDetectionRepositorySummary]]
+    )(LeakDetectionSummary.apply _)
+  }
 }
 
 final case class LeakDetectionRule(
@@ -182,8 +192,19 @@ final case class LeakDetectionRule(
 )
 
 object LeakDetectionRule {
-  implicit val pr   : Reads[Priority]          = Priority.reads
-  implicit val reads: Reads[LeakDetectionRule] = Json.reads[LeakDetectionRule]
+  val reads: Reads[LeakDetectionRule] = {
+    implicit val pr: Reads[Priority] = Priority.reads
+    ( (__ \ "id"               ).read[String]
+    ~ (__ \ "scope"            ).read[String]
+    ~ (__ \ "regex"            ).read[String]
+    ~ (__ \ "description"      ).read[String]
+    ~ (__ \ "ignoredFiles"     ).read[List[String]]
+    ~ (__ \ "ignoredExtensions").read[List[String]]
+    ~ (__ \ "ignoredContent"   ).read[List[String]]
+    ~ (__ \ "priority"         ).read[Priority]
+    ~ (__ \ "draft"            ).read[Boolean]
+    )(LeakDetectionRule.apply _)
+  }
 }
 
 final case class LeakDetectionRepositorySummary(
@@ -201,8 +222,8 @@ final case class LeakDetectionRepositorySummary(
 }
 
 object LeakDetectionRepositorySummary {
-  private implicit val ldbr: Reads[LeakDetectionBranchSummary]= LeakDetectionBranchSummary.reads
-  implicit val reads: Reads[LeakDetectionRepositorySummary] =
+  val reads: Reads[LeakDetectionRepositorySummary] = {
+    implicit val ldbr: Reads[LeakDetectionBranchSummary]= LeakDetectionBranchSummary.reads
     ( (__ \ "repository"     ).read[String]
     ~ (__ \ "isArchived"     ).read[Boolean]
     ~ (__ \ "firstScannedAt" ).read[LocalDateTime]
@@ -212,6 +233,7 @@ object LeakDetectionRepositorySummary {
     ~ (__ \ "unresolvedCount").read[Int]
     ~ (__ \ "branchSummary"  ).readNullable[Seq[LeakDetectionBranchSummary]]
     )(LeakDetectionRepositorySummary.apply _)
+  }
 }
 
 final case class LeakDetectionBranchSummary(
@@ -227,7 +249,8 @@ final case class LeakDetectionBranchSummary(
 }
 
 object LeakDetectionBranchSummary {
-  val reads = Json.reads[LeakDetectionBranchSummary]
+  val reads: Reads[LeakDetectionBranchSummary] =
+    Json.reads[LeakDetectionBranchSummary]
 }
 
 final case class UnusedExemption(
@@ -237,14 +260,15 @@ final case class UnusedExemption(
 )
 
 object UnusedExemption {
-  implicit val format: Format[UnusedExemption] = Json.format[UnusedExemption]
+  val reads: Reads[UnusedExemption] =
+    Json.reads[UnusedExemption]
 }
 
 final case class LeakDetectionReport(
   repoName        : String,
   branch          : String,
-  _id             : String,
-  timestamp       : LocalDateTime,
+  id              : String,
+  timestamp       : LocalDateTime, // TODO Instant
   author          : String,
   commitId        : String,
   rulesViolated   : Map[String, Int],
@@ -253,7 +277,19 @@ final case class LeakDetectionReport(
 )
 
 object LeakDetectionReport {
-  implicit val reads: Reads[LeakDetectionReport] = Json.reads[LeakDetectionReport]
+  val reads: Reads[LeakDetectionReport] = {
+    implicit val uer: Reads[UnusedExemption] = UnusedExemption.reads
+    ( (__ \ "repoName"        ).read[String]
+    ~ (__ \ "branch"          ).read[String]
+    ~ (__ \ "_id"             ).read[String]
+    ~ (__ \ "timestamp"       ).read[LocalDateTime]
+    ~ (__ \ "author"          ).read[String]
+    ~ (__ \ "commitId"        ).read[String]
+    ~ (__ \ "rulesViolated"   ).read[Map[String, Int]]
+    ~ (__ \ "exclusions"      ).read[Map[String, Int]]
+    ~ (__ \ "unusedExemptions").read[Seq[UnusedExemption]]
+    )(LeakDetectionReport.apply _)
+  }
 }
 
 final case class LeakDetectionLeak(
@@ -270,9 +306,21 @@ final case class LeakDetectionLeak(
 )
 
 object LeakDetectionLeak {
-  implicit val mr   : Reads[Match]             = Match.reads
-  implicit val pr   : Reads[Priority]          = Priority.reads
-  implicit val reads: Reads[LeakDetectionLeak] = Json.reads[LeakDetectionLeak]
+  val reads: Reads[LeakDetectionLeak] = {
+    implicit val mr: Reads[Match]    = Match.reads
+    implicit val pr: Reads[Priority] = Priority.reads
+    ( (__ \ "ruleId"     ).read[String]
+    ~ (__ \ "description").read[String]
+    ~ (__ \ "filePath"   ).read[String]
+    ~ (__ \ "scope"      ).read[String]
+    ~ (__ \ "lineNumber" ).read[Int]
+    ~ (__ \ "urlToSource").read[String]
+    ~ (__ \ "lineText"   ).read[String]
+    ~ (__ \ "matches"    ).read[List[Match]]
+    ~ (__ \ "priority"   ).read[Priority]
+    ~ (__ \ "isExcluded" ).read[Boolean]
+    )(LeakDetectionLeak.apply _)
+  }
 }
 
 final case class Match(
@@ -281,11 +329,15 @@ final case class Match(
 )
 
 object Match {
-  implicit val reads: Reads[Match] = Json.reads[Match]
+  val reads: Reads[Match] =
+    ( (__ \ "start").read[Int]
+    ~ (__ \ "end"  ).read[Int]
+    )(Match.apply _)
 }
 
 final case class LeakDetectionWarning(message: String)
 
 object LeakDetectionWarning {
-  implicit val reads: Reads[LeakDetectionWarning] = Json.reads[LeakDetectionWarning]
+  val reads: Reads[LeakDetectionWarning] =
+    (__ \ "message").read[String].map(LeakDetectionWarning.apply)
 }

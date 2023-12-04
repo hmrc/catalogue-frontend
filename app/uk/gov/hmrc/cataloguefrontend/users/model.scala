@@ -94,9 +94,9 @@ final case class TeamMembership(
 )
 
 object TeamMembership {
-  implicit val rr : Reads[Role]     = Role.reads
-  implicit val tnr: Reads[TeamName] = TeamName.format
   val reads: Reads[TeamMembership] = {
+    implicit val rr : Reads[Role]     = Role.reads
+    implicit val tnr: Reads[TeamName] = TeamName.format
     ( (__ \ "teamName").read[TeamName]
     ~ (__ \ "role"    ).read[Role]
     )(TeamMembership.apply _)

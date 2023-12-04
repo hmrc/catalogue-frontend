@@ -107,8 +107,8 @@ class LeakDetectionController @Inject() (
         for {
           isAuthorised <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository, "READ")))
           report       <- leakDetectionService.report(repository, branch)
-          leaks        <- leakDetectionService.reportLeaks(report._id)
-          warnings     <- leakDetectionService.reportWarnings(report._id)
+          leaks        <- leakDetectionService.reportLeaks(report.id)
+          warnings     <- leakDetectionService.reportWarnings(report.id)
           resolutionUrl = leakDetectionService.resolutionUrl
         } yield Ok(leaksPage(report, report.exclusions, leaks, warnings, resolutionUrl, isAuthorised))
       }
@@ -117,7 +117,7 @@ class LeakDetectionController @Inject() (
     BasicAuthAction.async { implicit request =>
       for {
         report     <- leakDetectionService.report(repository, branch)
-        exemptions <- leakDetectionService.reportExemptions(report._id)
+        exemptions <- leakDetectionService.reportExemptions(report.id)
       } yield Ok(exemptionsPage(repository, branch, exemptions, report.unusedExemptions))
     }
 
