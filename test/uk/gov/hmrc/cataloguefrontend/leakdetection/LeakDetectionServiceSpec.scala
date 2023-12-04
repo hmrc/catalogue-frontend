@@ -31,7 +31,6 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
   private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
 
   "Service" should {
-
     "return rule summaries with counts" in new Setup {
       when(connector.leakDetectionSummaries(None, None, None)).thenReturn(
         Future.successful(
@@ -280,40 +279,41 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
 
     def aRule              = LeakDetectionRule("", "", "", "", List(), List(), List(), Priority.Low, false)
     def aRepositorySummary = LeakDetectionRepositorySummary("", true, timestamp, timestamp, 0, 0, 0, None)
-    def aBranchSummary = LeakDetectionBranchSummary("", "", timestamp, 0, 0, 0)
+    def aBranchSummary     = LeakDetectionBranchSummary("", "", timestamp, 0, 0, 0)
 
-    when(connector.leakDetectionRules()).thenReturn(Future.successful(Seq.empty))
+    when(connector.leakDetectionRules())
+      .thenReturn(Future.successful(Seq.empty))
 
+    def givenRepoSummariesWithAllCountCombinations(includeNonIssues: Boolean) =
+      when(connector.leakDetectionRepoSummaries(None, None, None, includeNonIssues, false))
+        .thenReturn(Future.successful(
+          Seq(
+            aRepositorySummary.copy(repository = "warnings, exemptions and violations", warningCount = 1, excludedCount = 1, unresolvedCount = 1),
+            aRepositorySummary.copy(repository = "warnings and exemptions", warningCount = 1, excludedCount = 1),
+            aRepositorySummary.copy(repository = "warnings and violations", warningCount = 1, unresolvedCount = 1),
+            aRepositorySummary.copy(repository = "warnings", warningCount = 1),
+            aRepositorySummary.copy(repository = "exemptions and violations", excludedCount = 1, unresolvedCount = 1),
+            aRepositorySummary.copy(repository = "exemptions", excludedCount = 1),
+            aRepositorySummary.copy(repository = "violations", unresolvedCount = 1),
+            aRepositorySummary.copy(repository = "no issues")
+          )
+      ))
 
-    def givenRepoSummariesWithAllCountCombinations(includeNonIssues: Boolean) = when(connector.leakDetectionRepoSummaries(None, None, None, includeNonIssues, false)).thenReturn(
-      Future.successful(Seq(
-          aRepositorySummary.copy(repository = "warnings, exemptions and violations", warningCount = 1, excludedCount = 1, unresolvedCount = 1),
-          aRepositorySummary.copy(repository = "warnings and exemptions", warningCount = 1, excludedCount = 1),
-          aRepositorySummary.copy(repository = "warnings and violations", warningCount = 1, unresolvedCount = 1),
-          aRepositorySummary.copy(repository = "warnings", warningCount = 1),
-          aRepositorySummary.copy(repository = "exemptions and violations", excludedCount = 1, unresolvedCount = 1),
-          aRepositorySummary.copy(repository = "exemptions", excludedCount = 1),
-          aRepositorySummary.copy(repository = "violations", unresolvedCount = 1),
-          aRepositorySummary.copy(repository = "no issues")
-        )
-      )
-    )
-
-    def givenRepoSummariesWithAllCountCombinations(repoName: String, includeNonIssues: Boolean) = when(connector.leakDetectionRepoSummaries(None, Some(repoName), None, includeNonIssues, true)).thenReturn(
-      Future.successful(
-        Seq(
-          aRepositorySummary.copy(repository = "test-repo", branchSummary = Some(Seq(
-            aBranchSummary.copy(branch = "warnings, exemptions and violations", warningCount = 1, excludedCount = 1, unresolvedCount = 1),
-            aBranchSummary.copy(branch = "warnings and exemptions", warningCount = 1, excludedCount = 1),
-            aBranchSummary.copy(branch = "warnings and violations", warningCount = 1, unresolvedCount = 1),
-            aBranchSummary.copy(branch = "warnings", warningCount = 1),
-            aBranchSummary.copy(branch = "exemptions and violations", excludedCount = 1, unresolvedCount = 1),
-            aBranchSummary.copy(branch = "exemptions", excludedCount = 1),
-            aBranchSummary.copy(branch = "violations", unresolvedCount = 1),
-            aBranchSummary.copy(branch = "no issues")))
-          ),
-        )
-      )
-    )
+    def givenRepoSummariesWithAllCountCombinations(repoName: String, includeNonIssues: Boolean) =
+      when(connector.leakDetectionRepoSummaries(None, Some(repoName), None, includeNonIssues, true))
+        .thenReturn(Future.successful(
+          Seq(
+            aRepositorySummary.copy(repository = "test-repo", branchSummary = Some(Seq(
+              aBranchSummary.copy(branch = "warnings, exemptions and violations", warningCount = 1, excludedCount = 1, unresolvedCount = 1),
+              aBranchSummary.copy(branch = "warnings and exemptions", warningCount = 1, excludedCount = 1),
+              aBranchSummary.copy(branch = "warnings and violations", warningCount = 1, unresolvedCount = 1),
+              aBranchSummary.copy(branch = "warnings", warningCount = 1),
+              aBranchSummary.copy(branch = "exemptions and violations", excludedCount = 1, unresolvedCount = 1),
+              aBranchSummary.copy(branch = "exemptions", excludedCount = 1),
+              aBranchSummary.copy(branch = "violations", unresolvedCount = 1),
+              aBranchSummary.copy(branch = "no issues")))
+            ),
+          )
+      ))
   }
 }

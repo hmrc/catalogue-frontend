@@ -67,7 +67,6 @@ class DeploymentHistoryControllerSpec
   }
 
   "history" should {
-
     "return 400 when given a bad date" in new Fixture {
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
@@ -173,5 +172,4 @@ class DeploymentHistoryControllerSpec
       status(response) shouldBe 200
     }
   }
-
 }

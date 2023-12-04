@@ -52,14 +52,28 @@ class LeakDetectionConnector @Inject() (
       }
   }
 
-  def leakDetectionSummaries(ruleId: Option[String], repo: Option[String], team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionSummary]] = {
+  def leakDetectionSummaries(
+    ruleId: Option[String],
+    repo  : Option[String],
+    team  : Option[String]
+  )(implicit
+    hc    : HeaderCarrier
+  ): Future[Seq[LeakDetectionSummary]] = {
     implicit val ldrs: Reads[LeakDetectionSummary] = LeakDetectionSummary.reads
     httpClientV2
       .get(url"$url/api/rules/summary?ruleId=$ruleId&repository=$repo&team=$team")
       .execute[Seq[LeakDetectionSummary]]
   }
 
-  def leakDetectionRepoSummaries(ruleId: Option[String], repo: Option[String], team: Option[String], includeNonIssues: Boolean, includeBranches: Boolean)(implicit hc: HeaderCarrier): Future[Seq[LeakDetectionRepositorySummary]] = {
+  def leakDetectionRepoSummaries(
+    ruleId          : Option[String],
+    repo            : Option[String],
+    team            : Option[String],
+    includeNonIssues: Boolean,
+    includeBranches : Boolean
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[LeakDetectionRepositorySummary]] = {
     implicit val ldrs: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
     val excludeNonIssues = !includeNonIssues
     httpClientV2
@@ -182,7 +196,8 @@ final case class LeakDetectionRepositorySummary(
   unresolvedCount: Int,
   branchSummary  : Option[Seq[LeakDetectionBranchSummary]]
 ) {
-  def totalCount:Int = warningCount + excludedCount + unresolvedCount
+  def totalCount: Int =
+    warningCount + excludedCount + unresolvedCount
 }
 
 object LeakDetectionRepositorySummary {

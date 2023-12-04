@@ -63,10 +63,10 @@ object TeamName {
 
 
 case class RepositoryModules(
-  name                 : String,
-  version              : Option[Version],
-  dependenciesBuild    : Seq[Dependency],
-  modules              : Seq[RepositoryModule]
+  name             : String,
+  version          : Option[Version],
+  dependenciesBuild: Seq[Dependency],
+  modules          : Seq[RepositoryModule]
 ) {
   def allDependencies: Seq[Dependency] =
     modules.foldLeft(dependenciesBuild)((acc, module) =>

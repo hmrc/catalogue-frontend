@@ -33,11 +33,12 @@ class HealthIndicatorsConnector @Inject() (
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
 
-  private implicit val indicatorReads: Reads[Indicator] = Indicator.reads
+  private implicit val indicatorReads        : Reads[Indicator]            = Indicator.reads
   private implicit val historicIndicatorReads: Reads[HistoricIndicatorAPI] = HistoricIndicatorAPI.format
-  private implicit val averageReads: Reads[AveragePlatformScore] = AveragePlatformScore.format
+  private implicit val averageReads          : Reads[AveragePlatformScore] = AveragePlatformScore.format
 
-  private val healthIndicatorsBaseUrl: String = servicesConfig.baseUrl("health-indicators")
+  private val healthIndicatorsBaseUrl: String =
+    servicesConfig.baseUrl("health-indicators")
 
   def getIndicator(repoName: String)(implicit hc: HeaderCarrier): Future[Option[Indicator]] =
     httpClientV2
@@ -79,11 +80,11 @@ object MetricType {
       }
   }
 
-  case object GitHub extends MetricType
-  case object LeakDetection extends MetricType
-  case object BobbyRule extends MetricType
+  case object GitHub         extends MetricType
+  case object LeakDetection  extends MetricType
+  case object BobbyRule      extends MetricType
   case object BuildStability extends MetricType
-  case object AlertConfig extends MetricType
+  case object AlertConfig    extends MetricType
 }
 
 case class Breakdown(

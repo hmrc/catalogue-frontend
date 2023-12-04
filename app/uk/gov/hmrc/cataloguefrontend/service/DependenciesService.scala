@@ -80,8 +80,7 @@ class DependenciesService @Inject() (
       .map(_.sortBy(_.group))
 
   def getJDKVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[JDKVersion]] =
-    serviceDependenciesConnector
-      .getJDKVersions(teamName, flag)
+    serviceDependenciesConnector.getJDKVersions(teamName, flag)
 
   def getJDKCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[JDKUsageByEnv] =
     for {
@@ -90,8 +89,7 @@ class DependenciesService @Inject() (
     } yield JDKUsageByEnv(env, counts)
 
   def getSBTVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[SBTVersion]] =
-    serviceDependenciesConnector
-      .getSBTVersions(teamName, flag)
+    serviceDependenciesConnector.getSBTVersions(teamName, flag)
 
   def getSBTCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[SBTUsageByEnv] =
     for {
@@ -101,7 +99,6 @@ class DependenciesService @Inject() (
 }
 
 object DependenciesService {
-
   def sortDependencies(dependencies: Seq[ServiceDependency]): Seq[ServiceDependency] =
     dependencies.sortBy(serviceDependency => (serviceDependency.group, serviceDependency.artifact))
 

@@ -41,12 +41,12 @@ import scala.concurrent.Future
 
 class ShutterEventsControllerSpec
   extends AnyWordSpec
-  with MockitoSugar
-  with ArgumentMatchersSugar
-  with Matchers
-  with GuiceOneAppPerSuite
-  with DefaultAwaitTimeout
-  with OptionValues {
+     with MockitoSugar
+     with ArgumentMatchersSugar
+     with Matchers
+     with GuiceOneAppPerSuite
+     with DefaultAwaitTimeout
+     with OptionValues {
 
   import Helpers._
   import ShutterEventsControllerSpec._

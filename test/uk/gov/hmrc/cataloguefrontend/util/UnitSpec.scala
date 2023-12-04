@@ -17,12 +17,15 @@
 package uk.gov.hmrc.cataloguefrontend.util
 
 import org.scalatest.OptionValues
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import scala.concurrent.duration.DurationInt
 
-trait UnitSpec extends AnyWordSpecLike with Matchers with OptionValues with ScalaFutures {
-  override implicit val patienceConfig = PatienceConfig(timeout = 30.seconds, interval = 100.millis)
-}
+trait UnitSpec
+  extends AnyWordSpecLike
+     with Matchers
+     with OptionValues
+     with ScalaFutures
+     with IntegrationPatience

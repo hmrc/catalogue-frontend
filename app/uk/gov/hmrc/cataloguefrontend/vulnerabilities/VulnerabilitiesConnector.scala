@@ -37,7 +37,16 @@ class VulnerabilitiesConnector @Inject() (
 
   private val url: String = servicesConfig.baseUrl("vulnerabilities")
 
-  def vulnerabilitySummaries(vulnerability: Option[String] = None, curationStatus: Option[String] = None, service: Option[String] = None, version: Option[Version] = None, team: Option[String] = None, component: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitySummary]] = {
+  def vulnerabilitySummaries(
+    vulnerability : Option[String]  = None,
+    curationStatus: Option[String]  = None,
+    service       : Option[String]  = None,
+    version       : Option[Version] = None,
+    team          : Option[String]  = None,
+    component     : Option[String]  = None
+  )(implicit
+    hc            : HeaderCarrier
+  ): Future[Seq[VulnerabilitySummary]] = {
     implicit val vsrs: Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
     httpClientV2
       .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=$vulnerability&curationStatus=$curationStatus&service=$service&version=${version.map(_.original)}&team=$team&component=$component")
@@ -50,15 +59,31 @@ class VulnerabilitiesConnector @Inject() (
       .execute[Option[Int]]
   }
 
-  def vulnerabilityCounts(service: Option[String], team: Option[String], environment: Option[Environment])(implicit hc: HeaderCarrier): Future[Seq[TotalVulnerabilityCount]] = {
+  def vulnerabilityCounts(
+    service    : Option[String],
+    team       : Option[String],
+    environment: Option[Environment]
+  )(implicit
+    hc         : HeaderCarrier
+  ): Future[Seq[TotalVulnerabilityCount]] = {
     implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
     httpClientV2
       .get(url"$url/vulnerabilities/api/vulnerabilities/counts?service=$service&team=$team&environment=${environment.map(_.asString)}")
       .execute[Seq[TotalVulnerabilityCount]]
   }
 
-  def timelineCounts(service: Option[String], team: Option[String], vulnerability: Option[String], curationStatus: Option[String], from: LocalDate, to: LocalDate)(implicit hc: HeaderCarrier): Future[Seq[VulnerabilitiesTimelineCount]] = {
+  def timelineCounts(
+    service       : Option[String],
+    team          : Option[String],
+    vulnerability : Option[String],
+    curationStatus: Option[String],
+    from          : LocalDate,
+    to            : LocalDate
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[VulnerabilitiesTimelineCount]] = {
     implicit val stcr: Reads[VulnerabilitiesTimelineCount] = VulnerabilitiesTimelineCount.reads
+
     val fromInstant = DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))
     val toInstant   = DateTimeFormatter.ISO_INSTANT.format(to.atTime(23,59,59).toInstant(ZoneOffset.UTC))
 

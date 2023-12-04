@@ -24,7 +24,9 @@ case class Progress(
   current : Int,
   target  : Int,
 ) {
-  def percent: Int = if (target == 0) 0 else (current.toFloat / target.toFloat * 100).toInt
+  def percent: Int =
+    if (target == 0) 0
+    else (current.toFloat / target.toFloat * 100).toInt
 }
 
 object Progress {

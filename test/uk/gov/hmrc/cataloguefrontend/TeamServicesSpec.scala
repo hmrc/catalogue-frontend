@@ -150,6 +150,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     }
   }
 
-    def findAnchor(anchorTags: Seq[Element], href: String, text: String): Option[Element] =
-      anchorTags.find(e => e.text == text && e.attr("href") == href)
+  def findAnchor(anchorTags: Seq[Element], href: String, text: String): Option[Element] =
+    anchorTags.find(e => e.text == text && e.attr("href") == href)
 }

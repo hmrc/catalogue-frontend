@@ -24,7 +24,6 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
   "Teams list" should {
-
     "show a list of teams" in {
       setupAuthEndpoint()
       serviceEndpoint(

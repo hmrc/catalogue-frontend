@@ -31,5 +31,4 @@ class UserManagementPortalConfig @Inject() (config: Configuration) {
 
   lazy val userManagementProfileBaseUrl: String =
     config.get[String]("ump.profileBaseUrl")
-
 }

@@ -23,6 +23,7 @@ import java.util.Date
 object DateHelper {
   val utc = ZoneId.of("UTC")
 
+  // TODO consolidate presentation of dates
   val `yyyy-MM-dd`: DateTimeFormatter            = DateTimeFormatter.ofPattern("yyyy-MM-dd")
   val `dd-MM-yyyy HH:mm`: DateTimeFormatter      = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
   val `dd MMM uuuu HH:mm`: DateTimeFormatter     = DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")
@@ -54,7 +55,6 @@ object DateHelper {
 
     def displayFormat: String =
       d.format(`dd MMM uuuu HH:mm`)
-
   }
 
   implicit class InstantImplicits(d: Instant) {

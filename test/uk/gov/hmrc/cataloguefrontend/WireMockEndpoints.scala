@@ -25,15 +25,14 @@ import uk.gov.hmrc.http.test.WireMockSupport
 trait WireMockEndpoints extends WireMockSupport {
   this: Suite =>
 
-  def setupAuthEndpoint() = {
+  def setupAuthEndpoint(): Unit =
     if (CatalogueFrontendSwitches.requiresLogin.isEnabled)
       serviceEndpoint(RequestMethod.POST, "/internal-auth/auth", willRespondWith = (200, Some("""{"retrievals": []}""")))
-  }
 
-  def setupEnableBranchProtectionAuthEndpoint() =
+  def setupEnableBranchProtectionAuthEndpoint(): Unit =
     serviceEndpoint(RequestMethod.POST, "/internal-auth/auth", willRespondWith = (403, None))
 
-  def setupChangePrototypePasswordAuthEndpoint(hasAuth: Boolean) = {
+  def setupChangePrototypePasswordAuthEndpoint(hasAuth: Boolean): Unit = {
     val (status, body) = if(hasAuth) (200, Some("""{ "retrievals": [ true ] }""")) else (403, None)
     serviceEndpoint(RequestMethod.POST, "/internal-auth/auth", willRespondWith = (status, body))
   }

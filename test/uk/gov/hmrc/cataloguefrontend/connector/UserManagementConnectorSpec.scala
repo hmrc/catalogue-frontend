@@ -54,14 +54,10 @@ class UserManagementConnectorSpec
         get(urlPathEqualTo(s"/user-management/teams/$team"))
           .willReturn(
             aResponse()
-              .withBody(
-                s"""
-                   |{
-                   |  "members": [],
-                   |  "teamName": "$team"
-                   |}
-                   |""".stripMargin
-              )
+              .withBody(s"""{
+                "members": [],
+                "teamName": "$team"
+              }""")
           )
       )
 
@@ -96,20 +92,20 @@ class UserManagementConnectorSpec
                 """
                   |[
                   |  {
-                  |	   "displayName" : "Joe Bloggs",
-                  |	   "familyName" : "Bloggs",
-                  |	   "givenName" : "Joe",
-                  |	   "organisation" : "MDTP",
-                  |	   "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
-                  |	   "username" : "joe.bloggs",
-                  |	   "githubUsername" : "joebloggs-github",
-                  |	   "phoneNumber" : "07123456789",
-                  |	   "teamsAndRoles" : [
-                  |	   	 {
-                  |	   	   "teamName" : "TestTeam",
-                  |	   	   "role" : "user"
-                  |	   	 }
-                  |	   ]
+                  |    "displayName" : "Joe Bloggs",
+                  |    "familyName" : "Bloggs",
+                  |    "givenName" : "Joe",
+                  |    "organisation" : "MDTP",
+                  |    "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
+                  |    "username" : "joe.bloggs",
+                  |    "githubUsername" : "joebloggs-github",
+                  |    "phoneNumber" : "07123456789",
+                  |    "teamsAndRoles" : [
+                  |      {
+                  |        "teamName" : "TestTeam",
+                  |        "role" : "user"
+                  |      }
+                  |    ]
                   |  }
                   |]
                   |""".stripMargin)
@@ -119,15 +115,15 @@ class UserManagementConnectorSpec
       connector.getAllUsers().futureValue should contain theSameElementsAs
         Seq(
           User(
-            displayName = Some("Joe Bloggs"),
-            familyName = "Bloggs",
-            givenName = Some("Joe"),
-            organisation = Some("MDTP"),
-            primaryEmail = "joe.bloggs@digital.hmrc.gov.uk",
-            username = "joe.bloggs",
+            displayName    = Some("Joe Bloggs"),
+            familyName     = "Bloggs",
+            givenName      = Some("Joe"),
+            organisation   = Some("MDTP"),
+            primaryEmail   = "joe.bloggs@digital.hmrc.gov.uk",
+            username       = "joe.bloggs",
             githubUsername = Some("joebloggs-github"),
-            phoneNumber = Some("07123456789"),
-            teamsAndRoles = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
+            phoneNumber    = Some("07123456789"),
+            teamsAndRoles  = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
           )
         )
     }
@@ -137,69 +133,66 @@ class UserManagementConnectorSpec
         get(urlEqualTo("/user-management/users?team=TestTeam"))
           .willReturn(
             aResponse()
-              .withBody(
-                """
-                  |[
-                  |  {
-                  |	   "displayName" : "Joe Bloggs",
-                  |	   "familyName" : "Bloggs",
-                  |	   "givenName" : "Joe",
-                  |	   "organisation" : "MDTP",
-                  |	   "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
-                  |	   "username" : "joe.bloggs",
-                  |	   "github" : "https://github.com/joebloggs",
-                  |	   "phoneNumber" : "07123456789",
-                  |	   "teamsAndRoles" : [
-                  |	   	 {
-                  |	   	   "teamName" : "TestTeam",
-                  |	   	   "role" : "user"
-                  |	   	 }
-                  |	   ]
-                  |  },
-                  |  {
-                  |	   "displayName" : "Jane Doe",
-                  |	   "familyName" : "Doe",
-                  |	   "givenName" : "Jane",
-                  |	   "organisation" : "MDTP",
-                  |	   "primaryEmail" : "jane.doe@digital.hmrc.gov.uk",
-                  |	   "username" : "jane.doe",
-                  |	   "github" : "https://github.com/janedoe",
-                  |	   "phoneNumber" : "07123456789",
-                  |	   "teamsAndRoles" : [
-                  |	   	 {
-                  |	   	   "teamName" : "TestTeam",
-                  |	   	   "role" : "user"
-                  |	   	 }
-                  |	   ]
-                  |  }
-                  |]
-                  |""".stripMargin)
+              .withBody("""[
+                {
+                   "displayName" : "Joe Bloggs",
+                   "familyName" : "Bloggs",
+                   "givenName" : "Joe",
+                   "organisation" : "MDTP",
+                   "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
+                   "username" : "joe.bloggs",
+                   "github" : "https://github.com/joebloggs",
+                   "phoneNumber" : "07123456789",
+                   "teamsAndRoles" : [
+                      {
+                        "teamName" : "TestTeam",
+                        "role" : "user"
+                      }
+                   ]
+                },
+                {
+                   "displayName" : "Jane Doe",
+                   "familyName" : "Doe",
+                   "givenName" : "Jane",
+                   "organisation" : "MDTP",
+                   "primaryEmail" : "jane.doe@digital.hmrc.gov.uk",
+                   "username" : "jane.doe",
+                   "github" : "https://github.com/janedoe",
+                   "phoneNumber" : "07123456789",
+                   "teamsAndRoles" : [
+                      {
+                        "teamName" : "TestTeam",
+                        "role" : "user"
+                      }
+                   ]
+                }
+              ]""".stripMargin)
           )
       )
 
       connector.getAllUsers(team = Some("TestTeam")).futureValue should contain theSameElementsAs
         Seq(
           User(
-            displayName = Some("Joe Bloggs"),
-            familyName = "Bloggs",
-            givenName = Some("Joe"),
-            organisation = Some("MDTP"),
-            primaryEmail = "joe.bloggs@digital.hmrc.gov.uk",
-            username = "joe.bloggs",
+            displayName    = Some("Joe Bloggs"),
+            familyName     = "Bloggs",
+            givenName      = Some("Joe"),
+            organisation   = Some("MDTP"),
+            primaryEmail   = "joe.bloggs@digital.hmrc.gov.uk",
+            username       = "joe.bloggs",
             githubUsername = None,
-            phoneNumber = Some("07123456789"),
-            teamsAndRoles = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
+            phoneNumber    = Some("07123456789"),
+            teamsAndRoles  = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
           ),
           User(
-            displayName = Some("Jane Doe"),
-            familyName = "Doe",
-            givenName = Some("Jane"),
-            organisation = Some("MDTP"),
-            primaryEmail = "jane.doe@digital.hmrc.gov.uk",
-            username = "jane.doe",
+            displayName    = Some("Jane Doe"),
+            familyName     = "Doe",
+            givenName      = Some("Jane"),
+            organisation   = Some("MDTP"),
+            primaryEmail   = "jane.doe@digital.hmrc.gov.uk",
+            username       = "jane.doe",
             githubUsername = None,
-            phoneNumber = Some("07123456789"),
-            teamsAndRoles = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
+            phoneNumber    = Some("07123456789"),
+            teamsAndRoles  = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
           )
         )
     }
@@ -225,40 +218,37 @@ class UserManagementConnectorSpec
         get(urlPathEqualTo(s"/user-management/users/$username"))
           .willReturn(
             aResponse()
-              .withBody(
-                """
-                  |{
-                  |  "displayName" : "Joe Bloggs",
-                  |  "familyName" : "Bloggs",
-                  |  "givenName" : "Joe",
-                  |  "organisation" : "MDTP",
-                  |  "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
-                  |  "username" : "joe.bloggs",
-                  |  "githubUsername" : "joebloggs-github",
-                  |  "phoneNumber" : "07123456789",
-                  |  "teamsAndRoles" : [
-                  |  	 {
-                  |  	   "teamName" : "Test Team",
-                  |  	   "role" : "user"
-                  |  	 }
-                  |  ]
-                  |}
-                  |""".stripMargin)
+              .withBody("""{
+                "displayName" : "Joe Bloggs",
+                "familyName" : "Bloggs",
+                "givenName" : "Joe",
+                "organisation" : "MDTP",
+                "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
+                "username" : "joe.bloggs",
+                "githubUsername" : "joebloggs-github",
+                "phoneNumber" : "07123456789",
+                "teamsAndRoles" : [
+                  {
+                    "teamName" : "Test Team",
+                    "role" : "user"
+                  }
+                ]
+              }""".stripMargin)
           )
       )
 
       connector.getUser(username).futureValue shouldBe
         Some(
           User(
-            displayName = Some("Joe Bloggs"),
-            familyName = "Bloggs",
-            givenName = Some("Joe"),
-            organisation = Some("MDTP"),
-            primaryEmail = "joe.bloggs@digital.hmrc.gov.uk",
-            username = "joe.bloggs",
+            displayName    = Some("Joe Bloggs"),
+            familyName     = "Bloggs",
+            givenName      = Some("Joe"),
+            organisation   = Some("MDTP"),
+            primaryEmail   = "joe.bloggs@digital.hmrc.gov.uk",
+            username       = "joe.bloggs",
             githubUsername = Some("joebloggs-github"),
-            phoneNumber = Some("07123456789"),
-            teamsAndRoles = Seq(TeamMembership(teamName = "Test Team", role = Role("user")))
+            phoneNumber    = Some("07123456789"),
+            teamsAndRoles  = Seq(TeamMembership(teamName = "Test Team", role = Role("user")))
           )
         )
     }
@@ -277,6 +267,4 @@ class UserManagementConnectorSpec
       connector.getUser(username).futureValue shouldBe None
     }
   }
-
-
 }

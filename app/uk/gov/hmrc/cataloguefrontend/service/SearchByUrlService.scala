@@ -39,37 +39,35 @@ class SearchByUrlService @Inject() (
     else
       Future.successful(Nil)
 
-  private def isValidSearchTerm(term: Option[String]): Boolean = {
+  private def isValidSearchTerm(term: Option[String]): Boolean =
     if (term.isEmpty || term.getOrElse("").trim.isEmpty || term.getOrElse("").trim == "/")
-      return false
+      false
+    else
+      try {
+        val url = new URI(term.get)
 
-    try {
-      val url = new URI(term.get)
-
-      Option(url.getPath).getOrElse("").nonEmpty &&
-      ( !Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") ||
-        Option(url.getHost).getOrElse("").isEmpty &&
-        Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") &&
-        url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim.nonEmpty
-      )
-    } catch {
-      case e: URISyntaxException => false
-    }
-  }
+        Option(url.getPath).getOrElse("").nonEmpty &&
+        ( !Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") ||
+          Option(url.getHost).getOrElse("").isEmpty &&
+          Option(url.getPath).getOrElse("").contains("tax.service.gov.uk") &&
+          url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim.nonEmpty
+        )
+      } catch {
+        case e: URISyntaxException => false
+      }
 
   private def takeUrlPath(term: String): String = {
     val url = new URI(term)
 
     if (Option(url.getHost).getOrElse("").trim.nonEmpty)
-      return url.getPath.trim
-
-    if (
+      url.getPath.trim
+    else if (
       Option(url.getHost).getOrElse("").trim.isEmpty &&
       Option(url.getPath).getOrElse("").contains("tax.service.gov.uk")
     )
-      return url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim
-
-    url.getPath.trim
+      url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim
+    else
+      url.getPath.trim
   }
 }
 

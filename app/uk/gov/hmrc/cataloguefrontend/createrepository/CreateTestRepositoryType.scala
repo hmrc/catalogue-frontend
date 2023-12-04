@@ -19,20 +19,21 @@ package uk.gov.hmrc.cataloguefrontend.createrepository
 sealed trait CreateTestRepositoryType { def asString: String}
 
 object CreateTestRepositoryType {
-  case object uiTestWithScalaTest   extends CreateTestRepositoryType { override def asString: String = "UI Journey Test - with ScalaTest"}
-  case object uiTestWithCucumber    extends CreateTestRepositoryType { override def asString: String = "UI Journey Test - with Cucumber" }
-  case object apiTestWithScalaTest  extends CreateTestRepositoryType { override def asString: String = "API Test - with ScalaTest" }
-  case object performanceTest       extends CreateTestRepositoryType { override def asString: String = "Performance Test "}
+  case object UITestWithScalaTest  extends CreateTestRepositoryType { override def asString: String = "UI Journey Test - with ScalaTest"}
+  case object UITestWithCucumber   extends CreateTestRepositoryType { override def asString: String = "UI Journey Test - with Cucumber" }
+  case object APITestWithScalaTest extends CreateTestRepositoryType { override def asString: String = "API Test - with ScalaTest"       }
+  case object PerformanceTest      extends CreateTestRepositoryType { override def asString: String = "Performance Test"                }
 
   val values = List(
-    uiTestWithScalaTest,
-    uiTestWithCucumber,
-    apiTestWithScalaTest,
-    performanceTest
+    UITestWithScalaTest,
+    UITestWithCucumber,
+    APITestWithScalaTest,
+    PerformanceTest
   )
 
-  val parsingError = s"Not a valid CreateTestRepositoryType. Should be one of ${values.mkString(", ")}"
+  val parsingError: String =
+    s"Not a valid CreateTestRepositoryType. Should be one of ${values.mkString(", ")}"
 
-  def parse(str: String): Option[CreateTestRepositoryType] = values.find(_.asString == str)
-
+  def parse(str: String): Option[CreateTestRepositoryType] =
+    values.find(_.asString == str)
 }

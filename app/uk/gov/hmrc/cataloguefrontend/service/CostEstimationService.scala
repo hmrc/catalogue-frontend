@@ -34,8 +34,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CostEstimationService @Inject() (
   serviceConfigsConnector: ServiceConfigsConnector,
-  resourceUsageConnector: ResourceUsageConnector,
-  costEstimateConfig    : CostEstimateConfig
+  resourceUsageConnector : ResourceUsageConnector,
+  costEstimateConfig     : CostEstimateConfig
 ) {
   import CostEstimationService._
 
@@ -163,18 +163,18 @@ object CostEstimationService {
     val name: String
     def displayName: String = name.capitalize
   }
-  
+
   object Zone {
-    case object Protected extends Zone { val name: String = "protected" }
-    case object ProtectedRate extends Zone { val name: String = "protected-rate" }
-    case object Public extends Zone { val name: String = "public" }
+    case object Protected      extends Zone { val name: String = "protected"       }
+    case object ProtectedRate  extends Zone { val name: String = "protected-rate"  }
+    case object Public         extends Zone { val name: String = "public"          }
     case object PublicMonolith extends Zone { val name: String = "public-monolith" }
-    case object PublicRate extends Zone { val name: String = "public-rate" }
-    case object Private extends Zone { val name: String = "private" }
+    case object PublicRate     extends Zone { val name: String = "public-rate"     }
+    case object Private        extends Zone { val name: String = "private"         }
 
     val values = Seq(Protected, Public, ProtectedRate, PublicMonolith, PublicRate, Private)
 
-    def parse(zone: String): Either[String, Zone] = 
+    def parse(zone: String): Either[String, Zone] =
       values.find(_.name == zone)
         .toRight(s"Invalid deployment zone '$zone' - valid values are ${values.map(_.name).mkString(", ")}")
 

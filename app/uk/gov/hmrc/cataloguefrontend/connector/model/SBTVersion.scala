@@ -21,8 +21,8 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 case class SBTVersion(
-  serviceName : String,
-  version     : Version
+  serviceName: String,
+  version    : Version
 )
 
 trait SBTVersionFormats {
@@ -37,4 +37,7 @@ trait SBTVersionFormats {
 
 object SBTVersionFormats extends SBTVersionFormats
 
-case class SBTUsageByEnv(env: SlugInfoFlag, usage: Map[SBTVersion, Int])
+case class SBTUsageByEnv(
+  env  : SlugInfoFlag,
+  usage: Map[SBTVersion, Int]
+)

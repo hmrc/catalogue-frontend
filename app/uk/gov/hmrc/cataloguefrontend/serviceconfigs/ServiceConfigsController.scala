@@ -57,9 +57,10 @@ class ServiceConfigsController @Inject()(
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey <- serviceConfigsService.configByKeyWithNextDeployment(serviceName)
-        warnings    <- if (CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
+        warnings    <- if (CatalogueFrontendSwitches.showConfigWarnings.isEnabled)
                          serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), version = None, latest = true)
-                       } else Future.successful(Seq.empty[ServiceConfigsService.ConfigWarning])
+                       else
+                         Future.successful(Seq.empty[ServiceConfigsService.ConfigWarning])
       } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings))
     }
 

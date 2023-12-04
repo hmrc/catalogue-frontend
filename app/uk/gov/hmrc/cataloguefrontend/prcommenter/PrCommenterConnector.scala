@@ -40,7 +40,13 @@ class PrCommenterConnector @Inject()(
       .get(url"$baseUrl/pr-commenter/repositories/$name/report")
       .execute[Option[PrCommenterReport]]
 
-  def search(name: Option[String], teamName: Option[String], commentType: Option[String])(implicit hc: HeaderCarrier): Future[Seq[PrCommenterReport]] =
+  def search(
+    name       : Option[String],
+    teamName   : Option[String],
+    commentType: Option[String]
+  )(implicit
+    hc          : HeaderCarrier
+  ): Future[Seq[PrCommenterReport]] =
     httpClientV2
       .get(url"$baseUrl/pr-commenter/reports?name=$name&teamName=$teamName&commentType=$commentType")
       .execute[Seq[PrCommenterReport]]

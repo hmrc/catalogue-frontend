@@ -36,10 +36,10 @@ import scala.util.Try
 
 @Singleton
 class BuildDeployApiConnector @Inject() (
-  httpClientV2          : HttpClientV2,
-  config                : BuildDeployApiConfig
+  httpClientV2: HttpClientV2,
+  config      : BuildDeployApiConfig
 )(implicit
-  ec                    : ExecutionContext
+  ec          : ExecutionContext
 ) extends Logging {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -179,7 +179,7 @@ class BuildDeployApiConnector @Inject() (
         (Environment.QA.asString, payload.appConfigQA),
         (Environment.Staging.asString, payload.appConfigStaging),
         (Environment.Production.asString, payload.appConfigProduction),
-      ).collect{ case (env, flag) if flag  => env}
+      ).collect{ case (env, flag) if flag  => env }
     val body = Json.toJson(CreateAppConfigsRequest(
       serviceName,
       st,
@@ -198,7 +198,10 @@ class BuildDeployApiConnector @Inject() (
 }
 
 object BuildDeployApiConnector {
-  final case class BuildDeployResponse(message: String, details: JsValue)
+  final case class BuildDeployResponse(
+    message: String,
+    details: JsValue
+  )
 
   private object BuildDeployResponse {
     val reads: Reads[BuildDeployResponse] =
@@ -212,9 +215,9 @@ object BuildDeployApiConnector {
   sealed trait PrototypeStatus { def asString: String; def displayString: String }
 
   object PrototypeStatus {
-    case object Running      extends PrototypeStatus { val asString = "running"      ; override def displayString = "Running"      }
-    case object Stopped      extends PrototypeStatus { val asString = "stopped"      ; override def displayString = "Stopped"      }
-    case object Undetermined extends PrototypeStatus { val asString = "undetermined" ; override def displayString = "Undetermined" }
+    case object Running      extends PrototypeStatus { val asString = "running"     ; override def displayString = "Running"      }
+    case object Stopped      extends PrototypeStatus { val asString = "stopped"     ; override def displayString = "Stopped"      }
+    case object Undetermined extends PrototypeStatus { val asString = "undetermined"; override def displayString = "Undetermined" }
 
     val values: List[PrototypeStatus] =
       List(Running, Stopped, Undetermined)
@@ -222,8 +225,8 @@ object BuildDeployApiConnector {
     def parse(s: String): Option[PrototypeStatus] =
       values.find(_.asString == s)
 
-    val reads: Reads[PrototypeStatus] = json =>
-      json.validate[String]
+    val reads: Reads[PrototypeStatus] =
+      _.validate[String]
           .flatMap(s =>
             PrototypeStatus
               .parse(s)
@@ -256,9 +259,9 @@ object BuildDeployApiConnector {
     prototype: String,
     password : String,
   )
-  
+
   object ChangePrototypePasswordRequest {
-    implicit val write: Writes[ChangePrototypePasswordRequest] = 
+    implicit val write: Writes[ChangePrototypePasswordRequest] =
       ( (__ \ "repositoryName").write[String]
       ~ (__ \ "password"      ).write[String]
       )(unlift(ChangePrototypePasswordRequest.unapply))
@@ -269,10 +272,10 @@ object BuildDeployApiConnector {
   )
 
   object GetPrototypeStatusRequest {
-      val reads: Reads[GetPrototypeStatusRequest] = 
+      val reads: Reads[GetPrototypeStatusRequest] =
         (__ \ "prototype").format[String].map(GetPrototypeStatusRequest.apply)
-      
-      val writes: Writes[GetPrototypeStatusRequest] = 
+
+      val writes: Writes[GetPrototypeStatusRequest] =
         Writes[GetPrototypeStatusRequest](r => JsObject(Seq("prototype" -> JsString(r.prototype))))
 
       implicit val format: Format[GetPrototypeStatusRequest] = Format(reads, writes)
@@ -284,7 +287,7 @@ object BuildDeployApiConnector {
   )
 
   object SetPrototypeStatusRequest {
-      implicit val format: Format[SetPrototypeStatusRequest] = 
+      implicit val format: Format[SetPrototypeStatusRequest] =
         ( (__ \ "prototype").format[String]
         ~ (__ \ "status"   ).format[String]
       )(SetPrototypeStatusRequest.apply _, unlift(SetPrototypeStatusRequest.unapply _))
@@ -352,7 +355,7 @@ object BuildDeployApiConnector {
   )
 
   object CreateAppConfigsRequest {
-      implicit val format: Format[CreateAppConfigsRequest] = 
+      implicit val format: Format[CreateAppConfigsRequest] =
         ( (__ \ "microserviceName").format[String]
         ~ (__ \ "microserviceType").format[String]
         ~ (__ \ "hasMongo"        ).format[Boolean]

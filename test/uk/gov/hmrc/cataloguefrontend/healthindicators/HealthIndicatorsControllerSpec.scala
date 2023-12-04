@@ -233,61 +233,61 @@ class HealthIndicatorsControllerSpec
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val testJson: String =
       """{
-          |  "repoName": "team-indicator-dashboard-frontend",
-          |  "repoType": "Service",
-          |  "overallScore": -450,
-          |  "weightedMetrics": [
-          |    {
-          |      "metricType": "bobby-rule",
-          |      "score": -400,
-          |      "breakdown": [
-          |        {
-          |          "points": -100,
-          |          "description": "frontend-bootstrap - Bug in Metrics Reporting"
-          |        },
-          |        {
-          |          "points": -100,
-          |          "description": "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)"
-          |        }
-          |      ]
-          |    },
-          |    {
-          |      "metricType": "leak-detection",
-          |      "score": 0,
-          |      "breakdown": []
-          |    },
-          |    {
-          |      "metricType": "github",
-          |      "score": -50,
-          |      "breakdown": [
-          |        {
-          |          "points": -50,
-          |          "description": "No Readme defined"
-          |        }
-          |      ]
-          |    }
-          |  ]
-          |}""".stripMargin
+        "repoName": "team-indicator-dashboard-frontend",
+        "repoType": "Service",
+        "overallScore": -450,
+        "weightedMetrics": [
+          {
+            "metricType": "bobby-rule",
+            "score": -400,
+            "breakdown": [
+              {
+                "points": -100,
+                "description": "frontend-bootstrap - Bug in Metrics Reporting"
+              },
+              {
+                "points": -100,
+                "description": "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)"
+              }
+            ]
+          },
+          {
+            "metricType": "leak-detection",
+            "score": 0,
+            "breakdown": []
+          },
+          {
+            "metricType": "github",
+            "score": -50,
+            "breakdown": [
+              {
+                "points": -50,
+                "description": "No Readme defined"
+              }
+            ]
+          }
+        ]
+      }""".stripMargin
 
     val testJson3RepoTypes: String =
       """[{
-    |  "repoName": "team-indicator-dashboard-frontend",
-    |  "repoType": "Service",
-    |  "overallScore": -450,
-    |  "weightedMetrics": []
-    |},
-    |{
-    | "repoName": "api-platform-scripts",
-    | "repoType": "Other",
-    | "overallScore": 50,
-    | "weightedMetrics": []
-    |},
-    |{
-    | "repoName": "the-childcare-service-prototype",
-    | "repoType": "Prototype",
-    | "overallScore": 50,
-    | "weightedMetrics": []
-    |}]""".stripMargin
+          "repoName": "team-indicator-dashboard-frontend",
+          "repoType": "Service",
+          "overallScore": -450,
+          "weightedMetrics": []
+        },
+        {
+          "repoName": "api-platform-scripts",
+          "repoType": "Other",
+          "overallScore": 50,
+          "weightedMetrics": []
+        },
+        {
+          "repoName": "the-childcare-service-prototype",
+          "repoType": "Prototype",
+          "overallScore": 50,
+          "weightedMetrics": []
+        }]"""
 
     val testJsonRepoTypeService: String =
       """[{
@@ -320,32 +320,32 @@ class HealthIndicatorsControllerSpec
     val lastActiveAt = Instant.parse("2016-10-12T10:30:12.00Z")
 
 
-    val repositoriesJson: String = s"""[
-                              | {
-                              | "name":"team-indicator-dashboard-frontend",
-                              | "description": "",
-                              | "teamNames":["Classic Services Manchester","Classic Services Telford"],
-                              | "createdDate":"$createdAt",
-                              | "lastActiveDate":"$lastActiveAt",
-                              | "repoType":"Service",
-                              | "language":"Scala",
-                              | "isArchived":false,
-                              | "defaultBranch":"main",
-                              | "isDeprecated":false,
-                              | "url": "http://git/repoa"
-                              | }
-                              |]""".stripMargin
+    val repositoriesJson: String =
+      s"""[{
+        "name"          : "team-indicator-dashboard-frontend",
+        "description"   : "",
+        "teamNames"     : ["Classic Services Manchester","Classic Services Telford"],
+        "createdDate"   : "$createdAt",
+        "lastActiveDate": "$lastActiveAt",
+        "repoType"      : "Service",
+        "language"      : "Scala",
+        "isArchived"    : false,
+        "defaultBranch" : "main",
+        "isDeprecated"  : false,
+        "url"           : "http://git/repoa"
+      }]""".stripMargin
 
-    val teamsJSON: String = """[{
-                              |  "name": "Classic Services Manchester",
-                              |  "createdDate": "2020-10-28T13:15:19Z",
-                              |  "lastActiveDate": "2021-07-09T10:00:49Z",
-                              |  "repos": 7
-                              |},{
-                              |  "name": "Classic Services Telford",
-                              |  "createdDate": "2020-10-28T13:15:19Z",
-                              |  "lastActiveDate": "2021-07-09T10:00:49Z",
-                              |  "repos": 7
-                              |}]""".stripMargin
+    val teamsJSON: String =
+      """[{
+        "name"          : "Classic Services Manchester",
+        "createdDate"   : "2020-10-28T13:15:19Z",
+        "lastActiveDate": "2021-07-09T10:00:49Z",
+        "repos"         : 7
+      }, {
+        "name"          : "Classic Services Telford",
+        "createdDate"   : "2020-10-28T13:15:19Z",
+        "lastActiveDate": "2021-07-09T10:00:49Z",
+        "repos"         : 7
+      }]"""
   }
 }
