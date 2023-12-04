@@ -228,14 +228,14 @@ case class GitRepository(
   serviceType         : Option[ServiceType]      = None,
   tags                : Option[Set[Tag]]         = None,
   digitalServiceName  : Option[String]           = None,
-  owningTeams         : Seq[String]              = Nil,
+  owningTeams         : Seq[TeamName]            = Seq.empty,
   language            : Option[String],
   isArchived          : Boolean,
   defaultBranch       : String,
   branchProtection    : Option[BranchProtection] = None,
   isDeprecated        : Boolean                  = false,
-  teamNames           : Seq[String]              = Nil,
-  jenkinsJobs         : Seq[JenkinsJob]          = Seq.empty[JenkinsJob],
+  teamNames           : Seq[TeamName]            = Seq.empty,
+  jenkinsJobs         : Seq[JenkinsJob]          = Seq.empty,
   prototypeName       : Option[String]           = None,
   zone                : Option[Zone]             = None,
 ) {
@@ -261,13 +261,13 @@ object GitRepository {
     ~ (__ \ "serviceType"       ).formatNullable[ServiceType]
     ~ (__ \ "tags"              ).formatNullable[Set[Tag]]
     ~ (__ \ "digitalServiceName").formatNullable[String]
-    ~ (__ \ "owningTeams"       ).formatWithDefault[Seq[String]](Nil)
+    ~ (__ \ "owningTeams"       ).formatWithDefault[Seq[String]](Seq.empty).inmap[Seq[TeamName]](_.map(TeamName.apply), _.map(_.asString))
     ~ (__ \ "language"          ).formatNullable[String]
     ~ (__ \ "isArchived"        ).formatWithDefault[Boolean](false)
     ~ (__ \ "defaultBranch"     ).format[String]
     ~ (__ \ "branchProtection"  ).formatNullable(BranchProtection.format)
     ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
-    ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Nil)
+    ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Seq.empty).inmap[Seq[TeamName]](_.map(TeamName.apply), _.map(_.asString))
     ~ (__ \ "jenkinsJobs"       ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
     ~ (__ \ "prototypeName"     ).formatNullable[String]
     ~ (__ \ "zone"              ).formatNullable[Zone]
@@ -277,7 +277,7 @@ object GitRepository {
 
 final case class BranchProtection(
   requiresApprovingReviews: Boolean,
-  dismissesStaleReviews: Boolean,
+  dismissesStaleReviews   : Boolean,
   requiresCommitSignatures: Boolean
 ) {
 
@@ -401,7 +401,7 @@ class TeamsAndRepositoriesConnector @Inject()(
       repos         <- httpClientV2
                          .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
                          .execute[Seq[GitRepository]]
-      teamsByService = repos.map(r => r.name -> r.teamNames.map(TeamName.apply)).toMap
+      teamsByService = repos.map(r => r.name -> r.teamNames).toMap
     } yield teamsByService
 
   def enableBranchProtection(repoName: String)(implicit hc: HeaderCarrier): Future[Unit] =

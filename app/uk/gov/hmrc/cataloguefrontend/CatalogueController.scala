@@ -27,7 +27,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
@@ -400,22 +400,22 @@ class CatalogueController @Inject() (
         DefaultBranchesFilter.form
           .bindFromRequest()
           .fold(
-            formWithErrors => Ok(defaultBranchListPage(
-              repositories      = Seq(),
-              teams             = Seq(""),
-              singleOwnership   = false,
-              includeArchived   = false,
-              formWithErrors)),
+            formWithErrors =>
+              Ok(defaultBranchListPage(
+                repositories      = Seq.empty,
+                teamNames         = Seq.empty,
+                singleOwnership   = false,
+                includeArchived   = false,
+                formWithErrors
+              )),
             query =>
-              Ok(
-                defaultBranchListPage(
-                  repositories = defaultBranchesService.filterRepositories(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, includeArchived),
-                  teams = defaultBranchesService.allTeams(repositories),
-                  singleOwnership = singleOwnership,
-                  includeArchived = includeArchived,
-                  DefaultBranchesFilter.form.bindFromRequest()
-                )
-              )
+              Ok(defaultBranchListPage(
+                repositories    = defaultBranchesService.filterRepositories(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, includeArchived),
+                teamNames       = defaultBranchesService.allTeams(repositories),
+                singleOwnership = singleOwnership,
+                includeArchived = includeArchived,
+                DefaultBranchesFilter.form.bindFromRequest()
+              ))
           )
       }
     }
@@ -500,9 +500,9 @@ object ChangePrototypePassword {
 }
 
 case class DefaultBranchesFilter(
-   name           : Option[String] = None,
-   teamNames      : Option[String] = None,
-   defaultBranch  : Option[String] = None
+   name           : Option[String]   = None,
+   teamNames      : Option[TeamName] = None,
+   defaultBranch  : Option[String]   = None
  ) {
   def isEmpty: Boolean = name.isEmpty && teamNames.isEmpty && defaultBranch.isEmpty
 }
@@ -511,7 +511,7 @@ object DefaultBranchesFilter {
   lazy val form: Form[DefaultBranchesFilter] = Form(
     mapping(
       "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "teamNames"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+      "teamNames"     -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
       "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(DefaultBranchesFilter.apply)(DefaultBranchesFilter.unapply)
   )

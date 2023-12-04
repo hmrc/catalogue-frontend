@@ -22,6 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, Member, TeamMembership, User, Role}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -48,15 +49,15 @@ class UserManagementConnectorSpec
 
   "getTeam" should {
     "return team when found" in {
-      val team = "test-team"
+      val team = TeamName("test-team")
 
       stubFor(
-        get(urlPathEqualTo(s"/user-management/teams/$team"))
+        get(urlPathEqualTo(s"/user-management/teams/${team.asString}"))
           .willReturn(
             aResponse()
               .withBody(s"""{
                 "members": [],
-                "teamName": "$team"
+                "teamName": "${team.asString}"
               }""")
           )
       )
@@ -68,10 +69,10 @@ class UserManagementConnectorSpec
     }
 
     "return None when not found" in {
-      val team = "non-existent-team"
+      val team = TeamName("non-existent-team")
 
       stubFor(
-        get(urlPathEqualTo(s"/user-management/teams/$team"))
+        get(urlPathEqualTo(s"/user-management/teams/${team.asString}"))
           .willReturn(
             aResponse()
               .withStatus(404)
@@ -88,27 +89,24 @@ class UserManagementConnectorSpec
         get(urlPathEqualTo("/user-management/users"))
           .willReturn(
             aResponse()
-              .withBody(
-                """
-                  |[
-                  |  {
-                  |    "displayName" : "Joe Bloggs",
-                  |    "familyName" : "Bloggs",
-                  |    "givenName" : "Joe",
-                  |    "organisation" : "MDTP",
-                  |    "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
-                  |    "username" : "joe.bloggs",
-                  |    "githubUsername" : "joebloggs-github",
-                  |    "phoneNumber" : "07123456789",
-                  |    "teamsAndRoles" : [
-                  |      {
-                  |        "teamName" : "TestTeam",
-                  |        "role" : "user"
-                  |      }
-                  |    ]
-                  |  }
-                  |]
-                  |""".stripMargin)
+              .withBody("""[
+                {
+                  "displayName" : "Joe Bloggs",
+                  "familyName" : "Bloggs",
+                  "givenName" : "Joe",
+                  "organisation" : "MDTP",
+                  "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
+                  "username" : "joe.bloggs",
+                  "githubUsername" : "joebloggs-github",
+                  "phoneNumber" : "07123456789",
+                  "teamsAndRoles" : [
+                    {
+                      "teamName" : "TestTeam",
+                      "role" : "user"
+                    }
+                  ]
+                }
+              ]""")
           )
       )
 
@@ -123,7 +121,7 @@ class UserManagementConnectorSpec
             username       = "joe.bloggs",
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
-            teamsAndRoles  = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
+            teamsAndRoles  = Seq(TeamMembership(teamName = TeamName("TestTeam"), role = Role("user")))
           )
         )
     }
@@ -170,7 +168,7 @@ class UserManagementConnectorSpec
           )
       )
 
-      connector.getAllUsers(team = Some("TestTeam")).futureValue should contain theSameElementsAs
+      connector.getAllUsers(team = Some(TeamName("TestTeam"))).futureValue should contain theSameElementsAs
         Seq(
           User(
             displayName    = Some("Joe Bloggs"),
@@ -181,7 +179,7 @@ class UserManagementConnectorSpec
             username       = "joe.bloggs",
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
-            teamsAndRoles  = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
+            teamsAndRoles  = Seq(TeamMembership(teamName = TeamName("TestTeam"), role = Role("user")))
           ),
           User(
             displayName    = Some("Jane Doe"),
@@ -192,7 +190,7 @@ class UserManagementConnectorSpec
             username       = "jane.doe",
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
-            teamsAndRoles  = Seq(TeamMembership(teamName = "TestTeam", role = Role("user")))
+            teamsAndRoles  = Seq(TeamMembership(teamName = TeamName("TestTeam"), role = Role("user")))
           )
         )
     }
@@ -248,7 +246,7 @@ class UserManagementConnectorSpec
             username       = "joe.bloggs",
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
-            teamsAndRoles  = Seq(TeamMembership(teamName = "Test Team", role = Role("user")))
+            teamsAndRoles  = Seq(TeamMembership(teamName = TeamName("Test Team"), role = Role("user")))
           )
         )
     }

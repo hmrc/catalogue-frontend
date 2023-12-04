@@ -24,6 +24,7 @@ import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -287,15 +288,15 @@ object BuildDeployApiConnector {
   )
 
   object SetPrototypeStatusRequest {
-      implicit val format: Format[SetPrototypeStatusRequest] =
-        ( (__ \ "prototype").format[String]
-        ~ (__ \ "status"   ).format[String]
+    implicit val format: Format[SetPrototypeStatusRequest] =
+      ( (__ \ "prototype").format[String]
+      ~ (__ \ "status"   ).format[String]
       )(SetPrototypeStatusRequest.apply _, unlift(SetPrototypeStatusRequest.unapply _))
   }
 
   case class CreateServiceRepoRequest(
     repositoryName            : String,
-    teamName                  : String,
+    teamName                  : TeamName,
     makePrivate               : Boolean,
     repositoryType            : String,
     slackNotificationChannels : String = "",
@@ -305,7 +306,7 @@ object BuildDeployApiConnector {
 
     implicit val format: Format[CreateServiceRepoRequest] =
       ( (__ \ "repositoryName"           ).format[String]
-      ~ (__ \ "teamName"                 ).format[String]
+      ~ (__ \ "teamName"                 ).format[String].inmap[TeamName](TeamName.apply, _.asString)
       ~ (__ \ "makePrivate"              ).format[Boolean]
       ~ (__ \ "repositoryType"           ).format[String]
       ~ (__ \ "slackNotificationChannels").format[String]
@@ -314,7 +315,7 @@ object BuildDeployApiConnector {
 
   case class CreatePrototypeRepoRequest(
     repositoryName           : String,
-    teamName                 : String,
+    teamName                 : TeamName,
     password                 : String,
     slackNotificationChannels: String,
   )
@@ -323,7 +324,7 @@ object BuildDeployApiConnector {
 
     implicit val format: Format[CreatePrototypeRepoRequest] =
       ( (__ \ "repositoryName"           ).format[String]
-      ~ (__ \ "teamName"                 ).format[String]
+      ~ (__ \ "teamName"                 ).format[String].inmap[TeamName](TeamName.apply, _.asString)
       ~ (__ \ "password"                 ).format[String]
       ~ (__ \ "slackNotificationChannels").format[String]
       )(CreatePrototypeRepoRequest.apply _, unlift(CreatePrototypeRepoRequest.unapply _))
@@ -331,7 +332,7 @@ object BuildDeployApiConnector {
 
   case class CreateTestRepoRequest(
     repositoryName       : String,
-    teamName             : String,
+    teamName             : TeamName,
     makePrivate          : Boolean,
     repositoryType       : String,
   )
@@ -340,7 +341,7 @@ object BuildDeployApiConnector {
 
     implicit val format: Format[CreateTestRepoRequest] =
       ( (__ \ "repositoryName"       ).format[String]
-      ~ (__ \ "teamName"             ).format[String]
+      ~ (__ \ "teamName"             ).format[String].inmap[TeamName](TeamName.apply, _.asString)
       ~ (__ \ "makePrivate"          ).format[Boolean]
       ~ (__ \ "repositoryType"       ).format[String]
       )(CreateTestRepoRequest.apply _, unlift(CreateTestRepoRequest.unapply _))

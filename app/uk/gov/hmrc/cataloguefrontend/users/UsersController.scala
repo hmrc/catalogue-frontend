@@ -22,6 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.error_404_template
@@ -64,7 +65,7 @@ class UsersController @Inject()(
           formWithErrors => Future.successful(BadRequest(userListPage(Seq.empty, Seq.empty, formWithErrors))),
           validForm      => for {
                               users <- userManagementConnector.getAllUsers(team = validForm.team)
-                              teams <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
+                              teams <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
                             }
           yield Ok(userListPage(users, teams, UsersListFilter.form.fill(validForm.copy(username = username))))
         )
@@ -76,15 +77,16 @@ object UsersController {
 }
 
 case class UsersListFilter(
-  team    : Option[String] = None,
-  username: Option[String] = None
+  team    : Option[TeamName] = None,
+  username: Option[String]   = None
 )
 
 object UsersListFilter {
-  lazy val form: Form[UsersListFilter] = Form(
-    mapping(
-      "team"     -> optional(text),
-      "username" -> optional(text)
-    )(UsersListFilter.apply)(UsersListFilter.unapply)
-  )
+  lazy val form: Form[UsersListFilter] =
+    Form(
+      mapping(
+        "team"     -> optional(text).transform[Option[TeamName]](_.map(TeamName.apply), _.map(_.asString)),
+        "username" -> optional(text)
+      )(UsersListFilter.apply)(UsersListFilter.unapply)
+    )
 }

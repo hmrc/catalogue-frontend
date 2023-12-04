@@ -83,7 +83,7 @@
                         <ul id="user-teams" class="list-unstyled" style="column-count: 2;">
                         @user.teamsAndRoles.map { team =>
                           <li>
-                            <a href="@teamRoutes.TeamsController.team(TeamName(team.teamName))">
+                            <a href="@teamRoutes.TeamsController.team(team.teamName)">
                               @team.teamName
                             </a>
                             @if(!team.role.isUser) {

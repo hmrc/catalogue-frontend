@@ -106,7 +106,7 @@
                     }
                         <td class="name">@report.name</td>
                         <td class="teams">
-                            @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
+                            @teamNames(report.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
                         </td>
                         <td class="recommendations text-center">@report.comments.size</td>
                         <td class="lastrun d-none text-nowrap">@report.created</td>
@@ -115,7 +115,7 @@
                     <tr id="collapsible-area-@report.name" class="collapse multi-collapse @if(report.comments.isEmpty) {d-none}">
                         <td class="d-none name"><a href="@report.name">@report.name</a></td>
                         <td class="d-none teams">
-                            @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
+                            @teamNames(report.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
                         </td>
                         <td class="d-none recommendations">@report.comments.size<td>
                         <td class="d-none lastrun">@report.created</td>

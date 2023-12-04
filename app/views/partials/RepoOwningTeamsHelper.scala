@@ -17,9 +17,10 @@
 package views.partials
 
 import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 object RepoOwningTeamsHelper {
 
-  def teamNamesSortedByOwningTeam(repo: GitRepository): Seq[String] = repo.teamNames.sortWith((a, _) => repo.owningTeams.contains(a))
-
+  def teamNamesSortedByOwningTeam(repo: GitRepository): Seq[TeamName] =
+    repo.teamNames.sortWith((a, _) => repo.owningTeams.contains(a))
 }

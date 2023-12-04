@@ -14,11 +14,11 @@
  * limitations under the License.
  *@
 
+ @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-@import uk.gov.hmrc.cataloguefrontend.users.User
-@import uk.gov.hmrc.cataloguefrontend.users.UsersListFilter
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.users.{User, UsersListFilter}
 @import uk.gov.hmrc.cataloguefrontend.users.UsersController.maxRows
+@import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
 @import views.html.helper.select
 
 @this()
@@ -112,7 +112,7 @@
           <td class="" id="row@{i}_teams">
             @user.teamsAndRoles.map { team =>
                 <div>
-                  <a href="/teams/@TeamName(team.teamName).asString">@TeamName(team.teamName).asString</a>
+                  <a href="@teamRoutes.TeamsController.team(team.teamName)">@team.teamName.asString</a>
                   @if(!team.role.isUser) {
                     <span class="badge rounded-pill text-bg-secondary">@team.role.displayName</span>
                   }
@@ -175,4 +175,3 @@
   document.getElementById('form').submit();
   });
 </script>
-

@@ -14,14 +14,15 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import helper._
 
 @this(viewMessages: ViewMessages)
 
 @(repositories   : Seq[GitRepository],
-  teams          : Seq[String],
+  teamNames      : Seq[TeamName],
   singleOwnership: Boolean,
   includeArchived: Boolean,
   form           : Form[_]
@@ -61,7 +62,7 @@
                 <div class="col-md-3">
                     @select(
                         field                 =  form("teamNames"),
-                        options               =  teams.map(t => t -> t),
+                        options               =  teamNames.map(t => t.asString -> t.asString),
                         Symbol("_default")    -> "All",
                         Symbol("_label")      -> "Teams: ",
                         Symbol("_labelClass") -> "form-label",

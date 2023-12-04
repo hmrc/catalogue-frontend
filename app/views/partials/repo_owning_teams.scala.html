@@ -35,7 +35,7 @@
                 <ul class="list-unstyled mb-0">
                     @for(teamName <- RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(repo)) {
                         <li class="list-item">
-                            <a id="link-to-team-page-for-@{teamName.toLowerCase.replaceAll(" ", "-")}" href="@teamRoutes.TeamsController.team(TeamName(teamName))">@if(repo.owningTeams.contains(teamName)) {<strong>@teamName <span class="badge rounded-pill text-bg-secondary ms-1">Owner</span></strong>} else {@teamName}</a>
+                            <a id="link-to-team-page-for-@{teamName.asString.toLowerCase.replaceAll(" ", "-")}" href="@teamRoutes.TeamsController.team(teamName)">@if(repo.owningTeams.contains(teamName)) {<strong>@teamName.asString <span class="badge rounded-pill text-bg-secondary ms-1">Owner</span></strong>} else {@teamName.asString}</a>
                         </li>
                     }
                 </ul>

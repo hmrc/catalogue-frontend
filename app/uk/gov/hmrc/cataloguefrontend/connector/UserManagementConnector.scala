@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import play.api.Logging
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, User}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -39,20 +40,20 @@ class UserManagementConnector @Inject()(
 
   private val baseUrl = servicesConfig.baseUrl("user-management")
 
-  def getTeam(team: String)(implicit hc: HeaderCarrier): Future[Option[LdapTeam]] = {
-    val url: URL = url"$baseUrl/user-management/teams/$team"
+  def getTeam(team: TeamName)(implicit hc: HeaderCarrier): Future[Option[LdapTeam]] = {
+    val url: URL = url"$baseUrl/user-management/teams/${team.asString}"
 
-    implicit val ltR: Reads[LdapTeam] = LdapTeam.reads
+    implicit val ltr: Reads[LdapTeam] = LdapTeam.reads
 
     httpClientV2
       .get(url)
       .execute[Option[LdapTeam]]
   }
 
-  def getAllUsers(team: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[User]] = {
-    val url: URL = url"$baseUrl/user-management/users?team=$team"
+  def getAllUsers(team: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[User]] = {
+    val url: URL = url"$baseUrl/user-management/users?team=${team.map(_.asString)}"
 
-    implicit val uR: Reads[User] = User.reads
+    implicit val ur: Reads[User] = User.reads
 
     httpClientV2
       .get(url)
@@ -67,7 +68,7 @@ class UserManagementConnector @Inject()(
   def getUser(username: String)(implicit hc: HeaderCarrier): Future[Option[User]] = {
     val url: URL = url"$baseUrl/user-management/users/$username"
 
-    implicit val uR: Reads[User] = User.reads
+    implicit val ur: Reads[User] = User.reads
 
     httpClientV2
       .get(url)

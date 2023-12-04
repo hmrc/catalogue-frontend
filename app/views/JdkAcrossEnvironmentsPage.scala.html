@@ -80,7 +80,7 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@appRoutes.JDKVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name.asString))">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.JDKVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name))">@d.env.displayString</a></td>
               @for(jdk <- jdks) { <td>@{d.usage.getOrElse(jdk, 0)}</td>}
           </tr>
 
