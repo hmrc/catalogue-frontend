@@ -27,7 +27,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with ScalaFutures {
+class HealthIndicatorsServiceSpec
+  extends AnyWordSpec
+     with Matchers
+     with MockitoSugar
+     with ScalaFutures {
+
   "createRepoRatingsWithTeams" should {
     "return an empty owning teams set when .allTeamsByService is map.empty and allRepoRatings is Seq.empty" in new Setup {
       when(mockTeamsAndReposConnector.allTeamsByService())
@@ -94,8 +99,8 @@ class HealthIndicatorsServiceSpec extends AnyWordSpec with Matchers with Mockito
           )
       }
     }
-
   }
+
   private[this] trait Setup {
     implicit val hc: HeaderCarrier                                = HeaderCarrier()
     val mockTeamsAndReposConnector: TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]

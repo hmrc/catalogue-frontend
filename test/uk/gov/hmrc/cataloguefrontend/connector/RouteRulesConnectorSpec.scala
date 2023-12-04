@@ -25,6 +25,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import scala.concurrent.ExecutionContext
+
 class RouteRulesConnectorSpec
   extends AnyWordSpec
      with MockitoSugar
@@ -39,8 +41,8 @@ class RouteRulesConnectorSpec
     when(servicesConfig.baseUrl("service-configs"))
       .thenReturn(wireMockUrl)
 
-    implicit val headerCarrier = HeaderCarrier()
-    implicit val executionContext = scala.concurrent.ExecutionContext.global
+    implicit val hc: HeaderCarrier    = HeaderCarrier()
+    implicit val ec: ExecutionContext = ExecutionContext.global
     val connector = new RouteRulesConnector(httpClientV2, servicesConfig)
   }
 

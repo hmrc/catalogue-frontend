@@ -24,30 +24,30 @@ class CreateTestRepoFormSpec extends UnitSpec {
     "the repo type starts with 'ui' the repo name should end with '-ui-tests'" should {
       "return false" in {
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(repositoryName = "test-service-api-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.uiTestWithScalaTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-service-api-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.UITestWithScalaTest.asString)
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(repositoryName = "test-service", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.uiTestWithScalaTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-service", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.UITestWithScalaTest.asString)
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(repositoryName = "test-service-api-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.uiTestWithCucumber.asString)
+          CreateServiceRepoForm(repositoryName = "test-service-api-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.UITestWithCucumber.asString)
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(repositoryName = "test-service", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.uiTestWithCucumber.asString)
+          CreateServiceRepoForm(repositoryName = "test-service", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.UITestWithCucumber.asString)
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(repositoryName = "test-serviceui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.uiTestWithScalaTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-serviceui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.UITestWithScalaTest.asString)
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(repositoryName = "test-serviceui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.uiTestWithCucumber.asString)
+          CreateServiceRepoForm(repositoryName = "test-serviceui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.UITestWithCucumber.asString)
         ) shouldBe false
       }
       "return true" in {
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(repositoryName = "test-service-ui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.uiTestWithScalaTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-service-ui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.UITestWithScalaTest.asString)
         ) shouldBe true
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(repositoryName = "test-service-ui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.uiTestWithCucumber.asString)
+          CreateServiceRepoForm(repositoryName = "test-service-ui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.UITestWithCucumber.asString)
         ) shouldBe true
       }
     }
@@ -57,18 +57,18 @@ class CreateTestRepoFormSpec extends UnitSpec {
     "the repo type starts with 'api' the repo name should end with '-api-tests'" should {
       "return false" in {
         CreateTestRepoForm.conflictingFieldsValidationApiTests(
-          CreateServiceRepoForm(repositoryName = "test-service-ui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.apiTestWithScalaTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-service-ui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.APITestWithScalaTest.asString)
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationApiTests(
-          CreateServiceRepoForm(repositoryName = "test-service", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.apiTestWithScalaTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-service", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.APITestWithScalaTest.asString)
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationApiTests(
-          CreateServiceRepoForm(repositoryName = "test-serviceapi-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.apiTestWithScalaTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-serviceapi-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.APITestWithScalaTest.asString)
         ) shouldBe false
       }
       "return true" in {
         CreateTestRepoForm.conflictingFieldsValidationApiTests(
-          CreateServiceRepoForm(repositoryName = "test-service-api-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.apiTestWithScalaTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-service-api-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.APITestWithScalaTest.asString)
         ) shouldBe true
       }
     }
@@ -78,18 +78,18 @@ class CreateTestRepoFormSpec extends UnitSpec {
     "the repo type starts with 'performance' the repo name should end with '-performance-tests'" should {
       "return false" in {
         CreateTestRepoForm.conflictingFieldsValidationPerformanceTests(
-          CreateServiceRepoForm(repositoryName = "test-service-ui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.performanceTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-service-ui-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.PerformanceTest.asString)
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationPerformanceTests(
-          CreateServiceRepoForm(repositoryName = "test-service", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.performanceTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-service", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.PerformanceTest.asString)
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationPerformanceTests(
-          CreateServiceRepoForm(repositoryName = "test-serviceperformance-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.performanceTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-serviceperformance-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.PerformanceTest.asString)
         ) shouldBe false
       }
       "return true" in {
         CreateTestRepoForm.conflictingFieldsValidationPerformanceTests(
-          CreateServiceRepoForm(repositoryName = "test-service-performance-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.performanceTest.asString)
+          CreateServiceRepoForm(repositoryName = "test-service-performance-tests", makePrivate = false, teamName = "test", repoType = CreateTestRepositoryType.PerformanceTest.asString)
         ) shouldBe true
       }
     }

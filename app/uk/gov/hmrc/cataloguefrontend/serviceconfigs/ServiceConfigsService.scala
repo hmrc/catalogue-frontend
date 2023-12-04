@@ -39,8 +39,14 @@ class ServiceConfigsService @Inject()(
 ) {
   import ServiceConfigsService._
 
-  private def configByKey(serviceName: String, environments: Seq[Environment], version: Option[Version], latest: Boolean)
-                         (implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]] =
+  private def configByKey(
+    serviceName : String,
+    environments: Seq[Environment],
+    version     : Option[Version],
+    latest      : Boolean
+  )(implicit
+    hc          : HeaderCarrier
+  ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]] =
     serviceConfigsConnector
       .configByEnv(serviceName, environments, version, latest)
       .map(_.foldLeft(Map.empty[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]) { case (acc, (e -> cses)) =>
@@ -53,8 +59,13 @@ class ServiceConfigsService @Inject()(
         }
       }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString): _*)) // sort by keys
 
-  def configByKeyWithNextDeployment(serviceName: String, environments: Seq[Environment] = Nil, version: Option[Version] = None)
-                                   (implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
+  def configByKeyWithNextDeployment(
+    serviceName: String,
+    environments: Seq[Environment] = Nil,
+    version: Option[Version] = None
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
     for {
       latestConfigByKey   <- configByKey(serviceName, environments, version, latest = true )
       deployedConfigByKey <- configByKey(serviceName, environments, None   , latest = false)
@@ -108,7 +119,12 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
   def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
     serviceConfigsConnector.getConfigKeys(teamName)
 
-  def deploymentConfig(environment: Option[Environment] = None, serviceName: Option[String] = None)(implicit hc: HeaderCarrier): Future[Seq[DeploymentConfig]] =
+  def deploymentConfig(
+    environment: Option[Environment] = None,
+    serviceName: Option[String]      = None
+  )(implicit
+    hc         : HeaderCarrier
+  ): Future[Seq[DeploymentConfig]] =
     serviceConfigsConnector.deploymentConfig(serviceName, environment)
 
   def configSearch(

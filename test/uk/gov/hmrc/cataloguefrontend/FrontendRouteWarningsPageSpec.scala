@@ -45,14 +45,10 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with FakeApplicationBuilder
   val emptyJson = "[]"
 
   val abcWarnings =
-    """
-      |[
-      |{
-      |"name": "LegacyErrorPageMisconfigured",
-      |"message": "The legacy error_page configured '/shutter/abc/index.html' does not match the format '/shutter/abc-frontend/index.html'",
-      |"consequence": "You will mostly likely get a 404 when shuttered as the error_page pointed to will not exist",
-      |"ruleConfigurationURL": "conf/config.conf#L4602"
-      |}
-      |]
-      |""".stripMargin
+    """[{
+      "name"                : "LegacyErrorPageMisconfigured",
+      "message"             : "The legacy error_page configured '/shutter/abc/index.html' does not match the format '/shutter/abc-frontend/index.html'",
+      "consequence"         : "You will mostly likely get a 404 when shuttered as the error_page pointed to will not exist",
+      "ruleConfigurationURL": "conf/config.conf#L4602"
+    }]"""
 }

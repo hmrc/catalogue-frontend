@@ -34,23 +34,30 @@ class ServiceCommissioningStatusConnector @Inject() (
 
   private val serviceCommissioningBaseUrl = servicesConfig.baseUrl("service-commissioning-status")
 
-  private implicit val cReads = Check.reads
-  def commissioningStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[List[Check]]] =
+  def commissioningStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[List[Check]]] = {
+    implicit val cReads = Check.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/status/$serviceName")
       .execute[Option[List[Check]]]
+  }
 
-  private implicit val fctReads = FormCheckType.reads
-  def allChecks()(implicit hc: HeaderCarrier): Future[Seq[(String, FormCheckType)]] =
+  def allChecks()(implicit hc: HeaderCarrier): Future[Seq[(String, FormCheckType)]] = {
+    implicit val fctReads = FormCheckType.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/checks")
       .execute[Seq[Map[String, FormCheckType]]]
-      .map(_.flatMap(_.map { case (k, v ) => (k, v)}))
+      .map(_.flatMap(_.map { case (k, v ) => (k, v) }))
+  }
 
-  private implicit val cscReads = CachedServiceCheck.reads
-  def cachedCommissioningStatus(teamName: Option[TeamName], serviceType: Option[ServiceType])(implicit hc: HeaderCarrier): Future[List[CachedServiceCheck]] =
+  def cachedCommissioningStatus(
+    teamName   : Option[TeamName],
+    serviceType: Option[ServiceType]
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[List[CachedServiceCheck]] = {
+    implicit val cscReads = CachedServiceCheck.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[List[CachedServiceCheck]]
-
+  }
 }

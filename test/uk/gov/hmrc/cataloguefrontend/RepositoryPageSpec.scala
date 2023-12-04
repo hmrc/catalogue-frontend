@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
-import uk.gov.hmrc.cataloguefrontend.JsonData._
+import uk.gov.hmrc.cataloguefrontend.jsondata.JsonData
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
@@ -70,9 +70,9 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
 
       serviceEndpoint(GET, s"/api/v2/repositories/$repoName"    , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
       serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
-      serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some(repositoryModules(
+      serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some(JsonData.repositoryModules(
                                                                                                 repoName,
-                                                                                                dependenciesCompile = dependencies
+                                                                                                dependenciesCompile = JsonData.dependencies
                                                                                               ))))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get().futureValue
@@ -85,17 +85,17 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
 
   def repositoryData(repositoryDetails: RepositoryDetails): String =
     s"""
-     {"name":"${repositoryDetails.repositoryName}",
-      "description": "",
-      "teamNames":["teamA", "teamB"],
-      "createdDate":"$createdAt",
-      "lastActiveDate":"$lastActiveAt",
-      "repoType":"${repositoryDetails.repositoryType.asString}",
-      "language":"Scala",
-      "isArchived":false,
-      "defaultBranch":"main",
-      "isDeprecated":false,
-      "url": "http://github.com/repoa"
+     {"name":           "${repositoryDetails.repositoryName}",
+      "description":    "",
+      "teamNames":      ["teamA", "teamB"],
+      "createdDate":    "${JsonData.createdAt}",
+      "lastActiveDate": "${JsonData.lastActiveAt}",
+      "repoType":       "${repositoryDetails.repositoryType.asString}",
+      "language":       "Scala",
+      "isArchived":     false,
+      "defaultBranch":  "main",
+      "isDeprecated":   false,
+      "url":            "http://github.com/repoa"
       }
     """
 }

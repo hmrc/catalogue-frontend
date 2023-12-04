@@ -61,7 +61,10 @@ trait JDKVersionFormats {
 
 object JDKVersionFormats extends JDKVersionFormats
 
-case class JDKUsageByEnv(env: SlugInfoFlag, usage: Map[JDKVersion, Int])
+case class JDKUsageByEnv(
+  env  : SlugInfoFlag,
+  usage: Map[JDKVersion, Int]
+)
 
 sealed trait Vendor
 

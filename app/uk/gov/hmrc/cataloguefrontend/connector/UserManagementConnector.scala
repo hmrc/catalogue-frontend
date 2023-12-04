@@ -73,5 +73,4 @@ class UserManagementConnector @Inject()(
       .get(url)
       .execute[Option[User]]
   }
-
 }

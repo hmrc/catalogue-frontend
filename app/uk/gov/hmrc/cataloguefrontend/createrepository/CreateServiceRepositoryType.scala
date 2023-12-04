@@ -19,14 +19,14 @@ package uk.gov.hmrc.cataloguefrontend.createrepository
 sealed trait CreateServiceRepositoryType { def asString: String}
 
 object CreateServiceRepositoryType {
-  case object Empty                            extends CreateServiceRepositoryType { override def asString: String = "Empty"}
-  case object FrontendMicroservice             extends CreateServiceRepositoryType { override def asString: String = "Frontend microservice"}
+  case object Empty                            extends CreateServiceRepositoryType { override def asString: String = "Empty"                                 }
+  case object FrontendMicroservice             extends CreateServiceRepositoryType { override def asString: String = "Frontend microservice"                 }
   case object FrontendMicroserviceWithScaffold extends CreateServiceRepositoryType { override def asString: String = "Frontend microservice - with scaffold" }
-  case object FrontendMicroserviceWithMongodb  extends CreateServiceRepositoryType { override def asString: String = "Frontend microservice - with mongodb" }
-  case object BackendMicroservice              extends CreateServiceRepositoryType { override def asString: String = "Backend microservice"}
-  case object BackendMicroserviceWithMongodb   extends CreateServiceRepositoryType { override def asString: String = "Backend microservice - with mongodb"}
-  case object ApiMicroservice                  extends CreateServiceRepositoryType { override def asString: String = "API microservice"}
-  case object ApiMicroserviceWithMongodb       extends CreateServiceRepositoryType { override def asString: String = "API microservice - with mongodb"}
+  case object FrontendMicroserviceWithMongodb  extends CreateServiceRepositoryType { override def asString: String = "Frontend microservice - with mongodb"  }
+  case object BackendMicroservice              extends CreateServiceRepositoryType { override def asString: String = "Backend microservice"                  }
+  case object BackendMicroserviceWithMongodb   extends CreateServiceRepositoryType { override def asString: String = "Backend microservice - with mongodb"   }
+  case object ApiMicroservice                  extends CreateServiceRepositoryType { override def asString: String = "API microservice"                      }
+  case object ApiMicroserviceWithMongodb       extends CreateServiceRepositoryType { override def asString: String = "API microservice - with mongodb"       }
 
   val values = List(
     Empty,
@@ -39,8 +39,9 @@ object CreateServiceRepositoryType {
     ApiMicroserviceWithMongodb
   )
 
-  val parsingError = s"Not a valid CreateServiceRepositoryType. Should be one of ${values.mkString(", ")}"
+  val parsingError: String =
+    s"Not a valid CreateServiceRepositoryType. Should be one of ${values.mkString(", ")}"
 
-  def parse(str: String): Option[CreateServiceRepositoryType] = values.find(_.asString == str)
-
+  def parse(str: String): Option[CreateServiceRepositoryType] =
+    values.find(_.asString == str)
 }

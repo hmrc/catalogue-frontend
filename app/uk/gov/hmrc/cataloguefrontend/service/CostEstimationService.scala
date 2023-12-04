@@ -34,8 +34,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CostEstimationService @Inject() (
   serviceConfigsConnector: ServiceConfigsConnector,
-  resourceUsageConnector: ResourceUsageConnector,
-  costEstimateConfig    : CostEstimateConfig
+  resourceUsageConnector : ResourceUsageConnector,
+  costEstimateConfig     : CostEstimateConfig
 ) {
   import CostEstimationService._
 
@@ -163,18 +163,18 @@ object CostEstimationService {
     val name: String
     def displayName: String = name.capitalize
   }
-  
+
   object Zone {
-    case object Protected extends Zone { val name: String = "protected" }
-    case object ProtectedRate extends Zone { val name: String = "protected-rate" }
-    case object Public extends Zone { val name: String = "public" }
+    case object Protected      extends Zone { val name: String = "protected"       }
+    case object ProtectedRate  extends Zone { val name: String = "protected-rate"  }
+    case object Public         extends Zone { val name: String = "public"          }
     case object PublicMonolith extends Zone { val name: String = "public-monolith" }
-    case object PublicRate extends Zone { val name: String = "public-rate" }
-    case object Private extends Zone { val name: String = "private" }
+    case object PublicRate     extends Zone { val name: String = "public-rate"     }
+    case object Private        extends Zone { val name: String = "private"         }
 
     val values = Seq(Protected, Public, ProtectedRate, PublicMonolith, PublicRate, Private)
 
-    def parse(zone: String): Either[String, Zone] = 
+    def parse(zone: String): Either[String, Zone] =
       values.find(_.name == zone)
         .toRight(s"Invalid deployment zone '$zone' - valid values are ${values.map(_.name).mkString(", ")}")
 
@@ -187,9 +187,9 @@ object CostEstimationService {
   }
 
   object DeploymentConfig {
-    implicit val ef  = environmentFormat
-    implicit val ds  = DeploymentSize.reads
-    implicit val zf  = Zone.format
+    implicit val ef: Reads[Environment]    = environmentFormat
+    implicit val ds: Reads[DeploymentSize] = DeploymentSize.reads
+    implicit val zf: Reads[Zone]           = Zone.format
 
     def apply(
       slots:       Int,
@@ -204,10 +204,10 @@ object CostEstimationService {
       )
 
     val reads: Reads[DeploymentConfig] =
-      ( (__ \ "slots").read[Int]
-      ~ (__ \ "instances").read[Int]
+      ( (__ \ "slots"      ).read[Int]
+      ~ (__ \ "instances"  ).read[Int]
       ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "zone").read[Zone]
+      ~ (__ \ "zone"       ).read[Zone]
       )(DeploymentConfig.apply(_, _, _, _))
   }
 

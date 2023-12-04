@@ -43,9 +43,9 @@ class BobbyExplorerController @Inject() (
   def list(selector: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        rules  <- bobbyService.getRules()
-        counts <- serviceDeps.getBobbyRuleViolations()
-        response = Ok(page(rules, counts))
+        rules    <- bobbyService.getRules()
+        counts   <- serviceDeps.getBobbyRuleViolations()
+        response =  Ok(page(rules, counts))
       } yield response
     }
 }

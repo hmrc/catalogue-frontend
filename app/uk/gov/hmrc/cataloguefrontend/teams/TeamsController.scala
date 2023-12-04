@@ -63,6 +63,7 @@ class TeamsController @Inject()(
             masterTeamDependencies = Seq.empty,
             prodDependencies       = Map.empty
           ))
+
         case repos =>
           (
             userManagementConnector.getTeam(teamName.asString),

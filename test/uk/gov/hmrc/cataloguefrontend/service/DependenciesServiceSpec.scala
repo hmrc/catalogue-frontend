@@ -30,7 +30,7 @@ class SlugInfoServiceSpec
   extends UnitSpec
      with MockitoSugar {
 
-  implicit val hc = mock[HeaderCarrier]
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val group        = "group"
   val artefact     = "artefact"
@@ -77,7 +77,7 @@ class SlugInfoServiceSpec
       val boot = Boot.init
 
       when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact, versionRange, scopes))
-        .thenReturn(Future(Seq(v100, v200, v205)))
+        .thenReturn(Future.successful(Seq(v100, v200, v205)))
 
       boot.service.getServicesWithDependency(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, group, artefact, versionRange, scopes).futureValue shouldBe Seq(v200, v100)
       boot.service.getServicesWithDependency(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, group, artefact, versionRange, scopes).futureValue shouldBe Seq(v205, v200)
@@ -94,7 +94,7 @@ class SlugInfoServiceSpec
       val jdk4 = JDKVersion(name = "test4", version = Version("1.121.1"), vendor = OpenJDK, kind = JRE)
 
       when(boot.mockedServiceDependenciesConnector.getJDKVersions(teamName = None, flag = SlugInfoFlag.Latest))
-        .thenReturn(Future(List(jdk1, jdk2, jdk3, jdk4)))
+        .thenReturn(Future.successful(List(jdk1, jdk2, jdk3, jdk4)))
 
       val res = boot.service.getJDKCountsForEnv(env = SlugInfoFlag.Latest, teamName = None).futureValue
 
@@ -107,7 +107,7 @@ class SlugInfoServiceSpec
       val boot = Boot.init
 
       when(boot.mockedServiceDependenciesConnector.getJDKVersions(teamName = None, flag = SlugInfoFlag.Latest))
-        .thenReturn(Future(List.empty[JDKVersion]))
+        .thenReturn(Future.successful(List.empty[JDKVersion]))
 
       boot.service.getJDKCountsForEnv(env = SlugInfoFlag.Latest, teamName = None).futureValue shouldBe JDKUsageByEnv(SlugInfoFlag.Latest, Map.empty[JDKVersion, Int])
     }

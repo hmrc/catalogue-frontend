@@ -31,7 +31,7 @@ class SearchController @Inject()(
   cc         : MessagesControllerComponents
 ) extends FrontendController(cc){
 
-  def search(query: String, limit: Int) =  Action { request =>
+  def search(query: String, limit: Int) = Action { request =>
     val searchTerms =
       query.trim.split("\\s+") // query is space delimited
         .take(5)               // cap number of searchable terms at 5

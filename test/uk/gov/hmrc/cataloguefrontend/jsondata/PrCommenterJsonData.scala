@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.shuttering
+package uk.gov.hmrc.cataloguefrontend.jsondata
 
-import uk.gov.hmrc.cataloguefrontend.model.Environment
-
-object ShutterLinkUtils {
-  def hostName(env: Environment): String =
-    env match {
-      case Environment.Production => "www.tax.service.gov.uk"
-      case _                      => s"www.${env.asString}.tax.service.gov.uk"
-    }
-
-  def mkLink(env: Environment, serviceLink: String): String =
-    s"https://${hostName(env)}$serviceLink/platops-shutter-testing"
+object PrCommenterJsonData {
+  val reportResults: String =
+    s"""[
+     {
+       "name"     : "11-seven-teams-repo",
+       "version"  : "1.2.3",
+       "teamNames": ["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"],
+       "comments" : [
+           { "message": "hello", "params": { "id": "12345"} },
+           { "message": "yo", "params": { "id": "123456"} },
+           { "message": "wibble", "params": { "id": "1234567" } }
+         ],
+       "created": "${JsonData.createdAt}"
+     }
+    ]""""
 }

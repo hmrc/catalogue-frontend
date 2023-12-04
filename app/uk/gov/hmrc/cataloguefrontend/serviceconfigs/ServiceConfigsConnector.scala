@@ -44,17 +44,19 @@ class ServiceConfigsConnector @Inject() (
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
   private val logger = Logger(getClass)
 
-  implicit val cber = ConfigByEnvironment.reads
-  implicit val cwr  = ConfigWarning.reads
-  implicit val cser = ConfigSourceEntries.reads
-  implicit val srr  = ServiceRelationships.reads
+  implicit val cber: Reads[ConfigByEnvironment]  = ConfigByEnvironment.reads
+  implicit val cwr : Reads[ConfigWarning]        = ConfigWarning.reads
+  implicit val cser: Reads[ConfigSourceEntries]  = ConfigSourceEntries.reads
+  implicit val srr : Reads[ServiceRelationships] = ServiceRelationships.reads
 
   def configByEnv(
     service     : String
   , environments: Seq[Environment]
   , version     : Option[Version]
   , latest      : Boolean
-  )(implicit hc: HeaderCarrier): Future[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]  =
+  )(implicit
+    hc          : HeaderCarrier
+  ): Future[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]  =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/$service?environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
       .execute[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]
@@ -72,9 +74,11 @@ class ServiceConfigsConnector @Inject() (
   }
 
   def deploymentConfig(
-    service    : Option[String] = None,
+    service    : Option[String]      = None,
     environment: Option[Environment] = None,
-  )(implicit hc: HeaderCarrier): Future[Seq[DeploymentConfig]] = {
+  )(implicit
+    hc         : HeaderCarrier
+  ): Future[Seq[DeploymentConfig]] = {
     implicit val dcr = DeploymentConfig.reads
     val qsParams = Seq(
       environment.map("environment" -> _.asString),
@@ -97,7 +101,9 @@ class ServiceConfigsConnector @Inject() (
       .execute[Seq[ServiceDeploymentConfig]]
   }
 
-  private val configKeysCacheExpiration: Duration = servicesConfig.getConfDuration("configKeysCacheDuration", 1.hour)
+  private val configKeysCacheExpiration: Duration =
+    servicesConfig.getConfDuration("configKeysCacheDuration", 1.hour)
+
   def getConfigKeys(teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[String]] =
     cache.getOrElseUpdate(s"config-keys-cache-${teamName.getOrElse("all")}", configKeysCacheExpiration) {
       httpClientV2
@@ -113,7 +119,9 @@ class ServiceConfigsConnector @Inject() (
   , keyFilterType  : KeyFilterType
   , value          : Option[String]
   , valueFilterType: ValueFilterType
-  )(implicit hc: HeaderCarrier): Future[Either[String, Seq[AppliedConfig]]] = {
+  )(implicit
+    hc             : HeaderCarrier
+  ): Future[Either[String, Seq[AppliedConfig]]] = {
     implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
 
     httpClientV2
@@ -131,7 +139,9 @@ class ServiceConfigsConnector @Inject() (
   , environments: Seq[Environment]
   , version     : Option[Version]
   , latest      : Boolean
-  )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
+  )(implicit
+    hc          : HeaderCarrier
+  ): Future[Seq[ConfigWarning]] =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/warnings?serviceName=${serviceName.asString}&environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
       .execute[Seq[ConfigWarning]]

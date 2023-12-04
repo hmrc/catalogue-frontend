@@ -20,11 +20,11 @@
 @import views.html.partials.TeamNames
 
 @this(
-    repoTeamNames: TeamNames
+  repoTeamNames: TeamNames
 )
 
 @(
-    repositories: Seq[GitRepository]
+  repositories: Seq[GitRepository]
 )
 
 <tbody class="list" id="matches">
@@ -47,7 +47,6 @@
     </td>
 
     <td id="row@{i}_team">
-        @* TODO: change the GitRepository model to use TeamName types instead of String, then this mapping can be removed *@
         @repoTeamNames(repo.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
     </td>
 

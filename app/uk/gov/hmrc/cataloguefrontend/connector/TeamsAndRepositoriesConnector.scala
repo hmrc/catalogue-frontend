@@ -183,10 +183,11 @@ object BuildJobType {
   val values: List[BuildJobType] =
     List(Job, Pipeline, Performance)
 
-  implicit val ordering = new Ordering[BuildJobType] {
-    def compare(x: BuildJobType, y: BuildJobType): Int =
-      values.indexOf(x).compare(values.indexOf(y))
-  }
+  implicit val ordering: Ordering[BuildJobType] =
+    new Ordering[BuildJobType] {
+      def compare(x: BuildJobType, y: BuildJobType): Int =
+        values.indexOf(x).compare(values.indexOf(y))
+    }
 
   def parse(s: String): BuildJobType =
     values
@@ -324,8 +325,8 @@ class TeamsAndRepositoriesConnector @Inject()(
   private val teamsAndServicesBaseUrl: String =
     servicesConfig.baseUrl("teams-and-repositories")
 
-  private implicit val tf   = Team.format
-  private implicit val ghrf = GitRepository.apiFormat // v2 model
+  private implicit val tf  : Format[Team]          = Team.format
+  private implicit val ghrf: Format[GitRepository] = GitRepository.apiFormat // v2 model
 
   def lookupLatestBuildJobs(service: String)(implicit hc: HeaderCarrier): Future[Seq[JenkinsJob]] = {
 

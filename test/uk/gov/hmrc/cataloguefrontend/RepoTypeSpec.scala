@@ -18,12 +18,11 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 class RepoTypeSpec extends AnyWordSpec with Matchers {
-
-  implicit val rtf = RepoType.format
+  implicit val rtf: Format[RepoType] = RepoType.format
 
   "RepoType" should {
     "be able to be read from a json string" in {

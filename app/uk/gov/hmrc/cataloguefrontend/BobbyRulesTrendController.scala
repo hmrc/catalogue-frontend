@@ -130,8 +130,8 @@ class BobbyRulesTrendController @Inject() (
     Form(
       Forms.mapping(
         "rules" -> Forms.seq(Forms.text).verifying(notEmptySeq),
-        "from" -> default(Forms.localDate, LocalDate.now().minusYears(2)),
-        "to" -> default(Forms.localDate, LocalDate.now())
+        "from"  -> default(Forms.localDate, LocalDate.now().minusYears(2)),
+        "to"    -> default(Forms.localDate, LocalDate.now())
       )(SearchForm.apply)(SearchForm.unapply)
     )
   }
@@ -145,6 +145,6 @@ object BobbyRulesTrendController {
 
   case class GraphData(
     columns: List[(String, String)],
-    rows: List[List[Any]]
+    rows   : List[List[Any]]
   )
 }

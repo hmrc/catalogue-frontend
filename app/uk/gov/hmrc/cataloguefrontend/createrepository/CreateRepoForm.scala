@@ -25,22 +25,22 @@ import play.api.libs.json.{Writes, __}
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkConstraint
 
 case class CreateServiceRepoForm(
-                                  repositoryName     : String,
-                                  makePrivate        : Boolean,
-                                  teamName           : String,
-                                  repoType           : String
-                                )
+  repositoryName: String,
+  makePrivate   : Boolean,
+  teamName      : String,
+  repoType      : String
+)
 
 object CreateServiceRepoForm {
-
   implicit val writes: Writes[CreateServiceRepoForm] =
     ( (__ \ "repositoryName").write[String]
-      ~ (__ \ "makePrivate"   ).write[Boolean]
-      ~ (__ \ "teamName"      ).write[String]
-      ~ (__ \ "repoType"      ).write[String]
-      )(unlift(CreateServiceRepoForm.unapply))
+    ~ (__ \ "makePrivate"   ).write[Boolean]
+    ~ (__ \ "teamName"      ).write[String]
+    ~ (__ \ "repoType"      ).write[String]
+    )(unlift(CreateServiceRepoForm.unapply))
 
-  val repoTypeValidation           : String => Boolean = str => CreateServiceRepositoryType.parse(str).nonEmpty
+  val repoTypeValidation: String => Boolean =
+    str => CreateServiceRepositoryType.parse(str).nonEmpty
 
   val conflictingFieldsValidation1 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("backend")  && crf.repositoryName.toLowerCase.contains("frontend"))
   val conflictingFieldsValidation2 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
@@ -57,25 +57,27 @@ object CreateServiceRepoForm {
     mkConstraint("constraints.frontendCheck")(constraint = frontendValidation2, error = "Repositories with 'frontend' in their repo name require a frontend repo type")
   )
 
-  val form: Form[CreateServiceRepoForm] = Form(
-    mapping(
-      "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None) :_*),
-      "makePrivate"         -> boolean,
-      "teamName"            -> nonEmptyText,
-      "repoType"            -> nonEmptyText.verifying(repoTypeConstraint),
-    )(CreateServiceRepoForm.apply)(CreateServiceRepoForm.unapply)
-      .verifying(repoTypeAndNameConstraints :_*)
-  )
+  val form: Form[CreateServiceRepoForm] =
+    Form(
+      mapping(
+        "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None) :_*),
+        "makePrivate"    -> boolean,
+        "teamName"       -> nonEmptyText,
+        "repoType"       -> nonEmptyText.verifying(repoTypeConstraint),
+      )(CreateServiceRepoForm.apply)(CreateServiceRepoForm.unapply)
+        .verifying(repoTypeAndNameConstraints :_*)
+    )
 }
 
 object CreateTestRepoForm {
+  private val repoTestTypeValidation: String => Boolean =
+    str => CreateTestRepositoryType.parse(str).nonEmpty
 
-  private val repoTestTypeValidation: String => Boolean = str => CreateTestRepositoryType.parse(str).nonEmpty
+  private val repoTestTypeConstraint: Constraint[String] =
+    mkConstraint("constraints.repoTypeCheck")(constraint = repoTestTypeValidation, error = CreateTestRepositoryType.parsingError)
 
-  private val repoTestTypeConstraint: Constraint[String] = mkConstraint("constraints.repoTypeCheck")(constraint = repoTestTypeValidation, error = CreateTestRepositoryType.parsingError)
-
-  val conflictingFieldsValidationUiTests: CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.startsWith("ui") && !crf.repositoryName.toLowerCase.endsWith("-ui-tests"))
-  val conflictingFieldsValidationApiTests: CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.startsWith("api") && !crf.repositoryName.toLowerCase.endsWith("-api-tests"))
+  val conflictingFieldsValidationUiTests         : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.startsWith("ui") && !crf.repositoryName.toLowerCase.endsWith("-ui-tests"))
+  val conflictingFieldsValidationApiTests        : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.startsWith("api") && !crf.repositoryName.toLowerCase.endsWith("-api-tests"))
   val conflictingFieldsValidationPerformanceTests: CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.startsWith("performance") && !crf.repositoryName.toLowerCase.endsWith("-performance-tests"))
 
   private val repoTypeAndNameConstraints = Seq(
@@ -96,60 +98,66 @@ object CreateTestRepoForm {
 }
 
 case class CreatePrototypeRepoForm(
-                                    repositoryName     : String,
-                                    password           : String,
-                                    teamName           : String,
-                                    slackChannels      : String)
+  repositoryName: String,
+  password      : String,
+  teamName      : String,
+  slackChannels : String
+)
 
 object CreatePrototypeRepoForm {
 
   implicit val writes: Writes[CreatePrototypeRepoForm] =
     ( (__ \ "repositoryName"  ).write[String]
-      ~ (__ \ "password"      ).write[String]
-      ~ (__ \ "teamName"      ).write[String]
-      ~ (__ \ "slackChannels" ).write[String]
-      )(unlift(CreatePrototypeRepoForm.unapply))
+    ~ (__ \ "password"      ).write[String]
+    ~ (__ \ "teamName"      ).write[String]
+    ~ (__ \ "slackChannels" ).write[String]
+    )(unlift(CreatePrototypeRepoForm.unapply))
 
-  private val passwordCharacterValidation: String => Boolean = str => str.matches("^[a-zA-Z0-9_]+$")
-  private val passwordConstraint = mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
+  private val passwordCharacterValidation: String => Boolean =
+    str => str.matches("^[a-zA-Z0-9_]+$")
+
+  private val passwordConstraint =
+    mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
 
   private val slackChannelCharacterValidation: String => Boolean = str => str.matches("^#?[a-z0-9-_]*$")
-  private val slackChannelLengthValidation: String => Boolean = str => str.isEmpty || !str.split(',').exists(elem => elem.length > 80)
+  private val slackChannelLengthValidation   : String => Boolean = str => str.isEmpty || !str.split(',').exists(elem => elem.length > 80)
+
   private val slackChannelConstraint = Seq(
     mkConstraint("constraints.channelLengthCheck")(constraint = slackChannelLengthValidation, error = "Each slack channel name must be under 80 characters long"),
     mkConstraint("constraints.channelCharacterCheck")(constraint = slackChannelCharacterValidation, error = "Each slack channel name Should only contain the following characters lowercase letters, numbers, underscores, dashes, hash character (#)")
   )
-  val form: Form[CreatePrototypeRepoForm] = Form(
-    mapping(
-      "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype")) :_*),
-      "password"            -> nonEmptyText.verifying(passwordConstraint),
-      "teamName"            -> nonEmptyText,
-      "slackChannels"       -> text.verifying(slackChannelConstraint :_*),
-    )(CreatePrototypeRepoForm.apply)(CreatePrototypeRepoForm.unapply)
-  )
+
+  val form: Form[CreatePrototypeRepoForm] =
+    Form(
+      mapping(
+        "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype")) :_*),
+        "password"            -> nonEmptyText.verifying(passwordConstraint),
+        "teamName"            -> nonEmptyText,
+        "slackChannels"       -> text.verifying(slackChannelConstraint :_*),
+      )(CreatePrototypeRepoForm.apply)(CreatePrototypeRepoForm.unapply)
+    )
 }
 
 object CreateRepoConstraints {
 
-  def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] = {
-    Constraint(constraintName)({ toBeValidated => if (constraint(toBeValidated)) Valid else Invalid(error) })
-  }
+  def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] =
+    Constraint(constraintName)(toBeValidated => if (constraint(toBeValidated)) Valid else Invalid(error))
 
   def createRepoNameConstraints(length: Int, suffix: Option[String]): Seq[Constraint[String]] = {
     val whiteSpaceValidation: String => Boolean = str => !str.matches(".*\\s.*")
     val underscoreValidation: String => Boolean = str => !str.contains("_")
-    val slashValidation: String => Boolean = str => !str.contains("/")
-    val lengthValidation: String => Boolean = str => str.length <= length
-    val lowercaseValidation: String => Boolean = str => str.toLowerCase.equals(str)
-    val suffixValidation: String => Boolean = str => if(suffix.isEmpty) true else str.endsWith(suffix.get)
+    val slashValidation     : String => Boolean = str => !str.contains("/")
+    val lengthValidation    : String => Boolean = str => str.length <= length
+    val lowercaseValidation : String => Boolean = str => str.toLowerCase.equals(str)
+    val suffixValidation    : String => Boolean = str => if (suffix.isEmpty) true else str.endsWith(suffix.get)
 
     Seq(
       mkConstraint("constraints.repoNameWhitespaceCheck")(constraint = whiteSpaceValidation, error = "Repository name cannot include whitespace, use hyphens instead"),
       mkConstraint("constraints.repoNameUnderscoreCheck")(constraint = underscoreValidation, error = "Repository name cannot include underscores, use hyphens instead"),
-      mkConstraint("constraints.repoNameSlashCheck")(constraint = slashValidation, error = "Repository name cannot include forward slashes. You do not need to specify the hmrc organisation"),
-      mkConstraint("constraints.repoNameLengthCheck")(constraint = lengthValidation, error = s"Repository name can have a maximum of $length characters"),
-      mkConstraint("constraints.repoNameCaseCheck")(constraint = lowercaseValidation, error = "Repository name should only contain lowercase characters"),
-      mkConstraint("constraints.repoNameSuffixCheck")(constraint = suffixValidation, error = s"Repository name must end with ${if(suffix.nonEmpty) suffix.get else ""}")
+      mkConstraint("constraints.repoNameSlashCheck"     )(constraint = slashValidation     , error = "Repository name cannot include forward slashes. You do not need to specify the hmrc organisation"),
+      mkConstraint("constraints.repoNameLengthCheck"    )(constraint = lengthValidation    , error = s"Repository name can have a maximum of $length characters"),
+      mkConstraint("constraints.repoNameCaseCheck"      )(constraint = lowercaseValidation , error = "Repository name should only contain lowercase characters"),
+      mkConstraint("constraints.repoNameSuffixCheck"    )(constraint = suffixValidation    , error = s"Repository name must end with ${if (suffix.nonEmpty) suffix.get else ""}")
     )
   }
 }

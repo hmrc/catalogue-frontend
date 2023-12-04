@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -39,8 +40,8 @@ class ReleasesConnector @Inject() (
 
   private val serviceUrl: String = servicesConfig.baseUrl("releases-api")
 
-  private implicit val wrwf = JsonCodecs.whatsRunningWhereReads
-  private implicit val pf   = JsonCodecs.profileFormat
+  private implicit val wrwf: Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
+  private implicit val pf  : Reads[Profile]           = JsonCodecs.profileFormat
 
 
   def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {

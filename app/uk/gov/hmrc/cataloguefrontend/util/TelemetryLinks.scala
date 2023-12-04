@@ -69,20 +69,20 @@ class TelemetryLinks @Inject()(configuration: Configuration) {
   )
 
   def kibanaNonPerformantQueries(
-    env        : Environment,
-    serviceName: String,
+    env                 : Environment,
+    serviceName         : String,
     nonPerformantQueries: Seq[ServiceMetricsConnector.NonPerformantQueries] = Seq.empty
-  ): Seq[Link] = {
-    telemetryLogsDiscoverLinkTemplates.toSeq.map{ case (name, linkTemplate) =>
-      val `class` = nonPerformantQueries.collectFirst{ 
-        case npq if (npq.service == serviceName &&
-          npq.queryTypes.exists(_.contains(name)) &&
-          npq.environment == env) => "glyphicon glyphicon-exclamation-sign text-danger"
-      }
-      val url = linkTemplate.replace(s"$${env}", UrlUtils.encodePathParam(env.asString))
-      .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
+  ): Seq[Link] =
+    telemetryLogsDiscoverLinkTemplates.toSeq.map { case (name, linkTemplate) =>
+      val `class` =
+        nonPerformantQueries.collectFirst {
+          case npq if (npq.service == serviceName && npq.queryTypes.exists(_.contains(name)) && npq.environment == env) =>
+            "glyphicon glyphicon-exclamation-sign text-danger"
+        }
+      val url =
+        linkTemplate
+          .replace(s"$${env}"    , UrlUtils.encodePathParam(env.asString))
+          .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
       Link(name, s"$name Queries", url, `class`)
     }
-  }
-    
 }
