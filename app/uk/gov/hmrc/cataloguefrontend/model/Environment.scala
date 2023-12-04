@@ -58,21 +58,14 @@ object Environment {
         value.asString
     }
 
-  implicit val queryStringBindable: QueryStringBindable[Environment] =
+  implicit def queryStringBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[Environment] =
     new QueryStringBindable[Environment] {
-      private val Name = "environment"
-
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Environment]] =
-        params.get(Name).map { values =>
-          values.toList match {
-            case Nil         => Left("missing environment value")
-            case head :: Nil => pathBindable.bind(key, head)
-            case _           => Left("too many environment values")
-          }
-        }
+        strBinder.bind(key, params)
+          .map(_.flatMap { value => parse(value).toRight(s"Invalid Environment '$value'") })
 
       override def unbind(key: String, value: Environment): String =
-        s"$Name=${value.asString}"
+        strBinder.unbind(key, value.asString)
     }
 
   val formFormat: Formatter[Environment] = new Formatter[Environment] {

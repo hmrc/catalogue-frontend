@@ -44,21 +44,14 @@ object TeamName {
         value.asString
     }
 
-  implicit val queryStringBindable: QueryStringBindable[TeamName] =
+  implicit def queryStringBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[TeamName] =
     new QueryStringBindable[TeamName] {
-      private val Name = "team"
-
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, TeamName]] =
-        params.get(Name).map { values =>
-          values.toList match {
-            case Nil         => Left("missing team value")
-            case head :: Nil => pathBindable.bind(key, head)
-            case _           => Left("too many team values")
-          }
-        }
+        strBinder.bind(key, params)
+          .map(_.map(TeamName.apply))
 
       override def unbind(key: String, value: TeamName): String =
-        s"$Name=${value.asString}"
+        strBinder.unbind(key, value.asString)
     }
 }
 
