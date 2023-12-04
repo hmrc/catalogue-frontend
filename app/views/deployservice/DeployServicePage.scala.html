@@ -37,9 +37,9 @@
 , releases      : Seq[WhatsRunningWhereVersion]
 , environments  : Seq[Environment]
 , evaluations   : Option[(
-                    Map[ServiceConfigsService.KeyName, ServiceConfigsService.ConfigSourceValue]
+                    Map[ServiceConfigsService.KeyName, (ServiceConfigsService.ConfigSourceValue, Boolean)]
                   , Seq[ServiceConfigsService.ConfigWarning]
-                  , Seq[VulnerabilitySummary]
+                  , Option[Seq[VulnerabilitySummary]]
                   )]
 )( implicit
   messages      : Messages
@@ -122,22 +122,18 @@
       </div>
     </div>
     <div class="col-md-8">
-      @evaluations.map { case (updates, warnings, vulnerabilities) =>
-        @defining( (form("serviceName").value, form("version").value, form("environment").value.flatMap(Environment.parse) ) ) { deploying =>
-          @defining( deploying._3.contains(Environment.Production) ) { isProd =>
-            <div class="alert @if(isProd) {alert-danger} else {alert-warning}">
-              You are about to deploy <strong>@deploying._1:@deploying._2</strong> into <strong>@deploying._3.map(_.displayString)</strong>
-            </div>
-          }
-        }
+      @evaluations.map { case (configUpdates, configWarnings, optVulnerabilities) =>
+        <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
+          You are about to deploy <strong>@form.get.serviceName:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
+        </div>
         <label class="form-label fw-bold">Please review before deploying:</label>
         <div class="accordion mb-3" id="accordion">
           <div class="accordion-item">
             <div class="accordion-header" id="headingConfigUpdates">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(updates.isEmpty) {disabled} >
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(configUpdates.isEmpty) {disabled} >
                 Config Updates
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(updates.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
-                  @updates.size
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(configUpdates.isEmpty) {text-bg-secondary} else {text-bg-info}">
+                  @configUpdates.size
                   <span class="visually-hidden">Number of config changes</span>
                 </span>
               </button>
@@ -152,10 +148,15 @@
                     </tr>
                   </thead>
                   <tbody id="config-updates-rows">
-                    @for((key, configSourceValue) <- updates) {
+                    @for((key, (configSourceValue, isNew)) <- configUpdates.toList.sortBy(_._1.asString) ) {
                       <tr>
-                        <td><code>@key.asString</code></td>
-                        <td>@displayConfigSourceValue(ServiceConfigsService.ServiceName(form.get.serviceName), key, form.get.environment, configSourceValue)</td>
+                        @if(isNew) {
+                          <td><code>@key.asString</code></td>
+                          <td>@displayConfigSourceValue(ServiceConfigsService.ServiceName(form.get.serviceName), key, form.get.environment, configSourceValue)</td>
+                        } else {
+                          <td><del><code>@key.asString</code></del></td>
+                          <td><del>@displayConfigSourceValue(ServiceConfigsService.ServiceName(form.get.serviceName), key, form.get.environment, configSourceValue)</del></td>
+                        }
                       </tr>
                     }
                   </tbody>
@@ -165,10 +166,10 @@
           </div>
           <div class="accordion-item">
             <div class="accordion-header" id="headingConfigWarnings">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigWarnings" aria-expanded="false" aria-controls="collapseConfigWarnings" @if(warnings.isEmpty) {disabled}>
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigWarnings" aria-expanded="false" aria-controls="collapseConfigWarnings" @if(configWarnings.isEmpty) {disabled}>
                 Config Warnings
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(warnings.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
-                  @warnings.size
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(configWarnings.isEmpty) {text-bg-secondary} else {text-bg-info}">
+                  @configWarnings.size
                   <span class="visually-hidden">Number of config warnings</span>
                 </span>
               </button>
@@ -183,7 +184,7 @@
                     </tr>
                   </thead>
                   <tbody id="config-warnings-rows">
-                    @for(x <- warnings) {
+                    @for(x <- configWarnings) {
                       <tr>
                         <td><code>@x.key.asString</code></td>
                         <td>@displayConfigWarning(ServiceConfigsService.ServiceName(form.get.serviceName), x.key, x.environment, x)</td>
@@ -194,14 +195,19 @@
               </div>
             </div>
           </div>
+
           <div class="accordion-item">
             <div class="accordion-header" id="headingVulnerabilities">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVulnerabilities" aria-expanded="false" aria-controls="collapseVulnerabilities" @if(vulnerabilities.isEmpty) {disabled}>
-                Vulnerabilities
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @if(vulnerabilities.isEmpty) {text-bg-secondary} else {text-bg-info} z-3">
-                  @vulnerabilities.size
-                  <span class="visually-hidden">Number of vulnerabilities</span>
-                </span>
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVulnerabilities" aria-expanded="false" aria-controls="collapseVulnerabilities" @if(optVulnerabilities.getOrElse(Nil).isEmpty) {disabled}>
+                @if(optVulnerabilities.isEmpty) {
+                  Vulnerabilities unknown - needs to be already deployed in an environment
+                } else {
+                  Vulnerabilities - action required
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(optVulnerabilities.getOrElse(Nil).isEmpty) {text-bg-secondary} else {text-bg-info}">
+                    @optVulnerabilities.getOrElse(Nil).size
+                    <span class="visually-hidden">Number of vulnerabilities</span>
+                  </span>
+                }
               </button>
             </div>
             <div id="collapseVulnerabilities" class="accordion-collapse collapse" aria-labelledby="headingVulnerabilities" data-bs-parent="#accordion">
@@ -209,11 +215,10 @@
                 <table class="table table-striped sticky-header text-break">
                   <thead>
                     <tr>
-                      <th></th>
+                      <th style="width: 30px;"></th>
                       <th class="col-2"><button class="sort no-border fw-bold" data-sort="vuln-id">Vulnerability ID</button></th>
-                      <th class="col-2">Vulnerable Component</th>
-                      <th class="col-4">Assessment</th>
-                      <th class="col-2"><button class="sort no-border fw-bold" data-sort="curation-status">Curation Status</button></th>
+                      <th class="col-3">Vulnerable Component</th>
+                      <th class="">Assessment</th>
                       <th class="col-1 text-right" style="width: 90px;"><button class="sort no-border fw-bold" data-sort="score">Score</button></th>
                       <th class="d-none"></th>
                       <th class="d-none"></th>
@@ -223,7 +228,7 @@
                     </tr>
                   </thead>
                   <tbody id="vulnerabilities-rows" class="list">
-                    @vulnerabilities.map(vulnerabilitiesSummary)
+                    @optVulnerabilities.getOrElse(Nil).map(vulnerabilitiesSummary)
                   </tbody>
                 </table>
                 <script @CSPNonce.attr>
@@ -318,19 +323,15 @@
 }
 
 @displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue) = {
-  <ul class="list-unstyled">
-    <li>
-      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey)).url"
-         target="_blank"
-         data-bs-toggle="popover"
-         data-bs-trigger="hover"
-         data-bs-placement="bottom"
-         data-bs-html="true"
-         data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
-        @configSourceValue.displayString
-      </a>
-    </li>
-  </ul>
+  <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey)).url"
+    target="_blank"
+    data-bs-toggle="popover"
+    data-bs-trigger="hover"
+    data-bs-placement="bottom"
+    data-bs-html="true"
+    data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
+      @configSourceValue.displayString
+  </a>
 }
 
 @popoverConfigSourceValue(key: ServiceConfigsService.KeyName, sourceValue: ServiceConfigsService.ConfigSourceValue, env: Environment) = {
@@ -338,19 +339,15 @@
 }
 
 @displayConfigWarning(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configWarning: ServiceConfigsService.ConfigWarning) = {
-  <ul class="list-unstyled">
-    <li>
-      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey)).url"
-         target="_blank"
-         data-bs-toggle="popover"
-         data-bs-trigger="hover"
-         data-bs-placement="bottom"
-         data-bs-html="true"
-         data-bs-content='@popoverConfigWarning(configWarning, env)'>
-          @configWarning.warning
-      </a>
-    </li>
-  </ul>
+  <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey)).url"
+      target="_blank"
+      data-bs-toggle="popover"
+      data-bs-trigger="hover"
+      data-bs-placement="bottom"
+      data-bs-html="true"
+      data-bs-content='@popoverConfigWarning(configWarning, env)'>
+      @configWarning.warning
+  </a>
 }
 
 @popoverConfigWarning(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
@@ -365,7 +362,6 @@
           <td class="vuln-id">@summary.distinctVulnerability.id</td>
           <td class="vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
           <td class="assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-          <td class="curation-status"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
           <td class="score text-end">@summary.distinctVulnerability.score.getOrElse("")</td>
           <td class="d-none"></td>
           <td class="d-none"></td>
@@ -378,9 +374,8 @@
           <td class="vuln-id d-none">@summary.distinctVulnerability.id</td>
           <td class="vulnerable-component-name d-none">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
           <td class="assessment d-none">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-          <td class="curation-status d-none"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
           <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
-          <td colspan="6">
+          <td colspan="5">
               @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
           </td>
       </tr>

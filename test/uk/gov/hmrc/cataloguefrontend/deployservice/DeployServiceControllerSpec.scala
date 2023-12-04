@@ -37,7 +37,7 @@ import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVer
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion, WhatsRunningWhere}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{VulnerabilitiesConnector, DistinctVulnerability, VulnerabilitySummary}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesConnector, DistinctVulnerability, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
@@ -118,9 +118,11 @@ class DeployServiceControllerSpec
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockServiceConfigsService.configByKeyWithNextDeployment(eqTo("some-service"), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someConfigByKeyWithNextDeployment))
+      when(mockServiceConfigsService.removedConfig(eqTo("some-service"), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+        .thenReturn(Future.successful(someRemoveConfig))
       when(mockServiceConfigsService.configWarnings(eqTo(ServiceName("some-service")), eqTo(List(Environment.QA)), eqTo(Some(Version("0.3.0"))), eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(someConfigWarning)))
-      when(mockVulnerabilitiesConnector.vulnerabilitySummaries(eqTo(None), eqTo(None), eqTo(Some("some-service")), eqTo(Some(Version("0.3.0"))), eqTo(None), eqTo(None))(any[HeaderCarrier]))
+      when(mockVulnerabilitiesConnector.vulnerabilitySummaries(eqTo(None), eqTo(Some(CurationStatus.ActionRequired)), eqTo(Some("some-service")), eqTo(Some(Version("0.3.0"))), eqTo(None), eqTo(None))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(someVulnerabilities)))
 
       val futResult = underTest.step2()(
@@ -140,7 +142,7 @@ class DeployServiceControllerSpec
       jsoupDocument.select("#version-environment-form").select("#service-name").attr("version") shouldBe ""
       jsoupDocument.select("#version-environment-form").select("#service-name").attr("environment") shouldBe ""
 
-      jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 1
+      jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 2
       jsoupDocument.select("#config-warnings-rows").first.children.size shouldBe 1
       jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
       jsoupDocument.select("#deploy-btn").size shouldBe 1
@@ -223,6 +225,10 @@ class DeployServiceControllerSpec
   private val someConfigByKeyWithNextDeployment: Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] = Map(
     KeyName("key1") -> Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> Seq((ConfigSourceValue("some-source", Some("some-url"), "some-value1") -> true)))
   , KeyName("key2") -> Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> Seq((ConfigSourceValue("some-source", Some("some-url"), "some-value2") -> false)))
+  )
+
+  private val someRemoveConfig: Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] = Map(
+    KeyName("key3") -> Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> Seq((ConfigSourceValue("some-source", Some("some-url"), "some-value3") -> true)))
   )
 
   private val someReleasesForService = WhatsRunningWhere(

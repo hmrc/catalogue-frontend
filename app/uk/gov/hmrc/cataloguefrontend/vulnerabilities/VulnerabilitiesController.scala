@@ -125,11 +125,11 @@ class VulnerabilitiesController @Inject() (
 
 
   case class VulnerabilitiesExplorerFilter(
-    vulnerability : Option[String] = None,
-    curationStatus: Option[String] = None,
-    service       : Option[String] = None,
-    team          : Option[String] = None,
-    component     : Option[String] = None
+    vulnerability : Option[String]         = None,
+    curationStatus: Option[CurationStatus] = None,
+    service       : Option[String]         = None,
+    team          : Option[String]         = None,
+    component     : Option[String]         = None
   )
 
 object VulnerabilitiesExplorerFilter {
@@ -140,7 +140,7 @@ object VulnerabilitiesExplorerFilter {
     Form(
       mapping(
         "vulnerability"  -> optional(text),
-        "curationStatus" -> optional(text),
+        "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
         "service"        -> optional(text),
         "team"           -> optional(text),
         "component"      -> optional(text)
@@ -172,7 +172,7 @@ case class VulnerabilitiesTimelineFilter(
   service       : Option[String],
   team          : Option[String],
   vulnerability : Option[String],
-  curationStatus: Option[String],
+  curationStatus: Option[CurationStatus],
   from          : LocalDate,
   to            : LocalDate,
   showDelta     : Boolean
@@ -192,7 +192,7 @@ object VulnerabilitiesTimelineFilter {
         "service"       -> optional(text),
         "team"          -> optional(text),
         "vulnerability" -> optional(text),
-        "curationStatus"-> optional(text),
+        "curationStatus"-> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
         "from"          -> optional(Forms.localDate(dateFormat))
                                 .transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply),
                                 //Default to 6 months ago if loading initial page/value not set

@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{VulnerabilitiesConnector, CurationStatus}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Retrieval, Resource}
@@ -160,7 +160,7 @@ class DeployServiceController @Inject()(
                             serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                             , BadRequest(deployServicePage(form.withGlobalError("Version not found"), hasPerm, allServices, latest, releases, environments, evaluations = None))
                           )
-        confUpdates  <- EitherT
+        confNew      <- EitherT
                           .right[Result](serviceConfigsService.configByKeyWithNextDeployment(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
                           .map(_.flatMap { case (k, envData) =>
                             envData
@@ -168,10 +168,23 @@ class DeployServiceController @Inject()(
                               .collect { case (x, true) if !x.isReferenceConf => x }
                               .map(v => (k -> v))
                           })
+        confRemoves  <- EitherT
+                          .right[Result](serviceConfigsService.removedConfig(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
+                          .map(_.flatMap { case (k, envData) =>
+                            envData
+                              .getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil)
+                              .collect { case (x, true) if !x.isReferenceConf  => x }
+                              .map(v => (k -> v))
+                          })
+        confUpdates  =  (confNew.view.mapValues(x => (x, true)) ++ confRemoves.view.mapValues(x => (x, false))).toMap
         confWarnings <- EitherT
                           .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), Some(formObject.version), latest = true))
         vulnerabils  <- EitherT
-                          .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version)))
+                          .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired)))
+                          .map {
+                            case Nil if releases.exists(_.versionNumber.asVersion == formObject.version) => None
+                            case xs                                                                      => Some(xs)
+                          }
       } yield
         Ok(deployServicePage(form, hasPerm, allServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils))))
       ).merge

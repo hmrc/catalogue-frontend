@@ -59,10 +59,32 @@ class ServiceConfigsService @Inject()(
         }
       }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString): _*)) // sort by keys
 
-  def configByKeyWithNextDeployment(
-    serviceName: String,
+  def removedConfig(
+    serviceName : String,
     environments: Seq[Environment] = Nil,
-    version: Option[Version] = None
+    version     : Option[Version]  = None
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
+    for {
+      latestConfigByKey   <- configByKey(serviceName, environments, version, latest = true )
+      deployedConfigByKey <- configByKey(serviceName, environments, None   , latest = false)
+      configByKey         =  deployedConfigByKey.map {
+                               case (k, m) => k -> m.map {
+                                 case (e, vs) =>
+                                   latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match {
+                                     case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs.map(x => (x -> false)))
+                                     case None    if vs.lastOption.isDefined                  => e -> (vs.map(x => (x -> true)))
+                                     case _                                                   => e -> (vs.map(x => (x -> false)))
+                                   }
+                               }
+                             }
+    } yield (configByKey)
+
+  def configByKeyWithNextDeployment(
+    serviceName : String,
+    environments: Seq[Environment] = Nil,
+    version     : Option[Version]  = None
   )(implicit
     hc: HeaderCarrier
   ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
