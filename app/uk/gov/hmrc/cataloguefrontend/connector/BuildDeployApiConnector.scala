@@ -304,13 +304,15 @@ object BuildDeployApiConnector {
 
   object CreateServiceRepoRequest {
 
-    implicit val format: Format[CreateServiceRepoRequest] =
+    implicit val format: Format[CreateServiceRepoRequest] = {
+      implicit val tnf: Format[TeamName] = TeamName.format
       ( (__ \ "repositoryName"           ).format[String]
-      ~ (__ \ "teamName"                 ).format[String].inmap[TeamName](TeamName.apply, _.asString)
+      ~ (__ \ "teamName"                 ).format[TeamName]
       ~ (__ \ "makePrivate"              ).format[Boolean]
       ~ (__ \ "repositoryType"           ).format[String]
       ~ (__ \ "slackNotificationChannels").format[String]
       )(CreateServiceRepoRequest.apply _, unlift(CreateServiceRepoRequest.unapply _))
+    }
   }
 
   case class CreatePrototypeRepoRequest(
@@ -322,12 +324,14 @@ object BuildDeployApiConnector {
 
   object CreatePrototypeRepoRequest {
 
-    implicit val format: Format[CreatePrototypeRepoRequest] =
+    implicit val format: Format[CreatePrototypeRepoRequest] = {
+      implicit val tnf: Format[TeamName] = TeamName.format
       ( (__ \ "repositoryName"           ).format[String]
-      ~ (__ \ "teamName"                 ).format[String].inmap[TeamName](TeamName.apply, _.asString)
+      ~ (__ \ "teamName"                 ).format[TeamName]
       ~ (__ \ "password"                 ).format[String]
       ~ (__ \ "slackNotificationChannels").format[String]
       )(CreatePrototypeRepoRequest.apply _, unlift(CreatePrototypeRepoRequest.unapply _))
+    }
   }
 
   case class CreateTestRepoRequest(
@@ -338,13 +342,14 @@ object BuildDeployApiConnector {
   )
 
   object CreateTestRepoRequest {
-
-    implicit val format: Format[CreateTestRepoRequest] =
+    implicit val format: Format[CreateTestRepoRequest] = {
+      implicit val tnf: Format[TeamName] = TeamName.format
       ( (__ \ "repositoryName"       ).format[String]
-      ~ (__ \ "teamName"             ).format[String].inmap[TeamName](TeamName.apply, _.asString)
+      ~ (__ \ "teamName"             ).format[TeamName]
       ~ (__ \ "makePrivate"          ).format[Boolean]
       ~ (__ \ "repositoryType"       ).format[String]
       )(CreateTestRepoRequest.apply _, unlift(CreateTestRepoRequest.unapply _))
+    }
   }
 
   case class CreateAppConfigsRequest(
@@ -356,12 +361,12 @@ object BuildDeployApiConnector {
   )
 
   object CreateAppConfigsRequest {
-      implicit val format: Format[CreateAppConfigsRequest] =
-        ( (__ \ "microserviceName").format[String]
-        ~ (__ \ "microserviceType").format[String]
-        ~ (__ \ "hasMongo"        ).format[Boolean]
-        ~ (__ \ "environments"    ).format[Seq[String]]
-        ~ (__ \ "zone"            ).format[String]
-      )(CreateAppConfigsRequest.apply _, unlift(CreateAppConfigsRequest.unapply _))
+    implicit val format: Format[CreateAppConfigsRequest] =
+      ( (__ \ "microserviceName").format[String]
+      ~ (__ \ "microserviceType").format[String]
+      ~ (__ \ "hasMongo"        ).format[Boolean]
+      ~ (__ \ "environments"    ).format[Seq[String]]
+      ~ (__ \ "zone"            ).format[String]
+    )(CreateAppConfigsRequest.apply _, unlift(CreateAppConfigsRequest.unapply _))
   }
 }

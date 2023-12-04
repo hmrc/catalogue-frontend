@@ -41,12 +41,13 @@ object PrCommenterReport {
     ~ (__ \ "params" \ "id").read[String]
     )(PrCommenterComment.apply _)
 
-  val reads: Reads[PrCommenterReport] =
+  val reads: Reads[PrCommenterReport] = {
+    implicit val tnf: Reads[TeamName] = TeamName.format
     ( (__ \ "name"     ).read[String]
-    ~ (__ \ "teamNames").read[List[String]].map(_.map(TeamName.apply))
+    ~ (__ \ "teamNames").read[List[TeamName]]
     ~ (__ \ "version"  ).read[Version](Version.format)
     ~ (__ \ "comments" ).read[Seq[PrCommenterComment]]
     ~ (__ \ "created"  ).read[Instant]
     )(PrCommenterReport.apply _)
-
+  }
 }

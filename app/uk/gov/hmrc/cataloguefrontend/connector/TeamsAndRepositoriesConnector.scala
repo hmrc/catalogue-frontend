@@ -250,6 +250,7 @@ object GitRepository {
     implicit val jjF  : Format[JenkinsJob]  = JenkinsJob.apiFormat
     implicit val tagF : Format[Tag]         = Tag.format
     implicit val zoneF: Format[Zone]        = Zone.format
+    implicit val tnf  : Format[TeamName]    = TeamName.format
 
     ( (__ \ "name"              ).format[String]
     ~ (__ \ "description"       ).format[String]
@@ -261,13 +262,13 @@ object GitRepository {
     ~ (__ \ "serviceType"       ).formatNullable[ServiceType]
     ~ (__ \ "tags"              ).formatNullable[Set[Tag]]
     ~ (__ \ "digitalServiceName").formatNullable[String]
-    ~ (__ \ "owningTeams"       ).formatWithDefault[Seq[String]](Seq.empty).inmap[Seq[TeamName]](_.map(TeamName.apply), _.map(_.asString))
+    ~ (__ \ "owningTeams"       ).formatWithDefault[Seq[TeamName]](Seq.empty)
     ~ (__ \ "language"          ).formatNullable[String]
     ~ (__ \ "isArchived"        ).formatWithDefault[Boolean](false)
     ~ (__ \ "defaultBranch"     ).format[String]
     ~ (__ \ "branchProtection"  ).formatNullable(BranchProtection.format)
     ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
-    ~ (__ \ "teamNames"         ).formatWithDefault[Seq[String]](Seq.empty).inmap[Seq[TeamName]](_.map(TeamName.apply), _.map(_.asString))
+    ~ (__ \ "teamNames"         ).formatWithDefault[Seq[TeamName]](Seq.empty)
     ~ (__ \ "jenkinsJobs"       ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
     ~ (__ \ "prototypeName"     ).formatNullable[String]
     ~ (__ \ "zone"              ).formatNullable[Zone]
