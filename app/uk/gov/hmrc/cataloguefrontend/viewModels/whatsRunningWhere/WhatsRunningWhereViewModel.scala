@@ -26,14 +26,8 @@ case class WhatsRunningWhereViewModel(whatsRunning: Seq[WhatsRunningWhere], envi
       val versionMap: Seq[EnvironmentField] =
         environments.map(env =>
           env -> versions.find(_.environment == env) match {
-            case (env, Some(version)) => {
-              if (version.versionNumber.asVersion.patch > 0) {
-                EnvironmentWithPatchVersion(env, version)
-              } else {
-                EnvironmentWithVersion(env, version)
-              }
-            }
-            case _ => EnvironmentWithoutVersion(env)
+            case (env, Some(version)) => EnvironmentWithVersion(env, version)
+            case _                    => EnvironmentWithoutVersion(env)
           }
         )
 

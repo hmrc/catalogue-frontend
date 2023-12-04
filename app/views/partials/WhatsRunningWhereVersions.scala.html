@@ -16,7 +16,6 @@
 
 @import uk.gov.hmrc.cataloguefrontend.viewModels.whatsRunningWhere.{EnvironmentWithVersion, EnvironmentWithoutVersion, VersionRow}
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.viewModels.whatsRunningWhere.EnvironmentWithPatchVersion
 
 @(rows: Seq[VersionRow])
 
@@ -28,19 +27,16 @@
     </td>
 
     @row.environments.map {
-        case EnvironmentWithVersion(env, version) => {
-        @if(version.versionNumber.asVersion == row.latestVersion) {
-            <td id="row@{row.index}_version_@{env.asString}">@version.versionNumber.asString</td>
+        case environmentWithVersion: EnvironmentWithVersion => {
+        @if(environmentWithVersion.version.versionNumber.asVersion == row.latestVersion) {
+            <td id="row@{row.index}_version_@{environmentWithVersion.env.asString}">@environmentWithVersion.version.versionNumber.asString</td>
         } else {
-            <td id="row@{row.index}_version_@{env.asString}" class="wrw-version-outdated" style="--bs-bg-opacity: @row.versionOpacity(version.versionNumber.asVersion)">
-                @version.versionNumber.asString
+            <td id="row@{row.index}_version_@{environmentWithVersion.env.asString}"
+                class="@if(environmentWithVersion.isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}"
+                style="--bs-bg-opacity: @if(environmentWithVersion.isPatchedVersion) {1} else {@row.versionOpacity(environmentWithVersion.version.versionNumber.asVersion)}">
+                @environmentWithVersion.version.versionNumber.asString
             </td>
          }
-        }
-        case EnvironmentWithPatchVersion(env, version) => {
-            <td id="row@{row.index}_version_@{env.asString}" class="wrw-version-outdated-patch" style="--bs-bg-opacity: 1">
-                @version.versionNumber.asString
-            </td>
         }
         case EnvironmentWithoutVersion(env) => {
             <td id="row@{row.index}_version_@{env.asString}"></td>

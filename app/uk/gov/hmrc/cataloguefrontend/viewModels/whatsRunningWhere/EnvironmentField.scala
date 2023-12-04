@@ -24,5 +24,6 @@ trait EnvironmentField {
 }
 
 case class EnvironmentWithoutVersion(env: Environment) extends EnvironmentField
-case class EnvironmentWithVersion(env: Environment, version: WhatsRunningWhereVersion) extends EnvironmentField
-case class EnvironmentWithPatchVersion(env: Environment, version: WhatsRunningWhereVersion) extends EnvironmentField
+case class EnvironmentWithVersion(env: Environment, version: WhatsRunningWhereVersion) extends EnvironmentField {
+  val isPatchedVersion: Boolean = version.versionNumber.asVersion.patch > 0
+}
