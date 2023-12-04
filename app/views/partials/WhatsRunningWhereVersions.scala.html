@@ -14,14 +14,14 @@
  * limitations under the License.
  *@
 
-@import play.twirl.api.TwirlFeatureImports.defining
-@import uk.gov.hmrc.cataloguefrontend.viewModels.{EnvironmentWithVersion, EnvironmentWithoutVersion, VersionViewModel}
+@import uk.gov.hmrc.cataloguefrontend.viewModels.whatsRunningWhere.{EnvironmentWithVersion, EnvironmentWithoutVersion, VersionRow}
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.viewModels.whatsRunningWhere.EnvironmentWithPatchVersion
 
-@(viewModel: VersionViewModel)
+@(rows: Seq[VersionRow])
 
 <tbody class="list">
-@viewModel.toRows.map { row =>
+@rows.map { row =>
   <tr id="row@{row.index}">
     <td class="application-name" id="row@{row.index}_application">
         <a id="link-to-info-page-for-@{row.applicationName}" href="@appRoutes.CatalogueController.service(row.applicationName)">@{row.applicationName}</a>
@@ -29,17 +29,18 @@
 
     @row.environments.map {
         case EnvironmentWithVersion(env, version) => {
-            @if(version.versionNumber.asVersion == row.latestVersion) {
-                <td id="row@{row.index}_version_@{env.asString}">@version.versionNumber.asString</td>
-            } else {
-                @defining(row.uniqueVersions.indexOf(version.versionNumber.asVersion)) { age =>
-                    @defining((1 - (age.toDouble / row.uniqueVersions.length)) * 0.75) { opacity =>
-                        <td id="row@{row.index}_version_@{env.asString}" class="wrw-version-outdated" style="--bs-bg-opacity: @opacity">
-                        @version.versionNumber.asString
-                        </td>
-                    }
-                }
-            }
+        @if(version.versionNumber.asVersion == row.latestVersion) {
+            <td id="row@{row.index}_version_@{env.asString}">@version.versionNumber.asString</td>
+        } else {
+            <td id="row@{row.index}_version_@{env.asString}" class="wrw-version-outdated" style="--bs-bg-opacity: @row.versionOpacity(version.versionNumber.asVersion)">
+                @version.versionNumber.asString
+            </td>
+         }
+        }
+        case EnvironmentWithPatchVersion(env, version) => {
+            <td id="row@{row.index}_version_@{env.asString}" class="wrw-version-outdated-patch" style="--bs-bg-opacity: 1">
+                @version.versionNumber.asString
+            </td>
         }
         case EnvironmentWithoutVersion(env) => {
             <td id="row@{row.index}_version_@{env.asString}"></td>
@@ -50,5 +51,5 @@
     </td>
   </tr>
 }
-</tbody>
+</tbody>viewModel.toRows
 

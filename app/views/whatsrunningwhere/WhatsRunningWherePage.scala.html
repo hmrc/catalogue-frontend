@@ -15,17 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, ViewMode}
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes
+@import uk.gov.hmrc.cataloguefrontend.viewModels.whatsRunningWhere.WhatsRunningWhereViewModel
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
-@import views.html.partials.{WhatsRunningWhereVersions, WhatsRunningWhereInstances}
-@import uk.gov.hmrc.cataloguefrontend.viewModels.VersionViewModel
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, ViewMode, routes}
+@import views.html.partials.{WhatsRunningWhereInstances, WhatsRunningWhereVersions}
 
 @this(viewMessages: ViewMessages)
 
 @(
-   viewModel: VersionViewModel
+   viewModel: WhatsRunningWhereViewModel
  , selectedProfileType: ProfileType
  , profileNames       : Seq[ProfileName]
  , form               : Form[_]
@@ -99,7 +97,7 @@
                 }
             </thead>
             @if(viewMode == ViewMode.Versions) {
-                @WhatsRunningWhereVersions(viewModel)
+                @WhatsRunningWhereVersions(viewModel.toVersionRow)
             } else {
                 @WhatsRunningWhereInstances(serviceDeployments, viewModel.environments, maxMemory)
             }

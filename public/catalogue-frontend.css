@@ -280,7 +280,7 @@ table.table-striped-columns-custom > :not(caption) > tr > td:nth-child(even) {
     background-color: rgba(var(--bs-warning-rgb),var(--bs-bg-opacity))!important;
 }
 
-.wrw-version-outdated-red {
+.wrw-version-outdated-patch {
     background-color: rgba(246, 124, 27, var(--bs-bg-opacity))!important;
 }
 

@@ -14,36 +14,29 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.viewModels
+package uk.gov.hmrc.cataloguefrontend.viewModels.whatsRunningWhere
 
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
 
-case class Row(applicationName: String, index: Int, environments: Seq[EnvironmentField]) {
+case class WhatsRunningWhereViewModel(whatsRunning: Seq[WhatsRunningWhere], environments: Seq[Environment]) {
 
-  val sortedVersions: Seq[Version] =
-    environments.collect { case EnvironmentWithVersion(_, version) => version.versionNumber.asVersion }.sorted
-
-  val uniqueVersions: Seq[Version] = sortedVersions.distinct
-  val latestVersion: Version = sortedVersions.reverse.head
-}
-
-
-case class VersionViewModel(whatsRunning: Seq[WhatsRunningWhere], environments: Seq[Environment]) {
-
-  val indexedRows: Seq[(WhatsRunningWhere, Int)] = whatsRunning.zipWithIndex
-
-  val toRows: Seq[Row] = indexedRows.map {
+  val toVersionRow: Seq[VersionRow] = whatsRunning.zipWithIndex.map {
     case (WhatsRunningWhere(applicationName, versions), index) =>
       val versionMap: Seq[EnvironmentField] =
         environments.map(env =>
           env -> versions.find(_.environment == env) match {
-            case (env, Some(version)) => EnvironmentWithVersion(env, version)
-            case _                    => EnvironmentWithoutVersion(env)
+            case (env, Some(version)) => {
+              if (version.versionNumber.asVersion.patch > 0) {
+                EnvironmentWithPatchVersion(env, version)
+              } else {
+                EnvironmentWithVersion(env, version)
+              }
+            }
+            case _ => EnvironmentWithoutVersion(env)
           }
         )
 
-      Row(applicationName.asString, index, versionMap)
+      VersionRow(applicationName.asString, index, versionMap)
   }
 }

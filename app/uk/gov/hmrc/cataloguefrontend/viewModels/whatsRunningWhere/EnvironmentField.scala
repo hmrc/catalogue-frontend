@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.viewModels
+package uk.gov.hmrc.cataloguefrontend.viewModels.whatsRunningWhere
 
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
@@ -23,5 +23,6 @@ trait EnvironmentField {
   val env: Environment
 }
 
-case class EnvironmentWithVersion(env: Environment, version: WhatsRunningWhereVersion) extends EnvironmentField
 case class EnvironmentWithoutVersion(env: Environment) extends EnvironmentField
+case class EnvironmentWithVersion(env: Environment, version: WhatsRunningWhereVersion) extends EnvironmentField
+case class EnvironmentWithPatchVersion(env: Environment, version: WhatsRunningWhereVersion) extends EnvironmentField
