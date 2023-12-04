@@ -20,11 +20,12 @@
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
 @import views.html.partials.{WhatsRunningWhereVersions, WhatsRunningWhereInstances}
+@import uk.gov.hmrc.cataloguefrontend.viewModels.VersionViewModel
 
 @this(viewMessages: ViewMessages)
 
-@( environments       : Seq[Environment]
- , whatsRunning       : Seq[WhatsRunningWhere]
+@(
+   viewModel: VersionViewModel
  , selectedProfileType: ProfileType
  , profileNames       : Seq[ProfileName]
  , form               : Form[_]
@@ -87,20 +88,20 @@
             <thead>
                 <th><button role="button" class="sort no-border fw-bold" data-sort="application-name">Application Name</button></th>
                 @if(viewMode == ViewMode.Versions) {
-                    @environments.map { env =>
+                    @viewModel.environments.map { env =>
                         <th class="wrw-environment-head">@env.displayString</th>
                     }
                     <th></th>
                 } else {
-                    @environments.map { env =>
+                    @viewModel.environments.map { env =>
                         <th class="wrw-environment-head"><button role="button" class="sort no-border fw-bold" data-sort="@env.asString">@env.displayString</button></th>
                     }
                 }
             </thead>
             @if(viewMode == ViewMode.Versions) {
-                @WhatsRunningWhereVersions(whatsRunning, environments)
+                @WhatsRunningWhereVersions(viewModel)
             } else {
-                @WhatsRunningWhereInstances(serviceDeployments, environments, maxMemory)
+                @WhatsRunningWhereInstances(serviceDeployments, viewModel.environments, maxMemory)
             }
         </table>
     </div>
@@ -108,7 +109,7 @@
 <script @CSPNonce.attr>
     let searchBox = document.getElementById("search");
 
-    @if((viewMode == ViewMode.Versions && whatsRunning.nonEmpty) || serviceDeployments.nonEmpty) {
+    @if((viewMode == ViewMode.Versions && viewModel.whatsRunning.nonEmpty) || serviceDeployments.nonEmpty) {
       let options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
       let serviceList = new List('whats-running-where-list', options);
       // re-search the list upon page load.

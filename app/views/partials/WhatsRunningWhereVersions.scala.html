@@ -14,54 +14,41 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController
+@import play.twirl.api.TwirlFeatureImports.defining
+@import uk.gov.hmrc.cataloguefrontend.viewModels.{EnvironmentWithVersion, EnvironmentWithoutVersion, VersionViewModel}
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 
-
-@(whatsRunning: Seq[WhatsRunningWhere]
-, environments: Seq[Environment]
-)
+@(viewModel: VersionViewModel)
 
 <tbody class="list">
-@whatsRunning.zipWithIndex.map { case (wrw, i) =>
-  <tr id="row@i">
-    <td class="application-name" id="row@{i}_application">
-        <a id="link-to-info-page-for-@{wrw.applicationName.asString}" href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
+@viewModel.toRows.map { row =>
+  <tr id="row@{row.index}">
+    <td class="application-name" id="row@{row.index}_application">
+        <a id="link-to-info-page-for-@{row.applicationName}" href="@appRoutes.CatalogueController.service(row.applicationName)">@{row.applicationName}</a>
     </td>
-    @* Highlight older version numbers, older == higher opacity (max 0.75) *@
-    @defining(environments.map(env => env -> wrw.versions.find(_.environment == env))) { versionMap =>
-      @defining(versionMap.map(_._2).collect{ case Some(v) => v.versionNumber.asVersion}.sorted) { sortedVersions =>
-        @defining(sortedVersions.distinct) { uniqueVersions =>
-          @defining(sortedVersions.reverse.head) { latestVersion =>
-              @versionMap.map { case (env, maybeVersion) =>
-                  @maybeVersion match {
-                      case Some(version) => {
-                        @if(version.versionNumber.asVersion == latestVersion) {
-                            <td id="row@{i}_version_@{env.asString}">@version.versionNumber.asString</td>
-                        } else {
-                          @defining(uniqueVersions.indexOf(version.versionNumber.asVersion)) { age =>
-                            @defining((1 - (age.toDouble / uniqueVersions.length)) * 0.75) { opacity =>
-                                <td id="row@{i}_version_@{env.asString}" class="wrw-version-outdated" style="--bs-bg-opacity: @opacity">
-                                    @version.versionNumber.asString
-                                </td>
-                            }
-                          }
-                        }
-                      }
-                      case None => {
-                          <td id="row@{i}_version_@{env.asString}"></td>
-                      }
-                  }
-              }
-          }
+
+    @row.environments.map {
+        case EnvironmentWithVersion(env, version) => {
+            @if(version.versionNumber.asVersion == row.latestVersion) {
+                <td id="row@{row.index}_version_@{env.asString}">@version.versionNumber.asString</td>
+            } else {
+                @defining(row.uniqueVersions.indexOf(version.versionNumber.asVersion)) { age =>
+                    @defining((1 - (age.toDouble / row.uniqueVersions.length)) * 0.75) { opacity =>
+                        <td id="row@{row.index}_version_@{env.asString}" class="wrw-version-outdated" style="--bs-bg-opacity: @opacity">
+                        @version.versionNumber.asString
+                        </td>
+                    }
+                }
+            }
         }
-      }
+        case EnvironmentWithoutVersion(env) => {
+            <td id="row@{row.index}_version_@{env.asString}"></td>
+        }
     }
     <td>
-        <a id="link-to-deployment-timeline-for-@{wrw.applicationName.asString}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
+        <a id="link-to-deployment-timeline-for-@{row.applicationName}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(row.applicationName) "><span class="glyphicon glyphicon-stats"></span> </a>
     </td>
   </tr>
 }
 </tbody>
+

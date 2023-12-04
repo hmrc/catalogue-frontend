@@ -23,6 +23,7 @@ import play.api.i18n.Messages.implicitMessagesProviderToMessages
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.viewModels.VersionViewModel
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.whatsrunningwhere.WhatsRunningWherePage
@@ -82,7 +83,10 @@ class WhatsRunningWhereController @Inject() (
       releases     <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
       environments =  distinctEnvironments(releases)
       profileNames =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-    } yield page(environments, releases, selectedProfileType, profileNames, form, Seq.empty, config.maxMemoryAmount, selectedViewMode)
+    } yield {
+      val viewModel = VersionViewModel(releases, environments)
+      page(viewModel, selectedProfileType, profileNames, form, Seq.empty, config.maxMemoryAmount, selectedViewMode)
+    }
 
 
   private def instancesPage(
@@ -99,7 +103,10 @@ class WhatsRunningWhereController @Inject() (
       environments       =  distinctEnvironments(releases)
       serviceDeployments <- service.allDeploymentConfigs(releases)
       profileNames       =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-    } yield page(environments, Seq.empty, selectedProfileType, profileNames, form, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
+    } yield {
+      val viewModel = VersionViewModel(releases, environments)
+      page(viewModel, selectedProfileType, profileNames, form, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
+    }
 }
 
 case class WhatsRunningWhereFilter(
