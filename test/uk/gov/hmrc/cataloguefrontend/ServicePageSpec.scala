@@ -18,11 +18,12 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
+import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.JsonData._
 import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositories._
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunningWhere}
 
 import scala.io.Source
 import scala.jdk.CollectionConverters._
@@ -48,7 +49,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/service-metrics/service-1/collections", willRespondWith = (200, Some("""[{"database": "database-1", "service": "service-1", "sizeBytes": 1024, "date": "2023-11-06", "collection": "collection-1", "environment": "qa", "queryTypes": []}]""")))
   }
 
-  implicit val wrwf = JsonCodecs.whatsRunningWhereReads
+  implicit val wrwf: Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
 
   "A service page" should {
     "return a 404 when a Library is viewed as a service" in {
@@ -180,7 +181,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         val document = Jsoup.parse(response.body)
         document.select("#production-telemetry").eachText().asScala.mkString should not include "Slow Running Queries"
       }
-    } 
+    }
   }
 
   def readFile(jsonFilePath: String): String = {

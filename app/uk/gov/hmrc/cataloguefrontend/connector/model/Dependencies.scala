@@ -48,20 +48,21 @@ object BobbyRuleViolation {
     )(BobbyRuleViolation.apply _)
   }
 
-  implicit val ordering = new Ordering[BobbyRuleViolation] {
-    // ordering by rule which is most strict first
-    def compare(x: BobbyRuleViolation, y: BobbyRuleViolation): Int = {
-      implicit val vo: Ordering[Version] = Version.ordering.reverse
-      implicit val bo: Ordering[Boolean] = Ordering.Boolean.reverse
-      implicit val ldo: Ordering[LocalDate] = new Ordering[LocalDate] {
-        def compare(x: LocalDate, y: LocalDate) = x.compareTo(y)
-      }.reverse
-      (x.range.upperBound.map(_.version), x.range.upperBound.map(_.inclusive), x.from)
-        .compare(
-          (y.range.upperBound.map(_.version), y.range.upperBound.map(_.inclusive), y.from)
-        )
+  implicit val ordering: Ordering[BobbyRuleViolation] =
+    new Ordering[BobbyRuleViolation] {
+      // ordering by rule which is most strict first
+      def compare(x: BobbyRuleViolation, y: BobbyRuleViolation): Int = {
+        implicit val vo: Ordering[Version] = Version.ordering.reverse
+        implicit val bo: Ordering[Boolean] = Ordering.Boolean.reverse
+        implicit val ldo: Ordering[LocalDate] = new Ordering[LocalDate] {
+          def compare(x: LocalDate, y: LocalDate) = x.compareTo(y)
+        }.reverse
+        (x.range.upperBound.map(_.version), x.range.upperBound.map(_.inclusive), x.from)
+          .compare(
+            (y.range.upperBound.map(_.version), y.range.upperBound.map(_.inclusive), y.from)
+          )
+      }
     }
-  }
 }
 
 

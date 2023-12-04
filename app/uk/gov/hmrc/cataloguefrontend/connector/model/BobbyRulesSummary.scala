@@ -32,7 +32,7 @@ case class HistoricBobbyRulesSummary(
 )
 
 private object DataFormat {
-  private implicit val brvf = BobbyRule.reads
+  private implicit val brvf: Reads[BobbyRule] = BobbyRule.reads
 
   private def f[A](map: List[(JsValue, Map[String, A])]): Map[(BobbyRule, SlugInfoFlag), A] =
     map.flatMap {

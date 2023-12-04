@@ -44,10 +44,10 @@ class ServiceConfigsConnector @Inject() (
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
   private val logger = Logger(getClass)
 
-  implicit val cber = ConfigByEnvironment.reads
-  implicit val cwr  = ConfigWarning.reads
-  implicit val cser = ConfigSourceEntries.reads
-  implicit val srr  = ServiceRelationships.reads
+  implicit val cber: Reads[ConfigByEnvironment]  = ConfigByEnvironment.reads
+  implicit val cwr : Reads[ConfigWarning]        = ConfigWarning.reads
+  implicit val cser: Reads[ConfigSourceEntries]  = ConfigSourceEntries.reads
+  implicit val srr : Reads[ServiceRelationships] = ServiceRelationships.reads
 
   def configByEnv(
     service     : String

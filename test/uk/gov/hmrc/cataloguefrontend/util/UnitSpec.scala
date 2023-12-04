@@ -21,8 +21,6 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import scala.concurrent.duration.DurationInt
-
 trait UnitSpec
   extends AnyWordSpecLike
      with Matchers

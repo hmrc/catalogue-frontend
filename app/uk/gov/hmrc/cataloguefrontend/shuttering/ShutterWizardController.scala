@@ -22,7 +22,7 @@ import cats.syntax.all._
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.i18n.Messages
-import play.api.libs.json.{Json, Reads, Writes}
+import play.api.libs.json.{Format, Json, Reads, Writes}
 import play.api.mvc.{MessagesControllerComponents, Request, Result}
 import play.twirl.api.Html
 
@@ -74,10 +74,10 @@ class ShutterWizardController @Inject() (
     sessionIdKey     = sessionIdKey
   )
 
-  implicit val s0f  = step0OutFormats
-  implicit val s1f  = step1OutFormats
-  implicit val s2af = step2aOutFormats
-  implicit val s2bf = step2bOutFormats
+  implicit val s0f : Format[Step0Out]  = step0OutFormats
+  implicit val s1f : Format[Step1Out]  = step1OutFormats
+  implicit val s2af: Format[Step2aOut] = step2aOutFormats
+  implicit val s2bf: Format[Step2bOut] = step2bOutFormats
 
   def shutterPermission(shutterType: ShutterType)(serviceName: String): Predicate =
     Predicate.Permission(Resource.from("shutter-api", s"${shutterType.asString}/$serviceName"), IAAction("SHUTTER"))

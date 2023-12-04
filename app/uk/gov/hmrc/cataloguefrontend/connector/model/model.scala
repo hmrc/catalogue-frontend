@@ -29,10 +29,11 @@ object TeamName {
   lazy val format: Format[TeamName] =
     Format.of[String].inmap(TeamName.apply, unlift(TeamName.unapply))
 
-  implicit val ordering = new Ordering[TeamName] {
-    def compare(x: TeamName, y: TeamName): Int =
-      x.asString.compare(y.asString)
-  }
+  implicit val ordering: Ordering[TeamName] =
+    new Ordering[TeamName] {
+      def compare(x: TeamName, y: TeamName): Int =
+        x.asString.compare(y.asString)
+    }
 
   implicit val pathBindable: PathBindable[TeamName] =
     new PathBindable[TeamName] {
@@ -76,8 +77,8 @@ case class RepositoryModules(
 
 object RepositoryModules {
   val reads: Reads[RepositoryModules] = {
-    implicit val dr  = Dependency.reads
-    implicit val rmr = RepositoryModule.reads
+    implicit val dr : Reads[Dependency]       = Dependency.reads
+    implicit val rmr: Reads[RepositoryModule] = RepositoryModule.reads
     ( (__ \ "name"             ).read[String]
     ~ (__ \ "version"          ).readNullable[Version](Version.format)
     ~ (__ \ "dependenciesBuild").read[Seq[Dependency]]
@@ -100,9 +101,9 @@ case class RepositoryModule(
 
 object RepositoryModule {
   val reads: Reads[RepositoryModule] = {
-    implicit val bf = BobbyRuleViolation.format
-    implicit val dr = Dependency.reads
-    implicit val vf  = Version.format
+    implicit val bf: Reads[BobbyRuleViolation] = BobbyRuleViolation.format
+    implicit val dr: Reads[Dependency]         = Dependency.reads
+    implicit val vf: Reads[Version]            = Version.format
     ( (__ \ "name"                ).read[String]
     ~ (__ \ "group"               ).read[String]
     ~ (__ \ "dependenciesCompile" ).read[Seq[Dependency]]

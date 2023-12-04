@@ -20,17 +20,22 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 import org.mockito.MockitoSugar
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
 
-class ShutterServiceSpec extends AnyWordSpec with MockitoSugar with Matchers {
+class ShutterServiceSpec
+  extends AnyWordSpec
+     with MockitoSugar
+     with Matchers
+     with ScalaFutures
+     with IntegrationPatience {
 
   val mockShutterStates = Seq(
       ShutterState(
@@ -89,11 +94,11 @@ class ShutterServiceSpec extends AnyWordSpec with MockitoSugar with Matchers {
       implicit val hc = new HeaderCarrier()
 
       when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production))
-        .thenReturn(Future(mockShutterStates))
+        .thenReturn(Future.successful(mockShutterStates))
       when(boot.mockShutterConnector.latestShutterEvents(ShutterType.Frontend, Environment.Production))
-        .thenReturn(Future(mockEvents))
+        .thenReturn(Future.successful(mockEvents))
 
-      val Seq(a,b,c) = Await.result(boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production), Duration(10, "seconds"))
+      val Seq(a,b,c) = boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production).futureValue
 
       a.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       b.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)

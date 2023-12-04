@@ -33,7 +33,7 @@ trait WireMockEndpoints extends WireMockSupport {
     serviceEndpoint(RequestMethod.POST, "/internal-auth/auth", willRespondWith = (403, None))
 
   def setupChangePrototypePasswordAuthEndpoint(hasAuth: Boolean): Unit = {
-    val (status, body) = if(hasAuth) (200, Some("""{ "retrievals": [ true ] }""")) else (403, None)
+    val (status, body) = if (hasAuth) (200, Some("""{ "retrievals": [ true ] }""")) else (403, None)
     serviceEndpoint(RequestMethod.POST, "/internal-auth/auth", willRespondWith = (status, body))
   }
 

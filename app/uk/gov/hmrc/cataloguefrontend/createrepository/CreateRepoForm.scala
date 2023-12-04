@@ -157,7 +157,7 @@ object CreateRepoConstraints {
       mkConstraint("constraints.repoNameSlashCheck"     )(constraint = slashValidation     , error = "Repository name cannot include forward slashes. You do not need to specify the hmrc organisation"),
       mkConstraint("constraints.repoNameLengthCheck"    )(constraint = lengthValidation    , error = s"Repository name can have a maximum of $length characters"),
       mkConstraint("constraints.repoNameCaseCheck"      )(constraint = lowercaseValidation , error = "Repository name should only contain lowercase characters"),
-      mkConstraint("constraints.repoNameSuffixCheck"    )(constraint = suffixValidation    , error = s"Repository name must end with ${if(suffix.nonEmpty) suffix.get else ""}")
+      mkConstraint("constraints.repoNameSuffixCheck"    )(constraint = suffixValidation    , error = s"Repository name must end with ${if (suffix.nonEmpty) suffix.get else ""}")
     )
   }
 }

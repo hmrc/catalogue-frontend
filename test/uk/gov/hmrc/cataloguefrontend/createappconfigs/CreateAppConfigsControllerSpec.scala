@@ -351,8 +351,9 @@ class CreateAppConfigsControllerSpec
       "environmentsToHideByDefault" -> List("integration", "development")
     )
 
-    implicit val hc       = HeaderCarrier()
-    implicit val mcc      = app.injector.instanceOf[MessagesControllerComponents]
+    implicit val hc : HeaderCarrier                = HeaderCarrier()
+    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+
     val mockCACView       = app.injector.instanceOf[CreateAppConfigsPage]
     val mockTRConnector   = mock[TeamsAndRepositoriesConnector]
     val mockGHConnector   = mock[GitHubProxyConnector]

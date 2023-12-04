@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import play.api.Configuration
+import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
@@ -42,8 +43,8 @@ class DeploymentHistoryControllerSpec
   import ExecutionContext.Implicits.global
 
   private trait Fixture {
+    implicit val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
-    implicit val mcc                             = stubMessagesControllerComponents()
     lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     lazy val mockedServiceDependenciesConnector  = mock[ServiceDependenciesConnector]
     lazy val mockedReleasesConnector             = mock[ReleasesConnector]

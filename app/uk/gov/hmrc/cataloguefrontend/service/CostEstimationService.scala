@@ -187,9 +187,9 @@ object CostEstimationService {
   }
 
   object DeploymentConfig {
-    implicit val ef  = environmentFormat
-    implicit val ds  = DeploymentSize.reads
-    implicit val zf  = Zone.format
+    implicit val ef: Reads[Environment]    = environmentFormat
+    implicit val ds: Reads[DeploymentSize] = DeploymentSize.reads
+    implicit val zf: Reads[Zone]           = Zone.format
 
     def apply(
       slots:       Int,
@@ -204,10 +204,10 @@ object CostEstimationService {
       )
 
     val reads: Reads[DeploymentConfig] =
-      ( (__ \ "slots").read[Int]
-      ~ (__ \ "instances").read[Int]
+      ( (__ \ "slots"      ).read[Int]
+      ~ (__ \ "instances"  ).read[Int]
       ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "zone").read[Zone]
+      ~ (__ \ "zone"       ).read[Zone]
       )(DeploymentConfig.apply(_, _, _, _))
   }
 

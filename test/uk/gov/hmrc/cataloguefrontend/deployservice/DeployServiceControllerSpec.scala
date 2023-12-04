@@ -271,7 +271,8 @@ class DeployServiceControllerSpec
   )
 
   private trait Setup {
-    implicit val mcc                      = app.injector.instanceOf[MessagesControllerComponents]
+    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+
     val mockAuthStubBehaviour             = mock[StubBehaviour]
     val mockBuildJobsConnector            = mock[BuildJobsConnector]
     val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]

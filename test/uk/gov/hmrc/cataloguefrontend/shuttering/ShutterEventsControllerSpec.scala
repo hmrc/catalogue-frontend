@@ -52,7 +52,8 @@ class ShutterEventsControllerSpec
   import ShutterEventsControllerSpec._
 
   private trait Fixture {
-    implicit val mcc        = app.injector.instanceOf[MessagesControllerComponents]
+    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+
     val connector           = mock[ShutterConnector]
     val authStubBehaviour   = mock[StubBehaviour]
     val routeRulesConnector = mock[RouteRulesConnector]
@@ -62,7 +63,8 @@ class ShutterEventsControllerSpec
     when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
       .thenReturn(Future.unit)
 
-    when(routeRulesConnector.frontendServices()(any[HeaderCarrier])).thenReturn(Future.successful(Seq.empty[String]))
+    when(routeRulesConnector.frontendServices()(any[HeaderCarrier]))
+      .thenReturn(Future.successful(Seq.empty[String]))
 
     def stubConnectorSuccess(forFilter: ShutterEventsFilter, returnEvents: Seq[ShutterStateChangeEvent] = Seq.empty): Unit =
       when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(any[HeaderCarrier]))
