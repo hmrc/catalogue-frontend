@@ -20,8 +20,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.DateHelper._
-import uk.gov.hmrc.cataloguefrontend.JsonData._
-import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositories._
+import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, TeamsAndRepositoriesJsonData}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunningWhere}
 
@@ -35,16 +34,16 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     setupAuthEndpoint()
     setupEnableBranchProtectionAuthEndpoint()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/service-configs/frontend-route/service-1",    willRespondWith = (200, Some(serviceConfigsServiceService1)))
-    serviceEndpoint(GET, "/service-configs/frontend-route/service-name", willRespondWith = (200, Some(serviceConfigsServiceService1)))
-    serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(jenkinsData)))
+    serviceEndpoint(GET, "/service-configs/frontend-route/service-1",    willRespondWith = (200, Some(JsonData.serviceConfigsServiceService1)))
+    serviceEndpoint(GET, "/service-configs/frontend-route/service-name", willRespondWith = (200, Some(JsonData.serviceConfigsServiceService1)))
+    serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsData)))
     serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=latest",willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=0.0.1", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/service-configs/service-relationships/service-1",    willRespondWith = (200, Some(serviceRelationships)))
-    serviceEndpoint(GET, "/service-configs/service-relationships/service-name", willRespondWith = (200, Some(serviceRelationships)))
+    serviceEndpoint(GET, "/service-configs/service-relationships/service-1",    willRespondWith = (200, Some(JsonData.serviceRelationships)))
+    serviceEndpoint(GET, "/service-configs/service-relationships/service-name", willRespondWith = (200, Some(JsonData.serviceRelationships)))
     serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=repo1", willRespondWith = (200, Some(deploymentConfigsService1)))
-    serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=service-1", willRespondWith = (200, Some(deploymentConfigsService1)))
+    serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=repo1", willRespondWith = (200, Some(JsonData.deploymentConfigsService1)))
+    serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=service-1", willRespondWith = (200, Some(JsonData.deploymentConfigsService1)))
     serviceEndpoint(GET, "/service-metrics/service-1/non-performant-queries", willRespondWith = (200, Some("""[{"service": "service-1", "environment": "qa", "queryTypes": ["Slow Running"]}]""")))
     serviceEndpoint(GET, "/service-metrics/service-1/collections", willRespondWith = (200, Some("""[{"database": "database-1", "service": "service-1", "sizeBytes": 1024, "date": "2023-11-06", "collection": "collection-1", "environment": "qa", "queryTypes": []}]""")))
   }
@@ -53,7 +52,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
   "A service page" should {
     "return a 404 when a Library is viewed as a service" in {
-      serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (200, Some(libraryDetailsData)))
+      serviceEndpoint(GET, "/api/v2/repositories/serv", willRespondWith = (200, Some(JsonData.libraryDetailsData)))
 
       val response = wsClient.url(s"http://localhost:$port/service/serv").withAuthToken("Token token").get().futureValue
       response.status shouldBe 404
@@ -102,7 +101,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
   case class ServicePageBehaviour(serviceName: String, repoName: String) {
     trait Setup {
       if (serviceName == repoName)
-        serviceEndpoint(GET, s"/api/v2/repositories/$serviceName", willRespondWith = (200, Some(repositoryData(repoName))))
+        serviceEndpoint(GET, s"/api/v2/repositories/$serviceName", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData(repoName))))
       else {
         serviceEndpoint(GET, s"/api/v2/repositories/$serviceName", willRespondWith = (404, None))
         val configRsp = s"""{
@@ -112,14 +111,14 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         serviceEndpoint(GET, s"/service-configs/config-by-env/$serviceName?latest=true",  willRespondWith = (200, Some(configRsp)))
         serviceEndpoint(GET, s"/service-configs/config-by-env/$serviceName?latest=false", willRespondWith = (200, Some(configRsp)))
 
-        serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (200, Some(repositoryData(repoName))))
+        serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData(repoName))))
         serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=0.0.1" , willRespondWith = (200, Some("[]")))
         serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some("[]")))
       }
     }
 
     "show the teams owning the service with github, ci and environment links and info box" in new Setup {
-      serviceEndpoint(GET, s"/api/jenkins-jobs/$repoName", willRespondWith = (200, Some(serviceJenkinsBuildData)))
+      serviceEndpoint(GET, s"/api/jenkins-jobs/$repoName", willRespondWith = (200, Some(JsonData.serviceJenkinsBuildData)))
 
       serviceEndpoint(
         GET,

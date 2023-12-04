@@ -24,8 +24,8 @@
 @import views.html.partials.TeamNames
 
 @this(
-  viewMessages       : ViewMessages,
-  teamNames          : TeamNames
+  viewMessages: ViewMessages,
+  teamNames   : TeamNames
 )
 
 @(form        : Form[_],
@@ -106,7 +106,6 @@
                     }
                         <td class="name">@report.name</td>
                         <td class="teams">
-                            @* TODO: change the report model to use TeamName types instead of String, then this mapping can be removed *@
                             @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
                         </td>
                         <td class="recommendations text-center">@report.comments.size</td>
@@ -116,7 +115,6 @@
                     <tr id="collapsible-area-@report.name" class="collapse multi-collapse @if(report.comments.isEmpty) {d-none}">
                         <td class="d-none name"><a href="@report.name">@report.name</a></td>
                         <td class="d-none teams">
-                            @* TODO: change the report model to use TeamName types instead of String, then this mapping can be removed *@
                             @teamNames(report.teamNames.map(TeamName.apply), s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(report.name)}#teams")
                         </td>
                         <td class="d-none recommendations">@report.comments.size<td>
@@ -226,4 +224,3 @@
       });
     });
 </script>
-

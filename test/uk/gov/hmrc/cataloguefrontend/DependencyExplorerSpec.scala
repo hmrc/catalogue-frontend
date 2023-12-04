@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.scalatest.BeforeAndAfter
-import uk.gov.hmrc.cataloguefrontend.jsondata.{ServiceDependencies, TeamsAndRepositories}
+import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, ServiceDependenciesJsonData, TeamsAndRepositoriesJsonData}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
@@ -31,8 +31,8 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
 
   "Dependency Explorer Page" should {
     "show search fields on landing on this page with no query" in {
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositories.teams)))
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesTeamAData)))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
       serviceEndpoint(GET, "/api/groupArtefacts", willRespondWith = (200, Some(JsonData.emptyList)))
       serviceEndpoint(GET, "/pr-commenter/reports", willRespondWith = (200, Some(JsonData.emptyList)))
 
@@ -47,11 +47,11 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
     }
 
     "show teams correctly on results page" in {
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositories.teams)))
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesTeamAData)))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
       serviceEndpoint(GET, "/pr-commenter/reports", willRespondWith = (200, Some(JsonData.emptyList)))
-      serviceEndpoint(GET, "/api/groupArtefacts", willRespondWith = (200, Some(ServiceDependencies.groupArtefactsFromHMRC)))
-      serviceEndpoint(GET, "/api/serviceDeps?flag=latest&group=uk.gov.hmrc&artefact=bootstrap-backend-play-28&versionRange=%5B0.0.0,%5D&scope=compile", willRespondWith = (200,Some(ServiceDependencies.serviceDepsForBootstrapBackendPlay) ))
+      serviceEndpoint(GET, "/api/groupArtefacts", willRespondWith = (200, Some(ServiceDependenciesJsonData.groupArtefactsFromHMRC)))
+      serviceEndpoint(GET, "/api/serviceDeps?flag=latest&group=uk.gov.hmrc&artefact=bootstrap-backend-play-28&versionRange=%5B0.0.0,%5D&scope=compile", willRespondWith = (200,Some(ServiceDependenciesJsonData.serviceDepsForBootstrapBackendPlay) ))
 
       val response = wsClient.url(s"http://localhost:$port/dependencyexplorer/results?group=uk.gov.hmrc&artefact=bootstrap-backend-play-28&versionRange=[0.0.0%2C]&asCsv=false&team=&flag=latest&scope[]=compile").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -65,7 +65,7 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
       document.select("#search-results").select("tbody tr").get(0).select("td.teams a").text() shouldBe "teamA"
       document.select("#search-results").select("tbody tr").get(0).select("td.teams a").attr("href") shouldBe "/teams/teamA"
       document.select("#search-results").select("tbody tr").get(1).select("td.teams a").text() shouldBe "Shared by 9 teams"
-      document.select("#search-results").select("tbody tr").get(1).select("td.teams a").attr("href") shouldBe "/service/ankh-morpork-the-shades#teams"
+      document.select("#search-results").select("tbody tr").get(1).select("td.teams a").attr("href") shouldBe "/service/teams-amd-repositories#teams"
     }
   }
 }
