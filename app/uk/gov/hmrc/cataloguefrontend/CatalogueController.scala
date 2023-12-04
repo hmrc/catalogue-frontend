@@ -89,7 +89,8 @@ class CatalogueController @Inject() (
 
   private val logger = Logger(getClass)
 
-  private def notFound(implicit request: Request[_]) = NotFound(error_404_template())
+  private def notFound(implicit request: Request[_]) =
+    NotFound(error_404_template())
 
   def index(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
@@ -148,7 +149,7 @@ class CatalogueController @Inject() (
       repositoryName       =  repositoryDetails.name
       jenkinsJobs          <- teamsAndRepositoriesConnector.lookupLatestBuildJobs(repositoryName)
       database             <- serviceMetricsConnector.getCollections(serviceName).map(_.headOption.map(_.database))
-      nonPerformantQueries <- if (database.isDefined) 
+      nonPerformantQueries <- if (database.isDefined)
         serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
         else
           Future.successful(Seq.empty)

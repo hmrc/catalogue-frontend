@@ -23,7 +23,6 @@ import org.scalatest.wordspec.AnyWordSpec
 class EnvironmentQueryStringBindableSpec extends AnyWordSpec with Matchers with OptionValues {
 
   "an Environment QueryString parameter" should {
-
     "be bound to an Environment value when valid" in {
       Environment.values.foreach { environment =>
         val params = Map("environment" -> Seq(environment.asString))

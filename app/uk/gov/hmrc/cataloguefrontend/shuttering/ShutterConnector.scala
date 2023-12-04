@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -38,8 +38,8 @@ class ShutterConnector @Inject() (
 
   private val baseUrl = serviceConfig.baseUrl("shutter-api")
 
-  private implicit val ssr = ShutterState.reads
-  private implicit val ser = ShutterEvent.reads
+  private implicit val ssr: Reads[ShutterState] = ShutterState.reads
+  private implicit val ser: Reads[ShutterEvent] = ShutterEvent.reads
 
   /**
     * GET

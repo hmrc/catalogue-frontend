@@ -44,7 +44,7 @@ class HealthIndicatorsService @Inject() (
     for {
       repoToTeams        <- eventualTeamLookUp
       indicators         <- eventualIndicators
-      filteredIndicators = indicators.filter(ind => repoNameFilter.fold(true)(name => ind.repoName.toLowerCase.contains(name.toLowerCase)))
+      filteredIndicators =  indicators.filter(ind => repoNameFilter.fold(true)(name => ind.repoName.toLowerCase.contains(name.toLowerCase)))
     } yield filteredIndicators.map { i =>
       IndicatorsWithTeams(
         i.repoName,

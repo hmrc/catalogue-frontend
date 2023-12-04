@@ -85,12 +85,13 @@ class ServiceCommissioningStatusController @Inject() (
                               allChecks <- serviceCommissioningStatusConnector.allChecks()
                             } yield BadRequest(searchServiceCommissioningStatusPage(formWithErrors, allTeams, allChecks))
         , formObject     => for {
-                              allTeams  <- teamsAndRepositoriesConnector.allTeams()
-                              allChecks <- serviceCommissioningStatusConnector.allChecks()
-                              results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType)
-                              checks    =  if(formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
+                                allTeams  <- teamsAndRepositoriesConnector.allTeams()
+                                allChecks <- serviceCommissioningStatusConnector.allChecks()
+                                results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType)
+                                checks    =  if (formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
 
-                          } yield if (formObject.asCsv) {
+                            } yield
+                              if (formObject.asCsv) {
                                 val rows   = toRows(allChecks.filter { case (title, _) => checks.contains(title) }, formObject.environments, results)
                                 val csv    = CsvUtils.toCsv(rows)
                                 val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
@@ -98,9 +99,8 @@ class ServiceCommissioningStatusController @Inject() (
                                   header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"commissioning-state.csv\"")),
                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                                 )
-                            } else {
-                              Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(results)))
-                            }
+                              } else
+                                Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(results)))
         )
     }
 
@@ -162,10 +162,10 @@ object SearchCommissioning {
     checkType: String
   )
 
-  lazy val teamForm: Form[TeamCommissioningForm] = Form(
-    Forms.mapping(
-      "checkType" -> Forms.text
-    )(TeamCommissioningForm.apply)(TeamCommissioningForm.unapply)
-  )
-
+  lazy val teamForm: Form[TeamCommissioningForm] =
+    Form(
+      Forms.mapping(
+        "checkType" -> Forms.text
+      )(TeamCommissioningForm.apply)(TeamCommissioningForm.unapply)
+    )
 }

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import org.mockito.MockitoSugar
+import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
@@ -48,7 +49,7 @@ class PrototypesSpec extends UnitSpec with MockitoSugar {
     }
   }
 
-  implicit private val mcc = stubMessagesControllerComponents()
+  implicit private val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
   private lazy val authStubBehaviour = mock[StubBehaviour]
   private lazy val repositoriesController = new RepositoriesController(

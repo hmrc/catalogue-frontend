@@ -108,16 +108,16 @@ class VulnerabilitiesController @Inject() (
         validForm      =>
           for {
             sortedTeams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-            teamNames     = sortedTeams.map(_.name.asString)
+            teamNames    =  sortedTeams.map(_.name.asString)
             counts       <- vulnerabilitiesConnector.timelineCounts(
-              service        = validForm.service,
-              team           = validForm.team,
-              vulnerability  = validForm.vulnerability,
-              curationStatus = validForm.curationStatus,
-              from           = validForm.from,
-              to             = validForm.to
-            )
-            sortedCounts  = counts.sortBy(_.weekBeginning)
+                              service        = validForm.service,
+                              team           = validForm.team,
+                              vulnerability  = validForm.vulnerability,
+                              curationStatus = validForm.curationStatus,
+                              from           = validForm.from,
+                              to             = validForm.to
+                            )
+            sortedCounts =  counts.sortBy(_.weekBeginning)
           } yield Ok(vulnerabilitiesTimelinePage(teams = teamNames, result = sortedCounts, form.fill(validForm)))
       )
   }
@@ -160,9 +160,10 @@ object VulnerabilitiesCountFilter {
       "service"     -> optional(text),
       "team"        -> optional(text),
       "environment" -> optional(text)
-        .transform[Option[Environment]](
-          o => Environment.parse(o.getOrElse(Environment.Production.asString)),
-          _.map(_.asString))
+                         .transform[Option[Environment]](
+                           o => Environment.parse(o.getOrElse(Environment.Production.asString)),
+                           _.map(_.asString)
+                         )
     )(VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
   )
 }
@@ -193,10 +194,10 @@ object VulnerabilitiesTimelineFilter {
         "vulnerability" -> optional(text),
         "curationStatus"-> optional(text),
         "from"          -> optional(Forms.localDate(dateFormat))
-                                .transform[LocalDate](opt => opt.getOrElse(defaultFromTime()), date => Some(date)),
+                                .transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply),
                                 //Default to 6 months ago if loading initial page/value not set
         "to"            -> optional(Forms.localDate(dateFormat))
-                                .transform[LocalDate](opt => opt.getOrElse(defaultToTime()), date => Some(date)),
+                                .transform[LocalDate](_.getOrElse(defaultToTime()), Some.apply),
                                 //Default to now if loading initial page/value not set
         "showDelta"     ->  boolean
       )(VulnerabilitiesTimelineFilter.apply)(VulnerabilitiesTimelineFilter.unapply)
@@ -204,4 +205,3 @@ object VulnerabilitiesTimelineFilter {
     )
   }
 }
-

@@ -32,7 +32,6 @@ class PrCommenterSpec extends UnitSpec with BeforeAndAfter with FakeApplicationB
 
   "PrCommenter Page" should {
     "show page with some results" in {
-
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositories.teams)))
       serviceEndpoint(GET, "/api/v2/repositories?name=11-seven-teams-repo", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesSharedRepoSearchResult)))
       serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesTeamAData)))
@@ -50,7 +49,6 @@ class PrCommenterSpec extends UnitSpec with BeforeAndAfter with FakeApplicationB
       document.select("tbody.list tr").get(0).select("td.teams div.repo-team").attr("title") shouldBe "teamA\nteamB\nteamC\nteamD\nteamE\nteamF\nteamG\nteamH"
       document.select("tbody.list tr").get(0).select("td.teams div.repo-team a").attr("href") shouldBe "/repositories/11-seven-teams-repo#teams"
       document.select("tbody.list tr").get(0).select("td.teams div.repo-team a").text() shouldBe "Shared by 9 teams"
-
     }
   }
 }

@@ -34,7 +34,7 @@ class PrCommenterController @Inject() (
   prCommenterConnector         : PrCommenterConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   recommendationsPage          : PrCommenterRecommendationsPage,
-  override val auth: FrontendAuthComponents
+  override val auth            : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -42,7 +42,11 @@ class PrCommenterController @Inject() (
 
   import play.api.data.{Form, Forms}
 
-  case class Filter(team: Option[String], repo: Option[String], commentType: Option[String])
+  case class Filter(
+    team       : Option[String],
+    repo       : Option[String],
+    commentType: Option[String]
+  )
 
   lazy val form: Form[Filter] = Form(
     Forms.mapping(

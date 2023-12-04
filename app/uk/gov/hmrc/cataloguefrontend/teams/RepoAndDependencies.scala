@@ -19,4 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.teams
 import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 import uk.gov.hmrc.cataloguefrontend.connector.model.Dependencies
 
-case class RepoAndDependencies(repo: GitRepository, dependencies: Dependencies )
+case class RepoAndDependencies(
+  repo        : GitRepository,
+  dependencies: Dependencies
+)

@@ -31,7 +31,6 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
 
   "Dependency Explorer Page" should {
     "show search fields on landing on this page with no query" in {
-
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositories.teams)))
       serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesTeamAData)))
       serviceEndpoint(GET, "/api/groupArtefacts", willRespondWith = (200, Some(JsonData.emptyList)))
@@ -48,7 +47,6 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
     }
 
     "show teams correctly on results page" in {
-
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositories.teams)))
       serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositories.repositoriesTeamAData)))
       serviceEndpoint(GET, "/pr-commenter/reports", willRespondWith = (200, Some(JsonData.emptyList)))

@@ -20,8 +20,11 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 
 final case class Role(asString: String) {
-  def displayName = asString.split("_").map(_.capitalize).mkString(" ")
-  def isUser: Boolean = asString == "user"
+  def displayName: String =
+    asString.split("_").map(_.capitalize).mkString(" ")
+
+  def isUser: Boolean =
+    asString == "user"
 }
 
 object Role {
@@ -46,9 +49,14 @@ object Member {
 }
 
 final case class SlackInfo(url: String) {
-  val name: String = url.split("/").lastOption.getOrElse(url)
-  val hasValidUrl: Boolean = url.startsWith("http://") || url.startsWith("https://")
-  val hasValidName: Boolean = "^[A-Z0-9]+$".r.findFirstIn(name).isEmpty
+  val name: String =
+    url.split("/").lastOption.getOrElse(url)
+
+  val hasValidUrl: Boolean =
+    url.startsWith("http://") || url.startsWith("https://")
+
+  val hasValidName: Boolean =
+    "^[A-Z0-9]+$".r.findFirstIn(name).isEmpty
 }
 
 object SlackInfo {

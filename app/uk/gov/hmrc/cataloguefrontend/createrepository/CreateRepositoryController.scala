@@ -30,12 +30,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CreateRepositoryController @Inject()(
-   override val auth            : FrontendAuthComponents,
-   override val mcc             : MessagesControllerComponents,
-   createRepositoryPage         : CreateServiceRepositoryPage,
-   createPrototypePage          : CreatePrototypeRepositoryPage,
-   createTestRepositoryPage     : CreateTestRepositoryPage,
-   buildDeployApiConnector      : BuildDeployApiConnector
+   override val auth        : FrontendAuthComponents,
+   override val mcc         : MessagesControllerComponents,
+   createRepositoryPage     : CreateServiceRepositoryPage,
+   createPrototypePage      : CreatePrototypeRepositoryPage,
+   createTestRepositoryPage : CreateTestRepositoryPage,
+   buildDeployApiConnector  : BuildDeployApiConnector
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -50,7 +50,7 @@ class CreateRepositoryController @Inject()(
   def createServiceRepositoryLanding(): Action[AnyContent] = {
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createServiceRepositoryLanding(),
-      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
       val userTeams = cleanseUserTeams(request.retrieval)
       Ok(createRepositoryPage(CreateServiceRepoForm.form, userTeams, CreateServiceRepositoryType.values))
@@ -60,7 +60,7 @@ class CreateRepositoryController @Inject()(
   def createServiceRepository(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createServiceRepositoryLanding(),
-      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ).async { implicit request =>
       CreateServiceRepoForm.form.bindFromRequest().fold(
         formWithErrors => {
@@ -70,7 +70,7 @@ class CreateRepositoryController @Inject()(
         validForm => {
           import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
           for {
-            _ <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
+            _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
             res <- buildDeployApiConnector.createServiceRepository(validForm)
           } yield {
             res match {
@@ -86,7 +86,7 @@ class CreateRepositoryController @Inject()(
   def createPrototypeRepositoryLanding(): Action[AnyContent] = {
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createPrototypeRepositoryLanding(),
-      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
       val userTeams = cleanseUserTeams(request.retrieval)
       Ok(createPrototypePage(CreateServiceRepoForm.form, userTeams))
@@ -95,7 +95,7 @@ class CreateRepositoryController @Inject()(
   def createPrototypeRepository(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createPrototypeRepositoryLanding(),
-      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ).async { implicit request =>
       CreatePrototypeRepoForm.form.bindFromRequest().fold(
         formWithErrors => {
@@ -105,12 +105,12 @@ class CreateRepositoryController @Inject()(
         validForm => {
           import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
           for {
-            _ <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
+            _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
             res <- buildDeployApiConnector.createPrototypeRepository(validForm)
           } yield {
             res match {
               case Left(errMsg) => logger.info(s"createPrototypeRepository failed with: $errMsg")
-              case Right(id) => logger.info(s"Bnd api request id: $id:")
+              case Right(id)    => logger.info(s"Bnd api request id: $id:")
             }
             Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
           }
@@ -118,20 +118,19 @@ class CreateRepositoryController @Inject()(
       )
     }
 
-  def createTestRepositoryLanding(): Action[AnyContent] = {
+  def createTestRepositoryLanding(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createTestRepositoryLanding(),
-      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
       val userTeams = cleanseUserTeams(request.retrieval)
       Ok(createTestRepositoryPage(CreateTestRepoForm.form, userTeams, CreateTestRepositoryType.values))
     }
-  }
 
   def createTestRepository(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createTestRepositoryLanding(),
-      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ).async { implicit request =>
       CreateTestRepoForm.form.bindFromRequest().fold(
         formWithErrors => {
@@ -141,12 +140,12 @@ class CreateRepositoryController @Inject()(
         validForm => {
           import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
           for {
-            _ <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
+            _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
             res <- buildDeployApiConnector.createTestRepository(validForm)
           } yield {
             res match {
               case Left(errMsg) => logger.info(s"createTestRepository failed with: $errMsg")
-              case Right(id) => logger.info(s"Bnd api request id: $id:")
+              case Right(id)    => logger.info(s"Bnd api request id: $id:")
             }
             Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
           }

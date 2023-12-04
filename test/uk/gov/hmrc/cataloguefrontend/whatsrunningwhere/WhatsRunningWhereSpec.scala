@@ -31,7 +31,6 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
 
   "What's running where page" should {
     "show a list of applications, environments and version numbers for releases" in {
-
       serviceEndpoint(GET, "/api/teams", willRespondWith = (200, Some(TeamsAndRepositories.teams)))
 
       serviceEndpoint(GET, "/releases-api/profiles", willRespondWith = (200, Some(JsonData.profiles)))

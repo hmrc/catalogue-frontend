@@ -27,8 +27,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class LeakDetectionService @Inject() (
   leakDetectionConnector: LeakDetectionConnector,
-  configuration: Configuration
-)(implicit val ec: ExecutionContext) {
+  configuration         : Configuration
+)(implicit
+  ec                    : ExecutionContext
+) {
 
   def resolutionUrl: String =
     configuration
@@ -42,7 +44,8 @@ class LeakDetectionService @Inject() (
         None
     }
 
-  private val ldsIntegrationEnabled: Boolean    = configuration.get[Boolean]("lds.integrationEnabled")
+  private val ldsIntegrationEnabled: Boolean =
+    configuration.get[Boolean]("lds.integrationEnabled")
 
   def repositoriesWithLeaks(implicit hc: HeaderCarrier): Future[Seq[RepositoryWithLeaks]] =
     if (ldsIntegrationEnabled)

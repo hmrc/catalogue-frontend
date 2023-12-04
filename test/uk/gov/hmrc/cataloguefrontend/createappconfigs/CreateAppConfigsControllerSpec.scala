@@ -43,11 +43,11 @@ import scala.concurrent.Future
 
 class CreateAppConfigsControllerSpec
   extends AnyWordSpec
-  with Matchers
-  with MockitoSugar
-  with ArgumentMatchersSugar
-  with FakeApplicationBuilder
-  with ScalaFutures {
+     with Matchers
+     with MockitoSugar
+     with ArgumentMatchersSugar
+     with FakeApplicationBuilder
+     with ScalaFutures {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -73,9 +73,7 @@ class CreateAppConfigsControllerSpec
   }
 
   "CreateAppConfigsController.createAppConfigsLanding" should {
-
     "return 200 when user is authenticated" in new Setup {
-
       when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(true))
 
@@ -95,7 +93,6 @@ class CreateAppConfigsControllerSpec
     }
 
     "return 200 with global form error - when user does not have permission to create app configs for the service" in new Setup {
-
       when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(false))
 
@@ -105,7 +102,6 @@ class CreateAppConfigsControllerSpec
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(List.empty[Check])))
 
-
       val result = controller
         .createAppConfigsLanding(serviceName)(
           FakeRequest()
@@ -114,11 +110,9 @@ class CreateAppConfigsControllerSpec
 
       status(result) shouldBe 200
       contentAsString(result) should include(s"You do not have permission to create App Configs")
-
     }
 
     "return 404 when service name is not found" in new Setup {
-
       when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(true))
 
@@ -135,7 +129,6 @@ class CreateAppConfigsControllerSpec
     }
 
     "return 404 when service has no service type" in new Setup {
-
       when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(true))
 
@@ -153,9 +146,7 @@ class CreateAppConfigsControllerSpec
   }
 
   "CreateAppConfigsController.createAppConfigs" should {
-
     "redirect to the service commissioning page when the form is submitted successfully" in new Setup {
-
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
@@ -184,7 +175,6 @@ class CreateAppConfigsControllerSpec
     }
 
     "redirect when service requires mongo but slug info is not found" in new Setup {
-
       val appDependenciesIncludesMongo = Some("mongo")
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
@@ -217,7 +207,6 @@ class CreateAppConfigsControllerSpec
     }
 
     "redirect when service does not require mongo" in new Setup {
-
       val noMongoDependencies = ""
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
@@ -238,7 +227,6 @@ class CreateAppConfigsControllerSpec
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = false, isApi = false))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
-
       val result = controller
         .createAppConfigs(serviceName)(
           FakeRequest(POST, "/create-app-configs")
@@ -251,7 +239,6 @@ class CreateAppConfigsControllerSpec
     }
 
     "return 400 when the form is submitted with errors" in new Setup {
-
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
@@ -276,7 +263,6 @@ class CreateAppConfigsControllerSpec
     }
 
     "return 400 when form is submitted with no configs selected" in new Setup {
-
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
@@ -301,7 +287,6 @@ class CreateAppConfigsControllerSpec
     }
 
     "return 404 when service name is not found" in new Setup {
-
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[String]]))
         .thenReturn(Future.successful("test-service"))
 
@@ -318,7 +303,6 @@ class CreateAppConfigsControllerSpec
     }
 
     "return 500 when service has no service type" in new Setup {
-
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[String]]))
         .thenReturn(Future.successful("test-service"))
 
@@ -335,7 +319,6 @@ class CreateAppConfigsControllerSpec
     }
 
     "return 500 when POST to build and deploy api fails" in new Setup {
-
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
@@ -364,13 +347,13 @@ class CreateAppConfigsControllerSpec
   }
 
   private trait Setup {
-
     private val config = Configuration(
       "environmentsToHideByDefault" -> List("integration", "development")
     )
 
-    implicit val hc       = HeaderCarrier()
-    implicit val mcc      = app.injector.instanceOf[MessagesControllerComponents]
+    implicit val hc : HeaderCarrier                = HeaderCarrier()
+    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+
     val mockCACView       = app.injector.instanceOf[CreateAppConfigsPage]
     val mockTRConnector   = mock[TeamsAndRepositoriesConnector]
     val mockGHConnector   = mock[GitHubProxyConnector]
@@ -379,18 +362,17 @@ class CreateAppConfigsControllerSpec
     val mockSDConnector   = mock[ServiceDependenciesConnector]
     val authStubBehaviour = mock[StubBehaviour]
     val authComponent     = FrontendAuthComponentsStub(authStubBehaviour)
-    val controller        =
-      new CreateAppConfigsController(
-        auth                                = authComponent,
-        mcc                                 = mcc,
-        createAppConfigsPage                = mockCACView,
-        buildDeployApiConnector             = mockBDConnector,
-        teamsAndRepositoriesConnector       = mockTRConnector,
-        gitHubProxyConnector                = mockGHConnector,
-        serviceCommissioningStatusConnector = mockSCSConnector,
-        serviceDependenciesConnector        = mockSDConnector,
-        configuration                       = config
-      )
+    val controller        = new CreateAppConfigsController(
+                              auth                                = authComponent,
+                              mcc                                 = mcc,
+                              createAppConfigsPage                = mockCACView,
+                              buildDeployApiConnector             = mockBDConnector,
+                              teamsAndRepositoriesConnector       = mockTRConnector,
+                              gitHubProxyConnector                = mockGHConnector,
+                              serviceCommissioningStatusConnector = mockSCSConnector,
+                              serviceDependenciesConnector        = mockSDConnector,
+                              configuration                       = config
+                            )
 
     val serviceName = "test-service"
 

@@ -34,10 +34,11 @@ object Environment {
   val values: List[Environment] =
     List(Integration, Development, QA, Staging, ExternalTest, Production)
 
-  implicit val ordering = new Ordering[Environment] {
-    def compare(x: Environment, y: Environment): Int =
-      values.indexOf(x).compare(values.indexOf(y))
-  }
+  implicit val ordering: Ordering[Environment] =
+    new Ordering[Environment] {
+      def compare(x: Environment, y: Environment): Int =
+        values.indexOf(x).compare(values.indexOf(y))
+    }
 
   def parse(s: String): Option[Environment] =
     values.find(_.asString == s)
@@ -94,10 +95,11 @@ object SlugInfoFlag {
   val values: List[SlugInfoFlag] =
     Latest :: Environment.values.map(ForEnvironment.apply)
 
-  implicit val ordering = new Ordering[SlugInfoFlag] {
-    def compare(x: SlugInfoFlag, y: SlugInfoFlag): Int =
-      values.indexOf(x).compare(values.indexOf(y))
-  }
+  implicit val ordering: Ordering[SlugInfoFlag] =
+    new Ordering[SlugInfoFlag] {
+      def compare(x: SlugInfoFlag, y: SlugInfoFlag): Int =
+        values.indexOf(x).compare(values.indexOf(y))
+    }
 
   def parse(s: String): Option[SlugInfoFlag] =
     if (s == "external test")

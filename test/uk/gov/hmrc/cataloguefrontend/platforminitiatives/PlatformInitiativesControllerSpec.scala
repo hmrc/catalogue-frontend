@@ -101,8 +101,9 @@ class PlatformInitiativesControllerSpec
   }
 
   private trait Setup {
-    implicit val hc       = HeaderCarrier()
-    implicit val mcc      = app.injector.instanceOf[MessagesControllerComponents]
+    implicit val hc : HeaderCarrier                = HeaderCarrier()
+    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+
     val mockPIView        = app.injector.instanceOf[PlatformInitiativesListPage]
     val mockTRConnector   = mock[TeamsAndRepositoriesConnector]
     val mockPIConnector   = mock[PlatformInitiativesConnector]

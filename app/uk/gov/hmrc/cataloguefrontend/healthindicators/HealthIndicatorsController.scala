@@ -73,10 +73,11 @@ class HealthIndicatorsController @Inject() (
         )
     }
 
-  private def indicatorsFilteredByTeam(indicatorsWithTeams: Seq[IndicatorsWithTeams], team: Option[String]): Seq[IndicatorsWithTeams] = team match {
-    case Some(t) => indicatorsWithTeams.filter(i => i.owningTeams.map(v => v.asString).contains(t))
-    case None => indicatorsWithTeams
-  }
+  private def indicatorsFilteredByTeam(indicatorsWithTeams: Seq[IndicatorsWithTeams], team: Option[String]): Seq[IndicatorsWithTeams] =
+    team match {
+      case Some(t) => indicatorsWithTeams.filter(i => i.owningTeams.map(v => v.asString).contains(t))
+      case None    => indicatorsWithTeams
+    }
 
 }
 
@@ -91,7 +92,7 @@ object HealthIndicatorsController {
 
 case class HealthIndicatorsFilter(
   repoName: Option[String],
-  team: Option[String] = None,
+  team    : Option[String]   = None,
   repoType: Option[RepoType] = None
 )
 
@@ -101,10 +102,10 @@ object HealthIndicatorsFilter {
       "repoName" -> optional(text),
       "team"     -> optional(text),
       "repoType" -> optional(text)
-        .transform[Option[RepoType]](
-          _.flatMap(s => RepoType.parse(s).toOption),
-          _.map(_.asString)
-        )
+                      .transform[Option[RepoType]](
+                        _.flatMap(s => RepoType.parse(s).toOption),
+                        _.map(_.asString)
+                      )
     )(HealthIndicatorsFilter.apply)(HealthIndicatorsFilter.unapply)
   )
 }
@@ -151,22 +152,10 @@ object RepoType {
     AllTypes
   )
 
-  case object Service extends RepoType {
-    override def asString: String = "Service"
-  }
-  case object Library extends RepoType {
-    override def asString: String = "Library"
-  }
-  case object Prototype extends RepoType {
-    override def asString: String = "Prototype"
-  }
-  case object Test extends RepoType {
-    override def asString: String = "Test"
-  }
-  case object Other extends RepoType {
-    override def asString: String = "Other"
-  }
-  case object AllTypes extends RepoType {
-    override def asString: String = "All Types"
-  }
+  case object Service   extends RepoType { override def asString: String = "Service"   }
+  case object Library   extends RepoType { override def asString: String = "Library"   }
+  case object Prototype extends RepoType { override def asString: String = "Prototype" }
+  case object Test      extends RepoType { override def asString: String = "Test"      }
+  case object Other     extends RepoType { override def asString: String = "Other"     }
+  case object AllTypes  extends RepoType { override def asString: String = "All Types" }
 }

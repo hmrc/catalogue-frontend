@@ -34,12 +34,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with WireMockSupport {
 
   private val underlyingConfig = Configuration(
-        "build-deploy-api.url"                       -> wireMockUrl,
-        "build-deploy-api.host"                      -> wireMockHost,
-        "build-deploy-api.aws-region"                -> "eu-west-2",
-        "microservice.services.platops-bnd-api.port" -> wireMockPort,
-        "microservice.services.platops-bnd-api.host" -> wireMockHost,
-      )
+    "build-deploy-api.url"                       -> wireMockUrl,
+    "build-deploy-api.host"                      -> wireMockHost,
+    "build-deploy-api.aws-region"                -> "eu-west-2",
+    "microservice.services.platops-bnd-api.port" -> wireMockPort,
+    "microservice.services.platops-bnd-api.host" -> wireMockHost,
+  )
 
   private val config =
     new BuildDeployApiConfig(
@@ -51,7 +51,6 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
   "changePrototypePassword" should {
     "return success=true when Build & Deploy respond with 200" in {
-
       val requestJson = """{ "repositoryName": "test", "password": "newpassword" }"""
 
       stubFor(
@@ -144,18 +143,19 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       stubFor(
         post("/get-prototype-details")
           .withRequestBody(equalToJson(requestJson))
-          .willReturn(aResponse().withStatus(400).withBody(
-            """
-              |{
-              |  "code": 403,
-              |  "success": false,
-              |  "message": "Some downstream error",
-              |  "details": {
-              |    "prototype": "test-prototype",
-              |    "status": "undetermined"
-              |  }
-              |}""".stripMargin
-          ))
+          .willReturn(
+            aResponse()
+              .withStatus(400)
+              .withBody("""{
+                "code"   : 403,
+                "success": false,
+                "message": "Some downstream error",
+                "details": {
+                  "prototype": "test-prototype",
+                  "status"   : "undetermined"
+                }
+              }""")
+          )
       )
 
       val result = connector.getPrototypeDetails("test-prototype").futureValue
@@ -171,17 +171,18 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       stubFor(
         post("/set-prototype-status")
           .withRequestBody(equalToJson(requestJson))
-          .willReturn(aResponse().withStatus(200).withBody(
-            """
-              |{
-              |  "success": true,
-              |  "message": "Successfully running test-prototype",
-              |  "details": {
-              |    "prototype": "test-prototype",
-              |    "status": "running"
-              |  }
-              |}""".stripMargin
-          ))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+              .withBody("""{
+                "success": true,
+                "message": "Successfully running test-prototype",
+                "details": {
+                  "prototype": "test-prototype",
+                  "status"   : "running"
+                }
+              }""")
+          )
       )
 
       val result = connector.setPrototypeStatus("test-prototype", PrototypeStatus.Running).futureValue
@@ -195,18 +196,19 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       stubFor(
         post("/set-prototype-status")
           .withRequestBody(equalToJson(requestJson))
-          .willReturn(aResponse().withStatus(400).withBody(
-            """
-              |{
-              |  "code": 500,
-              |  "success": false,
-              |  "message": "Some downstream error",
-              |  "details": {
-              |    "prototype": "test-prototype",
-              |    "status": "undetermined"
-              |  }
-              |}""".stripMargin
-          ))
+          .willReturn(
+            aResponse()
+              .withStatus(400)
+              .withBody("""{
+                "code"   : 500,
+                "success": false,
+                "message": "Some downstream error",
+                "details": {
+                  "prototype": "test-prototype",
+                  "status"   : "undetermined"
+                }
+              }""")
+          )
       )
 
       val result = connector.setPrototypeStatus("test-prototype", PrototypeStatus.Running).futureValue
@@ -216,63 +218,69 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
   }
 
   "createARepository" should {
-      "return the Async request id when the request is accepted by the B&D async api" in {
-        val payload = CreateServiceRepoForm(
-          repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
-        )
+    "return the Async request id when the request is accepted by the B&D async api" in {
+      val payload = CreateServiceRepoForm(
+        repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
+      )
 
-        val expectedBody = s"""
-                              |{
-                              |   "repositoryName": "${payload.repositoryName}",
-                              |   "makePrivate": ${payload.makePrivate},
-                              |   "teamName": "${payload.teamName}",
-                              |   "repositoryType": "${payload.repoType}",
-                              |   "slackNotificationChannels" : ""
-                              |}""".stripMargin
+      val expectedBody =
+        s"""{
+          "repositoryName"           : "${payload.repositoryName}",
+          "makePrivate"              : ${payload.makePrivate},
+          "teamName"                 : "${payload.teamName}",
+          "repositoryType"           : "${payload.repoType}",
+          "slackNotificationChannels": ""
+        }""".stripMargin
 
-        stubFor(
-          post("/create-service-repository")
-            .withRequestBody(equalToJson(expectedBody))
-            .willReturn(aResponse().withStatus(202).withBody(
-              """
-                |{
-                |  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
-                |  "details": {
-                |     "bnd_api_request_id": "1234",
-                |     "start_timestamp_milliseconds": 1687852118708
-                |  }
-                |}""".stripMargin
-            ))
-        )
+      stubFor(
+        post("/create-service-repository")
+          .withRequestBody(equalToJson(expectedBody))
+          .willReturn(
+            aResponse()
+              .withStatus(202)
+              .withBody("""
+                {
+                  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
+                  "details": {
+                     "bnd_api_request_id": "1234",
+                     "start_timestamp_milliseconds": 1687852118708
+                  }
+                }""")
+          )
+      )
 
-        val result = connector.createServiceRepository(payload = payload).futureValue
+      val result = connector.createServiceRepository(payload = payload).futureValue
 
-        result shouldBe Right(AsyncRequestId(JsObject(Seq(
-          "bnd_api_request_id"           -> JsString("1234"),
-          "start_timestamp_milliseconds" -> JsNumber(1687852118708L)
-        ))))
-      }
+      result shouldBe Right(AsyncRequestId(JsObject(Seq(
+        "bnd_api_request_id"           -> JsString("1234"),
+        "start_timestamp_milliseconds" -> JsNumber(1687852118708L)
+      ))))
+    }
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
       val payload = CreateServiceRepoForm(
         repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
       )
 
-      val expectedBody = s"""
-                            |{
-                            |   "repositoryName": "${payload.repositoryName}",
-                            |   "makePrivate": ${payload.makePrivate},
-                            |   "teamName": "${payload.teamName}",
-                            |   "repositoryType": "${payload.repoType}"
-                            |}""".stripMargin
+      val expectedBody =
+        s"""
+        {
+          "repositoryName": "${payload.repositoryName}",
+          "makePrivate"   : ${payload.makePrivate},
+          "teamName"      : "${payload.teamName}",
+          "repositoryType": "${payload.repoType}"
+        }""".stripMargin
 
       stubFor(
         post("/create-service-repository")
           .withRequestBody(equalToJson(expectedBody))
-          .willReturn(aResponse().withStatus(500)
-            .withBody(
-              """{ "code": "INTERNAL_SERVER_ERROR", "message": "Some server error" }"""
-            ))
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+              .withBody(
+                """{ "code": "INTERNAL_SERVER_ERROR", "message": "Some server error" }"""
+              )
+          )
       )
 
       val result = connector.createServiceRepository(payload = payload).failed.futureValue
@@ -287,14 +295,14 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
           repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
         )
 
-        val expectedBody = s"""
-                              |{
-                              |   "repositoryName": "${payload.repositoryName}",
-                              |   "makePrivate": ${payload.makePrivate},
-                              |   "teamName": "${payload.teamName}",
-                              |   "repositoryType": "${payload.repoType}",
-                              |   "slackNotificationChannels" : ""
-                              |}""".stripMargin
+        val expectedBody =
+          s"""{
+             "repositoryName"           : "${payload.repositoryName}",
+             "makePrivate"              : ${payload.makePrivate},
+             "teamName"                 : "${payload.teamName}",
+             "repositoryType"           : "${payload.repoType}",
+             "slackNotificationChannels": ""
+          }"""
 
         stubFor(
           post("/create-service-repository")

@@ -22,17 +22,17 @@ import play.api.libs.json.{JsValue, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 case class BobbyRulesSummary(
-  date: LocalDate,
+  date   : LocalDate,
   summary: Map[(BobbyRule, SlugInfoFlag), Int]
 )
 
 case class HistoricBobbyRulesSummary(
-  date: LocalDate,
+  date   : LocalDate,
   summary: Map[(BobbyRule, SlugInfoFlag), List[Int]]
 )
 
 private object DataFormat {
-  private implicit val brvf = BobbyRule.reads
+  private implicit val brvf: Reads[BobbyRule] = BobbyRule.reads
 
   private def f[A](map: List[(JsValue, Map[String, A])]): Map[(BobbyRule, SlugInfoFlag), A] =
     map.flatMap {
@@ -54,19 +54,19 @@ private object DataFormat {
 }
 
 object BobbyRulesSummary {
-
   val reads: Reads[BobbyRulesSummary] = {
     implicit val df = DataFormat.dataReads[Int]
-    ((__ \ "date").read[LocalDate]
-      ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), Int]])(BobbyRulesSummary.apply _)
+    ( (__ \ "date"   ).read[LocalDate]
+    ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), Int]]
+    )(BobbyRulesSummary.apply _)
   }
 }
 
 object HistoricBobbyRulesSummary {
-
   val reads: Reads[HistoricBobbyRulesSummary] = {
     implicit val df = DataFormat.dataReads[List[Int]]
-    ((__ \ "date").read[LocalDate]
-      ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), List[Int]]])(HistoricBobbyRulesSummary.apply _)
+    ( (__ \ "date"   ).read[LocalDate]
+    ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), List[Int]]]
+    )(HistoricBobbyRulesSummary.apply _)
   }
 }

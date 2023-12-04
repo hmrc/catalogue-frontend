@@ -56,7 +56,7 @@ class ConfluenceConnector @Inject()(
   private val searchLimit = config.get[String]("confluence.search.limit")
   private val searchLabel = config.get[String]("confluence.search.label")
 
-  implicit private val hc = HeaderCarrier()
+  implicit private val hc: HeaderCarrier = HeaderCarrier()
 
   private val blogCacheExpiration = config.get[Duration]("confluence.blogCacheExpiration")
   def getBlogs(): Future[List[ConfluenceConnector.Blog]] =

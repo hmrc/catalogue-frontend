@@ -21,15 +21,6 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterType
 
 import java.time.Instant
 
-/**
- * Created by armin.
- *
- * TODO: Refactor the data here into files under the
- * TODO: uk.gov.hmrc.cataloguefrontend.jsondata package so that
- * TODO: a) This files doesn't get too big
- * TODO:  b) Data is split by service/source
- * TODO: Eventually move this file (common code) to that package as well
- */
 object JsonData {
 
   val emptyList = "[]"
@@ -38,8 +29,8 @@ object JsonData {
   val lastActiveAt = Instant.parse("2016-10-12T10:30:12.00Z")
 
   val serviceJenkinsBuildData: String =
-    """
-        { "jobs": [
+    """{
+      "jobs": [
         {
            "jobName": "service-1-pipeline",
            "jobType": "pipeline",
@@ -55,9 +46,8 @@ object JsonData {
            "jobType": "job",
            "jenkinsURL": "http://jenkins/service-1/"
         }
-
-        ]}
-        """
+      ]
+    }"""
 
   val teamDetailsData =
     """
@@ -82,33 +72,30 @@ object JsonData {
     """
 
   val teamsAndRepositories =
-    s""" [$teamDetailsData] """
+    s"""[$teamDetailsData]"""
 
   val prototypeDetailsData =
-    s"""
-  {
-    "name": "2fa-prototype",
-    "description": "some description",
-    "url": "https://github.com/HMRC/2fa-prototype",
-    "createdDate": "$createdAt",
-    "lastActiveDate": "$lastActiveAt",
-    "isPrivate": true,
-    "repoType": "Prototype",
-    "owningTeams": [],
-    "language": "HTML",
-    "isArchived": false,
-    "defaultBranch": "main",
-    "isDeprecated": false,
-    "teamNames": [
-      "CATO",
-      "Designers"
-    ]
-  }
-    """
+    s"""{
+      "name": "2fa-prototype",
+      "description": "some description",
+      "url": "https://github.com/HMRC/2fa-prototype",
+      "createdDate": "$createdAt",
+      "lastActiveDate": "$lastActiveAt",
+      "isPrivate": true,
+      "repoType": "Prototype",
+      "owningTeams": [],
+      "language": "HTML",
+      "isArchived": false,
+      "defaultBranch": "main",
+      "isDeprecated": false,
+      "teamNames": [
+        "CATO",
+        "Designers"
+      ]
+    }"""
 
   val libraryDetailsData =
-    """
-      {
+    """{
         "name": "serv",
         "description": "",
         "isPrivate": false,
@@ -123,8 +110,7 @@ object JsonData {
         ],
         "teamNames": ["teamA", "teamB"],
         "url": "https://github.com/hmrc/serv"
-      }
-    """
+    }"""
 
   val deploymentThroughputData =
     """[

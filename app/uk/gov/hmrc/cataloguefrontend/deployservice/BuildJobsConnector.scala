@@ -53,11 +53,12 @@ class BuildJobsConnector @Inject()(
   )(implicit hc: HeaderCarrier): Future[String] = {
     val url = new URL(s"$baseUrl/job/build-and-deploy/job/deploy-microservice/buildWithParameters")
 
-    implicit val locationRead: HttpReads[String] = HttpReads[HttpResponse].map(_.header("Location") match {
-      case Some(url) if baseUrl.startsWith("https:") => url.replace("http:", "https:") // Jenkins requires this switch
-      case Some(url)                                 => url                            // It should not happen for acceptance tests
-      case None                                      => sys.error(s"Could not find Location header for: $url")
-    })
+    implicit val locationRead: HttpReads[String] =
+      HttpReads[HttpResponse].map(_.header("Location") match {
+        case Some(url) if baseUrl.startsWith("https:") => url.replace("http:", "https:") // Jenkins requires this switch
+        case Some(url)                                 => url                            // It should not happen for acceptance tests
+        case None                                      => sys.error(s"Could not find Location header for: $url")
+      })
 
     httpClientV2
       .post(url)

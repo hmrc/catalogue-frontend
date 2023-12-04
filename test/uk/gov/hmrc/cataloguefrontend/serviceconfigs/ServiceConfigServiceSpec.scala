@@ -39,12 +39,15 @@ class ServiceConfigsServiceSpec
   private def toNextDeploymentFalse(config: Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]): Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] =
     config.view.mapValues(_.view.mapValues(_.map(_ -> false)).toMap).toMap
 
-  private def update(config: Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]], k: KeyName, ce: ConfigEnvironment)
-                    (update: Seq[(ConfigSourceValue, Boolean)] => Seq[(ConfigSourceValue, Boolean)]): Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] =
+  private def update(
+    config: Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]],
+    k     : KeyName,
+    ce    : ConfigEnvironment
+  )(update: Seq[(ConfigSourceValue, Boolean)] => Seq[(ConfigSourceValue, Boolean)]
+  ): Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] =
     config + (k -> (config.getOrElse(k, Map.empty) + (ce -> update(config.getOrElse(k, Map.empty).getOrElse(ce, Seq.empty)))))
 
   "serviceConfigsService.configByKey" should {
-
     val deployedConfigByKey = Map(
       KeyName("k1") -> ConfigEnvironment.values.map(e => e -> Seq(
         ConfigSourceValue(source = "appConfigCommon"     , sourceUrl = None, value = s"${e.asString}-a1"),

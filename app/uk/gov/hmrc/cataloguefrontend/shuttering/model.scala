@@ -291,10 +291,10 @@ object EventData {
 
   def reads(et: EventType) =
     new Reads[EventData] {
-      implicit val sscrdf = shutterStateCreateDataFormat
-      implicit val ssddf  = shutterStateDeleteDataFormat
-      implicit val sscdf  = shutterStateChangeDataFormat
-      implicit val kscdf  = killSwitchStateChangeDataFormat
+      implicit val sscrdf: Reads[EventData.ShutterStateCreateData]    = shutterStateCreateDataFormat
+      implicit val ssddf : Reads[EventData.ShutterStateDeleteData]    = shutterStateDeleteDataFormat
+      implicit val sscdf : Reads[EventData.ShutterStateChangeData]    = shutterStateChangeDataFormat
+      implicit val kscdf : Reads[EventData.KillSwitchStateChangeData] = killSwitchStateChangeDataFormat
       def reads(js: JsValue): JsResult[EventData] =
         et match {
           case EventType.ShutterStateCreate    => js.validate[EventData.ShutterStateCreateData]
@@ -391,9 +391,9 @@ case class OutagePage(
 
 object OutagePage {
   val reads: Reads[OutagePage] = {
-    implicit val ef   = ShutterEnvironment.format
-    implicit val tcf  = TemplatedContent.format
-    implicit val opwr = OutagePageWarning.reads
+    implicit val ef  : Reads[Environment]       = ShutterEnvironment.format
+    implicit val tcf : Reads[TemplatedContent]  = TemplatedContent.format
+    implicit val opwr: Reads[OutagePageWarning] = OutagePageWarning.reads
     ( (__ \ "serviceName"      ).read[String]
     ~ (__ \ "environment"      ).read[Environment]
     ~ (__ \ "outagePageURL"    ).read[String]

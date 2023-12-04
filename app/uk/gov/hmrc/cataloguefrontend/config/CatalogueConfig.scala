@@ -27,6 +27,6 @@ class CatalogueConfig @Inject() (servicesConfig: ServicesConfig) {
   private def killswitchJenkinsJob(shutterType: String) =
     servicesConfig.getString(s"killswitch.jenkins-job.$shutterType")
 
-  def killSwitchLink(shutterType: String, env: String) =
+  def killSwitchLink(shutterType: String, env: String): String =
     s"${killswitchJenkinsUrl(env)}/job/${killswitchJenkinsJob(shutterType)}/"
 }
