@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend.prcommenter
 
-import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
+import play.api.data.{Form, Forms}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-
 import views.html.prcommenter.PrCommenterRecommendationsPage
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 class PrCommenterController @Inject() (
   override val mcc : MessagesControllerComponents,
@@ -40,30 +39,32 @@ class PrCommenterController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  import play.api.data.{Form, Forms}
-
   case class Filter(
     team       : Option[String],
-    repo       : Option[String],
+    repo       : Option[TeamName],
     commentType: Option[String]
   )
 
   lazy val form: Form[Filter] = Form(
     Forms.mapping(
       "name"        -> Forms.optional(Forms.text),
-      "teamName"    -> Forms.optional(Forms.text),
+      "teamName"    -> Forms.optional(Forms.text).transform[Option[TeamName]](_.map(TeamName.apply), _.map(_.asString)),
       "commentType" -> Forms.optional(Forms.text)
     )(Filter.apply)(Filter.unapply)
   )
 
-  def recommendations(name: Option[String], teamName: Option[String], commentType: Option[String]): Action[AnyContent] =
+  def recommendations(
+    name       : Option[String],
+    teamName   : Option[TeamName],
+    commentType: Option[String]
+  ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         teams        <- teamsAndRepositoriesConnector.allTeams()
-        repos        <- teamsAndRepositoriesConnector.allRepositories(team = teamName.map(TeamName.apply), name = name)
+        repos        <- teamsAndRepositoriesConnector.allRepositories(team = teamName, name = name)
         reports      <- prCommenterConnector.search(
                           name        = None, // Use listjs filtering
-                          teamName    = teamName.filter(_.nonEmpty),
+                          teamName    = teamName.filter(_.asString.nonEmpty),
                           commentType = commentType.filter(_.nonEmpty)
                         )
         commentTypes =  reports.flatMap(_.comments.map(_.commentType)).toSet

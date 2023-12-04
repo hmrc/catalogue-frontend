@@ -17,33 +17,28 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class DefaultBranchesService @Inject()()(implicit val ec: ExecutionContext){
 
-  def allTeams(repos: Seq[GitRepository]): Seq[String] = {
-    val repositories = repos.map(t => t.teamNames)
-    repositories.flatten.distinct.sorted
-  }
+  def allTeams(repos: Seq[GitRepository]): Seq[TeamName] =
+    repos.map(_.teamNames).flatten.distinct.sorted
 
   def filterRepositories(
-      repositories:     Seq[GitRepository],
-      name:             Option[String],
-      defaultBranch:    Option[String],
-      teamNames:        Option[String],
-      singleOwnership:  Boolean,
-      includeArchived:  Boolean): Seq[GitRepository] = {
-
-    val results: Seq[GitRepository] = {
-      repositories
-        .filter(repo => name.fold(true)(repo.name contains _))
-        .filter(repo => defaultBranch.fold(true)(repo.defaultBranch contains _))
-        .filter(repo => teamNames.fold(true)(repo.teamNames contains _))
-        .filter(repo => !singleOwnership || repo.teamNames.length == 1)
-        .filter(repo => includeArchived || !repo.isArchived)
-    }
-    results
-  }
+    repositories:     Seq[GitRepository],
+    name:             Option[String],
+    defaultBranch:    Option[String],
+    teamNames:        Option[TeamName],
+    singleOwnership:  Boolean,
+    includeArchived:  Boolean
+  ): Seq[GitRepository] =
+    repositories
+      .filter(repo => name.fold(true)(repo.name.contains(_)))
+      .filter(repo => defaultBranch.fold(true)(repo.defaultBranch.contains(_)))
+      .filter(repo => teamNames.fold(true)(repo.teamNames.contains(_)))
+      .filter(repo => !singleOwnership || repo.teamNames.length == 1)
+      .filter(repo => includeArchived || !repo.isArchived)
 }

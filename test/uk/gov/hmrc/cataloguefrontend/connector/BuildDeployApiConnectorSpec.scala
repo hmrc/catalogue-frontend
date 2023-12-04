@@ -22,6 +22,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus, PrototypeDetails}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepoForm
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -220,14 +221,17 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
   "createARepository" should {
     "return the Async request id when the request is accepted by the B&D async api" in {
       val payload = CreateServiceRepoForm(
-        repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
+        repositoryName = "test-repo",
+        makePrivate    = true,
+        teamName       = TeamName("team1"),
+        repoType       = "Empty"
       )
 
       val expectedBody =
         s"""{
           "repositoryName"           : "${payload.repositoryName}",
           "makePrivate"              : ${payload.makePrivate},
-          "teamName"                 : "${payload.teamName}",
+          "teamName"                 : "${payload.teamName.asString}",
           "repositoryType"           : "${payload.repoType}",
           "slackNotificationChannels": ""
         }""".stripMargin
@@ -259,7 +263,10 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
       val payload = CreateServiceRepoForm(
-        repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
+        repositoryName = "test-repo",
+        makePrivate    = true,
+        teamName       = TeamName("team1"),
+        repoType       = "Empty"
       )
 
       val expectedBody =
@@ -267,7 +274,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
         {
           "repositoryName": "${payload.repositoryName}",
           "makePrivate"   : ${payload.makePrivate},
-          "teamName"      : "${payload.teamName}",
+          "teamName"      : "${payload.teamName.asString}",
           "repositoryType": "${payload.repoType}"
         }""".stripMargin
 
@@ -292,14 +299,17 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     //This may however change in the future, so we are testing the desired future behaviour below.
     "return an error message when the B&D async api returns a 4XX code" in {
         val payload = CreateServiceRepoForm(
-          repositoryName = "test-repo", makePrivate = true, teamName = "team1", repoType = "Empty"
+          repositoryName = "test-repo",
+          makePrivate    = true,
+          teamName       = TeamName("team1"),
+          repoType       = "Empty"
         )
 
         val expectedBody =
           s"""{
              "repositoryName"           : "${payload.repositoryName}",
              "makePrivate"              : ${payload.makePrivate},
-             "teamName"                 : "${payload.teamName}",
+             "teamName"                 : "${payload.teamName.asString}",
              "repositoryType"           : "${payload.repoType}",
              "slackNotificationChannels": ""
           }"""
@@ -321,31 +331,37 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
   "CreateAppConfigs" should {
      "return the Async request id when the request is accepted by the B&D async api" in {
-        val payload = CreateAppConfigsForm(appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+        val payload = CreateAppConfigsForm(
+          appConfigBase        = false,
+          appConfigDevelopment = false,
+          appConfigQA          = false,
+          appConfigStaging     = false,
+          appConfigProduction  = false
         )
 
-        val expectedBody = s"""
-                              |{
-                              |   "microserviceName": "test-service",
-                              |   "microserviceType": "Backend microservice",
-                              |   "hasMongo": true,
-                              |   "environments": [],
-                              |   "zone": "protected"
-                              |}""".stripMargin
+        val expectedBody =
+          s"""{
+            "microserviceName": "test-service",
+            "microserviceType": "Backend microservice",
+            "hasMongo"        : true,
+            "environments"    : [],
+            "zone"            : "protected"
+          }"""
 
         stubFor(
           post("/create-app-configs")
             .withRequestBody(equalToJson(expectedBody))
-            .willReturn(aResponse().withStatus(202).withBody(
-              """
-                |{
-                |  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
-                |  "details": {
-                |     "bnd_api_request_id": "1234",
-                |     "start_timestamp_milliseconds": 1687852118708
-                |  }
-                |}""".stripMargin
-            ))
+            .willReturn(
+              aResponse()
+                .withStatus(202)
+                .withBody("""{
+                  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
+                  "details": {
+                     "bnd_api_request_id": "1234",
+                     "start_timestamp_milliseconds": 1687852118708
+                  }
+                }""")
+            )
         )
 
         val result =
@@ -361,17 +377,21 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
       val payload = CreateAppConfigsForm(
-       appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+        appConfigBase        = false,
+        appConfigDevelopment = false,
+        appConfigQA          = false,
+        appConfigStaging     = false,
+        appConfigProduction  = false
       )
 
-      val expectedBody = s"""
-                            |{
-                            |   "microserviceName": "test-service",
-                            |   "microserviceType": "Frontend microservice",
-                            |   "hasMongo": true,
-                            |   "environments": [],
-                            |   "zone": "public"
-                            |}""".stripMargin
+      val expectedBody =
+        s"""{
+          "microserviceName": "test-service",
+          "microserviceType": "Frontend microservice",
+          "hasMongo"        : true,
+          "environments"    : [],
+          "zone"            : "public"
+        }"""
 
       stubFor(
         post("/create-app-configs")
@@ -393,17 +413,21 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     //This may however change in the future, so we are testing the desired future behaviour below.
     "return an error message when the B&D async api returns a 4XX code" in {
        val payload = CreateAppConfigsForm(
-         appConfigBase = false, appConfigDevelopment = false, appConfigQA = false, appConfigStaging = false, appConfigProduction = false
+         appConfigBase        = false,
+         appConfigDevelopment = false,
+         appConfigQA          = false,
+         appConfigStaging     = false,
+         appConfigProduction  = false
        )
 
-       val expectedBody = s"""
-                             |{
-                             |   "microserviceName": "test-service",
-                             |   "microserviceType": "Backend microservice",
-                             |   "hasMongo": true,
-                             |   "environments": [],
-                             |   "zone": "protected"
-                             |}""".stripMargin
+       val expectedBody =
+         s"""{
+            "microserviceName": "test-service",
+            "microserviceType": "Backend microservice",
+            "hasMongo"        : true,
+            "environments"    : [],
+            "zone"            : "protected"
+         }"""
 
        stubFor(
          post("/create-app-configs")
@@ -420,6 +444,5 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
        result shouldBe Left("Some client error")
     }
-
   }
 }

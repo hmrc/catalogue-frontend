@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.prcommenter
 
 import play.api.Logging
 import play.api.libs.json.Reads
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -29,7 +30,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class PrCommenterConnector @Inject()(
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) extends Logging {
+)(implicit
+   ec           : ExecutionContext
+) extends Logging {
   import HttpReads.Implicits._
 
   private val baseUrl = servicesConfig.baseUrl("pr-commenter")
@@ -43,12 +46,12 @@ class PrCommenterConnector @Inject()(
 
   def search(
     name       : Option[String],
-    teamName   : Option[String],
+    teamName   : Option[TeamName],
     commentType: Option[String]
   )(implicit
     hc          : HeaderCarrier
   ): Future[Seq[PrCommenterReport]] =
     httpClientV2
-      .get(url"$baseUrl/pr-commenter/reports?name=$name&teamName=$teamName&commentType=$commentType")
+      .get(url"$baseUrl/pr-commenter/reports?name=$name&teamName=${teamName.map(_.asString)}&commentType=$commentType")
       .execute[Seq[PrCommenterReport]]
 }

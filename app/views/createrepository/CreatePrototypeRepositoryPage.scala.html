@@ -16,15 +16,17 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import views.html.partials.{form_global_errors, form_fields_warnings}
 @import views.html.helper.select
 
 @this(viewMessages: ViewMessages)
 
-@(form: Form[_],
-teamNames: Seq[String])(implicit
- messages: Messages,
- request: RequestHeader
+@(form     : Form[_],
+  teamNames: Seq[TeamName]
+)(implicit
+  messages : Messages,
+  request  : RequestHeader
 )
 
 @standard_layout("Create a Prototype Repository", "create a prototype repository") {
@@ -95,7 +97,7 @@ teamNames: Seq[String])(implicit
                     }
                     <select class="form-select" id="teamInput" name="teamName">
                         @teamNames.map { tn =>
-                            <option value="@{tn}"
+                            <option value="@{tn.asString}"
                                     @if(form.data.getOrElse("teamName", "").equals(tn)) { selected="selected" }
                             >@tn</option>
                         }

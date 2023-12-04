@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
 @import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, Vendor, Oracle, OpenJDK}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, Vendor, Oracle, OpenJDK, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import play.twirl.api.Html
@@ -26,12 +26,12 @@
 
 @this(viewMessages: ViewMessages)
 
-@(envdata     : List[JDKUsageByEnv],
-  jdks        : List[JDKVersion],
-  teams       : Seq[Team],
-  selectedTeam: Option[Team]
+@(envdata         : List[JDKUsageByEnv],
+  jdks            : List[JDKVersion],
+  teams           : Seq[Team],
+  selectedTeamName: Option[TeamName]
 )(implicit
-  request     : RequestHeader
+  request         : RequestHeader
 )
 
 @standard_layout("JDK Versions", active = "explore") {
@@ -46,9 +46,9 @@
             <div class="col-md-3">
                 <label for="teamName" class="form-label fw-bold">Team:</label>
                 <select class="form-select" id="teamName" name="teamName">
-                    <option value="" @{if(selectedTeam.isEmpty) "selected"}>All</option>
+                    <option value="" @{if(selectedTeamName.isEmpty) "selected"}>All</option>
                     @teams.map { team =>
-                        <option value="@{team.name.asString}" @{if(Some(team) == selectedTeam) "selected"}>
+                        <option value="@{team.name.asString}" @{if(Some(team.name) == selectedTeamName) "selected"}>
                             @team.name.asString
                         </option>
                     }
@@ -80,10 +80,9 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@appRoutes.JDKVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name.asString))">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.JDKVersionController.findLatestVersions(d.env.asString, selectedTeamName)">@d.env.displayString</a></td>
               @for(jdk <- jdks) { <td>@{d.usage.getOrElse(jdk, 0)}</td>}
           </tr>
-
         }
         </tbody>
     </table>

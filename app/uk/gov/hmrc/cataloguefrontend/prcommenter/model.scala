@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend.prcommenter
 
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import java.time.Instant
 
 case class PrCommenterReport(
   name     : String,
-  teamNames: List[String],
+  teamNames: List[TeamName],
   version  : Version,
   comments : Seq[PrCommenterComment],
   created  : Instant
@@ -41,12 +41,13 @@ object PrCommenterReport {
     ~ (__ \ "params" \ "id").read[String]
     )(PrCommenterComment.apply _)
 
-  val reads: Reads[PrCommenterReport] =
+  val reads: Reads[PrCommenterReport] = {
+    implicit val tnf: Reads[TeamName] = TeamName.format
     ( (__ \ "name"     ).read[String]
-    ~ (__ \ "teamNames").read[List[String]]
+    ~ (__ \ "teamNames").read[List[TeamName]]
     ~ (__ \ "version"  ).read[Version](Version.format)
     ~ (__ \ "comments" ).read[Seq[PrCommenterComment]]
     ~ (__ \ "created"  ).read[Instant]
     )(PrCommenterReport.apply _)
-
+  }
 }

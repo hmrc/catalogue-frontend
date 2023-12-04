@@ -79,7 +79,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
             |	"group:main_2.11:1.0.0" -> "group:component_2.11:jar:1.0.1"
             |	"group:subcomponent:1.0.2:compile" -> "group:component_2:1.0.3"
             |}""".stripMargin)
-        .dependencies should contain allOf(
+        .dependencies should contain theSameElementsAs Seq(
           ServiceDependency("group", "main", "1.0.0"),
           ServiceDependency("group", "component", "1.0.1"),
           ServiceDependency("group", "subcomponent", "1.0.2"),
@@ -117,9 +117,10 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
             |	"uk.gov.hmrc.jdc:emcs:war:3.226.0" -> "uk.gov.hmrc.rehoming:rehoming-common:jar:7.41.0:compile" ;
             |	"uk.gov.hmrc.jdc:emcs:war:3.226.0" -> "xerces:xercesImpl:jar:2.12.0:compile" ;
             |}""".stripMargin)
-        .dependencies should contain allOf(
-          ServiceDependency("uk.gov.hmrc.rehoming", "event-auditing", "2.0.0"),
+        .dependencies should contain theSameElementsAs Seq(
           ServiceDependency("org.springframework.ws", "spring-ws-support", "2.1.4.RELEASE"),
+          ServiceDependency("uk.gov.hmrc.rehoming", "event-auditing", "2.0.0"),
+          ServiceDependency("uk.gov.hmrc.jdc", "emcs", "3.226.0"),
           ServiceDependency("uk.gov.hmrc.rehoming", "rehoming-common", "7.41.0"),
           ServiceDependency("xerces", "xercesImpl", "2.12.0")
         )
@@ -175,7 +176,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
             |	"uk.gov.hmrc.portal:reauthdecrypt:jar:3.3.0:compile" -> "org.opensaml:opensaml-saml-api:jar:3.3.0:compile" ;
             | "org.opensaml:opensaml-core:jar:3.3.0:compile" -> "net.shibboleth.utilities:java-support:jar:7.3.0:compile" ;
             |}""".stripMargin)
-        .dependenciesWithImportPath should contain allOf(
+        .dependenciesWithImportPath should contain theSameElementsAs Seq(
           (reauthenticationClientApp, Seq(reauthenticationClientApp, emcs)),
           (reauthdecrypt, Seq(reauthdecrypt, reauthenticationClientApp, emcs)),
           (iassDataProtection, Seq(iassDataProtection, reauthdecrypt, reauthenticationClientApp, emcs)),
@@ -193,7 +194,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
         "\t\"uk.gov.hmrc.jdc:platops-example-classic-service:war:0.53.0\" -> \"uk.gov.hmrc.jdc:platops-example-classic-service-business:jar:0.53.0:compile\" ; \n" +
         " } "
       val graph = DependencyGraphParser.parse(input)
-      graph.dependencies should contain allOf(
+      graph.dependencies should contain theSameElementsAs Seq(
         ServiceDependency("uk.gov.hmrc.jdc", "platops-example-classic-service", "0.53.0"),
         ServiceDependency("uk.gov.hmrc.jdc", "platops-example-classic-service-business", "0.53.0"),
       )

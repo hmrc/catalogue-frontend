@@ -72,7 +72,7 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@appRoutes.SBTVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name.asString))">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.SBTVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name))">@d.env.displayString</a></td>
               @for(sbt <- sbts) { <td>@{d.usage.getOrElse(sbt, 0)}</td>}
           </tr>
 

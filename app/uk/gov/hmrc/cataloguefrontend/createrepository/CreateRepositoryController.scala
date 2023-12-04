@@ -21,6 +21,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.createrepository.{CreatePrototypeRepositoryPage, CreateServiceRepositoryPage, CreateTestRepositoryPage}
@@ -44,8 +45,8 @@ class CreateRepositoryController @Inject()(
 
   private val logger = Logger(getClass)
 
-  private def createRepositoryPermission(teamName: String): Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/$teamName"), IAAction("CREATE_REPOSITORY"))
+  private def createRepositoryPermission(teamName: TeamName): Predicate =
+    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_REPOSITORY"))
 
   def createServiceRepositoryLanding(): Action[AnyContent] = {
     auth.authenticatedAction(
@@ -153,9 +154,11 @@ class CreateRepositoryController @Inject()(
       )
     }
 
-  private def cleanseUserTeams(resources: Set[Resource]): Seq[String] =
-    resources.map(_.resourceLocation.value.stripPrefix("teams/"))
+  private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
+    resources
+      .map(_.resourceLocation.value.stripPrefix("teams/"))
       .filterNot(_.contains("app_group_"))
+      .map(TeamName.apply)
       .toSeq
       .sorted
 }

@@ -23,11 +23,12 @@ import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{Writes, __}
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkConstraint
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 case class CreateServiceRepoForm(
   repositoryName: String,
   makePrivate   : Boolean,
-  teamName      : String,
+  teamName      : TeamName,
   repoType      : String
 )
 
@@ -35,7 +36,7 @@ object CreateServiceRepoForm {
   implicit val writes: Writes[CreateServiceRepoForm] =
     ( (__ \ "repositoryName").write[String]
     ~ (__ \ "makePrivate"   ).write[Boolean]
-    ~ (__ \ "teamName"      ).write[String]
+    ~ (__ \ "teamName"      ).write[String].contramap[TeamName](_.asString)
     ~ (__ \ "repoType"      ).write[String]
     )(unlift(CreateServiceRepoForm.unapply))
 
@@ -48,7 +49,8 @@ object CreateServiceRepoForm {
   val frontendValidation2          : CreateServiceRepoForm => Boolean = crf => !(crf.repositoryName.toLowerCase.contains("frontend") && !crf.repoType.toLowerCase.contains("frontend"))
 
 
-  private val repoTypeConstraint: Constraint[String] = mkConstraint("constraints.repoTypeCheck")(constraint = repoTypeValidation, error = CreateServiceRepositoryType.parsingError)
+  private val repoTypeConstraint: Constraint[String] =
+    mkConstraint("constraints.repoTypeCheck")(constraint = repoTypeValidation, error = CreateServiceRepositoryType.parsingError)
 
   private val repoTypeAndNameConstraints = Seq(
     mkConstraint("constraints.conflictingFields1")(constraint = conflictingFieldsValidation1, error = "You have chosen a backend repo type, but have included 'frontend' in your repo name. Change either the repo name or repo type"),
@@ -62,7 +64,7 @@ object CreateServiceRepoForm {
       mapping(
         "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None) :_*),
         "makePrivate"    -> boolean,
-        "teamName"       -> nonEmptyText,
+        "teamName"       -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
         "repoType"       -> nonEmptyText.verifying(repoTypeConstraint),
       )(CreateServiceRepoForm.apply)(CreateServiceRepoForm.unapply)
         .verifying(repoTypeAndNameConstraints :_*)
@@ -89,9 +91,9 @@ object CreateTestRepoForm {
   val form: Form[CreateServiceRepoForm] = Form(
     mapping(
       "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None): _*),
-      "makePrivate" -> boolean,
-      "teamName" -> nonEmptyText,
-      "repoType" -> nonEmptyText.verifying(repoTestTypeConstraint),
+      "makePrivate"    -> boolean,
+      "teamName"       -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
+      "repoType"       -> nonEmptyText.verifying(repoTestTypeConstraint),
     )(CreateServiceRepoForm.apply)(CreateServiceRepoForm.unapply)
       .verifying(repoTypeAndNameConstraints: _*)
   )
@@ -100,16 +102,16 @@ object CreateTestRepoForm {
 case class CreatePrototypeRepoForm(
   repositoryName: String,
   password      : String,
-  teamName      : String,
+  teamName      : TeamName,
   slackChannels : String
 )
 
 object CreatePrototypeRepoForm {
 
   implicit val writes: Writes[CreatePrototypeRepoForm] =
-    ( (__ \ "repositoryName"  ).write[String]
+    ( (__ \ "repositoryName").write[String]
     ~ (__ \ "password"      ).write[String]
-    ~ (__ \ "teamName"      ).write[String]
+    ~ (__ \ "teamName"      ).write[String].contramap[TeamName](_.asString)
     ~ (__ \ "slackChannels" ).write[String]
     )(unlift(CreatePrototypeRepoForm.unapply))
 
@@ -132,7 +134,7 @@ object CreatePrototypeRepoForm {
       mapping(
         "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype")) :_*),
         "password"            -> nonEmptyText.verifying(passwordConstraint),
-        "teamName"            -> nonEmptyText,
+        "teamName"            -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
         "slackChannels"       -> text.verifying(slackChannelConstraint :_*),
       )(CreatePrototypeRepoForm.apply)(CreatePrototypeRepoForm.unapply)
     )

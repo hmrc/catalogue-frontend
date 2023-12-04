@@ -52,7 +52,7 @@ class TeamsController @Inject()(
     BasicAuthAction.async { implicit request =>
       teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)).flatMap {
         case repo if repo.isEmpty => for {
-            maybeTeam <- userManagementConnector.getTeam(teamName.asString)
+            maybeTeam <- userManagementConnector.getTeam(teamName)
           } yield Ok(teamInfoPage(
             teamName               = teamName,
             repos                  = Map.empty,
@@ -66,7 +66,7 @@ class TeamsController @Inject()(
 
         case repos =>
           (
-            userManagementConnector.getTeam(teamName.asString),
+            userManagementConnector.getTeam(teamName),
             leakDetectionService.repositoriesWithLeaks,
             serviceDependenciesConnector.dependenciesForTeam(teamName),
             serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),

@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 final case class Role(asString: String) {
   def displayName: String =
@@ -65,7 +66,7 @@ object SlackInfo {
 
 final case class LdapTeam(
   members          : Seq[Member]
-, teamName         : String
+, teamName         : TeamName
 , description      : Option[String]
 , documentation    : Option[String]
 , slack            : Option[SlackInfo]
@@ -74,10 +75,11 @@ final case class LdapTeam(
 
 object LdapTeam {
   val reads: Reads[LdapTeam] = {
-    implicit val mR: Reads[Member] = Member.reads
-    implicit val siR: Reads[SlackInfo] = SlackInfo.reads
+    implicit val mr : Reads[Member]    = Member.reads
+    implicit val sir: Reads[SlackInfo] = SlackInfo.reads
+    implicit val tnr: Reads[TeamName]  = TeamName.format
     ( (__ \ "members"          ).read[Seq[Member]]
-    ~ (__ \ "teamName"         ).read[String]
+    ~ (__ \ "teamName"         ).read[TeamName]
     ~ (__ \ "description"      ).readNullable[String]
     ~ (__ \ "documentation"    ).readNullable[String]
     ~ (__ \ "slack"            ).readNullable[SlackInfo]
@@ -87,14 +89,15 @@ object LdapTeam {
 }
 
 final case class TeamMembership(
-  teamName: String
+  teamName: TeamName
 , role    : Role
 )
 
 object TeamMembership {
-  implicit val rR : Reads[Role] = Role.reads
+  implicit val rr : Reads[Role]     = Role.reads
+  implicit val tnr: Reads[TeamName] = TeamName.format
   val reads: Reads[TeamMembership] = {
-    ( (__ \ "teamName").read[String]
+    ( (__ \ "teamName").read[TeamName]
     ~ (__ \ "role"    ).read[Role]
     )(TeamMembership.apply _)
   }

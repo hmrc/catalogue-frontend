@@ -4,7 +4,7 @@ GET        /teams                                       uk.gov.hmrc.cataloguefro
 GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.teams.TeamsController.team(teamName: TeamName)
 GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.teams.TeamsController.outOfDateTeamDependencies(teamName: TeamName)
 
-GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[String] ?= None, archived: Option[Boolean] ?= None, repoType: Option[String] ?= None)
+GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[TeamName] ?= None, archived: Option[Boolean] ?= None, repoType: Option[String] ?= None)
 
 GET        /services                                    uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allServices
 GET        /libraries                                   uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allLibraries
@@ -68,11 +68,11 @@ GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefro
 
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
-GET        /jdkexplorer/:env                            uk.gov.hmrc.cataloguefrontend.JDKVersionController.findLatestVersions(env: String, teamName: Option[String] ?= None)
-GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JDKVersionController.compareAllEnvironments(teamName: Option[String] ?= None)
+GET        /jdkexplorer/:env                            uk.gov.hmrc.cataloguefrontend.JDKVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None)
+GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JDKVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None)
 
-GET        /sbtexplorer/:env                            uk.gov.hmrc.cataloguefrontend.SBTVersionController.findLatestVersions(env: String, teamName: Option[String] ?= None)
-GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SBTVersionController.compareAllEnvironments(teamName: Option[String] ?= None)
+GET        /sbtexplorer/:env                            uk.gov.hmrc.cataloguefrontend.SBTVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None)
+GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SBTVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None)
 
 GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name, showWarnings: Boolean ?= false, selector: Option[uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName] ?= None)
 GET        /config/search                               uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchLanding()
@@ -82,7 +82,7 @@ GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefro
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list(selector: Option[String] ?= None)
 
-GET        /pr-commenter/recommendations                uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterController.recommendations(name: Option[String] ?= None, teamName: Option[String] ?= None, commentType: Option[String] ?= None)
+GET        /pr-commenter/recommendations                uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterController.recommendations(name: Option[String] ?= None, teamName: Option[TeamName] ?= None, commentType: Option[String] ?= None)
 
 GET        /shuttering-overview/:shutterType            uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStates(shutterType: ShutterType)
 GET        /shuttering-overview/:shutterType/:env       uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStatesForEnv(shutterType: ShutterType, env: Environment)
@@ -100,7 +100,7 @@ GET        /shuttering/4                                uk.gov.hmrc.cataloguefro
 GET        /shuttering/:shutterType/:env                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.start(shutterType: ShutterType, env: Environment, serviceName: Option[String])
 
 GET        /shutter-events                              uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEvents
-GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(env: Environment, serviceName: Option[String] ?= None, limit: Option[Int] ?= None, offset: Option[Int] ?= None)
+GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(environment: Environment, serviceName: Option[String] ?= None, limit: Option[Int] ?= None, offset: Option[Int] ?= None)
 
 GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases()
 GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.history(env: Environment)
@@ -130,4 +130,3 @@ GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefr
 
 GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.allUsers(username: Option[String] ?= None)
 GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: String)
-
