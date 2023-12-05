@@ -34,7 +34,14 @@
             <td id="row@{row.index}_version_@{environmentWithVersion.env.asString}"
                 class="@if(environmentWithVersion.isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}"
                 style="--bs-bg-opacity: @if(environmentWithVersion.isPatchedVersion) {0.75} else {@row.versionOpacity(environmentWithVersion.version.versionNumber.asVersion)}">
-                @environmentWithVersion.version.versionNumber.asString
+                <span
+                    data-bs-toggle="popover"
+                    data-bs-trigger="hover"
+                    data-bs-placement="bottom"
+                    data-bs-html="true"
+                    data-bs-content='@{environmentWithVersion.toolTipContent(row.latestVersion)}'
+                >
+                @environmentWithVersion.version.versionNumber.asString</span>
             </td>
          }
         }
