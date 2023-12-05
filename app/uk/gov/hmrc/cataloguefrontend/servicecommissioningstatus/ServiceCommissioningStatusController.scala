@@ -99,8 +99,23 @@ class ServiceCommissioningStatusController @Inject() (
                                   header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"commissioning-state.csv\"")),
                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                                 )
-                              } else
-                                Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(results)))
+                              } else {
+                                val filteredResults = results.filter{ result =>
+                                  result.checks.exists {
+                                    case check: Check.SimpleCheck =>
+                                      check.checkResult match {
+                                        case Right(_) => true
+                                        case _ => false
+                                      }
+                                    case check: Check.EnvCheck =>
+                                      check.checkResults.values.exists {
+                                        case Right(_) => true
+                                        case _ => false
+                                      }
+                                  }
+                                }
+                                Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(filteredResults)))
+                              }
         )
     }
 
