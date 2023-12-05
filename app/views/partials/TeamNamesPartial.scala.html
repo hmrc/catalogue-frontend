@@ -24,7 +24,7 @@
   controllerLinkHref: String,
 )
 
-@if(teamNames.length < Constant.sharedRepoTeamsCutOff ) {
+@if(teamNames.length < Constant.sharedRepoTeamsCutOff) {
     @teamNames.map { tn =>
         <div class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(tn)">@tn.asString</a></div>
     }
