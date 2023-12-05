@@ -182,8 +182,8 @@ class DeployServiceController @Inject()(
         vulnerabils  <- EitherT
                           .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired)))
                           .map {
-                            case Nil if releases.exists(_.versionNumber.asVersion == formObject.version) => None
-                            case xs                                                                      => Some(xs)
+                            case Nil if !releases.exists(_.versionNumber.asVersion == formObject.version) => None
+                            case xs                                                                       => Some(xs)
                           }
       } yield
         Ok(deployServicePage(form, hasPerm, allServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils))))
