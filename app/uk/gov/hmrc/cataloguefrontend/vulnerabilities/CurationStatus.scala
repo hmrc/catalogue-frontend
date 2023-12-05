@@ -46,4 +46,17 @@ object CurationStatus {
     override def writes(cs: CurationStatus): JsValue =
       JsString(cs.asString)
   }
+
+  import play.api.data.format.Formatter
+  import play.api.data.FormError
+  val formFormat: Formatter[CurationStatus] = new Formatter[CurationStatus] {
+    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], CurationStatus] =
+      data
+        .get(key)
+        .flatMap(parse(_).toOption)
+        .fold[Either[Seq[FormError], CurationStatus]](Left(Seq(FormError(key, "Invalid value"))))(Right.apply)
+
+    override def unbind(key: String, value: CurationStatus): Map[String, String] =
+      Map(key -> value.asString)
+  }
 }

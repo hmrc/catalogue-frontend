@@ -67,14 +67,14 @@
 }
 
 a {
-    --bs-link-underline-opacity: 0;
-    text-decoration-color: rgba(var(--bs-link-color-rgb),var(--bs-link-underline-opacity,1))!important;
-    text-underline-offset: 0.25em!important;
+    text-decoration: none;
+    text-underline-offset: 0.25em !important;
 }
 
 a:hover {
     --bs-link-underline-opacity: 100;
-    text-decoration-color: rgba(var(--bs-link-color-rgb),var(--bs-link-underline-opacity,1))!important;
+    text-decoration-color: rgba(var(--bs-link-color-rgb), var(--bs-link-underline-opacity, 1));
+    text-decoration: underline;
 }
 
 .accordion-button:disabled::after {
