@@ -84,14 +84,15 @@
         </form>
         <table class="table table-striped sticky-header" id="service-list">
             <thead>
-                <th><button role="button" class="sort no-border fw-bold" data-sort="application-name">Application Name</button></th>
-                @if(viewMode == ViewMode.Versions) {
-                    @viewModel.environments.map { env =>
+                    <th>
+                        <button role="button" class="sort no-border fw-bold" data-sort="application-name">Application Name</button></th>
+                    @if(viewMode == ViewMode.Versions) {
+                    @viewModel.distinctEnvironment.map { env =>
                         <th class="wrw-environment-head">@env.displayString</th>
                     }
                     <th></th>
                 } else {
-                    @viewModel.environments.map { env =>
+                    @viewModel.distinctEnvironment.map { env =>
                         <th class="wrw-environment-head"><button role="button" class="sort no-border fw-bold" data-sort="@env.asString">@env.displayString</button></th>
                     }
                 }
@@ -99,7 +100,7 @@
             @if(viewMode == ViewMode.Versions) {
                 @WhatsRunningWhereVersions(viewModel.toVersionRow)
             } else {
-                @WhatsRunningWhereInstances(serviceDeployments, viewModel.environments, maxMemory)
+                @WhatsRunningWhereInstances(serviceDeployments, viewModel.distinctEnvironment, maxMemory)
             }
         </table>
     </div>

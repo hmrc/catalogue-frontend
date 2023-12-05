@@ -19,12 +19,14 @@ package uk.gov.hmrc.cataloguefrontend.viewModels.whatsRunningWhere
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
 
-case class WhatsRunningWhereViewModel(whatsRunning: Seq[WhatsRunningWhere], environments: Seq[Environment]) {
+case class WhatsRunningWhereViewModel(whatsRunning: Seq[WhatsRunningWhere]) {
+
+  val distinctEnvironment: Seq[Environment] = whatsRunning.flatMap(_.versions.map(_.environment)).distinct.sorted
 
   val toVersionRow: Seq[VersionRow] = whatsRunning.zipWithIndex.map {
     case (WhatsRunningWhere(applicationName, versions), index) =>
       val versionMap: Seq[EnvironmentField] =
-        environments.map(env =>
+        distinctEnvironment.map(env =>
           env -> versions.find(_.environment == env) match {
             case (env, Some(version)) => EnvironmentWithVersion(env, version)
             case _                    => EnvironmentWithoutVersion(env)

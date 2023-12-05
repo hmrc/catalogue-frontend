@@ -28,12 +28,12 @@
 
     @row.environments.map {
         case environmentWithVersion: EnvironmentWithVersion => {
-        @if(environmentWithVersion.version.versionNumber.asVersion == row.latestVersion) {
+        @if(environmentWithVersion.version.versionNumber.asVersion == row.latestVersion && !environmentWithVersion.isPatchedVersion) {
             <td id="row@{row.index}_version_@{environmentWithVersion.env.asString}">@environmentWithVersion.version.versionNumber.asString</td>
         } else {
             <td id="row@{row.index}_version_@{environmentWithVersion.env.asString}"
                 class="@if(environmentWithVersion.isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}"
-                style="--bs-bg-opacity: @if(environmentWithVersion.isPatchedVersion) {1} else {@row.versionOpacity(environmentWithVersion.version.versionNumber.asVersion)}">
+                style="--bs-bg-opacity: @if(environmentWithVersion.isPatchedVersion) {0.75} else {@row.versionOpacity(environmentWithVersion.version.versionNumber.asVersion)}">
                 @environmentWithVersion.version.versionNumber.asString
             </td>
          }

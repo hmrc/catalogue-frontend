@@ -31,34 +31,64 @@ class WhatsRunningWhereViewModelSpec extends UnitSpec {
       val qaVersion          = WhatsRunningWhereVersion(QA, VersionNumber("1.3.0"), List.empty)
       val productionVersion  = WhatsRunningWhereVersion(Production, VersionNumber("1.2.0"), List.empty)
 
-      val environments = List(developmentVersion, qaVersion, productionVersion)
+      val environments            = List(developmentVersion, qaVersion, productionVersion)
+      val environmentsWithMissing = List(developmentVersion, qaVersion)
 
       val whatsRunningWhere = Seq(
         WhatsRunningWhere(ServiceName("foo"), environments),
         WhatsRunningWhere(ServiceName("bar"), environments),
-        WhatsRunningWhere(ServiceName("baz"), environments)
+        WhatsRunningWhere(ServiceName("baz"), environmentsWithMissing)
       )
 
-      val acceptedEnvironments = Seq(Development, QA, ExternalTest)
-
       val viewModel = WhatsRunningWhereViewModel(
-        whatsRunning = whatsRunningWhere,
-        environments = acceptedEnvironments
+        whatsRunning = whatsRunningWhere
       )
 
       val expectedEnvironmentType = List(
         EnvironmentWithVersion(Development, developmentVersion),
         EnvironmentWithVersion(QA, qaVersion),
-        EnvironmentWithoutVersion(ExternalTest)
+        EnvironmentWithVersion(Production, productionVersion)
+      )
+
+      val expectedEmptyEnvironmentType = List(
+        EnvironmentWithVersion(Development, developmentVersion),
+        EnvironmentWithVersion(QA, qaVersion),
+        EnvironmentWithoutVersion(Production)
       )
 
       val expectedResult = Seq(
         VersionRow("foo", 0, expectedEnvironmentType),
         VersionRow("bar", 1, expectedEnvironmentType),
-        VersionRow("baz", 2, expectedEnvironmentType)
+        VersionRow("baz", 2, expectedEmptyEnvironmentType)
       )
 
       viewModel.toVersionRow shouldBe expectedResult
+    }
+
+    "create a list of distinct environments when given a list of WhatsRunningWhere" in {
+
+      val developmentVersion = WhatsRunningWhereVersion(Development, VersionNumber("1.4.0"), List.empty)
+      val qaVersion = WhatsRunningWhereVersion(QA, VersionNumber("1.3.0"), List.empty)
+      val productionVersion = WhatsRunningWhereVersion(Production, VersionNumber("1.2.0"), List.empty)
+      val externalTest  = WhatsRunningWhereVersion(ExternalTest, VersionNumber("1.1.0"), List.empty)
+
+      val environments = List(developmentVersion, qaVersion, productionVersion)
+
+      val environmentsWithET = environments ++ List(externalTest)
+
+      val whatsRunningWhere = Seq(
+        WhatsRunningWhere(ServiceName("foo"), environments),
+        WhatsRunningWhere(ServiceName("bar"), environments),
+        WhatsRunningWhere(ServiceName("baz"), environmentsWithET)
+      )
+
+      val viewModel = WhatsRunningWhereViewModel(
+        whatsRunning = whatsRunningWhere
+      )
+
+      val expectedResults = Seq(Development, QA, ExternalTest, Production)
+
+      viewModel.distinctEnvironment shouldBe expectedResults
     }
   }
 

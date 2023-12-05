@@ -22,7 +22,6 @@ import play.api.data.Forms.{mapping, optional, text}
 import play.api.i18n.Messages.implicitMessagesProviderToMessages
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.viewModels.whatsRunningWhere.WhatsRunningWhereViewModel
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -53,9 +52,6 @@ class WhatsRunningWhereController @Inject() (
         } yield Profile(profileType, profileName)
     )
 
-  private def distinctEnvironments(releases: Seq[WhatsRunningWhere]): Seq[Environment] =
-    releases.flatMap(_.versions.map(_.environment)).distinct.sorted
-
   def releases(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val form                  = WhatsRunningWhereFilter.form.bindFromRequest()
@@ -81,10 +77,9 @@ class WhatsRunningWhereController @Inject() (
     for {
       profiles     <- service.profiles()
       releases     <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
-      environments =  distinctEnvironments(releases)
       profileNames =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
     } yield {
-      val viewModel = WhatsRunningWhereViewModel(releases, environments)
+      val viewModel = WhatsRunningWhereViewModel(releases)
       page(viewModel, selectedProfileType, profileNames, form, Seq.empty, config.maxMemoryAmount, selectedViewMode)
     }
 
@@ -100,11 +95,10 @@ class WhatsRunningWhereController @Inject() (
     for {
       profiles           <- service.profiles()
       releases           <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
-      environments       =  distinctEnvironments(releases)
       serviceDeployments <- service.allDeploymentConfigs(releases)
       profileNames       =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
     } yield {
-      val viewModel = WhatsRunningWhereViewModel(releases, environments)
+      val viewModel = WhatsRunningWhereViewModel(releases)
       page(viewModel, selectedProfileType, profileNames, form, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
     }
 }
