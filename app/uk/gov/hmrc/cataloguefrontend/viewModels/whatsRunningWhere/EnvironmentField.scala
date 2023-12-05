@@ -41,37 +41,30 @@ case class EnvironmentWithVersion(env: Environment, version: WhatsRunningWhereVe
 
     val majorVersionContent = if (thisMajorVersion < latestMajorVersion) {
       val versionDiff: Int = latestMajorVersion - thisMajorVersion
-      val plural = if (versionDiff > 1) "'s" else ""
-      Some(s"${versionDiff} major version${plural} behind")
+      val plural = if (versionDiff > 1) "s" else ""
+      Some(s"<div>${toVersion.toString} is ${versionDiff} <strong>major</strong> version${plural} behind latest ${latestVersion.toString}</div>")
     } else None
 
     val minorVersionContent = if (thisMinorVersion < latestMinorVersion) {
       val versionDiff: Int = latestMinorVersion - thisMinorVersion
-      val plural = if (versionDiff > 1) "'s" else ""
-      Some(s"${versionDiff} minor version${plural} behind")
+      val plural = if (versionDiff > 1) "s" else ""
+      Some(s"<div>${toVersion.toString} is ${versionDiff} <strong>minor</strong> version${plural} behind latest ${latestVersion.toString}</div>")
     } else None
 
     val patchAheadVersionContent = if (toVersion.patch > 0) {
       val latestNonPatchedVersion = s"${latestMajorVersion}.${latestMinorVersion}.0"
-      val plural = if (thisPatchVersion > 1) "'s" else ""
-      Some(s"${thisPatchVersion} patch/hotfix version${plural} ahead latest minor version [${latestNonPatchedVersion}]")
+      val plural = if (thisPatchVersion > 1) "s" else ""
+      Some(s"<div>${toVersion.toString} is ${thisPatchVersion} <strong>patch/hotfix</strong> version${plural} ahead latest ${latestNonPatchedVersion}</div>")
     } else None
 
     val patchBehindVersionContent = if (latestPatchVersion > 0 && toVersion.patch == 0) {
-      val plural = if (latestPatchVersion > 1) "'s" else ""
-      Some(s"${latestPatchVersion} version${plural} behind latest patch/hotfix version [${latestVersion.toString}]. Consider releasing new minor version.")
+      val plural = if (latestPatchVersion > 1) "s" else ""
+      Some(s"<div>${toVersion.toString} is ${latestPatchVersion.toString} version${plural} behind latest <strong>patch/hotfix</strong> version ${latestVersion.toString}</div>")
     } else None
 
-    val listOfStringsToConcat = List(majorVersionContent, minorVersionContent, patchAheadVersionContent, patchBehindVersionContent)
+    val listOfContentByPriority = List(patchBehindVersionContent, patchAheadVersionContent, majorVersionContent, minorVersionContent)
 
-    val buildHtml: String =
-      s"""
-        |<div><strong>Latest version:</strong> ${latestVersion.toString}</div>
-        |<div><strong>Current version:</strong> ${toVersion.toString}</div>
-        |<ul>
-        | ${listOfStringsToConcat.flatten.map(x => s"<li>${x}</li>").mkString}
-        |</ul>""".stripMargin
-    buildHtml
+    listOfContentByPriority.flatten.headOption.getOrElse("")
   }
 
 }
