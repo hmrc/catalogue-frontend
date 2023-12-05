@@ -89,18 +89,27 @@ class ServiceCommissioningStatusController @Inject() (
                                 allChecks <- serviceCommissioningStatusConnector.allChecks()
                                 results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType)
                                 checks    =  if (formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
-
+                                
+                                filteredResults = results.filter { result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
+                                  result.checks.exists {
+                                    case check: Check.SimpleCheck =>
+                                      check.checkResult.isRight
+                                    case check: Check.EnvCheck =>
+                                      check.checkResults.values.exists(_.isRight)
+                                  }
+                                }
                             } yield
                               if (formObject.asCsv) {
-                                val rows   = toRows(allChecks.filter { case (title, _) => checks.contains(title) }, formObject.environments, results)
+                                val rows   = toRows(allChecks.filter { case (title, _) => checks.contains(title) }, formObject.environments, filteredResults)
                                 val csv    = CsvUtils.toCsv(rows)
                                 val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
                                 Result(
                                   header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"commissioning-state.csv\"")),
                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                                 )
-                              } else
-                                Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(results)))
+                              } else {
+                                Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(filteredResults)))
+                              }
         )
     }
 
