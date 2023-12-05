@@ -93,15 +93,9 @@ class ServiceCommissioningStatusController @Inject() (
                                 filteredResults = results.filter { result => //exclude decommissioned services
                                   result.checks.exists {
                                     case check: Check.SimpleCheck =>
-                                      check.checkResult match {
-                                        case Right(_) => true
-                                        case _ => false
-                                      }
+                                      check.checkResult.isRight
                                     case check: Check.EnvCheck =>
-                                      check.checkResults.values.exists {
-                                        case Right(_) => true
-                                        case _ => false
-                                      }
+                                      check.checkResults.values.exists(_.isRight)
                                   }
                                 }
                             } yield
