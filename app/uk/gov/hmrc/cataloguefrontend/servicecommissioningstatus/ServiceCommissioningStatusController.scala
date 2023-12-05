@@ -89,18 +89,8 @@ class ServiceCommissioningStatusController @Inject() (
                                 allChecks <- serviceCommissioningStatusConnector.allChecks()
                                 results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType)
                                 checks    =  if (formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
-
-                            } yield
-                              if (formObject.asCsv) {
-                                val rows   = toRows(allChecks.filter { case (title, _) => checks.contains(title) }, formObject.environments, results)
-                                val csv    = CsvUtils.toCsv(rows)
-                                val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
-                                Result(
-                                  header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"commissioning-state.csv\"")),
-                                  body   = HttpEntity.Streamed(source, None, Some("text/csv"))
-                                )
-                              } else {
-                                val filteredResults = results.filter{ result =>
+                                
+                                filteredResults = results.filter { result => //exclude decommissioned services
                                   result.checks.exists {
                                     case check: Check.SimpleCheck =>
                                       check.checkResult match {
@@ -114,6 +104,16 @@ class ServiceCommissioningStatusController @Inject() (
                                       }
                                   }
                                 }
+                            } yield
+                              if (formObject.asCsv) {
+                                val rows   = toRows(allChecks.filter { case (title, _) => checks.contains(title) }, formObject.environments, filteredResults)
+                                val csv    = CsvUtils.toCsv(rows)
+                                val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
+                                Result(
+                                  header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"commissioning-state.csv\"")),
+                                  body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+                                )
+                              } else {
                                 Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(filteredResults)))
                               }
         )
