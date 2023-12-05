@@ -71,7 +71,7 @@ a {
     text-underline-offset: 0.25em !important;
 }
 
-a:hover {
+a:not(.btn):hover  {
     --bs-link-underline-opacity: 100;
     text-decoration-color: rgba(var(--bs-link-color-rgb), var(--bs-link-underline-opacity, 1));
     text-decoration: underline;
