@@ -23,7 +23,6 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, ServiceType}
 
 @this()
-
 @(form     : Form[SearchCommissioning.SearchCommissioningForm],
   allTeams : Seq[Team]
 , allChecks: Seq[(String, FormCheckType)]
@@ -158,7 +157,20 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @results.getOrElse(Nil).map { result =>
+                @results.getOrElse(Nil).filter( { result =>
+                    result.checks.exists {
+                        case check: Check.SimpleCheck =>
+                            check.checkResult match {
+                                case Right(_) => true
+                                case _ => false
+                            }
+                        case check: Check.EnvCheck =>
+                            check.checkResults.values.exists {
+                                case Right(_) => true
+                                case _ => false
+                            }
+                    }
+                }).map { result =>
                         <tr>
                             <td><a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a></td>
                             @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
