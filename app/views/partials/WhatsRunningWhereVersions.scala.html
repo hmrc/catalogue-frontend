@@ -14,11 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import play.twirl.api.TwirlFeatureImports.defining
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController
-
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 
 @(whatsRunning: Seq[WhatsRunningWhere]
 , environments: Seq[Environment]
@@ -38,16 +38,28 @@
               @versionMap.map { case (env, maybeVersion) =>
                   @maybeVersion match {
                       case Some(version) => {
-                        @if(version.versionNumber.asVersion == latestVersion) {
-                            <td id="row@{i}_version_@{env.asString}">@version.versionNumber.asString</td>
-                        } else {
-                          @defining(uniqueVersions.indexOf(version.versionNumber.asVersion)) { age =>
-                            @defining((1 - (age.toDouble / uniqueVersions.length)) * 0.75) { opacity =>
-                                <td id="row@{i}_version_@{env.asString}" class="wrw-version-outdated" style="--bs-bg-opacity: @opacity">
-                                    @version.versionNumber.asString
-                                </td>
+                          @defining(version.versionNumber.asVersion.patch > 0) { isPatchedVersion =>
+
+                              @if(version.versionNumber.asVersion == latestVersion && !isPatchedVersion ) {
+                              <td id="row@{i}_version_@{env.asString}">@version.versionNumber.asString</td>
+                              } else {
+                              @defining(uniqueVersions.indexOf(version.versionNumber.asVersion)) { age =>
+                                @defining(opacity(version.versionNumber.asVersion, latestVersion, uniqueVersions, isPatchedVersion)) { opacity =>
+                                  <td id="row@{i}_version_@{env.asString}" class="@if(isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}" style="--bs-bg-opacity: @opacity">
+                                      <span
+                                      data-bs-toggle="popover"
+                                      data-bs-trigger="hover"
+                                      data-bs-placement="bottom"
+                                      data-bs-html="true"
+                                      data-bs-title='@{tooltipContent(version.versionNumber.asVersion, latestVersion)}'
+                                      >
+                                      @version.versionNumber.asString
+                                      </span>
+
+                                  </td>
+                                }
+                              }
                             }
-                          }
                         }
                       }
                       case None => {
@@ -65,3 +77,36 @@
   </tr>
 }
 </tbody>
+
+@opacity(version: Version, latestVersion: Version, uniqueVersions: Seq[Version], isPatchedVersion: Boolean) = @{
+    val versionOpacity = if(version.major < latestVersion.major) 1 else 0.5
+    val age = uniqueVersions.indexOf(version)
+
+    if(isPatchedVersion) {
+        0.75
+    } else {
+        (1 - (age.toDouble / uniqueVersions.length)) * versionOpacity
+    }
+}
+
+@tooltipContent(version: Version, latestVersion: Version) = @{
+    if(latestVersion.patch > 0 && version.patch == 0) {
+       val plural = if (latestVersion.patch > 1) "s" else ""
+      <div>{version.toString} is {latestVersion.patch} version{plural} behind latest <strong>patch/hotfix</strong> version {latestVersion.toString}</div>
+    } else if (version.patch > 0) {
+       val plural = if (version.patch > 1) "s" else ""
+        val latestNonPatchedVersion = s"${latestVersion.major}.${latestVersion.minor}.0"
+       <div>{version.toString} is {version.patch} <strong>patch/hotfix</strong> version{plural} ahead latest {latestNonPatchedVersion}</div>
+    } else if (version.major < latestVersion.major) {
+        val versionDiff: Int = latestVersion.major - version.major
+        val plural = if (versionDiff > 1) "s" else ""
+       <div>{version.toString} is {versionDiff} <strong>major</strong> version{plural} behind latest {latestVersion.toString}</div>
+    } else if (version.minor < latestVersion.minor) {
+        val versionDiff: Int = latestVersion.minor - version.minor
+        val plural = if (versionDiff > 1) "s" else ""
+        <div>{version.toString} is {versionDiff} <strong>minor</strong> version{plural} behind latest {latestVersion.toString}</div>
+    } else {
+      ""
+    }
+}
+
