@@ -1,0 +1,108 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import play.twirl.api.TwirlFeatureImports.defining
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+
+@(whatsRunning: Seq[WhatsRunningWhere]
+, environments: Seq[Environment]
+)
+
+<tbody class="list">
+@whatsRunning.zipWithIndex.map { case (wrw, i) =>
+  <tr id="row@i">
+    <td class="application-name" id="row@{i}_application">
+        <a id="link-to-info-page-for-@{wrw.applicationName.asString}" href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
+    </td>
+    @defining(environments.map(env => env -> wrw.versions.find(_.environment == env))) { versionMap =>
+      @defining(versionMap.map(_._2).collect{ case Some(v) => v.versionNumber.asVersion}.sorted) { sortedVersions =>
+        @defining(sortedVersions.distinct) { uniqueVersions =>
+          @defining(sortedVersions.reverse.head) { latestVersion =>
+              @versionMap.map {
+                case (env, Some(version)) => {
+                  @defining(version.versionNumber.asVersion) { currentVersion =>
+                    @defining(currentVersion.patch > 0) { isPatchedVersion =>
+                        @if(currentVersion == latestVersion && !isPatchedVersion ) {
+                            <td id="row@{i}_version_@{env.asString}">@currentVersion.toString</td>
+                        } else {
+                        @defining(uniqueVersions.indexOf(currentVersion)) { age =>
+                          @defining(opacity(currentVersion, latestVersion, uniqueVersions, isPatchedVersion)) { opacity =>
+                            <td id="row@{i}_version_@{env.asString}" class="@if(isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}" style="--bs-bg-opacity: @opacity">
+                                <span
+                                data-bs-toggle="popover"
+                                data-bs-trigger="hover"
+                                data-bs-placement="bottom"
+                                data-bs-html="true"
+                                data-bs-title='@{tooltipContent(currentVersion, latestVersion)}'
+                                >
+                                @currentVersion.toString
+                                </span>
+                            </td>
+                          }
+                        }
+                      }
+                    }
+                }
+              }
+              case (env, None) => {
+                  <td id="row@{i}_version_@{env.asString}"></td>
+              }
+            }
+          }
+        }
+      }
+    }
+    <td>
+        <a id="link-to-deployment-timeline-for-@{wrw.applicationName.asString}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
+    </td>
+  </tr>
+}
+</tbody>
+
+@opacity(version: Version, latestVersion: Version, uniqueVersions: Seq[Version], isPatchedVersion: Boolean) = @{
+    if(isPatchedVersion) {
+        0.75
+    } else {
+        val majorOrMinorOpacity = if(version.major < latestVersion.major) 1 else 0.5
+        val age = uniqueVersions.indexOf(version)
+        (1 - (age.toDouble / uniqueVersions.length)) * majorOrMinorOpacity
+    }
+}
+
+@tooltipContent(version: Version, latestVersion: Version) = @{
+    if(latestVersion.patch > 0 && version.patch == 0) {
+       val plural = if (latestVersion.patch > 1) "s" else ""
+            <div>{version.toString} is {latestVersion.patch} version{plural} behind latest <strong>patch/hotfix</strong> version {latestVersion.toString}</div>
+    } else if (version.patch > 0) {
+       val plural = if (version.patch > 1) "s" else ""
+        val latestNonPatchedVersion = s"${latestVersion.major}.${latestVersion.minor}.0"
+            <div>{version.toString} is {version.patch} <strong>patch/hotfix</strong> version{plural} ahead latest {latestNonPatchedVersion}</div>
+    } else if (version.major < latestVersion.major) {
+        val versionDiff: Int = latestVersion.major - version.major
+        val plural = if (versionDiff > 1) "s" else ""
+            <div>{version.toString} is {versionDiff} <strong>major</strong> version{plural} behind latest {latestVersion.toString}</div>
+    } else if (version.minor < latestVersion.minor) {
+        val versionDiff: Int = latestVersion.minor - version.minor
+        val plural = if (versionDiff > 1) "s" else ""
+            <div>{version.toString} is {versionDiff} <strong>minor</strong> version{plural} behind latest {latestVersion.toString}</div>
+    } else {
+      ""
+    }
+}
+

@@ -19,7 +19,8 @@
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, WhatsRunningWhere, ViewMode}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
-@import views.html.partials.{WhatsRunningWhereVersions, WhatsRunningWhereInstances}
+@import views.html.whatsrunningwhere.WhatsRunningWhereInstancesPartial
+@import views.html.whatsrunningwhere.WhatsRunningWhereVersionsPartial
 
 @this(viewMessages: ViewMessages)
 
@@ -98,9 +99,9 @@
                 }
             </thead>
             @if(viewMode == ViewMode.Versions) {
-                @WhatsRunningWhereVersions(whatsRunning, environments)
+                @WhatsRunningWhereVersionsPartial(whatsRunning, environments)
             } else {
-                @WhatsRunningWhereInstances(serviceDeployments, environments, maxMemory)
+                @WhatsRunningWhereInstancesPartial(serviceDeployments, environments, maxMemory)
             }
         </table>
     </div>
