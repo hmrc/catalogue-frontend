@@ -84,7 +84,7 @@
                         @user.teamsAndRoles.map { team =>
                           <li>
                             <a href="@teamRoutes.TeamsController.team(team.teamName)">
-                              @team.teamName
+                              @team.teamName.asString
                             </a>
                             @if(!team.role.isUser) {
                               <span class="badge rounded-pill text-bg-secondary">@team.role.displayName</span>

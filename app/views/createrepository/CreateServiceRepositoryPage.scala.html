@@ -97,7 +97,7 @@
                         @teamNames.map { tn =>
                             <option value="@{tn.asString}"
                                     @if(form.data.getOrElse("teamName", "").equals(tn)) { selected="selected" }
-                            >@tn</option>
+                            >@tn.asString</option>
                         }
                     </select>
                     @form_fields_warnings(form,"teamName")
