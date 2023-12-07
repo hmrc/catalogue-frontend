@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 import play.api.Logger
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
-import uk.gov.hmrc.cataloguefrontend.leakdetection.Priority.{High, Low, Medium}
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -55,20 +55,20 @@ class LeakDetectionConnector @Inject() (
   def leakDetectionSummaries(
     ruleId: Option[String],
     repo  : Option[String],
-    team  : Option[String]
+    team  : Option[TeamName]
   )(implicit
     hc    : HeaderCarrier
   ): Future[Seq[LeakDetectionSummary]] = {
     implicit val ldrs: Reads[LeakDetectionSummary] = LeakDetectionSummary.reads
     httpClientV2
-      .get(url"$url/api/rules/summary?ruleId=$ruleId&repository=$repo&team=$team")
+      .get(url"$url/api/rules/summary?ruleId=$ruleId&repository=$repo&team=${team.map(_.asString)}")
       .execute[Seq[LeakDetectionSummary]]
   }
 
   def leakDetectionRepoSummaries(
     ruleId          : Option[String],
     repo            : Option[String],
-    team            : Option[String],
+    team            : Option[TeamName],
     includeNonIssues: Boolean,
     includeBranches : Boolean
   )(implicit
@@ -77,7 +77,7 @@ class LeakDetectionConnector @Inject() (
     implicit val ldrs: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
     val excludeNonIssues = !includeNonIssues
     httpClientV2
-      .get(url"$url/api/repositories/summary?ruleId=$ruleId&repository=$repo&team=$team&excludeNonIssues=$excludeNonIssues&includeBranches=$includeBranches")
+      .get(url"$url/api/repositories/summary?ruleId=$ruleId&repository=$repo&team=${team.map(_.asString)}&excludeNonIssues=$excludeNonIssues&includeBranches=$includeBranches")
       .execute[Seq[LeakDetectionRepositorySummary]]
   }
 
@@ -134,16 +134,16 @@ object RepositoryWithLeaks {
 sealed trait Priority {
   val name: String =
     this match {
-      case High   => "high"
-      case Medium => "medium"
-      case Low    => "low"
+      case Priority.High   => "high"
+      case Priority.Medium => "medium"
+      case Priority.Low    => "low"
     }
 
   protected val ordering: Int =
     this match {
-      case High   => 1
-      case Medium => 2
-      case Low    => 3
+      case Priority.High   => 1
+      case Priority.Medium => 2
+      case Priority.Low    => 3
     }
 }
 
