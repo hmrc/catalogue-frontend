@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -75,7 +76,7 @@ class LeakDetectionService @Inject() (
 
   def repoSummaries(
     ruleId           : Option[String],
-    team             : Option[String],
+    team             : Option[TeamName],
     includeWarnings  : Boolean,
     includeExemptions: Boolean,
     includeViolations: Boolean,
