@@ -110,13 +110,14 @@
                                         } else {
                                             @defining(
                                             ( envSources.getOrElse(env, Seq.empty).filterNot(_._2).size != idx+1
-                                            , configWarnings.filter(x => x.key == key && ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env  )
+                                            , configWarnings.filter(x => x.key == key && ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env && x.value.source == sourceValue.source )
                                             )
                                             ) { case (isStrikethrough, warnings) =>
                                             <span class="truncate-content-overflow
                                                         @if(sourceValue.isSuppressed) {suppressed}
-                                                        @if(isStrikethrough) {strikethrough} else if(warnings.nonEmpty){warning}">
-                                                @if(!isStrikethrough && warnings.nonEmpty){ <span class="glyphicon glyphicon-exclamation-sign small-text hide-warnings"></span> }
+                                                        @if(isStrikethrough) {strikethrough}
+                                                        @if(warnings.nonEmpty) {warning}">
+                                                @if(warnings.nonEmpty){ <span class="glyphicon glyphicon-exclamation-sign small-text hide-warnings"></span> }
                                                 @displayValue(sourceValue, nextDeployment, env, key, warnings)
                                             </span>
                                             }
