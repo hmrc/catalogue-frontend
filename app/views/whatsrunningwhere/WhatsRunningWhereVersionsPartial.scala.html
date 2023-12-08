@@ -86,13 +86,11 @@
 }
 
 @tooltipContent(version: Version, latestVersion: Version) = @{
-    if(latestVersion.patch > 0 && version.patch == 0) {
-       val plural = if (latestVersion.patch > 1) "s" else ""
-            <div>{version.toString} is {latestVersion.patch} version{plural} behind latest <strong>patch/hotfix</strong> version {latestVersion.toString}</div>
+    if (version.<(latestVersion) && latestVersion.patch > 0) {
+        val plural = if (latestVersion.patch > 1) "s" else ""
+            <div>{version.toString} is behind latest <strong>hotfix</strong> version {latestVersion.toString}</div>
     } else if (version.patch > 0) {
-       val plural = if (version.patch > 1) "s" else ""
-        val latestNonPatchedVersion = s"${latestVersion.major}.${latestVersion.minor}.0"
-            <div>{version.toString} is {version.patch} <strong>patch/hotfix</strong> version{plural} ahead latest {latestNonPatchedVersion}</div>
+            <div><strong>hotfix</strong></div>
     } else if (version.major < latestVersion.major) {
         val versionDiff: Int = latestVersion.major - version.major
         val plural = if (versionDiff > 1) "s" else ""
@@ -102,7 +100,7 @@
         val plural = if (versionDiff > 1) "s" else ""
             <div>{version.toString} is {versionDiff} <strong>minor</strong> version{plural} behind latest {latestVersion.toString}</div>
     } else {
-      ""
+      <div>{version.toString}</div>
     }
 }
 
