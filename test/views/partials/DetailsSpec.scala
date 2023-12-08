@@ -36,7 +36,6 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     language       = None,
     repoType       = RepoType.Other,
     isPrivate      = true,
-    isArchived     = false,
     defaultBranch  = "main",
     zone           = Option(Zone.Protected),
     serviceType    = Option(ServiceType.Backend),

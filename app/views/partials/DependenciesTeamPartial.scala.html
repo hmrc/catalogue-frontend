@@ -48,15 +48,16 @@
                         @defining(prodDependencies.getOrElse(dependency.dependencies.repositoryName, Seq.empty)) { prodDependencies =>
                           <div id="ood-@dependency.dependencies.repositoryName" class="row mb-3">
                               <div class="col-12">
-                                  <h4>
-                                      <a href="@appRoutes.CatalogueController.repository(dependency.dependencies.repositoryName).url" title="Link to Service Page">@dependency.dependencies.repositoryName</a>
-                                      @if(dependency.repo.isArchived) {
-                                          <span class="badge rounded-pill text-bg-secondary">archived</span>
-                                      }
-                                      @if(dependency.repo.isDeprecated && !dependency.repo.isArchived) {
-                                          <span class="badge rounded-pill text-bg-secondary">deprecated</span>
-                                      }
-                                  </h4>
+                                  <h6 class="fw-bold mb-3">
+                                    <a href="@appRoutes.CatalogueController.repository(dependency.dependencies.repositoryName).url" title="Link to Service Page">@dependency.dependencies.repositoryName</a>
+                                    @{
+                                        if(dependency.repo.isArchived) {
+                                            <span class="badge rounded-pill text-bg-secondary">archived</span>
+                                        } else if(dependency.repo.isDeprecated) {
+                                            <span class="badge rounded-pill text-bg-secondary">deprecated</span>
+                                        }
+                                    }
+                                  </h6>
 
                                   @bobby_alerts(prodDependencies, pending = false)
                                   @bobby_alerts(prodDependencies, pending = true )

@@ -25,6 +25,7 @@
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector.ServiceStatusType
 @import java.time.Instant
 
 @this(
@@ -43,20 +44,26 @@
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
   distinctVulnerabilitiesCount : Option[Int],
-  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsWithHasRepo
+  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsWithHasRepo,
+  canMarkForDecommissioning    : Boolean,
+  status                       : Option[ServiceStatusType],
 )(implicit
   messages                     : Messages,
-  request                      : RequestHeader
+  request                      : RequestHeader,
 )
-
 
 @standard_layout(serviceName, active = "repositories") {
     <header class="header-with-github-badge">
         <div>
-            <h1 id="service-header" class="page-heading mt-4">
+            <h1 id="service-header" class="page-heading mt-4 position-relative">
               Service: @serviceName
-                  @if(repositoryDetails.isDeprecated) { <span>Deprecated</span> }
-                  @if(repositoryDetails.isArchived) { <span>Archived</span> }
+                @{
+                    if(repositoryDetails.isDeprecated) { 
+                        <span>Deprecated</span> 
+                    } else if(repositoryDetails.isArchived) {
+                        <span>Archived</span> 
+                    }
+                }
             </h1>
         </div>
 
@@ -73,7 +80,7 @@
 
         <div class="row mb-3">
             <div class="col-md-6">
-                @partials.details(repositoryDetails)
+                @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, status = status)
             </div>
             <div class="col-md-6">
                 @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
@@ -128,4 +135,6 @@
           @Html(viewMessages.informationalText)
         </p>
     </div>
+
+    <script @CSPNonce.attr src="@routes.Assets.versioned("confirm-buttons.js")"></script>
 }

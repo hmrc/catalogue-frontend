@@ -31,6 +31,7 @@ GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefro
 
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
+POST       /repositories/:name/mark-for-decommissioning uk.gov.hmrc.cataloguefrontend.CatalogueController.markForDecommissioning(name)
 
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
 GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name)

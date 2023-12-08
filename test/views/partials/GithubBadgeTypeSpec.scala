@@ -55,7 +55,6 @@ class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
     githubUrl     = "https://github.com/hmrc/name",
     repoType      = RepoType.Other,
     isPrivate     = false,
-    isArchived    = false,
     defaultBranch = "main",
     language      = None
   )

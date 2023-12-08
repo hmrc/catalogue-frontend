@@ -35,6 +35,8 @@ import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimation
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector.ServiceStatusType
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -56,31 +58,33 @@ case class EnvData(
 
 @Singleton
 class CatalogueController @Inject() (
-  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  serviceConfigsService        : ServiceConfigsService,
-  costEstimationService        : CostEstimationService,
-  serviceCostEstimateConfig    : CostEstimateConfig,
-  routeRulesService            : RouteRulesService,
-  serviceDependenciesConnector : ServiceDependenciesConnector,
-  leakDetectionService         : LeakDetectionService,
-  shutterService               : ShutterService,
-  defaultBranchesService       : DefaultBranchesService,
-  override val mcc             : MessagesControllerComponents,
-  whatsRunningWhereService     : WhatsRunningWhereService,
-  prCommenterConnector         : PrCommenterConnector,
-  vulnerabilitiesConnector     : VulnerabilitiesConnector,
-  confluenceConnector          : ConfluenceConnector,
-  buildDeployApiConnector      : BuildDeployApiConnector,
-  telemetryLinks               : TelemetryLinks,
-  indexPage                    : IndexPage,
-  serviceInfoPage              : ServiceInfoPage,
-  libraryInfoPage              : LibraryInfoPage,
-  prototypeInfoPage            : PrototypeInfoPage,
-  repositoryInfoPage           : RepositoryInfoPage,
-  defaultBranchListPage        : DefaultBranchListPage,
-  costEstimationPage           : CostEstimationPage,
-  serviceMetricsConnector      : ServiceMetricsConnector,
-  override val auth            : FrontendAuthComponents
+  teamsAndRepositoriesConnector      : TeamsAndRepositoriesConnector,
+  serviceConfigsService              : ServiceConfigsService,
+  costEstimationService              : CostEstimationService,
+  serviceCostEstimateConfig          : CostEstimateConfig,
+  routeRulesService                  : RouteRulesService,
+  serviceDependenciesConnector       : ServiceDependenciesConnector,
+  serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector,
+  leakDetectionService               : LeakDetectionService,
+  shutterService                     : ShutterService,
+  defaultBranchesService             : DefaultBranchesService,
+  override val mcc                   : MessagesControllerComponents,
+  whatsRunningWhereService           : WhatsRunningWhereService,
+  prCommenterConnector               : PrCommenterConnector,
+  vulnerabilitiesConnector           : VulnerabilitiesConnector,
+  confluenceConnector                : ConfluenceConnector,
+  buildDeployApiConnector            : BuildDeployApiConnector,
+  telemetryLinks                     : TelemetryLinks,
+  indexPage                          : IndexPage,
+  serviceInfoPage                    : ServiceInfoPage,
+  libraryInfoPage                    : LibraryInfoPage,
+  prototypeInfoPage                  : PrototypeInfoPage,
+  repositoryInfoPage                 : RepositoryInfoPage,
+  defaultBranchListPage              : DefaultBranchListPage,
+  costEstimationPage                 : CostEstimationPage,
+  serviceMetricsConnector            : ServiceMetricsConnector,
+  userManagementConnector            : UserManagementConnector,
+  override val auth                  : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -145,59 +149,61 @@ class CatalogueController @Inject() (
     request : Request[_]
   ): Future[Result] = {
     for {
-      deployments          <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-      repositoryName       =  repositoryDetails.name
-      jenkinsJobs          <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repositoryName)
-      database             <- serviceMetricsConnector.getCollections(serviceName).map(_.headOption.map(_.database))
-      nonPerformantQueries <- if (database.isDefined)
-        serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
-        else
-          Future.successful(Seq.empty)
-      envDatas             <- Environment.values.traverse { env =>
-                                val slugInfoFlag: SlugInfoFlag = SlugInfoFlag.ForEnvironment(env)
-                                val deployedVersions = deployments.filter(_.environment == env).map(_.version)
-                                // a single environment may have multiple versions during a deployment
-                                // return the lowest
-                                deployedVersions.sorted.headOption match {
-                                  case Some(version) =>
-                                    for {
-                                      repoModules     <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
-                                      optShutterState <- shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-                                      data            =  EnvData(
-                                                           version                 = version,
-                                                           repoModules             = repoModules.headOption,
-                                                           optShutterState         = optShutterState,
-                                                           telemetryLinks          = Seq(
-                                                              telemetryLinks.grafanaDashboard(env, serviceName),
-                                                              telemetryLinks.kibanaDashboard(env, serviceName)
-                                                           ),
-                                                           nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]())(d =>
-                                                             telemetryLinks.kibanaNonPerformantQueries(env, d, nonPerformantQueries)
-                                                           )
-                                                         )
-                                    } yield Some(slugInfoFlag -> data)
-                                  case None => Future.successful(None)
+      deployments               <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
+      repositoryName            =  repositoryDetails.name
+      jenkinsJobs               <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repositoryName)
+      database                  <- serviceMetricsConnector.getCollections(serviceName).map(_.headOption.map(_.database))
+      nonPerformantQueries      <- if (database.isDefined)
+                                      serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
+                                    else
+                                      Future.successful(Seq.empty)
+      envDatas                  <- Environment.values.traverse { env =>
+                                     val slugInfoFlag: SlugInfoFlag = SlugInfoFlag.ForEnvironment(env)
+                                     val deployedVersions = deployments.filter(_.environment == env).map(_.version)
+                                     // a single environment may have multiple versions during a deployment
+                                     // return the lowest
+                                     deployedVersions.sorted.headOption match {
+                                       case Some(version) =>
+                                         for {
+                                           repoModules     <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
+                                           optShutterState <- shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
+                                           data            =  EnvData(
+                                                                version                 = version,
+                                                                repoModules             = repoModules.headOption,
+                                                                optShutterState         = optShutterState,
+                                                                telemetryLinks          = Seq(
+                                                                   telemetryLinks.grafanaDashboard(env, serviceName),
+                                                                   telemetryLinks.kibanaDashboard(env, serviceName)
+                                                                ),
+                                                                nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]())(d =>
+                                                                  telemetryLinks.kibanaNonPerformantQueries(env, d, nonPerformantQueries)
+                                                                )
+                                                              )
+                                         } yield Some(slugInfoFlag -> data)
+                                       case None => Future.successful(None)
+                                     }
+                                   }.map(_.collect { case Some(v) => v }.toMap)
+      latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
+      urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
+      serviceRoutes             <- routeRulesService.serviceRoutes(serviceName)
+      optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(repositoryName)
+      costEstimate              <- costEstimationService.estimateServiceCost(repositoryName)
+      commenterReport           <- prCommenterConnector.report(repositoryName)
+      vulnerabilitiesCount      <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
+      serviceRelationships      <- serviceConfigsService.serviceRelationships(serviceName)
+      zone                      <- retrieveZone(serviceName)
+      optLatestData             =  optLatestServiceInfo.map { latestServiceInfo =>
+                                  SlugInfoFlag.Latest ->
+                                    EnvData(
+                                      version                 = latestServiceInfo.version,
+                                      repoModules             = latestRepoModules,
+                                      optShutterState         = None,
+                                      telemetryLinks          = Seq.empty,
+                                      nonPerformantQueryLinks = Seq.empty,
+                                    )
                                 }
-                              }.map(_.collect { case Some(v) => v }.toMap)
-      latestRepoModules    <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
-      urlIfLeaksFound      <- leakDetectionService.urlIfLeaksFound(repositoryName)
-      serviceRoutes        <- routeRulesService.serviceRoutes(serviceName)
-      optLatestServiceInfo <- serviceDependenciesConnector.getSlugInfo(repositoryName)
-      costEstimate         <- costEstimationService.estimateServiceCost(repositoryName)
-      commenterReport      <- prCommenterConnector.report(repositoryName)
-      vulnerabilitiesCount <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
-      serviceRelationships <- serviceConfigsService.serviceRelationships(serviceName)
-      zone                 <- retrieveZone(serviceName)
-      optLatestData        =  optLatestServiceInfo.map { latestServiceInfo =>
-                                SlugInfoFlag.Latest ->
-                                  EnvData(
-                                    version                 = latestServiceInfo.version,
-                                    repoModules             = latestRepoModules,
-                                    optShutterState         = None,
-                                    telemetryLinks          = Seq.empty,
-                                    nonPerformantQueryLinks = Seq.empty,
-                                  )
-                              }
+      canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(serviceName).map(_.value)
+      status                    <- serviceCommissioningStatusConnector.status(serviceName)
     } yield Ok(serviceInfoPage(
       serviceName                  = serviceName,
       repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = zone),
@@ -210,7 +216,9 @@ class CatalogueController @Inject() (
       hasBranchProtectionAuth      = hasBranchProtectionAuth,
       commenterReport              = commenterReport,
       distinctVulnerabilitiesCount = vulnerabilitiesCount,
-      serviceRelationships         = serviceRelationships
+      serviceRelationships         = serviceRelationships,
+      canMarkForDecommissioning    = canMarkForDecommissioning,
+      status                       = status
     ))
   }
 
@@ -254,6 +262,24 @@ class CatalogueController @Inject() (
     auth
       .verify(Retrieval.hasPredicate(EnableBranchProtection.permission(repoName)))
       .map(r => EnableBranchProtection.HasAuthorisation(r.getOrElse(false)))
+
+  def markForDecommissioning(repoName: String) =
+    auth
+      .authorizedAction(
+        continueUrl = routes.CatalogueController.repository(repoName),
+        predicate = MarkForDecommissioning.permission(repoName))
+      .async { implicit request =>
+        serviceCommissioningStatusConnector
+          .setServiceStatus(repoName, ServiceStatusType.BeingDecommissioned)
+          .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
+      }
+
+  private def hasMarkForDecommissioningAuthorisation(repoName: String)(
+    implicit hc: HeaderCarrier
+  ): Future[MarkForDecommissioning.HasAuthorisation] =
+    auth
+      .verify(Retrieval.hasPredicate(MarkForDecommissioning.permission(repoName)))
+      .map(r => MarkForDecommissioning.HasAuthorisation(r.getOrElse(false)))
 
   def changePrototypePassword(repoName: String) =
     auth
@@ -474,6 +500,17 @@ object EnableBranchProtection {
     Predicate.Permission(
       Resource.from("catalogue-repository", repoName),
       IAAction("WRITE_BRANCH_PROTECTION")
+    )
+}
+
+object MarkForDecommissioning {
+
+  final case class HasAuthorisation(value: Boolean) extends AnyVal
+
+  def permission(repoName: String): Permission =
+    Predicate.Permission(
+      Resource.from("catalogue-repository", repoName),
+      IAAction("MARK_FOR_DECOMMISSIONING")
     )
 }
 
