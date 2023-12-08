@@ -21,6 +21,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.ScalaFutures
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentConfig, ServiceDeploymentConfigSummary}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -35,16 +36,16 @@ class WhatsRunningWhereServiceSpec
 
   private val release1 = WhatsRunningWhere(ServiceName("address-lookup"),
     List(
-      WhatsRunningWhereVersion(Environment.Development, VersionNumber("1.011"), Nil),
-      WhatsRunningWhereVersion(Environment.Production,  VersionNumber("1.011"), Nil)
+      WhatsRunningWhereVersion(Environment.Development, Version("1.011"), Nil),
+      WhatsRunningWhereVersion(Environment.Production,  Version("1.011"), Nil)
     )
   )
 
   private val release2 = WhatsRunningWhere(ServiceName("health-indicators"),
     List(
-      WhatsRunningWhereVersion(Environment.QA,         VersionNumber("1.011"), Nil),
-      WhatsRunningWhereVersion(Environment.Staging,    VersionNumber("1.011"), Nil),
-      WhatsRunningWhereVersion(Environment.Production, VersionNumber("1.011"), Nil)
+      WhatsRunningWhereVersion(Environment.QA,         Version("1.011"), Nil),
+      WhatsRunningWhereVersion(Environment.Staging,    Version("1.011"), Nil),
+      WhatsRunningWhereVersion(Environment.Production, Version("1.011"), Nil)
     )
   )
 

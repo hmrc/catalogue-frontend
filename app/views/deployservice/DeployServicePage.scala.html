@@ -87,7 +87,7 @@
                     ( latestVersion.map(x => (x, "Latest")) ++
                       releases
                         .sortBy(_.environment)
-                        .map(x => (x.versionNumber.asVersion, x.environment.displayString))
+                        .map(x => (x.version, x.environment.displayString))
                     ).groupBy { case (version, _) => version }
                       .toList
                       .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
