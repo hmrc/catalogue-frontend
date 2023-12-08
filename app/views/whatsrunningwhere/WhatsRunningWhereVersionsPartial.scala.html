@@ -86,7 +86,7 @@
 }
 
 @tooltipContent(version: Version, latestVersion: Version) = @{
-    if (version.<(latestVersion) && latestVersion.patch > 0) {
+    if (version < latestVersion && latestVersion.patch > 0) {
         val plural = if (latestVersion.patch > 1) "s" else ""
             <div>{version.toString} is behind latest <strong>hotfix</strong> version {latestVersion.toString}</div>
     } else if (version.patch > 0) {
