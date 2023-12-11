@@ -21,12 +21,16 @@ import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, User}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import play.api.libs.json.{Json, Reads, Writes}
+import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, LdapTeam, User}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
 
 @Singleton
 class UserManagementConnector @Inject()(
@@ -74,4 +78,21 @@ class UserManagementConnector @Inject()(
       .get(url)
       .execute[Option[User]]
   }
+
+  def createUser(userRequest: CreateUserRequest, isServiceAccount: Boolean)(implicit hc: HeaderCarrier): Future[Unit] = {
+    val userWrites = if (isServiceAccount) CreateUserRequest.serviceUserWrites else CreateUserRequest.humanUserWrites
+    val url: URL = url"$baseUrl/user-management/create-user"
+
+    println(">>> " + userRequest)
+
+    httpClientV2
+      .post(url)
+      .withBody(Json.toJson(userRequest)(userWrites))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap {
+        case Right(res) => Future.successful(res)
+        case Left(err)  => Future.failed(new RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+      }
+  }
+
 }

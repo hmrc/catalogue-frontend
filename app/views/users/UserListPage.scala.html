@@ -20,6 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.users.UsersController.maxRows
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
 @import views.html.helper.select
+@import uk.gov.hmrc.cataloguefrontend.users.{routes => createUserRoutes}
 
 @this()
 
@@ -34,8 +35,22 @@
 @implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
 @standard_layout("Users", active = "explore") {
-
-  <h1 class="page-heading mt-4">Users</h1>
+  @if(true) {
+    <h1 class="page-heading mt-4">
+      Users
+      <div class="btn-group float-end" role="group">
+        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            Create
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="@createUserRoutes.CreateUserController.createHumanUser()">Create a User</a></li>
+          <li><a class="dropdown-item" href="@createUserRoutes.CreateUserController.createServiceUser()">Create a Service Account</a></li>
+        </ul>
+      </div>
+    </h1>
+  } else {
+    <h1 class="page-heading mt-4">Users</h1>
+  }
 
   <div id="users-list">
     <form id="form" action="/users" method="get">

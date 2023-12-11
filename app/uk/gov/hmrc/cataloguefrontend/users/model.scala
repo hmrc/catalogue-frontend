@@ -79,7 +79,7 @@ object LdapTeam {
     implicit val sir: Reads[SlackInfo] = SlackInfo.reads
     implicit val tnr: Reads[TeamName]  = TeamName.format
     ( (__ \ "members"          ).read[Seq[Member]]
-    ~ (__ \ "teamName"         ).read[TeamName]
+    ~ (__ \ "teamName"         ).read[String]
     ~ (__ \ "description"      ).readNullable[String]
     ~ (__ \ "documentation"    ).readNullable[String]
     ~ (__ \ "slack"            ).readNullable[SlackInfo]
@@ -115,5 +115,77 @@ object User {
     ~ ( __ \ "teamNames"     ).read[Seq[TeamName]](Reads.seq(TeamName.format))
       )(User.apply _)
   }
+}
+
+case class CreateUserRequest(
+  givenName         : String,
+  familyName        : String,
+  organisation      : String,
+  contactEmail      : String,
+  contactComments   : String,
+  team              : String,
+  isReturningUser   : Boolean,
+  isTransitoryUser  : Boolean,
+  vpn               : Boolean,
+  jira              : Boolean,
+  confluence        : Boolean,
+  googleApps        : Boolean,
+  environments      : Boolean
+)
+
+
+object CreateUserRequest {
+
+  implicit val humanUserWrites: OWrites[CreateUserRequest] =
+    OWrites.transform(
+      ( (__ \ "givenName"               ).write[String]
+      ~ (__ \ "familyName"              ).write[String]
+      ~ (__ \ "organisation"            ).write[String]
+      ~ (__ \ "contactEmail"            ).write[String]
+      ~ (__ \ "contactComments"         ).write[String]
+      ~ (__ \ "team"                    ).write[String]
+      ~ (__ \ "isReturningUser"         ).write[Boolean]
+      ~ (__ \ "isTransitoryUser"        ).write[Boolean]
+      ~ (__ \ "access" \ "vpn"          ).write[Boolean]
+      ~ (__ \ "access" \ "jira"         ).write[Boolean]
+      ~ (__ \ "access" \ "confluence"   ).write[Boolean]
+      ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
+      ~ (__ \ "access" \ "environments" ).write[Boolean]
+      )(unlift(CreateUserRequest.unapply))
+    ) { (req, json) =>
+      json ++ Json.obj(
+        "username"           -> s"${req.givenName}.${req.familyName}",
+        "displayName"        -> s"${req.givenName.capitalize} ${req.familyName.capitalize}",
+        "isServiceAccount"   -> false,
+        "isExistingLDAPUser" -> false,
+        "access"             -> ((json \ "access").as[JsObject] ++ Json.obj("ldap" -> true))
+      )
+    }
+
+  implicit val serviceUserWrites: OWrites[CreateUserRequest] =
+    OWrites.transform(
+      ( (__ \ "givenName"               ).write[String]
+      ~ (__ \ "familyName"              ).write[String]
+      ~ (__ \ "organisation"            ).write[String]
+      ~ (__ \ "contactEmail"            ).write[String]
+      ~ (__ \ "contactComments"         ).write[String]
+      ~ (__ \ "team"                    ).write[String]
+      ~ (__ \ "isReturningUser"         ).write[Boolean]
+      ~ (__ \ "isTransitoryUser"        ).write[Boolean]
+      ~ (__ \ "access" \ "vpn"          ).write[Boolean]
+      ~ (__ \ "access" \ "jira"         ).write[Boolean]
+      ~ (__ \ "access" \ "confluence"   ).write[Boolean]
+      ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
+      ~ (__ \ "access" \ "environments" ).write[Boolean]
+      )(unlift(CreateUserRequest.unapply))
+    ) { (req, json) =>
+      json ++ Json.obj(
+        "username"           -> s"${req.givenName}.${req.familyName}",
+        "displayName"        -> s"${req.givenName} ${req.familyName}",
+        "isServiceAccount"   -> true,
+        "isExistingLDAPUser" -> false,
+        "access"             -> ((json \ "access").as[JsObject] ++ Json.obj("ldap" -> true))
+      )
+    }
 }
 
