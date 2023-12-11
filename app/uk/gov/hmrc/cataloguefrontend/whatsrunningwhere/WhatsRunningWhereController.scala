@@ -79,7 +79,7 @@ class WhatsRunningWhereController @Inject() (
   ]) =
     for {
       profiles     <- service.profiles()
-      releases     <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
+      releases     <- service.releasesForProfile(profile).map(_.sortBy(_.serviceName.asString))
       environments =  distinctEnvironments(releases)
       profileNames =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
     } yield page(environments, releases, selectedProfileType, profileNames, form, Seq.empty, config.maxMemoryAmount, selectedViewMode)
@@ -95,7 +95,7 @@ class WhatsRunningWhereController @Inject() (
   ) =
     for {
       profiles           <- service.profiles()
-      releases           <- service.releasesForProfile(profile).map(_.sortBy(_.applicationName.asString))
+      releases           <- service.releasesForProfile(profile).map(_.sortBy(_.serviceName.asString))
       environments       =  distinctEnvironments(releases)
       serviceDeployments <- service.allDeploymentConfigs(releases)
       profileNames       =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted

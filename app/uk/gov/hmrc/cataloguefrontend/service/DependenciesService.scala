@@ -37,7 +37,7 @@ class DependenciesService @Inject() (
     Future
       .traverse(deployments)(wrwv =>
         serviceDependenciesConnector
-          .getSlugInfo(serviceName, Some(wrwv.versionNumber.asVersion))
+          .getSlugInfo(serviceName, Some(wrwv.version))
           .map(_.map(_.copy(environment = Some(wrwv.environment))))
       )
       .map(_.flatten)

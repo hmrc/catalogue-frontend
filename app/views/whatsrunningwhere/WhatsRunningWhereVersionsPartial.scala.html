@@ -28,48 +28,40 @@
 @whatsRunning.zipWithIndex.map { case (wrw, i) =>
   <tr id="row@i">
     <td class="application-name" id="row@{i}_application">
-        <a id="link-to-info-page-for-@{wrw.applicationName.asString}" href="@appRoutes.CatalogueController.service(wrw.applicationName.asString)">@{wrw.applicationName.asString}</a>
+        <a id="link-to-info-page-for-@{wrw.serviceName.asString}" href="@appRoutes.CatalogueController.service(wrw.serviceName.asString)">@{wrw.serviceName.asString}</a>
     </td>
     @defining(environments.map(env => env -> wrw.versions.find(_.environment == env))) { versionMap =>
-      @defining(versionMap.map(_._2).collect{ case Some(v) => v.versionNumber.asVersion}.sorted) { sortedVersions =>
-        @defining(sortedVersions.distinct) { uniqueVersions =>
-          @defining(sortedVersions.reverse.head) { latestVersion =>
-              @versionMap.map {
-                case (env, Some(version)) => {
-                  @defining(version.versionNumber.asVersion) { currentVersion =>
-                    @defining(currentVersion.patch > 0) { isPatchedVersion =>
-                        @if(currentVersion == latestVersion && !isPatchedVersion ) {
-                            <td id="row@{i}_version_@{env.asString}">@currentVersion.toString</td>
-                        } else {
-                        @defining(uniqueVersions.indexOf(currentVersion)) { age =>
-                          @defining(opacity(currentVersion, latestVersion, uniqueVersions, isPatchedVersion)) { opacity =>
-                            <td id="row@{i}_version_@{env.asString}" class="@if(isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}" style="--bs-bg-opacity: @opacity">
-                                <span
-                                data-bs-toggle="popover"
-                                data-bs-trigger="hover"
-                                data-bs-placement="bottom"
-                                data-bs-html="true"
-                                data-bs-title='@{tooltipContent(currentVersion, latestVersion)}'
-                                >
-                                @currentVersion.toString
-                                </span>
-                            </td>
-                          }
-                        }
-                      }
-                    }
+      @defining(versionMap.map(_._2).collect { case Some(x) => x.version}.sorted) { sortedVersions =>
+        @defining(sortedVersions.reverse.head) { latestVersion =>
+          @versionMap.map {
+            case (env, Some(current)) => {
+              @defining(current.version.patch > 0) { isPatchedVersion =>
+                @if(current.version == latestVersion && !isPatchedVersion ) {
+                  <td id="row@{i}_version_@{env.asString}">@current.version.toString</td>
+                } else {
+                  @defining(opacity(current.version, latestVersion, sortedVersions.distinct, isPatchedVersion)) { opacity =>
+                    <td id="row@{i}_version_@{env.asString}" class="@if(isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}" style="--bs-bg-opacity: @opacity">
+                      <span data-bs-toggle="popover"
+                            data-bs-trigger="hover"
+                            data-bs-placement="bottom"
+                            data-bs-html="true"
+                            data-bs-content='@{popoverContent(current.version, latestVersion)}'>
+                              @current.version.toString
+                      </span>
+                    </td>
+                  }
                 }
               }
-              case (env, None) => {
-                  <td id="row@{i}_version_@{env.asString}"></td>
-              }
+            }
+            case (env, None) => {
+              <td id="row@{i}_version_@{env.asString}"></td>
             }
           }
         }
       }
     }
     <td>
-        <a id="link-to-deployment-timeline-for-@{wrw.applicationName.asString}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.applicationName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
+        <a id="link-to-deployment-timeline-for-@{wrw.serviceName.asString}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph(wrw.serviceName.asString)"><span class="glyphicon glyphicon-stats"></span> </a>
     </td>
   </tr>
 }
@@ -85,24 +77,21 @@
     }
 }
 
-@tooltipContent(version: Version, latestVersion: Version) = @{
-    if(latestVersion.patch > 0 && version.patch == 0) {
-       val plural = if (latestVersion.patch > 1) "s" else ""
-            <div>{version.toString} is {latestVersion.patch} version{plural} behind latest <strong>patch/hotfix</strong> version {latestVersion.toString}</div>
+@popoverContent(version: Version, latestVersion: Version) = @{
+    if (version < latestVersion && latestVersion.patch > 0) {
+        <div>{version.toString} is behind latest <strong>hotfix</strong> version {latestVersion.toString}</div>
     } else if (version.patch > 0) {
-       val plural = if (version.patch > 1) "s" else ""
-        val latestNonPatchedVersion = s"${latestVersion.major}.${latestVersion.minor}.0"
-            <div>{version.toString} is {version.patch} <strong>patch/hotfix</strong> version{plural} ahead latest {latestNonPatchedVersion}</div>
+        <div><strong>hotfix</strong></div>
     } else if (version.major < latestVersion.major) {
         val versionDiff: Int = latestVersion.major - version.major
         val plural = if (versionDiff > 1) "s" else ""
-            <div>{version.toString} is {versionDiff} <strong>major</strong> version{plural} behind latest {latestVersion.toString}</div>
+        <div>{version.toString} is {versionDiff} <strong>major</strong> version{plural} behind latest {latestVersion.toString}</div>
     } else if (version.minor < latestVersion.minor) {
         val versionDiff: Int = latestVersion.minor - version.minor
         val plural = if (versionDiff > 1) "s" else ""
-            <div>{version.toString} is {versionDiff} <strong>minor</strong> version{plural} behind latest {latestVersion.toString}</div>
+        <div>{version.toString} is {versionDiff} <strong>minor</strong> version{plural} behind latest {latestVersion.toString}</div>
     } else {
-      ""
+        <div>{version.toString}</div>
     }
 }
 

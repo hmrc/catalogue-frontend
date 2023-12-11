@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.EitherValues
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
+import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
@@ -76,13 +77,13 @@ class ReleasesConnectorSpec
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Integration, Version("1.57.0"), Nil)
           )
         ),
         WhatsRunningWhere(
           ServiceName("api-documentation"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("0.44.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Integration, Version("0.44.0"), Nil)
           )
         )
       )
@@ -122,7 +123,7 @@ class ReleasesConnectorSpec
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, VersionNumber("1.57.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Integration, Version("1.57.0"), Nil)
           )
         )
       )

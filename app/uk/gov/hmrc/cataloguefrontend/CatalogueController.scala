@@ -155,7 +155,7 @@ class CatalogueController @Inject() (
           Future.successful(Seq.empty)
       envDatas             <- Environment.values.traverse { env =>
                                 val slugInfoFlag: SlugInfoFlag = SlugInfoFlag.ForEnvironment(env)
-                                val deployedVersions = deployments.filter(_.environment == env).map(_.versionNumber.asVersion)
+                                val deployedVersions = deployments.filter(_.environment == env).map(_.version)
                                 // a single environment may have multiple versions during a deployment
                                 // return the lowest
                                 deployedVersions.sorted.headOption match {

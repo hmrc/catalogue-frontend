@@ -21,6 +21,7 @@ import play.api.Configuration
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
@@ -95,7 +96,7 @@ class DeploymentHistoryControllerSpec
         DeploymentHistory(
           ServiceName("s1"),
           Environment.Production,
-          VersionNumber("1.1.1"),
+          Version("1.1.1"),
           Seq.empty,
           TimeSeen(d1),
           Username("user_a")
@@ -125,7 +126,7 @@ class DeploymentHistoryControllerSpec
         DeploymentHistory(
           ServiceName("s1"),
           Environment.Production,
-          VersionNumber("1.1.1"),
+          Version("1.1.1"),
           Seq.empty,
           TimeSeen(d1),
           Username("user_a")

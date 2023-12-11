@@ -232,10 +232,10 @@ class DeployServiceControllerSpec
   )
 
   private val someReleasesForService = WhatsRunningWhere(
-    applicationName = uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName("some-service")
-  , versions        = WhatsRunningWhereVersion(Environment.QA        , uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.VersionNumber("0.2.0"), Nil) ::
-                      WhatsRunningWhereVersion(Environment.Production, uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.VersionNumber("0.1.0"), Nil) ::
-                      Nil
+    serviceName = uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName("some-service")
+  , versions    = WhatsRunningWhereVersion(Environment.QA        , Version("0.2.0"), Nil) ::
+                  WhatsRunningWhereVersion(Environment.Production, Version("0.1.0"), Nil) ::
+                  Nil
   )
 
   private val someCommissioningStatus = List(Check.EnvCheck(
