@@ -17,28 +17,30 @@
 package uk.gov.hmrc.cataloguefrontend.users
 
 import cats.data.EitherT
-import play.api.data.Form
+import play.api.Logger
 import play.api.data.Forms._
+import play.api.data.validation.Constraints.maxLength
 import play.api.data.validation.{Constraint, Invalid, Valid}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import play.api.{Configuration, Logger}
+import play.api.data.{Form, Forms}
+import play.api.i18n.Messages
+import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, _}
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.users.CreateUserPage
+import views.html.users.{CreateUserPage, CreateUserRequestSentPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CreateUserController @Inject()(
-  override val auth: FrontendAuthComponents,
-  override val mcc : MessagesControllerComponents,
-  createUserPage   : CreateUserPage,
-  configuration    : Configuration,
-    teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  userManagementConnector: UserManagementConnector
+  override val auth            : FrontendAuthComponents,
+  override val mcc             : MessagesControllerComponents,
+  createUserPage               : CreateUserPage,
+  createUserRequestSentPage    : CreateUserRequestSentPage,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  userManagementConnector      : UserManagementConnector
 ) (implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -46,23 +48,43 @@ class CreateUserController @Inject()(
 
   private val logger = Logger(getClass)
 
-  def createUserPermission(userName: String): Predicate = ???
+  private def createUserPermission(teamName: String): Predicate =
+    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/$teamName"), IAAction("CREATE_USER"))
 
-  def createUserLanding(isServiceAccount: Boolean): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      for {
-        teams <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-      } yield Ok(createUserPage(CreateUserForm.form, teams.map(_.name.asString), Organisation.values, isServiceAccount))
+  def requestSent(givenName: String, familyName: String, isServiceAccount: Boolean): Action[AnyContent] = Action { implicit request =>
+    Ok(createUserRequestSentPage(givenName, familyName, isServiceAccount))
   }
 
-  def createUser(isServiceAccount: Boolean): Action[AnyContent] =
-    Action.async { implicit request =>
+  def createUserLanding(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      for {
+        teams <- teamsAndRepositoriesConnector.allTeams()
+      } yield Ok(createUserPage(CreateUserForm.form, teams.map(_.name.asString), Organisation.values, isServiceAccount = false))
+  }
+
+  def createServiceUserLanding(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      for {
+        teams <- teamsAndRepositoriesConnector.allTeams()
+      } yield Ok(createUserPage(CreateUserForm.form, teams.map(_.name.asString), Organisation.values, isServiceAccount = true))
+    }
+
+  def createHumanUser(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      createUser(isServiceAccount = false)
+    }
+
+  def createServiceUser(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      createUser(isServiceAccount = true)
+    }
+
+  private def createUser(isServiceAccount: Boolean)(implicit request : Request[_], messages: Messages): Future[Result] =
       (
         for {
           allTeams  <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams())
           form      <- EitherT.fromEither[Future](CreateUserForm.form.bindFromRequest().fold(
                          formWithErrors => {
-                           println(formWithErrors)
                            Left(
                              BadRequest(
                                createUserPage(
@@ -74,74 +96,19 @@ class CreateUserController @Inject()(
                              )
                            )
                          },
+
                          validForm => Right(validForm)
                        ))
-          res       <- EitherT(userManagementConnector.createUser(
-                         CreateUserRequest(
-                           givenName          = form.givenName,
-                           familyName         = form.familyName,
-                           organisation       = form.organisation,
-                           contactEmail       = form.contactEmail,
-                           contactComments    = form.contactComments,
-                           team               = form.team,
-                           isReturningUser    = form.isReturningUser,
-                           isTransitoryUser   = form.isTransitoryUser,
-                           isServiceAccount   = false,
-                           isExistingLDAPUser = false,
-                           ldap               = true,
-                           vpn                = form.vpn,
-                           jira               = form.jira,
-                           confluence         = form.confluence,
-                           googleApps         = form.googleApps,
-                           environments       = form.environments
-                         )
-                       )).leftMap { errMsg =>
-                        logger.info(s"createUser failed with: $errMsg")
-                        InternalServerError(
-                          createUserPage(
-                            form = CreateUserForm.form.bindFromRequest().withGlobalError(errMsg),
-                            teamNames = Seq.empty,
-                            organisations = Seq.empty,
-                            isServiceAccount = isServiceAccount
-                          )
-                        )
-                       }
-          _        = logger.info(s"user management result: $res:")
+          res       <- EitherT.right[Result](userManagementConnector.createUser(
+                       //service_ is prepended to the service name for service accounts
+                       if (isServiceAccount) form.copy(givenName = "service_" + form.givenName) else form,
+                       isServiceAccount = isServiceAccount
+                       ))
+          _         = logger.info(s"user management result: $res:")
 
-          } yield Ok(res)
+          } yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(form.givenName, form.familyName, isServiceAccount))
       ).merge
-    }
 }
-
-sealed trait Organisation { def asString: String; }
-
-object Organisation {
-  case object Mdtp extends  Organisation { val asString = "MDTP"  }
-  case object Voa  extends  Organisation { val asString = "VOA"   }
-  case object Other extends Organisation { val asString = "Other" }
-
-  val values: List[Organisation] = List(Mdtp, Voa, Other)
-}
-
-//case class CreateUserForm(
-//  familyName        : String,
-//  givenName         : String,
-//  organisation      : String,
-//  contactEmail      : String,
-//  contactComments   : String,
-//  team              : String,
-//  platformLocation  : Option[String], //platform_location in payload
-//  isReturningUser   : Boolean,
-//  //isServiceAccount  : Boolean = false, can be set in payload
-//  isTransitoryUser  : Boolean,
-//  //isExistingLDAPUser: Boolean = false, should default to false in payload
-//  vpn          : Boolean,
-//  jira         : Boolean,
-//  confluence   : Boolean,
-//  environments : Boolean, // developer tools
-//  googleApps   : Boolean, // g suite
-//  //ldap         : Boolean = true, should default to true in payload
-//)
 
 object CreateUserForm {
 
@@ -150,18 +117,19 @@ object CreateUserForm {
       "givenName"        -> text.verifying(CreateUserConstraints.nameConstraints("givenName") :_*).verifying(CreateUserConstraints.containsServiceConstraint),
       "familyName"       -> text.verifying(CreateUserConstraints.nameConstraints("familyName") :_*),
       "organisation"     -> nonEmptyText,
-      "contactEmail"     -> nonEmptyText.verifying(CreateUserConstraints.emailConstraints() :_*),
-      "contactComments"  -> default(text, "").verifying(CreateUserConstraints.commentLengthConstraint),
+      "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.digitalEmailConstraint),
+      "contactComments"  -> default(text, "").verifying(maxLength(512)),
       "team"             -> nonEmptyText,
       "isReturningUser"  -> boolean,
       "isTransitoryUser" -> boolean,
       "vpn"              -> boolean,
       "jira"            -> boolean,
       "confluence"      -> boolean,
-      "environments"    -> boolean,
-      "googleApps"      -> boolean
+      "googleApps"      -> boolean,
+      "environments"    -> boolean
     )(CreateUserRequest.apply)(CreateUserRequest.unapply)
   )
+
 }
 
 object CreateUserConstraints {
@@ -187,27 +155,13 @@ object CreateUserConstraints {
   val containsServiceConstraint: Constraint[String] =
     mkConstraint("constraints.givenNameNotAServiceCheck")(
       constraint = containsServiceValidation,
-      error      = "Should not contain 'service' - please use <a href=\"/create-user?isServiceAccount=true\"'>Create A Service Account</a> instead"
+      error      = "Should not contain 'service' - if you are trying to create a non human user, please use <a href=\"/create-service-user\"'>Create A Service Account</a> instead"
     )
 
-  private val commentLengthValidation: String => Boolean = str => str.length <= 512
-  val commentLengthConstraint: Constraint[String] =
-    mkConstraint("constraints.commentLengthCheck")(
-      constraint = commentLengthValidation,
-      error      = "Cannot exceed 512 characters"
+  private val digitalEmailValidation: String => Boolean = str => !str.matches(".*digital\\.hmrc\\.gov\\.uk.*")
+  val digitalEmailConstraint: Constraint[String] =
+    mkConstraint("constraints.digitalEmailCheck")(
+      constraint = digitalEmailValidation,
+      error      = "Cannot be a digital email such as: digital.hmrc.gov.uk"
     )
-
-  def emailConstraints(): Seq[Constraint[String]] = {
-    //val emailValidation       : String => Boolean = str => str.matches("/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}/i")
-    val emailValidation: String => Boolean = str => !str.matches("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}$")
-    //val digitalEmailValidation: String => Boolean = str => !str.matches("digital.hmrc.gov.uk$")
-    val digitalEmailValidation: String => Boolean = str => !str.matches(".*digital\\.hmrc\\.gov\\.uk.*")
-
-    Seq(
-      mkConstraint("constraints.emailCheck"       )(constraint = emailValidation,        error = "Invalid email address"),
-      mkConstraint("constraints.digitalEmailCheck")(constraint = digitalEmailValidation, error = "Cannot be a digital email such as: digital.hmrc.gov.uk")
-    )
-  }
-
-
 }

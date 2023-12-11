@@ -14,12 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepositoryType
 @import uk.gov.hmrc.cataloguefrontend.users.Organisation
-@import views.html.partials.{form_fields_warnings, form_global_errors}
-@import views.html.helper.select
+@import views.html.partials.form_fields_warnings
 
 @this(viewMessages: ViewMessages)
 
@@ -37,16 +34,21 @@
 
   <section class="section-wrapper">
     @if(isServiceAccount){
-      <h1 class="page-heading mt-4">Create A Service Account</h1>
+      <h1 class="page-heading mt-4">Create A Service User</h1>
     } else {
       <h1 class="page-heading mt-4">Create A User</h1>
     }
-    <p>Use the below form to create a new user. Make sure to follow the guidance for each field!</p>
+    @if(isServiceAccount){
+      <p>Use the below form to create a new non human user. Make sure to follow the guidance for each field.</p>
+      <p>If you would like to create a human user please use <a href="/create-user">Create A User</a> instead.</p>
+    } else {
+      <p>Use the below form to create a new user. Make sure to follow the guidance for each field.</p>
+      <p>If you would like to create a non human user please use <a href="/create-service-user">Create A Service User</a> instead.</p>
+    }
 
-    @println(">>>>>>>> " + form.errorsAsJson)
 
     @helper.form(
-      action                =  uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createUser(isServiceAccount),
+      action                =  if (isServiceAccount) uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createServiceUser() else uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createHumanUser(),
       Symbol("id")         -> "createUserForm",
       Symbol("method")     -> "post",
       Symbol("class")      -> "needs-validation",
@@ -72,41 +74,28 @@
           <p>Select if user is required to be granted only two weeks access.</p>
         </div>
       </div>
-      @if(!isServiceAccount){
-        <div class="form-group row mb-2">
-          <div class="col-md-6">
-            <div class="row mb-2">
-              <div class="col-md-6" id="givenName">
-                <label class="fw-bold" for="givenNameInput">First Name:</label>
-                <input class="form-control" type="text" id="givenNameInput" name="givenName" value="@form.data.getOrElse("givenName", "")">
-              </div>
-              <div class="col-md-6" id="familyName">
-                  <label class="fw-bold" for="familyNameInput">Last Name:</label>
-                <input class="form-control" type="text" id="familyNameInput" name="familyName" value="@form.data.getOrElse("familyName", "")">
-              </div>
+      <div class="form-group row mb-2">
+        <div class="col-md-6">
+          <div class="row mb-2">
+            <div class="col-md-6" id="givenName">
+            @if(isServiceAccount) {
+              <label class="fw-bold" for="givenNameInput">Service Name:</label>
+            } else {
+              <label class="fw-bold" for="givenNameInput">First Name:</label>
+            }
+              <input class="form-control" type="text" id="givenNameInput" name="givenName" value="@form.data.getOrElse("givenName", "")">
             </div>
-          </div>
-        </div>
-      } else {
-        <div class="form-group row mb-2">
-          <div class="col-md-6 d-grid gap-2">
-            <label class="fw-bold" for="familyNameInput">Service Name:</label>
-            <div class="mb-2">
+            <div class="col-md-6" id="familyName">
+              @if(isServiceAccount){
+                <label class="fw-bold" for="familyNameInput">Platform:</label>
+              } else {
+                <label class="fw-bold" for="familyNameInput">Last Name:</label>
+              }
               <input class="form-control" type="text" id="familyNameInput" name="familyName" value="@form.data.getOrElse("familyName", "")">
             </div>
-            @form_fields_warnings(form,"familyName")
           </div>
         </div>
-        <div class="form-group row mb-2">
-          <div class="col-md-6 d-grid gap-2">
-            <label class="fw-bold" for="platformLocationInput">Platform:</label>
-            <div class="mb-2">
-              <input class="form-control" type="text" id="platformInput" name="platformLocation" value="@form.data.getOrElse("platformLocation", "")">
-            </div>
-            @form_fields_warnings(form,"platformLocation")
-          </div>
-        </div>
-      }
+      </div>
       <div class="form-group row mb-2">
         <div class="col-md-6 d-grid gap-2">
           <label class="fw-bold" for="organisationInput">Organisation:</label>
@@ -119,28 +108,26 @@
               }
             </select>
           </div>
-          @form_fields_warnings(form,"organisation")
         </div>
       </div>
       <div class="form-group row">
         <div class="col-md-6 mb-3">
           <label class="fw-bold" for="teamInput">Team:</label>
-          @if(teamNames.nonEmpty){
-            <p class="mt-2">You will only be able to onboard users onto teams that you are a member of. If the team you wish to create a user for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
-          } else {
-            <p class="alert alert-danger mt-2">There are currently no teams that you have permissions to create a user for. Ensure you are signed in to the Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
-              If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
-            </p>
-          }
-          <select class="form-select" id="teamInput" name="team">
+          <select class="form-select @if(teamNames.isEmpty) { is-invalid }" id="teamInput" name="team">
           @teamNames.map { tn =>
-            <option value="@{tn}"
-              @if(form.data.getOrElse("team", "").equals(tn)) { selected="selected" }
-            >@tn</option>
+            <option value="@{tn}" @if(form.data.getOrElse("team", "").equals(tn)) { selected="selected" }>@tn</option>
           }
           </select>
+          @if(teamNames.isEmpty) {
+            <div class="invalid-feedback">
+              There are currently no teams that you have permissions to create a user for. Ensure you are signed in to the Catalogue using your LDAP credentials (as opposed to using the guest sign-in process). If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
+            </div>
+          } else {
+            <p class="mt-2">You will only be able to onboard users onto teams that you are a member of. If the team you wish to create a user for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+          }
         </div>
       </div>
+
       <div class="form-group row mb-2">
         <div class="col-md-6 d-grid gap-2">
           <label class="fw-bold" for="contactEmailInput">Contact Email:</label>
@@ -154,7 +141,6 @@
           <label class="fw-bold" for="contactCommentsInput">Comments:</label>
           <div class="mb-2">
             <textarea class="form-control" id="contactCommentsInput" rows="1" name="contactComments" placeholder="Please tell us why you are creating this user" value="@form.data.getOrElse("contactComments", "")"></textarea>
-            @form_fields_warnings(form,"contactComments")
           </div>
         </div>
       </div>
@@ -188,8 +174,8 @@
 
             <div class="col-md-6 mb-2">
               <div class="form-check form-check-inline">
-                <label class="form-check-label" for="developerToolsCheckbox">Developer Tools (Kibana, Grafana, Jenkins)</label>
-                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="developerToolsCheckbox" name="developerTools" value=true @form.data.get("developerTools").map{ _ => checked }>
+                <label class="form-check-label" for="environmentsCheckbox">Developer Tools (Kibana, Grafana, Jenkins)</label>
+                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="environmentsCheckbox" name="environments" value=true @form.data.get("environments").map{ _ => checked }>
               </div>
             </div>
           </div>
@@ -205,11 +191,35 @@
               <button id="selectAllButton" class="btn btn-success btn-sm">Select All</button>
             </div>
           </div>
-
         </div>
       </div>
+
       <div>
-        <button id="create-user-submission-button" class="btn btn-success" type="submit">Create</button>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+          Create
+        </button>
+
+      </div>
+
+        <!-- Modal -->
+      <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="staticBackdropLabel">Create New User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to create a new user?
+                <p></p>
+                Please double-check the details to ensure accuracy.
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-success">Yes</button>
+            </div>
+          </div>
+        </div>
       </div>
     }
   </section>
@@ -245,7 +255,7 @@
       }
 
       selectAllButton.addEventListener('click', function (event) {
-        event.preventDefault(); // Prevent form submission
+        event.preventDefault();
 
         const isChecked = !Array.from(groupCheckboxes).every(c => c.checked);
 
@@ -256,6 +266,12 @@
         updateButtonText();
       });
 
+      selectAllButton.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+        }
+      });
+
       groupCheckboxes.forEach(function (checkbox) {
         checkbox.addEventListener('click', function () {
           // Update the button text if any of the group checkboxes are unchecked
@@ -263,10 +279,8 @@
         });
       });
 
-      // Page load
+      // Initial page load
       updateButtonText();
     });
-
-
   </script>
 }

@@ -22,8 +22,12 @@ POST       /create-test                                 uk.gov.hmrc.cataloguefro
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
 
-GET        /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean)
-POST       /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean)
+GET        /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding()
+POST       /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createHumanUser()
+GET        /create-user/:givenName/:familyName          uk.gov.hmrc.cataloguefrontend.users.CreateUserController.requestSent(givenName: String, familyName: String, isServiceAccount: Boolean)
+
+GET        /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createServiceUserLanding()
+POST       /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createServiceUser()
 
 GET        /deploy-service/1                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step1(serviceName: Option[String])
 POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step2()
