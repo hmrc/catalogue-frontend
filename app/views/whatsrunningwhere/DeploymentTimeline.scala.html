@@ -47,7 +47,6 @@
 }
 
 @standard_layout("Deployment Timeline", active = "explore") {
-
     <style>
         .timeline-tooltip {
             padding: 6px;
@@ -121,11 +120,20 @@
                     <dt>
                         <label for="service" class="form-label">Service</label>
                     </dt>
-                    <dd>
-                        <select name="service" id="service" class="form-select">
-                            <option value=""></option>
-                            @services.map { s => <option value="@s" @if(service.equalsIgnoreCase(s)) { selected="true" } >@s</option> }
-                        </select>
+@*                    <dd>*@
+@*                        <select name="service" id="service" class="form-select" data-live-search="true">*@
+@*                            <option value=""></option>*@
+@*                            @services.map { s => <option value="@s" @if(service.equalsIgnoreCase(s)) { selected="true" } >@s</option> }*@
+@*                        </select>*@
+@*                    </dd>*@
+                    <dd class="position-relative">
+                        <input id="service" name="service" class="form-control" type="text" list="services" autocomplete="off">
+                        <datalist id="services">
+                        @for(s <- services) {
+                            <option value="@s" @if(service.equalsIgnoreCase(s)) { selected="true" }>@s</option>
+                        }
+                        </datalist>
+                        <div id="service-matches" class="service-matches-dropdown d-none"></div>
                     </dd>
                 </dl>
             </div>
@@ -176,3 +184,4 @@
       });
     });
 </script>
+
