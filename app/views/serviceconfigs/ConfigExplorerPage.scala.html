@@ -82,7 +82,7 @@
                                     case x => <span class="warning small hide-warnings"><span class="glyphicon glyphicon-exclamation-sign"></span> {x} warnings</span>
                                 })
                             </div>
-                            <div>@findDeployment(env).fold("")(_.toString)</div>
+                            <div>@findDeployment(env).fold("")(_.version.toString)</div>
                         </div>
                         <div class="gutter gutter-horizontal column-@env.asString @if(!show(env)){hidden}"></div>
                     }
