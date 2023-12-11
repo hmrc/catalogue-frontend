@@ -22,6 +22,9 @@ POST       /create-test                                 uk.gov.hmrc.cataloguefro
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
 
+GET        /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean)
+POST       /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean)
+
 GET        /deploy-service/1                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step1(serviceName: Option[String])
 POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step2()
 POST       /deploy-service/3                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step3()

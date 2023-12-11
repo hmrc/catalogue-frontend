@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.users
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Reads, __}
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{Format, JsObject, Json, OWrites, Reads, Writes, __}
 
 final case class Role(asString: String) {
   def displayName = asString.split("_").map(_.capitalize).mkString(" ")
@@ -119,4 +119,50 @@ object User {
     ~ ( __ \ "teamsAndRoles" ).read[Seq[TeamMembership]]
     )(User.apply _)
   }
+}
+
+case class CreateUserRequest(
+  givenName         : String,
+  familyName        : String,
+  organisation      : String,
+  contactEmail      : String,
+  contactComments   : String,
+  team              : String,
+  isReturningUser   : Boolean,
+  isTransitoryUser  : Boolean,
+  vpn               : Boolean,
+  jira              : Boolean,
+  confluence        : Boolean,
+  googleApps        : Boolean,
+  environments      : Boolean
+)
+
+object CreateUserRequest {
+
+  implicit val writes: OWrites[CreateUserRequest] =
+    ( (__ \ "givenName"               ).write[String]
+    ~ (__ \ "familyName"              ).write[String]
+    ~ (__ \ "organisation"            ).write[String]
+    ~ (__ \ "contactEmail"            ).write[String]
+    ~ (__ \ "contactComments"         ).write[String]
+    ~ (__ \ "team"                    ).write[String]
+    ~ (__ \ "isReturningUser"         ).write[Boolean]
+    ~ (__ \ "isTransitoryUser"        ).write[Boolean]
+    ~ (__ \ "access" \ "vpn"          ).write[Boolean]
+    ~ (__ \ "access" \ "jira"         ).write[Boolean]
+    ~ (__ \ "access" \ "confluence"   ).write[Boolean]
+    ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
+    ~ (__ \ "access" \ "environments" ).write[Boolean]
+    )(unlift(CreateUserRequest.unapply))
+      .transform { json =>
+        val username    = (json \ "givenName").as[String] + "." + (json \ "familyName").as[String]
+        val displayName = (json \ "givenName").as[String].capitalize + " " + (json \ "familyName").as[String].capitalize
+        json ++ Json.obj(
+          "username"    -> username,
+          "displayName"        -> displayName,
+          "isServiceAccount" -> false,
+          "isExistingLDAPUser" -> false,
+          "access" -> (json \ "access").asOpt[JsObject].getOrElse(Json.obj()) ++ Json.obj("ldap" -> true)
+        )
+      }
 }

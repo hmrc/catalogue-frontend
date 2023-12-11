@@ -25,20 +25,20 @@ import play.api.libs.json.{Writes, __}
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkConstraint
 
 case class CreateServiceRepoForm(
-                                  repositoryName     : String,
-                                  makePrivate        : Boolean,
-                                  teamName           : String,
-                                  repoType           : String
-                                )
+  repositoryName: String,
+  makePrivate   : Boolean,
+  teamName      : String,
+  repoType      : String
+)
 
 object CreateServiceRepoForm {
 
   implicit val writes: Writes[CreateServiceRepoForm] =
     ( (__ \ "repositoryName").write[String]
-      ~ (__ \ "makePrivate"   ).write[Boolean]
-      ~ (__ \ "teamName"      ).write[String]
-      ~ (__ \ "repoType"      ).write[String]
-      )(unlift(CreateServiceRepoForm.unapply))
+    ~ (__ \ "makePrivate"   ).write[Boolean]
+    ~ (__ \ "teamName"      ).write[String]
+    ~ (__ \ "repoType"      ).write[String]
+    )(unlift(CreateServiceRepoForm.unapply))
 
   val repoTypeValidation           : String => Boolean = str => CreateServiceRepositoryType.parse(str).nonEmpty
 
@@ -96,19 +96,20 @@ object CreateTestRepoForm {
 }
 
 case class CreatePrototypeRepoForm(
-                                    repositoryName     : String,
-                                    password           : String,
-                                    teamName           : String,
-                                    slackChannels      : String)
+  repositoryName: String,
+  password      : String,
+  teamName      : String,
+  slackChannels : String
+)
 
 object CreatePrototypeRepoForm {
 
   implicit val writes: Writes[CreatePrototypeRepoForm] =
-    ( (__ \ "repositoryName"  ).write[String]
-      ~ (__ \ "password"      ).write[String]
-      ~ (__ \ "teamName"      ).write[String]
-      ~ (__ \ "slackChannels" ).write[String]
-      )(unlift(CreatePrototypeRepoForm.unapply))
+    ( (__ \ "repositoryName").write[String]
+    ~ (__ \ "password"      ).write[String]
+    ~ (__ \ "teamName"      ).write[String]
+    ~ (__ \ "slackChannels" ).write[String]
+    )(unlift(CreatePrototypeRepoForm.unapply))
 
   private val passwordCharacterValidation: String => Boolean = str => str.matches("^[a-zA-Z0-9_]+$")
   private val passwordConstraint = mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")

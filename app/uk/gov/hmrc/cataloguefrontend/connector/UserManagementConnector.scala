@@ -17,15 +17,16 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
-import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, User}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import play.api.libs.json.{Json, Reads}
+import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, LdapTeam, User}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
 
 @Singleton
 class UserManagementConnector @Inject()(
@@ -73,5 +74,51 @@ class UserManagementConnector @Inject()(
       .get(url)
       .execute[Option[User]]
   }
+
+  def createUser(userRequest: CreateUserRequest)(implicit hc: HeaderCarrier): Future[Either[String, String]] = {
+    val url: URL = url"$baseUrl/user-management/create-user"
+
+    //supply username and display name
+
+//    val toolingAccess =
+//      ToolingAccess(
+//        vpn          = Option.when(payload.vpn)("todo"),
+//        jira         = Option.when(payload.jira)("todo"),
+//        confluence   = Option.when(payload.confluence)("todo"),
+//        googleApps   = Option.when(payload.googleApps)("todo"),
+//        environments = Option.when(payload.environments)("todo")
+//      )
+//
+    val body = Json.toJson(userRequest)
+
+    println(">>>>" + userRequest.jira)
+
+//    implicit val hr: HttpReads[Either[String, String]] =
+//      implicitly[HttpReads[Either[UpstreamErrorResponse, String]]]
+//        .flatMap {
+//          case Right(r) =>
+//            HttpReads.pure(Right(r))
+//          case Left(UpstreamErrorResponse.Upstream4xxResponse(e)) =>
+//            HttpReads.ask
+//              .flatMap { case (method, url, response) =>
+//                logger.error(s"Failed to call User Management endpoint create user. response: $response: ${e.getMessage}", e)
+//                Try(HttpReads.pure(Left((response.json \ "message").as[String]): Either[String, String])).getOrElse(throw e)
+//              }
+//          case Left(other) => throw other
+//        }
+
+//    httpClientV2
+//      .post(url)
+//      .withBody(body)
+//      .execute[Either[String, String]]
+    Future.successful(Right(body.toString()))
+
+  }
+}
+
+object UserManagementConnector {
+
+
+
 
 }
