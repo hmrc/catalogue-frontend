@@ -139,30 +139,56 @@ case class CreateUserRequest(
 
 object CreateUserRequest {
 
+//  implicit val writes: OWrites[CreateUserRequest] =
+//    ( (__ \ "givenName"               ).write[String]
+//    ~ (__ \ "familyName"              ).write[String]
+//    ~ (__ \ "organisation"            ).write[String]
+//    ~ (__ \ "contactEmail"            ).write[String]
+//    ~ (__ \ "contactComments"         ).write[String]
+//    ~ (__ \ "team"                    ).write[String]
+//    ~ (__ \ "isReturningUser"         ).write[Boolean]
+//    ~ (__ \ "isTransitoryUser"        ).write[Boolean]
+//    ~ (__ \ "access" \ "vpn"          ).write[Boolean]
+//    ~ (__ \ "access" \ "jira"         ).write[Boolean]
+//    ~ (__ \ "access" \ "confluence"   ).write[Boolean]
+//    ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
+//    ~ (__ \ "access" \ "environments" ).write[Boolean]
+//    )(unlift(CreateUserRequest.unapply))
+//      .transform { json =>
+//        val username    = (json \ "givenName").as[String] + "." + (json \ "familyName").as[String]
+//        val displayName = (json \ "givenName").as[String].capitalize + " " + (json \ "familyName").as[String].capitalize
+//        json ++ Json.obj(
+//          "username"    -> username,
+//          "displayName"        -> displayName,
+//          "isServiceAccount" -> false,
+//          "isExistingLDAPUser" -> false,
+//          "access" -> (json \ "access").asOpt[JsObject].getOrElse(Json.obj()) ++ Json.obj("ldap" -> true)
+//        )
+//      }
+
   implicit val writes: OWrites[CreateUserRequest] =
-    ( (__ \ "givenName"               ).write[String]
-    ~ (__ \ "familyName"              ).write[String]
-    ~ (__ \ "organisation"            ).write[String]
-    ~ (__ \ "contactEmail"            ).write[String]
-    ~ (__ \ "contactComments"         ).write[String]
-    ~ (__ \ "team"                    ).write[String]
-    ~ (__ \ "isReturningUser"         ).write[Boolean]
-    ~ (__ \ "isTransitoryUser"        ).write[Boolean]
-    ~ (__ \ "access" \ "vpn"          ).write[Boolean]
-    ~ (__ \ "access" \ "jira"         ).write[Boolean]
-    ~ (__ \ "access" \ "confluence"   ).write[Boolean]
-    ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
-    ~ (__ \ "access" \ "environments" ).write[Boolean]
-    )(unlift(CreateUserRequest.unapply))
-      .transform { json =>
-        val username    = (json \ "givenName").as[String] + "." + (json \ "familyName").as[String]
-        val displayName = (json \ "givenName").as[String].capitalize + " " + (json \ "familyName").as[String].capitalize
-        json ++ Json.obj(
-          "username"    -> username,
-          "displayName"        -> displayName,
-          "isServiceAccount" -> false,
-          "isExistingLDAPUser" -> false,
-          "access" -> (json \ "access").asOpt[JsObject].getOrElse(Json.obj()) ++ Json.obj("ldap" -> true)
-        )
-      }
+    OWrites.transform(
+      ( (__ \ "givenName"               ).write[String]
+      ~ (__ \ "familyName"              ).write[String]
+      ~ (__ \ "organisation"            ).write[String]
+      ~ (__ \ "contactEmail"            ).write[String]
+      ~ (__ \ "contactComments"         ).write[String]
+      ~ (__ \ "team"                    ).write[String]
+      ~ (__ \ "isReturningUser"         ).write[Boolean]
+      ~ (__ \ "isTransitoryUser"        ).write[Boolean]
+      ~ (__ \ "access" \ "vpn"          ).write[Boolean]
+      ~ (__ \ "access" \ "jira"         ).write[Boolean]
+      ~ (__ \ "access" \ "confluence"   ).write[Boolean]
+      ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
+      ~ (__ \ "access" \ "environments" ).write[Boolean]
+      )(unlift(CreateUserRequest.unapply))
+    ) { (req, json) =>
+      json ++ Json.obj(
+ "username"           -> s"${req.givenName}.${req.familyName}",
+        "displayName"        -> s"${req.givenName.capitalize} ${req.familyName.capitalize}",
+        "isServiceAccount"   -> false,
+        "isExistingLDAPUser" -> false,
+        "access"             -> ((json \ "access").as[JsObject] ++ Json.obj("ldap" -> true))
+      )
+    }
 }
