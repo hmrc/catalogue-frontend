@@ -184,7 +184,7 @@ object CreateUserRequest {
       )(unlift(CreateUserRequest.unapply))
     ) { (req, json) =>
       json ++ Json.obj(
- "username"           -> s"${req.givenName}.${req.familyName}",
+        "username"    -> s"${req.givenName}.${req.familyName}",
         "displayName"        -> s"${req.givenName.capitalize} ${req.familyName.capitalize}",
         "isServiceAccount"   -> false,
         "isExistingLDAPUser" -> false,
