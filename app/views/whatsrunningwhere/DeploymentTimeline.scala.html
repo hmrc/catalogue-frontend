@@ -168,6 +168,18 @@
 <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
 
 <script @CSPNonce.attr>
+        autoCompleteInit({
+          formId: "form",
+          inputSearchId: "service-search",
+          matchesDivId: "service-matches",
+          allowPartial: false,
+          ignoreCase: true,
+          values: @Html(services.map(s => s""""$s"""").mkString("[", ", ", "]")),
+          minSearch: 1
+        });
+</script>
+
+<script @CSPNonce.attr>
   ["start", "end", "service"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
@@ -185,3 +197,4 @@
     minSearch: 1
   });
 </script>
+
