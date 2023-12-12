@@ -174,7 +174,7 @@
           matchesDivId: "service-matches",
           allowPartial: false,
           ignoreCase: true,
-          values: @Html(services.map(s => s""""$s"""").mkString("[", ", ", "]")),
+          values: [@for(service <- services) {'@service',}],
           minSearch: 1
         });
 </script>
