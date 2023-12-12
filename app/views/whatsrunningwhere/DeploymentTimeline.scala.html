@@ -186,15 +186,4 @@
         document.getElementById("form").submit();
       });
     });
-
-  autoCompleteInit({
-    formId: "form",
-    inputSearchId: "service-search",
-    matchesDivId: "service-matches",
-    allowPartial: false,
-    ignoreCase: true,
-    values: @Html(services.map(s => s""""$s"""").mkString("[", ", ", "]")),
-    minSearch: 1
-  });
 </script>
-
