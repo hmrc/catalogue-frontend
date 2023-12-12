@@ -47,7 +47,6 @@
 }
 
 @standard_layout("Deployment Timeline", active = "explore") {
-
     <style>
         .timeline-tooltip {
             padding: 6px;
@@ -117,17 +116,15 @@
     <form id="form" action="" method="get">
         <div class="form-group row">
             <div class="col-md-6">
-                <dl>
-                    <dt>
-                        <label for="service" class="form-label">Service</label>
-                    </dt>
-                    <dd>
-                        <select name="service" id="service" class="form-select">
-                            <option value=""></option>
-                            @services.map { s => <option value="@s" @if(service.equalsIgnoreCase(s)) { selected="true" } >@s</option> }
-                        </select>
-                    </dd>
-                </dl>
+              <dl>
+                <dt>
+                  <label class="form-label" for="service-search" >Service</label>
+                </dt>
+                <dd class="position-relative">
+                  <input id="service-search" name="service" class="form-control" type="text" list="services" autocomplete="off">
+                  <div id="service-matches" class="search-matches-dropdown d-none"></div>
+                </dd>
+              </dl>
             </div>
 
             <div class="col-md-2">
@@ -167,6 +164,20 @@
         <div id="history-chart" style="height: 300px;"></div>
     }
 }
+
+<script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+
+<script @CSPNonce.attr>
+        autoCompleteInit({
+          formId: "form",
+          inputSearchId: "service-search",
+          matchesDivId: "service-matches",
+          allowPartial: false,
+          ignoreCase: true,
+          values: [@for(service <- services) {'@service',}],
+          minSearch: 1
+        });
+</script>
 
 <script @CSPNonce.attr>
   ["start", "end", "service"]
