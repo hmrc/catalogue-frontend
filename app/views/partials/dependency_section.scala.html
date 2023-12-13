@@ -29,7 +29,7 @@
                     .sortBy(d => d.scope + d.group + d.name)
 ) {
     @dependencyRow(dependency)
-    @for(transitiveDependency <- transitiveDependencies(dependency).filter(d => !showOutOfDateOnly || d.isOutOfDate)) {
+    @for(transitiveDependency <- transitiveDependencies(dependency).filter(d => !showOutOfDateOnly || d.isOutOfDate).distinctBy(d => d.group + d.name)) {
         @dependencyRow(transitiveDependency)
     }
 }
