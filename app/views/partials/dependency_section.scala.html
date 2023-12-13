@@ -20,19 +20,22 @@
 @import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRule
-@(dependencies: Seq[Dependency], rootId: String)
+@(dependencies: Seq[Dependency], rootId: String, showOutOfDateOnly: Boolean = false)
 
-@defining(dependencies.groupBy(_.name).map(_._2.head).toSeq) { uniqueDependencies =>
-    @defining(uniqueDependencies.filter(_.importBy.isDefined)) { transitiveDependencies =>
-        @for(dependency <- uniqueDependencies.filter(_.importBy.isEmpty).sortBy(d => d.group + d.name)) {
-
-            @dependencyRow(dependency)
-
-            @for(transitiveDependency <- transitiveDependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))) {
-                @dependencyRow(transitiveDependency)
-            }
-        }
+@for(
+    dependency <- dependencies
+                    .filter(d => d.importBy.isEmpty && (!showOutOfDateOnly || d.isOutOfDate || transitiveDependencies(d).exists(_.isOutOfDate)))
+                    .distinctBy(d => d.group + d.name)
+                    .sortBy(d => d.scope + d.group + d.name)
+) {
+    @dependencyRow(dependency)
+    @for(transitiveDependency <- transitiveDependencies(dependency).filter(d => !showOutOfDateOnly || d.isOutOfDate)) {
+        @dependencyRow(transitiveDependency)
     }
+}
+
+@transitiveDependencies(dependency: Dependency) = @{
+    dependencies.filter(_.importBy.contains(ImportedBy(dependency.name, dependency.group, dependency.currentVersion)))
 }
 
 @dependencyRow(dependency: Dependency) = {
@@ -91,6 +94,6 @@
     case Some(VersionState.NewVersionAvailable )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-arrow-up" title="new version available"></span> }
     case Some(_: VersionState.BobbyRulePending )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-alert"    title="bobby rule pending"></span> }
     case Some(_: VersionState.BobbyRuleViolated)  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="bobby rule violated"></span> }
-    case _                                        => { <span style="margin-right: 10px;">&nbsp;</span> }
+    case _                                        => { }
   }
 }
