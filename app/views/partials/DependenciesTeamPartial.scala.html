@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model._
 @import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.teams.routes
 
 @this()
@@ -47,15 +48,15 @@
                         @defining(prodDependencies.getOrElse(dependency.dependencies.repositoryName, Seq.empty)) { prodDependencies =>
                           <div id="ood-@dependency.dependencies.repositoryName" class="row mb-3">
                               <div class="col-12">
-                                  <h6 class="fw-bold mb-3">
-                                      @dependency.dependencies.repositoryName
+                                  <h4>
+                                      <a href="@appRoutes.CatalogueController.repository(dependency.dependencies.repositoryName).url" title="Link to Service Page">@dependency.dependencies.repositoryName</a>
                                       @if(dependency.repo.isArchived) {
                                           <span class="badge rounded-pill text-bg-secondary">archived</span>
                                       }
                                       @if(dependency.repo.isDeprecated && !dependency.repo.isArchived) {
                                           <span class="badge rounded-pill text-bg-secondary">deprecated</span>
                                       }
-                                  </h6>
+                                  </h4>
 
                                   @bobby_alerts(prodDependencies, pending = false)
                                   @bobby_alerts(prodDependencies, pending = true )
@@ -75,9 +76,9 @@
                                       </div>
                                   </div>
 
-                                  @partials.dependency_section(dependency.dependencies.libraryDependencies.filter(_.isOutOfDate).sortBy(_.scope), s"${teamName.asString}-libraries")
-                                  @partials.dependency_section(dependency.dependencies.sbtPluginsDependencies.filter(_.isOutOfDate), s"${teamName.asString}-sbt-plugins")
-                                  @partials.dependency_section(dependency.dependencies.otherDependencies.filter(_.isOutOfDate), s"${teamName.asString}-other")
+                                  @partials.dependency_section(dependency.dependencies.libraryDependencies,    s"${teamName.asString}-libraries"  , showOutOfDateOnly = true)
+                                  @partials.dependency_section(dependency.dependencies.sbtPluginsDependencies, s"${teamName.asString}-sbt-plugins", showOutOfDateOnly = true)
+                                  @partials.dependency_section(dependency.dependencies.otherDependencies,      s"${teamName.asString}-other"      , showOutOfDateOnly = true)
                               </div>
                           </div>
                         }
