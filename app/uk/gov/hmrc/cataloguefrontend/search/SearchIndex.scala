@@ -61,22 +61,22 @@ class SearchIndex @Inject()(
   private[search] val cachedIndex = new AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
 
   private val hardcodedLinks = List(
-    SearchTerm("explorer", "dependency",                   catalogueRoutes.DependencyExplorerController.landing.url,                    1.0f, Set("depex")),
-    SearchTerm("explorer", "bobby",                        catalogueRoutes.BobbyExplorerController.list().url,                          1.0f),
-    SearchTerm("explorer", "jvm",                          catalogueRoutes.JDKVersionController.compareAllEnvironments().url,           1.0f, Set("jdk", "jre")),
-    SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                        1.0f, Set("lds")),
-    SearchTerm("page",     "whatsrunningwhere",            wrwRoutes.WhatsRunningWhereController.releases().url,                        1.0f, Set("wrw")),
-    SearchTerm("page",     "deployment",                   wrwRoutes.DeploymentHistoryController.history(Environment.Production).url,   1.0f),
-    SearchTerm("page",     "shutter-overview",             shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url, 1.0f),
-    SearchTerm("page",     "shutter-api",                  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,      1.0f),
-    SearchTerm("page",     "shutter-rate",                 shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,     1.0f),
-    SearchTerm("page",     "shutter-events",               shutterRoutes.ShutterEventsController.shutterEvents.url,                     1.0f),
-    SearchTerm("page",     "teams",                        teamRoutes.TeamsController.allTeams().url,                                   1.0f),
-    SearchTerm("page",     "repositories",                 reposRoutes.RepositoriesController.allRepositories().url,                    1.0f),
-    SearchTerm("page",     "users",                        userRoutes.UsersController.allUsers().url,                                   1.0f),
-    SearchTerm("page",     "defaultbranch",                catalogueRoutes.CatalogueController.allDefaultBranches().url,                1.0f),
-    SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,               1.0f),
-    SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,           1.0f),
+    SearchTerm("explorer", "dependency",                   catalogueRoutes.DependencyExplorerController.landing.url,                              1.0f, Set("depex")),
+    SearchTerm("explorer", "bobby",                        catalogueRoutes.BobbyExplorerController.list().url,                                    1.0f),
+    SearchTerm("explorer", "jvm",                          catalogueRoutes.JDKVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
+    SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f, Set("lds")),
+    SearchTerm("page",     "whatsrunningwhere",            wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
+    SearchTerm("page",     "deployment",                   wrwRoutes.DeploymentHistoryController.deploymentEvents(Environment.Production).url,    1.0f),
+    SearchTerm("page",     "shutter-overview",             shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url,           1.0f),
+    SearchTerm("page",     "shutter-api",                  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,                1.0f),
+    SearchTerm("page",     "shutter-rate",                 shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,               1.0f),
+    SearchTerm("page",     "shutter-events",               shutterRoutes.ShutterEventsController.shutterEvents.url,                               1.0f),
+    SearchTerm("page",     "teams",                        teamRoutes.TeamsController.allTeams().url,                                             1.0f),
+    SearchTerm("page",     "repositories",                 reposRoutes.RepositoriesController.allRepositories().url,                              1.0f),
+    SearchTerm("page",     "users",                        userRoutes.UsersController.allUsers().url,                                             1.0f),
+    SearchTerm("page",     "defaultbranch",                catalogueRoutes.CatalogueController.allDefaultBranches().url,                          1.0f),
+    SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,                         1.0f),
+    SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,                     1.0f),
   ) ++ {
       if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
         List(

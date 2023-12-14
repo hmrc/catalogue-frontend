@@ -40,7 +40,7 @@
             <a id="link-to-services-list" href="@repositoryRoutes.RepositoriesController.allServices">different services</a>
             and <a id="link-to-libraries-list" href="@repositoryRoutes.RepositoriesController.allLibraries">libraries</a> in use on the platform,
             <a id="link-to-wrw-page" href="@wrwRoutes.WhatsRunningWhereController.releases()">where they are running</a> and
-            their <a id="link-to-deployments-page" href="@wrwRoutes.DeploymentHistoryController.history(Environment.Production)">recent deployments</a>,
+            their <a id="link-to-deployments-page" href="@wrwRoutes.DeploymentHistoryController.deploymentEvents(Environment.Production)">recent deployments</a>,
             what <a id="link-to-dependency-explorer-page" href="@appRoutes.DependencyExplorerController.landing">dependencies</a>
             and config they use, and <a id="link-to-teams-page" href="@teamsRoutes.TeamsController.allTeams()">who</a> maintains them.
             You can also <a id="link-to-shuttering-overview-page" href="@shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend)">shutter your service</a> to the outside world,

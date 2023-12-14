@@ -38,12 +38,7 @@
 
 @standard_layout("Deployments", "deployments") {
     <h1 class="page-heading mt-4">
-        Deployments
-        @if(uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
-            <a class="float-end btn btn-success" role="button" href="@uk.gov.hmrc.cataloguefrontend.deployservice.routes.DeployServiceController.step1(None)" title="Link to the deploy service page">
-                Deploy
-            </a>
-        }
+        Deployment Events
     </h1>
 
     @if(form.hasErrors) {
@@ -171,7 +166,7 @@
 @envOption(env: Environment) = {
   @defining(env == selectedEnv) { active =>
       <li id="tab-@env.asString" class="nav-item">
-          <a id="@env.asString-tab" class="nav-link @if(active){active}" href="@routes.DeploymentHistoryController.history(env)">
+          <a id="@env.asString-tab" class="nav-link @if(active){active}" href="@routes.DeploymentHistoryController.deploymentEvents(env)">
               @env.displayString
           </a>
       </li>

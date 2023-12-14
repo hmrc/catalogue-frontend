@@ -103,7 +103,7 @@ GET        /shutter-events                              uk.gov.hmrc.cataloguefro
 GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(environment: Environment, serviceName: Option[String] ?= None, limit: Option[Int] ?= None, offset: Option[Int] ?= None)
 
 GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases()
-GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.history(env: Environment)
+GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.deploymentEvents(env: Environment)
 
 GET        /health-indicators                           uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepoType()
 GET        /health-indicators/:name                     uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.breakdownForRepo(name: String)

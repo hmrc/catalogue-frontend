@@ -68,11 +68,11 @@ class DeploymentHistoryControllerSpec
     )
   }
 
-  "history" should {
+  "deploymentEvents" should {
     "return 400 when given a bad date" in new Fixture {
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
-      val response = controller.history()(FakeRequest(GET, "/deployments/production?from=baddate").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?from=baddate").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 400
     }
 
@@ -83,7 +83,7 @@ class DeploymentHistoryControllerSpec
         .thenReturn(Future.successful(PaginatedDeploymentHistory(history = Seq.empty, 0)))
       when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
-      val response = controller.history()(FakeRequest(GET, "/deployments/production").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
     }
 
@@ -110,7 +110,7 @@ class DeploymentHistoryControllerSpec
       when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
 
-      val response = controller.history()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
 
       val responseString = contentAsString(response)
@@ -144,7 +144,7 @@ class DeploymentHistoryControllerSpec
       when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
 
-      val response = controller.history()(FakeRequest(GET, "/deployments/production?service=s1").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?service=s1").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
 
       val responseString = contentAsString(response)
@@ -170,7 +170,7 @@ class DeploymentHistoryControllerSpec
       when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
 
-      val response = controller.history()(FakeRequest(GET, "/deployments/production?page=2").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?page=2").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
     }
   }
