@@ -105,10 +105,10 @@
                         <a id="link-to-whats-running-where" class="nav-link @if(active == "whats-running-where") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">What's Running Where</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a id="shuttering-dropdown" class="nav-link dropdown-toggle @if(active == "deployments") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a id="deployments-dropdown" class="nav-link dropdown-toggle @if(active == "deployments") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Deployments
                         </a>
-                    <ul id="deployment-menu" class="dropdown-menu">
+                    <ul id="deployments-menu" class="dropdown-menu">
                             @if(CatalogueFrontendSwitches.showDeployService.isEnabled) {
                                 <li><a id="link-to-deploy-service" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployservice.routes.DeployServiceController.step1(None)">Deploy Service</a></li>
                             }
