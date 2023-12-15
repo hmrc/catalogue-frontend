@@ -103,7 +103,7 @@ GET        /shutter-events                              uk.gov.hmrc.cataloguefro
 GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(environment: Environment, serviceName: Option[String] ?= None, limit: Option[Int] ?= None, offset: Option[Int] ?= None)
 
 GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases()
-GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.deploymentEvents(env: Environment)
+GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentEventsController.deploymentEvents(env: Environment)
 
 GET        /health-indicators                           uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepoType()
 GET        /health-indicators/:name                     uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.breakdownForRepo(name: String)
@@ -119,7 +119,7 @@ POST       /leak-detection/repositories/:repository/:branch                uk.go
 GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.reportExemptions(repository: String, branch: String)
 
 GET        /quicksearch                                                    uk.gov.hmrc.cataloguefrontend.search.SearchController.search(query: String, limit: Int ?= 20)
-GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentHistoryController.graph(service ?="", start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
+GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineController.graph(service ?="", start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
 
 +nocsrf
 POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()

@@ -66,7 +66,7 @@ class SearchIndex @Inject()(
     SearchTerm("explorer", "jvm",                          catalogueRoutes.JDKVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
     SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f, Set("lds")),
     SearchTerm("page",     "whatsrunningwhere",            wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
-    SearchTerm("page",     "deployment",                   wrwRoutes.DeploymentHistoryController.deploymentEvents(Environment.Production).url,    1.0f),
+    SearchTerm("page",     "deployment",                   wrwRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,    1.0f),
     SearchTerm("page",     "shutter-overview",             shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url,           1.0f),
     SearchTerm("page",     "shutter-api",                  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,                1.0f),
     SearchTerm("page",     "shutter-rate",                 shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,               1.0f),
@@ -122,7 +122,7 @@ class SearchIndex @Inject()(
                                             )
                                           } else Nil) ++
                                           List(SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(r.name).url ),
-                                               SearchTerm("timeline",            r.name, wrwRoutes.DeploymentHistoryController.graph(r.name).url),
+                                               SearchTerm("timeline",            r.name, wrwRoutes.DeploymentTimelineController.graph(r.name).url),
                                                SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(r.name).url)
                                           )
                                     )

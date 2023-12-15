@@ -23,7 +23,7 @@
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
 @import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentTimelineController
 @import views.html.helper.CSRF
 
 @(repo                          : GitRepository,
@@ -44,7 +44,7 @@
         <ul class="list-unstyled" style="column-count: 2;">
             <li><a id="link-to-github" href="@{repo.githubUrl}" target="_blank" rel="noreferrer noopener"><img class="list-item" src="@routes.Assets.versioned("githubicon.svg")" alt="Link to Github" /> GitHub<span class="glyphicon glyphicon-new-window"/></a></li>
             @if(repo.repoType == RepoType.Service) {
-                <li><a id="link-to-timeline" href="@DeploymentHistoryController.graph(repo.name)">Deployment Timeline</a></li>
+                <li><a id="link-to-timeline" href="@DeploymentTimelineController.graph(repo.name)">Deployment Timeline</a></li>
                 <li><a id="link-to-@{repo.name}-config" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(repo.name)" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
                 <li><a id="link-to-dependency-list" href="@appRoutes.DependenciesController.services(repo.name)">Service Dependencies</a></li>
                 <li><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, repo.name)}">Frontend Route Warnings</a></li>

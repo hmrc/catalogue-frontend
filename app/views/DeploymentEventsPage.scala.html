@@ -166,7 +166,7 @@
 @envOption(env: Environment) = {
   @defining(env == selectedEnv) { active =>
       <li id="tab-@env.asString" class="nav-item">
-          <a id="@env.asString-tab" class="nav-link @if(active){active}" href="@routes.DeploymentHistoryController.deploymentEvents(env)">
+          <a id="@env.asString-tab" class="nav-link @if(active){active}" href="@routes.DeploymentEventsController.deploymentEvents(env)">
               @env.displayString
           </a>
       </li>
