@@ -104,6 +104,7 @@
                     <li class="nav-item">
                         <a id="link-to-whats-running-where" class="nav-link @if(active == "whats-running-where") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">What's Running Where</a>
                     </li>
+                    @* TODO remove once date has elapsed *@
                     @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2024-03-01T00:00:00Z"))) { isNew =>
                         <li class="nav-item dropdown">
                             <a id="deployments-dropdown" class="nav-link dropdown-toggle @if(active == "deployments") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -115,17 +116,17 @@
                                     </span>
                                 }
                         </a>
-                        <ul id="deployment-menu" class="dropdown-menu">
+                        <ul id="deployments-menu" class="dropdown-menu">
                             @if(CatalogueFrontendSwitches.showDeployService.isEnabled) {
                                 <li>
                                     <a id="link-to-deploy-service" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployservice.routes.DeployServiceController.step1(None)">
                                         Deploy Service
-                                            @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
+                                        @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
                                     </a>
                                 </li>
                             }
                             <li><a id="link-to-events" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.deploymentEvents(Production)">Events</a></li>
-                            <li><a id="link-to-deployment-timelines" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Timelines</a></li>
+                            <li><a id="link-to-deployment-timeline" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Timeline</a></li>
                         </ul>
                     </li>
                     }
