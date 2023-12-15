@@ -22,11 +22,11 @@ POST       /create-test                                 uk.gov.hmrc.cataloguefro
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
 
-GET        /deploy-service/1                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step1(serviceName: Option[String])
-POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step2()
-POST       /deploy-service/3                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step3()
-GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
-GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployservice.DeployServiceController.step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
+GET        /deploy-service/1                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step1(serviceName: Option[String])
+POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step2()
+POST       /deploy-service/3                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step3()
+GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
+GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 
 
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
@@ -102,8 +102,8 @@ GET        /shuttering/:shutterType/:env                uk.gov.hmrc.cataloguefro
 GET        /shutter-events                              uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEvents
 GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(environment: Environment, serviceName: Option[String] ?= None, limit: Option[Int] ?= None, offset: Option[Int] ?= None)
 
-GET        /whats-running-where                         uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases()
-GET        /deployments/:env                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentEventsController.deploymentEvents(env: Environment)
+GET        /whats-running-where        uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases()
+GET        /deployments/:env           uk.gov.hmrc.cataloguefrontend.deployments.DeploymentEventsController.deploymentEvents(env: Environment)
 
 GET        /health-indicators                           uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepoType()
 GET        /health-indicators/:name                     uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.breakdownForRepo(name: String)
@@ -119,7 +119,7 @@ POST       /leak-detection/repositories/:repository/:branch                uk.go
 GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.reportExemptions(repository: String, branch: String)
 
 GET        /quicksearch                                                    uk.gov.hmrc.cataloguefrontend.search.SearchController.search(query: String, limit: Int ?= 20)
-GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineController.graph(service ?="", start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
+GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.deployments.DeploymentTimelineController.graph(service ?="", start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
 
 +nocsrf
 POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()

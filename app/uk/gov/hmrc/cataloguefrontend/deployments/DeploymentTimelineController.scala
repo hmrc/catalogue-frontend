@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
+package uk.gov.hmrc.cataloguefrontend.deployments
 
 import cats.implicits._
 import play.api.mvc._
@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, Te
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.DeploymentTimelinePage
+import views.html.deployments.DeploymentTimelinePage
 
 import java.time.{LocalDate, ZoneOffset}
 import javax.inject.{Inject, Singleton}

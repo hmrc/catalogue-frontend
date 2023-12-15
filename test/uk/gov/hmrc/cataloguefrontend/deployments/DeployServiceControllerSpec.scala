@@ -14,40 +14,37 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.deployservice
+package uk.gov.hmrc.cataloguefrontend.deployments
 
-import java.time.Instant
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-
 import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
-import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.cataloguefrontend.auth.AuthController
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceDependenciesConnector, GitRepository}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion, WhatsRunningWhere}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesConnector, DistinctVulnerability, VulnerabilitySummary}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
-import views.html.deployservice.{DeployServicePage, DeployServiceStep4Page}
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
+import views.html.deployments.{DeployServicePage, DeployServiceStep4Page}
 
-
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 
 class DeployServiceControllerSpec
   extends AnyWordSpec
@@ -101,7 +98,7 @@ class DeployServiceControllerSpec
     }
   }
 
-  import ServiceConfigsService.{ServiceName, KeyName, ConfigEnvironment, ConfigSourceValue, ConfigWarning}
+  import ServiceConfigsService._
   "Deploy Service Page step2" should {
     "help evaluate deployment" in new Setup {
       when(mockAuthStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))

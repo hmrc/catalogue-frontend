@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.deployments
 
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentEventsController
 
 import java.time.LocalDate
 
 class DeploymentsFilterSpec extends UnitSpec {
-  import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentEventsController._
+  import DeploymentEventsController._
 
   val formData: Map[String, String] =
     Map("team" -> "teamA", "serviceName" -> "aService", "from" -> "2016-04-23", "to" -> "2016-05-25")

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
+package uk.gov.hmrc.cataloguefrontend.deployments
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import play.api.mvc.MessagesControllerComponents
@@ -25,11 +25,12 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Integration
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
-import views.html.DeploymentTimelinePage
+import views.html.deployments.DeploymentTimelinePage
 
 import java.time.{Instant, LocalDate}
 import scala.concurrent.{ExecutionContext, Future}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
+package uk.gov.hmrc.cataloguefrontend.deployments
 
 object TimelinePalette {
   val rgb: Seq[String] = Seq(

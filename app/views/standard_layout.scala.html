@@ -119,14 +119,14 @@
                         <ul id="deployments-menu" class="dropdown-menu">
                             @if(CatalogueFrontendSwitches.showDeployService.isEnabled) {
                                 <li>
-                                    <a id="link-to-deploy-service" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployservice.routes.DeployServiceController.step1(None)">
+                                    <a id="link-to-deploy-service" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeployServiceController.step1(None)">
                                         Deploy Service
                                         @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
                                     </a>
                                 </li>
                             }
-                            <li><a id="link-to-events" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentEventsController.deploymentEvents(Production)">Events</a></li>
-                            <li><a id="link-to-deployment-timeline" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentTimelineController.graph("")">Timeline</a></li>
+                            <li><a id="link-to-events" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentEventsController.deploymentEvents(Production)">Events</a></li>
+                            <li><a id="link-to-deployment-timeline" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController.graph("")">Timeline</a></li>
                         </ul>
                     </li>
                     }

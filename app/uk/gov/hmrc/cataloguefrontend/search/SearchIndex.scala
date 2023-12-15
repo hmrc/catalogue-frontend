@@ -28,11 +28,11 @@ import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.{normalizeTerm, optimize
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
 import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
+import uk.gov.hmrc.cataloguefrontend.deployments.{routes => depRoutes}
 import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
 import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => createRepoRoutes}
-import uk.gov.hmrc.cataloguefrontend.deployservice.{routes => deployServiceRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
@@ -66,7 +66,7 @@ class SearchIndex @Inject()(
     SearchTerm("explorer", "jvm",                          catalogueRoutes.JDKVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
     SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f, Set("lds")),
     SearchTerm("page",     "whatsrunningwhere",            wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
-    SearchTerm("page",     "deployment",                   wrwRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,    1.0f),
+    SearchTerm("page",     "deployment",                   depRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,    1.0f),
     SearchTerm("page",     "shutter-overview",             shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url,           1.0f),
     SearchTerm("page",     "shutter-api",                  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,                1.0f),
     SearchTerm("page",     "shutter-rate",                 shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,               1.0f),
@@ -94,7 +94,7 @@ class SearchIndex @Inject()(
   } ++ {
     if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
       List(
-        SearchTerm("page", "deploy service", deployServiceRoutes.DeployServiceController.step1(None).url, 1.0f)
+        SearchTerm("page", "deploy service", depRoutes.DeployServiceController.step1(None).url, 1.0f)
       )
     } else Nil
   } ++ {
@@ -118,11 +118,11 @@ class SearchIndex @Inject()(
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
                             .flatMap(r => (if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
                                             List(
-                                              SearchTerm("deploy", r.name, deployServiceRoutes.DeployServiceController.step1(Some(r.name)).url)
+                                              SearchTerm("deploy", r.name, depRoutes.DeployServiceController.step1(Some(r.name)).url)
                                             )
                                           } else Nil) ++
                                           List(SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(r.name).url ),
-                                               SearchTerm("timeline",            r.name, wrwRoutes.DeploymentTimelineController.graph(r.name).url),
+                                               SearchTerm("timeline",            r.name, depRoutes.DeploymentTimelineController.graph(r.name).url),
                                                SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(r.name).url)
                                           )
                                     )
