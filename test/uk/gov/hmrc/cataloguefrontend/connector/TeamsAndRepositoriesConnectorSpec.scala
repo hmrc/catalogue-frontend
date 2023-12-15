@@ -56,46 +56,38 @@ class TeamsAndRepositoriesConnectorSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  "lookUpLink" should {
+  "lookupLatestJenkinsJobs" should {
     "return a Link if exists" in {
       stubFor(
         get(urlEqualTo("/api/jenkins-jobs/serviceA"))
-          .willReturn(
-            aResponse()
-            .withBody(
-              """
-                { "jobs": [
-                    {
-                      "jobName": "serviceA-pipeline",
-                      "jenkinsURL": "http.jenkins/serviceA-pipeline",
-                      "jobType": "pipeline"
-                    },
-                    {
-                      "jobName": "serviceA-performance",
-                      "jenkinsURL": "http.jenkins/serviceA-performance",
-                      "jobType": "performance"
-                    },
-                    {
-                      "jobName": "serviceA",
-                      "jenkinsURL": "http.jenkins/serviceA",
-                      "jobType": "job"
-                    }
-                  ]
-                }
-              """
-          )
+          .willReturn(aResponse().withBody("""
+            {
+              "jobs": [{
+                "jobName"   : "serviceA",
+                "jenkinsURL": "http.jenkins/serviceA",
+                "jobType"   : "job"
+              }, {
+                "jobName"   : "serviceA-pr-builder",
+                "jenkinsURL": "http.jenkins/serviceA-pr-builder",
+                "jobType"   : "pull-request"
+              }, {
+                "jobName"   : "serviceA-pipeline",
+                "jenkinsURL": "http.jenkins/serviceA-pipeline",
+                "jobType"   : "pipeline"
+              }]
+            }
+          """)
         )
       )
 
       val response = teamsAndRepositoriesConnector
-        .lookupLatestBuildJobs("serviceA")(HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .lookupLatestJenkinsJobs("serviceA")(HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
-        .sortBy(_.jobType)
 
       response shouldBe Seq(
-        JenkinsJob(name = "serviceA",             jenkinsURL = "http.jenkins/serviceA",             jobType = BuildJobType.Job,         latestBuild = None),
-        JenkinsJob(name = "serviceA-pipeline",    jenkinsURL = "http.jenkins/serviceA-pipeline",    jobType = BuildJobType.Pipeline,    latestBuild = None),
-        JenkinsJob(name = "serviceA-performance", jenkinsURL = "http.jenkins/serviceA-performance", jobType = BuildJobType.Performance, latestBuild = None)
+        JenkinsJob(name = "serviceA",             jenkinsURL = "http.jenkins/serviceA",            jobType = BuildJobType.Job,         latestBuild = None),
+        JenkinsJob(name = "serviceA-pr-builder",  jenkinsURL = "http.jenkins/serviceA-pr-builder", jobType = BuildJobType.PullRequest, latestBuild = None),
+        JenkinsJob(name = "serviceA-pipeline",    jenkinsURL = "http.jenkins/serviceA-pipeline",   jobType = BuildJobType.Pipeline,    latestBuild = None),
       )
     }
   }

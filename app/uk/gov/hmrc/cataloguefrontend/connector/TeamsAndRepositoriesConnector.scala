@@ -174,14 +174,14 @@ object BuildData {
 sealed trait BuildJobType { def asString: String }
 
 object BuildJobType {
-  case object Job         extends BuildJobType { override val asString = "job"         }
-  case object Pipeline    extends BuildJobType { override val asString = "pipeline"    }
-  case object Performance extends BuildJobType { override val asString = "performance" }
+  case object Job         extends BuildJobType { override val asString = "job"          }
+  case object Pipeline    extends BuildJobType { override val asString = "pipeline"     }
+  case object PullRequest extends BuildJobType { override val asString = "pull-request" }
 
   private val logger = Logger(this.getClass)
 
   val values: List[BuildJobType] =
-    List(Job, Pipeline, Performance)
+    List(Job, Pipeline, PullRequest)
 
   implicit val ordering: Ordering[BuildJobType] =
     new Ordering[BuildJobType] {
@@ -329,7 +329,7 @@ class TeamsAndRepositoriesConnector @Inject()(
   private implicit val tf  : Format[Team]          = Team.format
   private implicit val ghrf: Format[GitRepository] = GitRepository.apiFormat // v2 model
 
-  def lookupLatestBuildJobs(service: String)(implicit hc: HeaderCarrier): Future[Seq[JenkinsJob]] = {
+  def lookupLatestJenkinsJobs(service: String)(implicit hc: HeaderCarrier): Future[Seq[JenkinsJob]] = {
 
     implicit val dr: Reads[Seq[JenkinsJob]] =
       Reads.at(__ \ "jobs")(Reads.seq(JenkinsJob.apiFormat))
@@ -392,7 +392,7 @@ class TeamsAndRepositoriesConnector @Inject()(
       repo    <- httpClientV2
                    .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
                    .execute[Option[GitRepository]]
-      jobs    <- lookupLatestBuildJobs(name)
+      jobs    <- lookupLatestJenkinsJobs(name)
       withJobs = repo.map(_.copy(jenkinsJobs = jobs))
     } yield withJobs
   }
