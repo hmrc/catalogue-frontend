@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
+package uk.gov.hmrc.cataloguefrontend.deployments
 
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentTimelineEvent, ReleasesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.UpstreamErrorResponse.Upstream4xxResponse
 

@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Username, DeploymentHistory, Pagination}
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes
+@import uk.gov.hmrc.cataloguefrontend.deployments.routes
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
@@ -36,14 +36,9 @@
 
 @implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
-@standard_layout("Deployments", "deployments") {
+@standard_layout("Deployment Events", "deployments") {
     <h1 class="page-heading mt-4">
-        Deployments
-        @if(uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
-            <a class="float-end btn btn-success" role="button" href="@uk.gov.hmrc.cataloguefrontend.deployservice.routes.DeployServiceController.step1(None)" title="Link to the deploy service page">
-                Deploy
-            </a>
-        }
+        Deployment Events
     </h1>
 
     @if(form.hasErrors) {
@@ -171,7 +166,7 @@
 @envOption(env: Environment) = {
   @defining(env == selectedEnv) { active =>
       <li id="tab-@env.asString" class="nav-item">
-          <a id="@env.asString-tab" class="nav-link @if(active){active}" href="@routes.DeploymentHistoryController.history(env)">
+          <a id="@env.asString-tab" class="nav-link @if(active){active}" href="@routes.DeploymentEventsController.deploymentEvents(env)">
               @env.displayString
           </a>
       </li>

@@ -15,7 +15,8 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.deployservice.{DeployServiceForm, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.deployments.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceForm
 @import views.html.vulnerabilities.VulnerabilityDetails
 @import uk.gov.hmrc.cataloguefrontend.connector.Link
 @import uk.gov.hmrc.play.bootstrap.binders.{SafeRedirectUrl, RedirectUrl}
@@ -32,7 +33,7 @@
   messages  : RequestHeader
 )
 
-@standard_layout("Deploying Service", "deploying service") {
+@standard_layout("Deploying Service", "deployments") {
   <h1 class="page-heading mt-4">Deploying Service</h1>
   <table class="table">
     <tr>

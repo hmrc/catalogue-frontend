@@ -14,33 +14,30 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
+package uk.gov.hmrc.cataloguefrontend.deployments
 
+import cats.implicits._
 import play.api.Configuration
 import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceDependenciesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
-import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Pagination, ReleasesConnector}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.DeploymentHistoryPage
-import views.html.whatsrunningwhere.DeploymentTimeline
+import views.html.deployments.DeploymentEventsPage
 
-import cats.implicits._
-import java.time.{LocalDate, ZoneOffset}
+import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
 @Singleton
-class DeploymentHistoryController @Inject() (
+class DeploymentEventsController @Inject()(
   releasesConnector            : ReleasesConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  serviceDependenciesConnector : ServiceDependenciesConnector,
-  deploymentGraphService       : DeploymentGraphService,
-  page                         : DeploymentHistoryPage,
-  timelinePage                 : DeploymentTimeline,
+  page                         : DeploymentEventsPage,
   config                       : Configuration,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
@@ -49,12 +46,12 @@ class DeploymentHistoryController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  import DeploymentHistoryController._
+  import DeploymentEventsController._
 
   //TODO: link to users page in catalogue rather than UMP - this config has been deleted
   private val userProfileUrl = config.getOptional[String]("microservice.services.user-management.profileBaseUrl")
 
-  def history(env: Environment = Production): Action[AnyContent] =
+  def deploymentEvents(env: Environment = Production): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       form
         .bindFromRequest()
@@ -85,31 +82,9 @@ class DeploymentHistoryController @Inject() (
             )
         )
     }
-
-  def graph(service: String, to: LocalDate, from: LocalDate) = BasicAuthAction.async { implicit request =>
-    val start  = to.atStartOfDay().toInstant(ZoneOffset.UTC)
-    val end    = from.atTime(23,59,59).toInstant(ZoneOffset.UTC)
-
-    for {
-      services    <- teamsAndRepositoriesConnector.allServices()
-      serviceNames = services.map(_.name.toLowerCase).sorted
-      data        <- deploymentGraphService.findEvents(service, start, end)
-      slugInfo    <- data
-                      .groupBy(_.version)
-                      .keys
-                      .toList
-                      .foldLeftM[Future, List[ServiceDependencies]](List.empty){
-                        case (xs, v) => serviceDependenciesConnector.getSlugInfo(service, Some(v)).map {
-                          case Some(x) => xs :+ x
-                          case None    => xs
-                        }
-                      }
-      view         = timelinePage(service, start, end, data, slugInfo, serviceNames)
-    } yield Ok(view)
-  }
 }
 
-object DeploymentHistoryController {
+object DeploymentEventsController {
 
   case class SearchForm(
     from   : LocalDate,

@@ -104,9 +104,32 @@
                     <li class="nav-item">
                         <a id="link-to-whats-running-where" class="nav-link @if(active == "whats-running-where") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">What's Running Where</a>
                     </li>
-                    <li class="nav-item">
-                        <a id="link-to-deployments" class="nav-link @if(active == "deployments") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.history(Production)">Deployments</a>
+                    @* TODO remove once date has elapsed *@
+                    @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2024-03-01T00:00:00Z"))) { isNew =>
+                        <li class="nav-item dropdown">
+                            <a id="deployments-dropdown" class="nav-link dropdown-toggle @if(active == "deployments") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Deployments
+                                @if(CatalogueFrontendSwitches.showDeployService.isEnabled && isNew) {
+                                    <span style="color: violet;">
+                                        *
+                                        <span class="visually-hidden">new pages in dropdown</span>
+                                    </span>
+                                }
+                        </a>
+                        <ul id="deployments-menu" class="dropdown-menu">
+                            @if(CatalogueFrontendSwitches.showDeployService.isEnabled) {
+                                <li>
+                                    <a id="link-to-deploy-service" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeployServiceController.step1(None)">
+                                        Deploy Service
+                                        @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
+                                    </a>
+                                </li>
+                            }
+                            <li><a id="link-to-events" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentEventsController.deploymentEvents(Production)">Events</a></li>
+                            <li><a id="link-to-deployment-timeline" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController.graph("")">Timeline</a></li>
+                        </ul>
                     </li>
+                    }
                     <li class="nav-item dropdown">
                         <a id="shuttering-dropdown" class="nav-link dropdown-toggle @if(active == "shuttering") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Shuttering
@@ -138,17 +161,9 @@
                             <li><a id="link-to-pr-commenter-recommendations" class="dropdown-item" href="@prcommenterRoutes.PrCommenterController.recommendations()">PR-Commenter Recommendations</a></li>
                         </ul>
                     </li>
-                    @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2024-02-01T00:00:00Z"))) { isNew =>
                     <li class="nav-item dropdown">
                         <a id="explore-dropdown" class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Explore
-                            @* TODO remove once date has elapsed *@
-                            @if(isNew && CatalogueFrontendSwitches.showSearchCommissioningState.isEnabled) {
-                                <span style="color: violet;">
-                                    *
-                                    <span class="visually-hidden">new pages in dropdown</span>
-                                </span>
-                            }
                         </a>
                         <ul id="explore-menu" class="dropdown-menu">
                             <li><a id="link-to-dependency-explorer" class="dropdown-item" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
@@ -165,8 +180,6 @@
                                 <li>
                                     <a id="link-to-search-commissioning-state" class="dropdown-item" href="@commissioningRoutes.ServiceCommissioningStatusController.searchLanding()">
                                         Search Commissioning State
-                                        @* TODO remove once date has elapsed *@
-                                        @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
                                     </a>
                                 </li>
                             }
@@ -177,7 +190,6 @@
                                     </a>
                                 </li>
                             }
-                            <li><a id="link-to-deployment-timelines" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.DeploymentHistoryController.graph("")">Deployment Timelines</a></li>
                             <li>
                                 <a id="link-to-users-list-page" class="dropdown-item" href="@userRoutes.UsersController.allUsers()">
                                     Users
@@ -185,7 +197,6 @@
                             </li>
                         </ul>
                     </li>
-                    }
                 </ul>
 
                 <ul id="catalogue-search-bar" class="nav navbar-nav ms-auto d-none">

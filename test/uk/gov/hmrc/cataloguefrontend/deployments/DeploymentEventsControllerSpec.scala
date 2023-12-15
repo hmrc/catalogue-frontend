@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
+package uk.gov.hmrc.cataloguefrontend.deployments
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import play.api.Configuration
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
 import uk.gov.hmrc.cataloguefrontend.{DateHelper, FakeApplicationBuilder}
-import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
+import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.http.SessionKeys
-import views.html.DeploymentHistoryPage
-import views.html.whatsrunningwhere.DeploymentTimeline
+import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
+import views.html.deployments.DeploymentEventsPage
 
 import java.time.{Instant, LocalDate}
 import scala.concurrent.{ExecutionContext, Future}
 
-class DeploymentHistoryControllerSpec
+class DeploymentEventsControllerSpec
   extends UnitSpec
      with MockitoSugar
      with ArgumentMatchersSugar
@@ -47,32 +47,26 @@ class DeploymentHistoryControllerSpec
     implicit val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
     lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
-    lazy val mockedServiceDependenciesConnector  = mock[ServiceDependenciesConnector]
     lazy val mockedReleasesConnector             = mock[ReleasesConnector]
     lazy val authStubBehaviour                   = mock[StubBehaviour]
-    lazy val mockedDeploymentGraphService        = mock[DeploymentGraphService]
     lazy val authComponent                       = FrontendAuthComponentsStub(authStubBehaviour)
-    lazy val page                                = new DeploymentHistoryPage()
-    lazy val timelinePage                        = new DeploymentTimeline()
+    lazy val page                                = new DeploymentEventsPage()
 
-    lazy val controller = new DeploymentHistoryController(
+    lazy val controller = new DeploymentEventsController(
       mockedReleasesConnector,
       mockedTeamsAndRepositoriesConnector,
-      mockedServiceDependenciesConnector,
-      mockedDeploymentGraphService,
       page,
-      timelinePage,
       Configuration.empty,
       mcc,
       authComponent
     )
   }
 
-  "history" should {
+  "DeploymentEvents" should {
     "return 400 when given a bad date" in new Fixture {
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
-      val response = controller.history()(FakeRequest(GET, "/deployments/production?from=baddate").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?from=baddate").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 400
     }
 
@@ -83,7 +77,7 @@ class DeploymentHistoryControllerSpec
         .thenReturn(Future.successful(PaginatedDeploymentHistory(history = Seq.empty, 0)))
       when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
-      val response = controller.history()(FakeRequest(GET, "/deployments/production").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
     }
 
@@ -110,7 +104,7 @@ class DeploymentHistoryControllerSpec
       when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
 
-      val response = controller.history()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
 
       val responseString = contentAsString(response)
@@ -144,7 +138,7 @@ class DeploymentHistoryControllerSpec
       when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
 
-      val response = controller.history()(FakeRequest(GET, "/deployments/production?service=s1").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?service=s1").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
 
       val responseString = contentAsString(response)
@@ -160,8 +154,8 @@ class DeploymentHistoryControllerSpec
             to      = any,
             team    = eqTo(None),
             service = eqTo(None),
-            skip    = eqTo(Some(2 * DeploymentHistoryController.pageSize)),
-            limit   = eqTo(Some(DeploymentHistoryController.pageSize))
+            skip    = eqTo(Some(2 * DeploymentEventsController.pageSize)),
+            limit   = eqTo(Some(DeploymentEventsController.pageSize))
           )(any))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(Seq.empty, 0)))
 
@@ -170,7 +164,7 @@ class DeploymentHistoryControllerSpec
       when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
         .thenReturn(Future.successful(Seq.empty))
 
-      val response = controller.history()(FakeRequest(GET, "/deployments/production?page=2").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?page=2").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
     }
   }
