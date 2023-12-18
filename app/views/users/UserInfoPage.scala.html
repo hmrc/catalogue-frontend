@@ -59,6 +59,10 @@
                                 case None      => {}
                               }
                           </li>
+                          <li id="user-role">
+                            <label class="fw-bold">Role:</label>
+                            <span class="badge rounded-pill text-bg-secondary">@user.userRole.displayName </span>
+                          </li>
                       </ul>
 
                       <div id="user-ump-link" class="list-unstyled">
@@ -75,20 +79,17 @@
                 </div>
 
                   <div class="card-body">
-                      @if(user.teamsAndRoles.isEmpty) {
+                      @if(user.teams.isEmpty) {
                         <p class="card-text col-6">
                             @user.username does not belong to any teams.
                         </p>
                       }
                         <ul id="user-teams" class="list-unstyled" style="column-count: 2;">
-                        @user.teamsAndRoles.map { team =>
+                        @user.teams.map { team =>
                           <li>
-                            <a href="@teamRoutes.TeamsController.team(team.teamName)">
-                              @team.teamName.asString
+                            <a href="@teamRoutes.TeamsController.team(team)">
+                              @team.asString
                             </a>
-                            @if(!team.role.isUser) {
-                              <span class="badge rounded-pill text-bg-secondary">@team.role.displayName</span>
-                            }
                           </li>
                         }
                         </ul>
