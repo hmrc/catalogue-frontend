@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes }
 @import views.partials.githubBadgeType
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector.ServiceStatusType
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @(
   repositoryDetails        : GitRepository,
@@ -81,7 +82,7 @@
                   }
                 </div>
             }
-            @if(canMarkForDecommissioning) {
+            @if(CatalogueFrontendSwitches.showMarkForDecommissioningButton.isEnabled && canMarkForDecommissioning) {
                 @status match {
                     case Some(s) if (!Seq(ServiceStatusType.Archived, ServiceStatusType.BeingDecommissioned).contains(s)) => {
                         <div class="col-6 offset-6">

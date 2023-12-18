@@ -57,4 +57,7 @@ object CatalogueFrontendSwitches {
   def showSearchCommissioningState: FeatureSwitch =
     FeatureSwitch.forName("show-search-commissioning-state")
 
+  def showMarkForDecommissioningButton: FeatureSwitch =
+    FeatureSwitch.forName("show-mark-for-decommissioning-button")
+
 }
