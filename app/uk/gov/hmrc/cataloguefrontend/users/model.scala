@@ -97,7 +97,7 @@ final case class User(
   username      : String,
   githubUsername: Option[String],
   phoneNumber   : Option[String],
-  userRole      : Role,
+  role          : Role,
   teams         : Seq[TeamName]
 )
 

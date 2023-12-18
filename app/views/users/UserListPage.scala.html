@@ -77,7 +77,7 @@
           <th class="col-lg-2"><button role="button" id="givenName"  data-sort="given-name"  class="sort no-border fw-bold">Given Name </button></th>
           <th class="col-lg-2"><button role="button" id="familyName" data-sort="family-name" class="sort no-border fw-bold">Family Name</button></th>
           <th class="col-lg-2"><button role="button" id="github"     data-sort="github"      class="sort no-border fw-bold">GitHub     </button></th>
-          <th class="col-lg-1"><button role="button" id="userRole"   data-sort="user-role"    class="sort no-border fw-bold">Role       </button></th>
+          <th class="col-lg-1"><button role="button" id="role"       data-sort="role"        class="sort no-border fw-bold">Role       </button></th>
           <th class="col-lg-3"><button class="no-border fw-bold">Teams</button></th>
         </tr>
       </thead>
@@ -110,8 +110,8 @@
             }
           </td>
 
-          <td class="user-role" id="row@{i}_teams">
-            <span class="badge rounded-pill text-bg-secondary">@user.userRole.displayName </span>
+          <td class="role" id="row@{i}_teams">
+            <span class="badge rounded-pill text-bg-secondary">@user.role.displayName </span>
           </td>
 
           <td class="" id="row@{i}_teams">
@@ -150,7 +150,7 @@
   document.addEventListener('DOMContentLoaded', toggleMessage);
 
   const options = {
-    valueNames: ['username', 'given-name', 'family-name', 'github', 'github-username', 'ldap-username', 'user-role'],
+    valueNames: ['username', 'given-name', 'family-name', 'github', 'github-username', 'ldap-username', 'role'],
     searchColumns: ['ldap-username', 'github-username'],
     searchDelay: 350,
     page: @maxRows,
