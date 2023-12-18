@@ -58,10 +58,10 @@
             <h1 id="service-header" class="page-heading mt-4 position-relative">
               Service: @serviceName
                 @{
-                    if(repositoryDetails.isDeprecated) { 
-                        <span>Deprecated</span> 
-                    } else if(repositoryDetails.isArchived) {
+                    if(repositoryDetails.isArchived) { 
                         <span>Archived</span> 
+                    } else if(repositoryDetails.isDeprecated) {
+                        <span>Deprecated</span> 
                     }
                 }
             </h1>

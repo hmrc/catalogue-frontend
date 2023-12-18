@@ -82,9 +82,9 @@
                   }
                 </div>
             }
-            @if(CatalogueFrontendSwitches.showMarkForDecommissioningButton.isEnabled && canMarkForDecommissioning) {
+            @if(CatalogueFrontendSwitches.showDecommissionButton.isEnabled && canMarkForDecommissioning) {
                 @status match {
-                    case Some(s) if (!Seq(ServiceStatusType.Archived, ServiceStatusType.BeingDecommissioned).contains(s)) => {
+                    case Some(s) if !Seq(ServiceStatusType.Archived, ServiceStatusType.BeingDecommissioned).contains(s) => {
                         <div class="col-6 offset-6">
                             <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning">Mark for decommissioning</button>
                         </div>

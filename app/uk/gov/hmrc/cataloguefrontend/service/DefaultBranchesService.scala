@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext

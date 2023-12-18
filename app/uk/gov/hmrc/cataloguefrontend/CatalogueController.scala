@@ -510,7 +510,7 @@ object MarkForDecommissioning {
   def permission(repoName: String): Permission =
     Predicate.Permission(
       Resource.from("catalogue-repository", repoName),
-      IAAction("MARK_FOR_DECOMMISSIONING")
+      IAAction("DECOMMISSION")
     )
 }
 

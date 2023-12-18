@@ -245,12 +245,12 @@ case class GitRepository(
 
 object GitRepository {
   val apiFormat: OFormat[GitRepository] = {
-    implicit val rtF              : Format[RepoType]         = RepoType.format
-    implicit val stF              : Format[ServiceType]      = ServiceType.stFormat
-    implicit val jjF              : Format[JenkinsJob]       = JenkinsJob.apiFormat
-    implicit val tagF             : Format[Tag]              = Tag.format
-    implicit val zoneF            : Format[Zone]             = Zone.format
-    implicit val tnf              : Format[TeamName]         = TeamName.format
+    implicit val rtF  : Format[RepoType]    = RepoType.format
+    implicit val stF  : Format[ServiceType] = ServiceType.stFormat
+    implicit val jjF  : Format[JenkinsJob]  = JenkinsJob.apiFormat
+    implicit val tagF : Format[Tag]         = Tag.format
+    implicit val zoneF: Format[Zone]        = Zone.format
+    implicit val tnf  : Format[TeamName]    = TeamName.format
 
     ( (__ \ "name"              ).format[String]
     ~ (__ \ "description"       ).format[String]

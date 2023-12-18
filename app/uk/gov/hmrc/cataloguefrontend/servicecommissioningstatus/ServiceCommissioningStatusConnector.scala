@@ -67,11 +67,7 @@ class ServiceCommissioningStatusConnector @Inject() (
   def setServiceStatus(serviceName: String, serviceStatusType: ServiceStatusType)(implicit hc: HeaderCarrier): Future[Unit] = {
     httpClientV2
       .post(url"$serviceCommissioningBaseUrl/service-commissioning-status/lifecycle/$serviceName/status")
-      .withBody(Json.parse(s"""
-        |{
-        | "status": "${serviceStatusType.asString}"
-        |}
-      """.stripMargin))
+      .withBody(Json.obj("status" -> serviceStatusType.asString))
       .execute[Unit]
   }
 
@@ -88,9 +84,9 @@ object ServiceCommissioningStatusConnector {
 
   object ServiceStatusType {
     object BeingDecommissioned extends ServiceStatusType { val asString: String = "Being decommissioned" }
-    object Archived extends ServiceStatusType { val asString: String = "Archived" }
-    object Deprecated extends ServiceStatusType { val asString: String = "Deprecated" }
-    object Active extends ServiceStatusType { val asString: String = "Active" }
+    object Archived            extends ServiceStatusType { val asString: String = "Archived" }
+    object Deprecated          extends ServiceStatusType { val asString: String = "Deprecated" }
+    object Active              extends ServiceStatusType { val asString: String = "Active" }
 
     val values: List[ServiceStatusType] = List(BeingDecommissioned, Archived, Deprecated, Active)
 
