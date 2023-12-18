@@ -384,6 +384,7 @@ class CreateAppConfigsControllerSpec
         createdDate    = Instant.now(),
         lastActiveDate = Instant.now(),
         language       = Some("en"),
+        isArchived     = false,
         defaultBranch  = "test",
         serviceType    = Some(ServiceType.Backend)
       )

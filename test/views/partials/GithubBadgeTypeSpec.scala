@@ -46,17 +46,18 @@ class GithubBadgeTypeSpec extends AnyWordSpec with Matchers {
   val aLink = Link("name", "display-name", "url")
 
   val aRepo = GitRepository(
-    name          = "name",
-    description   = "description",
+    name           = "name",
+    description    = "description",
     createdDate    = Instant.now,
     lastActiveDate = Instant.now,
-    owningTeams   = Nil,
-    teamNames     = Nil,
-    githubUrl     = "https://github.com/hmrc/name",
-    repoType      = RepoType.Other,
-    isPrivate     = false,
-    defaultBranch = "main",
-    language      = None
+    owningTeams    = Nil,
+    teamNames      = Nil,
+    githubUrl      = "https://github.com/hmrc/name",
+    repoType       = RepoType.Other,
+    isPrivate      = false,
+    isArchived     = false,
+    defaultBranch  = "main",
+    language       = None
   )
 
 }

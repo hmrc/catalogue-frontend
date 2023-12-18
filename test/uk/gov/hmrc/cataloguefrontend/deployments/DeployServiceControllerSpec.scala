@@ -205,6 +205,7 @@ class DeployServiceControllerSpec
   , createdDate    = Instant.now
   , lastActiveDate = Instant.now
   , language       = Some("some-language")
+  , isArchived     = false
   , defaultBranch  = "some-default-branch"
   )
 
