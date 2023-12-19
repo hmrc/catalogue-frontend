@@ -509,7 +509,7 @@ object MarkForDecommissioning {
 
   def permission(repoName: String): Permission =
     Predicate.Permission(
-      Resource.from("catalogue-repository", repoName),
+      Resource.from("catalogue-frontend", s"services/$repoName"),
       IAAction("DECOMMISSION")
     )
 }
