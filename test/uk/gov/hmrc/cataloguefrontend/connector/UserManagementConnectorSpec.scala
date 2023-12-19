@@ -21,7 +21,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, Member, TeamMembership, User, Role}
+import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, Member, User, Role}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -99,11 +99,9 @@ class UserManagementConnectorSpec
                   "username" : "joe.bloggs",
                   "githubUsername" : "joebloggs-github",
                   "phoneNumber" : "07123456789",
-                  "teamsAndRoles" : [
-                    {
-                      "teamName" : "TestTeam",
-                      "role" : "user"
-                    }
+                  "role" : "user",
+                  "teamNames" : [
+                       "TestTeam"
                   ]
                 }
               ]""")
@@ -121,7 +119,8 @@ class UserManagementConnectorSpec
             username       = "joe.bloggs",
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
-            teamsAndRoles  = Seq(TeamMembership(teamName = TeamName("TestTeam"), role = Role("user")))
+            role           = Role("user"),
+            teamNames      = Seq(new TeamName("TestTeam"))
           )
         )
     }
@@ -141,11 +140,9 @@ class UserManagementConnectorSpec
                    "username" : "joe.bloggs",
                    "github" : "https://github.com/joebloggs",
                    "phoneNumber" : "07123456789",
-                   "teamsAndRoles" : [
-                      {
-                        "teamName" : "TestTeam",
-                        "role" : "user"
-                      }
+                   "role" : "user",
+                   "teamNames" : [
+                        "TestTeam"
                    ]
                 },
                 {
@@ -157,11 +154,9 @@ class UserManagementConnectorSpec
                    "username" : "jane.doe",
                    "github" : "https://github.com/janedoe",
                    "phoneNumber" : "07123456789",
-                   "teamsAndRoles" : [
-                      {
-                        "teamName" : "TestTeam",
-                        "role" : "user"
-                      }
+                   "role" : "user",
+                   "teamNames" : [
+                        "TestTeam"
                    ]
                 }
               ]""".stripMargin)
@@ -179,7 +174,8 @@ class UserManagementConnectorSpec
             username       = "joe.bloggs",
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
-            teamsAndRoles  = Seq(TeamMembership(teamName = TeamName("TestTeam"), role = Role("user")))
+            role           = Role("user"),
+            teamNames      = Seq(new TeamName("TestTeam"))
           ),
           User(
             displayName    = Some("Jane Doe"),
@@ -190,7 +186,8 @@ class UserManagementConnectorSpec
             username       = "jane.doe",
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
-            teamsAndRoles  = Seq(TeamMembership(teamName = TeamName("TestTeam"), role = Role("user")))
+            role           = Role("user"),
+            teamNames      = Seq(new TeamName("TestTeam"))
           )
         )
     }
@@ -225,11 +222,9 @@ class UserManagementConnectorSpec
                 "username" : "joe.bloggs",
                 "githubUsername" : "joebloggs-github",
                 "phoneNumber" : "07123456789",
-                "teamsAndRoles" : [
-                  {
-                    "teamName" : "Test Team",
-                    "role" : "user"
-                  }
+                "role" : "user",
+                "teamNames" : [
+                    "TestTeam"
                 ]
               }""".stripMargin)
           )
@@ -246,7 +241,8 @@ class UserManagementConnectorSpec
             username       = "joe.bloggs",
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
-            teamsAndRoles  = Seq(TeamMembership(teamName = TeamName("Test Team"), role = Role("user")))
+            role           = Role("user"),
+            teamNames      = Seq(new TeamName("TestTeam"))
           )
         )
     }

@@ -88,37 +88,21 @@ object LdapTeam {
   }
 }
 
-final case class TeamMembership(
-  teamName: TeamName
-, role    : Role
-)
-
-object TeamMembership {
-  val reads: Reads[TeamMembership] = {
-    implicit val rr : Reads[Role]     = Role.reads
-    implicit val tnr: Reads[TeamName] = TeamName.format
-    ( (__ \ "teamName").read[TeamName]
-    ~ (__ \ "role"    ).read[Role]
-    )(TeamMembership.apply _)
-  }
-}
-
 final case class User(
-  displayName   : Option[String]
-, familyName    : String
-, givenName     : Option[String]
-, organisation  : Option[String]
-, primaryEmail  : String
-, username      : String
-, githubUsername: Option[String]
-, phoneNumber   : Option[String]
-, teamsAndRoles : Seq[TeamMembership]
+  displayName   : Option[String],
+  familyName    : String,
+  givenName     : Option[String],
+  organisation  : Option[String],
+  primaryEmail  : String,
+  username      : String,
+  githubUsername: Option[String],
+  phoneNumber   : Option[String],
+  role          : Role,
+  teamNames     : Seq[TeamName]
 )
 
 object User {
   val reads: Reads[User] = {
-    implicit val tmR: Reads[TeamMembership] = TeamMembership.reads
-
     ( ( __ \ "displayName"   ).readNullable[String]
     ~ ( __ \ "familyName"    ).read[String]
     ~ ( __ \ "givenName"     ).readNullable[String]
@@ -127,7 +111,9 @@ object User {
     ~ ( __ \ "username"      ).read[String]
     ~ ( __ \ "githubUsername").readNullable[String]
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
-    ~ ( __ \ "teamsAndRoles" ).read[Seq[TeamMembership]]
-    )(User.apply _)
+    ~ ( __ \ "role"          ).read[Role](Role.reads)
+    ~ ( __ \ "teamNames"     ).read[Seq[TeamName]](Reads.seq(TeamName.format))
+      )(User.apply _)
   }
 }
+
