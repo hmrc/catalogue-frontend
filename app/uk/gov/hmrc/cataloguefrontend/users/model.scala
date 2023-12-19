@@ -98,7 +98,7 @@ final case class User(
   githubUsername: Option[String],
   phoneNumber   : Option[String],
   role          : Role,
-  teams         : Seq[TeamName]
+  teamNames     : Seq[TeamName]
 )
 
 object User {
@@ -111,8 +111,8 @@ object User {
     ~ ( __ \ "username"      ).read[String]
     ~ ( __ \ "githubUsername").readNullable[String]
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
-    ~ ( __ \ "userRole"      ).read[Role](Role.reads)
-    ~ ( __ \ "teams"         ).read[Seq[TeamName]](Reads.seq(TeamName.format))
+    ~ ( __ \ "role"          ).read[Role](Role.reads)
+    ~ ( __ \ "teamNames"     ).read[Seq[TeamName]](Reads.seq(TeamName.format))
       )(User.apply _)
   }
 }

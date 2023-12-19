@@ -115,7 +115,7 @@
           </td>
 
           <td class="" id="row@{i}_teams">
-            @user.teams.map { team =>
+            @user.teamNames.map { team =>
               <div>
                 <a href="@teamRoutes.TeamsController.team(team)">@team.asString</a>
               </div>

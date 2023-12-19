@@ -79,13 +79,13 @@
                 </div>
 
                   <div class="card-body">
-                      @if(user.teams.isEmpty) {
+                      @if(user.teamNames.isEmpty) {
                         <p class="card-text col-6">
                             @user.username does not belong to any teams.
                         </p>
                       }
                         <ul id="user-teams" class="list-unstyled" style="column-count: 2;">
-                        @user.teams.map { team =>
+                        @user.teamNames.map { team =>
                           <li>
                             <a href="@teamRoutes.TeamsController.team(team)">
                               @team.asString

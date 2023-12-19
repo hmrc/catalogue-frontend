@@ -99,8 +99,8 @@ class UserManagementConnectorSpec
                   "username" : "joe.bloggs",
                   "githubUsername" : "joebloggs-github",
                   "phoneNumber" : "07123456789",
-                  "userRole" : "user",
-                  "teams" : [
+                  "role" : "user",
+                  "teamNames" : [
                        "TestTeam"
                   ]
                 }
@@ -120,7 +120,7 @@ class UserManagementConnectorSpec
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teams          = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(new TeamName("TestTeam"))
           )
         )
     }
@@ -140,8 +140,8 @@ class UserManagementConnectorSpec
                    "username" : "joe.bloggs",
                    "github" : "https://github.com/joebloggs",
                    "phoneNumber" : "07123456789",
-                   "userRole" : "user",
-                   "teams" : [
+                   "role" : "user",
+                   "teamNames" : [
                         "TestTeam"
                    ]
                 },
@@ -154,8 +154,8 @@ class UserManagementConnectorSpec
                    "username" : "jane.doe",
                    "github" : "https://github.com/janedoe",
                    "phoneNumber" : "07123456789",
-                   "userRole" : "user",
-                   "teams" : [
+                   "role" : "user",
+                   "teamNames" : [
                         "TestTeam"
                    ]
                 }
@@ -175,7 +175,7 @@ class UserManagementConnectorSpec
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teams          = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(new TeamName("TestTeam"))
           ),
           User(
             displayName    = Some("Jane Doe"),
@@ -187,7 +187,7 @@ class UserManagementConnectorSpec
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teams          = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(new TeamName("TestTeam"))
           )
         )
     }
@@ -222,8 +222,8 @@ class UserManagementConnectorSpec
                 "username" : "joe.bloggs",
                 "githubUsername" : "joebloggs-github",
                 "phoneNumber" : "07123456789",
-                "userRole" : "user",
-                "teams" : [
+                "role" : "user",
+                "teamNames" : [
                     "TestTeam"
                 ]
               }""".stripMargin)
@@ -242,7 +242,7 @@ class UserManagementConnectorSpec
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teams          = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(new TeamName("TestTeam"))
           )
         )
     }
