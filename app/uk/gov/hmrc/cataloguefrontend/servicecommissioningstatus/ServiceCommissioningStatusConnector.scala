@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import HttpReads.Implicits._
+import play.api.libs.json._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -31,6 +32,8 @@ class ServiceCommissioningStatusConnector @Inject() (
   httpClientV2  : HttpClientV2
 , servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
+
+  import ServiceCommissioningStatusConnector.ServiceStatusType
 
   private val serviceCommissioningBaseUrl = servicesConfig.baseUrl("service-commissioning-status")
 
@@ -59,5 +62,49 @@ class ServiceCommissioningStatusConnector @Inject() (
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[List[CachedServiceCheck]]
+  }
+
+  def setServiceStatus(serviceName: String, serviceStatusType: ServiceStatusType)(implicit hc: HeaderCarrier): Future[Unit] = {
+    httpClientV2
+      .post(url"$serviceCommissioningBaseUrl/service-commissioning-status/lifecycle/$serviceName/status")
+      .withBody(Json.obj("status" -> serviceStatusType.asString))
+      .execute[Unit]
+  }
+
+  def status(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ServiceStatusType]] = {
+    implicit val serviceStatusTypeFormat = ServiceStatusType.format
+    httpClientV2
+      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/lifecycle/$serviceName/status")
+      .execute[Option[ServiceStatusType]]
+  }
+}
+
+object ServiceCommissioningStatusConnector {
+  sealed trait ServiceStatusType { val asString: String; val displayName: String }
+
+  object ServiceStatusType {
+    object DecommissionInProgress extends ServiceStatusType { val asString: String = "DecommissionInProgress"; val displayName: String = "Decommission in progress" }
+    object Archived               extends ServiceStatusType { val asString: String = "Archived"; val displayName: String = "Archived" }
+    object Deprecated             extends ServiceStatusType { val asString: String = "Deprecated"; val displayName: String = "Deprecated" }
+    object Active                 extends ServiceStatusType { val asString: String = "Active"; val displayName: String = "Active" }
+
+    val values: List[ServiceStatusType] = List(DecommissionInProgress, Archived, Deprecated, Active)
+
+    def parse(s: String): Either[String, ServiceStatusType] =
+      values
+        .find(_.asString == s)
+        .toRight(s"Invalid service status - should be one of: ${values.map(_.asString).mkString(", ")}")
+
+    val format: Format[ServiceStatusType] =
+      new Format[ServiceStatusType] {
+        override def reads(json: JsValue): JsResult[ServiceStatusType] =
+          json match {
+            case JsString(s) => parse(s).fold(msg => JsError(msg), rt => JsSuccess(rt))
+            case _           => JsError("String value expected")
+          }
+
+        override def writes(rt: ServiceStatusType): JsValue =
+          JsString(rt.asString)
+      }
   }
 }

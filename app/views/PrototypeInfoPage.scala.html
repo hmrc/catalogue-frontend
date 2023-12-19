@@ -47,8 +47,13 @@ viewMessages           : ViewMessages
     <h1 class="page-heading mt-4">
         Prototype: @prototype.name
         <span>@githubBadgeType(prototype)</span>
-        @if(prototype.isDeprecated) { <span>Deprecated</span> }
-        @if(prototype.isArchived) { <span>Archived</span> }
+        @{
+            if(prototype.isArchived) {
+                <span>Archived</span> 
+            } else if(prototype.isDeprecated) {
+                <span>Deprecated</span>
+            }
+        }
     </h1>
 
     <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
