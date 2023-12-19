@@ -147,7 +147,7 @@ class CatalogueController @Inject() (
     for {
       deployments          <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
       repositoryName       =  repositoryDetails.name
-      jenkinsJobs          <- teamsAndRepositoriesConnector.lookupLatestBuildJobs(repositoryName)
+      jenkinsJobs          <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repositoryName)
       database             <- serviceMetricsConnector.getCollections(serviceName).map(_.headOption.map(_.database))
       nonPerformantQueries <- if (database.isDefined)
         serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
@@ -313,7 +313,7 @@ class CatalogueController @Inject() (
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit request: Request[_]): Future[Result] =
-    ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
+    ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesAllVersions(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
       prCommenterConnector.report(repoDetails.name)
@@ -361,7 +361,7 @@ class CatalogueController @Inject() (
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit request: Request[_]): Future[Result] =
-    ( teamsAndRepositoriesConnector.lookupLatestBuildJobs(repoDetails.name),
+    ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
       prCommenterConnector.report(repoDetails.name)

@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, BuildJobType}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 
@@ -39,7 +39,7 @@
         </tr>
       </thead>
         <tbody>
-        @for(ciLink <- repo.jenkinsJobs.filterNot(_.name.endsWith("-pr-builder")).sortBy(job => (job.jobType, job.name))) {
+        @for(ciLink <- repo.jenkinsJobs.filterNot(_.jobType == BuildJobType.PullRequest).sortBy(job => (job.jobType, job.name))) {
             <tr>
                 <td>
                     <a id="link-to-build-@{ciLink.name}" href="@{ciLink.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{ciLink.name}<span class="glyphicon glyphicon-new-window"/></a>
