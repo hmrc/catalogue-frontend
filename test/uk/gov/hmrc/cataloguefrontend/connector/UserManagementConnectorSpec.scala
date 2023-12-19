@@ -99,11 +99,9 @@ class UserManagementConnectorSpec
                   "username" : "joe.bloggs",
                   "githubUsername" : "joebloggs-github",
                   "phoneNumber" : "07123456789",
-                   "userRole" : "user"
-                   "teams" : [
-                      {
-                        "TestTeam"
-                      }
+                  "userRole" : "user",
+                  "teams" : [
+                       "TestTeam"
                   ]
                 }
               ]""")
@@ -142,11 +140,9 @@ class UserManagementConnectorSpec
                    "username" : "joe.bloggs",
                    "github" : "https://github.com/joebloggs",
                    "phoneNumber" : "07123456789",
-                   "userRole" : "user"
+                   "userRole" : "user",
                    "teams" : [
-                      {
                         "TestTeam"
-                      }
                    ]
                 },
                 {
@@ -158,11 +154,9 @@ class UserManagementConnectorSpec
                    "username" : "jane.doe",
                    "github" : "https://github.com/janedoe",
                    "phoneNumber" : "07123456789",
-                   "userRole" : "user"
+                   "userRole" : "user",
                    "teams" : [
-                      {
                         "TestTeam"
-                      }
                    ]
                 }
               ]""".stripMargin)
@@ -230,9 +224,7 @@ class UserManagementConnectorSpec
                 "phoneNumber" : "07123456789",
                 "userRole" : "user",
                 "teams" : [
-                  {
-                    "Test Team"
-                  }
+                    "TestTeam"
                 ]
               }""".stripMargin)
           )
