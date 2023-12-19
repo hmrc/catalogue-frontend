@@ -99,11 +99,11 @@ class UserManagementConnectorSpec
                   "username" : "joe.bloggs",
                   "githubUsername" : "joebloggs-github",
                   "phoneNumber" : "07123456789",
-                  "teamsAndRoles" : [
-                    {
-                      "teamName" : "TestTeam",
-                      "role" : "user"
-                    }
+                   "userRole" : "user"
+                   "teams" : [
+                      {
+                        "TestTeam"
+                      }
                   ]
                 }
               ]""")
@@ -142,10 +142,10 @@ class UserManagementConnectorSpec
                    "username" : "joe.bloggs",
                    "github" : "https://github.com/joebloggs",
                    "phoneNumber" : "07123456789",
-                   "teamsAndRoles" : [
+                   "userRole" : "user"
+                   "teams" : [
                       {
-                        "teamName" : "TestTeam",
-                        "role" : "user"
+                        "TestTeam"
                       }
                    ]
                 },
@@ -158,10 +158,10 @@ class UserManagementConnectorSpec
                    "username" : "jane.doe",
                    "github" : "https://github.com/janedoe",
                    "phoneNumber" : "07123456789",
-                   "teamsAndRoles" : [
+                   "userRole" : "user"
+                   "teams" : [
                       {
-                        "teamName" : "TestTeam",
-                        "role" : "user"
+                        "TestTeam"
                       }
                    ]
                 }
@@ -228,10 +228,10 @@ class UserManagementConnectorSpec
                 "username" : "joe.bloggs",
                 "githubUsername" : "joebloggs-github",
                 "phoneNumber" : "07123456789",
-                "teamsAndRoles" : [
+                "userRole" : "user",
+                "teams" : [
                   {
-                    "teamName" : "Test Team",
-                    "role" : "user"
+                    "Test Team"
                   }
                 ]
               }""".stripMargin)
