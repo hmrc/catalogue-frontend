@@ -270,7 +270,7 @@ class CatalogueController @Inject() (
         predicate = MarkForDecommissioning.permission(repoName))
       .async { implicit request =>
         serviceCommissioningStatusConnector
-          .setServiceStatus(repoName, ServiceStatusType.BeingDecommissioned)
+          .setServiceStatus(repoName, ServiceStatusType.DecommissionInProgress)
           .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
       }
 

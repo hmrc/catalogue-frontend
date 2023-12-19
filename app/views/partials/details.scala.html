@@ -75,16 +75,16 @@
             @status.map { status =>
                 <div class="col-6">
                   <label class="fw-bold">Status: </label>
-                  @if(status == ServiceStatusType.BeingDecommissioned) {
-                    <b class="text-dark">@status.asString</b>
+                  @if(status == ServiceStatusType.DecommissionInProgress) {
+                    <b class="text-dark">@status.displayName</b>
                   } else {
-                    @status.asString
+                    @status.displayName
                   }
                 </div>
             }
             @if(CatalogueFrontendSwitches.showDecommissionButton.isEnabled && canMarkForDecommissioning) {
                 @status match {
-                    case Some(s) if !Seq(ServiceStatusType.Archived, ServiceStatusType.BeingDecommissioned).contains(s) => {
+                    case Some(s) if !Seq(ServiceStatusType.Archived, ServiceStatusType.DecommissionInProgress).contains(s) => {
                         <div class="col-6 offset-6">
                             <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning">Mark for decommissioning</button>
                         </div>

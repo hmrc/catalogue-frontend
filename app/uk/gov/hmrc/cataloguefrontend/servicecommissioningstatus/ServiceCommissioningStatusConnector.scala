@@ -80,15 +80,15 @@ class ServiceCommissioningStatusConnector @Inject() (
 }
 
 object ServiceCommissioningStatusConnector {
-  sealed trait ServiceStatusType { val asString: String }
+  sealed trait ServiceStatusType { val asString: String; val displayName: String }
 
   object ServiceStatusType {
-    object BeingDecommissioned extends ServiceStatusType { val asString: String = "Being decommissioned" }
-    object Archived            extends ServiceStatusType { val asString: String = "Archived" }
-    object Deprecated          extends ServiceStatusType { val asString: String = "Deprecated" }
-    object Active              extends ServiceStatusType { val asString: String = "Active" }
+    object DecommissionInProgress extends ServiceStatusType { val asString: String = "DecommissionInProgress"; val displayName: String = "Decommission in progress" }
+    object Archived               extends ServiceStatusType { val asString: String = "Archived"; val displayName: String = "Archived" }
+    object Deprecated             extends ServiceStatusType { val asString: String = "Deprecated"; val displayName: String = "Deprecated" }
+    object Active                 extends ServiceStatusType { val asString: String = "Active"; val displayName: String = "Active" }
 
-    val values: List[ServiceStatusType] = List(BeingDecommissioned, Archived, Deprecated, Active)
+    val values: List[ServiceStatusType] = List(DecommissionInProgress, Archived, Deprecated, Active)
 
     def parse(s: String): Either[String, ServiceStatusType] =
       values
