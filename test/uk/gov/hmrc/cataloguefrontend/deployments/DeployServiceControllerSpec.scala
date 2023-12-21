@@ -26,7 +26,6 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
-import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -150,6 +149,8 @@ class DeployServiceControllerSpec
     "deploy service" in new Setup {
       when(mockAuthStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(true))
+      when(mockAuthStubBehaviour.stubAuth(eqTo(None), eqTo(Retrieval.username))) // Note test fails if mockAuthStubBehaviour order is changed
+        .thenReturn(Future.successful((Retrieval.Username("some-user"))))
       when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(someService)))
       when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
@@ -160,7 +161,7 @@ class DeployServiceControllerSpec
       val futResult = underTest.step3()(
         FakeRequest()
           .withMethod(Helpers.POST)
-          .withSession(SessionKeys.authToken -> "Token token", AuthController.SESSION_USERNAME -> "some-user")
+          .withSession(SessionKeys.authToken -> "Token token")
           .withFormUrlEncodedBody("serviceName" -> "some-service", "version" -> "0.3.0", "environment" -> "qa")
       )
 

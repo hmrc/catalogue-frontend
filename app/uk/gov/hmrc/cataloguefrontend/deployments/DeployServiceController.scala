@@ -21,7 +21,7 @@ import cats.data.EitherT
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
@@ -155,7 +155,7 @@ class DeployServiceController @Inject()(
                           ).map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
                            .map(_.sorted)
         _            <- EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, allServices, None, Nil, Nil, evaluations = None)))
-        slugInfo     <- EitherT
+        _            <- EitherT
                           .fromOptionF(
                             serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                             , BadRequest(deployServicePage(form.withGlobalError("Version not found"), hasPerm, allServices, latest, releases, environments, evaluations = None))
@@ -194,6 +194,7 @@ class DeployServiceController @Inject()(
   def step3(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.DeployServiceController.step1(None)
+    , retrieval   = Retrieval.username
     ).async { implicit request =>
       (for {
         allServices  <- EitherT.right[Result](teamsAndRepositoriesConnector.allServices())
@@ -210,23 +211,18 @@ class DeployServiceController @Inject()(
                             Option.when(hasPerm)(())
                           , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, allServices, None, Nil, Nil, evaluations = None))
                           )
-        slugInfo     <- EitherT
+        _            <- EitherT
                           .fromOptionF(
                             serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                           , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, allServices, None, Nil, Nil, evaluations = None))
-                          )
-        user         <- EitherT
-                          .fromOption[Future](
-                            request.session.get(AuthController.SESSION_USERNAME)
-                          , sys.error("Username not found in auth session"): Result
                           )
         queueUrl     <- EitherT
                           .right[Result](buildJobsConnector.deployMicroservice(
                             serviceName = formObject.serviceName
                           , version     = formObject.version
                           , environment = formObject.environment
-                          , user        = user
-                           ))
+                          , user        = request.retrieval.value
+                          ))
       } yield
         Redirect(routes.DeployServiceController.step4(
           serviceName = formObject.serviceName
