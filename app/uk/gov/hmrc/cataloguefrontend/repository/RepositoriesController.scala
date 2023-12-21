@@ -21,7 +21,7 @@ import play.api.data.Forms._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.repository
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -44,10 +44,10 @@ class RepositoriesController @Inject() (
   with CatalogueAuthBuilders {
 
   def allRepositories(
-    name          : Option[String]   = None,
-    team          : Option[TeamName] = None,
-    archived      : Option[Boolean]  = None,
-    repoTypeString: Option[String]   = None
+    name          : Option[String],
+    team          : Option[TeamName],
+    showArchived  : Boolean,
+    repoTypeString: Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val allTeams =
@@ -67,7 +67,7 @@ class RepositoriesController @Inject() (
           .allRepositories(
             name        = None, // Use listjs filtering
             team        = team.filterNot(_.asString.isEmpty),
-            archived    = archived,
+            archived    = if (showArchived) None else Some(false),
             repoType    = repoType,
             serviceType = serviceType
           ).map(_.sortBy(_.name.toLowerCase))
@@ -75,9 +75,20 @@ class RepositoriesController @Inject() (
       for {
         teams        <- allTeams
         repositories <- allRepositories
-      } yield Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest())
-      )}
+      } yield {
+        val filteredRepositoriesByStatus = filterRepositoriesByStatus(repositories, request.getQueryString("status"))
+        Ok(repositoriesListPage(filteredRepositoriesByStatus, teams, RepoListFilter.form.bindFromRequest()))
+      }
+    }
 
+  private def filterRepositoriesByStatus(repositories: Seq[GitRepository], status: Option[String]): Seq[GitRepository] = {
+    status match {
+      case Some("All") => repositories
+      case Some("Archived") => repositories.filter(repo => repo.isArchived)
+      case Some("Deprecated") => repositories.filter(repo => repo.isDeprecated)
+      case _ => repositories.filterNot(repo => repo.isArchived || repo.isDeprecated) //Case for default "Active" status
+    }
+  }
 
   def allServices: Action[AnyContent] =
     Action {
@@ -99,7 +110,8 @@ class RepositoriesController @Inject() (
 case class RepoListFilter(
   name    : Option[String]   = None,
   team    : Option[TeamName] = None,
-  repoType: Option[String]   = None
+  repoType: Option[String]   = None,
+  status  : Option[String]   = None
 ) {
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && repoType.isEmpty

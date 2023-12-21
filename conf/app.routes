@@ -4,7 +4,7 @@ GET        /teams                                       uk.gov.hmrc.cataloguefro
 GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.teams.TeamsController.team(teamName: TeamName)
 GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.teams.TeamsController.outOfDateTeamDependencies(teamName: TeamName)
 
-GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[TeamName] ?= None, archived: Option[Boolean] ?= None, repoType: Option[String] ?= None)
+GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[TeamName] ?= None, showArchived: Boolean ?= false, repoType: Option[String] ?= None)
 
 GET        /services                                    uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allServices
 GET        /libraries                                   uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allLibraries

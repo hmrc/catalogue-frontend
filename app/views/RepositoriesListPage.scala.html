@@ -68,7 +68,7 @@
     <div id="service-list">
         <form id="repos-form" action="/repositories" method="get">
             <div id="repos-form-row" class="row">
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <dl id="search_field">
                         <dt>
                             <label for="search" class="form-label">Name</label>
@@ -89,7 +89,7 @@
                     Symbol("class")       -> "form-select"
                 )
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                 @select(
                     field                 =  form("repoType"),
                     options               =  Seq(
@@ -108,6 +108,21 @@
                     Symbol("class")       -> "form-select"
                 )
                 </div>
+              <div class="col-md-2">
+              @select(
+                field                 =  form("status"),
+                options               =  Seq(
+                  "Archived"          -> "Archived",
+                  "Deprecated"        -> "Deprecated",
+                  "All"               -> "All"
+                ),
+                Symbol("_default")    -> "Active",
+                Symbol("_label")      -> "Status",
+                Symbol("_labelClass") -> "form-label",
+                Symbol("id")          -> "status-search",
+                Symbol("class")       -> "form-select"
+              )
+              </div>
             </div>
         </form>
 
@@ -149,6 +164,9 @@
   ["team-filter", "type-search"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("repos-form").submit();
+      });
+      document.getElementById("status-search").addEventListener("change", function() {
         document.getElementById("repos-form").submit();
       });
     });
