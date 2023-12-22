@@ -32,9 +32,37 @@
   request                      : RequestHeader
 )
 
+@configOptions = @{
+    val markForDecommissioningOption = status.flatMap(s =>
+        Option.when(
+            CatalogueFrontendSwitches.showDecommissionButton.isEnabled
+                && canMarkForDecommissioning
+                && !Seq(ServiceStatusType.Archived, ServiceStatusType.DecommissionInProgress).contains(s)
+        ){
+            <li>
+                <button type="button" class="dropdown-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning">Mark for decommissioning</button>
+            </li>
+        }
+    )
+    markForDecommissioningOption.toList
+}
+
 <div id="details" class="card">
     <div class="card-header">
-      <h4 class="mb-0">Details</h4>
+      <h4 class="mb-0">
+        Details
+        
+        @if(configOptions.nonEmpty){
+            <div class="dropdown d-inline">
+              <button class="btn btn-default border-0" type="button" id="config-menu" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="glyphicon glyphicon-cog" ></i>
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="config-menu">
+                @configOptions
+              </ul>
+            </div>
+        }
+      </h4>
     </div>
     <div class="card-body">
         <div class="row gy-3">
@@ -75,22 +103,8 @@
             @status.map { status =>
                 <div class="col-6">
                   <label class="fw-bold">Status: </label>
-                  @if(status == ServiceStatusType.DecommissionInProgress) {
-                    <b class="text-dark">@status.displayName</b>
-                  } else {
                     @status.displayName
-                  }
                 </div>
-            }
-            @if(CatalogueFrontendSwitches.showDecommissionButton.isEnabled && canMarkForDecommissioning) {
-                @status match {
-                    case Some(s) if !Seq(ServiceStatusType.Archived, ServiceStatusType.DecommissionInProgress).contains(s) => {
-                        <div class="col-6 offset-6">
-                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning">Mark for decommissioning</button>
-                        </div>
-                    }
-                    case _       => { }    
-                }
             }
         </div>
     </div>
@@ -100,16 +114,17 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="confirm-mark-for-decommissioning-label">Mark for decommissioning</h5>
+          <h5 class="modal-title" id="confirm-mark-for-decommissioning-label">Warning: Service Decommissioning</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
             <p class="body">
-                Please, make sure that you want to mark this service as being decommissioned.
-                <br>
-                This will let MDTP users know that the <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/prepare-for-decommissioning.html#alert-teams-that-own-dependent-services">decommission process</a> has started.
+              Are you sure you want to mark this service for decommissioning?
+            </p>
+            <p class="body"
+                This action will let MDTP users know that the  <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/prepare-for-decommissioning.html#alert-teams-that-own-dependent-services">decommission process</a> has started. Please ensure that you want to decommission @repositoryDetails.name before proceeding.
             </p>
             <p class="body">
                 If you have flagged this service by mistake, please contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<i class="glyphicon glyphicon-new-window"></i></a>.
