@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{CatalogueFrontendSwitches, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsService, routes => serviceConfigsRoutes }
 @import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
 @import scala.collection.immutable.ListMap
@@ -168,12 +168,10 @@
                     <input type="checkbox" id="word-wrap" />
                     <label for="word-wrap">Word wrap</label>
                 </li>
-                @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
-                    <li>
-                        <input type="checkbox" id="show-warnings" @if(showWarnings){checked="checked"} />
-                        <label for="show-warnings">Show warnings</label>
-                    </li>
-                }
+                <li>
+                    <input type="checkbox" id="show-warnings" @if(showWarnings){checked="checked"} />
+                    <label for="show-warnings">Show warnings</label>
+                </li>
             </ul>
         </aside>
         <aside id="help">
@@ -263,11 +261,9 @@
                 document.querySelector("#word-wrap").addEventListener("change", e => {
                     document.querySelector("body").classList.toggle("word-wrap");
                 });
-                @if(CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
-                    document.querySelector("#show-warnings").addEventListener("change", e => {
-                        document.querySelector("body").classList.toggle("show-warnings");
-                    });
-                }
+                document.querySelector("#show-warnings").addEventListener("change", e => {
+                    document.querySelector("body").classList.toggle("show-warnings");
+                });
                 // Activate bootstrap tooltips
                 const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
                 const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
