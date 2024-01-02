@@ -21,7 +21,7 @@ import play.api.data.Forms._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.repository
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -75,9 +75,7 @@ class RepositoriesController @Inject() (
       for {
         teams        <- allTeams
         repositories <- allRepositories
-      } yield {
-        Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest()))
-      }
+      } yield Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest()))
     }
 
   def allServices: Action[AnyContent] =
@@ -101,7 +99,7 @@ case class RepoListFilter(
   name         : Option[String]   = None,
   team         : Option[TeamName] = None,
   repoType     : Option[String]   = None,
-  showArchived : Boolean          = false
+  showArchived : Boolean
 ) {
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && repoType.isEmpty
