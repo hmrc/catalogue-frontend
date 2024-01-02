@@ -45,4 +45,7 @@ object CatalogueFrontendSwitches {
   def showDecommissionButton: FeatureSwitch =
     FeatureSwitch.forName("show-decommission-button")
 
+  def showTestRepoRelationships: FeatureSwitch =
+    FeatureSwitch.forName("show-test-repo-relationships")
+
 }

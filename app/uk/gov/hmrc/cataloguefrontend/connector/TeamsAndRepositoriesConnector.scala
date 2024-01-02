@@ -345,6 +345,32 @@ class TeamsAndRepositoriesConnector @Inject()(
       }
   }
 
+  def findRelatedTestRepos(service: String)(implicit hc: HeaderCarrier): Future[Seq[String]] = {
+    val url = url"$teamsAndServicesBaseUrl/api/$service/test-repositories"
+
+    httpClientV2
+      .get(url)
+      .execute[Seq[String]]
+      .recover {
+        case NonFatal(ex) =>
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          Seq.empty[String]
+      }
+  }
+
+  def findServicesUnderTest(testRepo: String)(implicit hc: HeaderCarrier): Future[Seq[String]] = {
+    val url = url"$teamsAndServicesBaseUrl/api/$testRepo/services-under-test"
+
+    httpClientV2
+      .get(url)
+      .execute[Seq[String]]
+      .recover {
+        case NonFatal(ex) =>
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          Seq.empty[String]
+      }
+  }
+
   def allTeams()(implicit hc: HeaderCarrier): Future[Seq[Team]] =
     httpClientV2
       .get(url"$teamsAndServicesBaseUrl/api/v2/teams")

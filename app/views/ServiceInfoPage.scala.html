@@ -17,6 +17,7 @@
 @import partials.DependenciesByEnvironmentPartial
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.JenkinsJob
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
@@ -47,6 +48,7 @@
   serviceRelationships         : ServiceConfigsService.ServiceRelationshipsWithHasRepo,
   canMarkForDecommissioning    : Boolean,
   status                       : Option[ServiceStatusType],
+  testJobMap                   : Map[String, Seq[JenkinsJob]]
 )(implicit
   messages                     : Messages,
   request                      : RequestHeader,
@@ -126,6 +128,14 @@
                 @partials.build(repositoryDetails, hasBranchProtectionAuth, commenterReport)
             </div>
         </div>
+
+        @if(CatalogueFrontendSwitches.showTestRepoRelationships.isEnabled) {
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                @partials.tests(testJobMap)
+                </div>
+            </div>
+        }
 
         @dependenciesByEnvironmentPartial(serviceName, envDatas)
     </section>

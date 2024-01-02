@@ -79,6 +79,7 @@ class CatalogueController @Inject() (
   serviceInfoPage                    : ServiceInfoPage,
   libraryInfoPage                    : LibraryInfoPage,
   prototypeInfoPage                  : PrototypeInfoPage,
+  testRepoInfoPage                   : TestRepoInfoPage,
   repositoryInfoPage                 : RepositoryInfoPage,
   defaultBranchListPage              : DefaultBranchListPage,
   costEstimationPage                 : CostEstimationPage,
@@ -152,6 +153,13 @@ class CatalogueController @Inject() (
       deployments               <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
       repositoryName            =  repositoryDetails.name
       jenkinsJobs               <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repositoryName)
+      testRepos                 <- teamsAndRepositoriesConnector.findRelatedTestRepos(repositoryName)
+      testJobMap                <- testRepos.foldLeftM[Future, Map[String, Seq[JenkinsJob]]](Map.empty) {
+                                     case (xs, r) =>
+                                       teamsAndRepositoriesConnector
+                                         .lookupLatestJenkinsJobs(r)
+                                         .map(x => xs ++ Map(r -> x.filter(_.jobType == BuildJobType.Job)))
+                                   }
       database                  <- serviceMetricsConnector.getCollections(serviceName).map(_.headOption.map(_.database))
       nonPerformantQueries      <- if (database.isDefined)
                                       serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
@@ -218,7 +226,8 @@ class CatalogueController @Inject() (
       distinctVulnerabilitiesCount = vulnerabilitiesCount,
       serviceRelationships         = serviceRelationships,
       canMarkForDecommissioning    = canMarkForDecommissioning,
-      status                       = status
+      status                       = status,
+      testJobMap                   = testJobMap
     ))
   }
 
@@ -238,7 +247,7 @@ class CatalogueController @Inject() (
                         case RepoType.Service   => renderServicePage(repoDetails.name, repoDetails, hasBranchProtectionAuth)
                         case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth).map(Ok(_))
-                        case RepoType.Test      => renderOther(repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Test      => renderTest(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
                       }
                     )
@@ -382,6 +391,25 @@ class CatalogueController @Inject() (
         commenterReport,
         prototypeDetails
       )
+
+  private def renderTest(
+    repoDetails: GitRepository,
+    hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
+  )(implicit request: Request[_]): Future[Result] =
+    for {
+      jenkinsJobs       <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name)
+      repoModules       <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name)
+      urlIfLeaksFound   <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
+      commenterReport   <- prCommenterConnector.report(repoDetails.name)
+      servicesUnderTest <- teamsAndRepositoriesConnector.findServicesUnderTest(repoDetails.name)
+    } yield Ok(testRepoInfoPage(
+      repoDetails.copy(jenkinsJobs = jenkinsJobs),
+      repoModules,
+      urlIfLeaksFound,
+      hasBranchProtectionAuth,
+      commenterReport,
+      servicesUnderTest
+    ))
 
   private def renderOther(
     repoDetails: GitRepository,

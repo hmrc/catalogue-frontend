@@ -47,7 +47,7 @@
                 @if(ciLink.latestBuild.nonEmpty) {
                     @if(repo.repoType == RepoType.Test) {
                         <td>
-                        @{ciLink.latestBuild.get.description}
+                        @Html(ciLink.latestBuild.get.description)
                         </td>
                     }
                     @defining({
