@@ -76,19 +76,9 @@ class RepositoriesController @Inject() (
         teams        <- allTeams
         repositories <- allRepositories
       } yield {
-        val filteredRepositoriesByStatus = filterRepositoriesByStatus(repositories, request.getQueryString("status"))
-        Ok(repositoriesListPage(filteredRepositoriesByStatus, teams, RepoListFilter.form.bindFromRequest()))
+        Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest()))
       }
     }
-
-  private def filterRepositoriesByStatus(repositories: Seq[GitRepository], status: Option[String]): Seq[GitRepository] = {
-    status match {
-      case Some("All") => repositories
-      case Some("Archived") => repositories.filter(repo => repo.isArchived)
-      case Some("Deprecated") => repositories.filter(repo => repo.isDeprecated)
-      case _ => repositories.filterNot(repo => repo.isArchived || repo.isDeprecated) //Case for default "Active" status
-    }
-  }
 
   def allServices: Action[AnyContent] =
     Action {
@@ -108,10 +98,10 @@ class RepositoriesController @Inject() (
 }
 
 case class RepoListFilter(
-  name    : Option[String]   = None,
-  team    : Option[TeamName] = None,
-  repoType: Option[String]   = None,
-  status  : Option[String]   = None
+  name         : Option[String]   = None,
+  team         : Option[TeamName] = None,
+  repoType     : Option[String]   = None,
+  showArchived : Boolean          = false
 ) {
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && repoType.isEmpty
@@ -123,7 +113,8 @@ object RepoListFilter {
       mapping(
         "name"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
         "team"            -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
-        "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+        "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "showArchived"    -> boolean
       )(RepoListFilter.apply)(RepoListFilter.unapply)
     )
 }
