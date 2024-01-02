@@ -106,7 +106,7 @@
                             Symbol("_default")    -> "All teams",
                             Symbol("_label")      -> "Team",
                             Symbol("_labelClass") -> "form-label",
-                            Symbol("class")       -> "form-control"
+                            Symbol("class")       -> "form-select"
                         )
                     </div>
                     <div class="col-md-2">
@@ -115,7 +115,7 @@
                             options               =  flags.map(f => (f.asString, f.displayString)),
                             Symbol("_label")      -> "Flag",
                             Symbol("_labelClass") -> "form-label",
-                            Symbol("class")       -> "form-control"
+                            Symbol("class")       -> "form-select"
                         )
                     </div>
                     <div class="col-md-2">
@@ -124,7 +124,7 @@
                             options               =  scopes.map(s => (s.asString, s.displayString)),
                             Symbol("_label")      -> "Scope",
                             Symbol("_labelClass") -> "form-label",
-                            Symbol("class")       -> "form-control",
+                            Symbol("class")       -> "form-select",
                             Symbol("size")        -> scopes.size,
                             Symbol("multiple")    -> None
                         )
@@ -142,7 +142,7 @@
                 <ul class="list"/>
             }
             case Some(Nil)           => {
-                <p id="search-results-empty">This search did not return any results.</p>
+                <p id="search-results-empty" class="pt-2">This search did not return any results.</p>
                 <ul class="list"/>
             }
             case Some(searchResults) => {
