@@ -43,23 +43,26 @@
                                 <td>
                                     <a id="link-to-job-@{firstJob.name}" href="@{firstJob.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{firstJob.name}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
-                                @if(firstJob.latestBuild.nonEmpty) {
-                                    @defining({
-                                        firstJob.latestBuild.get.result match {
-                                            case Some(value) if value.equals("SUCCESS")  => "text-bg-success"
-                                            case Some(value) if value.equals("FAILURE")  => "text-bg-danger"
-                                            case Some(value) if value.equals("UNSTABLE") => "text-bg-warning"
-                                            case _ => "text-bg-secondary"
+                                @defining(firstJob.latestBuild.flatMap(_.result)) {
+                                    case Some(result) => {
+                                        @defining({
+                                            result match {
+                                                case "SUCCESS" => "text-bg-success"
+                                                case "FAILURE" => "text-bg-danger"
+                                                case "UNSTABLE" => "text-bg-warning"
+                                                case _ => "text-bg-secondary"
+                                            }
+                                        }) { badgeColour =>
+                                            <td>
+                                                <span class="badge fs-6 @badgeColour">@{result}</span>
+                                            </td>
                                         }
-                                    }) { badgeColour =>
+                                    }
+                                    case None => {
                                         <td>
-                                            <span class="badge fs-6 @badgeColour">@{firstJob.latestBuild.get.result}</span>
+                                            <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
                                         </td>
                                     }
-                                } else {
-                                    <td>
-                                        <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
-                                    </td>
                                 }
                             </tr>
                         }
@@ -69,23 +72,26 @@
                                 <td>
                                     <a id="link-to-job-@{job.name}" href="@{job.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{job.name}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
-                                @if(job.latestBuild.nonEmpty) {
-                                    @defining({
-                                        job.latestBuild.get.result match {
-                                            case Some(value) if value.equals("SUCCESS")  => "text-bg-success"
-                                            case Some(value) if value.equals("FAILURE")  => "text-bg-danger"
-                                            case Some(value) if value.equals("UNSTABLE") => "text-bg-warning"
-                                            case _ => "text-bg-secondary"
+                                @defining(job.latestBuild.flatMap(_.result)) {
+                                    case Some(result) => {
+                                        @defining({
+                                            result match {
+                                                case "SUCCESS" => "text-bg-success"
+                                                case "FAILURE" => "text-bg-danger"
+                                                case "UNSTABLE" => "text-bg-warning"
+                                                case _ => "text-bg-secondary"
+                                            }
+                                        }) { badgeColour =>
+                                            <td>
+                                                <span class="badge fs-6 @badgeColour">@{result}</span>
+                                            </td>
                                         }
-                                    }) { badgeColour =>
+                                    }
+                                    case None => {
                                         <td>
-                                            <span class="badge fs-6 @badgeColour">@{job.latestBuild.get.result}</span>
+                                            <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
                                         </td>
                                     }
-                                } else {
-                                    <td>
-                                        <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
-                                    </td>
                                 }
                             </tr>
                         }

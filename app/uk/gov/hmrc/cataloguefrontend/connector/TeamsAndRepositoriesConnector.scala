@@ -346,7 +346,7 @@ class TeamsAndRepositoriesConnector @Inject()(
   }
 
   def findRelatedTestRepos(service: String)(implicit hc: HeaderCarrier): Future[Seq[String]] = {
-    val url = url"$teamsAndServicesBaseUrl/api/$service/test-repositories"
+    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories/$service/test-repositories"
 
     httpClientV2
       .get(url)
@@ -359,7 +359,7 @@ class TeamsAndRepositoriesConnector @Inject()(
   }
 
   def findServicesUnderTest(testRepo: String)(implicit hc: HeaderCarrier): Future[Seq[String]] = {
-    val url = url"$teamsAndServicesBaseUrl/api/$testRepo/services-under-test"
+    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories/$testRepo/services-under-test"
 
     httpClientV2
       .get(url)
