@@ -24,7 +24,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     ),
     TwirlKeys.templateImports ++= Seq(
       "uk.gov.hmrc.cataloguefrontend.util.ViewHelper.csrfFormField",
-      "views.html.helper.CSPNonce"
+      "views.html.helper.CSPNonce",
+      "uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches"
     ),
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress unused-imports in twirl and routes files

@@ -37,7 +37,6 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       val response = wsClient.url(s"http://localhost:$port/repositories?repoType=").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
-      response.body   should include("Repositories</h1>")
       val document = Jsoup.parse(response.body)
       document.select("#row0_name").select("td a").text()             shouldBe "teamA-library"
       document.select("#row0_name").select("td a[href]").attr("href") shouldBe "/repositories/teamA-library"
@@ -78,7 +77,6 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       val response = wsClient.url(s"http://localhost:$port/repositories?repoType=Library").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
-      response.body   should include("Repositories</h1>")
 
       val document = Jsoup.parse(response.body)
       document.select("tbody.list").select("tr").size()               shouldBe 1
@@ -97,7 +95,6 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
       val response = wsClient.url(s"http://localhost:$port/repositories?repoType=").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
-      response.body should include("Repositories</h1>")
 
       val document = Jsoup.parse(response.body)
       document.select("#row0_team").select("td a").text() shouldBe "teamB"

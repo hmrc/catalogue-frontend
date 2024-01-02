@@ -42,22 +42,10 @@ object CatalogueFrontendSwitches {
   def requiresLogin: FeatureSwitch =
     FeatureSwitch.forName("requires-login")
 
-  def showConfigWarnings: FeatureSwitch =
-    FeatureSwitch.forName("show-config-warnings")
-
-  def showUsers: FeatureSwitch =
-    FeatureSwitch.forName("show-users")
-
-  def showCreateRepo: FeatureSwitch =
-    FeatureSwitch.forName("show-create-repo")
-
-  def showDeployService: FeatureSwitch =
-    FeatureSwitch.forName("show-deploy-service")
-
-  def showSearchCommissioningState: FeatureSwitch =
-    FeatureSwitch.forName("show-search-commissioning-state")
-
   def showDecommissionButton: FeatureSwitch =
     FeatureSwitch.forName("show-decommission-button")
+
+  def showTestRepoRelationships: FeatureSwitch =
+    FeatureSwitch.forName("show-test-repo-relationships")
 
 }

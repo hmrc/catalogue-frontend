@@ -66,7 +66,7 @@ class SearchIndex @Inject()(
     SearchTerm("explorer", "jvm",                          catalogueRoutes.JDKVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
     SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f, Set("lds")),
     SearchTerm("page",     "whatsrunningwhere",            wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
-    SearchTerm("page",     "deployment",                   depRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,    1.0f),
+    SearchTerm("page",     "deployment",                   depRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,     1.0f),
     SearchTerm("page",     "shutter-overview",             shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url,           1.0f),
     SearchTerm("page",     "shutter-api",                  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,                1.0f),
     SearchTerm("page",     "shutter-rate",                 shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,               1.0f),
@@ -77,33 +77,13 @@ class SearchIndex @Inject()(
     SearchTerm("page",     "defaultbranch",                catalogueRoutes.CatalogueController.allDefaultBranches().url,                          1.0f),
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,                         1.0f),
     SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,                     1.0f),
-  ) ++ {
-      if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showConfigWarnings.isEnabled) {
-        List(
-          SearchTerm("page",     "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,    1.0f),
-        )
-    } else Nil
-  } ++ {
-    if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showCreateRepo.isEnabled) {
-      List(
-        SearchTerm("page", "create service repository", createRepoRoutes.CreateRepositoryController.createServiceRepositoryLanding().url, 1.0f),
-        SearchTerm("page", "create prototype repository", createRepoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding().url, 1.0f),
-        SearchTerm("page", "create test repository", createRepoRoutes.CreateRepositoryController.createTestRepository().url, 1.0f)
-      )
-    } else Nil
-  } ++ {
-    if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
-      List(
-        SearchTerm("page", "deploy service", depRoutes.DeployServiceController.step1(None).url, 1.0f)
-      )
-    } else Nil
-  } ++ {
-    if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showSearchCommissioningState.isEnabled) {
-      List(
-        SearchTerm("page", "search commissioning state  service", commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url, 1.0f)
-      )
-    } else Nil
-  }
+    SearchTerm("page",     "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,              1.0f),
+    SearchTerm("page",     "create service repository",    createRepoRoutes.CreateRepositoryController.createServiceRepositoryLanding().url,      1.0f),
+    SearchTerm("page",     "create prototype repository",  createRepoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding().url,    1.0f),
+    SearchTerm("page",     "create test repository",       createRepoRoutes.CreateRepositoryController.createTestRepository().url,                1.0f),
+    SearchTerm("page",     "deploy service",               depRoutes.DeployServiceController.step1(None).url,                                     1.0f),
+    SearchTerm("page",     "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f)
+  )
 
   def updateIndexes(): Future[Unit] = {
     implicit val hc = HeaderCarrier()
@@ -116,12 +96,8 @@ class SearchIndex @Inject()(
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
-                            .flatMap(r => (if (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDeployService.isEnabled) {
-                                            List(
-                                              SearchTerm("deploy", r.name, depRoutes.DeployServiceController.step1(Some(r.name)).url)
-                                            )
-                                          } else Nil) ++
-                                          List(SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(r.name).url ),
+                            .flatMap(r => List(SearchTerm("deploy",              r.name, depRoutes.DeployServiceController.step1(Some(r.name)).url),
+                                               SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(r.name).url ),
                                                SearchTerm("timeline",            r.name, depRoutes.DeploymentTimelineController.graph(r.name).url),
                                                SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(r.name).url)
                                           )

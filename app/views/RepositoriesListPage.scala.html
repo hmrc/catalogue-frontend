@@ -18,7 +18,6 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Team}
 @import views.html.helper.{select, checkbox}
 @import views.html.partials.RepoSearchResultsPage
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 @import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => repoRoutes}
 
 @this(
@@ -37,23 +36,19 @@
 @implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
 
 @standard_layout("Repositories", "repositories") {
-    @if(CatalogueFrontendSwitches.showCreateRepo.isEnabled) {
-        <h1 class="page-heading mt-4">
-            Repositories
-            <div class="btn-group float-end" role="group">
-                <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    Create
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createServiceRepositoryLanding()">Create a Service</a></li>
-                    <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding()">Create a Prototype</a></li>
-                    <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createTestRepositoryLanding()">Create a Test Repository</a></li>
-                </ul>
-            </div>
-        </h1>
-    } else {
-        <h1 class="page-heading mt-4">Repositories</h1>
-    }
+    <h1 class="page-heading mt-4">
+        Repositories
+        <div class="btn-group float-end" role="group">
+            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                Create
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createServiceRepositoryLanding()">Create a Service</a></li>
+                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding()">Create a Prototype</a></li>
+                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createTestRepositoryLanding()">Create a Test Repository</a></li>
+            </ul>
+        </div>
+    </h1>
 
     @if(form.hasErrors) {
         <div class="alert alert-danger" role="alert">

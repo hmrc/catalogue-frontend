@@ -83,7 +83,7 @@ object ServiceCommissioningStatusConnector {
   sealed trait ServiceStatusType { val asString: String; val displayName: String }
 
   object ServiceStatusType {
-    object DecommissionInProgress extends ServiceStatusType { val asString: String = "DecommissionInProgress"; val displayName: String = "Decommission in progress" }
+    object DecommissionInProgress extends ServiceStatusType { val asString: String = "DecommissionInProgress"; val displayName: String = "Decommissioning" }
     object Archived               extends ServiceStatusType { val asString: String = "Archived"; val displayName: String = "Archived" }
     object Deprecated             extends ServiceStatusType { val asString: String = "Deprecated"; val displayName: String = "Deprecated" }
     object Active                 extends ServiceStatusType { val asString: String = "Active"; val displayName: String = "Active" }

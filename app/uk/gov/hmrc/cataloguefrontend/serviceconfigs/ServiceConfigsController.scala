@@ -21,7 +21,6 @@ import cats.implicits._
 import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import play.api.http.HttpEntity
-import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -57,10 +56,7 @@ class ServiceConfigsController @Inject()(
       for {
         deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey <- serviceConfigsService.configByKeyWithNextDeployment(serviceName)
-        warnings    <- if (CatalogueFrontendSwitches.showConfigWarnings.isEnabled)
-                         serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), version = None, latest = true)
-                       else
-                         Future.successful(Seq.empty[ServiceConfigsService.ConfigWarning])
+        warnings    <- serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), version = None, latest = true)
       } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings))
     }
 
