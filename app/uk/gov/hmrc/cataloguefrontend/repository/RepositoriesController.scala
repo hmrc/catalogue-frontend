@@ -46,7 +46,7 @@ class RepositoriesController @Inject() (
   def allRepositories(
     name          : Option[String],
     team          : Option[TeamName],
-    showArchived  : Boolean,
+    showArchived  : Option[Boolean],
     repoTypeString: Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
@@ -67,7 +67,7 @@ class RepositoriesController @Inject() (
           .allRepositories(
             name        = None, // Use listjs filtering
             team        = team.filterNot(_.asString.isEmpty),
-            archived    = if (showArchived) None else Some(false),
+            archived    = if (showArchived.contains(true)) None else Some(false),
             repoType    = repoType,
             serviceType = serviceType
           ).map(_.sortBy(_.name.toLowerCase))
@@ -99,7 +99,7 @@ case class RepoListFilter(
   name         : Option[String]   = None,
   team         : Option[TeamName] = None,
   repoType     : Option[String]   = None,
-  showArchived : Boolean
+  showArchived : Option[Boolean]  = None
 ) {
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && repoType.isEmpty
@@ -112,7 +112,7 @@ object RepoListFilter {
         "name"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
         "team"            -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
         "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "showArchived"    -> boolean
+        "showArchived"    -> optional(boolean)
       )(RepoListFilter.apply)(RepoListFilter.unapply)
     )
 }
