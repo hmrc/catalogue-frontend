@@ -31,7 +31,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
   }
 
   "Repositories list" should {
-    "show a list of all repositories when 'All' is selected" in {
+    "show a list of all non-archived repositories when repository type 'All' is selected" in {
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams )))
       serviceEndpoint(GET, "/api/v2/repositories?archived=false", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
 
@@ -71,7 +71,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       document.select("#row4_lastActive").text()                      shouldBe JsonData.lastActiveAt.asPattern("yyyy-MM-dd")
     }
 
-    "show a list of all libraries when 'Library' is selected" in {
+    "show a list of all non-archived libraries when 'Library' is selected" in {
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
       serviceEndpoint(GET, "/api/v2/repositories?archived=false&repoType=Library", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamADataLibrary)))
 
