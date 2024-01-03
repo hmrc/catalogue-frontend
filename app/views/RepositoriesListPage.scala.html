@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Team}
-@import views.html.helper.select
+@import views.html.helper.{select, checkbox}
 @import views.html.partials.RepoSearchResultsPage
 @import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => repoRoutes}
 
@@ -63,7 +63,7 @@
     <div id="service-list">
         <form id="repos-form" action="/repositories" method="get">
             <div id="repos-form-row" class="row">
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <dl id="search_field">
                         <dt>
                             <label for="search" class="form-label">Name</label>
@@ -84,7 +84,7 @@
                     Symbol("class")       -> "form-select"
                 )
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                 @select(
                     field                 =  form("repoType"),
                     options               =  Seq(
@@ -102,6 +102,19 @@
                     Symbol("id")          -> "type-search",
                     Symbol("class")       -> "form-select"
                 )
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                  <div class="d-flex align-items-center">
+                    @checkbox(
+                      field                 = form("showArchived"),
+                      Symbol("_default")    -> Option(false),
+                      Symbol("_label")      -> "",
+                      Symbol("_labelClass") -> "showArchived",
+                      Symbol("id")          -> "show-archived",
+                      Symbol("class")       -> "form-check-input"
+                    )
+                    <label class="ms-1">Show Archived</label>
+                  </div>
                 </div>
             </div>
         </form>
@@ -141,7 +154,7 @@
   serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
-  ["team-filter", "type-search"]
+  ["team-filter", "type-search", "show-archived"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("repos-form").submit();

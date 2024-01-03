@@ -44,10 +44,10 @@ class RepositoriesController @Inject() (
   with CatalogueAuthBuilders {
 
   def allRepositories(
-    name          : Option[String]   = None,
-    team          : Option[TeamName] = None,
-    archived      : Option[Boolean]  = None,
-    repoTypeString: Option[String]   = None
+    name          : Option[String],
+    team          : Option[TeamName],
+    showArchived  : Option[Boolean],
+    repoTypeString: Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val allTeams =
@@ -67,7 +67,7 @@ class RepositoriesController @Inject() (
           .allRepositories(
             name        = None, // Use listjs filtering
             team        = team.filterNot(_.asString.isEmpty),
-            archived    = archived,
+            archived    = if (showArchived.contains(true)) None else Some(false),
             repoType    = repoType,
             serviceType = serviceType
           ).map(_.sortBy(_.name.toLowerCase))
@@ -75,9 +75,8 @@ class RepositoriesController @Inject() (
       for {
         teams        <- allTeams
         repositories <- allRepositories
-      } yield Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest())
-      )}
-
+      } yield Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest()))
+    }
 
   def allServices: Action[AnyContent] =
     Action {
@@ -97,9 +96,10 @@ class RepositoriesController @Inject() (
 }
 
 case class RepoListFilter(
-  name    : Option[String]   = None,
-  team    : Option[TeamName] = None,
-  repoType: Option[String]   = None
+  name         : Option[String]   = None,
+  team         : Option[TeamName] = None,
+  repoType     : Option[String]   = None,
+  showArchived : Option[Boolean]  = None
 ) {
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && repoType.isEmpty
@@ -111,7 +111,8 @@ object RepoListFilter {
       mapping(
         "name"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
         "team"            -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
-        "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+        "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "showArchived"    -> optional(boolean)
       )(RepoListFilter.apply)(RepoListFilter.unapply)
     )
 }
