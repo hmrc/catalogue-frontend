@@ -22,11 +22,11 @@ POST       /create-test                                 uk.gov.hmrc.cataloguefro
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
 
-GET        /deploy-service/1                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step1(serviceName: Option[String])
-POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step2()
-POST       /deploy-service/3                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step3()
-GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
-GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
+GET        /deploy                                      uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step1(serviceName: Option[String])
+POST       /deploy/2                                    uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step2()
+POST       /deploy/3                                    uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step3()
+GET        /deploy/4                                    uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
+GET        /deploy/4/sse                                uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 
 
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
