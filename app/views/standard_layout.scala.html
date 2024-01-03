@@ -98,6 +98,9 @@
                         <a id="link-to-teams" class="nav-link @if(active == "teams") {active}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams()">Teams</a>
                     </li>
                     <li class="nav-item">
+                        <a id="link-to-users-list-page" class="nav-link @if(active == "users") {active}" href="@userRoutes.UsersController.allUsers()">Users </a>
+                    </li>
+                    <li class="nav-item">
                         <a id="link-to-repositories" class="nav-link @if(active == "repositories") {active}" href="@reposRoutes.RepositoriesController.allRepositories()">Repositories</a>
                     </li>
                     <li class="nav-item">
@@ -179,11 +182,6 @@
                             <li>
                                 <a id="link-to-search-config" class="dropdown-item" href="@serviceConfigsRoutes.ServiceConfigsController.configWarningLanding()">
                                     Config Warnings
-                                </a>
-                            </li>
-                            <li>
-                                <a id="link-to-users-list-page" class="dropdown-item" href="@userRoutes.UsersController.allUsers()">
-                                    Users
                                 </a>
                             </li>
                         </ul>
