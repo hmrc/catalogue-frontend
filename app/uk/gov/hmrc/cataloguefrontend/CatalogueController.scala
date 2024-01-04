@@ -35,8 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimation
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector.ServiceStatusType
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{ServiceCommissioningStatusConnector, LifecycleStatus}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -211,7 +210,7 @@ class CatalogueController @Inject() (
                                     )
                                 }
       canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(serviceName).map(_.value)
-      status                    <- serviceCommissioningStatusConnector.status(serviceName)
+      lifecycleStatus           <- serviceCommissioningStatusConnector.getLifecycleStatus(serviceName)
     } yield Ok(serviceInfoPage(
       serviceName                  = serviceName,
       repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = zone),
@@ -226,7 +225,7 @@ class CatalogueController @Inject() (
       distinctVulnerabilitiesCount = vulnerabilitiesCount,
       serviceRelationships         = serviceRelationships,
       canMarkForDecommissioning    = canMarkForDecommissioning,
-      status                       = status,
+      lifecycleStatus              = lifecycleStatus,
       testJobMap                   = testJobMap
     ))
   }
@@ -279,7 +278,7 @@ class CatalogueController @Inject() (
         predicate = MarkForDecommissioning.permission(repoName))
       .async { implicit request =>
         serviceCommissioningStatusConnector
-          .setServiceStatus(repoName, ServiceStatusType.DecommissionInProgress)
+          .setLifecycleStatus(repoName, LifecycleStatus.DecommissionInProgress)
           .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
       }
 

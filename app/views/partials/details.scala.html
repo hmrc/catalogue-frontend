@@ -20,23 +20,24 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 @import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes }
 @import views.partials.githubBadgeType
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector.ServiceStatusType
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @(
   repositoryDetails        : GitRepository,
   version                  : Option[Version] = None,
   canMarkForDecommissioning: Boolean = false,
-  status                   : Option[ServiceStatusType] = None,
+  lifecycleStatus          : Option[LifecycleStatus] = None,
 )(implicit
   request                      : RequestHeader
 )
 
 @configOptions = @{
-    val markForDecommissioningOption = status.flatMap(s =>
+    val markForDecommissioningOption = lifecycleStatus.flatMap(s =>
         Option.when(
             CatalogueFrontendSwitches.showDecommissionButton.isEnabled
                 && canMarkForDecommissioning
-                && !Seq(ServiceStatusType.Archived, ServiceStatusType.DecommissionInProgress).contains(s)
+                && !Seq(LifecycleStatus.Archived, LifecycleStatus.DecommissionInProgress).contains(s)
         ){
             <li>
                 <button type="button" class="dropdown-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning">Mark for decommissioning</button>
@@ -99,7 +100,7 @@
                   @version.toString
                 </div>
             }
-            @status.map { status =>
+            @lifecycleStatus.map { status =>
                 <div class="col-6">
                   <label class="fw-bold">Status: </label>
                     @status.displayName
@@ -114,9 +115,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="confirm-mark-for-decommissioning-label">Warning: Service Decommissioning</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
             <p class="body">

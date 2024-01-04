@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 
-import play.api.libs.json.{JsValue, JsSuccess, JsError, Reads, __}
+import play.api.libs.json.{Format, JsValue, JsSuccess, JsError, JsResult, JsString, Reads, __}
 import play.api.libs.functional.syntax._
 
 sealed trait Check {
@@ -90,15 +90,17 @@ object Check {
 case class ServiceName(asString: String) extends AnyVal
 
 case class CachedServiceCheck(
-  serviceName: ServiceName
-, checks     : Seq[Check]
+  serviceName    : ServiceName
+, lifecycleStatus: LifecycleStatus
+, checks         : Seq[Check]
 )
 
 object CachedServiceCheck {
   val reads: Reads[CachedServiceCheck] = {
     implicit val readsCheck = Check.reads
-    ( (__ \ "serviceName").read[String].map(ServiceName.apply)
-    ~ (__ \ "checks"     ).read[Seq[Check]]
+    ( (__ \ "serviceName"    ).read[String].map(ServiceName.apply)
+    ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.format)
+    ~ (__ \ "checks"         ).read[Seq[Check]]
     )(CachedServiceCheck.apply _)
   }
 }
@@ -111,4 +113,36 @@ object FormCheckType extends Enum[FormCheckType] {
   case object Environment extends FormCheckType { val asString = "environment"}
 
   override val values: List[FormCheckType] = List(Simple, Environment)
+}
+
+sealed trait LifecycleStatus { val asString: String; val displayName: String }
+
+object LifecycleStatus {
+  object Active                 extends LifecycleStatus { val asString: String = "Active";                 val displayName: String = "Active" }
+  object Archived               extends LifecycleStatus { val asString: String = "Archived";               val displayName: String = "Archived" }
+  object DecommissionInProgress extends LifecycleStatus { val asString: String = "DecommissionInProgress"; val displayName: String = "Decommissioning" }
+  object Deprecated             extends LifecycleStatus { val asString: String = "Deprecated";             val displayName: String = "Deprecated" }
+
+  val values: List[LifecycleStatus] = List(Active, Archived, DecommissionInProgress, Deprecated)
+
+  def parse(s: String): Either[String, LifecycleStatus] =
+    values
+      .find(_.asString == s)
+      .toRight(s"Invalid service status - should be one of: ${values.map(_.asString).mkString(", ")}")
+
+  val format: Format[LifecycleStatus] =
+    new Format[LifecycleStatus] {
+      override def reads(json: JsValue): JsResult[LifecycleStatus] =
+        json match {
+          case JsString(s) => parse(s).fold(msg => JsError(msg), rt => JsSuccess(rt))
+          case _           => JsError("String value expected")
+        }
+
+      override def writes(rt: LifecycleStatus): JsValue =
+        JsString(rt.asString)
+    }
+
+  def canDecommission(lifecycleStatus: LifecycleStatus): Boolean =
+    uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDecommissionButton.isEnabled && (lifecycleStatus == Archived || lifecycleStatus == DecommissionInProgress)
+
 }
