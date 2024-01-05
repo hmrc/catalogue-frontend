@@ -94,12 +94,6 @@
                     MDTP
                 </a>
                 <ul id="main-menu-bar" class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a id="link-to-whats-running-where" class="nav-link @if(active == "whats-running-where") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">WhaRW</a>
-                    </li>
-                    <li class="nav-item">
-                        <a id="link-to-repositories" class="nav-link @if(active == "repositories") {active}" href="@reposRoutes.RepositoriesController.allRepositories()">Repositories</a>
-                    </li>
                     @* TODO remove once date has elapsed *@
                     @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2024-03-01T00:00:00Z"))) { isNew =>
                         <li class="nav-item dropdown">
@@ -111,10 +105,14 @@
                                 </span>
                             </a>
                             <ul id="deployments-menu" class="dropdown-menu">
+                                <li class="nav-item">
+                                    <a id="link-to-whats-running-where" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">What's Running Where</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a id="link-to-deploy-service" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeployServiceController.step1(None)">
-                                    Deploy Service
-                                    @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
+                                        Deploy Service
+                                        @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
                                     </a>
                                 </li>
                                 <li><a id="link-to-events" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentEventsController.deploymentEvents(Production)">
@@ -143,21 +141,14 @@
                             </li>
                         </ul>
                     </li>
+                    <li class="nav-item">
+                        <a id="link-to-repositories" class="nav-link @if(active == "repositories") {active}" href="@reposRoutes.RepositoriesController.allRepositories()">Repositories</a>
+                    </li>
                     <li class="nav-item"><a id="link-to-teams" class="nav-link @if(active == "teams") {active}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams()">
                         Teams</a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a id="users-dropdown" class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Users
-                        </a>
-                        <ul id="users-menu" class="dropdown-menu">
-                            <li><a id="link-to-users-list-page" class="dropdown-item" href="@userRoutes.UsersController.allUsers()">
-                                User List </a></li>
-                            <li><a  class="dropdown-divider"></a>
-                            <li><a  class="dropdown-item disabled" href="#"> Create User soon™</a>
-                            <li><a  class="dropdown-item disabled" href="#"> Create Service Account soon™</a>
-                            <li><a  class="dropdown-item disabled" href="#"> Edit User soon™</a>
-                        </ul>
+                    <li class="nav-item">
+                        <a id="link-to-users-list-page" class="nav-link @if(active == "users") {active}" href="@userRoutes.UsersController.allUsers()">Users </a>
                     </li>
                     <li class="nav-item dropdown">
                         <a id="health-dropdown" class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -208,8 +199,6 @@
                                 Search Commissioning State </a></li>
                             <li><a id="link-to-search-config" class="dropdown-item" href="@serviceConfigsRoutes.ServiceConfigsController.configWarningLanding()">
                                 Config Warnings </a></li>
-                            <li><a id="link-to-users-list-page" class="dropdown-item" href="@userRoutes.UsersController.allUsers()">
-                                Users </a></li>
                         </ul>
                     </li>
                 </ul>
