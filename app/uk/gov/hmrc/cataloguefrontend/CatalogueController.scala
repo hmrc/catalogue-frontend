@@ -275,12 +275,13 @@ class CatalogueController @Inject() (
     auth
       .authorizedAction(
         continueUrl = routes.CatalogueController.repository(repoName),
-        predicate = MarkForDecommissioning.permission(repoName))
-      .async { implicit request =>
-        serviceCommissioningStatusConnector
-          .setLifecycleStatus(repoName, LifecycleStatus.DecommissionInProgress)
-          .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
-      }
+        predicate   = MarkForDecommissioning.permission(repoName),
+        retrieval   = Retrieval.username
+    ).async { implicit request =>
+      serviceCommissioningStatusConnector
+        .setLifecycleStatus(repoName, LifecycleStatus.DecommissionInProgress, username = request.retrieval.value)
+        .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
+    }
 
   private def hasMarkForDecommissioningAuthorisation(repoName: String)(
     implicit hc: HeaderCarrier
@@ -293,7 +294,7 @@ class CatalogueController @Inject() (
     auth
       .authorizedAction(
         continueUrl = routes.CatalogueController.repository(repoName),
-        predicate = ChangePrototypePassword.permission(repoName)
+        predicate = ChangePrototypePassword.permission(repoName),
       ).async { implicit request =>
 
       (for {

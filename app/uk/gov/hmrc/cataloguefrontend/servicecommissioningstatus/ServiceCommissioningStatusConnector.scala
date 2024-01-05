@@ -63,10 +63,10 @@ class ServiceCommissioningStatusConnector @Inject() (
       .execute[List[CachedServiceCheck]]
   }
 
-  def setLifecycleStatus(serviceName: String, lifecycleStatus: LifecycleStatus)(implicit hc: HeaderCarrier): Future[Unit] = {
+  def setLifecycleStatus(serviceName: String, lifecycleStatus: LifecycleStatus, username: String)(implicit hc: HeaderCarrier): Future[Unit] = {
     httpClientV2
       .post(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/$serviceName/lifecycleStatus")
-      .withBody(Json.obj("lifecycleStatus" -> lifecycleStatus.asString))
+      .withBody(Json.obj("lifecycleStatus" -> lifecycleStatus.asString, "username" -> username))
       .execute[Unit]
   }
 
