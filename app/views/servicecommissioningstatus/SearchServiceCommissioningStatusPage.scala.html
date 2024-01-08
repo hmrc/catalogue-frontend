@@ -19,7 +19,7 @@
 @import views.html.helper
 @import views.html.partials.form_global_errors
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{SearchCommissioning, routes, FormCheckType, Check, CachedServiceCheck }
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{SearchCommissioning, LifecycleStatus, routes, FormCheckType, Check, CachedServiceCheck }
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, ServiceType}
 
 @this()
@@ -51,6 +51,7 @@
                     <li>In the search results:
                         <ul>
                             <li><span class="glyphicon glyphicon-ok text-success"></span> means found.</li>
+                            <li><span class="glyphicon glyphicon-remove text-danger"></span> means please decommission.</li>
                             <li><span class="glyphicon glyphicon-minus text-secondary"></span> means not found.</li>
                             <li>Empty means not applicable for service type or deployment zone.</li>
                             <li>Hovering over a check also provides these details.</li>
@@ -76,7 +77,7 @@
         Symbol("class")  -> "form-group"
     ) {
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 @helper.select(
                     field                 =  form("team"),
                     options               =  allTeams.map(t => t.name.asString -> t.name.asString),
@@ -98,7 +99,22 @@
                     Symbol("class")       -> "form-select"
                 )
             </div>
-            <div class="col-md-4">
+            @if(uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDecommissionButton.isEnabled) {
+                <div class="col-md-2">
+                    <dl>
+                        <dt><label>Service Status</label></dt>
+                        <dd>
+                            @for(x <-  LifecycleStatus.values) {
+                                <div class="checkbox-group">
+                                    <input name="lifecycleStatus[]" id="@{x.asString}-checkbox" type="checkbox" value="@x.asString" @if(form.get.lifecycleStatus.contains(x)) {checked} />
+                                    <label class="form-check-label" for="@{x.asString}-checkbox">@x.displayName</label>
+                                </div>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            }
+            <div class="col-md-3">
                 @helper.select(
                     field                 = form("checks"),
                     options               = allChecks.map { case (title, _) => title -> title },
@@ -109,18 +125,15 @@
                     Symbol("size")        -> Environment.values.size
                 )
             </div>
-
             <div class="col-md-2">
                 <dl>
                     <dt><label>Environments</label></dt>
                     <dd>
-                        @defining(form.get.environments) { environments =>
-                            @for(env <-  Environment.values) {
-                                <div class="checkbox-group">
-                                    <input name="environments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(environments.contains(env)) {checked} />
-                                    <label class="form-check-label" for="@{env.asString}-checkbox">@env.displayString</label>
-                                </div>
-                            }
+                        @for(env <-  Environment.values) {
+                            <div class="checkbox-group">
+                                <input name="environments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.environments.contains(env)) {checked} />
+                                <label class="form-check-label" for="@{env.asString}-checkbox">@env.displayString</label>
+                            </div>
                         }
                     </dd>
                 </dl>
@@ -163,10 +176,10 @@
                             <td><a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a></td>
                             @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
                                 @(result.checks.find(_.title == title), formCheckType) match {
-                                    case (Some(check: Check.SimpleCheck), _                        ) => {<td>@displayResult(title, None, Some(check.checkResult))</td><td></td>}
-                                    case (None                          , FormCheckType.Simple     ) => {<td>@displayResult(title, None, None)</td><td></td>}
-                                    case (Some(check: Check.EnvCheck)   , _                        ) => {<td></td>@availableEnvironments(title).map { e => <td>@displayResult(title, Some(e), check.checkResults.get(e))</td>}<td></td>}
-                                    case (None                          , FormCheckType.Environment) => {<td></td>@availableEnvironments(title).map { e => <td>@displayResult(title, Some(e), None)</td>}<td></td>}
+                                    case (Some(check: Check.SimpleCheck), _                        ) => {<td>@displayResult(title, None, result.lifecycleStatus, Some(check.checkResult))</td><td></td>}
+                                    case (None                          , FormCheckType.Simple     ) => {<td>@displayResult(title, None, result.lifecycleStatus, None)</td><td></td>}
+                                    case (Some(check: Check.EnvCheck)   , _                        ) => {<td></td>@availableEnvironments(title).map { e => <td>@displayResult(title, Some(e), result.lifecycleStatus, check.checkResults.get(e))</td>}<td></td>}
+                                    case (None                          , FormCheckType.Environment) => {<td></td>@availableEnvironments(title).map { e => <td>@displayResult(title, Some(e), result.lifecycleStatus, None)</td>}<td></td>}
                                 }
                             }
                             <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName.asString).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
@@ -197,30 +210,32 @@
     }
 }
 
-@displayResult(title: String, env: Option[Environment], result: Option[Check.Result]) = {
+@displayResult(title: String, env: Option[Environment], lifecycleStatus: LifecycleStatus, result: Option[Check.Result]) = {
     <span
         @result match {
-            case None                 => { class="glyphicon glyphicon-minus text-secondary" style="opacity: 0%"}
-            case Some(Left(missing))  => { class="glyphicon glyphicon-minus text-secondary" }
-            case Some(Right(present)) => { class="glyphicon glyphicon-ok text-success low"  }
+            case None                                                                     => { class="glyphicon glyphicon-minus text-secondary" style="opacity: 0%"}
+            case Some(Left(missing))                                                      => { class="glyphicon glyphicon-minus text-secondary" }
+            case Some(Right(present)) if LifecycleStatus.canDecommission(lifecycleStatus) => { class="glyphicon glyphicon-remove text-danger"}
+            case Some(Right(present))                                                     => { class="glyphicon glyphicon-ok text-success"   }
         }
         data-bs-toggle="popover"
         data-bs-trigger="hover"
         data-bs-placement="bottom"
         data-bs-html="true"
-        data-bs-content='@popoverContent(title, env, result)'
+        data-bs-content='@popoverContent(title, env, lifecycleStatus, result)'
     ></span>
 }
 
-@popoverContent(title: String, env: Option[Environment], result: Option[Check.Result]) = {
+@popoverContent(title: String, env: Option[Environment], lifecycleStatus: LifecycleStatus, result: Option[Check.Result]) = {
     <div class="fs-5 fw-bold">@title</div>
     @env.map { e => <div><strong>Environment:</strong> @e.displayString</div> }
     <div>
         <strong>State:</strong>
         @result match {
-            case None                 => { Not applicable }
-            case Some(Left(missing))  => { Not found      }
-            case Some(Right(present)) => { Found          }
+            case None                                                                     => { Not applicable      }
+            case Some(Left(missing))                                                      => { Not found           }
+            case Some(Right(present)) if LifecycleStatus.canDecommission(lifecycleStatus) => { Should decommission }
+            case Some(Right(present))                                                     => { Found               }
         }
     </div>
 }

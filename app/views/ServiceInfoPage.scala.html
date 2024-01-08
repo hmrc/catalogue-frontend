@@ -26,7 +26,7 @@
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector.ServiceStatusType
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
 @import java.time.Instant
 
 @this(
@@ -47,7 +47,7 @@
   distinctVulnerabilitiesCount : Option[Int],
   serviceRelationships         : ServiceConfigsService.ServiceRelationshipsWithHasRepo,
   canMarkForDecommissioning    : Boolean,
-  status                       : Option[ServiceStatusType],
+  lifecycleStatus              : Option[LifecycleStatus],
   testJobMap                   : Map[String, Seq[JenkinsJob]]
 )(implicit
   messages                     : Messages,
@@ -60,10 +60,10 @@
             <h1 id="service-header" class="page-heading mt-4 position-relative">
               Service: @serviceName
                 @{
-                    if(repositoryDetails.isArchived) { 
-                        <span>Archived</span> 
+                    if(repositoryDetails.isArchived) {
+                        <span>Archived</span>
                     } else if(repositoryDetails.isDeprecated) {
-                        <span>Deprecated</span> 
+                        <span>Deprecated</span>
                     }
                 }
             </h1>
@@ -82,7 +82,7 @@
 
         <div class="row mb-3">
             <div class="col-md-6">
-                @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, status = status)
+                @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, lifecycleStatus = lifecycleStatus)
             </div>
             <div class="col-md-6">
                 @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
