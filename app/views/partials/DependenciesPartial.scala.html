@@ -64,11 +64,11 @@
         </div>
         <div class="row">
             <div class="col-3 offset-9">
-                @if(dependencies.headOption.exists(_.scope.isDefined)) {
+                @if(dependencies.nonEmpty) {
                     @version.map(ver => graphLink(ver, dependencies.head.scope))
                 }
                 @* Only show the dependencies link for compile scope for now (we'd need to extend the page to support other scopes *@
-                @if(dependencies.headOption.exists(_.scope.contains(DependencyScope.Compile))){
+                @if(dependencies.headOption.exists(_.scope == DependencyScope.Compile)){
                     <br/>@version.map(ver => dependenciesLink(ver))
                 }
             </div>
@@ -76,8 +76,8 @@
     </div>
 </div>
 
-@graphLink(v: Version, scope: Option[DependencyScope]) = {
-  <a id="@rootId-view-dependency-graph" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, v.toString, scope.map(_.asString).getOrElse(DependencyScope.Compile.asString))">View Dependency Graph</a>
+@graphLink(v: Version, scope: DependencyScope) = {
+  <a id="@rootId-view-dependency-graph" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, v.toString, scope.asString)">View Dependency Graph</a>
 }
 
 @dependenciesLink(v: Version) = {

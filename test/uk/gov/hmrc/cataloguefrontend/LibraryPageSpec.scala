@@ -33,9 +33,9 @@ class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
     "show the teams owning the service with github and ci links and info box" in {
       val libName = "lib"
 
-      serviceEndpoint(GET, s"/api/v2/repositories/$libName"                , willRespondWith = (200, Some(JsonData.libraryData)))
-      serviceEndpoint(GET, s"/api/jenkins-url/$libName"                    , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsData)))
-      serviceEndpoint(GET, s"/api/jenkins-jobs/$libName"                   , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
+      serviceEndpoint(GET, s"/api/v2/repositories/$libName"                 , willRespondWith = (200, Some(JsonData.libraryData)))
+      serviceEndpoint(GET, s"/api/jenkins-url/$libName"                     , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsData)))
+      serviceEndpoint(GET, s"/api/jenkins-jobs/$libName"                    , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
       serviceEndpoint(GET, s"/api/repositories/$libName/module-dependencies", willRespondWith = (200, Some(JsonData.repositoryModulesAllVersions(libName, "[]"))))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$libName").withAuthToken("Token token").get().futureValue

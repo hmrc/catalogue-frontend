@@ -98,7 +98,7 @@
           <div class="row">
             <div class="col-md-12">
               @dependenciesPartial(
-                dependencies.filter(_.scope.contains(DependencyScope.Compile))
+                dependencies.filter(_.scope == DependencyScope.Compile)
               , s"platform-dependencies-${slugInfoFlag.asString}"
               , "Compile Dependencies"
               , serviceName
@@ -107,7 +107,7 @@
             </div>
           </div>
 
-          @defining(dependencies.filter(_.scope.contains(DependencyScope.Test))) { testDependencies =>
+          @defining(dependencies.filter(_.scope == DependencyScope.Test)) { testDependencies =>
             @if(testDependencies.nonEmpty){
               <div class="row">
                 <div class="col-md-12">
@@ -123,7 +123,7 @@
             }
           }
 
-          @defining(dependencies.filter(_.scope.contains(DependencyScope.It))) { itDependencies =>
+          @defining(dependencies.filter(_.scope == DependencyScope.It)) { itDependencies =>
             @if(itDependencies.nonEmpty){
               <div class="row">
                 <div class="col-md-12">
@@ -139,7 +139,7 @@
             }
           }
 
-          @defining(dependencies.filter(_.scope.contains(DependencyScope.Build))) { buildDependencies =>
+          @defining(dependencies.filter(_.scope == DependencyScope.Build)) { buildDependencies =>
             @if(buildDependencies.nonEmpty) {
               <div class="row">
                 <div class="col-md-12">

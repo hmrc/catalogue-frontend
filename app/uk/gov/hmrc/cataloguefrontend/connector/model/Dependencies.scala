@@ -89,7 +89,7 @@ case class Dependency(
   latestVersion      : Option[Version],
   bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty,
   importBy           : Option[ImportedBy]      = None,
-  scope              : Option[DependencyScope] = None
+  scope              : DependencyScope
 ) {
 
   val isExternal =
@@ -142,7 +142,7 @@ object Dependency {
     ~ (__ \ "latestVersion"      ).readNullable[Version]
     ~ (__ \ "bobbyRuleViolations").read[Seq[BobbyRuleViolation]]
     ~ (__ \ "importBy"           ).readNullable[ImportedBy]
-    ~ (__ \ "scope"              ).readNullable[DependencyScope]
+    ~ (__ \ "scope"              ).read[DependencyScope]
     )(Dependency.apply _)
   }
 }

@@ -537,7 +537,8 @@ object JsonData {
       "name"               : "dn",
       "group"              : "dg",
       "currentVersion"     : "dv",
-      "bobbyRuleViolations": []
+      "bobbyRuleViolations": [],
+      "scope"              : "compile"
     }]"""
 
   val indicatorData: String =
