@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import com.typesafe.config.ConfigFactory
+import org.mockito.Strictness
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -127,11 +128,14 @@ final class CostEstimationServiceSpec
     service            : String,
     stubs              : Seq[DeploymentConfig]
   ): ServiceConfigsConnector = {
-    val serviceConfigsConnector = mock[ServiceConfigsConnector](withSettings.lenient())
+    val serviceConfigsConnector = mock[ServiceConfigsConnector](withSettings.strictness(Strictness.Lenient))
 
-    when(serviceConfigsConnector.deploymentConfig(Option(service))).thenReturn(Future.successful(stubs))
+    when(serviceConfigsConnector.deploymentConfig(Option(service)))
+      .thenReturn(Future.successful(stubs))
+
     stubs.foreach(deploymentConfig =>
-      when(serviceConfigsConnector.deploymentConfig(Option(service), Some(deploymentConfig.environment))).thenReturn(Future.successful(Seq(deploymentConfig)))
+      when(serviceConfigsConnector.deploymentConfig(Option(service), Some(deploymentConfig.environment)))
+        .thenReturn(Future.successful(Seq(deploymentConfig)))
     )
 
     serviceConfigsConnector
