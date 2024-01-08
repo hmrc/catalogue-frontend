@@ -24,15 +24,16 @@
         <h4 class="mb-0">Tests</h4>
     </div>
     <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Test Repository</th>
-                    <th>Test Job</th>
-                    <th>Latest Result</th>
-                </tr>
-            </thead>
-            <tbody>
+        @if(testJobMap.nonEmpty) {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Test Repository</th>
+                        <th>Test Job</th>
+                        <th>Latest Result</th>
+                    </tr>
+                </thead>
+                <tbody>
                 @for((testRepo, jobs) <- testJobMap) {
                     @if(jobs.nonEmpty) {
                         @defining(jobs.head) { firstJob =>
@@ -97,7 +98,10 @@
                         }
                     }
                 }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        } else {
+            <p class="mb-0">No test repositories <abbr title="Defined in repository.yaml">found</abbr>.</p>
+        }
     </div>
 </div>
