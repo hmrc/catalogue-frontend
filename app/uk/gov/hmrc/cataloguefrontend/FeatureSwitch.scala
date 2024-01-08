@@ -19,20 +19,8 @@ package uk.gov.hmrc.cataloguefrontend
 case class FeatureSwitch(name: String, isEnabled: Boolean)
 
 object FeatureSwitch {
-
   def forName(name: String): FeatureSwitch =
     FeatureSwitch(name, java.lang.Boolean.getBoolean(systemPropertyName(name)))
-
-  def enable(switch: FeatureSwitch): FeatureSwitch =
-    setProp(switch.name, true)
-
-  def disable(switch: FeatureSwitch): FeatureSwitch =
-    setProp(switch.name, false)
-
-  private def setProp(name: String, value: Boolean): FeatureSwitch = {
-    sys.props += ((systemPropertyName(name), value.toString))
-    forName(name)
-  }
 
   private def systemPropertyName(name: String) =
     s"feature.$name"
@@ -47,5 +35,4 @@ object CatalogueFrontendSwitches {
 
   def showTestRepoRelationships: FeatureSwitch =
     FeatureSwitch.forName("show-test-repo-relationships")
-
 }
