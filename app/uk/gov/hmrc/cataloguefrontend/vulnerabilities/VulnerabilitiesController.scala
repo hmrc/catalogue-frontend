@@ -33,13 +33,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class VulnerabilitiesController @Inject() (
-    override val mcc              : MessagesControllerComponents,
-    override val auth             : FrontendAuthComponents,
-    vulnerabilitiesConnector      : VulnerabilitiesConnector,
-    vulnerabilitiesListPage       : VulnerabilitiesListPage,
-    vulnerabilitiesForServicesPage: VulnerabilitiesForServicesPage,
-    vulnerabilitiesTimelinePage   : VulnerabilitiesTimelinePage,
-    teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
+  override val mcc              : MessagesControllerComponents,
+  override val auth             : FrontendAuthComponents,
+  vulnerabilitiesConnector      : VulnerabilitiesConnector,
+  vulnerabilitiesListPage       : VulnerabilitiesListPage,
+  vulnerabilitiesForServicesPage: VulnerabilitiesForServicesPage,
+  vulnerabilitiesTimelinePage   : VulnerabilitiesTimelinePage,
+  teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
 ) (implicit
    override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -52,7 +52,7 @@ class VulnerabilitiesController @Inject() (
     team          : Option[String],
     component     : Option[String]
   ): Action[AnyContent] =
-    Action.async { implicit request =>
+    BasicAuthAction.async { implicit request =>
       VulnerabilitiesExplorerFilter.form
         .bindFromRequest()
         .fold(
@@ -66,62 +66,64 @@ class VulnerabilitiesController @Inject() (
     }
 
   def vulnerabilitiesCountForServices(
-      teamName: Option[String] = None //TeamName is read from form, this param only exists for reverse routes
-    ): Action[AnyContent] = Action.async { implicit request =>
-    import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
-    form
-      .bindFromRequest()
-      .fold(
-        formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
-        validForm =>
-         for {
-           teams      <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-           counts     <- vulnerabilitiesConnector.vulnerabilityCounts(
-                            service     = None // Use listjs filtering
-                          , team        = validForm.team
-                          , environment = validForm.environment
-                          )
-         } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
-      )
-  }
-
-  def getDistinctVulnerabilities(service: String): Action[AnyContent] = Action.async { implicit request =>
-    vulnerabilitiesConnector.distinctVulnerabilities(service).map {
-      result => Ok(Json.toJson(result))
+    teamName: Option[String] = None //TeamName is read from form, this param only exists for reverse routes
+  ): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
+      form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
+          validForm =>
+          for {
+            teams      <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
+            counts     <- vulnerabilitiesConnector.vulnerabilityCounts(
+                              service     = None // Use listjs filtering
+                            , team        = validForm.team
+                            , environment = validForm.environment
+                            )
+          } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
+        )
     }
-  }
+
+  def getDistinctVulnerabilities(service: String): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      vulnerabilitiesConnector.distinctVulnerabilities(service)
+        .map(result => Ok(Json.toJson(result)))
+    }
 
   def vulnerabilitiesTimeline(
-     service       : Option[String],
-     team          : Option[String],
-     vulnerability : Option[String],
-     curationStatus: Option[String],
-     from          : LocalDate,
-     to            : LocalDate
- ): Action[AnyContent] = Action.async { implicit request =>
-    import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesTimelineFilter.form
+    service       : Option[String],
+    team          : Option[String],
+    vulnerability : Option[String],
+    curationStatus: Option[String],
+    from          : LocalDate,
+    to            : LocalDate
+  ): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesTimelineFilter.form
 
-    form
-      .bindFromRequest()
-      .fold(
-        formWithErrors => Future.successful(BadRequest(vulnerabilitiesTimelinePage(teams = Seq.empty, result = Seq.empty, formWithErrors))),
-        validForm      =>
-          for {
-            sortedTeams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-            teamNames    =  sortedTeams.map(_.name.asString)
-            counts       <- vulnerabilitiesConnector.timelineCounts(
-                              service        = validForm.service,
-                              team           = validForm.team,
-                              vulnerability  = validForm.vulnerability,
-                              curationStatus = validForm.curationStatus,
-                              from           = validForm.from,
-                              to             = validForm.to
-                            )
-            sortedCounts =  counts.sortBy(_.weekBeginning)
-          } yield Ok(vulnerabilitiesTimelinePage(teams = teamNames, result = sortedCounts, form.fill(validForm)))
-      )
+      form
+        .bindFromRequest()
+        .fold(
+          formWithErrors => Future.successful(BadRequest(vulnerabilitiesTimelinePage(teams = Seq.empty, result = Seq.empty, formWithErrors))),
+          validForm      =>
+            for {
+              sortedTeams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
+              teamNames    =  sortedTeams.map(_.name.asString)
+              counts       <- vulnerabilitiesConnector.timelineCounts(
+                                service        = validForm.service,
+                                team           = validForm.team,
+                                vulnerability  = validForm.vulnerability,
+                                curationStatus = validForm.curationStatus,
+                                from           = validForm.from,
+                                to             = validForm.to
+                              )
+              sortedCounts =  counts.sortBy(_.weekBeginning)
+            } yield Ok(vulnerabilitiesTimelinePage(teams = teamNames, result = sortedCounts, form.fill(validForm)))
+        )
+    }
   }
-}
 
 
   case class VulnerabilitiesExplorerFilter(
@@ -149,9 +151,9 @@ object VulnerabilitiesExplorerFilter {
 }
 
 case class VulnerabilitiesCountFilter(
- service    : Option[String] = None,
- team       : Option[String] = None,
- environment: Option[Environment] = None
+  service    : Option[String]      = None,
+  team       : Option[String]      = None,
+  environment: Option[Environment] = None
 )
 
 object VulnerabilitiesCountFilter {
