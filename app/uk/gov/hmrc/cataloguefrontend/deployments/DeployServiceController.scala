@@ -101,11 +101,9 @@ class DeployServiceController @Inject()(
                         }
         environments <- serviceName.fold(EitherT.rightT[Future, Result](Seq.empty[Environment]))(sn =>
                           EitherT
-                            .fromOptionF(
-                              serviceCommissioningConnector.commissioningStatus(sn)
-                            , BadRequest(deployServicePage(form.withGlobalError("Service Commissioning Status not found"), hasPerm, allServices, None, Nil, Nil, evaluations = None))
-                            ).map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
-                             .map(_.sorted)
+                            .right[Result](serviceCommissioningConnector.commissioningStatus(sn))
+                            .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
+                            .map(_.sorted)
                         )
         _            <- serviceName match {
                           case Some(_) => EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, allServices, None, Nil, Nil, evaluations = None)))
@@ -149,11 +147,9 @@ class DeployServiceController @Inject()(
                           .map(_.versions.toSeq)
         _            <- EitherT.fromOption[Future](releases.headOption, BadRequest(deployServicePage(form.withGlobalError("No releases found"), hasPerm, allServices, None, Nil, Nil, evaluations = None)))
         environments <- EitherT
-                          .fromOptionF(
-                            serviceCommissioningConnector.commissioningStatus(formObject.serviceName)
-                            , BadRequest(deployServicePage(form.withGlobalError("Service Commissioning Status not found"), hasPerm, allServices, None, Nil, Nil, evaluations = None))
-                          ).map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
-                           .map(_.sorted)
+                          .right[Result](serviceCommissioningConnector.commissioningStatus(formObject.serviceName))
+                          .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
+                          .map(_.sorted)
         _            <- EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, allServices, None, Nil, Nil, evaluations = None)))
         _            <- EitherT
                           .fromOptionF(

@@ -80,7 +80,7 @@ class DeployServiceControllerSpec
       when(mockReleasesConnector.releasesForService(eqTo("some-service"))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someReleasesForService))
       when(mockServiceCommissioningConnector.commissioningStatus(eqTo("some-service"))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(someCommissioningStatus)))
+        .thenReturn(Future.successful(someCommissioningStatus))
 
       val futResult = underTest.step1(Some("some-service"))(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
 
@@ -109,7 +109,7 @@ class DeployServiceControllerSpec
       when(mockReleasesConnector.releasesForService(eqTo("some-service"))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someReleasesForService))
       when(mockServiceCommissioningConnector.commissioningStatus(eqTo("some-service"))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(someCommissioningStatus)))
+        .thenReturn(Future.successful(someCommissioningStatus))
       when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockServiceConfigsService.configByKeyWithNextDeployment(eqTo("some-service"), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))

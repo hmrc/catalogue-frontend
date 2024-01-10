@@ -96,7 +96,6 @@ class CreateAppConfigsController @Inject()(
                            })
           configChecks  <- EitherT.liftF[Future, Result, List[Check]](
                              serviceCommissioningStatusConnector.commissioningStatus(serviceName)
-                               .map(_.getOrElse(List.empty[Check]))
                            )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
@@ -137,7 +136,6 @@ class CreateAppConfigsController @Inject()(
           serviceType   <- EitherT.fromOption[Future](repo.serviceType, InternalServerError("No Service Type"))
           configChecks  <- EitherT.liftF[Future, Result, List[Check]](
                              serviceCommissioningStatusConnector.commissioningStatus(serviceName)
-                               .map(_.getOrElse(List.empty[Check]))
                            )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
