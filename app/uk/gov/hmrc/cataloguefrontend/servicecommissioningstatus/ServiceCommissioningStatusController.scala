@@ -50,12 +50,12 @@ class ServiceCommissioningStatusController @Inject() (
 
   def getCommissioningState(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      (for {
-        lifecycleStatus  <- OptionT(serviceCommissioningStatusConnector.getLifecycleStatus(serviceName))
-        results          <- OptionT(serviceCommissioningStatusConnector.commissioningStatus(serviceName))
+      for {
+        lifecycleStatus <- serviceCommissioningStatusConnector.getLifecycleStatus(serviceName).map(_.getOrElse(LifecycleStatus.Active))
+        results         <- serviceCommissioningStatusConnector.commissioningStatus(serviceName)
       } yield {
         Ok(serviceCommissioningStatusPage(serviceName, lifecycleStatus, results))
-      }).getOrElse(NotFound(error_404_template()))
+      }
     }
 
   def searchLanding(): Action[AnyContent] =
