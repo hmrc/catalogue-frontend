@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
-import play.api.libs.json.{Format, JsObject, Json, OWrites, Reads, Writes, __}
+import play.api.libs.json._
 
 final case class Role(asString: String) {
   def displayName = asString.split("_").map(_.capitalize).mkString(" ")
@@ -91,6 +91,17 @@ object TeamMembership {
     )(TeamMembership.apply _)
   }
 }
+
+sealed trait Organisation { def asString: String }
+
+object Organisation {
+  case object Mdtp  extends Organisation { val asString = "MDTP"  }
+  case object Voa   extends Organisation { val asString = "VOA"   }
+  case object Other extends Organisation { val asString = "Other" }
+
+  val values: List[Organisation] =
+    List(Mdtp, Voa, Other)
+  }
 
 final case class User(
   displayName   : Option[String]

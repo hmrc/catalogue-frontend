@@ -341,7 +341,7 @@ class UserManagementConnectorSpec
         |    "environments": true,
         |    "ldap": true
         |  },
-        |  "username": "service_joe_bloggs",
+        |  "username": "service_joe.bloggs",
         |  "displayName": "service_joe bloggs",
         |  "isServiceAccount": true,
         |  "isExistingLDAPUser": false

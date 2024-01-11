@@ -36,7 +36,7 @@
       <h1 class="page-heading mt-4">Request Sent</h1>
 
     @if(isServiceAccount) {
-      <p>You have requested the creation of a non human user account for: service_@{givenName}_@familyName</p>
+      <p>You have requested the creation of a non human user account for: @{s"service_$givenName.$familyName"}</p>
 
       <p>To review the progression of this request and check the non human users details are correct, please view the <a target=_blank href="https://jira.tools.tax.service.gov.uk/projects/ACRS/issues/ACRS">ACRS Jira Board</a>.</p>
 
