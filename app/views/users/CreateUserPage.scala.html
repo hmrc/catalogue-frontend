@@ -17,12 +17,13 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.users.Organisation
 @import views.html.partials.form_fields_warnings
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 @this(viewMessages: ViewMessages)
 
 
 @(form: Form[_],
-  teamNames       : Seq[String],
+  teamNames       : Seq[TeamName],
   organisations   : Seq[Organisation],
   isServiceAccount: Boolean
 )(implicit

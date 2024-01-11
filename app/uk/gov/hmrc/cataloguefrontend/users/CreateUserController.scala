@@ -25,8 +25,9 @@ import play.api.data.{Form, Forms}
 import play.api.i18n.Messages
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource}
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.users.{CreateUserPage, CreateUserRequestSentPage}
 
@@ -48,66 +49,81 @@ class CreateUserController @Inject()(
 
   private val logger = Logger(getClass)
 
-  private def createUserPermission(teamName: String): Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/$teamName"), IAAction("CREATE_USER"))
+  private def createUserPermission(teamName: String): Predicate = {
+    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/$teamName"), IAAction("MANAGE"))
+  }
 
   def requestSent(givenName: String, familyName: String, isServiceAccount: Boolean): Action[AnyContent] = Action { implicit request =>
     Ok(createUserRequestSentPage(givenName, familyName, isServiceAccount))
   }
 
-  def createUserLanding(): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      for {
-        teams <- teamsAndRepositoriesConnector.allTeams()
-      } yield Ok(createUserPage(CreateUserForm.form, teams.map(_.name.asString), Organisation.values, isServiceAccount = false))
-  }
-
-  def createServiceUserLanding(): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      for {
-        teams <- teamsAndRepositoriesConnector.allTeams()
-      } yield Ok(createUserPage(CreateUserForm.form, teams.map(_.name.asString), Organisation.values, isServiceAccount = true))
+  private def createUserLandingAction(isServiceAccount: Boolean)(implicit messages: Messages): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.CreateUserController.createUserLanding(),
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE")))
+    ).apply { implicit request =>
+      Ok(createUserPage(CreateUserForm.form, cleanseUserTeams(request.retrieval), Organisation.values, isServiceAccount))
     }
 
-  def createHumanUser(): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      createUser(isServiceAccount = false)
+  def createUserLanding()(implicit messages: Messages): Action[AnyContent] =
+    createUserLandingAction(isServiceAccount = false)
+
+  def createServiceUserLanding()(implicit messages: Messages): Action[AnyContent] =
+    createUserLandingAction(isServiceAccount = true)
+
+
+  private def createUserAction(isServiceAccount: Boolean)(implicit messages: Messages): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.CreateUserController.createUserLanding(),
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE")))
+    ).async { implicit request =>
+      createUser(isServiceAccount, cleanseUserTeams(request.retrieval))
     }
 
-  def createServiceUser(): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      createUser(isServiceAccount = true)
-    }
+  def createHumanUser()(implicit messages: Messages): Action[AnyContent] =
+    createUserAction(isServiceAccount = false)
 
-  private def createUser(isServiceAccount: Boolean)(implicit request : Request[_], messages: Messages): Future[Result] =
+  def createServiceUser()(implicit messages: Messages): Action[AnyContent] =
+    createUserAction(isServiceAccount = true)
+
+  private def createUser(
+    isServiceAccount : Boolean,
+    teams            : Seq[TeamName]
+  )(implicit request : Request[_],
+    messages         : Messages
+  ): Future[Result] =
       (
         for {
-          allTeams  <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams())
-          form      <- EitherT.fromEither[Future](CreateUserForm.form.bindFromRequest().fold(
-                         formWithErrors => {
-                           Left(
-                             BadRequest(
-                               createUserPage(
-                                 form             = formWithErrors,
-                                 teamNames        = allTeams.map(_.name.asString),
-                                 organisations    = Organisation.values,
-                                 isServiceAccount = isServiceAccount
-                               )
-                             )
-                           )
-                         },
-
-                         validForm => Right(validForm)
-                       ))
-          res       <- EitherT.right[Result](userManagementConnector.createUser(
-                       //service_ is prepended to the service name for service accounts
-                       if (isServiceAccount) form.copy(givenName = "service_" + form.givenName) else form,
-                       isServiceAccount = isServiceAccount
-                       ))
-          _         = logger.info(s"user management result: $res:")
+          form <- EitherT.fromEither[Future](CreateUserForm.form.bindFromRequest().fold(
+                    formWithErrors => {
+                      Left(
+                        BadRequest(
+                          createUserPage(
+                            form             = formWithErrors,
+                            teamNames        = teams,
+                            organisations    = Organisation.values,
+                            isServiceAccount = isServiceAccount
+                          )
+                        )
+                      )
+                    },
+                    validForm => Right(validForm)
+                  ))
+          res  <- EitherT.right[Result](userManagementConnector.createUser(
+                  //service_ is prepended for service accounts
+                  if (isServiceAccount) form.copy(givenName = "service_" + form.givenName) else form,
+                  isServiceAccount = isServiceAccount
+                  ))
+          _    = logger.info(s"user management result: $res:")
 
           } yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(form.givenName, form.familyName, isServiceAccount))
       ).merge
+
+  private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
+    resources.map(_.resourceLocation.value.stripPrefix("teams/"))
+      .map(TeamName.apply)
+      .toSeq
+      .sorted
 }
 
 object CreateUserForm {
