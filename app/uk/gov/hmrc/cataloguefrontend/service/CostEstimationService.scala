@@ -221,9 +221,9 @@ object CostEstimationService {
     chart     : ChartDataTable
   ) {
     lazy val totalSlots: TotalSlots =
-      TotalSlots(slotsByEnv.map(_._2.asInt).fold(0)(_ + _))
+      TotalSlots(slotsByEnv.map(_._2.asInt).sum)
 
-    def totalYearlyCostGbp(costEstimateConfig: CostEstimateConfig) =
+    def totalYearlyCostGbp(costEstimateConfig: CostEstimateConfig): Double =
       totalSlots.costGbp(costEstimateConfig)
   }
 }
