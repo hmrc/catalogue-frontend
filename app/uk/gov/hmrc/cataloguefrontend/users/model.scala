@@ -21,6 +21,7 @@ import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 final case class Role(asString: String) {
   def displayName: String =
@@ -81,7 +82,7 @@ object LdapTeam {
     implicit val sir: Reads[SlackInfo] = SlackInfo.reads
     implicit val tnr: Reads[TeamName]  = TeamName.format
     ( (__ \ "members"          ).read[Seq[Member]]
-    ~ (__ \ "teamName"         ).read[String]
+    ~ (__ \ "teamName"         ).read[TeamName]
     ~ (__ \ "description"      ).readNullable[String]
     ~ (__ \ "documentation"    ).readNullable[String]
     ~ (__ \ "slack"            ).readNullable[SlackInfo]
@@ -119,13 +120,24 @@ object User {
   }
 }
 
+sealed trait Organisation { def asString: String }
+
+object Organisation {
+  case object Mdtp  extends Organisation { val asString = "MDTP"  }
+  case object Voa   extends Organisation { val asString = "VOA"   }
+  case object Other extends Organisation { val asString = "Other" }
+
+  val values: List[Organisation] =
+    List(Mdtp, Voa, Other)
+}
+
 case class CreateUserRequest(
   givenName         : String,
   familyName        : String,
   organisation      : String,
   contactEmail      : String,
   contactComments   : String,
-  team              : String,
+  team              : TeamName,
   isReturningUser   : Boolean,
   isTransitoryUser  : Boolean,
   vpn               : Boolean,
@@ -145,7 +157,7 @@ object CreateUserRequest {
       ~ (__ \ "organisation"            ).write[String]
       ~ (__ \ "contactEmail"            ).write[String]
       ~ (__ \ "contactComments"         ).write[String]
-      ~ (__ \ "team"                    ).write[String]
+      ~ (__ \ "team"                    ).write[TeamName](TeamName.format)
       ~ (__ \ "isReturningUser"         ).write[Boolean]
       ~ (__ \ "isTransitoryUser"        ).write[Boolean]
       ~ (__ \ "access" \ "vpn"          ).write[Boolean]
@@ -171,7 +183,7 @@ object CreateUserRequest {
       ~ (__ \ "organisation"            ).write[String]
       ~ (__ \ "contactEmail"            ).write[String]
       ~ (__ \ "contactComments"         ).write[String]
-      ~ (__ \ "team"                    ).write[String]
+      ~ (__ \ "team"                    ).write[TeamName](TeamName.format)
       ~ (__ \ "isReturningUser"         ).write[Boolean]
       ~ (__ \ "isTransitoryUser"        ).write[Boolean]
       ~ (__ \ "access" \ "vpn"          ).write[Boolean]

@@ -17,11 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
-import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, User}
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
-import play.api.libs.json.{Json, Reads, Writes}
 import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, LdapTeam, User}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -83,8 +80,6 @@ class UserManagementConnector @Inject()(
     val userWrites = if (isServiceAccount) CreateUserRequest.serviceUserWrites else CreateUserRequest.humanUserWrites
     val url: URL = url"$baseUrl/user-management/create-user"
 
-    println(">>> " + userRequest)
-
     httpClientV2
       .post(url)
       .withBody(Json.toJson(userRequest)(userWrites))
@@ -94,5 +89,4 @@ class UserManagementConnector @Inject()(
         case Left(err)  => Future.failed(new RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
       }
   }
-
 }

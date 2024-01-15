@@ -24,11 +24,12 @@ import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.users.{CreateUserController, CreateUserRequest, Organisation, routes}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Predicate, Retrieval}
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
 import views.html.users.{CreateUserPage, CreateUserRequestSentPage}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -48,31 +49,28 @@ class CreateUserControllerSpec
   }
 
   "CreateUserController.createUserLanding" should {
-    "have the correct url setup" in {
-      uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createUserLanding()
+    "have the correct url setup for creating a human user" in {
+      uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createUserLanding(isServiceAccount = false)
         .url shouldBe "/create-user"
     }
   }
 
   "CreateUserController.createServiceUserLanding" should {
-    "have the correct url setup" in {
-      uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createServiceUserLanding()
+    "have the correct url setup for creating a non human user" in {
+      uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createUserLanding(isServiceAccount = true)
         .url shouldBe "/create-service-user"
     }
   }
 
   "CreateUserController.createUserLanding" should {
 
-    "return 200 when user is authenticated" in new Setup {
+    "return 200 when user is authenticated when creating a human user" in new Setup {
 
-      when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(true))
-
-      when(mockTRConnector.allTeams()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq.empty))
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
+        .thenReturn(Future.successful(Set(Resource(ResourceType("test-service"), ResourceLocation("teams/TestTeam")))))
 
       val result = controller
-        .createUserLanding()(
+        .createUserLanding(isServiceAccount = false)(
           FakeRequest()
             .withSession(SessionKeys.authToken -> "Token token")
         )
@@ -80,17 +78,13 @@ class CreateUserControllerSpec
       status(result) shouldBe 200
     }
 
-    "return 200 with form error - when user does not have permission to create a user" in new Setup {
+    "return 200 with form error - when user does not have permission to create a human user" in new Setup {
 
-      when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(false))
-
-      when(mockTRConnector.allTeams()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq.empty))
-
+      when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Set[Resource]]]))
+        .thenReturn(Future.successful(Set.empty[Resource]))
 
       val result = controller
-        .createUserLanding()(
+        .createUserLanding(isServiceAccount = false)(
           FakeRequest()
             .withSession(SessionKeys.authToken -> "Token token")
         )
@@ -101,18 +95,15 @@ class CreateUserControllerSpec
     }
   }
 
-  "CreateUserController.createServiceUserLanding" should {
+  "CreateUserController.createUserLanding" should {
 
-    "return 200 when user is authenticated" in new Setup {
+    "return 200 when user is authenticated when creating a non human user" in new Setup {
 
-      when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(true))
-
-      when(mockTRConnector.allTeams()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq.empty))
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
+        .thenReturn(Future.successful(Set(Resource(ResourceType("test-service"), ResourceLocation("teams/TestTeam")))))
 
       val result = controller
-        .createServiceUserLanding()(
+        .createUserLanding(isServiceAccount = true)(
           FakeRequest()
             .withSession(SessionKeys.authToken -> "Token token")
         )
@@ -120,17 +111,13 @@ class CreateUserControllerSpec
       status(result) shouldBe 200
     }
 
-    "return 200 with form error - when user does not have permission to create a user" in new Setup {
+    "return 200 with form error - when user does not have permission to create non human a user" in new Setup {
 
-      when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(false))
-
-      when(mockTRConnector.allTeams()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq.empty))
-
+      when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Set[Resource]]]))
+        .thenReturn(Future.successful(Set.empty[Resource]))
 
       val result = controller
-        .createServiceUserLanding()(
+        .createUserLanding(isServiceAccount = true)(
           FakeRequest()
             .withSession(SessionKeys.authToken -> "Token token")
         )
@@ -141,28 +128,28 @@ class CreateUserControllerSpec
     }
   }
 
-  "CreateUserController.createHumanUser" should {
+  "CreateUserController.createUser" should {
 
-    "redirect to user creation request sent page when the form is submitted successfully" in new Setup {
+    "redirect to human user creation request sent page when the form is submitted successfully" in new Setup {
 
-      when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(true))
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
+        .thenReturn(Future.successful(Set(Resource(ResourceType("test-service"), ResourceLocation("teams/TestTeam")))))
 
-      when(mockTRConnector.allTeams()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq.empty))
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
+        .thenReturn(Future.unit)
 
       when(mockUMConnector.createUser(any[CreateUserRequest], isServiceAccount = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.unit)
 
       val result = controller
-        .createHumanUser()(
+        .createUser(isServiceAccount = false)(
           FakeRequest(POST, "/create-user")
             .withSession(SessionKeys.authToken -> "Token token")
             .withFormUrlEncodedBody(
               "givenName"    -> user.givenName,
               "familyName"   -> user.familyName,
               "organisation" -> user.organisation,
-              "team"         -> user.team,
+              "team"         -> user.team.asString,
               "contactEmail" -> user.contactEmail
             )
         )
@@ -175,26 +162,26 @@ class CreateUserControllerSpec
 
   "CreateUserController.createNonHumanUser" should {
 
-    "redirect to user creation request sent page when the form is submitted successfully" in new Setup {
+    "redirect to service user creation request sent page when the form is submitted successfully" in new Setup {
 
-      when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(true))
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
+        .thenReturn(Future.successful(Set(Resource(ResourceType("test-service"), ResourceLocation("teams/TestTeam")))))
 
-      when(mockTRConnector.allTeams()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq.empty))
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
+        .thenReturn(Future.unit)
 
       when(mockUMConnector.createUser(any[CreateUserRequest], isServiceAccount = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.unit)
 
       val result = controller
-        .createServiceUser()(
+        .createUser(isServiceAccount = true)(
           FakeRequest(POST, "/create-service-user")
             .withSession(SessionKeys.authToken -> "Token token")
             .withFormUrlEncodedBody(
               "givenName"    -> user.givenName,
               "familyName"   -> user.familyName,
               "organisation" -> user.organisation,
-              "team"         -> user.team,
+              "team"         -> user.team.asString,
               "contactEmail" -> user.contactEmail
             )
         )
@@ -211,18 +198,16 @@ class CreateUserControllerSpec
     val mockCUPView      : CreateUserPage                = app.injector.instanceOf[CreateUserPage]
     val mockCURSPView    : CreateUserRequestSentPage     = app.injector.instanceOf[CreateUserRequestSentPage]
     val mockUMConnector  : UserManagementConnector       = mock[UserManagementConnector]
-    val mockTRConnector  : TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     val authStubBehaviour: StubBehaviour                 = mock[StubBehaviour]
     val authComponent    : FrontendAuthComponents        = FrontendAuthComponentsStub(authStubBehaviour)
 
     val controller        =
       new CreateUserController(
-        auth                          = authComponent,
-        mcc                           = mcc,
-        teamsAndRepositoriesConnector = mockTRConnector,
-        createUserPage                = mockCUPView,
-        createUserRequestSentPage     = mockCURSPView,
-        userManagementConnector       = mockUMConnector
+        auth                      = authComponent,
+        mcc                       = mcc,
+        createUserPage            = mockCUPView,
+        createUserRequestSentPage = mockCURSPView,
+        userManagementConnector   = mockUMConnector
       )
 
     val user: CreateUserRequest =
@@ -232,7 +217,7 @@ class CreateUserControllerSpec
         organisation     = Organisation.Mdtp.asString,
         contactEmail     = "test.user@email.gov.uk",
         contactComments  = "test123",
-        team             = "TestTeam",
+        team             = TeamName("TestTeam"),
         isReturningUser  = false,
         isTransitoryUser = false,
         vpn              = true,

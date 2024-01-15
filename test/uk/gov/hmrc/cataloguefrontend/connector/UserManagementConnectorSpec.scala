@@ -21,8 +21,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, Member, User, Role}
+import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.users._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -271,7 +272,7 @@ class UserManagementConnectorSpec
         organisation     = "MDTP",
         contactEmail     = "email@test.gov.uk",
         contactComments  = "test",
-        team             = "Test",
+        team             = TeamName("Test"),
         isReturningUser  = false,
         isTransitoryUser = false,
         vpn              = true,

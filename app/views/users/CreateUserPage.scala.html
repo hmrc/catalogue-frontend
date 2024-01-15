@@ -27,8 +27,8 @@
   organisations   : Seq[Organisation],
   isServiceAccount: Boolean
 )(implicit
-  messages: Messages,
-  request : RequestHeader
+  request         : RequestHeader,
+  messagesProvider: MessagesProvider
 )
 
 @standard_layout("Create a User", "create a user") {
@@ -49,7 +49,7 @@
 
 
     @helper.form(
-      action                =  if (isServiceAccount) uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createServiceUser() else uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createHumanUser(),
+      action                = uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createUser(isServiceAccount),
       Symbol("id")         -> "createUserForm",
       Symbol("method")     -> "post",
       Symbol("class")      -> "needs-validation",
@@ -115,9 +115,9 @@
         <div class="col-md-6 mb-3">
           <label class="fw-bold" for="teamInput">Team:</label>
           <select class="form-select @if(teamNames.isEmpty) { is-invalid }" id="teamInput" name="team">
-          @teamNames.map { tn =>
-            <option value="@{tn}" @if(form.data.getOrElse("team", "").equals(tn)) { selected="selected" }>@tn</option>
-          }
+            @teamNames.map { tn =>
+              <option value="@{tn.asString}" @if(form.data.getOrElse("team", TeamName("")).toString.equals(tn.asString)) { selected="selected" }>@tn.asString</option>
+            }
           </select>
           @if(teamNames.isEmpty) {
             <div class="invalid-feedback">

@@ -22,12 +22,11 @@ import play.api.data.Forms._
 import play.api.data.validation.Constraints.maxLength
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.data.{Form, Forms}
-import play.api.i18n.Messages
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceType, Retrieval}
+import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.users.{CreateUserPage, CreateUserRequestSentPage}
 
@@ -36,62 +35,39 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CreateUserController @Inject()(
-  override val auth            : FrontendAuthComponents,
-  override val mcc             : MessagesControllerComponents,
-  createUserPage               : CreateUserPage,
-  createUserRequestSentPage    : CreateUserRequestSentPage,
-  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  userManagementConnector      : UserManagementConnector
+  override val auth        : FrontendAuthComponents,
+  override val mcc         : MessagesControllerComponents,
+  createUserPage           : CreateUserPage,
+  createUserRequestSentPage: CreateUserRequestSentPage,
+  userManagementConnector  : UserManagementConnector
 ) (implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-  with CatalogueAuthBuilders {
+  with CatalogueAuthBuilders
+  with play.api.i18n.I18nSupport {
 
   private val logger = Logger(getClass)
 
-  private def createUserPermission(teamName: String): Predicate = {
+  private def createUserPermission(teamName: TeamName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/$teamName"), IAAction("MANAGE"))
-  }
 
   def requestSent(givenName: String, familyName: String, isServiceAccount: Boolean): Action[AnyContent] = Action { implicit request =>
     Ok(createUserRequestSentPage(givenName, familyName, isServiceAccount))
   }
 
-  private def createUserLandingAction(isServiceAccount: Boolean)(implicit messages: Messages): Action[AnyContent] =
+  def createUserLanding(isServiceAccount: Boolean): Action[AnyContent] =
     auth.authenticatedAction(
-      continueUrl = routes.CreateUserController.createUserLanding(),
+      continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE")))
     ).apply { implicit request =>
       Ok(createUserPage(CreateUserForm.form, cleanseUserTeams(request.retrieval), Organisation.values, isServiceAccount))
     }
 
-  def createUserLanding()(implicit messages: Messages): Action[AnyContent] =
-    createUserLandingAction(isServiceAccount = false)
-
-  def createServiceUserLanding()(implicit messages: Messages): Action[AnyContent] =
-    createUserLandingAction(isServiceAccount = true)
-
-
-  private def createUserAction(isServiceAccount: Boolean)(implicit messages: Messages): Action[AnyContent] =
+  def createUser(isServiceAccount: Boolean): Action[AnyContent] =
     auth.authenticatedAction(
-      continueUrl = routes.CreateUserController.createUserLanding(),
+      continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE")))
     ).async { implicit request =>
-      createUser(isServiceAccount, cleanseUserTeams(request.retrieval))
-    }
-
-  def createHumanUser()(implicit messages: Messages): Action[AnyContent] =
-    createUserAction(isServiceAccount = false)
-
-  def createServiceUser()(implicit messages: Messages): Action[AnyContent] =
-    createUserAction(isServiceAccount = true)
-
-  private def createUser(
-    isServiceAccount : Boolean,
-    teams            : Seq[TeamName]
-  )(implicit request : Request[_],
-    messages         : Messages
-  ): Future[Result] =
       (
         for {
           form <- EitherT.fromEither[Future](CreateUserForm.form.bindFromRequest().fold(
@@ -100,7 +76,7 @@ class CreateUserController @Inject()(
                         BadRequest(
                           createUserPage(
                             form             = formWithErrors,
-                            teamNames        = teams,
+                            teamNames        = cleanseUserTeams(request.retrieval),
                             organisations    = Organisation.values,
                             isServiceAccount = isServiceAccount
                           )
@@ -109,6 +85,7 @@ class CreateUserController @Inject()(
                     },
                     validForm => Right(validForm)
                   ))
+          _    <- EitherT.liftF(auth.authorised(Some(createUserPermission(form.team))))
           res  <- EitherT.right[Result](userManagementConnector.createUser(
                   //service_ is prepended for service accounts
                   if (isServiceAccount) form.copy(givenName = "service_" + form.givenName) else form,
@@ -116,8 +93,9 @@ class CreateUserController @Inject()(
                   ))
           _    = logger.info(s"user management result: $res:")
 
-          } yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(form.givenName, form.familyName, isServiceAccount))
+        } yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(form.givenName, form.familyName, isServiceAccount))
       ).merge
+    }
 
   private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
     resources.map(_.resourceLocation.value.stripPrefix("teams/"))
@@ -127,7 +105,6 @@ class CreateUserController @Inject()(
 }
 
 object CreateUserForm {
-
   val form: Form[CreateUserRequest] = Form(
     mapping(
       "givenName"        -> text.verifying(CreateUserConstraints.nameConstraints("givenName") :_*).verifying(CreateUserConstraints.containsServiceConstraint),
@@ -135,7 +112,7 @@ object CreateUserForm {
       "organisation"     -> nonEmptyText,
       "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.digitalEmailConstraint),
       "contactComments"  -> default(text, "").verifying(maxLength(512)),
-      "team"             -> nonEmptyText,
+      "team"             -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
       "isReturningUser"  -> boolean,
       "isTransitoryUser" -> boolean,
       "vpn"              -> boolean,
@@ -145,7 +122,6 @@ object CreateUserForm {
       "environments"    -> boolean
     )(CreateUserRequest.apply)(CreateUserRequest.unapply)
   )
-
 }
 
 object CreateUserConstraints {
