@@ -178,8 +178,9 @@ class DeployServiceController @Inject()(
         vulnerabils  <- EitherT
                           .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired)))
                           .map {
-                            case Nil if !releases.exists(_.version == formObject.version) => None
-                            case xs                                                       => Some(xs)
+                            case Some(Nil) if !releases.exists(_.version == formObject.version) => Left("Vulnerabilities unknown - needs to be already deployed in an environment")
+                            case Some(xs)                                                       => Right(xs)
+                            case _                                                              => Left("Vulnerabilities unknown - there is no data yet for this service")
                           }
       } yield
         Ok(deployServicePage(form, hasPerm, allServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils))))

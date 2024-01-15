@@ -56,7 +56,7 @@ class VulnerabilitiesController @Inject() (
       VulnerabilitiesExplorerFilter.form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(Seq.empty, Seq.empty, formWithErrors))),
+          formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(None, Seq.empty, formWithErrors))),
           validForm =>
             for {
               teams     <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))

@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
-import play.api.libs.json.Reads
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.format.DateTimeFormatter
@@ -46,11 +46,18 @@ class VulnerabilitiesConnector @Inject() (
     component     : Option[String]         = None
   )(implicit
     hc            : HeaderCarrier
-  ): Future[Seq[VulnerabilitySummary]] = {
+  ): Future[Option[Seq[VulnerabilitySummary]]] = {
     implicit val vsrs: Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
     httpClientV2
       .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&service=$service&version=${version.map(_.original)}&team=$team&component=$component")
-      .execute[Seq[VulnerabilitySummary]]
+      .execute[Either[UpstreamErrorResponse, HttpResponse]]
+      .flatMap {
+        case Right(res)                                      => Future.successful(Some(
+                                                                  Json.parse(res.body).as[Seq[VulnerabilitySummary]]
+                                                                ))
+        case Left(UpstreamErrorResponse.WithStatusCode(404)) => Future.successful(None)
+        case Left(err)                                       => Future.failed(new RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
+      }
   }
 
   def distinctVulnerabilities(service: String)(implicit hc: HeaderCarrier): Future[Option[Int]] = {

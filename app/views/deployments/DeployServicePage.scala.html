@@ -40,7 +40,7 @@
 , evaluations   : Option[(
                     Map[ServiceConfigsService.KeyName, (ServiceConfigsService.ConfigSourceValue, Boolean)]
                   , Seq[ServiceConfigsService.ConfigWarning]
-                  , Option[Seq[VulnerabilitySummary]]
+                  , Either[String,Seq[VulnerabilitySummary]]
                   )]
 )( implicit
   messages      : Messages
@@ -123,7 +123,7 @@
       </div>
     </div>
     <div class="col-md-8">
-      @evaluations.map { case (configUpdates, configWarnings, optVulnerabilities) =>
+      @evaluations.map { case (configUpdates, configWarnings, vulnerabilities) =>
         <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
           You are about to deploy <strong>@form.get.serviceName:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
         </div>
@@ -199,15 +199,18 @@
 
           <div class="accordion-item">
             <div class="accordion-header" id="headingVulnerabilities">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVulnerabilities" aria-expanded="false" aria-controls="collapseVulnerabilities" @if(optVulnerabilities.getOrElse(Nil).isEmpty) {disabled}>
-                @if(optVulnerabilities.isEmpty) {
-                  Vulnerabilities unknown - needs to be already deployed in an environment
-                } else {
-                  Vulnerabilities - action required
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(optVulnerabilities.getOrElse(Nil).isEmpty) {text-bg-secondary} else {text-bg-info}">
-                    @optVulnerabilities.getOrElse(Nil).size
-                    <span class="visually-hidden">Number of vulnerabilities</span>
-                  </span>
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVulnerabilities" aria-expanded="false" aria-controls="collapseVulnerabilities" @if(vulnerabilities.getOrElse(Nil).isEmpty) {disabled}>
+                @vulnerabilities match { 
+                  case Left(message) => {
+                    @message
+                  }
+                  case Right(vulnerabilities) => {
+                    Vulnerabilities - action required
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(vulnerabilities.isEmpty) {text-bg-secondary} else {text-bg-info}">
+                      @vulnerabilities.size
+                      <span class="visually-hidden">Number of vulnerabilities</span>
+                    </span>
+                  }
                 }
               </button>
             </div>
@@ -229,7 +232,7 @@
                     </tr>
                   </thead>
                   <tbody id="vulnerabilities-rows" class="list">
-                    @optVulnerabilities.getOrElse(Nil).map(vulnerabilitiesSummary)
+                    @vulnerabilities.getOrElse(Nil).map(vulnerabilitiesSummary)
                   </tbody>
                 </table>
                 <script @CSPNonce.attr>
