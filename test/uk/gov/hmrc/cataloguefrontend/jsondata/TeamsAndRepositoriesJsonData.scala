@@ -89,9 +89,9 @@ object TeamsAndRepositoriesJsonData {
 
   val repositoriesDataSharedRepo = {
     s"""[
-     {"name":"01-one-team-repo"   ,"description": "", "teamNames":["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
-     {"name":"05-five-teams-repo","description": "", "teamNames":["teamB", "teamC", "teamD", "teamE", "teamF"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
-     {"name":"11-seven-teams-repo"  ,"description": "", "teamNames":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
+     {"name":"01-one-team-repo"   ,"description": "", "teamNames":["teamB"], "owningTeams": ["teamB"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
+     {"name":"05-five-teams-repo","description": "", "teamNames":["teamB", "teamC", "teamD", "teamE", "teamF"], "owningTeams":["teamB", "teamC", "teamD", "teamE", "teamF"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
+     {"name":"11-seven-teams-repo"  ,"description": "", "teamNames":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"], "owningTeams":["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
      ]
    """"
   }
@@ -114,18 +114,18 @@ object TeamsAndRepositoriesJsonData {
 
   val repositoriesTeamAData = {
     s"""[
-       {"name":"teamA-serv"   ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
-       {"name":"teamA-library","description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
-       {"name":"teamA-other"  ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"},
-       {"name":"teamA-proto"  ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Prototype", "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"},
-       {"name":"teamA-proto2"  ,"description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Prototype", "language":"Scala", "isArchived":true, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
+       {"name":"teamA-serv"   ,"description": "", "teamNames":["teamA"], "owningTeams": ["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Service","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoa"},
+       {"name":"teamA-library","description": "", "teamNames":["teamA"], "owningTeams": ["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"},
+       {"name":"teamA-other"  ,"description": "", "teamNames":["teamA"], "owningTeams": ["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Other",  "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"},
+       {"name":"teamA-proto"  ,"description": "", "teamNames":["teamA"], "owningTeams": ["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Prototype", "language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"},
+       {"name":"teamA-proto2"  ,"description": "", "teamNames":["teamA"], "owningTeams": ["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Prototype", "language":"Scala", "isArchived":true, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repoc"}
        ]
      """"
   }
 
   val repositoriesTeamADataLibrary = {
     s"""[
-       {"name":"teamA-library","description": "", "teamNames":["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"}
+       {"name":"teamA-library","description": "", "teamNames":["teamA"], "owningTeams": ["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"}
        ]
      """"
   }

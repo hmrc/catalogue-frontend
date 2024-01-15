@@ -106,7 +106,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       document.select("#row1_team").select("div.repo-team").get(4).select("div a").text() shouldBe "teamF"
 
       document.select("#row2_team").select("td a").text() shouldBe "Shared by 9 teams"
-      document.select("#row2_team").select("td a[href]").attr("href") shouldBe "/repositories/11-seven-teams-repo#teams"
+      document.select("#row2_team").select("td a[href]").attr("href") shouldBe "/repositories/11-seven-teams-repo#owning-team"
     }
   }
 }
