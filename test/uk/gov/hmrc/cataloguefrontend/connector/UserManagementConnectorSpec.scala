@@ -275,6 +275,7 @@ class UserManagementConnectorSpec
         team             = TeamName("Test"),
         isReturningUser  = false,
         isTransitoryUser = false,
+        isServiceAccount = false,
         vpn              = true,
         jira             = true,
         confluence       = true,
@@ -292,6 +293,7 @@ class UserManagementConnectorSpec
         |  "team": "Test",
         |  "isReturningUser": false,
         |  "isTransitoryUser": false,
+        |  "isServiceAccount": false,
         |  "access": {
         |    "vpn": true,
         |    "jira": true,
@@ -302,7 +304,6 @@ class UserManagementConnectorSpec
         |  },
         |  "username": "joe.bloggs",
         |  "displayName": "Joe Bloggs",
-        |  "isServiceAccount": false,
         |  "isExistingLDAPUser": false
         |}
         |""".stripMargin
@@ -317,6 +318,7 @@ class UserManagementConnectorSpec
         |  "team": "Test",
         |  "isReturningUser": false,
         |  "isTransitoryUser": false,
+        |  "isServiceAccount": true,
         |  "access": {
         |    "vpn": true,
         |    "jira": true,
@@ -327,7 +329,6 @@ class UserManagementConnectorSpec
         |  },
         |  "username": "service_joe.bloggs",
         |  "displayName": "service_joe bloggs",
-        |  "isServiceAccount": true,
         |  "isExistingLDAPUser": false
         |}
         |""".stripMargin
@@ -336,7 +337,7 @@ class UserManagementConnectorSpec
       stubFor(
         post(urlPathEqualTo(s"/user-management/create-user"))
           .withRequestBody(
-            equalToJson(Json.toJson(createUserRequest)(CreateUserRequest.humanUserWrites).toString())
+            equalToJson(Json.toJson(createUserRequest).toString())
           )
           .willReturn(
             aResponse()
@@ -344,7 +345,7 @@ class UserManagementConnectorSpec
           )
       )
 
-      connector.createUser(createUserRequest, isServiceAccount = false).futureValue shouldBe ()
+      connector.createUser(createUserRequest).futureValue shouldBe ()
 
       verify(
         postRequestedFor(urlPathEqualTo("/user-management/create-user"))
@@ -354,9 +355,9 @@ class UserManagementConnectorSpec
 
     "return Unit when UMP response is 200 for non human user" in {
       stubFor(
-        post(urlPathEqualTo(s"/user-management/create-user"))
+        post(urlPathEqualTo("/user-management/create-user"))
           .withRequestBody(
-            equalToJson(Json.toJson(createUserRequest.copy(givenName = "service_joe"))(CreateUserRequest.serviceUserWrites).toString())
+            equalToJson(Json.toJson(createUserRequest.copy(isServiceAccount = true)).toString())
           )
           .willReturn(
             aResponse()
@@ -364,7 +365,7 @@ class UserManagementConnectorSpec
           )
       )
 
-      connector.createUser(createUserRequest.copy(givenName = "service_joe"), isServiceAccount = true).futureValue shouldBe ()
+      connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue shouldBe ()
 
       verify(
         postRequestedFor(urlPathEqualTo("/user-management/create-user"))
@@ -374,9 +375,9 @@ class UserManagementConnectorSpec
 
     "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in {
       stubFor(
-        post(urlPathEqualTo(s"/user-management/create-user"))
+        post(urlPathEqualTo(s"user-management/create-service-user"))
           .withRequestBody(
-            equalToJson(Json.toJson(createUserRequest)(CreateUserRequest.humanUserWrites).toString())
+            equalToJson(Json.toJson(createUserRequest.copy(isServiceAccount = true)).toString())
           )
           .willReturn(
             aResponse()
@@ -385,7 +386,7 @@ class UserManagementConnectorSpec
       )
 
       an[RuntimeException] shouldBe thrownBy {
-        connector.createUser(createUserRequest, isServiceAccount = false).futureValue
+        connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue
       }
     }
   }

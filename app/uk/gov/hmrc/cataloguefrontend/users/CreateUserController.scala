@@ -49,7 +49,7 @@ class CreateUserController @Inject()(
   private val logger = Logger(getClass)
 
   private def createUserPermission(teamName: TeamName): Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/$teamName"), IAAction("MANAGE"))
+    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("MANAGE"))
 
   def requestSent(givenName: String, familyName: String, isServiceAccount: Boolean): Action[AnyContent] = Action { implicit request =>
     Ok(createUserRequestSentPage(givenName, familyName, isServiceAccount))
@@ -87,10 +87,9 @@ class CreateUserController @Inject()(
                   ))
           _    <- EitherT.liftF(auth.authorised(Some(createUserPermission(form.team))))
           res  <- EitherT.right[Result](userManagementConnector.createUser(
-                  //service_ is prepended for service accounts
-                  if (isServiceAccount) form.copy(givenName = "service_" + form.givenName) else form,
-                  isServiceAccount = isServiceAccount
+                  form.copy(isServiceAccount = isServiceAccount)
                   ))
+
           _    = logger.info(s"user management result: $res:")
 
         } yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(form.givenName, form.familyName, isServiceAccount))
@@ -115,7 +114,8 @@ object CreateUserForm {
       "team"             -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
       "isReturningUser"  -> boolean,
       "isTransitoryUser" -> boolean,
-      "vpn"              -> boolean,
+      "isServiceAccount" -> boolean,
+      "vpn"             -> boolean,
       "jira"            -> boolean,
       "confluence"      -> boolean,
       "googleApps"      -> boolean,

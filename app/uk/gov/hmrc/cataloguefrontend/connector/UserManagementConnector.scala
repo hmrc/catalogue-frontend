@@ -28,7 +28,6 @@ import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-
 @Singleton
 class UserManagementConnector @Inject()(
   httpClientV2  : HttpClientV2
@@ -76,13 +75,12 @@ class UserManagementConnector @Inject()(
       .execute[Option[User]]
   }
 
-  def createUser(userRequest: CreateUserRequest, isServiceAccount: Boolean)(implicit hc: HeaderCarrier): Future[Unit] = {
-    val userWrites = if (isServiceAccount) CreateUserRequest.serviceUserWrites else CreateUserRequest.humanUserWrites
+  def createUser(userRequest: CreateUserRequest)(implicit hc: HeaderCarrier): Future[Unit] = {
     val url: URL = url"$baseUrl/user-management/create-user"
 
     httpClientV2
       .post(url)
-      .withBody(Json.toJson(userRequest)(userWrites))
+      .withBody(Json.toJson(userRequest)(CreateUserRequest.writes))
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap {
         case Right(res) => Future.successful(res)

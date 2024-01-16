@@ -47,7 +47,6 @@
       <p>If you would like to create a non human user please use <a href="/create-service-user">Create A Service User</a> instead.</p>
     }
 
-
     @helper.form(
       action                = uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createUser(isServiceAccount),
       Symbol("id")         -> "createUserForm",
@@ -199,7 +198,6 @@
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
           Create
         </button>
-
       </div>
 
         <!-- Modal -->
@@ -213,7 +211,7 @@
             <div class="modal-body">
                 Are you sure you want to create a new user?
                 <p></p>
-                Please double-check the details to ensure accuracy.
+                Please check that the details are correct.
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

@@ -24,12 +24,12 @@ import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.users.{CreateUserController, CreateUserRequest, Organisation, routes}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
+import uk.gov.hmrc.internalauth.client._
 import views.html.users.{CreateUserPage, CreateUserRequestSentPage}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -138,7 +138,7 @@ class CreateUserControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockUMConnector.createUser(any[CreateUserRequest], isServiceAccount = eqTo(false))(any[HeaderCarrier]))
+      when(mockUMConnector.createUser(any[CreateUserRequest])(any[HeaderCarrier]))
         .thenReturn(Future.unit)
 
       val result = controller
@@ -170,7 +170,7 @@ class CreateUserControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockUMConnector.createUser(any[CreateUserRequest], isServiceAccount = eqTo(true))(any[HeaderCarrier]))
+      when(mockUMConnector.createUser(any[CreateUserRequest])(any[HeaderCarrier]))
         .thenReturn(Future.unit)
 
       val result = controller
@@ -220,6 +220,7 @@ class CreateUserControllerSpec
         team             = TeamName("TestTeam"),
         isReturningUser  = false,
         isTransitoryUser = false,
+        isServiceAccount = false,
         vpn              = true,
         jira             = true,
         confluence       = true,
