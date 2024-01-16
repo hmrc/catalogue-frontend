@@ -16,19 +16,18 @@
 
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
+import play.api.Logger
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
-import play.api.Logger
-
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfig
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -74,8 +73,9 @@ class ServiceConfigsConnector @Inject() (
   }
 
   def deploymentConfig(
-    service    : Option[String]      = None,
-    environment: Option[Environment] = None,
+    service    : Option[String]      = None
+  , environment: Option[Environment] = None
+  , team       : Option[String]      = None
   )(implicit
     hc         : HeaderCarrier
   ): Future[Seq[DeploymentConfig]] = {
@@ -83,6 +83,7 @@ class ServiceConfigsConnector @Inject() (
     val qsParams = Seq(
       environment.map("environment" -> _.asString),
       service.map("serviceName" -> _),
+      team.map("teamName" -> _)
     ).flatten.toMap
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$qsParams")

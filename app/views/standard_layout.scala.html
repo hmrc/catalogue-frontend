@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthIndRoutes}
 @import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
+@import uk.gov.hmrc.cataloguefrontend.costs.{routes => costsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 @import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
@@ -184,6 +185,11 @@
                             <li>
                                 <a id="link-to-users-list-page" class="dropdown-item" href="@userRoutes.UsersController.allUsers()">
                                     Users
+                                </a>
+                            </li>
+                            <li>
+                                <a id="link-to-cost-explorer-page" class="dropdown-item" href="@costsRoutes.CostsSummaryController.costExplorer()">
+                                    Cost Explorer
                                 </a>
                             </li>
                         </ul>
