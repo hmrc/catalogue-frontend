@@ -22,22 +22,20 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.model.Environment._
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.costs.CostsSummaryPage
+import views.html.costs.CostExplorerPage
 
-import java.text.NumberFormat
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class CostsSummaryController @Inject() (
   serviceConfigsConnector: ServiceConfigsConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  costsSummaryPage: CostsSummaryPage,
+  costExplorerPage: CostExplorerPage,
   costEstimateConfig: CostEstimateConfig,
   override val mcc: MessagesControllerComponents,
   override val auth: FrontendAuthComponents
@@ -46,16 +44,13 @@ class CostsSummaryController @Inject() (
 ) extends FrontendController(mcc)
     with CatalogueAuthBuilders {
 
-  def onPageLoad(team: Option[String] = None): Action[AnyContent] =
+  def costExplorer(team: Option[String] = None): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
 
       for {
         teams   <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
         configs <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.trim.isEmpty))
-      } yield {
-        val viewModel: Seq[ServiceAndEnvironment] = ServiceAndEnvironment(configs.groupBy(_.serviceName))
-        Ok(costsSummaryPage(viewModel, teams, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
-      }
+      } yield Ok(costExplorerPage(configs.groupBy(_.serviceName), teams, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
     }
 }
 
@@ -66,34 +61,6 @@ object RepoListFilter {
         "team" -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString))
       )(RepoListFilter.apply)(RepoListFilter.unapply)
     )
-}
-
-case class ServiceAndEnvironment(serviceName: String, configs: Seq[DeploymentConfig]) {
-
-  val getIntegrationEnvironment: Option[DeploymentConfig]   = configs.find(_.environment == Integration)
-  val getDevelopmentEnvironment: Option[DeploymentConfig]   = configs.find(_.environment == Development)
-  val getQAEnvironment: Option[DeploymentConfig]            = configs.find(_.environment == QA)
-  val getStagingEnvironment: Option[DeploymentConfig]       = configs.find(_.environment == Staging)
-  val getExternalTestEnvironment: Option[DeploymentConfig]  = configs.find(_.environment == ExternalTest)
-  val getProductionEnvironment: Option[DeploymentConfig]    = configs.find(_.environment == Production)
-
-  def totalEstimatedCost(costEstimateConfig: CostEstimateConfig): Double = {
-    configs.map(_.deploymentSize.totalSlots.costGbp(costEstimateConfig)).sum
-  }
-
-  def totalEstimatedCostFormatted(costEstimateConfig: CostEstimateConfig): String = {
-    val formatter: NumberFormat = java.text.NumberFormat.getIntegerInstance
-    formatter.format(totalEstimatedCost(costEstimateConfig))
-  }
-
-}
-
-object ServiceAndEnvironment {
-  def apply(deploymentConfigs: Map[String, Seq[DeploymentConfig]]): Seq[ServiceAndEnvironment] = {
-    deploymentConfigs.map {
-      case (name, configs) => ServiceAndEnvironment(name, configs)
-    }.toSeq
-  }
 }
 
 case class RepoListFilter(team: Option[TeamName] = None)

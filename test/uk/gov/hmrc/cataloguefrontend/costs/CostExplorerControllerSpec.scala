@@ -33,7 +33,7 @@ import uk.gov.hmrc.internalauth.client.test.StubBehaviour
 
 import scala.concurrent.Future
 
-class CostsSummaryControllerSpec extends AnyWordSpec with FakeApplicationBuilder with OptionValues {
+class CostExplorerControllerSpec extends AnyWordSpec with FakeApplicationBuilder with OptionValues {
 
   private val mockAuthStubBehaviour             = mock[StubBehaviour]
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
@@ -58,7 +58,7 @@ class CostsSummaryControllerSpec extends AnyWordSpec with FakeApplicationBuilder
     when(mockServiceConfigConnector.deploymentConfig(any(), any(), any())(any()))
       .thenReturn(Future.successful(Seq.empty))
 
-    val request = FakeRequest(GET, routes.CostsSummaryController.onPageLoad().url)
+    val request = FakeRequest(GET, routes.CostsSummaryController.costExplorer().url)
 
     val result = route(app, request).value
 
