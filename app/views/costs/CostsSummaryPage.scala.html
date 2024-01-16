@@ -16,16 +16,17 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.Team
-@import uk.gov.hmrc.cataloguefrontend.costs.model.ServiceDeploymentConfigGrouped
+@import uk.gov.hmrc.cataloguefrontend.costs.ServiceAndEnvironment
 @import views.html.helper.select
+@import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 
 @this(viewMessages: ViewMessages)
 
 @(
-        configs         : Seq[ServiceDeploymentConfigGrouped],
-        slotsCostPerYear: Double,
-        teams: Seq[Team],
-        form: Form[_],
+        configs             : Seq[ServiceAndEnvironment],
+        teams               : Seq[Team],
+        form                : Form[_],
+        costEstimateConfig  : CostEstimateConfig
 )(implicit messages: Messages, request: RequestHeader)
 
 @implicitField = @{
@@ -102,23 +103,23 @@
                 <td class="repo-name" id="row@{
                     index
                 }_name"><a id="link-to-@config.serviceName-page" href="/repositories/@config.serviceName">@config.serviceName</a></td>
-                <td style="text-align: center">@config.getIntegrationEnvironment.map(_.slots)</td>          @* Integration - slots *@
-                <td style="text-align: center">@config.getIntegrationEnvironment.map(_.instances)</td>      @* Integration - instances *@
-                <td style="text-align: center">@config.getDevelopmentEnvironment.map(_.slots)</td>          @* Development - slots *@
-                <td style="text-align: center">@config.getDevelopmentEnvironment.map(_.instances)</td>      @* Development - instances *@
-                <td style="text-align: center">@config.getQAEnvironment.map(_.slots)</td>                   @* QA - slots *@
-                <td style="text-align: center">@config.getQAEnvironment.map(_.instances)</td>               @* QA - instances *@
-                <td style="text-align: center">@config.getStagingEnvironment.map(_.slots)</td>              @* Staging - slots *@
-                <td style="text-align: center">@config.getStagingEnvironment.map(_.instances)</td>          @* Staging - instances *@
-                <td style="text-align: center">@config.getExternalTestEnvironment.map(_.slots)</td>         @* External Test - slots *@
-                <td style="text-align: center">@config.getExternalTestEnvironment.map(_.instances)</td>     @* External Test - instances *@
-                <td style="text-align: center">@config.getProductionEnvironment.map(_.slots)</td>           @* Production - slots *@
-                <td style="text-align: center">@config.getProductionEnvironment.map(_.instances)</td>       @* Production - instances *@
-                <td style="text-align: center">£@config.totalEstimatedCostFormatted(slotsCostPerYear)       @* Estimated costs *@
+                <td style="text-align: center">@config.getIntegrationEnvironment.map(_.deploymentSize.slots)</td>    @* Integration - slots *@
+                <td style="text-align: center">@config.getIntegrationEnvironment.map(_.deploymentSize.instances)</td>               @* Integration - instances *@
+                <td style="text-align: center">@config.getDevelopmentEnvironment.map(_.deploymentSize.slots)</td>                   @* Development - slots *@
+                <td style="text-align: center">@config.getDevelopmentEnvironment.map(_.deploymentSize.instances)</td>               @* Development - instances *@
+                <td style="text-align: center">@config.getQAEnvironment.map(_.deploymentSize.slots)</td>                            @* QA - slots *@
+                <td style="text-align: center">@config.getQAEnvironment.map(_.deploymentSize.instances)</td>                        @* QA - instances *@
+                <td style="text-align: center">@config.getStagingEnvironment.map(_.deploymentSize.slots)</td>                       @* Staging - slots *@
+                <td style="text-align: center">@config.getStagingEnvironment.map(_.deploymentSize.instances)</td>                   @* Staging - instances *@
+                <td style="text-align: center">@config.getExternalTestEnvironment.map(_.deploymentSize.slots)</td>                  @* External Test - slots *@
+                <td style="text-align: center">@config.getExternalTestEnvironment.map(_.deploymentSize.instances)</td>              @* External Test - instances *@
+                <td style="text-align: center">@config.getProductionEnvironment.map(_.deploymentSize.slots)</td>                    @* Production - slots *@
+                <td style="text-align: center">@config.getProductionEnvironment.map(_.deploymentSize.instances)</td>                @* Production - instances *@
+                <td style="text-align: center">£@config.totalEstimatedCostFormatted(costEstimateConfig)                             @* Estimated costs *@
                 </td>
                 <td class="yearly-cost" style="display:none;" id="row@{
                     index
-                }_yearlyCost">@config.totalEstimatedCosts(slotsCostPerYear)
+                }_yearlyCost">@config.totalEstimatedCost(costEstimateConfig)
             </td>
             </tr>
             }

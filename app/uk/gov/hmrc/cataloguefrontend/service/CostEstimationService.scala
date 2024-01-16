@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import cats.implicits._
 import play.api.Configuration
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
+import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
@@ -107,7 +106,7 @@ class CostEstimationService @Inject() (
 
     val dataRows =
       resourceUsages.map { resourceUsage =>
-        val totalSlots = TotalSlots(resourceUsage.values.values.map(_.totalSlots.asInt).fold(0)(_ + _))
+        val totalSlots = TotalSlots(resourceUsage.values.values.map(_.totalSlots.asInt).sum)
         List(s"new Date(${resourceUsage.date.toEpochMilli})", formatForChart(totalSlots))
       }
       .toList
@@ -149,6 +148,7 @@ object CostEstimationService {
   }
 
   final case class DeploymentConfig(
+    serviceName   : String,
     deploymentSize: DeploymentSize,
     environment   : Environment,
     zone          : Zone,
@@ -192,23 +192,26 @@ object CostEstimationService {
     implicit val zf: Reads[Zone]           = Zone.format
 
     def apply(
+      serviceName: String,
       slots:       Int,
       instances:   Int,
       environment: Environment,
       zone:        Zone,
     ): DeploymentConfig =
       DeploymentConfig(
+        serviceName,
         DeploymentSize(slots, instances),
         environment,
         zone,
       )
 
     val reads: Reads[DeploymentConfig] =
-      ( (__ \ "slots"      ).read[Int]
+      ( (__ \ "name"       ).read[String]
+      ~ (__ \ "slots"      ).read[Int]
       ~ (__ \ "instances"  ).read[Int]
       ~ (__ \ "environment").read[Environment]
       ~ (__ \ "zone"       ).read[Zone]
-      )(DeploymentConfig.apply(_, _, _, _))
+      )(DeploymentConfig.apply(_, _, _, _, _))
   }
 
   final case class HistoricEstimatedCostCharts(

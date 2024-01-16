@@ -20,12 +20,9 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.scalatest.MockitoSugar
 import play.api.Configuration
 import play.api.cache.AsyncCacheApi
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-import uk.gov.hmrc.cataloguefrontend.costs.model.{EnvironmentConfig, ServiceDeploymentConfigGrouped}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.model.Environment.{Development, QA}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, ConfigSourceValue, KeyName, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, ConfigSourceValue, KeyName, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -53,7 +50,7 @@ final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Suppor
     "return the deployment configuration for a service in an environment" in {
       stubFor(
         get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service"))
-          .willReturn(aResponse().withBody("""[{ "slots": 11, "instances": 3, "environment": "production", "zone": "protected" }]"""))
+          .willReturn(aResponse().withBody("""[{ "name" : "test1", "slots": 11, "instances": 3, "environment": "production", "zone": "protected" }]"""))
       )
 
       val deploymentConfig =
@@ -61,7 +58,7 @@ final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Suppor
           .deploymentConfig(Some("some-service"), Some(Environment.Production))
           .futureValue
 
-      deploymentConfig.headOption shouldBe Some(DeploymentConfig(DeploymentSize(slots = 11, instances = 3), environment = Environment.Production, zone = Zone.Protected))
+      deploymentConfig.headOption shouldBe Some(DeploymentConfig("test1", DeploymentSize(slots = 11, instances = 3), environment = Environment.Production, zone = Zone.Protected))
     }
 
     "return None when the deployment configuration cannot be found" in {
@@ -77,90 +74,6 @@ final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Suppor
 
       deploymentConfig.headOption shouldBe None
     }
-  }
-
-  "searchDeploymentConfigGrouped" should {
-    "return grouped deployment config without params" in {
-      stubFor(
-        get(urlEqualTo("/service-configs/deployment-config-grouped"))
-          .willReturn(aResponse().withBody("""[
-              | {
-              |     "_id": "testFrontend",
-              |     "configs": [
-              |         {
-              |             "environment": "development",
-              |             "zone": "public",
-              |             "type": "frontend",
-              |             "slots": 3,
-              |             "instances": 1
-              |         },
-              |         {
-              |             "environment": "qa",
-              |             "zone": "public",
-              |             "type": "frontend",
-              |             "slots": 2,
-              |             "instances": 2
-              |         }
-              |     ]
-              |    }
-              |]""".stripMargin))
-      )
-
-
-      val expectedResult = Seq(
-        ServiceDeploymentConfigGrouped(
-          "testFrontend",
-          Seq(
-            EnvironmentConfig(Development, 3, 1),
-            EnvironmentConfig(QA, 2, 2)
-          )
-        )
-      )
-
-      serviceConfigsConnector.searchDeploymentConfigGrouped().futureValue shouldBe expectedResult
-    }
-
-    "return grouped deployment config with params" in {
-      stubFor(
-        get(urlEqualTo("/service-configs/deployment-config-grouped?serviceName=testName&teamName=testTeam&repoType=Service&sort=testSort"))
-          .willReturn(aResponse().withBody(
-            """[
-              | {
-              |     "_id": "testFrontend",
-              |     "configs": [
-              |         {
-              |             "environment": "development",
-              |             "zone": "public",
-              |             "type": "frontend",
-              |             "slots": 3,
-              |             "instances": 1
-              |         },
-              |         {
-              |             "environment": "qa",
-              |             "zone": "public",
-              |             "type": "frontend",
-              |             "slots": 2,
-              |             "instances": 2
-              |         }
-              |     ]
-              |    }
-              |]""".stripMargin))
-      )
-
-
-      val expectedResult = Seq(
-        ServiceDeploymentConfigGrouped(
-          "testFrontend",
-          Seq(
-            EnvironmentConfig(Development, 3, 1),
-            EnvironmentConfig(QA, 2, 2)
-          )
-        )
-      )
-
-      serviceConfigsConnector.searchDeploymentConfigGrouped(Some("testName"), Some("testTeam"), Some(RepoType.Service), Some("testSort")).futureValue shouldBe expectedResult
-    }
-
   }
 
   "configSearch" should {

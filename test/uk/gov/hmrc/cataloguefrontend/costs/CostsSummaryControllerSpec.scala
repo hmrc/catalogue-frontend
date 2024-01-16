@@ -55,7 +55,7 @@ class CostsSummaryControllerSpec extends AnyWordSpec with FakeApplicationBuilder
     when(mockTeamsAndRepositoriesConnector.allTeams()(any()))
       .thenReturn(Future.successful(Seq.empty))
 
-    when(mockServiceConfigConnector.searchDeploymentConfigGrouped(any(), any(), any(), any())(any()))
+    when(mockServiceConfigConnector.deploymentConfig(any(), any(), any(), any())(any()))
       .thenReturn(Future.successful(Seq.empty))
 
     val request = FakeRequest(GET, routes.CostsSummaryController.onPageLoad().url)
