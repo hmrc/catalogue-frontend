@@ -64,5 +64,4 @@ class CostExplorerControllerSpec extends AnyWordSpec with FakeApplicationBuilder
 
     status(result) shouldBe 200
   }
-
 }

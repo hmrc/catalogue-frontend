@@ -93,12 +93,12 @@ final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Suppor
 
       serviceConfigsConnector
         .configSearch(
-          teamName = None,
-          environments = Seq(Environment.Production),
-          serviceType = None,
-          key = Some("test.key"),
-          keyFilterType = KeyFilterType.Contains,
-          value = Some("testValue"),
+          teamName        = None,
+          environments    = Seq(Environment.Production),
+          serviceType     = None,
+          key             = Some("test.key"),
+          keyFilterType   = KeyFilterType.Contains,
+          value           = Some("testValue"),
           valueFilterType = ValueFilterType.EqualTo
         )
         .futureValue shouldBe (
