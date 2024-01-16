@@ -20,7 +20,6 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment._
@@ -52,7 +51,7 @@ class CostsSummaryController @Inject() (
 
       for {
         teams   <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
-        configs <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.trim.isEmpty), repoType = Some(Service))
+        configs <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.trim.isEmpty))
       } yield {
         val viewModel: Seq[ServiceAndEnvironment] = ServiceAndEnvironment(configs.groupBy(_.serviceName))
         Ok(costsSummaryPage(viewModel, teams, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
