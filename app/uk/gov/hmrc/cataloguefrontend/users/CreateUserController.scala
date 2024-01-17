@@ -51,8 +51,8 @@ class CreateUserController @Inject()(
   private def createUserPermission(teamName: TeamName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("MANAGE"))
 
-  def requestSent(givenName: String, familyName: String, isServiceAccount: Boolean): Action[AnyContent] = Action { implicit request =>
-    Ok(createUserRequestSentPage(givenName, familyName, isServiceAccount))
+  def requestSent(isServiceAccount: Boolean, givenName: String, familyName: String): Action[AnyContent] = Action { implicit request =>
+    Ok(createUserRequestSentPage(isServiceAccount, givenName, familyName))
   }
 
   def createUserLanding(isServiceAccount: Boolean): Action[AnyContent] =
@@ -89,10 +89,8 @@ class CreateUserController @Inject()(
           res  <- EitherT.right[Result](userManagementConnector.createUser(
                   form.copy(isServiceAccount = isServiceAccount)
                   ))
-
           _    = logger.info(s"user management result: $res:")
-
-        } yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(form.givenName, form.familyName, isServiceAccount))
+        } yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(isServiceAccount, form.givenName, form.familyName))
       ).merge
     }
 
@@ -125,9 +123,9 @@ object CreateUserForm {
 }
 
 object CreateUserConstraints {
-  def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] = {
-    Constraint(constraintName)({ toBeValidated => if (constraint(toBeValidated)) Valid else Invalid(error) })
-  }
+  def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] =
+    Constraint(constraintName){ toBeValidated => if (constraint(toBeValidated)) Valid else Invalid(error) }
+
 
   def nameConstraints(fieldName: String): Seq[Constraint[String]] = {
     val nameLengthValidation : String => Boolean = str => str.length >= 2 && str.length <= 30

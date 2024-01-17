@@ -155,12 +155,9 @@ class CreateUserControllerSpec
         )
 
       status(result) shouldBe 303
-      redirectLocation(result) shouldBe Some(routes.CreateUserController.requestSent(user.givenName, user.familyName, isServiceAccount = false).url)
+      redirectLocation(result) shouldBe Some(routes.CreateUserController.requestSent(isServiceAccount = false, user.givenName, user.familyName).url)
 
     }
-  }
-
-  "CreateUserController.createNonHumanUser" should {
 
     "redirect to service user creation request sent page when the form is submitted successfully" in new Setup {
 
@@ -187,7 +184,7 @@ class CreateUserControllerSpec
         )
 
       status(result) shouldBe 303
-      redirectLocation(result) shouldBe Some(routes.CreateUserController.requestSent(user.givenName, user.familyName, isServiceAccount = true).url)
+      redirectLocation(result) shouldBe Some(routes.CreateUserController.requestSent( isServiceAccount = true, user.givenName, user.familyName).url)
 
     }
   }

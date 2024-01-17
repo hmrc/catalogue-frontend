@@ -21,9 +21,10 @@
 @this(viewMessages: ViewMessages)
 
 
-@( givenName       : String,
-   familyName      : String,
-   isServiceAccount: Boolean
+@(
+  isServiceAccount: Boolean,
+  givenName       : String,
+  familyName      : String
 )(
   implicit
   request   : RequestHeader

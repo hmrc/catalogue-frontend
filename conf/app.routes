@@ -30,8 +30,7 @@ GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefro
 
 GET        /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean = false)
 POST       /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean = false)
-GET        /create-user/:givenName/:familyName          uk.gov.hmrc.cataloguefrontend.users.CreateUserController.requestSent(givenName: String, familyName: String, isServiceAccount: Boolean)
-
+GET        /create-user/2                               uk.gov.hmrc.cataloguefrontend.users.CreateUserController.requestSent(isServiceAccount: Boolean, givenName: String, familyName: String)
 GET        /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean = true)
 POST       /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean = true)
 
