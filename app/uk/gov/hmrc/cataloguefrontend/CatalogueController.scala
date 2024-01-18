@@ -308,6 +308,7 @@ class CatalogueController @Inject() (
                                password => EitherT.rightT(password)
                              )
         user            =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
+        _               =  println(s"-----------------------------> ${AuthController.SESSION_USERLOGS}")
         _               =  logger.info(s"User $user has triggered a password reset for prototype: $repoName")
         response        <- EitherT(buildDeployApiConnector.changePrototypePassword(repoName, newPassword))
                              .leftSemiflatMap(errorMsg => renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form().withGlobalError(errorMsg) , None).map(BadRequest(_)))

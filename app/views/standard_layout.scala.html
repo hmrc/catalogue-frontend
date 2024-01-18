@@ -26,6 +26,7 @@
 @import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 @import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 
+@import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 @(
   title      : String = "Home",
   active     : String = "",
@@ -218,6 +219,7 @@
                           <a id="sign-in" class="nav-link" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signIn(targetUrl = if (request.target.uriString == "/") None else Some(RedirectUrl(request.target.uriString)))">Sign in</a>
                       </li>
                     }
+                    @request.session.get(AuthController.SESSION_USERLOGS)
                 </ul>
             </div>
         </nav>
