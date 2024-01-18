@@ -92,7 +92,7 @@
                     <select class="form-select" id="teamInput" name="teamName">
                         @teamNames.map { tn =>
                             <option value="@{tn.asString}"
-                                    @if(form.data.getOrElse("teamName", "").equals(tn)) { selected="selected" }
+                                    @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" }
                             >@tn.asString</option>
                         }
                     </select>
