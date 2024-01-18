@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.users
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Reads, __}
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{JsObject, Json, OWrites, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 final case class Role(asString: String) {
@@ -115,5 +115,66 @@ object User {
     ~ ( __ \ "teamNames"     ).read[Seq[TeamName]](Reads.seq(TeamName.format))
       )(User.apply _)
   }
+}
+
+sealed trait Organisation { def asString: String }
+
+object Organisation {
+  case object Mdtp  extends Organisation { val asString = "MDTP"  }
+  case object Voa   extends Organisation { val asString = "VOA"   }
+  case object Other extends Organisation { val asString = "Other" }
+
+  val values: List[Organisation] =
+    List(Mdtp, Voa, Other)
+}
+
+case class CreateUserRequest(
+  givenName         : String,
+  familyName        : String,
+  organisation      : String,
+  contactEmail      : String,
+  contactComments   : String,
+  team              : TeamName,
+  isReturningUser   : Boolean,
+  isTransitoryUser  : Boolean,
+  isServiceAccount  : Boolean,
+  vpn               : Boolean,
+  jira              : Boolean,
+  confluence        : Boolean,
+  googleApps        : Boolean,
+  environments      : Boolean
+)
+
+
+object CreateUserRequest {
+
+  implicit val writes: OWrites[CreateUserRequest] =
+    OWrites.transform(
+      ( (__ \ "givenName"               ).write[String]
+      ~ (__ \ "familyName"              ).write[String]
+      ~ (__ \ "organisation"            ).write[String]
+      ~ (__ \ "contactEmail"            ).write[String]
+      ~ (__ \ "contactComments"         ).write[String]
+      ~ (__ \ "team"                    ).write[TeamName](TeamName.format)
+      ~ (__ \ "isReturningUser"         ).write[Boolean]
+      ~ (__ \ "isTransitoryUser"        ).write[Boolean]
+      ~ (__ \ "isServiceAccount"        ).write[Boolean]
+      ~ (__ \ "access" \ "vpn"          ).write[Boolean]
+      ~ (__ \ "access" \ "jira"         ).write[Boolean]
+      ~ (__ \ "access" \ "confluence"   ).write[Boolean]
+      ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
+      ~ (__ \ "access" \ "environments" ).write[Boolean]
+      )(unlift(CreateUserRequest.unapply))
+    ) { (req, json) =>
+      val givenName   = if (req.isServiceAccount) s"service_${req.givenName}" else req.givenName
+      val displayName = if (req.isServiceAccount) s"$givenName ${req.familyName}" else s"${givenName.capitalize} ${req.familyName.capitalize}"
+      json ++ Json.obj(
+        "givenName"          -> givenName,
+        "username"           -> s"$givenName.${req.familyName}",
+        "displayName"        -> displayName,
+        "isExistingLDAPUser" -> false,
+        "access"             -> ((json \ "access").as[JsObject] ++ Json.obj("ldap" -> true))
+      )
+    }
 }
 

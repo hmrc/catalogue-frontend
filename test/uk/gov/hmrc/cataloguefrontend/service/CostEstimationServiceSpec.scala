@@ -47,12 +47,12 @@ final class CostEstimationServiceSpec
     "produce a cost estimate for a service in all environments in which it's deployed" in {
       val stubs =
         Seq(
-          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.Development,  zone = Zone.Protected),
-          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.Integration,  zone = Zone.Protected),
-          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.QA,           zone = Zone.Protected),
-          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.Staging,      zone = Zone.Protected),
-          DeploymentConfig(DeploymentSize(3, 1),  environment = Environment.ExternalTest, zone = Zone.Protected),
-          DeploymentConfig(DeploymentSize(11, 3), environment = Environment.Production,   zone = Zone.Protected)
+          DeploymentConfig("test1", DeploymentSize(3, 1),  environment = Environment.Development,  zone = Zone.Protected),
+          DeploymentConfig("test2", DeploymentSize(3, 1),  environment = Environment.Integration,  zone = Zone.Protected),
+          DeploymentConfig("test3", DeploymentSize(3, 1),  environment = Environment.QA,           zone = Zone.Protected),
+          DeploymentConfig("test4", DeploymentSize(3, 1),  environment = Environment.Staging,      zone = Zone.Protected),
+          DeploymentConfig("test5", DeploymentSize(3, 1),  environment = Environment.ExternalTest, zone = Zone.Protected),
+          DeploymentConfig("test6", DeploymentSize(11, 3), environment = Environment.Production,   zone = Zone.Protected)
         )
 
       val serviceConfigsConnector =

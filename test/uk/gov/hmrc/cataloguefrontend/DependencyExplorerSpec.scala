@@ -65,7 +65,7 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
       document.select("#search-results").select("tbody tr").get(0).select("td.teams a").text() shouldBe "teamA"
       document.select("#search-results").select("tbody tr").get(0).select("td.teams a").attr("href") shouldBe "/teams/teamA"
       document.select("#search-results").select("tbody tr").get(1).select("td.teams a").text() shouldBe "Shared by 9 teams"
-      document.select("#search-results").select("tbody tr").get(1).select("td.teams a").attr("href") shouldBe "/service/teams-amd-repositories#teams"
+      document.select("#search-results").select("tbody tr").get(1).select("td.teams a").attr("href") shouldBe "/service/teams-amd-repositories#owning-team"
     }
   }
 }

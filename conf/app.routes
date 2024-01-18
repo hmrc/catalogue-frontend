@@ -28,6 +28,11 @@ POST       /deploy-service/3                            uk.gov.hmrc.cataloguefro
 GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 
+GET        /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean = false)
+POST       /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean = false)
+GET        /create-user/2                               uk.gov.hmrc.cataloguefrontend.users.CreateUserController.requestSent(isServiceAccount: Boolean, givenName: String, familyName: String)
+GET        /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean = true)
+POST       /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean = true)
 
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
@@ -80,6 +85,8 @@ GET        /config/search                               uk.gov.hmrc.cataloguefro
 GET        /config/search/results                       uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchResults(configKey: Option[String] ?= None)
 GET        /config/warnings/search                      uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningLanding()
 GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningResults()
+
+GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.costs.CostsSummaryController.costExplorer(team: Option[String] ?= None)
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list(selector: Option[String] ?= None)
 

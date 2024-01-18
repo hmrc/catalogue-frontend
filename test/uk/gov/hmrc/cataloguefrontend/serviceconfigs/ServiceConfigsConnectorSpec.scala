@@ -21,8 +21,8 @@ import org.mockito.scalatest.MockitoSugar
 import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, ConfigSourceValue, KeyName, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, ConfigSourceValue, KeyName, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -30,11 +30,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-final class ServiceConfigsConnectorSpec
-  extends UnitSpec
-     with HttpClientV2Support
-     with WireMockSupport
-     with MockitoSugar {
+final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Support with WireMockSupport with MockitoSugar {
 
   val servicesConfig =
     new ServicesConfig(
@@ -54,7 +50,7 @@ final class ServiceConfigsConnectorSpec
     "return the deployment configuration for a service in an environment" in {
       stubFor(
         get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service"))
-          .willReturn(aResponse().withBody("""[{ "slots": 11, "instances": 3, "environment": "production", "zone": "protected" }]"""))
+          .willReturn(aResponse().withBody("""[{ "name" : "test1", "slots": 11, "instances": 3, "environment": "production", "zone": "protected" }]"""))
       )
 
       val deploymentConfig =
@@ -62,7 +58,7 @@ final class ServiceConfigsConnectorSpec
           .deploymentConfig(Some("some-service"), Some(Environment.Production))
           .futureValue
 
-      deploymentConfig.headOption shouldBe Some(DeploymentConfig(DeploymentSize(slots = 11, instances = 3), environment = Environment.Production, zone = Zone.Protected))
+      deploymentConfig.headOption shouldBe Some(DeploymentConfig("test1", DeploymentSize(slots = 11, instances = 3), environment = Environment.Production, zone = Zone.Protected))
     }
 
     "return None when the deployment configuration cannot be found" in {
@@ -70,7 +66,7 @@ final class ServiceConfigsConnectorSpec
         get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service"))
           .willReturn(aResponse().withBody("""[]"""))
       )
-      
+
       val deploymentConfig =
         serviceConfigsConnector
           .deploymentConfig(Some("some-service"), Some(Environment.Production))
@@ -84,8 +80,7 @@ final class ServiceConfigsConnectorSpec
     "return AppliedConfig" in {
       stubFor(
         get(urlEqualTo("/service-configs/search?environment=production&key=test.key&keyFilterType=contains&value=testValue&valueFilterType=equalTo"))
-          .willReturn(aResponse().withBody(
-            """[
+          .willReturn(aResponse().withBody("""[
               |  {
               |    "serviceName": "test-service",
               |    "key": "test.key",
@@ -98,22 +93,25 @@ final class ServiceConfigsConnectorSpec
 
       serviceConfigsConnector
         .configSearch(
-          teamName        = None
-        , environments    = Seq(Environment.Production)
-        , serviceType     = None
-        , key             = Some("test.key")
-        , keyFilterType   = KeyFilterType.Contains
-        , value           = Some("testValue")
-        , valueFilterType = ValueFilterType.EqualTo
-       ).futureValue shouldBe (
-          Right(Seq(
+          teamName        = None,
+          environments    = Seq(Environment.Production),
+          serviceType     = None,
+          key             = Some("test.key"),
+          keyFilterType   = KeyFilterType.Contains,
+          value           = Some("testValue"),
+          valueFilterType = ValueFilterType.EqualTo
+        )
+        .futureValue shouldBe (
+        Right(
+          Seq(
             AppliedConfig(
               ServiceName("test-service"),
               KeyName("test.key"),
               Map(Environment.Production -> ConfigSourceValue("some-source", Some("some-url"), "testValue"))
             )
-          ))
+          )
         )
+      )
     }
   }
 }
