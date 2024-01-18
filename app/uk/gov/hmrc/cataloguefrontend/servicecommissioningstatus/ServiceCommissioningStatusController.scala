@@ -25,11 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
-import views.html.error_404_template
 import views.html.servicecommissioningstatus.{SearchServiceCommissioningStatusPage, ServiceCommissioningStatusPage}
-
-import cats.data.OptionT
-import cats.implicits._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

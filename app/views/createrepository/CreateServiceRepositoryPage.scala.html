@@ -14,12 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepositoryType
-@import views.html.partials.{form_global_errors, form_fields_warnings}
-@import views.html.helper.select
+@import views.html.partials.form_global_errors
 
 @this(viewMessages: ViewMessages)
 
@@ -40,16 +38,18 @@
         @form_global_errors(form)
 
         @helper.form(
-            action           =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createServiceRepository(),
-            Symbol("id")     -> "createRepoForm",
-            Symbol("method") -> "post",
+            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createServiceRepository(),
+            Symbol("id")         -> "createRepoForm",
+            Symbol("method")     -> "post",
+            Symbol("class")      -> "needs-validation",
+            Symbol("novalidate") -> "novalidate"
         ) {
             @csrfFormField
 
             <div class="form-group row mb-2">
                 <div class="col-md-6 d-grid gap-2">
                     <label class="fw-bold" for="repoNameInput">Repository name:</label>
-                    <div class="mb-2">
+                    <div id="repositoryName" class="mb-2">
                         <div class="mb-2">
                             You must comply with established naming conventions when naming your microservice:
                         </div>
@@ -66,17 +66,15 @@
                         </ul>
                         <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
                     </div>
-                    @form_fields_warnings(form,"repositoryName")
                 </div>
             </div>
             <div class="form-group row mb-4">
                 <div class="col-md-6">
-                    <div style = "white-space: nowrap;" class="mb-2">
+                    <div id="makePrivate" style = "white-space: nowrap;" class="mb-2">
                         <label class="fw-bold" for="makePrivateInput">Make Private: </label>
                         <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate" value=true
                             @form.data.get("makePrivate").map{ _ => checked }
                         >
-                        @form_fields_warnings(form,"makePrivate")
                     </div>
                     <p>You must decide now if you will code in the open, or privately. If you select ‘MAKE_PRIVATE’ the GitHub repository you create will only be visible within HMRC.
                         Private coding usually relates to data security. Open repositories are visible to the public.
@@ -84,7 +82,7 @@
                 </div>
             </div>
             <div class="form-group row">
-                <div class="col-md-6 mb-3">
+                <div id="teamName" class="col-md-6 mb-3">
                     <label class="fw-bold" for="teamInput">Team name:</label>
                     @if(teamNames.nonEmpty){
                         <p class="mt-2">Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
@@ -96,16 +94,14 @@
                     <select class="form-select" id="teamInput" name="teamName">
                         @teamNames.map { tn =>
                             <option value="@{tn.asString}"
-                                    @if(form.data.getOrElse("teamName", "").equals(tn)) { selected="selected" }
+                                    @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" }
                             >@tn.asString</option>
                         }
                     </select>
-                    @form_fields_warnings(form,"teamName")
-
                 </div>
             </div>
             <div class="form-group row mb-3">
-                <div class="col-md-6">
+                <div id="repoType" class="col-md-6">
                     <label class="fw-bold" for="typeInput">Type:</label>
                     <p class="mt-2">Repositories automatically include HMRC templating, depending on the type of microservice they support. Choose how you would like this repository to be set up.
                     </p>
@@ -116,7 +112,6 @@
                          >@rt.asString</option>
                         }
                     </select>
-                    @form_fields_warnings(form,"repoType")
                 </div>
             </div>
             <div>
@@ -124,4 +119,24 @@
             </div>
        }
     </section>
+
+    <script @CSPNonce.attr>
+            // Form validation using bootstrap
+            let errors = @Html(form.errorsAsJson.toString());
+
+            for (const [key, [fieldError]] of Object.entries(errors)) {
+                const field = document.getElementById(key);
+                const input = field?.querySelector('input, select');
+
+                if (input) {
+                    input.classList.add('is-invalid');
+
+                    const feedbackDiv = document.createElement('div');
+                    feedbackDiv.classList.add('invalid-feedback');
+                    feedbackDiv.innerHTML = fieldError;
+
+                    field.appendChild(feedbackDiv);
+                }
+            }
+    </script>
 }
