@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{Team, TeamsAndRepositoriesConnector, UserManagementConnector}
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Resource, ResourceType, Retrieval}
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.error_404_template
 import views.html.users.{UserInfoPage, UserListPage}
@@ -66,7 +66,7 @@ class UsersController @Inject()(
           retrieval   <- EitherT.liftF(
                            auth.verify(Retrieval.locations(
                              resourceType = Some(ResourceType("catalogue-frontend")),
-                             action       = Some(IAAction("MANAGE"))
+                             action       = Some(IAAction("CREATE_USER"))
                            ))
                          )
           isTeamAdmin =  retrieval.exists(_.nonEmpty)

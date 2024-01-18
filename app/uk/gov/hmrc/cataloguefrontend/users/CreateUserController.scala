@@ -49,7 +49,7 @@ class CreateUserController @Inject()(
   private val logger = Logger(getClass)
 
   private def createUserPermission(teamName: TeamName): Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("MANAGE"))
+    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_USER"))
 
   def requestSent(isServiceAccount: Boolean, givenName: String, familyName: String): Action[AnyContent] = Action { implicit request =>
     Ok(createUserRequestSentPage(isServiceAccount, givenName, familyName))
@@ -58,7 +58,7 @@ class CreateUserController @Inject()(
   def createUserLanding(isServiceAccount: Boolean): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
     ).apply { implicit request =>
       Ok(createUserPage(CreateUserForm.form, cleanseUserTeams(request.retrieval), Organisation.values, isServiceAccount))
     }
@@ -66,7 +66,7 @@ class CreateUserController @Inject()(
   def createUser(isServiceAccount: Boolean): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
     ).async { implicit request =>
       (
         for {
