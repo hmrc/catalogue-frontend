@@ -16,9 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.auth
 
+import play.api.libs.json.Json
+
+import scala.concurrent.{ExecutionContext, Future}
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Call, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
+import uk.gov.hmrc.cataloguefrontend.connector.PlatopsAuditingConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, UserLog}
+import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
@@ -27,7 +32,8 @@ import uk.gov.hmrc.play.bootstrap.binders.{OnlyRelative, RedirectUrl}
 @Singleton
 class AuthController @Inject() (
   auth: FrontendAuthComponents,
-  mcc : MessagesControllerComponents
+  mcc : MessagesControllerComponents,
+  platopsAuditingConnector: PlatopsAuditingConnector
 ) extends FrontendController(mcc) {
   import AuthController._
 
@@ -48,7 +54,8 @@ class AuthController @Inject() (
           .fold(appRoutes.CatalogueController.index.url)(_.url)
       )
       .addingToSession(
-        AuthController.SESSION_USERNAME -> request.retrieval.value
+        AuthController.SESSION_USERNAME -> request.retrieval.value,
+        (AuthController.SESSION_USERLOGS -> platopsAuditingConnector.userLogs(SESSION_USERNAME).toString)
       )
     }
 
@@ -60,6 +67,7 @@ class AuthController @Inject() (
 
 object AuthController {
   val SESSION_USERNAME = "username"
+  val SESSION_USERLOGS = "userLogs"
 
     // to avoid cyclical urls
   private[cataloguefrontend] def sanitize(targetUrl: Option[RedirectUrl]): Option[RedirectUrl] = {
