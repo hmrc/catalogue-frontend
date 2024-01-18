@@ -119,7 +119,7 @@ class DeployServiceControllerSpec
       when(mockServiceConfigsService.configWarnings(eqTo(ServiceName("some-service")), eqTo(List(Environment.QA)), eqTo(Some(Version("0.3.0"))), eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(someConfigWarning)))
       when(mockVulnerabilitiesConnector.vulnerabilitySummaries(eqTo(None), eqTo(Some(CurationStatus.ActionRequired)), eqTo(Some("some-service")), eqTo(Some(Version("0.3.0"))), eqTo(None), eqTo(None))(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq(someVulnerabilities)))
+        .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
 
       val futResult = underTest.step2()(
         FakeRequest()
