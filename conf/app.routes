@@ -28,6 +28,11 @@ POST       /deploy-service/3                            uk.gov.hmrc.cataloguefro
 GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 
+GET        /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean = false)
+POST       /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean = false)
+GET        /create-user/2                               uk.gov.hmrc.cataloguefrontend.users.CreateUserController.requestSent(isServiceAccount: Boolean, givenName: String, familyName: String)
+GET        /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean = true)
+POST       /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean = true)
 
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
