@@ -122,7 +122,7 @@ class ShutterWizardController @Inject() (
       envs          =  Environment.values
       statusValues  =  ShutterStatusValue.values
       shutterGroups <- shutterService.shutterGroups
-      back          =  appRoutes.ShutterOverviewController.allStates(shutterType)
+      back          =  appRoutes.ShutterOverviewController.allStatesForEnv(shutterType, env)
     } yield page1(form, shutterType, env, shutterStates, statusValues, shutterGroups, back)
 
   def step1Get(serviceName: Option[String]) =
@@ -164,7 +164,7 @@ class ShutterWizardController @Inject() (
   def statusFor(shutterStates: Seq[ShutterState])(optServiceName: Option[String]): Option[ShutterStatusValue] =
     for {
       serviceName <- optServiceName
-      status      <- shutterStates.find(_.name == serviceName).map(_.status.value)
+      status      <- shutterStates.find(_.serviceName.asString == serviceName).map(_.status.value)
     } yield
       status match {
         case ShutterStatusValue.Shuttered   => ShutterStatusValue.Unshuttered

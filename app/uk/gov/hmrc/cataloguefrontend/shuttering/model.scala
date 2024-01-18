@@ -22,7 +22,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 object ShutterEnvironment {
   val format: Format[Environment] =
     new Format[Environment] {
@@ -154,11 +154,19 @@ object ShutterStatus {
 }
 
 case class ShutterState(
-  name       : String,
+  _serviceName: Option[ServiceName],
+  context    : Option[String],
   shutterType: ShutterType,
   environment: Environment,
   status     : ShutterStatus
-)
+) {
+
+  val serviceName: ServiceName = shutterType match {
+    case ShutterType.Frontend => ServiceName(_serviceName.getOrElse(sys.error("Shutter Type: service does not have a service name")).asString)
+    case t                    => ServiceName(_serviceName.map(_.asString).orElse(context).getOrElse(sys.error(s"Shutter Type: ${t.asString} does not have a service name or context")))
+  }
+
+}
 
 object ShutterState {
 
@@ -166,7 +174,8 @@ object ShutterState {
     implicit val stf = ShutterType.format
     implicit val ef  = ShutterEnvironment.format
     implicit val ssf = ShutterStatus.format
-    ( (__ \ "name"       ).read[String]
+    ( (__ \ "name"       ).readNullable[String].map(_.map(ServiceName.apply))
+    ~ (__ \ "context"    ).readNullable[String]
     ~ (__ \ "type"       ).read[ShutterType]
     ~ (__ \ "environment").read[Environment]
     ~ (__ \ "status"     ).read[ShutterStatus]
