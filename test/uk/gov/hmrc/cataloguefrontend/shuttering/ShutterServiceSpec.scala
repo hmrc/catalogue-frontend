@@ -29,6 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 
 class ShutterServiceSpec
   extends AnyWordSpec
@@ -39,21 +40,24 @@ class ShutterServiceSpec
 
   val mockShutterStates = Seq(
       ShutterState(
-        name        = "abc-frontend"
-      , shutterType = ShutterType.Frontend
-      , environment = Environment.Production
-      , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+        _serviceName = Some(ServiceName("abc-frontend"))
+      , context      = None
+      , shutterType  = ShutterType.Frontend
+      , environment  = Environment.Production
+      , status       = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       )
     , ShutterState(
-        name        = "zxy-frontend"
-      , shutterType = ShutterType.Frontend
-      , environment = Environment.Production
-      , status      = ShutterStatus.Unshuttered
+        _serviceName = Some(ServiceName("zxy-frontend"))
+      , context      = None
+      , shutterType  = ShutterType.Frontend
+      , environment  = Environment.Production
+      , status       = ShutterStatus.Unshuttered
       )
     , ShutterState(
-        name        = "ijk-frontend"
-      , shutterType = ShutterType.Frontend
-      , environment = Environment.Production
+        _serviceName = Some(ServiceName("ijk-frontend"))
+      , context      = None
+      , shutterType  = ShutterType.Frontend
+      , environment  = Environment.Production
       , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       )
     )
@@ -98,11 +102,14 @@ class ShutterServiceSpec
       when(boot.mockShutterConnector.latestShutterEvents(ShutterType.Frontend, Environment.Production))
         .thenReturn(Future.successful(mockEvents))
 
-      val Seq(a,b,c) = boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production).futureValue
-
-      a.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
-      b.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
-      c.status shouldBe ShutterStatus.Unshuttered
+      boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production).futureValue match {
+        case Seq((a, _), (b, _), (c, _)) =>
+          a.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+          b.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+          c.status shouldBe ShutterStatus.Unshuttered
+        case other =>
+          other.size shouldBe(3)
+      }
     }
   }
 
