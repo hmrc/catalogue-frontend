@@ -74,7 +74,7 @@
                     <div class="col-5">
                         @select(
                               field                 =  form("allServices")
-                            , options               =  shutterStates.map(s => (s.name, s.name))
+                            , options               =  shutterStates.map(_.serviceName).map(sn => (sn.asString, sn.asString))
                             , Symbol("_label")      -> s"Available ${shutterType}s"
                             , Symbol("_labelClass") -> "form-label"
                             , Symbol("multiple")    -> "multiple"
