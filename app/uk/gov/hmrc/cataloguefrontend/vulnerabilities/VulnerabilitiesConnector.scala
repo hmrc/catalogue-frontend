@@ -50,14 +50,7 @@ class VulnerabilitiesConnector @Inject() (
     implicit val vsrs: Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
     httpClientV2
       .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&service=$service&version=${version.map(_.original)}&team=$team&component=$component")
-      .execute[Either[UpstreamErrorResponse, HttpResponse]]
-      .flatMap {
-        case Right(res)                                      => Future.successful(Some(
-                                                                  Json.parse(res.body).as[Seq[VulnerabilitySummary]]
-                                                                ))
-        case Left(UpstreamErrorResponse.WithStatusCode(404)) => Future.successful(None)
-        case Left(err)                                       => Future.failed(new RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
-      }
+      .execute[Option[Seq[VulnerabilitySummary]]]
   }
 
   def distinctVulnerabilities(service: String)(implicit hc: HeaderCarrier): Future[Option[Int]] = {

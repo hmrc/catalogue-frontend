@@ -97,7 +97,12 @@
         </form>
 
         @maybeSummaries.fold{
-            There is no data yet matching the search criteria.
+            <div>
+                There is no data matching the search criteria.
+            </div>
+            <div>
+                Services need to be already deployed in an environment for those to have associated vulnerabilities.
+            </div>
         }{ summaries =>
             @if(summaries.isEmpty) {
                 No vulnerabilities found matching the search criteria.
