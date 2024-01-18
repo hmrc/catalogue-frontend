@@ -137,7 +137,7 @@
 
             for (const [key, [fieldError]] of Object.entries(errors)) {
                 const field = document.getElementById(key);
-                const input = field?.querySelector('input');
+                const input = field?.querySelector('input, select');
 
                 if (input) {
                     input.classList.add('is-invalid');

@@ -16,12 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
+import cats.data.EitherT
+import cats.implicits._
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.createrepository.{CreatePrototypeRepositoryPage, CreateServiceRepositoryPage, CreateTestRepositoryPage}
@@ -36,7 +40,8 @@ class CreateRepositoryController @Inject()(
    createRepositoryPage     : CreateServiceRepositoryPage,
    createPrototypePage      : CreatePrototypeRepositoryPage,
    createTestRepositoryPage : CreateTestRepositoryPage,
-   buildDeployApiConnector  : BuildDeployApiConnector
+   buildDeployApiConnector  : BuildDeployApiConnector,
+   teamsAndReposConnector   : TeamsAndRepositoriesConnector
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -63,22 +68,28 @@ class CreateRepositoryController @Inject()(
       continueUrl = routes.CreateRepositoryController.createServiceRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ).async { implicit request =>
-      CreateServiceRepoForm.form.bindFromRequest().fold(
+      val userTeams = cleanseUserTeams(request.retrieval)
+      val submittedForm = CreateServiceRepoForm.form.bindFromRequest()
+
+      submittedForm.fold(
         formWithErrors => {
-          val userTeams = cleanseUserTeams(request.retrieval)
           Future.successful(BadRequest(createRepositoryPage(formWithErrors, userTeams, CreateServiceRepositoryType.values)))
         },
         validForm => {
           import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
-          for {
-            _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
-            res <- buildDeployApiConnector.createServiceRepository(validForm)
-          } yield {
-            res match {
-              case Left(errMsg) => logger.info(s"createServiceRepository failed with: $errMsg")
-              case Right(id) => logger.info(s"Bnd api request id: $id:")
-            }
-            Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+          (for {
+            _   <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
+            _   <- EitherT(verifyGithubTeamExists(validForm.teamName))
+            res <- EitherT(buildDeployApiConnector.createServiceRepository(validForm)).leftMap[CreateRepoError](ApiError)
+          } yield res).value map {
+            case Right(id) =>
+              logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
+              Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+            case Left(ApiError(msg)) =>
+              logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} failed with message: $msg")
+              BadRequest(createRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $msg"), userTeams, CreateServiceRepositoryType.values))
+            case Left(ValidationError(msg)) =>
+              BadRequest(createRepositoryPage(submittedForm.withError("teamName", msg), userTeams, CreateServiceRepositoryType.values))
           }
         }
       )
@@ -90,7 +101,7 @@ class CreateRepositoryController @Inject()(
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
       val userTeams = cleanseUserTeams(request.retrieval)
-      Ok(createPrototypePage(CreateServiceRepoForm.form, userTeams))
+      Ok(createPrototypePage(CreatePrototypeRepoForm.form, userTeams))
     }
   }
   def createPrototypeRepository(): Action[AnyContent] =
@@ -98,22 +109,28 @@ class CreateRepositoryController @Inject()(
       continueUrl = routes.CreateRepositoryController.createPrototypeRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ).async { implicit request =>
-      CreatePrototypeRepoForm.form.bindFromRequest().fold(
+      val userTeams = cleanseUserTeams(request.retrieval)
+      val submittedForm = CreatePrototypeRepoForm.form.bindFromRequest()
+
+      submittedForm.fold(
         formWithErrors => {
-          val userTeams = cleanseUserTeams(request.retrieval)
           Future.successful(BadRequest(createPrototypePage(formWithErrors, userTeams)))
         },
         validForm => {
           import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
-          for {
-            _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
-            res <- buildDeployApiConnector.createPrototypeRepository(validForm)
-          } yield {
-            res match {
-              case Left(errMsg) => logger.info(s"createPrototypeRepository failed with: $errMsg")
-              case Right(id)    => logger.info(s"Bnd api request id: $id:")
-            }
-            Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+          (for {
+            _   <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
+            _   <- EitherT(verifyGithubTeamExists(validForm.teamName))
+            res <- EitherT(buildDeployApiConnector.createPrototypeRepository(validForm)).leftMap[CreateRepoError](ApiError)
+          } yield res).value map {
+            case Right(id)    =>
+              logger.info(s"CreatePrototypeRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
+              Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+            case Left(ApiError(msg)) =>
+              logger.info(s"CreatePrototypeRepository request for ${validForm.repositoryName} failed with message: $msg")
+              BadRequest(createPrototypePage(submittedForm.withGlobalError(s"Repository creation failed! Error: $msg"), userTeams))
+            case Left(ValidationError(msg)) =>
+              BadRequest(createPrototypePage(submittedForm.withError("teamName", msg), userTeams))
           }
         }
       )
@@ -133,25 +150,41 @@ class CreateRepositoryController @Inject()(
       continueUrl = routes.CreateRepositoryController.createTestRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ).async { implicit request =>
-      CreateTestRepoForm.form.bindFromRequest().fold(
+      val userTeams = cleanseUserTeams(request.retrieval)
+      val submittedForm = CreateTestRepoForm.form.bindFromRequest()
+
+      submittedForm.fold(
         formWithErrors => {
-          val userTeams = cleanseUserTeams(request.retrieval)
           Future.successful(BadRequest(createTestRepositoryPage(formWithErrors, userTeams, CreateTestRepositoryType.values)))
         },
         validForm => {
           import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
-          for {
-            _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
-            res <- buildDeployApiConnector.createTestRepository(validForm)
-          } yield {
-            res match {
-              case Left(errMsg) => logger.info(s"createTestRepository failed with: $errMsg")
-              case Right(id)    => logger.info(s"Bnd api request id: $id:")
-            }
-            Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+          (for {
+            _   <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
+            _   <- EitherT(verifyGithubTeamExists(validForm.teamName))
+            res <- EitherT(buildDeployApiConnector.createTestRepository(validForm)).leftMap[CreateRepoError](ApiError)
+          } yield res).value map {
+            case Right(id)    =>
+              logger.info(s"CreateTestRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
+              Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+            case Left(ApiError(msg)) =>
+              logger.info(s"CreateTestRepository request for ${validForm.repositoryName} failed with message: $msg")
+              BadRequest(createTestRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $msg"), userTeams, CreateTestRepositoryType.values))
+            case Left(ValidationError(msg)) =>
+              BadRequest(createTestRepositoryPage(submittedForm.withError("teamName", msg), userTeams, CreateTestRepositoryType.values))
           }
         }
       )
+    }
+
+  private def verifyGithubTeamExists(
+    selectedTeam: TeamName
+  )(implicit hc: HeaderCarrier): Future[Either[CreateRepoError, Unit]] =
+    teamsAndReposConnector.allTeams().map { gitTeams =>
+      if(gitTeams.map(_.name).contains(selectedTeam))
+        Right(())
+      else
+        Left(ValidationError(s"'${selectedTeam.asString}' does not exist as a team on Github."))
     }
 
   private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
@@ -161,4 +194,12 @@ class CreateRepositoryController @Inject()(
       .map(TeamName.apply)
       .toSeq
       .sorted
+}
+
+object CreateRepositoryController {
+  sealed trait CreateRepoError {
+    val message: String
+  }
+  final case class ValidationError(message: String) extends CreateRepoError
+  final case class ApiError(message: String) extends CreateRepoError
 }
