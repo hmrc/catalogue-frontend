@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 
+import uk.gov.hmrc.cataloguefrontend.connector.model.Log
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthRoutes}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
@@ -34,6 +35,7 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterR
 import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => createRepoRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
+
 
 import java.net.URLEncoder
 import java.util.concurrent.atomic.AtomicReference
@@ -138,4 +140,8 @@ object SearchIndex {
       .view
       .mapValues(_.map(_._2))
       .toMap
+      
+  def searchURIs(uris: Seq[Log], index: Seq[SearchTerm]): Seq[SearchTerm] = {
+    ???
+  }
 }

@@ -33,7 +33,6 @@ import uk.gov.hmrc.play.bootstrap.binders.{OnlyRelative, RedirectUrl}
 class AuthController @Inject() (
   auth: FrontendAuthComponents,
   mcc : MessagesControllerComponents,
-  platopsAuditingConnector: PlatopsAuditingConnector
 ) extends FrontendController(mcc) {
   import AuthController._
 
@@ -54,8 +53,7 @@ class AuthController @Inject() (
           .fold(appRoutes.CatalogueController.index.url)(_.url)
       )
       .addingToSession(
-        AuthController.SESSION_USERNAME -> request.retrieval.value,
-        (AuthController.SESSION_USERLOGS -> platopsAuditingConnector.userLogs(SESSION_USERNAME).toString)
+        AuthController.SESSION_USERNAME -> request.retrieval.value
       )
     }
 
@@ -67,7 +65,6 @@ class AuthController @Inject() (
 
 object AuthController {
   val SESSION_USERNAME = "username"
-  val SESSION_USERLOGS = "userLogs"
 
     // to avoid cyclical urls
   private[cataloguefrontend] def sanitize(targetUrl: Option[RedirectUrl]): Option[RedirectUrl] = {
