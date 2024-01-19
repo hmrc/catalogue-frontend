@@ -17,15 +17,35 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 import org.mockito.MockitoSugar.mock
+import org.scalatest.concurrent.{ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.cataloguefrontend.connector.model.{UserLog, Log}
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.searchURIs
+
+
+import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
+import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
+import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes => prcommenterRoutes}
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
+import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
+import uk.gov.hmrc.cataloguefrontend.deployments.{routes => depRoutes}
+import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
+import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
+import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => createRepoRoutes}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SearchIndexSpec extends AnyWordSpec with Matchers {
 
+class SearchIndexSpec extends AnyWordSpec with Matchers{
+  implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   "optimiseIndex" should {
     "Return the expected index structure" in {
       val testIndex = Seq(
@@ -59,6 +79,47 @@ class SearchIndexSpec extends AnyWordSpec with Matchers {
     SearchTerm(linkType = "Service",  name = "time-to-pay-taxpayer",                       link = "/repositories/time-to-pay-taxpayer",                             weight = 0.5f,Set("repository")),
     SearchTerm(linkType = "Service",  name = "time-based-one-time-password",               link = "/repositories/time-based-one-time-password",                     weight = 0.5f,Set("repository")),
     SearchTerm(linkType = "health",   name = "voa",                                        link = "/health-indicators/voa-api-proxy-performance-tests",             weight = 0.5f,Set())
+  )
+  
+  private val uriIndex = List(
+    SearchTerm(linkType = "explorer", name = "dependency",                   link = catalogueRoutes.DependencyExplorerController.landing.url,                           1.0f, Set("depex")),
+    SearchTerm(linkType = "explorer", name = "bobby",                        link = catalogueRoutes.BobbyExplorerController.list().url,                                 1.0f),
+    SearchTerm(linkType = "explorer", name = "jvm",                          link = catalogueRoutes.JDKVersionController.compareAllEnvironments().url,                  1.0f, Set("jdk", "jre")),
+    SearchTerm(linkType = "explorer", name = "leaks",                        link = leakRoutes.LeakDetectionController.ruleSummaries.url,                               1.0f, Set("lds")),
+    SearchTerm(linkType = "page",     name = "whatsrunningwhere",            link = wrwRoutes.WhatsRunningWhereController.releases().url,                               1.0f, Set("wrw")),
+    SearchTerm(linkType = "page",     name = "deployment",                   link = depRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,  1.0f),
+    SearchTerm(linkType = "page",     name = "shutter-overview",             link = shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url,        1.0f),
+    SearchTerm(linkType = "page",     name = "shutter-api",                  link = shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,             1.0f),
+    SearchTerm(linkType = "page",     name = "shutter-rate",                 link = shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,            1.0f),
+    SearchTerm(linkType = "page",     name = "shutter-events",               link = shutterRoutes.ShutterEventsController.shutterEvents.url,                            1.0f),
+    SearchTerm(linkType = "page",     name = "teams",                        link = teamRoutes.TeamsController.allTeams().url,                                          1.0f),
+    SearchTerm(linkType = "page",     name = "repositories",                 link = reposRoutes.RepositoriesController.allRepositories().url,                           1.0f),
+    SearchTerm(linkType = "page",     name = "users",                        link = userRoutes.UsersController.allUsers().url,                                          1.0f),
+    SearchTerm(linkType = "page",     name = "defaultbranch",                link = catalogueRoutes.CatalogueController.allDefaultBranches().url,                       1.0f),
+    SearchTerm(linkType = "page",     name = "pr-commenter-recommendations", link = prcommenterRoutes.PrCommenterController.recommendations().url,                      1.0f),
+    SearchTerm(linkType = "page",     name = "search config",                link = serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,                  1.0f),
+    SearchTerm(linkType = "page",     name = "config warnings",              link = serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,           1.0f),
+    SearchTerm(linkType = "page",     name = "create service repository",    link = createRepoRoutes.CreateRepositoryController.createServiceRepositoryLanding().url,   1.0f),
+    SearchTerm(linkType = "page",     name = "create prototype repository",  link = createRepoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding().url, 1.0f),
+    SearchTerm(linkType = "page",     name = "create test repository",       link = createRepoRoutes.CreateRepositoryController.createTestRepository().url,             1.0f),
+    SearchTerm(linkType = "page",     name = "deploy service",               link = depRoutes.DeployServiceController.step1(None).url,                                  1.0f),
+    SearchTerm(linkType = "page",     name = "search commissioning state",   link = commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,       1.0f))
+  
+  private val testUserLog = new
+      UserLog(userName = "bob.bobber",
+        logs = Seq(
+          new Log(page = "/sign-out"                                                     , visitCounter = 9),
+          new Log(page = "/users?username=&team="                                        , visitCounter = 5),
+          new Log(page = "/create-app-configs?serviceName=platops-test-frontend"         , visitCounter = 8),
+          new Log(page = "/whats-running-where"                                          , visitCounter = 22),
+          new Log(page = "/deploy-service/1"                                             , visitCounter = 12)
+        )
+      )
+      
+  val userLogTestRes = Seq(
+    SearchTerm(linkType = "page",     name = "whatsrunningwhere", link = "/whats-running-where",    1.0f, Set("wrw")),
+    SearchTerm(linkType = "page",     name = "users",             link = "/users?username=&team=",  1.0f),
+    SearchTerm(linkType = "page",     name = "deploy service",    link = "/deploy-service/1",       1.0f),
   )
 
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
@@ -141,6 +202,13 @@ class SearchIndexSpec extends AnyWordSpec with Matchers {
       List(res1, res2, res3, res4).foreach(_ shouldBe Seq(
         SearchTerm(linkType = "timeline", name = "PODS File Upload", link = "/somethings/pods", weight = 0.5f, Set())
       ))
+    }
+  }
+  
+  "searchURIs" should {
+    "return SearchTerms in order that are exact matches to the URIs" in {
+      val res = searchURIs(testUserLog.logs, uriIndex)
+      res shouldBe userLogTestRes
     }
   }
 }

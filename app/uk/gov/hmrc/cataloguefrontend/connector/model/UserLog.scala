@@ -22,7 +22,7 @@ import play.api.libs.json.{OFormat, __}
 
 case class UserLog(
   userName: String,
-  logs       : Seq[Log]
+  logs    : Seq[Log]
 )
 
 object UserLog {

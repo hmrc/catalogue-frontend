@@ -219,7 +219,6 @@
                           <a id="sign-in" class="nav-link" href="@uk.gov.hmrc.cataloguefrontend.auth.routes.AuthController.signIn(targetUrl = if (request.target.uriString == "/") None else Some(RedirectUrl(request.target.uriString)))">Sign in</a>
                       </li>
                     }
-                    @request.session.get(AuthController.SESSION_USERLOGS)
                 </ul>
             </div>
         </nav>
