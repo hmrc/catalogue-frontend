@@ -29,7 +29,7 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repositoryName = "test-service-api-tests",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITestWithScalaTest.asString
+            repoType       = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
@@ -37,23 +37,7 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repositoryName = "test-service",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITestWithScalaTest.asString
-          )
-        ) shouldBe false
-        CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-service-api-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITestWithCucumber.asString
-          )
-        ) shouldBe false
-        CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-service",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITestWithCucumber.asString
+            repoType       = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationUiTests(
@@ -61,15 +45,7 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repositoryName = "test-serviceui-tests",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITestWithScalaTest.asString
-          )
-        ) shouldBe false
-        CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-serviceui-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITestWithCucumber.asString
+            repoType       = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe false
       }
@@ -79,15 +55,7 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repositoryName = "test-service-ui-tests",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITestWithScalaTest.asString
-          )
-        ) shouldBe true
-        CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-service-ui-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITestWithCucumber.asString
+            repoType       = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe true
       }
@@ -102,7 +70,7 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repositoryName = "test-service-ui-tests",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.APITestWithScalaTest.asString
+            repoType       = CreateTestRepositoryType.APITest.asString
           )
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationApiTests(
@@ -110,7 +78,7 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repositoryName = "test-service",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.APITestWithScalaTest.asString
+            repoType       = CreateTestRepositoryType.APITest.asString
           )
         ) shouldBe false
         CreateTestRepoForm.conflictingFieldsValidationApiTests(
@@ -118,7 +86,7 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repositoryName = "test-serviceapi-tests",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.APITestWithScalaTest.asString
+            repoType       = CreateTestRepositoryType.APITest.asString
           )
         ) shouldBe false
       }
@@ -128,7 +96,7 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repositoryName = "test-service-api-tests",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.APITestWithScalaTest.asString
+            repoType       = CreateTestRepositoryType.APITest.asString
           )
         ) shouldBe true
       }
