@@ -24,24 +24,26 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => scRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.createrepository.{CreatePrototypeRepositoryPage, CreateServiceRepositoryPage, CreateTestRepositoryPage}
+import views.html.createrepository.{CreatePrototypeRepositoryConfirmationPage, CreatePrototypeRepositoryPage, CreateServiceRepositoryConfirmationPage, CreateServiceRepositoryPage, CreateTestRepositoryConfirmationPage, CreateTestRepositoryPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CreateRepositoryController @Inject()(
-   override val auth        : FrontendAuthComponents,
-   override val mcc         : MessagesControllerComponents,
-   createRepositoryPage     : CreateServiceRepositoryPage,
-   createPrototypePage      : CreatePrototypeRepositoryPage,
-   createTestRepositoryPage : CreateTestRepositoryPage,
-   buildDeployApiConnector  : BuildDeployApiConnector,
-   teamsAndReposConnector   : TeamsAndRepositoriesConnector
+   override val auth                        : FrontendAuthComponents,
+   override val mcc                         : MessagesControllerComponents,
+   createRepositoryPage                     : CreateServiceRepositoryPage,
+   createRepositoryConfirmationPage         : CreateServiceRepositoryConfirmationPage,
+   createPrototypePage                      : CreatePrototypeRepositoryPage,
+   createPrototypeRepositoryConfirmationPage: CreatePrototypeRepositoryConfirmationPage,
+   createTestRepositoryPage                 : CreateTestRepositoryPage,
+   createTestRepositoryConfirmationPage     : CreateTestRepositoryConfirmationPage,
+   buildDeployApiConnector                  : BuildDeployApiConnector,
+   teamsAndReposConnector                   : TeamsAndRepositoriesConnector
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -84,7 +86,7 @@ class CreateRepositoryController @Inject()(
                               BadRequest(createRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams, CreateServiceRepositoryType.values))
                             }
          _             =  logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       } yield Redirect(scRoutes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+       } yield Redirect(routes.CreateRepositoryController.createServiceRepositoryConfirmation(validForm.repositoryName))
       ).merge
     }
 
@@ -118,7 +120,7 @@ class CreateRepositoryController @Inject()(
                               BadRequest(createPrototypePage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
                             }
          _             =  logger.info(s"CreatePrototypeRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       } yield Redirect(scRoutes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+       } yield Redirect(routes.CreateRepositoryController.createPrototypeRepositoryConfirmation(validForm.repositoryName))
       ).merge
     }
 
@@ -152,9 +154,27 @@ class CreateRepositoryController @Inject()(
                               BadRequest(createTestRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams, CreateTestRepositoryType.values))
                             }
          _             =  logger.info(s"CreateTestRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       } yield Redirect(scRoutes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+       } yield Redirect(routes.CreateRepositoryController.createTestRepositoryConfirmation(validForm.repositoryName))
       ).merge
     }
+
+  def createTestRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
+    implicit request => {
+      Ok(createTestRepositoryConfirmationPage(repoName))
+    }
+  }
+
+  def createPrototypeRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
+    implicit request => {
+      Ok(createPrototypeRepositoryConfirmationPage(repoName))
+    }
+  }
+
+  def createServiceRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
+    implicit request => {
+      Ok(createRepositoryConfirmationPage(repoName))
+    }
+  }
 
   private def verifyGithubTeamExists(
     selectedTeam: TeamName

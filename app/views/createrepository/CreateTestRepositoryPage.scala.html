@@ -33,7 +33,7 @@
 
     <section class="section-wrapper">
         <h1 class="page-heading mt-4">Create A Test Repository</h1>
-        <p>Use the below form to create a new repository. Make sure to follow the guidance for each field!</p>
+        <p>Use the below form to create a new repository. Make sure to follow the guidance for each field.</p>
 
         @form_global_errors(form)
 
@@ -59,7 +59,7 @@
                             <li>lowercase only</li>
                             <li>avoid uncommon initialisms or acronyms</li>
                             <li>prefix the test repository with the name of the relevant service</li>
-                            <li>suffix test repository with the type of tests it will include, such as ’-ui-tests, -api-tests, -performance tests</li>
+                            <li>suffix test repository with the type of tests it will include, such as: -ui-tests, -api-tests, -performance-tests</li>
                         </ul>
                         <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
                     </div>

@@ -21,18 +21,10 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class CreateTestRepoFormSpec extends UnitSpec {
 
-  "conflictingFieldsValidationUiTests" when {
-    "the repo type starts with 'ui' the repo name should end with '-ui-tests'" should {
+  "repoNameTestConstraint" when {
+    "the repo name should end in 'test' or 'tests'" should {
       "return false" in {
-        CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-service-api-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITest.asString
-          )
-        ) shouldBe false
-        CreateTestRepoForm.conflictingFieldsValidationUiTests(
+        CreateTestRepoForm.repoNameTestConstraint(
           CreateServiceRepoForm(
             repositoryName = "test-service",
             makePrivate    = false,
@@ -40,17 +32,9 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repoType       = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe false
-        CreateTestRepoForm.conflictingFieldsValidationUiTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-serviceui-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.UITest.asString
-          )
-        ) shouldBe false
       }
       "return true" in {
-        CreateTestRepoForm.conflictingFieldsValidationUiTests(
+        CreateTestRepoForm.repoNameTestConstraint(
           CreateServiceRepoForm(
             repositoryName = "test-service-ui-tests",
             makePrivate    = false,
@@ -58,86 +42,13 @@ class CreateTestRepoFormSpec extends UnitSpec {
             repoType       = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe true
-      }
-    }
-  }
 
-  "conflictingFieldsValidationApiTests" when {
-    "the repo type starts with 'api' the repo name should end with '-api-tests'" should {
-      "return false" in {
-        CreateTestRepoForm.conflictingFieldsValidationApiTests(
+        CreateTestRepoForm.repoNameTestConstraint(
           CreateServiceRepoForm(
-            repositoryName = "test-service-ui-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.APITest.asString
-          )
-        ) shouldBe false
-        CreateTestRepoForm.conflictingFieldsValidationApiTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-service",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.APITest.asString
-          )
-        ) shouldBe false
-        CreateTestRepoForm.conflictingFieldsValidationApiTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-serviceapi-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.APITest.asString
-          )
-        ) shouldBe false
-      }
-      "return true" in {
-        CreateTestRepoForm.conflictingFieldsValidationApiTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-service-api-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.APITest.asString
-          )
-        ) shouldBe true
-      }
-    }
-  }
-
-  "conflictingFieldsValidationPerformanceTests" when {
-    "the repo type starts with 'performance' the repo name should end with '-performance-tests'" should {
-      "return false" in {
-        CreateTestRepoForm.conflictingFieldsValidationPerformanceTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-service-ui-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.PerformanceTest.asString
-          )
-        ) shouldBe false
-        CreateTestRepoForm.conflictingFieldsValidationPerformanceTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-service",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.PerformanceTest.asString
-          )
-        ) shouldBe false
-        CreateTestRepoForm.conflictingFieldsValidationPerformanceTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-serviceperformance-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.PerformanceTest.asString
-          )
-        ) shouldBe false
-      }
-      "return true" in {
-        CreateTestRepoForm.conflictingFieldsValidationPerformanceTests(
-          CreateServiceRepoForm(
-            repositoryName = "test-service-performance-tests",
-            makePrivate    = false,
-            teamName       = TeamName("test"),
-            repoType       = CreateTestRepositoryType.PerformanceTest.asString
+            repositoryName = "test-service-ui-test",
+            makePrivate = false,
+            teamName = TeamName("test"),
+            repoType = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe true
       }
