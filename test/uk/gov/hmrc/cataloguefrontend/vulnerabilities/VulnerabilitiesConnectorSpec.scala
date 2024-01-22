@@ -104,7 +104,7 @@ class VulnerabilitiesConnectorSpec
           ))
       )
 
-      vulnerabilitiesConnector.vulnerabilitySummaries(None, None, None, None, None).futureValue shouldBe Seq(
+      vulnerabilitiesConnector.vulnerabilitySummaries(None, None, None, None, None).futureValue shouldBe Some(Seq(
         VulnerabilitySummary(
           distinctVulnerability = DistinctVulnerability(
             vulnerableComponentName = "deb://ubuntu/xenial:test",
@@ -128,7 +128,7 @@ class VulnerabilitiesConnectorSpec
           )),
           teams = Seq("TeamA", "TeamB")
         )
-      )
+      ))
     }
   }
 

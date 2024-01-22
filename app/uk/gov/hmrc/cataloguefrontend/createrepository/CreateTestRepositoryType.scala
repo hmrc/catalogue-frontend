@@ -19,15 +19,13 @@ package uk.gov.hmrc.cataloguefrontend.createrepository
 sealed trait CreateTestRepositoryType { def asString: String}
 
 object CreateTestRepositoryType {
-  case object UITestWithScalaTest  extends CreateTestRepositoryType { override def asString: String = "UI Journey Test - with ScalaTest"}
-  case object UITestWithCucumber   extends CreateTestRepositoryType { override def asString: String = "UI Journey Test - with Cucumber" }
-  case object APITestWithScalaTest extends CreateTestRepositoryType { override def asString: String = "API Test - with ScalaTest"       }
+  case object UITest  extends CreateTestRepositoryType { override def asString: String = "UI Journey Test"}
+  case object APITest extends CreateTestRepositoryType { override def asString: String = "API Test"       }
   case object PerformanceTest      extends CreateTestRepositoryType { override def asString: String = "Performance Test"                }
 
   val values = List(
-    UITestWithScalaTest,
-    UITestWithCucumber,
-    APITestWithScalaTest,
+    UITest,
+    APITest,
     PerformanceTest
   )
 

@@ -14,11 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-@import views.html.partials.{form_global_errors, form_fields_warnings}
-@import views.html.helper.select
+@import views.html.partials.form_global_errors
 
 @this(viewMessages: ViewMessages)
 
@@ -38,16 +36,18 @@
         @form_global_errors(form)
 
         @helper.form(
-            action           =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createPrototypeRepository(),
-            Symbol("id")     -> "createRepoForm",
-            Symbol("method") -> "post",
+            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createPrototypeRepository(),
+            Symbol("id")         -> "createRepoForm",
+            Symbol("method")     -> "post",
+            Symbol("class")      -> "needs-validation",
+            Symbol("novalidate") -> "novalidate"
         ) {
             @csrfFormField
 
             <div class="form-group row mb-2">
                 <div class="col-md-6 d-grid gap-2">
                     <label class="fw-bold" for="repoNameInput">Repository name:</label>
-                    <div class="mb-2">
+                    <div id="repositoryName" class="mb-2">
                         <div class="mb-2">
                             You must comply with established naming conventions when naming your microservice:
                         </div>
@@ -63,14 +63,13 @@
                         </ul>
                         <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
                     </div>
-                    @form_fields_warnings(form,"repositoryName")
                 </div>
             </div>
 
             <div class="form-group row mb-2">
                 <div class="col-md-6 d-grid gap-2">
                     <label class="fw-bold" for="passwordInput">Password:</label>
-                    <div class="mb-2">
+                    <div id="password" class="mb-2">
                         <div class="mb-2">
                             You must comply with the following password rules:
                         </div>
@@ -79,14 +78,13 @@
                             <li>Should only contain the following characters</li>
                             <ul><li>uppercase letters</li><li>lowercase letters</li><li> numbers</li><li>underscores</li></ul>
                         </ul>
-                        <input class="form-control" type="text" id="passwordInput" name="password" value="@form.data.getOrElse("password", "")">
+                        <input class="form-control" type="password" id="passwordInput" name="password" value="@form.data.getOrElse("password", "")">
                     </div>
-                    @form_fields_warnings(form,"password")
                 </div>
             </div>
 
             <div class="form-group row">
-                <div class="col-md-6 mb-3">
+                <div id="teamName" class="col-md-6 mb-3">
                     <label class="fw-bold" for="teamInput">Team name:</label>
                     @if(teamNames.nonEmpty){
                         <p class="mt-2">Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
@@ -98,19 +96,17 @@
                     <select class="form-select" id="teamInput" name="teamName">
                         @teamNames.map { tn =>
                             <option value="@{tn.asString}"
-                                    @if(form.data.getOrElse("teamName", "").equals(tn)) { selected="selected" }
+                                    @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" }
                             >@tn.asString</option>
                         }
                     </select>
-                    @form_fields_warnings(form,"teamName")
-
                 </div>
             </div>
 
             <div class="form-group row mb-2">
                 <div class="col-md-6 d-grid gap-2">
                     <label class="fw-bold" for="slackChannelsInput">Slack Channels:</label>
-                    <div class="mb-2">
+                    <div id="slackChannels" class="mb-2">
                         <div class="mb-2">
                             (Optional) A comma separated list of Slack channels for receiving prototype notifications. These channels can be added to and changed in the repository.yaml file in the prototype's repository.
                         </div>
@@ -126,7 +122,6 @@
                         </ul>
                         <input class="form-control" type="text" id="slackChannelsInput" name="slackChannels" value="@form.data.getOrElse("slackChannels", "")">
                     </div>
-                    @form_fields_warnings(form,"slackChannels")
                 </div>
             </div>
 
@@ -135,4 +130,24 @@
             </div>
        }
     </section>
+
+    <script @CSPNonce.attr>
+            // Form validation using bootstrap
+            let errors = @Html(form.errorsAsJson.toString());
+
+            for (const [key, [fieldError]] of Object.entries(errors)) {
+                const field = document.getElementById(key);
+                const input = field?.querySelector('input, select');
+
+                if (input) {
+                    input.classList.add('is-invalid');
+
+                    const feedbackDiv = document.createElement('div');
+                    feedbackDiv.classList.add('invalid-feedback');
+                    feedbackDiv.innerHTML = fieldError;
+
+                    field.appendChild(feedbackDiv);
+                }
+            }
+    </script>
 }

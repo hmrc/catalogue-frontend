@@ -1,0 +1,285 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.users.Organisation
+@import views.html.partials.form_fields_warnings
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+
+@this(viewMessages: ViewMessages)
+
+
+@(form: Form[_],
+  teamNames       : Seq[TeamName],
+  organisations   : Seq[Organisation],
+  isServiceAccount: Boolean
+)(implicit
+  request         : RequestHeader,
+  messagesProvider: MessagesProvider
+)
+
+@standard_layout("Create a User", "create a user") {
+
+  <section class="section-wrapper">
+    @if(isServiceAccount){
+      <h1 class="page-heading mt-4">Create A Service User</h1>
+    } else {
+      <h1 class="page-heading mt-4">Create A User</h1>
+    }
+    @if(isServiceAccount){
+      <p>Use the below form to create a new non human user. Make sure to follow the guidance for each field.</p>
+      <p>If you would like to create a human user please use <a href="/create-user">Create A User</a> instead.</p>
+    } else {
+      <p>Use the below form to create a new user. Make sure to follow the guidance for each field.</p>
+      <p>If you would like to create a non human user please use <a href="/create-service-user">Create A Service User</a> instead.</p>
+    }
+
+    @helper.form(
+      action                = uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.createUser(isServiceAccount),
+      Symbol("id")         -> "createUserForm",
+      Symbol("method")     -> "post",
+      Symbol("class")      -> "needs-validation",
+      Symbol("novalidate") -> "novalidate"
+    ) {
+    @csrfFormField
+
+      <div class="form-group row mb-4">
+        <div class="col-md-6 d-grid gap-2">
+          <div class="mb-2">
+            <label class="fw-bold form-check-label" for="isTransitoryUserCheckbox">Returning User: </label>
+            <input style="display:inline-block;" class="form-check-input" type="checkbox" id="isReturningUserCheckbox" name="isReturningUser" value="true" @form.data.get("isReturningUser").map{ _ => checked }>
+          </div>
+          <p>Select if user has worked for HMRC previously.</p>
+        </div>
+      </div>
+      <div class="form-group row mb-4">
+        <div class="col-md-6 d-grid gap-2">
+          <div class="mb-2">
+            <label class="fw-bold form-check-label" for="isTransitoryUserCheckbox">Transitory User: </label>
+            <input style="display:inline-block;" class="form-check-input" type="checkbox" id="isTransitoryUserCheckbox" name="isTransitoryUser" value=true @form.data.get("isTransitoryUser").map{ _ => checked }>
+          </div>
+          <p>Select if user is required to be granted only two weeks access.</p>
+        </div>
+      </div>
+      <div class="form-group row mb-2">
+        <div class="col-md-6">
+          <div class="row mb-2">
+            <div class="col-md-6" id="givenName">
+            @if(isServiceAccount) {
+              <label class="fw-bold" for="givenNameInput">Service Name:</label>
+            } else {
+              <label class="fw-bold" for="givenNameInput">First Name:</label>
+            }
+              <input class="form-control" type="text" id="givenNameInput" name="givenName" value="@form.data.getOrElse("givenName", "")">
+            </div>
+            <div class="col-md-6" id="familyName">
+              @if(isServiceAccount){
+                <label class="fw-bold" for="familyNameInput">Platform:</label>
+              } else {
+                <label class="fw-bold" for="familyNameInput">Last Name:</label>
+              }
+              <input class="form-control" type="text" id="familyNameInput" name="familyName" value="@form.data.getOrElse("familyName", "")">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row mb-2">
+        <div class="col-md-6 d-grid gap-2">
+          <label class="fw-bold" for="organisationInput">Organisation:</label>
+          <div class="mb-2">
+            <select class="form-select" id="organisationInput" name="organisation">
+              @organisations.map { org =>
+                <option value="@{org.asString}" @if(form.data.getOrElse("organisation", "").equals(org.asString)) { selected="selected" }>
+                  @org.asString
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-md-6 mb-3">
+          <label class="fw-bold" for="teamInput">Team:</label>
+          <select class="form-select @if(teamNames.isEmpty) { is-invalid }" id="teamInput" name="team">
+            @teamNames.map { tn =>
+              <option value="@{tn.asString}" @if(form.data.getOrElse("team", TeamName("")).toString.equals(tn.asString)) { selected="selected" }>@tn.asString</option>
+            }
+          </select>
+          @if(teamNames.isEmpty) {
+            <div class="invalid-feedback">
+              There are currently no teams that you have permissions to create a user for. Ensure you are signed in to the Catalogue using your LDAP credentials (as opposed to using the guest sign-in process). If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
+            </div>
+          } else {
+            <p class="mt-2">You will only be able to onboard users onto teams that you are a member of. If the team you wish to create a user for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+          }
+        </div>
+      </div>
+
+      <div class="form-group row mb-2">
+        <div class="col-md-6 d-grid gap-2">
+          <label class="fw-bold" for="contactEmailInput">Contact Email:</label>
+          <div class="mb-2" id="contactEmail">
+            <input class="form-control" type="text" id="contactEmailInput" name="contactEmail" value="@form.data.getOrElse("contactEmail", "")">
+          </div>
+        </div>
+      </div>
+      <div class="form-group row mb-2">
+        <div class="col-md-6 d-grid gap-2">
+          <label class="fw-bold" for="contactCommentsInput">Comments:</label>
+          <div class="mb-2">
+            <textarea class="form-control" id="contactCommentsInput" rows="1" name="contactComments" placeholder="Please tell us why you are creating this user" value="@form.data.getOrElse("contactComments", "")"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row mb-4">
+        <div class="col-md-6">
+          <label class="fw-bold">Tooling Access: </label>
+
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <div class="form-check form-check-inline">
+                <label class="form-check-label" for="vpnCheckbox">VPN</label>
+                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="vpnCheckbox" name="vpn" value=true @form.data.get("vpn").map{ _ => checked }>
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <div class="form-check form-check-inline">
+                <label class="form-check-label" for="jiraCheckbox">Jira</label>
+                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="jiraCheckbox" name="jira" value=true @form.data.get("jira").map{ _ => checked }>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <div class="form-check form-check-inline">
+                <label class="form-check-label" for="confluenceCheckbox">Confluence</label>
+                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="confluenceCheckbox" name="confluence" value=true @form.data.get("confluence").map{ _ => checked }>
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <div class="form-check form-check-inline">
+                <label class="form-check-label" for="environmentsCheckbox">Developer Tools (Kibana, Grafana, Jenkins)</label>
+                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="environmentsCheckbox" name="environments" value=true @form.data.get("environments").map{ _ => checked }>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <div class="form-check form-check-inline">
+                <label class="form-check-label" for="googleApps">G Suite (GMail, Calendar, Hangout, Drive etc)</label>
+                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="googleAppsCheckbox" name="googleApps" value=true @form.data.get("googleApps").map{ _ => checked }>
+              </div>
+
+            </div>
+            <div class="col-md-6 mb-2">
+              <button id="selectAllButton" class="btn btn-success btn-sm">Select All</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+          Create
+        </button>
+      </div>
+
+        <!-- Modal -->
+      <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="staticBackdropLabel">Create New User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to create a new user?
+                <p></p>
+                Please check that the details are correct.
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-success">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </section>
+
+  <script @CSPNonce.attr>
+
+    // Form validation using bootstrap
+    let errors = @Html(form.errorsAsJson.toString());
+
+    for (const [key, [fieldError]] of Object.entries(errors)) {
+      const field = document.getElementById(key);
+      const input = field?.querySelector('input');
+
+      if (input) {
+        input.classList.add('is-invalid');
+
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.classList.add('invalid-feedback');
+        feedbackDiv.innerHTML = fieldError;
+
+        field.appendChild(feedbackDiv);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const selectAllButton = document.getElementById('selectAllButton');
+      const groupCheckboxes = document.querySelectorAll('.toolingAccessCheckbox');
+
+      // Update button text based on checkbox states
+      function updateButtonText() {
+        const allChecked = Array.from(groupCheckboxes).every(c => c.checked);
+        selectAllButton.innerHTML = allChecked ? 'Deselect All' : 'Select All';
+      }
+
+      selectAllButton.addEventListener('click', function (event) {
+        event.preventDefault();
+
+        const isChecked = !Array.from(groupCheckboxes).every(c => c.checked);
+
+        groupCheckboxes.forEach(function (checkbox) {
+          checkbox.checked = isChecked;
+        });
+
+        updateButtonText();
+      });
+
+      selectAllButton.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+        }
+      });
+
+      groupCheckboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('click', function () {
+          // Update the button text if any of the group checkboxes are unchecked
+          updateButtonText();
+        });
+      });
+
+      // Initial page load
+      updateButtonText();
+    });
+  </script>
+}
