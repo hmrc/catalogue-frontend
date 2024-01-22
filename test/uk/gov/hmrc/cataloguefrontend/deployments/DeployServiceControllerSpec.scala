@@ -36,7 +36,8 @@ import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
-import uk.gov.hmrc.internalauth.client.Retrieval
+import uk.gov.hmrc.internalauth.client.{Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
+import uk.gov.hmrc.internalauth.client.syntax._
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import views.html.deployments.{DeployServicePage, DeployServiceStep4Page}
@@ -56,10 +57,8 @@ class DeployServiceControllerSpec
 
   "Deploy Service Page step1" should {
     "allow a service to be specified" in new Setup {
-      when(mockAuthStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(true))
-      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq(someService)))
+      when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
+        .thenReturn(Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))))
 
       val futResult = underTest.step1(None)(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
 
@@ -71,10 +70,12 @@ class DeployServiceControllerSpec
     }
 
     "allow a service to be provided" in new Setup {
-      when(mockAuthStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(true))
-      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq(someService)))
+
+      // This gets called twice
+      // Matching on retrieval ANY since the type is erased and the mocks get confused
+      when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Any]]))
+        .thenReturn(Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))))
+        .andThen(Future.successful(true))
       when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(None))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockReleasesConnector.releasesForService(eqTo("some-service"))(any[HeaderCarrier]))
@@ -100,10 +101,11 @@ class DeployServiceControllerSpec
   import ServiceConfigsService._
   "Deploy Service Page step2" should {
     "help evaluate deployment" in new Setup {
-      when(mockAuthStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(true))
-      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq(someService)))
+      // This gets called twice
+      // Matching on retrieval ANY since the type is erased and the mocks get confused
+      when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Any]]))
+        .thenReturn(Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))))
+        .andThen(Future.successful(true))
       when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(None))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockReleasesConnector.releasesForService(eqTo("some-service"))(any[HeaderCarrier]))
@@ -147,15 +149,21 @@ class DeployServiceControllerSpec
 
   "Deploy Service Page step3" should {
     "deploy service" in new Setup {
-      when(mockAuthStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
-        .thenReturn(Future.successful(true))
-      when(mockAuthStubBehaviour.stubAuth(eqTo(None), eqTo(Retrieval.username))) // Note test fails if mockAuthStubBehaviour order is changed
-        .thenReturn(Future.successful((Retrieval.Username("some-user"))))
+
+      // This gets called twice
+      // Matching on retrieval ANY since the type is erased and the mocks get confused
+      when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Any]]))
+        .thenReturn(Future.successful(
+            Retrieval.Username("some-user") ~
+              Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))
+        ))
+        .andThen(Future.successful(true))
+
       when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(someService)))
       when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockBuildJobsConnector.deployMicroservice(eqTo("some-service"), eqTo(Version("0.3.0")), eqTo(Environment.QA), eqTo("some-user") )(any[HeaderCarrier]))
+      when(mockBuildJobsConnector.deployMicroservice(eqTo("some-service"), eqTo(Version("0.3.0")), eqTo(Environment.QA), eqTo(Retrieval.Username("some-user")) )(any[HeaderCarrier]))
         .thenReturn(Future.successful("http://localhost:8461/some/queue/url"))
 
       val futResult = underTest.step3()(
@@ -290,7 +298,6 @@ class DeployServiceControllerSpec
                                             , mcc                           = mcc
                                             , configuration                 = app.injector.instanceOf[Configuration]
                                             , buildJobsConnector            = mockBuildJobsConnector
-                                            , teamsAndRepositoriesConnector = mockTeamsAndRepositoriesConnector
                                             , serviceDependenciesConnector  = mockServiceDependenciesConnector
                                             , serviceCommissioningConnector = mockServiceCommissioningConnector
                                             , releasesConnector             = mockReleasesConnector
