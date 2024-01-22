@@ -78,10 +78,10 @@ object CreateTestRepoForm {
   private val repoTestTypeConstraint: Constraint[String] =
     mkConstraint("constraints.repoTypeCheck")(constraint = repoTestTypeValidation, error = CreateTestRepositoryType.parsingError)
 
-  val conflictingFieldsValidationUiTests: CreateServiceRepoForm => Boolean = crf => crf.repositoryName.toLowerCase.endsWith("-tests") || crf.repositoryName.toLowerCase.endsWith("-test")
+  val repoNameTestConstraint: CreateServiceRepoForm => Boolean = crf => crf.repositoryName.toLowerCase.endsWith("-tests") || crf.repositoryName.toLowerCase.endsWith("-test")
 
   private val repoTypeAndNameConstraints = Seq(
-    mkConstraint("constraints.conflictingFields1")(constraint = conflictingFieldsValidationUiTests, error = "Repository name can only end in '-test' or '-tests'"),
+    mkConstraint("constraints.conflictingFields1")(constraint = repoNameTestConstraint, error = "Repository name can only end in '-test' or '-tests'"),
   )
 
   val form: Form[CreateServiceRepoForm] = Form(
