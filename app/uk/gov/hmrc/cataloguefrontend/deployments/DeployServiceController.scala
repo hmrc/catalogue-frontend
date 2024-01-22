@@ -227,7 +227,7 @@ class DeployServiceController @Inject()(
                             serviceName = formObject.serviceName
                           , version     = formObject.version
                           , environment = formObject.environment
-                          , user        = username.value // accept as an object
+                          , user        = username
                           ))
       } yield
         Redirect(routes.DeployServiceController.step4(

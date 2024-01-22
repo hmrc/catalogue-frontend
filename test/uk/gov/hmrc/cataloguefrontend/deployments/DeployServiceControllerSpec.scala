@@ -163,7 +163,7 @@ class DeployServiceControllerSpec
         .thenReturn(Future.successful(Seq(someService)))
       when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockBuildJobsConnector.deployMicroservice(eqTo("some-service"), eqTo(Version("0.3.0")), eqTo(Environment.QA), eqTo("some-user") )(any[HeaderCarrier]))
+      when(mockBuildJobsConnector.deployMicroservice(eqTo("some-service"), eqTo(Version("0.3.0")), eqTo(Environment.QA), eqTo(Retrieval.Username("some-user")) )(any[HeaderCarrier]))
         .thenReturn(Future.successful("http://localhost:8461/some/queue/url"))
 
       val futResult = underTest.step3()(

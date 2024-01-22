@@ -20,9 +20,10 @@ import play.api.{Configuration, Logging}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, UpstreamErrorResponse, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.internalauth.client.Retrieval
 
 import java.net.URL
 import javax.inject.{Inject, Singleton}
@@ -49,7 +50,7 @@ class BuildJobsConnector @Inject()(
     serviceName: String
   , version    : Version
   , environment: Environment
-  , user       : String
+  , user       : Retrieval.Username
   )(implicit hc: HeaderCarrier): Future[String] = {
     val url = new URL(s"$baseUrl/job/build-and-deploy/job/deploy-microservice/buildWithParameters")
 
@@ -70,7 +71,7 @@ class BuildJobsConnector @Inject()(
         "SERVICE"         -> Seq(serviceName)
       , "SERVICE_VERSION" -> Seq(version.original)
       , "ENVIRONMENT"     -> Seq(environment.asString)
-      , "DEPLOYER_ID"     -> Seq(user)
+      , "DEPLOYER_ID"     -> Seq(user.value)
       ))
       .execute[Either[UpstreamErrorResponse, String]]
       .flatMap {
