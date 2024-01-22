@@ -106,20 +106,20 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     SearchTerm(linkType = "page",     name = "search commissioning state",   link = commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,       1.0f))
   
   private val testUserLog = new
-      UserLog(userName = "bob.bobber",
-        logs = Seq(
-          new Log(page = "/sign-out"                                                     , visitCounter = 9),
-          new Log(page = "/users?username=&team="                                        , visitCounter = 5),
-          new Log(page = "/create-app-configs?serviceName=platops-test-frontend"         , visitCounter = 8),
-          new Log(page = "/whats-running-where"                                          , visitCounter = 22),
-          new Log(page = "/deploy-service/1"                                             , visitCounter = 12)
-        )
+    UserLog(userName = "bob.bobber",
+      logs = Seq(
+        new Log(page = "/sign-out"                                                     , visitCounter = 9),
+        new Log(page = "/users?username=&team=Platops"                                 , visitCounter = 5),
+        new Log(page = "/create-app-configs?serviceName=platops-test-frontend"         , visitCounter = 8),
+        new Log(page = "/whats-running-where"                                          , visitCounter = 22),
+        new Log(page = "/deploy-service/1"                                             , visitCounter = 12)
       )
+    )
       
   val userLogTestRes = Seq(
-    SearchTerm(linkType = "page",     name = "whatsrunningwhere", link = "/whats-running-where",    1.0f, Set("wrw")),
-    SearchTerm(linkType = "page",     name = "users",             link = "/users?username=&team=",  1.0f),
-    SearchTerm(linkType = "page",     name = "deploy service",    link = "/deploy-service/1",       1.0f),
+    SearchTerm(linkType = "explorer",     name = "dependency", link = "/whats-running-where",           1.0f, Set("depex")),
+    SearchTerm(linkType = "explorer",     name = "dependency", link = "/deploy-service/1",              1.0f, Set("depex")),
+    SearchTerm(linkType = "explorer",     name = "dependency", link = "/users?username=&team=Platops",  1.0f, Set("depex"))
   )
 
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
@@ -208,6 +208,7 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
   "searchURIs" should {
     "return SearchTerms in order that are exact matches to the URIs" in {
       val res = searchURIs(testUserLog.logs, uriIndex)
+      print(s"$res")
       res shouldBe userLogTestRes
     }
   }

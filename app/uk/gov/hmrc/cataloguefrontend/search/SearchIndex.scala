@@ -36,10 +36,10 @@ import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => createRepoRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 
-
 import java.net.URLEncoder
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.{Inject, Singleton}
+import scala.collection.Searching
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SearchTerm(
@@ -141,7 +141,19 @@ object SearchIndex {
       .mapValues(_.map(_._2))
       .toMap
       
-  def searchURIs(uris: Seq[Log], index: Seq[SearchTerm]): Seq[SearchTerm] = {
-    ???
+  def searchURIs(logs: Seq[Log], index: Seq[SearchTerm]): Seq[SearchTerm] = {
+    val sortedLogs = logs.sortWith(_.visitCounter > _.visitCounter)
+    val sortedUris = sortedLogs.map(_.page) //convert Seq(Log) to Seq(String)
+    val filteredUris = sortedUris.filter(uri => index.exists(term => uri.contains(term.link))) //remove uris not in index
+    for {
+      uri                 <- filteredUris
+      matchedSearchTerm   <- index.find(_ => index.exists(term => uri.contains(term.link))) //find term for URI
+      searchTermWithParams = SearchTerm(linkType = matchedSearchTerm.linkType,
+                                         name = matchedSearchTerm.name,
+                                         link = uri, //update basic link to uri with params
+                                         weight = matchedSearchTerm.weight,
+                                         hints = matchedSearchTerm.hints,
+        )
+    }yield searchTermWithParams
   }
 }
