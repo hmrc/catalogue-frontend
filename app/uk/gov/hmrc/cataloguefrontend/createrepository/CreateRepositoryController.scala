@@ -24,19 +24,21 @@ import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.createrepository.{CreatePrototypeRepositoryPage, CreateServiceRepositoryPage, CreateTestRepositoryPage}
+import views.html.createrepository.{CreatePrototypeRepositoryConfirmationPage, CreatePrototypeRepositoryPage, CreateServiceRepositoryPage, CreateTestRepositoryConfirmationPage, CreateTestRepositoryPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CreateRepositoryController @Inject()(
-   override val auth        : FrontendAuthComponents,
-   override val mcc         : MessagesControllerComponents,
-   createRepositoryPage     : CreateServiceRepositoryPage,
-   createPrototypePage      : CreatePrototypeRepositoryPage,
-   createTestRepositoryPage : CreateTestRepositoryPage,
-   buildDeployApiConnector  : BuildDeployApiConnector
+   override val auth                        : FrontendAuthComponents,
+   override val mcc                         : MessagesControllerComponents,
+   createRepositoryPage                     : CreateServiceRepositoryPage,
+   createPrototypePage                      : CreatePrototypeRepositoryPage,
+   createPrototypeRepositoryConfirmationPage: CreatePrototypeRepositoryConfirmationPage,
+   createTestRepositoryPage                 : CreateTestRepositoryPage,
+   createTestRepositoryConfirmationPage     : CreateTestRepositoryConfirmationPage,
+   buildDeployApiConnector                  : BuildDeployApiConnector
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -104,7 +106,6 @@ class CreateRepositoryController @Inject()(
           Future.successful(BadRequest(createPrototypePage(formWithErrors, userTeams)))
         },
         validForm => {
-          import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
           for {
             _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
             res <- buildDeployApiConnector.createPrototypeRepository(validForm)
@@ -113,7 +114,7 @@ class CreateRepositoryController @Inject()(
               case Left(errMsg) => logger.info(s"createPrototypeRepository failed with: $errMsg")
               case Right(id)    => logger.info(s"Bnd api request id: $id:")
             }
-            Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+            Redirect(routes.CreateRepositoryController.createPrototypeRepositoryConfirmation(validForm.teamName.asString))
           }
         }
       )
@@ -139,7 +140,6 @@ class CreateRepositoryController @Inject()(
           Future.successful(BadRequest(createTestRepositoryPage(formWithErrors, userTeams, CreateTestRepositoryType.values)))
         },
         validForm => {
-          import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes
           for {
             _   <- auth.authorised(Some(createRepositoryPermission(validForm.teamName)))
             res <- buildDeployApiConnector.createTestRepository(validForm)
@@ -148,11 +148,23 @@ class CreateRepositoryController @Inject()(
               case Left(errMsg) => logger.info(s"createTestRepository failed with: $errMsg")
               case Right(id)    => logger.info(s"Bnd api request id: $id:")
             }
-            Redirect(routes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+            Redirect(routes.CreateRepositoryController.createTestRepositoryConfirmation(validForm.teamName.asString))
           }
         }
       )
     }
+
+  def createTestRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
+    implicit request => {
+      Ok(createTestRepositoryConfirmationPage(repoName))
+    }
+  }
+
+  def createPrototypeRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
+    implicit request => {
+      Ok(createPrototypeRepositoryConfirmationPage(repoName))
+    }
+  }
 
   private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
     resources
