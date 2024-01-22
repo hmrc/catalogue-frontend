@@ -120,7 +120,7 @@ class CreateRepositoryController @Inject()(
                               BadRequest(createPrototypePage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
                             }
          _             =  logger.info(s"CreatePrototypeRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       } yield Redirect(scRoutes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+       } yield Redirect(routes.CreateRepositoryController.createPrototypeRepositoryConfirmation(validForm.repositoryName))
       ).merge
     }
 
@@ -154,18 +154,8 @@ class CreateRepositoryController @Inject()(
                               BadRequest(createTestRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams, CreateTestRepositoryType.values))
                             }
          _             =  logger.info(s"CreateTestRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       } yield Redirect(scRoutes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+       } yield Redirect(routes.CreateRepositoryController.createTestRepositoryConfirmation(validForm.repositoryName))
       ).merge
-    }
-
-  private def verifyGithubTeamExists(
-    selectedTeam: TeamName
-  )(implicit hc: HeaderCarrier): Future[Either[String, Unit]] =
-    teamsAndReposConnector.allTeams().map { gitTeams =>
-      if(gitTeams.map(_.name).contains(selectedTeam))
-        Right(())
-      else
-        Left(s"'${selectedTeam.asString}' does not exist as a team on Github.")
     }
 
   def createTestRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
@@ -179,6 +169,16 @@ class CreateRepositoryController @Inject()(
       Ok(createPrototypeRepositoryConfirmationPage(repoName))
     }
   }
+
+  private def verifyGithubTeamExists(
+    selectedTeam: TeamName
+  )(implicit hc: HeaderCarrier): Future[Either[String, Unit]] =
+    teamsAndReposConnector.allTeams().map { gitTeams =>
+      if(gitTeams.map(_.name).contains(selectedTeam))
+        Right(())
+      else
+        Left(s"'${selectedTeam.asString}' does not exist as a team on Github.")
+    }
 
   private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
     resources
