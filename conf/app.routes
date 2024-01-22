@@ -12,6 +12,7 @@ GET        /prototypes                                  uk.gov.hmrc.cataloguefro
 
 GET        /create-service                              uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepositoryLanding()
 POST       /create-service                              uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepository()
+GET        /create-service/:repoName/confirmation       uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepositoryConfirmation(repoName: String)
 
 GET        /create-prototype                            uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepositoryLanding()
 POST       /create-prototype                            uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepository()

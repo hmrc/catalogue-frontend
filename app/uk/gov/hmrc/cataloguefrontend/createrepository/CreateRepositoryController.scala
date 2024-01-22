@@ -24,11 +24,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => scRoutes}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.createrepository.{CreatePrototypeRepositoryConfirmationPage, CreatePrototypeRepositoryPage, CreateServiceRepositoryPage, CreateTestRepositoryConfirmationPage, CreateTestRepositoryPage}
+import views.html.createrepository.{CreatePrototypeRepositoryConfirmationPage, CreatePrototypeRepositoryPage, CreateServiceRepositoryConfirmationPage, CreateServiceRepositoryPage, CreateTestRepositoryConfirmationPage, CreateTestRepositoryPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,6 +37,7 @@ class CreateRepositoryController @Inject()(
    override val auth                        : FrontendAuthComponents,
    override val mcc                         : MessagesControllerComponents,
    createRepositoryPage                     : CreateServiceRepositoryPage,
+   createRepositoryConfirmationPage         : CreateServiceRepositoryConfirmationPage,
    createPrototypePage                      : CreatePrototypeRepositoryPage,
    createPrototypeRepositoryConfirmationPage: CreatePrototypeRepositoryConfirmationPage,
    createTestRepositoryPage                 : CreateTestRepositoryPage,
@@ -86,7 +86,7 @@ class CreateRepositoryController @Inject()(
                               BadRequest(createRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams, CreateServiceRepositoryType.values))
                             }
          _             =  logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       } yield Redirect(scRoutes.ServiceCommissioningStatusController.getCommissioningState(validForm.repositoryName))
+       } yield Redirect(routes.CreateRepositoryController.createServiceRepositoryConfirmation(validForm.repositoryName))
       ).merge
     }
 
@@ -167,6 +167,12 @@ class CreateRepositoryController @Inject()(
   def createPrototypeRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
     implicit request => {
       Ok(createPrototypeRepositoryConfirmationPage(repoName))
+    }
+  }
+
+  def createServiceRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
+    implicit request => {
+      Ok(createRepositoryConfirmationPage(repoName))
     }
   }
 
