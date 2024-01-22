@@ -57,6 +57,8 @@ class DeployServiceControllerSpec
 
   "Deploy Service Page step1" should {
     "allow a service to be specified" in new Setup {
+      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
+        .thenReturn(Future.successful(allServices))
       when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
         .thenReturn(Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))))
 
@@ -70,7 +72,8 @@ class DeployServiceControllerSpec
     }
 
     "allow a service to be provided" in new Setup {
-
+      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
+        .thenReturn(Future.successful(allServices))
       // This gets called twice
       // Matching on retrieval ANY since the type is erased and the mocks get confused
       when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Any]]))
@@ -101,6 +104,8 @@ class DeployServiceControllerSpec
   import ServiceConfigsService._
   "Deploy Service Page step2" should {
     "help evaluate deployment" in new Setup {
+      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
+        .thenReturn(Future.successful(allServices))
       // This gets called twice
       // Matching on retrieval ANY since the type is erased and the mocks get confused
       when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Any]]))
@@ -150,6 +155,8 @@ class DeployServiceControllerSpec
   "Deploy Service Page step3" should {
     "deploy service" in new Setup {
 
+      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
+        .thenReturn(Future.successful(allServices))
       // This gets called twice
       // Matching on retrieval ANY since the type is erased and the mocks get confused
       when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Any]]))
@@ -158,9 +165,6 @@ class DeployServiceControllerSpec
               Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))
         ))
         .andThen(Future.successful(true))
-
-      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq(someService)))
       when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockBuildJobsConnector.deployMicroservice(eqTo("some-service"), eqTo(Version("0.3.0")), eqTo(Environment.QA), eqTo(Retrieval.Username("some-user")) )(any[HeaderCarrier]))
@@ -216,6 +220,11 @@ class DeployServiceControllerSpec
   , language       = Some("some-language")
   , isArchived     = false
   , defaultBranch  = "some-default-branch"
+  )
+
+  private val allServices = Seq(
+    someService,
+    someService.copy(name = "some-service-2")
   )
 
   private val someSlugInfo = ServiceDependencies(
@@ -298,6 +307,7 @@ class DeployServiceControllerSpec
                                             , mcc                           = mcc
                                             , configuration                 = app.injector.instanceOf[Configuration]
                                             , buildJobsConnector            = mockBuildJobsConnector
+                                            , teamsAndRepositoriesConnector = mockTeamsAndRepositoriesConnector
                                             , serviceDependenciesConnector  = mockServiceDependenciesConnector
                                             , serviceCommissioningConnector = mockServiceCommissioningConnector
                                             , releasesConnector             = mockReleasesConnector
