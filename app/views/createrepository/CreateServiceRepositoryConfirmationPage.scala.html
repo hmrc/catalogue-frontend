@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commRoutes }
 
 @this(viewMessages: ViewMessages)
 
@@ -35,7 +36,7 @@
         <ul>
             <li>Check the service repository has been created in <a id="link-to-github-repo" href="https://github.com/hmrc/@repoName">GitHub</a> (this can take around 5 minutes)</li>
             <li>Follow the next steps in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/create-app-config.html">MDTP handbook</a> to finish creating your microservice</li>
-            <li>Track your progress on the <a id="link-to-mdtp-handbook" href="http://localhost:9017/service/@repoName/commissioning-state">commissioning state</a> page</li>
+            <li>Track your progress on the <a id="link-to-mdtp-handbook" href=@commRoutes.ServiceCommissioningStatusController.getCommissioningState(repoName).url>commissioning state</a> page</li>
         </ul>
     </section>
 
