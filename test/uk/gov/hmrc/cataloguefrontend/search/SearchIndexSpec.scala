@@ -117,9 +117,9 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     )
       
   val userLogTestRes = Seq(
-    SearchTerm(linkType = "explorer",     name = "dependency", link = "/whats-running-where",           1.0f, Set("depex")),
-    SearchTerm(linkType = "explorer",     name = "dependency", link = "/deploy-service/1",              1.0f, Set("depex")),
-    SearchTerm(linkType = "explorer",     name = "dependency", link = "/users?username=&team=Platops",  1.0f, Set("depex"))
+    SearchTerm(linkType = "page",         name = "whatsrunningwhere", link = "/whats-running-where",           1.0f, hints = Set("wrw")),
+    SearchTerm(linkType = "page",         name = "deploy service",    link = "/deploy-service/1",              1.0f),
+    SearchTerm(linkType = "page",         name = "users",             link = "/users?username=&team=Platops",  1.0f)
   )
 
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]

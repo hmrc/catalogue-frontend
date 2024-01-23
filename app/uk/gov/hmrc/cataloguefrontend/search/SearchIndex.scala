@@ -144,10 +144,10 @@ object SearchIndex {
   def searchURIs(logs: Seq[Log], index: Seq[SearchTerm]): Seq[SearchTerm] = {
     val sortedLogs = logs.sortWith(_.visitCounter > _.visitCounter)
     val sortedUris = sortedLogs.map(_.page) //convert Seq(Log) to Seq(String)
-    val filteredUris = sortedUris.filter(uri => index.exists(term => uri.contains(term.link))) //remove uris not in index
+    val filteredUris = sortedUris.filter(uri => index.exists(searchTerm => uri.contains(searchTerm.link))) //remove uris not in index
     for {
       uri                 <- filteredUris
-      matchedSearchTerm   <- index.find(_ => index.exists(term => uri.contains(term.link))) //find term for URI
+      matchedSearchTerm   <- index.find(searchTerm => uri.contains(searchTerm.link)) //find term for URI
       searchTermWithParams = SearchTerm(linkType = matchedSearchTerm.linkType,
                                          name = matchedSearchTerm.name,
                                          link = uri, //update basic link to uri with params
