@@ -36,7 +36,7 @@
         <ul>
             <li>Check the prototype repository has been created in <a id="link-to-github-repo" href="https://github.com/hmrc/@repoName">GitHub</a> (this can take around 5 minutes)</li>
             <li>Check the prototype has been deployed to <a id="link-to-heroku" href="https://dashboard.heroku.com/apps/@repoName">Heroku</a></li>
-            <li>Check the <a id="link-to-catalogue" href=@catalogueRoutes.CatalogueController.service(repoName).url>status</a> of the prototype is 'Running'</li>
+            <li>Check the <a id="link-to-catalogue" href=@catalogueRoutes.CatalogueController.repository(repoName).url>status</a> of the prototype is 'Running'</li>
             <li>Prototypes are turned off in Heroku throughout the weekend in order to save resources, if you need to access the prototype you will need to restart it:</li>
             <ul>
                 <li>By navigating to your prototype in Heroku and clicking on the 'Restart prototype' button</li>
