@@ -38,7 +38,7 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, S
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ServiceName, WhatsRunningWhereService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
@@ -51,7 +51,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class EnvData(
   version                : Version,
   repoModules            : Option[RepositoryModules],
-  optShutterState        : Option[ShutterState],
+  shutterStates          : Seq[ShutterState],
   telemetryLinks         : Seq[Link],
   nonPerformantQueryLinks: Seq[Link],
 )
@@ -173,20 +173,24 @@ class CatalogueController @Inject() (
                                      deployedVersions.sorted.headOption match {
                                        case Some(version) =>
                                          for {
-                                           repoModules     <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
-                                           optShutterState <- shutterService.getShutterState(ShutterType.Frontend, env, serviceName)
-                                           data            =  EnvData(
-                                                                version                 = version,
-                                                                repoModules             = repoModules.headOption,
-                                                                optShutterState         = optShutterState,
-                                                                telemetryLinks          = Seq(
-                                                                   telemetryLinks.grafanaDashboard(env, serviceName),
-                                                                   telemetryLinks.kibanaDashboard(env, serviceName)
-                                                                ),
-                                                                nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]())(d =>
-                                                                  telemetryLinks.kibanaNonPerformantQueries(env, d, nonPerformantQueries)
-                                                                )
+                                           repoModules   <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
+                                           shutterStates <- ShutterType.values.foldLeftM[Future, Seq[ShutterState]] (Seq.empty)( (acc, shutterType) =>
+                                                              shutterService
+                                                                .getShutterStates(shutterType, env, Some(ServiceName(serviceName)))
+                                                                .map(xs => acc ++ xs)
+                                                            )
+                                           data          =  EnvData(
+                                                              version                 = version,
+                                                              repoModules             = repoModules.headOption,
+                                                              shutterStates           = shutterStates,
+                                                              telemetryLinks          = Seq(
+                                                                  telemetryLinks.grafanaDashboard(env, serviceName),
+                                                                  telemetryLinks.kibanaDashboard(env, serviceName)
+                                                              ),
+                                                              nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]())(d =>
+                                                                telemetryLinks.kibanaNonPerformantQueries(env, d, nonPerformantQueries)
                                                               )
+                                                            )
                                          } yield Some(slugInfoFlag -> data)
                                        case None => Future.successful(None)
                                      }
@@ -205,7 +209,7 @@ class CatalogueController @Inject() (
                                     EnvData(
                                       version                 = latestServiceInfo.version,
                                       repoModules             = latestRepoModules,
-                                      optShutterState         = None,
+                                      shutterStates           = Seq.empty,
                                       telemetryLinks          = Seq.empty,
                                       nonPerformantQueryLinks = Seq.empty,
                                     )
