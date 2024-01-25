@@ -32,6 +32,8 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterCause.UserCreated
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus.Unshuttered
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType.Frontend
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
+
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
@@ -93,17 +95,17 @@ class ShutterEventsControllerSpec
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
-      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName, None, None)(fakeRequest)
+      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName.map(_.asString), None, None)(fakeRequest)
 
       status(futResult) shouldBe OK
       futResult.toDocument.select(ShutterEventCssSelector) should have length 1
     }
 
     "request shutter events from the shutter api for the specified service and environment" in new Fixture {
-      val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = Some("abc-frontend"))
+      val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = Some(ServiceName("abc-frontend")))
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
-      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName, None, None)(fakeRequest)
+      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName.map(_.asString), None, None)(fakeRequest)
 
       status(futResult) shouldBe OK
       futResult.toDocument.select(ShutterEventCssSelector) should have length 1
@@ -123,7 +125,7 @@ class ShutterEventsControllerSpec
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorFailure(filter)
 
-      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName, None, None)(fakeRequest)
+      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName.map(_.asString), None, None)(fakeRequest)
 
       status(futResult) shouldBe OK
       futResult.toDocument.select(ShutterEventCssSelector) shouldBe empty
