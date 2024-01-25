@@ -17,9 +17,10 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.{Json, JsValue, JsNull, JsString, Reads}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.internalauth.client.AuthorizationToken
@@ -46,20 +47,10 @@ class ShutterConnector @Inject() (
     * /shutter-api/{environment}/{serviceType}/states
     * Retrieves the current shutter states for all services in given environment
     */
-  def shutterStates(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
+  def shutterStates(st: ShutterType, env: Environment, serviceName: Option[ServiceName] = None)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
     httpClientV2
-      .get(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states")
+      .get(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states?serviceName=${serviceName.map(_.asString)}")
       .execute[Seq[ShutterState]]
-
-  /**
-    * GET
-    * /shutter-api/{environment}/{serviceType}/states/{serviceName}
-    * Retrieves the current shutter states for the given service in the given environment
-    */
-  def shutterState(st: ShutterType, env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ShutterState]] =
-    httpClientV2
-      .get(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states/$serviceName")
-      .execute[Option[ShutterState]]
 
   /**
     * PUT
@@ -68,16 +59,22 @@ class ShutterConnector @Inject() (
     */
   def updateShutterStatus(
     token      : AuthorizationToken,
-    serviceName: String,
+    serviceName: ServiceName,
+    context    : Option[String],
     st         : ShutterType,
     env        : Environment,
     status     : ShutterStatus
   )(implicit hc: HeaderCarrier): Future[Unit] = {
     implicit val ssf = ShutterStatus.format
     httpClientV2
-      .put(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states/$serviceName")
+      .put(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states/${serviceName.asString}")
       .setHeader("Authorization" -> token.value)
-      .withBody(Json.toJson(status))
+      .withBody(
+        Json.obj(
+          "context"       -> context.fold(JsNull: JsValue)(JsString(_))
+        , "shutterStatus" -> Json.toJson(status)
+        )
+      )
       .execute[Unit](HttpReads.Implicits.throwOnFailure(implicitly[HttpReads[Either[UpstreamErrorResponse, Unit]]]), implicitly[ExecutionContext])
   }
 
@@ -110,10 +107,10 @@ class ShutterConnector @Inject() (
     * /shutter-api/{environment}/outage-pages/{serviceName}
     * Retrieves the current shutter state for the given service in the given environment
     */
-  def outagePage(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
+  def outagePage(env: Environment, serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
     implicit val ssf = OutagePage.reads
     httpClientV2
-      .get(url"$baseUrl/shutter-api/${env.asString}/outage-pages/$serviceName")
+      .get(url"$baseUrl/shutter-api/${env.asString}/outage-pages/${serviceName.asString}")
       .execute[Option[OutagePage]]
   }
 
@@ -122,10 +119,10 @@ class ShutterConnector @Inject() (
     * /shutter-api/{environment}/frontend-route-warnings/{serviceName}
     * Retrieves the warnings (if any) for the given service in the given environment, based on parsing the mdtp-frontend-routes
     */
-  def frontendRouteWarnings(env: Environment, serviceName: String)(implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] = {
+  def frontendRouteWarnings(env: Environment, serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] = {
     implicit val r = FrontendRouteWarning.reads
     httpClientV2
-      .get(url"$baseUrl/shutter-api/${env.asString}/frontend-route-warnings/$serviceName")
+      .get(url"$baseUrl/shutter-api/${env.asString}/frontend-route-warnings/${serviceName.asString}")
       .execute[Seq[FrontendRouteWarning]]
   }
 }
@@ -133,10 +130,10 @@ class ShutterConnector @Inject() (
 object ShutterConnector {
   case class ShutterEventsFilter(
     environment: Environment,
-    serviceName: Option[String]
+    serviceName: Option[ServiceName]
   ) {
     def asQueryParams: Seq[(String, String)] =
       ("data.environment" -> environment.asString) +:
-        serviceName.map("data.serviceName" -> _).toSeq
+        serviceName.map("data.serviceName" -> _.asString).toSeq
   }
 }
