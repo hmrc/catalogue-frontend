@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 
-import uk.gov.hmrc.cataloguefrontend.connector.model.Log
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, UserLog}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthRoutes}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
@@ -114,10 +114,12 @@ class SearchIndex @Inject()(
 
   def search(query: Seq[String]): Seq[SearchTerm] =
     SearchIndex.search(query, cachedIndex.get())
+    
+  def searchByUserLogs(userLog: UserLog) : Seq[SearchTerm] =
+    SearchIndex.searchURIs(userLog.logs, hardcodedLinks)
 }
 
 object SearchIndex {
-
   def normalizeTerm(term: String): String =
     term.toLowerCase.replaceAll(" -_", "")
 
@@ -140,20 +142,26 @@ object SearchIndex {
       .view
       .mapValues(_.map(_._2))
       .toMap
-      
+  
   def searchURIs(logs: Seq[Log], index: Seq[SearchTerm]): Seq[SearchTerm] = {
-    val sortedLogs = logs.sortWith(_.visitCounter > _.visitCounter)
-    val sortedUris = sortedLogs.map(_.page) //convert Seq(Log) to Seq(String)
-    val filteredUris = sortedUris.filter(uri => index.exists(searchTerm => uri.contains(searchTerm.link))) //remove uris not in index
-    for {
-      uri                 <- filteredUris
-      matchedSearchTerm   <- index.find(searchTerm => uri.contains(searchTerm.link)) //find term for URI
-      searchTermWithParams = SearchTerm(linkType = matchedSearchTerm.linkType,
-                                         name = matchedSearchTerm.name,
-                                         link = uri, //update basic link to uri with params
-                                         weight = matchedSearchTerm.weight,
-                                         hints = matchedSearchTerm.hints,
+    val filteredLogs = logs.filter(log => index.exists(searchTerm => log.page.contains(searchTerm.link)))
+    val weightedSearchTerms = for {
+      log <- filteredLogs
+      matchedSearchTerm <- index.find(searchTerm => log.page.contains(searchTerm.link))
+      weightedSearchTerm = SearchTerm(
+        linkType = matchedSearchTerm.linkType
+      , name     = matchedSearchTerm.name
+      , link     = matchedSearchTerm.link
+      , weight   = log.visitCounter
+      )
+    } yield (weightedSearchTerm)
+    
+    weightedSearchTerms.groupBy(_.link)
+      .view.mapValues(groupedTerms =>
+        groupedTerms.reduce((term1, term2) =>
+          term1.copy(weight = term1.weight + term2.weight)
         )
-    }yield searchTermWithParams
+      ).values.toSeq
+      .sortWith(_.weight > _.weight)
   }
 }

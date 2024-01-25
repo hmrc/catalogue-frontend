@@ -38,6 +38,8 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, S
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
+import uk.gov.hmrc.cataloguefrontend.connector.model.UserLog
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ServiceName, WhatsRunningWhereService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
