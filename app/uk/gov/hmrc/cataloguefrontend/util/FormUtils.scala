@@ -28,7 +28,7 @@ trait FormUtils {
 
   def notEmptySeq = {
     import play.api.data.validation._
-    Constraint[Seq[String]]("") { o =>
+    Constraint[Seq[_]]("") { o =>
       if (o == null || o.isEmpty) Invalid(ValidationError("error.required")) else Valid
     }
   }

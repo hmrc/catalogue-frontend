@@ -25,11 +25,11 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 
 class ShutterServiceSpec
   extends AnyWordSpec
@@ -40,25 +40,25 @@ class ShutterServiceSpec
 
   val mockShutterStates = Seq(
       ShutterState(
-        _serviceName = Some(ServiceName("abc-frontend"))
+        serviceName  = ServiceName("abc-frontend")
       , context      = None
       , shutterType  = ShutterType.Frontend
       , environment  = Environment.Production
       , status       = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       )
     , ShutterState(
-        _serviceName = Some(ServiceName("zxy-frontend"))
+        serviceName  = ServiceName("zxy-frontend")
       , context      = None
       , shutterType  = ShutterType.Frontend
       , environment  = Environment.Production
       , status       = ShutterStatus.Unshuttered
       )
     , ShutterState(
-        _serviceName = Some(ServiceName("ijk-frontend"))
+        serviceName = ServiceName("ijk-frontend")
       , context      = None
       , shutterType  = ShutterType.Frontend
       , environment  = Environment.Production
-      , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+      , status       = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
       )
     )
 
@@ -118,10 +118,10 @@ class ShutterServiceSpec
 
     "handle missing OutagePage" in {
       boot.shutterService.toOutagePageStatus(
-          serviceNames = Seq("service1")
+          serviceNames = Seq(ServiceName("service1"))
         , outagePages  = List.empty
         ) shouldBe List(OutagePageStatus(
-            serviceName = "service1"
+            serviceName = ServiceName("service1")
           , warning     = Some(( "No templatedMessage Element no outage-page"
                                , "Default outage page will be displayed."
                               ))
@@ -130,17 +130,17 @@ class ShutterServiceSpec
 
     "handle multiple missing OutagePages" in {
       boot.shutterService.toOutagePageStatus(
-          serviceNames = Seq("service1", "service2")
+          serviceNames = Seq(ServiceName("service1"), ServiceName("service2"))
         , outagePages  = List.empty
         ) shouldBe List(
             OutagePageStatus(
-                serviceName = "service1"
+                serviceName = ServiceName("service1")
               , warning     = Some(( "No templatedMessage Element no outage-page"
                                    , "Default outage page will be displayed."
                                   ))
               )
           , OutagePageStatus(
-                serviceName = "service2"
+                serviceName = ServiceName("service2")
               , warning     = Some(( "No templatedMessage Element no outage-page"
                                    , "Default outage page will be displayed."
                                   ))
@@ -150,10 +150,10 @@ class ShutterServiceSpec
 
     "handle warnings" in {
       boot.shutterService.toOutagePageStatus(
-          serviceNames = Seq("service1", "service2", "service3")
+          serviceNames = Seq(ServiceName("service1"), ServiceName("service2"), ServiceName("service3"))
         , outagePages  = List(
                              mkOutagePage(
-                                 serviceName = "service1"
+                                 serviceName = ServiceName("service1")
                                , warnings    = List(OutagePageWarning(
                                                    name    = "UnableToRetrievePage"
                                                  , message = "Unable to retrieve outage-page from Github"
@@ -161,14 +161,14 @@ class ShutterServiceSpec
 
                                )
                            , mkOutagePage(
-                                 serviceName = "service2"
+                                 serviceName = ServiceName("service2")
                                , warnings    = List(OutagePageWarning(
                                                    name    = "MalformedHTML"
                                                  , message = "The outage page was found to have some malformed html content"
                                                  ))
                                )
                            , mkOutagePage(
-                                 serviceName = "service3"
+                                 serviceName = ServiceName("service3")
                                , warnings    = List(OutagePageWarning(
                                                    name    = "DuplicateTemplateElementIDs"
                                                  , message = "More than one template ID was found in the content for: templatedMessage"
@@ -177,19 +177,19 @@ class ShutterServiceSpec
                            )
         ) shouldBe List(
             OutagePageStatus(
-                serviceName = "service1"
+                serviceName = ServiceName("service1")
               , warning     = Some(( "Unable to retrieve outage-page from Github"
                                    , "Default outage page will be displayed."
                                   ))
               )
           , OutagePageStatus(
-                serviceName = "service2"
+                serviceName = ServiceName("service2")
               , warning     = Some(( "The outage page was found to have some malformed html content"
                                    , "Outage page will be sent as is, without updating templates."
                                   ))
               )
           , OutagePageStatus(
-                serviceName = "service3"
+                serviceName = ServiceName("service3")
               , warning     = Some(( "More than one template ID was found in the content for: templatedMessage"
                                    , "All matching elements will be updated"
                                   ))
@@ -198,7 +198,7 @@ class ShutterServiceSpec
     }
   }
 
-  def mkOutagePage(serviceName: String, warnings: List[OutagePageWarning]): OutagePage =
+  def mkOutagePage(serviceName: ServiceName, warnings: List[OutagePageWarning]): OutagePage =
     OutagePage(
         serviceName      = serviceName
       , environment      = Environment.Production

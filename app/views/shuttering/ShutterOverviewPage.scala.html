@@ -56,7 +56,7 @@
         </div>
 
         <p class="m-1">
-          Select a service from the list below or <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)">
+          Select a service from the list below or <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None, None)">
             click here to go to the shutter wizard
           </a>.
         </p>
@@ -131,11 +131,9 @@
       @defining(state.status.value == ShutterStatusValue.Shuttered) { isShuttered =>
           <tr id="row@i" class="shutter-row @if(isShuttered) {shuttered-row} else {unshuttered}">
               <td id="row@{i}_name" class="shutter-service">
-                  @state._serviceName.map { sn =>
-                    <a class="shutter-link " href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(sn.asString)">
-                      @sn.asString
-                    </a>
-                  }
+                <a class="shutter-link " href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName.asString)">
+                  @state.serviceName.asString
+                </a>
               </td>
               @if(shutterType != ShutterType.Frontend) {
                 <td id="row@{i}_context" class="shutter-context">
@@ -153,7 +151,7 @@
               </td>
               <td id="row@{i}_event">
               @if(lastEvent.isDefined) {
-                  <a id="event-history-link-@{state.serviceName}-@{state.environment.asString}"
+                  <a id="event-history-link-@{state.serviceName.asString}-@{state.environment.asString}"
                   class="medium-glyphicon glyphicon glyphicon-list"
                   data-bs-toggle="tooltip"
                   data-bs-placement="right"
@@ -164,7 +162,7 @@
               }
               </td>
               <td id="row@{i}_update" class="shutter-update">
-                  <a id="shutter-link-@{state.serviceName}-@{state.environment.asString}" class="shutter-link " href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName.asString))">
+                  <a id="shutter-link-@{state.serviceName.asString}-@{state.environment.asString}" class="shutter-link " href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName.asString), state.context)">
                       @if(isShuttered) {Unshutter} else {Shutter}
                   </a>
               </td>

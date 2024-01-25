@@ -16,15 +16,15 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterState}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step1Out, Step2aForm, ServiceAndRouteWarnings}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterState, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step0Out, Step1Out, Step2aForm, ServiceAndRouteWarnings}
 @import helper._
 @import partials.form_global_errors
 
 @this(viewMessages: ViewMessages)
 
 @( form                 : Form[Step2aForm]
- , env                  : Environment
+ , step0Out             : Step0Out
  , step1Out             : Step1Out
  , frontendRouteWarnings: Seq[ServiceAndRouteWarnings]
  , back                 : Call
@@ -49,14 +49,14 @@
             @csrfFormField
 
             <div class="card mb-3">
-                <div class="card-header @if(env == Environment.Production) {bg-danger-subtle} else {bg-warning-subtle}">
+                <div class="card-header @if(step0Out.env == Environment.Production) {bg-danger-subtle} else {bg-warning-subtle}">
                     <span class="glyphicon glyphicon-warning-sign"></span>
-                    You are about to <b>Shutter</b> the following frontends in <b>@env</b>:
+                    You are about to <b>Shutter</b> the following frontends in <b>@step0Out.env</b>:
                 </div>
                 <div class="card-body">
                     <ul class="mb-0">
-                        @step1Out.serviceNames.map { serviceName =>
-                            <li>@serviceName</li>
+                        @step1Out.serviceNameAndContexts.map { service =>
+                            <li>@service.serviceName.asString @if(step0Out.shutterType == ShutterType.Rate) { @service.context.fold("")(cntx => s"($cntx)") }</li>
                         }
                     </ul>
                 </div>
@@ -82,7 +82,7 @@
                             @frontendRouteWarnings.map { frw =>
                                 @frw.warnings.map { warning =>
                                     <tr class="alert-warning">
-                                        <td>@frw.serviceName</td>
+                                        <td>@frw.serviceName.asString</td>
                                         <td>@warning.name</td>
                                         <td>@warning.message</td>
                                         <td>@warning.consequence</td>

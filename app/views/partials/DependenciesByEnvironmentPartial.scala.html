@@ -54,7 +54,7 @@
                             @renderVersion(optEnvData.map(_.version))
                         </span>
                         <span>
-                            @renderShutterStatusBadge(optEnvData.flatMap(_.optShutterState))
+                            @renderShutterStatusBadge(optEnvData.fold(Seq.empty[uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState])(_.shutterStates))
                             @defining(optEnvData.toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)) { dependencies =>
                                 @renderActiveBobbyRuleViolationBadge(slugInfoFlag, dependencies)
                                 @renderPendingBobbyRuleViolationBadge(slugInfoFlag, dependencies)
@@ -168,8 +168,8 @@
   }
 }
 
-@renderShutterStatusBadge(optShutterState: Option[ShutterState]) = {
-  @if(optShutterState.exists(_.status.value == ShutterStatusValue.Shuttered)) {
+@renderShutterStatusBadge(shutterStates: Seq[ShutterState]) = {
+  @if(shutterStates.exists(_.status.value == ShutterStatusValue.Shuttered)) {
     <span class="environment-badge shutter-badge" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("shuttered.badge")"></span>
   } else {
     <span class="environment-badge no-badge"></span>

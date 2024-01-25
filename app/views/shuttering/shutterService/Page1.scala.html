@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterGroup, ShutterStatusValue, ShutterState, ShutterType}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.Step1Form
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step1Form, ServiceNameAndContext}
 @import helper._
 @import partials.form_global_errors
 
@@ -27,7 +27,6 @@
  , shutterType  : ShutterType
  , env          : Environment
  , shutterStates: Seq[ShutterState]
- , statusValues : Seq[ShutterStatusValue]
  , shutterGroups: Seq[ShutterGroup]
  , back         : Call
  )(implicit
@@ -61,7 +60,7 @@
                     <div class="col-2">
                         @select(
                               field                 =  form("status")
-                            , options               =  Seq("" -> "Please select") ++ statusValues.map {
+                            , options               =  Seq("" -> "Please select") ++ ShutterStatusValue.values.map {
                                                          case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
                                                          case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
                                                        }
@@ -74,8 +73,10 @@
                 <div class="row">
                     <div class="col-5">
                         @select(
-                              field                 =  form("allServices")
-                            , options               =  shutterStates.map(_.serviceName).map(sn => (sn.asString, sn.asString))
+                              field                 =  form("avalableServices")
+                            , options               =  shutterStates
+                                                         .map(x => ServiceNameAndContext(x.serviceName, x.context))
+                                                         .map(x => (x.asString, displayService(x)))
                             , Symbol("_label")      -> s"Available ${shutterType}s"
                             , Symbol("_labelClass") -> "form-label"
                             , Symbol("multiple")    -> "multiple"
@@ -108,8 +109,8 @@
                     </div>
                     <div class="col-5">
                         @select(
-                              field                 =  form("serviceName")
-                            , options               =  form("serviceName").indexes.map(i => form("serviceName")("[%s]".format(i)).value).collect { case Some(v) => (v, v) }
+                              field                 =  form("selectedServices")
+                            , options               =  scala.util.Try(form.get.serviceNameAndContexts).getOrElse(Nil).map(sn => (sn.asString, displayService(sn)))
                             , Symbol("_label")      -> s"Selected ${shutterType}s"
                             , Symbol("_labelClass") -> "form-label"
                             , Symbol("multiple")    -> "multiple"
@@ -147,7 +148,7 @@
 
   <script @CSPNonce.attr type="text/javascript">
     function onChangeGroup(selectElmt) {
-      let group = selectElmt.options[selectElmt.selectedIndex].value;
+      let groupOptions = selectElmt.options[selectElmt.selectedIndex].value;
 
       let groupData = @Html(shutterGroups.map { g =>
                          defining(g.services.map("\"" + _ + "\"").mkString("[", ",", "]")){ values =>
@@ -155,32 +156,30 @@
                          }
                        }.mkString("{", ",", "}"));
 
+      let avalableServices = document.getElementById('avalableServices');
+      let selectedServices = document.getElementById('selectedServices');
 
-      let selectedServices = groupData[group];
-
-      let allServices = document.getElementById('allServices');
-      let serviceName = document.getElementById('serviceName');
       let missingServices = [];
-      for (let selectedService of selectedServices) {
-        let i = indexOf(allServices, selectedService);
+      for (let group of groupData[groupOptions]) {
+        let i = indexOfServiceName(avalableServices, group);
         if (i === -1) {
-          let j = indexOf(serviceName, selectedService);
+          let j = indexOfServiceName(selectedServices, group);
           if (j === -1) {
-            missingServices.push(selectedService);
+            missingServices.push(group);
           }
         } else {
           let option = document.createElement("option");
-          option.text = selectedService;
-          serviceName.add(option);
+          option.text = group;
+          selectedServices.add(option);
 
-          allServices.remove(i);
+          avalableServices.remove(i);
         }
       };
-      sort('serviceName');
+      sort('selectedServices');
       selectElmt.selectedIndex = 0;
 
       if (missingServices.length > 0) {
-        addGroupWarning(group, missingServices);
+        addGroupWarning(groupOptions, missingServices);
       }
     }
 
@@ -195,15 +194,15 @@
     });
 
     $('#btnRight').click(function (e) {
-      move(e, 'allServices', 'serviceName');
+      move(e, 'avalableServices', 'selectedServices');
     });
 
     $('#btnLeft').click(function (e) {
-      move(e, 'serviceName', 'allServices');
+      move(e, 'selectedServices', 'avalableServices');
     });
 
     function selectAllOptions() {
-      $('#serviceName option').prop('selected', true);
+      $('#selectedServices option').prop('selected', true);
     }
 
     function indexOf(selectElement, value) {
@@ -215,6 +214,17 @@
       }
       return -1;
     }
+
+    function indexOfServiceName(selectElement, value) {
+      let options = selectElement.options;
+      for (var i = 0, optionsLength = options.length; i < optionsLength; i++) {
+        if (options[i].value.split(',')[0] === value) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
 
     function move(e, from, to) {
       let selectedOpts = $('#' + from + ' option:selected');
@@ -247,20 +257,28 @@
     }
 
     $(document).ready(function() {
-      // remove options in serviceName from allServices
-      let selectedOpts = $('#serviceName option');
+      // remove options in selectedServices from avalableServices
+      let selectedOpts = $('#selectedServices option');
       selectedOpts.prop('selected', false);
 
-      let allServices = document.getElementById('allServices');
-      sort('allServices');
-      sort('serviceName');
+      let avalableServices = document.getElementById('avalableServices');
+      sort('avalableServices');
+      sort('selectedServices');
 
       selectedOpts.each(function()
       {
         let value = $(this).val();
-        let i = indexOf(allServices, value);
-        allServices.remove(i);
+        let i = indexOf(avalableServices, value);
+        avalableServices.remove(i);
       });
     });
   </script>
+}
+
+@displayService(service: ServiceNameAndContext) = @{
+  if (shutterType == ShutterType.Rate) {
+    s"${service.serviceName.asString} ${service.context.fold("")(cntx => s"($cntx)")}"
+  } else {
+    service.serviceName.asString
+  }
 }
