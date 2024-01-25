@@ -18,14 +18,14 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.data.Form
-import play.api.data.Forms._
+import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering.ShutterEventsPage
 
@@ -53,7 +53,7 @@ class ShutterEventsController @Inject() (
 
   def shutterEventsList(env: Environment, serviceName: Option[String], limit: Option[Int], offset: Option[Int]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      val filter = filterFor(env, serviceName)
+      val filter = filterFor(env, serviceName.map(ServiceName.apply))
       val form   = ShutterEventsForm.fromFilter(filter)
 
       for {
@@ -68,17 +68,17 @@ class ShutterEventsController @Inject() (
       } yield Ok(page)
     }
 
-  private def filterFor(env: Environment, serviceNameOpt: Option[String]): ShutterEventsFilter =
-    ShutterEventsFilter(env, serviceNameOpt.filter(_.trim.nonEmpty))
+  private def filterFor(env: Environment, serviceNameOpt: Option[ServiceName]): ShutterEventsFilter =
+    ShutterEventsFilter(env, serviceNameOpt.filter(_.asString.trim.nonEmpty))
 }
 
-private case class ShutterEventsForm(env: String, serviceName: Option[String])
+private case class ShutterEventsForm(env: String, serviceName: Option[ServiceName])
 
 private object ShutterEventsForm {
   lazy val form = Form(
-    mapping(
-      "environment" -> nonEmptyText,
-      "serviceName" -> optional(text)
+    Forms.mapping(
+      "environment" -> Forms.nonEmptyText
+    , "serviceName" -> Forms.optional(Forms.text.transform[ServiceName](ServiceName.apply, _.asString))
     )(ShutterEventsForm.apply)(ShutterEventsForm.unapply)
   )
 
