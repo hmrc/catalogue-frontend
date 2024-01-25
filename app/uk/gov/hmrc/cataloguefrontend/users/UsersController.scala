@@ -21,8 +21,10 @@ import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.connector.{PlatopsAuditingConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, UserLog}
+import uk.gov.hmrc.cataloguefrontend.search.SearchController
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.error_404_template
@@ -35,6 +37,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class UsersController @Inject()(
   userManagementConnector      : UserManagementConnector
 , teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+, platopsAuditingConnector     : PlatopsAuditingConnector
+, searchController             : SearchController
 , userInfoPage                 : UserInfoPage
 , userListPage                 : UserListPage
 , umpConfig                    : UserManagementPortalConfig
@@ -51,7 +55,13 @@ class UsersController @Inject()(
         .map {
           case Some(user) =>
             val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
-            Ok(userInfoPage(user, umpProfileUrl))
+            platopsAuditingConnector.userLogs(username).map{
+              case Some(userLog) =>
+                val searchTerms = Some(searchController.searchByUserLog(userLog, 20))
+                println(s"=========================$searchTerms")
+                Ok(userInfoPage(user, umpProfileUrl, searchTerms))
+            }
+            Ok(userInfoPage(user, umpProfileUrl, None))
           case None =>
             NotFound(error_404_template())
         }

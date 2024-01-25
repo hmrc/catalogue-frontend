@@ -17,12 +17,19 @@
 @import uk.gov.hmrc.cataloguefrontend.users.User
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.users.UsersController
+@import uk.gov.hmrc.cataloguefrontend.connector.PlatopsAuditingConnector
+@import scala.concurrent.ExecutionContext
+@import uk.gov.hmrc.cataloguefrontend.search.SearchTerm
+
+
 
 @this()
 
 @(
   user: User,
-  umpProfileUrl: String
+  umpProfileUrl: String,
+  searchTerms: Option[Seq[SearchTerm]]
 )(implicit
   request: RequestHeader
 )
@@ -96,6 +103,18 @@
                   </div>
               </div>
           </div>
+
+
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="mb-0">Recent Pages</h4>
+              @println("=======================================")
+              @println(s"$searchTerms")
+              @searchTerms
+            </div>
+          </div>
+        </div>
       </div>
   </section>
 }

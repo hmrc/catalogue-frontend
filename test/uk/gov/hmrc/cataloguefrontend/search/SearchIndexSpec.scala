@@ -81,46 +81,6 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     SearchTerm(linkType = "health",   name = "voa",                                        link = "/health-indicators/voa-api-proxy-performance-tests",             weight = 0.5f,Set())
   )
   
-  private val uriIndex = List(
-    SearchTerm(linkType = "explorer", name = "dependency",                   link = catalogueRoutes.DependencyExplorerController.landing.url,                           1.0f, Set("depex")),
-    SearchTerm(linkType = "explorer", name = "bobby",                        link = catalogueRoutes.BobbyExplorerController.list().url,                                 1.0f),
-    SearchTerm(linkType = "explorer", name = "jvm",                          link = catalogueRoutes.JDKVersionController.compareAllEnvironments().url,                  1.0f, Set("jdk", "jre")),
-    SearchTerm(linkType = "explorer", name = "leaks",                        link = leakRoutes.LeakDetectionController.ruleSummaries.url,                               1.0f, Set("lds")),
-    SearchTerm(linkType = "page",     name = "whatsrunningwhere",            link = wrwRoutes.WhatsRunningWhereController.releases().url,                               1.0f, Set("wrw")),
-    SearchTerm(linkType = "page",     name = "deployment",                   link = depRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,  1.0f),
-    SearchTerm(linkType = "page",     name = "shutter-overview",             link = shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url,        1.0f),
-    SearchTerm(linkType = "page",     name = "shutter-api",                  link = shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,             1.0f),
-    SearchTerm(linkType = "page",     name = "shutter-rate",                 link = shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,            1.0f),
-    SearchTerm(linkType = "page",     name = "shutter-events",               link = shutterRoutes.ShutterEventsController.shutterEvents.url,                            1.0f),
-    SearchTerm(linkType = "page",     name = "teams",                        link = teamRoutes.TeamsController.allTeams().url,                                          1.0f),
-    SearchTerm(linkType = "page",     name = "repositories",                 link = reposRoutes.RepositoriesController.allRepositories().url,                           1.0f),
-    SearchTerm(linkType = "page",     name = "users",                        link = userRoutes.UsersController.allUsers().url,                                          1.0f),
-    SearchTerm(linkType = "page",     name = "defaultbranch",                link = catalogueRoutes.CatalogueController.allDefaultBranches().url,                       1.0f),
-    SearchTerm(linkType = "page",     name = "pr-commenter-recommendations", link = prcommenterRoutes.PrCommenterController.recommendations().url,                      1.0f),
-    SearchTerm(linkType = "page",     name = "search config",                link = serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,                  1.0f),
-    SearchTerm(linkType = "page",     name = "config warnings",              link = serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,           1.0f),
-    SearchTerm(linkType = "page",     name = "create service repository",    link = createRepoRoutes.CreateRepositoryController.createServiceRepositoryLanding().url,   1.0f),
-    SearchTerm(linkType = "page",     name = "create prototype repository",  link = createRepoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding().url, 1.0f),
-    SearchTerm(linkType = "page",     name = "create test repository",       link = createRepoRoutes.CreateRepositoryController.createTestRepository().url,             1.0f),
-    SearchTerm(linkType = "page",     name = "deploy service",               link = depRoutes.DeployServiceController.step1(None).url,                                  1.0f),
-    SearchTerm(linkType = "page",     name = "search commissioning state",   link = commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,       1.0f))
-  
-  private val testUserLog = new
-    UserLog(userName = "bob.bobber",
-      logs = Seq(
-        new Log(page = "/sign-out"                                                     , visitCounter = 9),
-        new Log(page = "/users?username=&team=Platops"                                 , visitCounter = 5),
-        new Log(page = "/create-app-configs?serviceName=platops-test-frontend"         , visitCounter = 8),
-        new Log(page = "/whats-running-where"                                          , visitCounter = 22),
-        new Log(page = "/deploy-service/1"                                             , visitCounter = 12)
-      )
-    )
-      
-  val userLogTestRes = Seq(
-    SearchTerm(linkType = "page",         name = "whatsrunningwhere", link = "/whats-running-where",           1.0f, hints = Set("wrw")),
-    SearchTerm(linkType = "page",         name = "deploy service",    link = "/deploy-service/1",              1.0f),
-    SearchTerm(linkType = "page",         name = "users",             link = "/users?username=&team=Platops",  1.0f)
-  )
 
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
   private val mockPrCommenterConnector          = mock[PrCommenterConnector]
@@ -205,11 +165,78 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     }
   }
   
+  
   "searchURIs" should {
-    "return SearchTerms in order that are exact matches to the URIs" in {
-      val res = searchURIs(testUserLog.logs, uriIndex)
-      print(s"$res")
-      res shouldBe userLogTestRes
+    val uriSearchTestIndex = List(
+      SearchTerm(linkType = "page", name = "page one",   link = "/page/1", weight = 0),
+      SearchTerm(linkType = "page", name = "page two",   link = "/page/2", weight = 0),
+      SearchTerm(linkType = "page", name = "page three", link = "/page/3", weight = 0),
+      SearchTerm(linkType = "page", name = "page four",  link = "/page/4", weight = 0)
+    )
+    
+    "filter out paths that are not pages in the index" in {
+      val testUserLog = UserLog(userName = "bob.bobber",
+        logs = Seq(
+          Log(page = "/page/1",    visitCounter = 4),
+          Log(page = "/page/2",    visitCounter = 3),
+          Log(page = "/page/5",    visitCounter = 2), //non-existent uri
+          Log(page = "/page/4",    visitCounter = 1)
+        )
+      )
+      
+      val expectedRes = Seq(
+        SearchTerm(linkType = "page", name = "page one",   link = "/page/1", weight = 4),
+        SearchTerm(linkType = "page", name = "page two",   link = "/page/2", weight = 3),
+        SearchTerm(linkType = "page", name = "page four",  link = "/page/4", weight = 1)
+      )
+      
+      val res = searchURIs(testUserLog.logs, uriSearchTestIndex)
+      res shouldBe expectedRes
+    }
+    
+    "return SearchTerms in desc order based on visits" in {
+       val testUserLog = UserLog(userName = "bob.bobber",
+         logs = Seq(
+           Log(page = "/page/1", visitCounter = 1),
+           Log(page = "/page/2", visitCounter = 23),
+           Log(page = "/page/3", visitCounter = 34),
+           Log(page = "/page/4", visitCounter = 12),
+         )
+       )
+      
+      val expectedRes = Seq(
+        SearchTerm(linkType = "page", name = "page three", link = "/page/3", weight = 34),
+        SearchTerm(linkType = "page", name = "page two",   link = "/page/2", weight = 23),
+        SearchTerm(linkType = "page", name = "page four",  link = "/page/4", weight = 12),
+        SearchTerm(linkType = "page", name = "page one",   link = "/page/1", weight = 1)
+      )
+      
+      val res = searchURIs(testUserLog.logs, uriSearchTestIndex)
+      res shouldBe expectedRes
+    }
+    
+    "return correctly ordered SearchTerms based on visits, correctly group and sum visits for those with base uri in common" in {
+      val testUserLog = UserLog(userName = "bob.bobber",
+        logs = Seq(
+          Log(page = "/page/1",         visitCounter = 3),
+          Log(page = "/page/1?x=1&y=0", visitCounter = 1),
+          Log(page = "/page/1?x=&y=4",  visitCounter = 2),
+          Log(page = "/page/2",         visitCounter = 5),
+          Log(page = "/page/2",         visitCounter = 5),
+          Log(page = "/page/3",         visitCounter = 1),
+          Log(page = "/page/4",         visitCounter = 16)
+        )
+      )
+      
+      val expectedRes = Seq(
+        SearchTerm(linkType = "page", name = "page four",  link = "/page/4", weight = 16),
+        SearchTerm(linkType = "page", name = "page two",   link = "/page/2", weight = 10),
+        SearchTerm(linkType = "page", name = "page one",   link = "/page/1", weight = 6 ),
+        SearchTerm(linkType = "page", name = "page three", link = "/page/3", weight = 1 )
+      )
+      
+      val res = searchURIs(testUserLog.logs, uriSearchTestIndex)
+      res shouldBe expectedRes
     }
   }
 }
