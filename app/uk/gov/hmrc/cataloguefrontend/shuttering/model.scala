@@ -154,19 +154,12 @@ object ShutterStatus {
 }
 
 case class ShutterState(
-  _serviceName: Option[ServiceName],
+  serviceName: ServiceName,
   context    : Option[String],
   shutterType: ShutterType,
   environment: Environment,
   status     : ShutterStatus
-) {
-
-  val serviceName: ServiceName = shutterType match {
-    case ShutterType.Frontend => ServiceName(_serviceName.getOrElse(sys.error("Shutter Type: service does not have a service name")).asString)
-    case t                    => ServiceName(_serviceName.map(_.asString).orElse(context).getOrElse(sys.error(s"Shutter Type: ${t.asString} does not have a service name or context")))
-  }
-
-}
+)
 
 object ShutterState {
 
@@ -174,7 +167,7 @@ object ShutterState {
     implicit val stf = ShutterType.format
     implicit val ef  = ShutterEnvironment.format
     implicit val ssf = ShutterStatus.format
-    ( (__ \ "name"       ).readNullable[String].map(_.map(ServiceName.apply))
+    ( (__ \ "name"       ).read[String].map(ServiceName.apply)
     ~ (__ \ "context"    ).readNullable[String]
     ~ (__ \ "type"       ).read[ShutterType]
     ~ (__ \ "environment").read[Environment]
@@ -387,7 +380,7 @@ object OutagePageWarning {
 }
 
 case class OutagePage(
-  serviceName      : String,
+  serviceName      : ServiceName,
   environment      : Environment,
   outagePageURL    : String,
   warnings         : List[OutagePageWarning],
@@ -403,7 +396,7 @@ object OutagePage {
     implicit val ef  : Reads[Environment]       = ShutterEnvironment.format
     implicit val tcf : Reads[TemplatedContent]  = TemplatedContent.format
     implicit val opwr: Reads[OutagePageWarning] = OutagePageWarning.reads
-    ( (__ \ "serviceName"      ).read[String]
+    ( (__ \ "serviceName"      ).read[String].map(ServiceName.apply)
     ~ (__ \ "environment"      ).read[Environment]
     ~ (__ \ "outagePageURL"    ).read[String]
     ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
@@ -413,7 +406,7 @@ object OutagePage {
 }
 
 case class OutagePageStatus(
-  serviceName: String,
+  serviceName: ServiceName,
   warning    : Option[(String, String)]
 )
 
