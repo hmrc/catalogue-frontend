@@ -27,7 +27,7 @@ case class UserLog(
 
 object UserLog {
   val userLogFormat: OFormat[UserLog] = {
-    implicit val urf = Log.format
+    implicit val lf: OFormat[Log] = Log.format
     ( ( __ \ "userName").format[String]
     ~ ( __ \ "logs"    ).format[Seq[Log]]
     )(UserLog.apply, unlift(UserLog.unapply))
@@ -35,8 +35,8 @@ object UserLog {
 }
 
 case class Log(
-  page         : String,
-  visitCounter : Int
+  uri   : String,
+  count : Int
 )
 
 object Log {

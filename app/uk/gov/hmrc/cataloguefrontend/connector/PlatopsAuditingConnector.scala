@@ -41,7 +41,7 @@ class PlatopsAuditingConnector @Inject()(
   private val baseUrl = servicesConfig.baseUrl("platops-auditing")
 
   def userLogs(userName: String)(implicit hc: HeaderCarrier): Future[Option[UserLog]] = {
-    val url: URL = url"$baseUrl/platops-auditing/getUserLog?userName=${userName}"
+    val url: URL = url"$baseUrl/getUserLog?userName=${userName}"
 
     implicit val lr: Reads[UserLog] = UserLog.userLogFormat
 
