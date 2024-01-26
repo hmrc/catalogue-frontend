@@ -109,14 +109,15 @@ class SearchIndex @Inject()(
       users         <- userManagementConnector.getAllUsers(None)
       userLinks     =  users.map(u => SearchTerm("users", u.username, userRoutes.UsersController.user(u.username).url, 0.5f))
       allLinks      =  hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
-    } yield cachedIndex.set(optimizeIndex(allLinks))
+      sortedLinks   = allLinks.sortWith(_.link.length > _.link.length)
+    } yield cachedIndex.set(optimizeIndex(sortedLinks))
   }
 
   def search(query: Seq[String]): Seq[SearchTerm] =
     SearchIndex.search(query, cachedIndex.get())
     
   def searchByUserLogs(userLog: UserLog) : Seq[SearchTerm] =
-    SearchIndex.searchURIs(userLog.logs, hardcodedLinks)
+    SearchIndex.searchURIs(userLog.logs, cachedIndex.get().values.flatten.toSeq)
 }
 
 object SearchIndex {
@@ -144,22 +145,22 @@ object SearchIndex {
       .toMap
   
   def searchURIs(logs: Seq[Log], index: Seq[SearchTerm]): Seq[SearchTerm] = {
-    val filteredLogs = logs.filter(log => index.exists(searchTerm => log.page.contains(searchTerm.link)))
+    //unlike search() .weight in this search represents visit counter instead of quality of match
+    val filteredLogs = logs.filter(log => index.exists(searchTerm => log.uri.contains(searchTerm.link))) //remove logs not in index
     val weightedSearchTerms = for {
       log <- filteredLogs
-      matchedSearchTerm <- index.find(searchTerm => log.page.contains(searchTerm.link))
+      matchedTerm <- index.find(searchTerm => log.uri.contains(searchTerm.link))
       weightedSearchTerm = SearchTerm(
-        linkType = matchedSearchTerm.linkType
-      , name     = matchedSearchTerm.name
-      , link     = matchedSearchTerm.link
-      , weight   = log.visitCounter
+        linkType = matchedTerm.linkType
+      , name     = matchedTerm.name
+      , link     = matchedTerm.link
+      , weight   = log.count  //insert visit counter
       )
     } yield (weightedSearchTerm)
-    
-    weightedSearchTerms.groupBy(_.link)
+    weightedSearchTerms.groupBy(_.link) //group search terms with same links
       .view.mapValues(groupedTerms =>
         groupedTerms.reduce((term1, term2) =>
-          term1.copy(weight = term1.weight + term2.weight)
+          term1.copy(weight = term1.weight + term2.weight) //sum visit counters where grouped
         )
       ).values.toSeq
       .sortWith(_.weight > _.weight)

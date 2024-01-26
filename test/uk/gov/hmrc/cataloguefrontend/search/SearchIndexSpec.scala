@@ -168,19 +168,20 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
   
   "searchURIs" should {
     val uriSearchTestIndex = List(
-      SearchTerm(linkType = "page", name = "page one",   link = "/page/1", weight = 0),
-      SearchTerm(linkType = "page", name = "page two",   link = "/page/2", weight = 0),
-      SearchTerm(linkType = "page", name = "page three", link = "/page/3", weight = 0),
-      SearchTerm(linkType = "page", name = "page four",  link = "/page/4", weight = 0)
+      SearchTerm(linkType = "page", name = "page four",  link = "/page/4/sub-page", weight = 0),
+      SearchTerm(linkType = "page", name = "page one",   link = "/page/1"         , weight = 0),
+      SearchTerm(linkType = "page", name = "page two",   link = "/page/2"         , weight = 0),
+      SearchTerm(linkType = "page", name = "page three", link = "/page/3"         , weight = 0),
+      SearchTerm(linkType = "page", name = "page four",  link = "/page/4"         , weight = 0)
     )
     
     "filter out paths that are not pages in the index" in {
       val testUserLog = UserLog(userName = "bob.bobber",
         logs = Seq(
-          Log(page = "/page/1",    visitCounter = 4),
-          Log(page = "/page/2",    visitCounter = 3),
-          Log(page = "/page/5",    visitCounter = 2), //non-existent uri
-          Log(page = "/page/4",    visitCounter = 1)
+          Log(uri = "/page/1",    count = 4),
+          Log(uri = "/page/2",    count = 3),
+          Log(uri = "/page/5",    count = 2), //non-existent uri
+          Log(uri = "/page/4",    count = 1)
         )
       )
       
@@ -197,10 +198,10 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
     "return SearchTerms in desc order based on visits" in {
        val testUserLog = UserLog(userName = "bob.bobber",
          logs = Seq(
-           Log(page = "/page/1", visitCounter = 1),
-           Log(page = "/page/2", visitCounter = 23),
-           Log(page = "/page/3", visitCounter = 34),
-           Log(page = "/page/4", visitCounter = 12),
+           Log(uri = "/page/1", count = 1),
+           Log(uri = "/page/2", count = 23),
+           Log(uri = "/page/3", count = 34),
+           Log(uri = "/page/4", count = 12),
          )
        )
       
@@ -215,16 +216,34 @@ class SearchIndexSpec extends AnyWordSpec with Matchers{
       res shouldBe expectedRes
     }
     
+    "only ignore params when grouping pages, dont group root pages with sub pages" in {
+      val testUserLog = UserLog(userName = "bob.bobber",
+        logs = Seq(
+          Log(uri = "/page/4",              count = 5),
+          Log(uri = "/page/4/sub-page",     count = 2),
+          Log(uri = "/page/4/sub-page?x=1", count = 1),
+        )
+      )
+      
+      val expectedRes = Seq(
+        SearchTerm(linkType = "page", name = "page four", link = "/page/4",          weight = 5),
+        SearchTerm(linkType = "page", name = "page four", link = "/page/4/sub-page", weight = 3)
+      )
+      
+      val res = searchURIs(testUserLog.logs, uriSearchTestIndex)
+      res shouldBe expectedRes
+    }
+    
     "return correctly ordered SearchTerms based on visits, correctly group and sum visits for those with base uri in common" in {
       val testUserLog = UserLog(userName = "bob.bobber",
         logs = Seq(
-          Log(page = "/page/1",         visitCounter = 3),
-          Log(page = "/page/1?x=1&y=0", visitCounter = 1),
-          Log(page = "/page/1?x=&y=4",  visitCounter = 2),
-          Log(page = "/page/2",         visitCounter = 5),
-          Log(page = "/page/2",         visitCounter = 5),
-          Log(page = "/page/3",         visitCounter = 1),
-          Log(page = "/page/4",         visitCounter = 16)
+          Log(uri = "/page/1",         count = 3),
+          Log(uri = "/page/1?x=1&y=0", count = 1),
+          Log(uri = "/page/1?x=&y=4",  count = 2),
+          Log(uri = "/page/2",         count = 5),
+          Log(uri = "/page/2",         count = 5),
+          Log(uri = "/page/3",         count = 1),
+          Log(uri = "/page/4",         count = 16)
         )
       )
       

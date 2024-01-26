@@ -38,7 +38,7 @@
   <h1 class="page-heading mt-4">@user.username</h1>
 
   <section class="section-wrapper">
-      <div class="row">
+      <div class="row mb-3">
           <div class="col-md-4">
               <div class="card">
                   <div class="card-header">
@@ -103,15 +103,40 @@
                   </div>
               </div>
           </div>
-
-
-        <div class="col-md-8">
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h4 class="mb-0">Recent Pages</h4>
-              @println("=======================================")
-              @println(s"$searchTerms")
-              @searchTerms
+              <h4 class="mb-1">Recent Pages</h4>
+            </div>
+            <div class="card-body">
+              <table class="table table-striped sticky-header" id="recent-pages-table">
+                <thead id="user-table-headings">
+                  <tr>
+                    <th class="col-lg-2"><button role="button" id="page"    data-sort="page"    class="sort no-border fw-bold">Page </button></th>
+                    <th class="col-lg-2"><button role="button" id="type"    data-sort="type"    class="sort no-border fw-bold">Type </button></th>
+                    <th class="col-lg-1"><button role="button" id="count"   data-sort="count"   class="sort no-border fw-bold">Count </button></th>
+                  </tr>
+                </thead>
+                <tbody class="list">
+                  @searchTerms.get.zipWithIndex.map{ case(searchTerm, i) =>
+                  <tr id="row@i">
+                    <td class="page" id="row@{i}_page">
+                      <a href="@searchTerm.link">@searchTerm.name</a>
+                    </td>
+
+                    <td class="type" id="row@{i}_type">
+                      <a>@searchTerm.linkType</a>
+                    </td>
+
+                    <td class="page" id="row@{i}_count">
+                      <a>@searchTerm.weight.toInt</a>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

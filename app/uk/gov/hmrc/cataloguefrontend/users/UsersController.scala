@@ -56,22 +56,20 @@ class UsersController @Inject()(
 
   def user(username: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      userManagementConnector.getUser(username)
-        .map {
-          case Some(user) =>
-            val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
-            platopsAuditingConnector.userLogs(username).map{
-              case Some(userLog) =>
-                val searchTerms = Some(searchController.searchByUserLog(userLog, 20))
-                println(s"=========================$searchTerms")
-                Ok(userInfoPage(user, umpProfileUrl, searchTerms))
-            }
-            Ok(userInfoPage(user, umpProfileUrl, None))
-          case None =>
-            NotFound(error_404_template())
-        }
+      userManagementConnector.getUser(username).flatMap {
+        case Some(user) =>
+          val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
+          platopsAuditingConnector.userLogs(username).map {
+            case Some(userLog) =>
+              val searchTerms = Some(searchController.searchByUserLog(userLog, 40))
+              Ok(userInfoPage(user, umpProfileUrl, searchTerms))
+            case None =>
+              Ok(userInfoPage(user, umpProfileUrl, None))
+          }
+        case None =>
+          Future.successful(NotFound(error_404_template()))
+      }
     }
-
   def allUsers(username: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (
@@ -117,3 +115,4 @@ object UsersListFilter {
       )(UsersListFilter.apply)(UsersListFilter.unapply)
     )
 }
+
