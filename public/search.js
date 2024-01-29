@@ -39,6 +39,7 @@ function search(q) {
         oReq.open("GET", "/quicksearch?query=" + encodeURIComponent(q));
         oReq.send();
     }, 250)
+
 }
 
 // show and hide the whole search bar

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 import org.mockito.MockitoSugar.mock
-import org.scalatest.concurrent.{ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.model.{UserLog, Log}
@@ -25,21 +24,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, U
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.searchURIs
-
-
-import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
-import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
-import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes => prcommenterRoutes}
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
-import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
-import uk.gov.hmrc.cataloguefrontend.deployments.{routes => depRoutes}
-import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
-import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
-import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
-import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => createRepoRoutes}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

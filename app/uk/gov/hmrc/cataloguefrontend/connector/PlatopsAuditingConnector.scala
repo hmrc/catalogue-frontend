@@ -18,8 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, UserLog}
-import uk.gov.hmrc.cataloguefrontend.users.User
+import uk.gov.hmrc.cataloguefrontend.connector.model.UserLog
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
