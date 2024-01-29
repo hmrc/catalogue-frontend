@@ -20,7 +20,6 @@ import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.search.SearchResults
-import uk.gov.hmrc.cataloguefrontend.connector.PlatopsAuditingConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.UserLog
 
 import javax.inject.{Inject, Singleton}

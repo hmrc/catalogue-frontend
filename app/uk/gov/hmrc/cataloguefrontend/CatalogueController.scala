@@ -39,7 +39,6 @@ import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissio
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector.ServiceStatusType
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
-import uk.gov.hmrc.cataloguefrontend.connector.model.UserLog
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission

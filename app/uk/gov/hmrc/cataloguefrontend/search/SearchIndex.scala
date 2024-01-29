@@ -39,7 +39,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.net.URLEncoder
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.{Inject, Singleton}
-import scala.collection.Searching
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SearchTerm(
@@ -109,7 +108,7 @@ class SearchIndex @Inject()(
       users         <- userManagementConnector.getAllUsers(None)
       userLinks     =  users.map(u => SearchTerm("users", u.username, userRoutes.UsersController.user(u.username).url, 0.5f))
       allLinks      =  hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
-      sortedLinks   = allLinks.sortWith(_.link.length > _.link.length)
+      sortedLinks   = allLinks.sortWith(_.link.length > _.link.length) //sort needed to efficiently search URIs
     } yield cachedIndex.set(optimizeIndex(sortedLinks))
   }
 
@@ -157,12 +156,17 @@ object SearchIndex {
       , weight   = log.count  //insert visit counter
       )
     } yield (weightedSearchTerm)
-    weightedSearchTerms.groupBy(_.link) //group search terms with same links
-      .view.mapValues(groupedTerms =>
-        groupedTerms.reduce((term1, term2) =>
-          term1.copy(weight = term1.weight + term2.weight) //sum visit counters where grouped
-        )
-      ).values.toSeq
-      .sortWith(_.weight > _.weight)
+    val distinctLinkSearchTerms = weightedSearchTerms.distinctBy(_.link) //group search terms with same links, weighting at this stage is incorrect
+    val reWeightedSearchTerms = for {
+      distinctTerm <- distinctLinkSearchTerms
+      summedWeight = weightedSearchTerms.filter(_.link.equals(distinctTerm.link)).foldLeft(0)(_ + _.weight.toInt) //find total weight for distinct term
+      reWeightedSearchTerm = SearchTerm(
+        linkType = distinctTerm.linkType
+      , name     = distinctTerm.name
+      , link     = distinctTerm.link
+      , weight   = summedWeight  //insert total weight
+      )
+    } yield(reWeightedSearchTerm)
+    reWeightedSearchTerms.sortWith(_.weight > _.weight)
   }
 }
