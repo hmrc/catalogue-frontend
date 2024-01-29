@@ -33,7 +33,7 @@
 
 @(form          : Form[DeployServiceForm]
 , hasPerm       : Boolean
-, allServices   : Seq[GitRepository]
+, services      : Seq[String]
 , latestVersion : Option[Version]
 , releases      : Seq[WhatsRunningWhereVersion]
 , environments  : Seq[Environment]
@@ -68,6 +68,7 @@
               <div id="service-name-matches" class="search-matches-dropdown d-none"></div>
             </dd>
           </dl>
+
         }
 
         @if(form("serviceName").value.isDefined && latestVersion.nonEmpty && environments.nonEmpty) {
@@ -272,6 +273,8 @@
 
   <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
   <script @CSPNonce.attr>
+
+
     autoCompleteInit({
       formId           : "service-name-form",
       inputSearchId    : "service-name",
@@ -279,7 +282,8 @@
       allowPartial     : false,
       ignoreCase       : true,
       submitOnSelection: true,
-      values           : [@for(service <- allServices) {'@service.name',}]
+      values           : [@for(service <- services) {'@service',}],
+      minSearch        : 1
     });
 
     @if(form("serviceName").value.isDefined) {

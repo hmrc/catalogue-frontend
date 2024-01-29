@@ -16,15 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend.users
 
+import cats.data.EitherT
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.{PlatopsAuditingConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
+
+import uk.gov.hmrc.cataloguefrontend.connector.{Team, PlatopsAuditingConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.search.SearchController
-import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.error_404_template
 import views.html.users.{UserInfoPage, UserListPage}
@@ -46,8 +48,9 @@ class UsersController @Inject()(
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
-  
+     with CatalogueAuthBuilders 
+     with play.api.i18n.I18nSupport {
+
   def user(username: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       userManagementConnector.getUser(username).flatMap {
@@ -66,17 +69,29 @@ class UsersController @Inject()(
     }
   def allUsers(username: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      UsersListFilter.form
-        .bindFromRequest()
-        .fold(
-          formWithErrors => Future.successful(BadRequest(userListPage(Seq.empty, Seq.empty, formWithErrors))),
-          validForm      => for {
-                              users <- userManagementConnector.getAllUsers(team = validForm.team)
-                              teams <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
-                            }
-          yield Ok(userListPage(users, teams, UsersListFilter.form.fill(validForm.copy(username = username))))
-        )
-    }
+      (
+        for {
+          retrieval   <- EitherT.liftF(
+                           auth.verify(Retrieval.locations(
+                             resourceType = Some(ResourceType("catalogue-frontend")),
+                             action       = Some(IAAction("CREATE_USER"))
+                           ))
+                         )
+          isTeamAdmin =  retrieval.exists(_.nonEmpty)
+          form        <- EitherT.fromEither[Future](UsersListFilter.form.bindFromRequest().fold(
+                           formWithErrors => Left(
+                             BadRequest(
+                               userListPage(isTeamAdmin, Seq.empty, Seq.empty, formWithErrors)
+                             )
+                           ),
+                           validForm => Right(validForm)
+                         ))
+          users       <- EitherT.liftF[Future, Result, Seq[User]](userManagementConnector.getAllUsers(team = form.team))
+          teams       <- EitherT.liftF[Future, Result, Seq[Team]](teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase)))
+        } yield
+          Ok(userListPage(isTeamAdmin, users, teams, UsersListFilter.form.fill(form.copy(username = username))))
+    ).merge
+  }
 }
 
 object UsersController {

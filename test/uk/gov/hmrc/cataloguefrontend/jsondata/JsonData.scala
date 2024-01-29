@@ -286,7 +286,7 @@ object JsonData {
       ]
     """
 
-  val deploymentConfigsService1 = """[{"instances": 1, "slots": 1, "environment": "production", "zone": "protected"}]"""
+  val deploymentConfigsService1 = """[{"name": "test", "instances": 1, "slots": 1, "environment": "production", "zone": "protected"}]"""
 
   val dependenciesWithRuleViolation =
   """{
@@ -537,7 +537,8 @@ object JsonData {
       "name"               : "dn",
       "group"              : "dg",
       "currentVersion"     : "dv",
-      "bobbyRuleViolations": []
+      "bobbyRuleViolations": [],
+      "scope"              : "compile"
     }]"""
 
   val indicatorData: String =

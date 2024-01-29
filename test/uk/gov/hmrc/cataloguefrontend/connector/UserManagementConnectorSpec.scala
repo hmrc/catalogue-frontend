@@ -21,8 +21,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, Member, User, Role}
+import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.users._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -259,6 +260,134 @@ class UserManagementConnectorSpec
       )
 
       connector.getUser(username).futureValue shouldBe None
+    }
+  }
+
+  "createUser" should {
+
+    val createUserRequest =
+      CreateUserRequest(
+        givenName        = "joe",
+        familyName       = "bloggs",
+        organisation     = "MDTP",
+        contactEmail     = "email@test.gov.uk",
+        contactComments  = "test",
+        team             = TeamName("Test"),
+        isReturningUser  = false,
+        isTransitoryUser = false,
+        isServiceAccount = false,
+        vpn              = true,
+        jira             = true,
+        confluence       = true,
+        googleApps       = true,
+        environments     = true
+      )
+
+    val actualUserRequest =
+      """{
+        |  "givenName": "joe",
+        |  "familyName": "bloggs",
+        |  "organisation": "MDTP",
+        |  "contactEmail": "email@test.gov.uk",
+        |  "contactComments": "test",
+        |  "team": "Test",
+        |  "isReturningUser": false,
+        |  "isTransitoryUser": false,
+        |  "isServiceAccount": false,
+        |  "access": {
+        |    "vpn": true,
+        |    "jira": true,
+        |    "confluence": true,
+        |    "googleApps": true,
+        |    "environments": true,
+        |    "ldap": true
+        |  },
+        |  "username": "joe.bloggs",
+        |  "displayName": "Joe Bloggs",
+        |  "isExistingLDAPUser": false
+        |}
+        |""".stripMargin
+
+    val actualNonHumanUserRequest =
+      """{
+        |  "givenName": "service_joe",
+        |  "familyName": "bloggs",
+        |  "organisation": "MDTP",
+        |  "contactEmail": "email@test.gov.uk",
+        |  "contactComments": "test",
+        |  "team": "Test",
+        |  "isReturningUser": false,
+        |  "isTransitoryUser": false,
+        |  "isServiceAccount": true,
+        |  "access": {
+        |    "vpn": true,
+        |    "jira": true,
+        |    "confluence": true,
+        |    "googleApps": true,
+        |    "environments": true,
+        |    "ldap": true
+        |  },
+        |  "username": "service_joe.bloggs",
+        |  "displayName": "service_joe bloggs",
+        |  "isExistingLDAPUser": false
+        |}
+        |""".stripMargin
+
+    "return Unit when UMP response is 200 for human user" in {
+      stubFor(
+        post(urlPathEqualTo(s"/user-management/create-user"))
+          .withRequestBody(
+            equalToJson(Json.toJson(createUserRequest).toString())
+          )
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.createUser(createUserRequest).futureValue shouldBe ()
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/create-user"))
+          .withRequestBody(equalToJson(actualUserRequest))
+      )
+    }
+
+    "return Unit when UMP response is 200 for non human user" in {
+      stubFor(
+        post(urlPathEqualTo("/user-management/create-user"))
+          .withRequestBody(
+            equalToJson(Json.toJson(createUserRequest.copy(isServiceAccount = true)).toString())
+          )
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue shouldBe ()
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/create-user"))
+          .withRequestBody(equalToJson(actualNonHumanUserRequest))
+      )
+    }
+
+    "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in {
+      stubFor(
+        post(urlPathEqualTo(s"user-management/create-service-user"))
+          .withRequestBody(
+            equalToJson(Json.toJson(createUserRequest.copy(isServiceAccount = true)).toString())
+          )
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+          )
+      )
+
+      an[RuntimeException] shouldBe thrownBy {
+        connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue
+      }
     }
   }
 }

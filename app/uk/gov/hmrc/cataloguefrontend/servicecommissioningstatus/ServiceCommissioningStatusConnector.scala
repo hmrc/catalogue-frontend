@@ -33,15 +33,13 @@ class ServiceCommissioningStatusConnector @Inject() (
 , servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
 
-  import ServiceCommissioningStatusConnector.ServiceStatusType
-
   private val serviceCommissioningBaseUrl = servicesConfig.baseUrl("service-commissioning-status")
 
-  def commissioningStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[List[Check]]] = {
+  def commissioningStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[List[Check]] = {
     implicit val cReads = Check.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/status/$serviceName")
-      .execute[Option[List[Check]]]
+      .execute[List[Check]]
   }
 
   def allChecks()(implicit hc: HeaderCarrier): Future[Seq[(String, FormCheckType)]] = {
@@ -53,58 +51,29 @@ class ServiceCommissioningStatusConnector @Inject() (
   }
 
   def cachedCommissioningStatus(
-    teamName   : Option[TeamName],
-    serviceType: Option[ServiceType]
+    teamName     : Option[TeamName],
+    serviceType  : Option[ServiceType],
+    lifecycleStatus: List[LifecycleStatus]
   )(implicit
     hc: HeaderCarrier
   ): Future[List[CachedServiceCheck]] = {
     implicit val cscReads = CachedServiceCheck.reads
     httpClientV2
-      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
+      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&lifecycleStatus=${lifecycleStatus.map(_.asString)}")
       .execute[List[CachedServiceCheck]]
   }
 
-  def setServiceStatus(serviceName: String, serviceStatusType: ServiceStatusType)(implicit hc: HeaderCarrier): Future[Unit] = {
+  def setLifecycleStatus(serviceName: String, lifecycleStatus: LifecycleStatus, username: String)(implicit hc: HeaderCarrier): Future[Unit] = {
     httpClientV2
-      .post(url"$serviceCommissioningBaseUrl/service-commissioning-status/lifecycle/$serviceName/status")
-      .withBody(Json.obj("status" -> serviceStatusType.asString))
+      .post(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/$serviceName/lifecycleStatus")
+      .withBody(Json.obj("lifecycleStatus" -> lifecycleStatus.asString, "username" -> username))
       .execute[Unit]
   }
 
-  def status(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[ServiceStatusType]] = {
-    implicit val serviceStatusTypeFormat = ServiceStatusType.format
+  def getLifecycleStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[LifecycleStatus]] = {
+    implicit val lifecycleStatusFormat = LifecycleStatus.format
     httpClientV2
-      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/lifecycle/$serviceName/status")
-      .execute[Option[ServiceStatusType]]
-  }
-}
-
-object ServiceCommissioningStatusConnector {
-  sealed trait ServiceStatusType { val asString: String; val displayName: String }
-
-  object ServiceStatusType {
-    object DecommissionInProgress extends ServiceStatusType { val asString: String = "DecommissionInProgress"; val displayName: String = "Decommissioning" }
-    object Archived               extends ServiceStatusType { val asString: String = "Archived"; val displayName: String = "Archived" }
-    object Deprecated             extends ServiceStatusType { val asString: String = "Deprecated"; val displayName: String = "Deprecated" }
-    object Active                 extends ServiceStatusType { val asString: String = "Active"; val displayName: String = "Active" }
-
-    val values: List[ServiceStatusType] = List(DecommissionInProgress, Archived, Deprecated, Active)
-
-    def parse(s: String): Either[String, ServiceStatusType] =
-      values
-        .find(_.asString == s)
-        .toRight(s"Invalid service status - should be one of: ${values.map(_.asString).mkString(", ")}")
-
-    val format: Format[ServiceStatusType] =
-      new Format[ServiceStatusType] {
-        override def reads(json: JsValue): JsResult[ServiceStatusType] =
-          json match {
-            case JsString(s) => parse(s).fold(msg => JsError(msg), rt => JsSuccess(rt))
-            case _           => JsError("String value expected")
-          }
-
-        override def writes(rt: ServiceStatusType): JsValue =
-          JsString(rt.asString)
-      }
+      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/$serviceName/lifecycleStatus")
+      .execute[Option[LifecycleStatus]]
   }
 }

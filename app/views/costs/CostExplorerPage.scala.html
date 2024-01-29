@@ -1,0 +1,149 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
+@import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
+@import views.html.helper.select
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+
+@import java.text.NumberFormat
+
+@this(viewMessages: ViewMessages)
+
+@(
+        serviceNameAndConfigs: Map[String, Seq[DeploymentConfig]],
+        teams: Seq[Team],
+        form: Form[_],
+        costEstimateConfig: CostEstimateConfig
+)(implicit messages: Messages, request: RequestHeader)
+
+@implicitField = @{
+    helper.FieldConstructor(helper.catalogueFieldConstructor.f)
+}
+
+@formatToCurrency(value: Double) = @{
+    val formatter: NumberFormat = java.text.NumberFormat.getIntegerInstance
+    formatter.format(value)
+}
+
+@standard_layout("Estimated Cost Explorer", active = "explore") {
+    <h1 class="page-heading mt-4">
+        Cost Explorer
+    </h1>
+
+    <div id="costs-summary-list">
+        <form id="costs-summary-form" action="/cost-explorer" method="get">
+            <div id="repos-form-row" class="row">
+                <div class="col-md-6">
+                    <dl id="search_field">
+                        <dt>
+                            <label for="search" class="form-label">Name</label>
+                        </dt>
+                        <dd>
+                            <input class="search form-control" id="search" type="search" name="name" value='@form("name").value' autofocus>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                @select(
+                    field = form("team"),
+                    options = teams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default") -> "All",
+                    Symbol("_label") -> "Team",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id") -> "team-filter",
+                    Symbol("class") -> "form-select"
+                )
+                </div>
+            </div>
+        </form>
+        @if(serviceNameAndConfigs.nonEmpty) {
+            <table class="table table-striped sticky-header table-layout: fixed" id="repo-list">
+                <thead>
+                    <tr>
+                        <th rowspan="2"><button role="button" id="name" data-sort="repo-name" class="fw-bold sort no-border">
+                            Application Name</button></th>
+                        @Environment.values.map { environment =>
+                            <th colspan="2" style="text-align: center">@environment.toString</th>
+                        }
+                        <th rowspan="2" style="text-align: center">
+                            <button role="button" id="yearlyCost" data-sort="yearly-cost" class="fw-bold sort no-border">
+                                Estimate Cost (yearly)
+                            </button>
+                        </th>
+                    </tr>
+                    <tr>
+                    @Environment.values.map(_ =>
+                        <th>Slots</th>
+                        <th>Instances</th>
+                    )
+                    </tr>
+                </thead>
+                <tbody class="list" id="matches">
+                @serviceNameAndConfigs.zipWithIndex.map { case ((serviceName, configs), index) =>
+                <tr>
+                    <td class="repo-name" id="row@{
+                        index
+                    }_name"><a id="link-to-@serviceName-page" href="/repositories/@serviceName">@serviceName</a></td>
+                    @Environment.values.map { env =>
+                        <td style="text-align: center">@configs.find(_.environment == env).map(_.deploymentSize.slots)</td>
+                        <td style="text-align: center">@configs.find(_.environment == env).map(_.deploymentSize.instances)</td>
+                    }
+                    @defining(configs.map(_.deploymentSize.totalSlots.costGbp(costEstimateConfig)).sum) { estimatedCost =>
+                        <td style="text-align: center">£@formatToCurrency(estimatedCost)</td>
+                        <td class="yearly-cost" style="display: none;" id="row@{
+                            index
+                        }_yearlyCost">@estimatedCost</td>
+                    }
+                </tr>
+                }
+                </tbody>
+            </table>
+        } else {
+            <p>No frontend or backend services found for this team.</p>
+        }
+    </div>
+
+
+}
+    <!-- listjs configuration -->
+<script @CSPNonce.attr>
+        let options = {
+            valueNames: ['repo-name', 'yearly-cost'],
+            searchColumns: ['repo-name'],
+            searchDelay: 350
+        };
+
+        let serviceList = new List('costs-summary-list', options);
+
+        let searchBox = document.getElementById('search');
+        // set autofocus cursor to right of text in search box
+        let length = searchBox.value.length;
+        searchBox.focus();
+        searchBox.setSelectionRange(length, length);
+        // re-search the list upon page load.
+        serviceList.search(searchBox.value);
+</script>
+<script @CSPNonce.attr>
+        ["team-filter"]
+                .forEach(function (id) {
+                    document.getElementById(id).addEventListener("change", function () {
+                        document.getElementById("costs-summary-form").submit();
+                    });
+                });
+</script>

@@ -81,7 +81,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(gitRepository)))
 
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(List.empty[Check])))
+        .thenReturn(Future.successful(List.empty[Check]))
 
       val result = controller
         .createAppConfigsLanding(serviceName)(
@@ -100,7 +100,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(gitRepository)))
 
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(List.empty[Check])))
+        .thenReturn(Future.successful(List.empty[Check]))
 
       val result = controller
         .createAppConfigsLanding(serviceName)(
@@ -154,7 +154,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(gitRepository)))
 
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(List.empty[Check])))
+        .thenReturn(Future.successful(List.empty[Check]))
 
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
@@ -184,7 +184,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(gitRepository)))
 
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(List.empty[Check])))
+        .thenReturn(Future.successful(List.empty[Check]))
 
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
@@ -216,7 +216,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(gitRepository)))
 
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(List.empty[Check])))
+        .thenReturn(Future.successful(List.empty[Check]))
 
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
@@ -246,7 +246,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(gitRepository)))
 
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(List.empty[Check])))
+        .thenReturn(Future.successful(List.empty[Check]))
 
       when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[String], any[ServiceType], any[Boolean], any[Boolean]))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
@@ -270,7 +270,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(gitRepository)))
 
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(List.empty[Check])))
+        .thenReturn(Future.successful(List.empty[Check]))
 
       when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[String], any[ServiceType], any[Boolean], any[Boolean]))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
@@ -326,7 +326,7 @@ class CreateAppConfigsControllerSpec
         .thenReturn(Future.successful(Some(gitRepository)))
 
       when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(List.empty)))
+        .thenReturn(Future.successful(List.empty[Check]))
 
       when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))

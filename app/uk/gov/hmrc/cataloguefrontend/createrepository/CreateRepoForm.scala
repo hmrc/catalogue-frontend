@@ -78,14 +78,10 @@ object CreateTestRepoForm {
   private val repoTestTypeConstraint: Constraint[String] =
     mkConstraint("constraints.repoTypeCheck")(constraint = repoTestTypeValidation, error = CreateTestRepositoryType.parsingError)
 
-  val conflictingFieldsValidationUiTests         : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.startsWith("ui") && !crf.repositoryName.toLowerCase.endsWith("-ui-tests"))
-  val conflictingFieldsValidationApiTests        : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.startsWith("api") && !crf.repositoryName.toLowerCase.endsWith("-api-tests"))
-  val conflictingFieldsValidationPerformanceTests: CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.startsWith("performance") && !crf.repositoryName.toLowerCase.endsWith("-performance-tests"))
+  val repoNameTestConstraint: CreateServiceRepoForm => Boolean = crf => crf.repositoryName.toLowerCase.endsWith("-tests") || crf.repositoryName.toLowerCase.endsWith("-test")
 
   private val repoTypeAndNameConstraints = Seq(
-    mkConstraint("constraints.conflictingFields1")(constraint = conflictingFieldsValidationUiTests, error = "You have chosen a ui test repo type, but the name doesn't end 'ui-tests'. Change either the repo name or repo type"),
-    mkConstraint("constraints.conflictingFields2")(constraint = conflictingFieldsValidationApiTests, error = "You have chosen an api test repo type, but the repo name doesn't end 'api-tests'. Change either the repo name or repo type"),
-    mkConstraint("constraints.conflictingFields2")(constraint = conflictingFieldsValidationPerformanceTests, error = "You have chosen a performance test repo type, but the repo name doesn't end 'performance-tests'. Change either the repo name or repo type")
+    mkConstraint("constraints.conflictingFields1")(constraint = repoNameTestConstraint, error = "Repository name can only end in '-test' or '-tests'"),
   )
 
   val form: Form[CreateServiceRepoForm] = Form(

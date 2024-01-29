@@ -127,7 +127,7 @@
                     <a class="repo-name" id="link-to-@{repo.name}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
                 </td>
                 <td class="teams" id="row@{i}_teamNames">
-                  @teamNamesPartial(repo.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
+                  @teamNamesPartial(repo.owningTeams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#owning-team")
                 </td>
                 <td class="defaultBranch font-monospace" id="row@{i}_defaultBranch">
                     @repo.defaultBranch

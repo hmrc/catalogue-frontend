@@ -18,12 +18,24 @@ package views.partials
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, Version}
 
 class DependencySectionSpec extends AnyWordSpec with Matchers {
 
-  val dependency1 = Dependency("example-library", "uk.gov.hmrc", Version("1.2.3-play-25"), Some(Version("1.2.3-play-26")))
-  val dependency2 = Dependency("library4j", "uk.gov.hmrc", Version("4.0.1"), Some(Version("4.2.0")))
+  val dependency1 = Dependency(
+                      name           = "example-library"
+                    , group          = "uk.gov.hmrc"
+                    , currentVersion = Version("1.2.3-play-25")
+                    , latestVersion  = Some(Version("1.2.3-play-26"))
+                    , scope          = DependencyScope.Compile
+                    )
+  val dependency2 = Dependency(
+                      name           = "library4j"
+                    , group          = "uk.gov.hmrc"
+                    , currentVersion = Version("4.0.1")
+                    , latestVersion  = Some(Version("4.2.0"))
+                    , scope          = DependencyScope.Compile
+                    )
   val rootId = "rootId"
 
   "dependency_section" should {

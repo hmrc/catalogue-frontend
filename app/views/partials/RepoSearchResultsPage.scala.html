@@ -47,7 +47,7 @@
     </td>
 
     <td id="row@{i}_team">
-        @teamNamesPartial(repo.teamNames, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#teams")
+        @teamNamesPartial(repo.owningTeams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#owning-team")
     </td>
 
     <td class="repo-bp font-monospace text-center" id="row@{i}_branch-protection">

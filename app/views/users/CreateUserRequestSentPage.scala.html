@@ -1,0 +1,56 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.users.{routes => createUserRoutes}
+@import uk.gov.hmrc.cataloguefrontend.users.{routes => users}
+
+@this(viewMessages: ViewMessages)
+
+
+@(
+  isServiceAccount: Boolean,
+  givenName       : String,
+  familyName      : String
+)(
+  implicit
+  request   : RequestHeader
+)
+
+@standard_layout("Create a User", "create a user") {
+
+  <section class="section-wrapper">
+      <h1 class="page-heading mt-4">Request Sent</h1>
+
+    @if(isServiceAccount) {
+      <p>You have requested the creation of a non human user account for: @{s"service_$givenName.$familyName"}</p>
+
+      <p>To review the progression of this request and check the non human users details are correct, please view the <a target=_blank href="https://jira.tools.tax.service.gov.uk/projects/ACRS/issues/ACRS">ACRS Jira Board</a>.</p>
+
+      <a href="@createUserRoutes.CreateUserController.createUser(isServiceAccount)" class="btn btn-success" role="button">Create Another Service User</a>
+    } else {
+
+      <p>You have requested the creation of a user account for: @{givenName.capitalize} @{familyName.capitalize}</p>
+
+      <p>To review the progression of this request and check the users details are correct, please view the <a target=_blank href="https://jira.tools.tax.service.gov.uk/projects/ACRS/issues/ACRS">ACRS Jira Board</a>.</p>
+
+      <a href="@createUserRoutes.CreateUserController.createUser(isServiceAccount)" class="btn btn-success" role="button">Create Another User</a>
+    }
+
+    <a href="@users.UsersController.allUsers()" class="btn btn-secondary" role="button">Back to Users Page</a>
+
+  </section>
+}

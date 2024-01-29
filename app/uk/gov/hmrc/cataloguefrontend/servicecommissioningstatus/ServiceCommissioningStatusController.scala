@@ -25,7 +25,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
-import views.html.error_404_template
 import views.html.servicecommissioningstatus.{SearchServiceCommissioningStatusPage, ServiceCommissioningStatusPage}
 
 import javax.inject.{Inject, Singleton}
@@ -47,9 +46,12 @@ class ServiceCommissioningStatusController @Inject() (
 
   def getCommissioningState(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      serviceCommissioningStatusConnector
-        .commissioningStatus(serviceName)
-        .map(_.fold(NotFound(error_404_template()))(result => Ok(serviceCommissioningStatusPage(serviceName, result))))
+      for {
+        lifecycleStatus <- serviceCommissioningStatusConnector.getLifecycleStatus(serviceName).map(_.getOrElse(LifecycleStatus.Active))
+        results         <- serviceCommissioningStatusConnector.commissioningStatus(serviceName)
+      } yield {
+        Ok(serviceCommissioningStatusPage(serviceName, lifecycleStatus, results))
+      }
     }
 
   def searchLanding(): Action[AnyContent] =
@@ -59,22 +61,18 @@ class ServiceCommissioningStatusController @Inject() (
         allChecks <- serviceCommissioningStatusConnector.allChecks()
         form      =  SearchCommissioning.searchForm.fill(
                        SearchCommissioning.SearchCommissioningForm(
-                         teamName     = None
-                       , serviceType  = None
-                       , checks       = allChecks.map(_._1).toList
-                       , environments = Environment.values.filterNot(_ == Environment.Integration)
+                         teamName        = None
+                       , serviceType     = None
+                       , lifecycleStatus = LifecycleStatus.values
+                       , checks          = allChecks.map(_._1).toList
+                       , environments    = Environment.values.filterNot(_ == Environment.Integration)
                        )
                      )
       } yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
     }
 
-  def searchResults(
     //Params exist so they can be provided for deep linking
-    teamName        : Option[TeamName],
-    serviceType     : Option[ServiceType],
-    `checks[]`      : List[String],
-    `environments[]`: List[String]
-  ): Action[AnyContent] =
+    def searchResults(teamName: Option[TeamName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchCommissioning
         .searchForm
@@ -87,9 +85,9 @@ class ServiceCommissioningStatusController @Inject() (
         , formObject     => for {
                                 allTeams  <- teamsAndRepositoriesConnector.allTeams()
                                 allChecks <- serviceCommissioningStatusConnector.allChecks()
-                                results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType)
+                                results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType, formObject.lifecycleStatus)
                                 checks    =  if (formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
-                                
+
                                 filteredResults = results.filter { result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
                                   result.checks.exists {
                                     case check: Check.SimpleCheck =>
@@ -143,27 +141,41 @@ import play.api.data.{Form, Forms}
 
 object SearchCommissioning {
   case class SearchCommissioningForm(
-    teamName    : Option[TeamName]
-  , serviceType : Option[ServiceType]
-  , checks      : List[String]
-  , environments: List[Environment]
-  , asCsv       : Boolean = false
+    teamName       : Option[TeamName]
+  , serviceType    : Option[ServiceType]
+  , lifecycleStatus: List[LifecycleStatus]
+  , checks         : List[String]
+  , environments   : List[Environment]
+  , asCsv          : Boolean = false
   )
 
   lazy val searchForm: Form[SearchCommissioningForm] = Form(
     Forms.mapping(
-      "team"         -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
-    , "serviceType"  -> Forms.optional(Forms.text.transform[ServiceType](x =>
-                               ServiceType.parse(x).getOrElse(ServiceType.Backend)
-                             , _.asString
-                             ))
-    , "checks"       -> Forms.list(Forms.text)
-    , "environments" -> Forms.list(Forms.text)
-                             .transform[List[Environment]](
-                               xs => xs.map(Environment.parse).flatten
-                             , x  => identity(x).map(_.asString)
-                             )
-    , "asCsv"        -> Forms.boolean
+      "team"            -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+    , "serviceType"     -> Forms.optional(Forms.text.transform[ServiceType](x =>
+                             ServiceType.parse(x).getOrElse(ServiceType.Backend)
+                           , _.asString
+                           ))
+    , "lifecycleStatus" -> Forms.default(
+                             Forms
+                               .list(Forms.text)
+                               .transform[List[LifecycleStatus]](
+                                 xs => xs.map(x => LifecycleStatus.parse(x).toOption).flatten
+                               , x  => identity(x).map(_.asString)
+                               )
+                           , LifecycleStatus.values
+                           )
+    , "checks"          -> Forms.list(Forms.text)
+    , "environments"    -> Forms.default(
+                             Forms
+                               .list(Forms.text)
+                               .transform[List[Environment]](
+                                 xs => xs.map(Environment.parse).flatten
+                               , x  => identity(x).map(_.asString)
+                               )
+                           , Environment.values.filterNot(_ == Environment.Integration)
+                           )
+    , "asCsv"           -> Forms.boolean
     )(SearchCommissioningForm.apply)(SearchCommissioningForm.unapply)
   )
 

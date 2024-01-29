@@ -26,7 +26,7 @@
     dependency <- dependencies
                     .filter(d => d.importBy.isEmpty && (!showOutOfDateOnly || d.isOutOfDate || transitiveDependencies(d).exists(_.isOutOfDate)))
                     .distinctBy(d => d.group + d.name)
-                    .sortBy(d => d.scope + d.group + d.name)
+                    .sortBy(d => d.scope.asString + d.group + d.name)
 ) {
     @dependencyRow(dependency)
     @for(transitiveDependency <- transitiveDependencies(dependency).filter(d => !showOutOfDateOnly || d.isOutOfDate).distinctBy(d => d.group + d.name)) {

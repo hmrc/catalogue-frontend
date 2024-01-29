@@ -36,6 +36,7 @@ function autoCompleteInit({formId, inputSearchId, matchesDivId, allowPartial, ig
 
     inputSearch.addEventListener('keydown', disableDefaults, false);
     inputSearch.addEventListener('keyup', autoCompleteSearchInputListener, false);
+    inputSearch.addEventListener('focus', autoCompleteSearchInputListener, false);
 }
 
 function findMatches(rawInput) {

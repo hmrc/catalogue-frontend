@@ -12,22 +12,32 @@ GET        /prototypes                                  uk.gov.hmrc.cataloguefro
 
 GET        /create-service                              uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepositoryLanding()
 POST       /create-service                              uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepository()
+GET        /create-service/:repoName/confirmation       uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepositoryConfirmation(repoName: String)
 
 GET        /create-prototype                            uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepositoryLanding()
 POST       /create-prototype                            uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepository()
 
+GET        /create-prototype/:repoName/confirmation     uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepositoryConfirmation(repoName: String)
+
 GET        /create-test                                 uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createTestRepositoryLanding()
 POST       /create-test                                 uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createTestRepository()
+
+GET        /create-test/:repoName/confirmation          uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createTestRepositoryConfirmation(repoName: String)
 
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
 
-GET        /deploy-service/1                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step1(serviceName: Option[String])
+GET        /deploy-service                              uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step1(serviceName: Option[String])
 POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step2()
 POST       /deploy-service/3                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step3()
 GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 
+GET        /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean = false)
+POST       /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean = false)
+GET        /create-user/2                               uk.gov.hmrc.cataloguefrontend.users.CreateUserController.requestSent(isServiceAccount: Boolean, givenName: String, familyName: String)
+GET        /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean = true)
+POST       /create-service-user                         uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUser(isServiceAccount: Boolean = true)
 
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
@@ -38,7 +48,7 @@ GET        /service/:name/costs                         uk.gov.hmrc.cataloguefro
 
 GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name)
 GET        /commissioning-state/search                  uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchLanding()
-GET        /commissioning-state/search/results          uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchResults(team: Option[TeamName] ?= None, serviceType: Option[uk.gov.hmrc.cataloguefrontend.connector.ServiceType] ?= None, `checks[]`: List[String] ?= List.empty, `environments[]`: List[String] ?= List.empty)
+GET        /commissioning-state/search/results          uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchResults(team: Option[TeamName] ?= None)
 
 
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
@@ -80,6 +90,8 @@ GET        /config/search                               uk.gov.hmrc.cataloguefro
 GET        /config/search/results                       uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchResults(configKey: Option[String] ?= None)
 GET        /config/warnings/search                      uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningLanding()
 GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningResults()
+
+GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.costs.CostsSummaryController.costExplorer(team: Option[String] ?= None)
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list(selector: Option[String] ?= None)
 

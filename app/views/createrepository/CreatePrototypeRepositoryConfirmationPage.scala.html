@@ -1,0 +1,57 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes }
+
+@this(viewMessages: ViewMessages)
+
+@(repoName: String)(implicit request: RequestHeader)
+
+@standard_layout(s"Creating prototype repository: $repoName") {
+
+    <section class="section-wrapper">
+        <h1 class="page-heading">Creating prototype repository: @repoName</h1>
+
+        <p>The prototype repository @repoName is being added to the catalogue. This can take around 30 minutes to appear and for all catalogue features to be available.</p>
+
+    </section>
+
+    <section class="section-wrapper">
+        <h2 id="what-to-do-next">What to do next?</h2>
+
+        <ul>
+            <li>Check the prototype repository has been created in <a id="link-to-github-repo" href="https://github.com/hmrc/@repoName">GitHub</a> (this can take around 5 minutes)</li>
+            <li>Check the prototype has been deployed to <a id="link-to-heroku" href="https://dashboard.heroku.com/apps/@repoName">Heroku</a></li>
+            <li>Check the <a id="link-to-catalogue" href=@catalogueRoutes.CatalogueController.repository(repoName).url>status</a> of the prototype is 'Running'</li>
+            <li>Prototypes are turned off in Heroku throughout the weekend in order to save resources, if you need to access the prototype you will need to restart it:</li>
+            <ul>
+                <li>By navigating to your prototype in Heroku and clicking on the 'Restart prototype' button</li>
+                <li>Alternatively, you can restart from the catalogue by navigating to the <a id="link-to-catalogue" href="/repositories/@repoName">repository</a> page and clicking the 'Start' button</li>
+            </ul>
+        </ul>
+    </section>
+
+    <section class="section-wrapper">
+        <h2 id="what-to-do-next">Helpful links</h2>
+
+        <ul>
+            <li><a id="link-to-prototype-guide" href="https://confluence.tools.tax.service.gov.uk/display/PROT/Prototyping+User+Guide">Prototype user guide</a> for additional information around prototyping and Heroku </li>
+            <li><a id="link-to-prototype-slack" href="https://hmrcdigital.slack.com/messages/community-prototype">Prototype community slack</a> for general discussions and troubleshooting prototypes</li>
+            <li><a id="link-to-platops" href="https://hmrcdigital.slack.com/messages/team-platops">Team platops slack</a> for general enquiries and technical guidance when creating microservices</li>
+        </ul>
+    </section>
+}

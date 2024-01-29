@@ -14,17 +14,16 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check
 @import uk.gov.hmrc.cataloguefrontend.routes
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, LifecycleStatus}
 
 @this()
 
-
-@(serviceName: String,
-  checks     : List[Check],
+@(serviceName    : String,
+  lifecycleStatus: LifecycleStatus,
+  checks         : List[Check]
 )(implicit
-  request    : RequestHeader
+  request        : RequestHeader
 )
 
 @standard_layout("Commissioning-State") {
@@ -40,11 +39,12 @@
             <div class="card-body">
                 <h4 class="fw-bold">How to use this page?</h4>
                 <ul>
-                    <li>This page shows some of the possibe steps in a service lifecycle.</li>
+                    <li>This page shows some of the possible steps in a service lifecycle.</li>
                     <li>Click on <span class="glyphicon glyphicon-question-sign text-success"></span> to see a helpful summary and relevant MDTP Handbook links for the step</li>
                     <li>The following icons mean:
                         <ul>
                             <li><span class="glyphicon glyphicon-ok text-success"></span> found</li>
+                            <li><span class="glyphicon glyphicon-remove text-danger"></span> should decommission</li>
                             <li><span class="glyphicon glyphicon-minus text-secondary"></span> not found</li>
                         </ul>
                     </li>
@@ -55,10 +55,20 @@
         </div>
     </div>
 
-    <h2><a class="fw-bold" href="@routes.CatalogueController.service(serviceName)">@serviceName</a></h2>
+    <h2>
+        <a class="fw-bold" href="@routes.CatalogueController.service(serviceName)">@serviceName</a>
+        @if(lifecycleStatus != LifecycleStatus.Active) {
+            <span class="badge rounded-pill text-bg-secondary fs-6 align-text-top mt-2">@lifecycleStatus.displayName</span>
+        }
+    </h2>
 
-    <p>Guidance for creating a microservice can be found in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a></p>
-
+    <p>
+        @if(LifecycleStatus.canDecommission(lifecycleStatus)) {
+            Guidance for decommissioning a microservice can be found in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a>
+        } else {
+            Guidance for creating a microservice can be found in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a>
+        }
+    </p>
 
     <table class="table table-striped">
         <thead>
@@ -133,13 +143,19 @@
 
 @displayResult(id: String, result: Check.Result) = {
     @result match {
-        case Right(present) => {
+        case Right(present) if LifecycleStatus.canDecommission(lifecycleStatus) => {
             <a id="@id-evidence-link" href="@present.evidenceLink" target="_blank" rel="noopener noreferrer">
-                <span style="width: 32px" class="glyphicon glyphicon-ok low"></span>
+                <span style="width: 32px" class="glyphicon glyphicon-remove text-danger"></span>
                 view
             </a>
         }
-        case Left(missing) if missing.addLink.isEmpty => {
+        case Right(present) => {
+            <a id="@id-evidence-link" href="@present.evidenceLink" target="_blank" rel="noopener noreferrer">
+                <span style="width: 32px" class="glyphicon glyphicon-ok text-success"></span>
+                view
+            </a>
+        }
+        case Left(missing) if missing.addLink.isEmpty || lifecycleStatus != LifecycleStatus.Active => {
             <span style="width: 32px" class="glyphicon glyphicon-minus text-secondary"></span>
         }
         case Left(missing) => {
