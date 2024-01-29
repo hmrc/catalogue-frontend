@@ -2,3 +2,4 @@ digital-service: Catalogue
 repoVisibility: public_0C3F0CE3E6E6448FAD341E7BFA50FCD333E06A20CFF05FCACE61154DDBBADF71
 test-repositories:
   - catalogue-acceptance-tests
+description: Catalogue frontend for teams to explore information about all the different services and libraries in use on the platform, where they are running and their recent deployments, what dependencies and config they use, and who maintains them. You can also shutter your service to the outside world, view bobby rules, see what JDK versions are in use, discover which service corresponds to a given URL, and more to come!
