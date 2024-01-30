@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.connector.model.UserLog
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, UserLog}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -48,4 +48,16 @@ class PlatopsAuditingConnector @Inject()(
       .get(url)
       .execute[Option[UserLog]]
   }
+  
+  def globalLogs()(implicit hc: HeaderCarrier): Future[Option[Seq[Log]]] = {
+    val url: URL = url"$baseUrl/getGlobalLogs"
+
+    implicit val lr: Reads[Log] = Log.format
+
+    httpClientV2
+      .get(url)
+      .execute[Option[Seq[Log]]]
+  }
+  
+  
 }

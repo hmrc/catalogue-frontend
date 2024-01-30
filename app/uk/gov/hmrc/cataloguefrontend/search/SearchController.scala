@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.search.SearchResults
-import uk.gov.hmrc.cataloguefrontend.connector.model.UserLog
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, UserLog}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -51,6 +51,6 @@ class SearchController @Inject() (
     ))
   }
   
-  def searchByUserLog(userLog: UserLog): Seq[SearchTerm] =
-    searchIndex.searchByUserLogs(userLog)
+  def searchByLogs(logs: Seq[Log]): Seq[SearchTerm] =
+    searchIndex.searchByUserLogs(logs)
 }

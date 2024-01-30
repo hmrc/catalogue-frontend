@@ -115,8 +115,8 @@ class SearchIndex @Inject()(
   def search(query: Seq[String]): Seq[SearchTerm] =
     SearchIndex.search(query, cachedIndex.get())
     
-  def searchByUserLogs(userLog: UserLog) : Seq[SearchTerm] =
-    SearchIndex.searchURIs(userLog.logs, cachedIndex.get().values.flatten.toSeq)
+  def searchByUserLogs(logs: Seq[Log]) : Seq[SearchTerm] =
+    SearchIndex.searchURIs(logs, cachedIndex.get().values.flatten.toSeq)
 }
 
 object SearchIndex {
