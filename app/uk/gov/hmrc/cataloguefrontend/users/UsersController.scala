@@ -22,9 +22,8 @@ import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-
-import uk.gov.hmrc.cataloguefrontend.connector.{Team, PlatopsAuditingConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.connector.{PlatopsAuditingConnector, Team, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, TeamName, UserLog}
 import uk.gov.hmrc.cataloguefrontend.search.SearchController
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -50,23 +49,31 @@ class UsersController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders 
      with play.api.i18n.I18nSupport {
-
-  def user(username: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      userManagementConnector.getUser(username).flatMap {
-        case Some(user) =>
+  
+  def user(username: String): Action[AnyContent] = BasicAuthAction.async { implicit request =>
+    val userFuture: Future[Option[User]] = userManagementConnector.getUser(username)
+    val userLogsFuture: Future[Option[UserLog]] = platopsAuditingConnector.userLogs(username)
+    val globalLogsFuture: Future[Option[Seq[Log]]] = platopsAuditingConnector.globalLogs()
+    
+    for {
+      userOption <- userFuture
+      userLogsOption <- userLogsFuture
+      globalLogsOption <- globalLogsFuture
+    } yield {
+      (userOption, userLogsOption,globalLogsOption) match {
+        case (Some(user), Some(userLog), Some(globalLogs)) =>
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
-          platopsAuditingConnector.userLogs(username).map {
-            case Some(userLog) =>
-              val searchTerms = Some(searchController.searchByUserLog(userLog))
-              Ok(userInfoPage(user, umpProfileUrl, searchTerms))
-            case None =>
-              Ok(userInfoPage(user, umpProfileUrl, None))
-          }
-        case None =>
-          Future.successful(NotFound(error_404_template()))
+          val userSearchTerms = Some(searchController.searchByLogs(userLog.logs))
+          val globalSearchTerms = Some(searchController.searchByLogs(globalLogs))
+          Ok(userInfoPage(user, umpProfileUrl, userSearchTerms, globalSearchTerms))
+        case (Some(user), None, None) =>
+          val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
+          Ok(userInfoPage(user, umpProfileUrl, None, None))
+        case _ =>
+          NotFound(error_404_template())
       }
     }
+  }
   def allUsers(username: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (

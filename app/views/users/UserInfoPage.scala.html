@@ -25,7 +25,8 @@
 @(
   user: User,
   umpProfileUrl: String,
-  searchTerms: Option[Seq[SearchTerm]]
+  userSearchTerms: Option[Seq[SearchTerm]],
+  globalSearchTerms: Option[Seq[SearchTerm]]
 )(implicit
   request: RequestHeader
 )
@@ -101,10 +102,10 @@
           </div>
       </div>
       <div class="row mb-3">
-        <div class="col-md-12">
+        <div class="col-md-6">
           <div class="card">
             <div class="card-header">
-              <h4 class="mb-1">Recent Pages</h4>
+              <h4 class="mb-1">User Recent Pages</h4>
             </div>
             <div class="card-body">
               <table class="table table-striped sticky-header" id="recent-pages-table">
@@ -116,20 +117,74 @@
                   </tr>
                 </thead>
                 <tbody class="list">
-                  @searchTerms.get.zipWithIndex.map{ case(searchTerm, i) =>
-                  <tr id="row@i">
-                    <td class="page" id="row@{i}_page">
-                      <a href="@searchTerm.link">@searchTerm.name</a>
-                    </td>
+                  @if(userSearchTerms.isDefined) {
+                    @userSearchTerms.get.zipWithIndex.map { case (searchTerm, i) =>
+                    <tr id="row@i">
+                      <td class="page" id="row@{
+                        i
+                      }_page">
+                        <a href="@searchTerm.link">@searchTerm.name</a>
+                      </td>
 
-                    <td class="type" id="row@{i}_type">
-                      <a>@searchTerm.linkType</a>
-                    </td>
+                      <td class="type" id="row@{
+                        i
+                      }_type">
+                        <a>@searchTerm.linkType</a>
+                      </td>
 
-                    <td class="count" id="row@{i}_count">
-                      <a>@searchTerm.weight.toInt</a>
+                      <td class="count" id="row@{
+                        i
+                      }_count">
+                        <a>@searchTerm.weight.toInt</a>
                     </td>
+                    </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="mb-1">Global Recent Pages</h4>
+            </div>
+            <div class="card-body">
+              <table class="table table-striped sticky-header" id="recent-pages-table">
+                <thead id="user-table-headings">
+                  <tr>
+                    <th class="col-lg-2"><button role="button" id="page"   class="no-border fw-bold">Page </button></th>
+                    <th class="col-lg-2"><button role="button" id="type"   class="no-border fw-bold">Type </button></th>
+                    <th class="col-lg-1"><button role="button" id="count"  class="no-border fw-bold">Count </button></th>
                   </tr>
+                </thead>
+                <tbody class="list">
+                  @if(globalSearchTerms.isDefined) {
+                    @globalSearchTerms.get.zipWithIndex.map { case (searchTerm, i) =>
+                    <tr id="row@i">
+                      <td class="page" id="row@{
+                        i
+                      }_page">
+                        <a href="@searchTerm.link">@searchTerm.name</a>
+                      </td>
+
+                      <td class="type" id="row@{
+                        i
+                      }_type">
+                        <a>@searchTerm.linkType</a>
+                      </td>
+
+                      <td class="count" id="row@{
+                        i
+                      }_count">
+                        <a>@searchTerm.weight.toInt</a>
+                    </td>
+                    </tr>
+                    }
+                  } else {
+                    @println(s"----------fail $globalSearchTerms")
                   }
                 </tbody>
               </table>
