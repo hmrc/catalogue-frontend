@@ -110,9 +110,9 @@
               <table class="table table-striped sticky-header" id="recent-pages-table">
                 <thead id="user-table-headings">
                   <tr>
-                    <th class="col-lg-2"><button role="button" id="page"    data-sort="page"    class="sort no-border fw-bold">Page </button></th>
-                    <th class="col-lg-2"><button role="button" id="type"    data-sort="type"    class="sort no-border fw-bold">Type </button></th>
-                    <th class="col-lg-1"><button role="button" id="count"   data-sort="count"   class="sort no-border fw-bold">Count </button></th>
+                    <th class="col-lg-2"><button role="button" id="page"   class="no-border fw-bold">Page </button></th>
+                    <th class="col-lg-2"><button role="button" id="type"   class="no-border fw-bold">Type </button></th>
+                    <th class="col-lg-1"><button role="button" id="count"  class="no-border fw-bold">Count </button></th>
                   </tr>
                 </thead>
                 <tbody class="list">
@@ -126,7 +126,7 @@
                       <a>@searchTerm.linkType</a>
                     </td>
 
-                    <td class="page" id="row@{i}_count">
+                    <td class="count" id="row@{i}_count">
                       <a>@searchTerm.weight.toInt</a>
                     </td>
                   </tr>
