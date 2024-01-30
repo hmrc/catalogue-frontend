@@ -44,6 +44,6 @@ class SearchController @Inject()(
     ))
   }
   
-  def searchByUserLog(userLog: UserLog, limit: Int): Seq[SearchTerm] =
-    searchIndex.searchByUserLogs(userLog).take(limit)
+  def searchByUserLog(userLog: UserLog): Seq[SearchTerm] =
+    searchIndex.searchByUserLogs(userLog)
 }

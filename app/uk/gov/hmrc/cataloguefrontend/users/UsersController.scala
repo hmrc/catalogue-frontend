@@ -58,7 +58,7 @@ class UsersController @Inject()(
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
           platopsAuditingConnector.userLogs(username).map {
             case Some(userLog) =>
-              val searchTerms = Some(searchController.searchByUserLog(userLog, 40))
+              val searchTerms = Some(searchController.searchByUserLog(userLog))
               Ok(userInfoPage(user, umpProfileUrl, searchTerms))
             case None =>
               Ok(userInfoPage(user, umpProfileUrl, None))

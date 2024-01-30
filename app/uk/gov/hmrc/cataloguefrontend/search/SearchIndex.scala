@@ -159,7 +159,7 @@ object SearchIndex {
     val distinctLinkSearchTerms = weightedSearchTerms.distinctBy(_.link) //group search terms with same links, weighting at this stage is incorrect
     val reWeightedSearchTerms = for {
       distinctTerm <- distinctLinkSearchTerms
-      summedWeight = weightedSearchTerms.filter(_.link.equals(distinctTerm.link)).foldLeft(0)(_ + _.weight.toInt) //find total weight for distinct term
+      summedWeight = weightedSearchTerms.filter(_.link.equals(distinctTerm.link)).foldLeft(0)(_ + _.weight.toInt) //find total weight for distinct terms
       reWeightedSearchTerm = SearchTerm(
         linkType = distinctTerm.linkType
       , name     = distinctTerm.name
@@ -167,6 +167,6 @@ object SearchIndex {
       , weight   = summedWeight  //insert total weight
       )
     } yield(reWeightedSearchTerm)
-    reWeightedSearchTerms.sortWith(_.weight > _.weight)
+    reWeightedSearchTerms.sortWith(_.weight > _.weight).take(20)
   }
 }
