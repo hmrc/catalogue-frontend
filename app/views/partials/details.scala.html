@@ -66,10 +66,33 @@
     </div>
     <div class="card-body">
         <div class="row gy-3">
-            <div id="repository-description" class="col-6">
-                <label class="fw-bold">Description: </label>
-                @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
+
+            <div id="repository-description" class="col-12">
+
+                <div class="@if(repositoryDetails.descriptionAboveLimit) {content-grow  content-grow-gradient}">
+                    <div class="content-grow-wrapper">
+                        <a href="#"
+                        tabindex="0"
+                        data-bs-toggle="popover"
+                        data-bs-trigger="focus"
+                        data-bs-placement="left"
+                        data-bs-html="true"
+                        data-bs-content='Description is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. You will need to add the `description` key to this file if it is missing. Changes can take up to 30 minutes to appear in the catalogue.'>
+                            <span class="glyphicon glyphicon-question-sign"/>
+                        </a>
+
+                        <label class="fw-bold">Description: </label>
+                    @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
+                    </div>
+                </div>
+                @if(repositoryDetails.descriptionAboveLimit) {
+                    <footer class="text-center">
+                        <a id="see-all-expand-link" href="#" title="See all" class="content-grow-expand-link glyphicon glyphicon-chevron-down">
+                        </a>
+                    </footer>
+                }
             </div>
+
             <div id="repository-visibility" class="col-6">
                 <label class="fw-bold">Repository visibility: </label>
                 @githubBadgeType(repositoryDetails)
@@ -138,3 +161,4 @@
       </div>
     </div>
   </div>
+
