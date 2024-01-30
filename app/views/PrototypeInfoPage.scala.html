@@ -19,14 +19,14 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import play.twirl.api.Html
-@import partials.PrototypeDetailsPartial
+@import partials.{PrototypeDetailsPartial, ManagePrototypePartial}
 @import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword
 @import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
-@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 @import views.partials.githubBadgeType
 
 @this(
 prototypeDetailsPartial: PrototypeDetailsPartial,
+managePrototypePartial : ManagePrototypePartial,
 viewMessages           : ViewMessages
 )
 
@@ -56,14 +56,20 @@ viewMessages           : ViewMessages
         }
     </h1>
 
-    <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
-
     @partials.leak_detection_banner(linkToLeakDetection)
+    @successMessage.map { msg =>
+        <div id="password-change-success-msg" class="alert alert-success" role="alert">
+            @msg
+        </div>
+    }
 
     <section class="section-wrapper">
         <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 @prototypeDetailsPartial(prototype, prototypeDetails, hasPasswordChangeAuth.value)
+            </div>
+            <div class="col-md-6">
+                @managePrototypePartial(prototype, prototypeDetails, hasPasswordChangeAuth.value, form)
             </div>
         </div>
 
@@ -76,39 +82,6 @@ viewMessages           : ViewMessages
                 @partials.code(prototype, hasBranchProtectionAuth, commenterReport, None)
             </div>
         </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    @if(hasPasswordChangeAuth.value && prototypeDetails.status == PrototypeStatus.Running) {
-                        <button id="reset-password-enabled" type="button" class="btn btn-success">Reset Password</button>
-                    } else {
-                        <button id="reset-password-disabled" type="button" class="btn btn-success" disabled>Reset Password</button>
-                        @if(hasPasswordChangeAuth.value == false) {
-                            <div class="text-muted mt-2">
-                                <i class="glyphicon glyphicon-info-sign"></i>
-                                @messages("prototype.password.forbidden")
-                            </div>
-                        }
-                        @if(hasPasswordChangeAuth.value && prototypeDetails.status != PrototypeStatus.Running) {
-                            <div class="text-muted mt-2">
-                                <i class="glyphicon glyphicon-info-sign"></i>
-                                @messages("prototype.password.not-running")
-                            </div>
-                        }
-                    }
-                </div>
-
-                @partials.change_prototype_password(prototype, form, successMessage)
-
-                <p>
-                    For additional support please
-                    <a id="link-to-confluence" href="https://confluence.tools.tax.service.gov.uk/display/PROT/Prototyping+User+Guide" target="_blank">check the prototyping space on confluence</a>
-                    or reach out in
-                    <a id="link-to-community-prototype-slack" href="https://hmrcdigital.slack.com/archives/C19R6A9L7" target="_blank">#community-prototype</a>.
-                </p>
-            </div>
-        </div>
     </section>
 
     <div class="alert alert-success" role="alert" id="@prototype.name">
@@ -117,19 +90,29 @@ viewMessages           : ViewMessages
       </p>
     </div>
 
-    @if(hasPasswordChangeAuth.value) {
+  @* bootstrap form validation, the form is rendered in the modal in the ManagePrototypePartial.scala.html *@
+  @* automatically displays the modal when errors are present. *@
+  @if(hasPasswordChangeAuth.value && form.hasErrors) {
       <script @CSPNonce.attr type="text/javascript">
-        function togglePasswordResetVisibility() {
-            var elem = document.getElementById("password-reset");
-            if (elem.style.display === "none") {
-                elem.style.display = "block";
-            } else {
-                elem.style.display = "none";
-            }
-        }
-        document.getElementById("reset-password-enabled").addEventListener("click", function() {
-          togglePasswordResetVisibility();
-        });
+          let errors = @Html(form.errorsAsJson.toString());
+
+          for (const [key, [fieldError]] of Object.entries(errors)) {
+              const field = document.getElementById(key);
+              const input = field?.querySelector('input');
+
+              if (input) {
+                  input.classList.add('is-invalid');
+
+                  const feedbackDiv = document.createElement('div');
+                  feedbackDiv.classList.add('invalid-feedback');
+                  feedbackDiv.innerHTML = fieldError;
+
+                  field.appendChild(feedbackDiv);
+              }
+          }
+
+          let modal = new bootstrap.Modal(document.getElementById('password-reset-modal'));
+          modal.show()
       </script>
-    }
+  }
 }

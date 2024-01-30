@@ -1,0 +1,137 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
+@import views.html.partials.form_global_errors
+
+@this()
+
+@(repo                  : GitRepository,
+  prototypeDetails      : PrototypeDetails,
+  hasPasswordChangeAuth : Boolean,
+  form                  : Form[_]
+)(implicit
+  request               : RequestHeader,
+  messages              : Messages
+)
+
+<div id="manage-prototype" class="card">
+  <div class="card-header">
+    <h4 class="mb-0">Manage</h4>
+  </div>
+  <div class="card-body">
+    @if(!hasPasswordChangeAuth) {
+        <div class="form-text mb-2">
+            <i class="glyphicon glyphicon-exclamation-sign pe-1"></i>
+            @messages("prototype.manage.forbidden")
+        </div>
+    }
+    <div id="start-stop-prototype" class="d-flex flex-row align-items-center mb-2">
+      <div class="p-2">
+          <label class="fw-bold">Start/Stop: </label>
+      </div>
+      <div class="p-2">
+          @if(prototypeDetails.status == PrototypeStatus.Stopped) {
+              <form id="start-prototype-form" action="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Running)" method="post">
+                  @csrfFormField
+              </form>
+              @if(hasPasswordChangeAuth) {
+                  <button id="start-prototype-enabled" type="submit" form="start-prototype-form" class="btn btn-sm btn-success">Start</button>
+              } else {
+                  <button id="start-prototype-disabled" class="btn btn-sm btn-success" disabled>Start</button>
+              }
+          }
+          @if(prototypeDetails.status == PrototypeStatus.Running) {
+              <form id="stop-prototype-form" action="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Stopped)" method="post">
+                  @csrfFormField
+              </form>
+              @if(hasPasswordChangeAuth) {
+                  <button id="stop-prototype-enabled" type="submit" form="stop-prototype-form" class="btn btn-sm btn-danger">Stop</button>
+              } else {
+                  <button id="stop-prototype-disabled" class="btn btn-sm btn-danger" disabled>Stop</button>
+              }
+          }
+      </div>
+    </div>
+    <div id="change-prototype-password" class="d-flex flex-row align-items-center mb-3">
+      <div class="p-2">
+          <label class="fw-bold">Password: </label>
+      </div>
+      <div class="p-2">
+          @if(hasPasswordChangeAuth && prototypeDetails.status == PrototypeStatus.Running) {
+              <button id="reset-password-enabled" type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#password-reset-modal">
+                  Reset Password
+              </button>
+          } else {
+              <button id="reset-password-disabled" type="button" class="btn btn-sm btn-success" disabled>Reset Password</button>
+          }
+      </div>
+      @if(prototypeDetails.status != PrototypeStatus.Running) {
+          <div class="p-2 form-text">
+              <i class="glyphicon glyphicon-info-sign pe-1"></i>
+              @messages("prototype.password.not-running")
+          </div>
+      }
+    </div>
+    <div class="card-text">
+        For additional support please
+        <a id="link-to-confluence" href="https://confluence.tools.tax.service.gov.uk/display/PROT/Prototyping+User+Guide" target="_blank">check the prototyping space on confluence</a>
+        or reach out in
+        <a id="link-to-community-prototype-slack" href="https://hmrcdigital.slack.com/archives/C19R6A9L7" target="_blank">#community-prototype</a>.
+    </div>
+  </div>
+</div>
+
+<div id="password-reset-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="resetPasswordModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resetPasswordModalTitle">Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @form_global_errors(form)
+                <p>You must comply with the following password rules:</p>
+                <ul>
+                    <li>Cannot be blank</li>
+                    <li>
+                        Should only contain the following characters
+                        <ul>
+                            <li>uppercase letters</li>
+                            <li>lowercase letters</li>
+                            <li>numbers</li>
+                            <li>underscores</li>
+                        </ul>
+                    </li>
+                </ul>
+                <form id="reset-password-form" class="needs-validation" method="post" action="@appRoutes.CatalogueController.changePrototypePassword(repo.name)" novalidate>
+                    @csrfFormField
+                    <div id="password">
+                        <label for="password-input" class="d-none">Password: </label>
+                        <input id="password-input" type="password" class="form-control" name="password" placeholder="New Password">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="reset-password-form" class="btn btn-success">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -237,6 +237,7 @@ case class GitRepository(
   teamNames           : Seq[TeamName]            = Seq.empty,
   jenkinsJobs         : Seq[JenkinsJob]          = Seq.empty,
   prototypeName       : Option[String]           = None,
+  prototypeAutoPublish: Option[Boolean]          = None,
   zone                : Option[Zone]             = None,
 ) {
   def isShared: Boolean =
@@ -252,26 +253,27 @@ object GitRepository {
     implicit val zoneF: Format[Zone]        = Zone.format
     implicit val tnf  : Format[TeamName]    = TeamName.format
 
-    ( (__ \ "name"              ).format[String]
-    ~ (__ \ "description"       ).format[String]
-    ~ (__ \ "url"               ).format[String]
-    ~ (__ \ "createdDate"       ).format[Instant]
-    ~ (__ \ "lastActiveDate"    ).format[Instant]
-    ~ (__ \ "isPrivate"         ).formatWithDefault[Boolean](false)
-    ~ (__ \ "repoType"          ).format[RepoType]
-    ~ (__ \ "serviceType"       ).formatNullable[ServiceType]
-    ~ (__ \ "tags"              ).formatNullable[Set[Tag]]
-    ~ (__ \ "digitalServiceName").formatNullable[String]
-    ~ (__ \ "owningTeams"       ).formatWithDefault[Seq[TeamName]](Seq.empty)
-    ~ (__ \ "language"          ).formatNullable[String]
-    ~ (__ \ "isArchived"        ).formatWithDefault[Boolean](false)
-    ~ (__ \ "defaultBranch"     ).format[String]
-    ~ (__ \ "branchProtection"  ).formatNullable(BranchProtection.format)
-    ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
-    ~ (__ \ "teamNames"         ).formatWithDefault[Seq[TeamName]](Seq.empty)
-    ~ (__ \ "jenkinsJobs"       ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
-    ~ (__ \ "prototypeName"     ).formatNullable[String]
-    ~ (__ \ "zone"              ).formatNullable[Zone]
+    ( (__ \ "name"                ).format[String]
+    ~ (__ \ "description"         ).format[String]
+    ~ (__ \ "url"                 ).format[String]
+    ~ (__ \ "createdDate"         ).format[Instant]
+    ~ (__ \ "lastActiveDate"      ).format[Instant]
+    ~ (__ \ "isPrivate"           ).formatWithDefault[Boolean](false)
+    ~ (__ \ "repoType"            ).format[RepoType]
+    ~ (__ \ "serviceType"         ).formatNullable[ServiceType]
+    ~ (__ \ "tags"                ).formatNullable[Set[Tag]]
+    ~ (__ \ "digitalServiceName"  ).formatNullable[String]
+    ~ (__ \ "owningTeams"         ).formatWithDefault[Seq[TeamName]](Seq.empty)
+    ~ (__ \ "language"            ).formatNullable[String]
+    ~ (__ \ "isArchived"          ).formatWithDefault[Boolean](false)
+    ~ (__ \ "defaultBranch"       ).format[String]
+    ~ (__ \ "branchProtection"    ).formatNullable(BranchProtection.format)
+    ~ (__ \ "isDeprecated"        ).formatWithDefault[Boolean](false)
+    ~ (__ \ "teamNames"           ).formatWithDefault[Seq[TeamName]](Seq.empty)
+    ~ (__ \ "jenkinsJobs"         ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
+    ~ (__ \ "prototypeName"       ).formatNullable[String]
+    ~ (__ \ "prototypeAutoPublish").formatNullable[Boolean]
+    ~ (__ \ "zone"                ).formatNullable[Zone]
     ) (apply, unlift(unapply))
   }
 }

@@ -23,6 +23,7 @@ import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import play.api.Logger
+import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
@@ -35,7 +36,7 @@ import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimation
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{ServiceCommissioningStatusConnector, LifecycleStatus}
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -556,10 +557,16 @@ object ChangePrototypePassword {
       IAAction("CHANGE_PROTOTYPE_PASSWORD")
     )
 
+  private val passwordConstraint =
+    Constraint("constraints.password") { input: String =>
+      if (input.matches("^[a-zA-Z0-9_]+$")) Valid
+      else Invalid("Should only contain uppercase letters, lowercase letters, numbers, underscores")
+    }
+
   def form(): Form[PrototypePassword] =
     Form(
       Forms.mapping(
-        "password" -> Forms.nonEmptyText
+        "password" -> Forms.nonEmptyText.verifying(passwordConstraint)
       )(PrototypePassword.apply)(PrototypePassword.unapply)
     )
 }

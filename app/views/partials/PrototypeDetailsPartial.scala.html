@@ -14,12 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
-@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
-
 
 @this()
 
@@ -40,36 +37,30 @@
           <label class="fw-bold">Description: </label>
           @if(repo.description.isEmpty) {None} else {@repo.description}
       </div>
+      <div id="prototype-status" class="col-6">
+          <label class="fw-bold">Status: </label>
+          @prototypeDetails.status.displayString
+      </div>
       <div id="created-at" class="col-6">
           <label class="fw-bold">Created: </label>
           @repo.createdDate.displayFormat
-      </div>
-      <div id="description-url" class="col-6">
-        <label class="fw-bold">Url: </label>
-          @prototypeDetails.url.fold(Html("Unknown")) { prototypeUrl =>
-              <a id="link-to-prototype" href="@prototypeUrl" target="_blank" rel="noreferrer noopener">@prototypeUrl<span class="glyphicon glyphicon-new-window"/></a>
-          }
       </div>
       <div id="last-active" class="col-6">
           <label class="fw-bold">Last Active: </label>
           @repo.lastActiveDate.displayFormat
       </div>
-      <div id="prototype-status" class="col-6">
-          <label class="fw-bold">Status: </label>
-          @prototypeDetails.status.displayString
-          @if(hasPasswordChangeAuth) {
-              @if(prototypeDetails.status == PrototypeStatus.Stopped) {
-                  <form id="start-prototype-form" action="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Running)" method="post">
-                  @csrfFormField
-                  </form>
-                  <button id="start-prototype-button" type="submit" form="start-prototype-form" class="btn btn-sm btn-success mt-3">Start</button>
-              }
-              @if(prototypeDetails.status == PrototypeStatus.Running) {
-                  <form id="stop-prototype-form" action="@appRoutes.CatalogueController.setPrototypeStatus(repo.name, PrototypeStatus.Stopped)" method="post">
-                  @csrfFormField
-                  </form>
-                  <button id="stop-prototype-button" type="submit" form="stop-prototype-form" class="btn btn-sm btn-danger mt-3">Stop</button>
-              }
+      <div id="description-url" class="col-12">
+        <label class="fw-bold">Url: </label>
+          @prototypeDetails.url.fold(Html("Unknown")) { prototypeUrl =>
+              <a id="link-to-prototype" href="@prototypeUrl" target="_blank" rel="noreferrer noopener">@prototypeUrl<span class="glyphicon glyphicon-new-window"/></a>
+          }
+      </div>
+      <div id="auto-publish" class="col-6">
+          <label class="fw-bold">Auto Publish: </label>
+          @if(repo.prototypeAutoPublish.getOrElse(false)) {
+            Enabled
+          } else {
+            Disabled
           }
       </div>
     </div>
