@@ -40,6 +40,10 @@
           <label class="fw-bold">Repository Visibility: </label>
           @githubBadgeType(repo)
       </div>
+      <div id="repository-status" class="col-6">
+          <label class="fw-bold">Repository Status: </label>
+          @if(repo.isArchived) {Archived} else if(repo.isDeprecated) {Deprecated} else {Active}
+      </div>
       <div id="description" class="col-12">
           <label class="fw-bold">Description: </label>
           @if(repo.description.isEmpty) {None} else {@repo.description}
