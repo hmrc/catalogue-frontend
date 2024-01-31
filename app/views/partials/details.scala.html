@@ -71,7 +71,7 @@
 
                 <div class="@if(repositoryDetails.descriptionAboveLimit) {content-grow  content-grow-gradient}">
                     <div class="content-grow-wrapper">
-                        <a href="#"
+                        <label class="fw-bold">Description <a href="#"
                         tabindex="0"
                         data-bs-toggle="popover"
                         data-bs-trigger="focus"
@@ -79,9 +79,7 @@
                         data-bs-html="true"
                         data-bs-content='Description is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. You will need to add the `description` key to this file if it is missing. Changes can take up to 30 minutes to appear in the catalogue.'>
                             <span class="glyphicon glyphicon-question-sign"/>
-                        </a>
-
-                        <label class="fw-bold">Description: </label>
+                        </a>: </label>
                     @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
                     </div>
                 </div>
@@ -97,18 +95,28 @@
                 <label class="fw-bold">Repository visibility: </label>
                 @githubBadgeType(repositoryDetails)
             </div>
-            @repositoryDetails.serviceType.map{ serviceType =>
-                <div id="repository-service-type" class="col-6">
-                    <label class="fw-bold">Service type: </label>
-                    @serviceType
-                </div>
-            }
+
             @repositoryDetails.zone.map{ zone =>
                 <div id="repository-zone" class="col-6">
                     <label class="fw-bold">Zone: </label>
                     @zone
                 </div>
             }
+
+            @repositoryDetails.serviceType.map{ serviceType =>
+                <div id="repository-service-type" class="col-6">
+                    <label class="fw-bold">Service type: </label>
+                    @serviceType
+                </div>
+            }
+
+            @lifecycleStatus.map { status =>
+                <div class="col-6">
+                    <label class="fw-bold">Status: </label>
+                    @status.displayName
+                </div>
+            }
+
             <div id="repository-created-at" class="col-6">
                 <label class="fw-bold">Created: </label>
                 @repositoryDetails.createdDate.displayFormat
@@ -121,12 +129,6 @@
                 <div class="col-6">
                   <label class="fw-bold">Latest Version: </label>
                   @version.toString
-                </div>
-            }
-            @lifecycleStatus.map { status =>
-                <div class="col-6">
-                  <label class="fw-bold">Status: </label>
-                    @status.displayName
                 </div>
             }
         </div>
