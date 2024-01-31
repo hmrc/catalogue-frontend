@@ -46,14 +46,6 @@ viewMessages           : ViewMessages
 @standard_layout(prototype.name, active = "repositories") {
     <h1 class="page-heading mt-4">
         Prototype: @prototype.name
-        <span>@githubBadgeType(prototype)</span>
-        @{
-            if(prototype.isArchived) {
-                <span>Archived</span> 
-            } else if(prototype.isDeprecated) {
-                <span>Deprecated</span>
-            }
-        }
     </h1>
 
     @partials.leak_detection_banner(linkToLeakDetection)
@@ -66,7 +58,7 @@ viewMessages           : ViewMessages
     <section class="section-wrapper">
         <div class="row mb-3">
             <div class="col-md-6">
-                @prototypeDetailsPartial(prototype, prototypeDetails, hasPasswordChangeAuth.value)
+                @prototypeDetailsPartial(prototype)
             </div>
             <div class="col-md-6">
                 @managePrototypePartial(prototype, prototypeDetails, hasPasswordChangeAuth.value, form)

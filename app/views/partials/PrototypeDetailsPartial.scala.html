@@ -16,16 +16,11 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
+@import views.partials.githubBadgeType
 
 @this()
 
-@(repo                  : GitRepository,
-  prototypeDetails      : PrototypeDetails,
-  hasPasswordChangeAuth : Boolean
-)(implicit
-  request               : RequestHeader
-)
+@(repo: GitRepository)(implicit request: RequestHeader)
 
 <div id="details" class="card">
   <div class="card-header">
@@ -33,14 +28,6 @@
   </div>
   <div class="card-body">
     <div class="row gy-3">
-      <div id="description" class="col-6">
-          <label class="fw-bold">Description: </label>
-          @if(repo.description.isEmpty) {None} else {@repo.description}
-      </div>
-      <div id="prototype-status" class="col-6">
-          <label class="fw-bold">Status: </label>
-          @prototypeDetails.status.displayString
-      </div>
       <div id="created-at" class="col-6">
           <label class="fw-bold">Created: </label>
           @repo.createdDate.displayFormat
@@ -49,19 +36,13 @@
           <label class="fw-bold">Last Active: </label>
           @repo.lastActiveDate.displayFormat
       </div>
-      <div id="description-url" class="col-12">
-        <label class="fw-bold">Url: </label>
-          @prototypeDetails.url.fold(Html("Unknown")) { prototypeUrl =>
-              <a id="link-to-prototype" href="@prototypeUrl" target="_blank" rel="noreferrer noopener">@prototypeUrl<span class="glyphicon glyphicon-new-window"/></a>
-          }
+      <div id="repository-visibility" class="col-6">
+          <label class="fw-bold">Repository Visibility: </label>
+          @githubBadgeType(repo)
       </div>
-      <div id="auto-publish" class="col-6">
-          <label class="fw-bold">Auto Publish: </label>
-          @if(repo.prototypeAutoPublish.getOrElse(false)) {
-            Enabled
-          } else {
-            Disabled
-          }
+      <div id="description" class="col-12">
+          <label class="fw-bold">Description: </label>
+          @if(repo.description.isEmpty) {None} else {@repo.description}
       </div>
     </div>
   </div>

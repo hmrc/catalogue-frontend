@@ -33,18 +33,42 @@
 
 <div id="manage-prototype" class="card">
   <div class="card-header">
-    <h4 class="mb-0">Manage</h4>
+    <h4 class="mb-0">Prototype</h4>
   </div>
   <div class="card-body">
+    <div id="prototype-url" class="d-flex flex-row align-items-center">
+      <div class="p-2">
+          <label class="fw-bold">Url: </label>
+      </div>
+      <div class="p-2">
+          @prototypeDetails.url.fold(Html("Unknown")) { prototypeUrl =>
+              <a id="link-to-prototype" href="@prototypeUrl" target="_blank" rel="noreferrer noopener">@prototypeUrl<span class="glyphicon glyphicon-new-window"/></a>
+          }
+      </div>
+    </div>
+    <div id="auto-publish" class="d-flex flex-row align-items-center">
+      <div class="p-2">
+          <label class="fw-bold">Auto Publish: </label>
+      </div>
+      <div class="p-2">
+          @if(repo.prototypeAutoPublish.getOrElse(false)) {Enabled} else {Disabled}
+      </div>
+    </div>
+
+    <hr>
+
     @if(!hasPasswordChangeAuth) {
-        <div class="form-text mb-2">
+        <div class="form-text">
             <i class="glyphicon glyphicon-exclamation-sign pe-1"></i>
             @messages("prototype.manage.forbidden")
         </div>
     }
-    <div id="start-stop-prototype" class="d-flex flex-row align-items-center mb-2">
+    <div id="start-stop-prototype" class="d-flex flex-row align-items-center">
       <div class="p-2">
-          <label class="fw-bold">Start/Stop: </label>
+          <label class="fw-bold">Status: </label>
+      </div>
+      <div class="p-2">
+        @prototypeDetails.status.displayString
       </div>
       <div class="p-2">
           @if(prototypeDetails.status == PrototypeStatus.Stopped) {
