@@ -42,8 +42,8 @@
         <link rel="stylesheet" href="@routes.Assets.versioned("glyphicon-bootstrap.3.4.1.css")" />
         <link rel="stylesheet" href="@routes.Assets.versioned("catalogue-frontend.css")" />
         <link rel="shortcut icon" href="@routes.Assets.versioned("favicon.ico")" type="image/x-icon">
-        <script @CSPNonce.attr src="@routes.Assets.versioned("jquery.3.5.1.min.js")"></script>
-        <script @CSPNonce.attr src="@routes.Assets.versioned("jquery-ui.1.13.2.min.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("jquery.3.5.1.min.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("jquery-ui.1.13.2.min.js")"></script>
         @* https://listjs.com/docs/ https://github.com/javve/list.js
 
         We've patched the list.js source code to allow searching by punctuation.
@@ -56,10 +56,10 @@
         This defunct 'replace' function has therefore been removed in our patched version.
 
         *@
-        <script @CSPNonce.attr src="@routes.Assets.versioned("list-2.3.0-patched.min.js")"></script>
-        <script @CSPNonce.attr src="@routes.Assets.versioned("popper.2.11.8.min.js")"></script>
-        <script @CSPNonce.attr src="@routes.Assets.versioned("bootstrap.5.3.0.min.js")"></script>
-        <script @CSPNonce.attr src="@routes.Assets.versioned("catalogue-frontend.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("list-2.3.0-patched.min.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("popper.2.11.8.min.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("bootstrap.5.3.0.min.js")"></script>
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("catalogue-frontend.js")"></script>
         @head
         <style>
 
@@ -255,7 +255,7 @@
             const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
         </script>
     </body>
-
-    <script @CSPNonce.attr src="@routes.Assets.versioned("search.js")" defer></script>
-    <script @CSPNonce.attr src="@routes.Assets.versioned("auditing.js")"></script>
+    <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("bootstrapFormValidation.js")"></script>
+    <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("search.js")" defer></script>
+    <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("auditing.js")"></script>
 </html>
