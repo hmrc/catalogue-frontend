@@ -242,6 +242,8 @@ case class GitRepository(
 ) {
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
+
+  val descriptionAboveLimit: Boolean = description.length > 512
 }
 
 object GitRepository {
