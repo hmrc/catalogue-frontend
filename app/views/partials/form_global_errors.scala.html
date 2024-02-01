@@ -21,7 +21,7 @@
 
 @if(form.hasGlobalErrors) {
 <div class="alert alert-danger">
-    <ul class="list-unstyled">
+    <ul class="list-unstyled mb-0">
         @form.globalErrors.map { error =>
         <li>@error.format</li>
         }

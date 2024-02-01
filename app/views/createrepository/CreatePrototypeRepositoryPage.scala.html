@@ -75,8 +75,15 @@
                         </div>
                         <ul>
                             <li>Cannot be blank</li>
-                            <li>Should only contain the following characters</li>
-                            <ul><li>uppercase letters</li><li>lowercase letters</li><li> numbers</li><li>underscores</li></ul>
+                            <li>
+                                Should only contain the following characters
+                                <ul>
+                                    <li>uppercase letters</li>
+                                    <li>lowercase letters</li>
+                                    <li> numbers</li>
+                                    <li>underscores</li>
+                                </ul>
+                            </li>
                         </ul>
                         <input class="form-control" type="password" id="passwordInput" name="password" value="@form.data.getOrElse("password", "")">
                     </div>
