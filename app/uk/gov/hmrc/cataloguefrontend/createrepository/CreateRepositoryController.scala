@@ -55,7 +55,7 @@ class CreateRepositoryController @Inject()(
   private def createRepositoryPermission(teamName: TeamName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_REPOSITORY"))
 
-  def createServiceRepositoryLanding(): Action[AnyContent] = {
+  def createServiceRepositoryLanding(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createServiceRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
@@ -63,7 +63,6 @@ class CreateRepositoryController @Inject()(
       val userTeams = cleanseUserTeams(request.retrieval)
       Ok(createRepositoryPage(CreateServiceRepoForm.form, userTeams, CreateServiceRepositoryType.values))
     }
-  }
 
   def createServiceRepository(): Action[AnyContent] =
     auth.authenticatedAction(
@@ -90,7 +89,7 @@ class CreateRepositoryController @Inject()(
       ).merge
     }
 
-  def createPrototypeRepositoryLanding(): Action[AnyContent] = {
+  def createPrototypeRepositoryLanding(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createPrototypeRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
@@ -98,7 +97,7 @@ class CreateRepositoryController @Inject()(
       val userTeams = cleanseUserTeams(request.retrieval)
       Ok(createPrototypePage(CreatePrototypeRepoForm.form, userTeams))
     }
-  }
+
   def createPrototypeRepository(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createPrototypeRepositoryLanding(),
@@ -158,23 +157,20 @@ class CreateRepositoryController @Inject()(
       ).merge
     }
 
-  def createTestRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
-    implicit request => {
+  def createTestRepositoryConfirmation(repoName: String): Action[AnyContent] =
+    BasicAuthAction { implicit request =>
       Ok(createTestRepositoryConfirmationPage(repoName))
     }
-  }
 
-  def createPrototypeRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
-    implicit request => {
+  def createPrototypeRepositoryConfirmation(repoName: String): Action[AnyContent] =
+    BasicAuthAction { implicit request =>
       Ok(createPrototypeRepositoryConfirmationPage(repoName))
     }
-  }
 
-  def createServiceRepositoryConfirmation(repoName: String): Action[AnyContent] = BasicAuthAction {
-    implicit request => {
+  def createServiceRepositoryConfirmation(repoName: String): Action[AnyContent] =
+    BasicAuthAction { implicit request =>
       Ok(createRepositoryConfirmationPage(repoName))
     }
-  }
 
   private def verifyGithubTeamExists(
     selectedTeam: TeamName

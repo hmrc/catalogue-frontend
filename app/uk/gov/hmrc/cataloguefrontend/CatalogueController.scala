@@ -115,14 +115,14 @@ class CatalogueController @Inject() (
           case ServiceConfigsService.ArtifactNameResult.ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName, hasBranchProtectionAuth).getOrElse(notFound)
           case ServiceConfigsService.ArtifactNameResult.ArtifactNameNotFound            => Future.successful(notFound)
           case ServiceConfigsService.ArtifactNameResult.ArtifactNameError(error)        => logger.error(error)
-                                                                                   Future.successful(InternalServerError)
+                                                                                           Future.successful(InternalServerError)
         }
 
       def buildServicePageFromRepoName(repoName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): OptionT[Future, Result] =
         OptionT(teamsAndRepositoriesConnector.repositoryDetails(repoName))
           .semiflatMap {
             case repositoryDetails if repositoryDetails.repoType == RepoType.Service => renderServicePage(serviceName, repositoryDetails, hasBranchProtectionAuth)
-            case _ => Future.successful(notFound)
+            case _                                                                   => Future.successful(notFound)
           }
 
       for {
@@ -130,7 +130,6 @@ class CatalogueController @Inject() (
         result                  <- buildServicePageFromRepoName(serviceName, hasBranchProtectionAuth)
                                     .getOrElseF(buildServicePageFromItsArtifactName(serviceName, hasBranchProtectionAuth))
       } yield result
-
     }
 
   private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[CostEstimationService.Zone]] =

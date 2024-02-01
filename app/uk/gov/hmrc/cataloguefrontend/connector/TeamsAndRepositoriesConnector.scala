@@ -381,7 +381,7 @@ class TeamsAndRepositoriesConnector @Inject()(
       .execute[Seq[Team]]
 
   def repositoriesForTeam(teamName: TeamName, includeArchived: Option[Boolean] = None)(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
-    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?team=${teamName.asString}&archived=$includeArchived"
+    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?owningTeam=${teamName.asString}&archived=$includeArchived"
 
     httpClientV2
       .get(url)
@@ -394,18 +394,15 @@ class TeamsAndRepositoriesConnector @Inject()(
   }
 
   def allRepositories(
-     name       : Option[String] = None,
-     team       : Option[TeamName] = None,
-     archived   : Option[Boolean] = None,
-     repoType   : Option[RepoType] = None,
+     name       : Option[String]      = None,
+     team       : Option[TeamName]    = None,
+     archived   : Option[Boolean]     = None,
+     repoType   : Option[RepoType]    = None,
      serviceType: Option[ServiceType] = None
-   )(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
-
-    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&team=${team.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}"
+   )(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
     httpClientV2
-      .get(url)
+      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[Seq[GitRepository]]
-  }
 
   def allServices()(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
     httpClientV2
@@ -417,22 +414,21 @@ class TeamsAndRepositoriesConnector @Inject()(
       .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?archived=true")
       .execute[Seq[GitRepository]]
 
-  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[GitRepository]] = {
+  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[GitRepository]] =
     for {
-      repo    <- httpClientV2
-                   .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
-                   .execute[Option[GitRepository]]
-      jobs    <- lookupLatestJenkinsJobs(name)
-      withJobs = repo.map(_.copy(jenkinsJobs = jobs))
+      repo     <- httpClientV2
+                    .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
+                    .execute[Option[GitRepository]]
+      jobs     <- lookupLatestJenkinsJobs(name)
+      withJobs =  repo.map(_.copy(jenkinsJobs = jobs))
     } yield withJobs
-  }
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     for {
-      repos         <- httpClientV2
-                         .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
-                         .execute[Seq[GitRepository]]
-      teamsByService = repos.map(r => r.name -> r.teamNames).toMap
+      repos          <- httpClientV2
+                          .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
+                          .execute[Seq[GitRepository]]
+      teamsByService =  repos.map(r => r.name -> r.teamNames).toMap
     } yield teamsByService
 
   def enableBranchProtection(repoName: String)(implicit hc: HeaderCarrier): Future[Unit] =
@@ -445,12 +441,4 @@ class TeamsAndRepositoriesConnector @Inject()(
 object TeamsAndRepositoriesConnector {
 
   type ServiceName = String
-
-  sealed trait TeamsAndRepositoriesError
-
-  case class HTTPError(code: Int) extends TeamsAndRepositoriesError
-
-  case class ConnectionError(exception: Throwable) extends TeamsAndRepositoriesError {
-    override def toString: String = exception.getMessage
-  }
 }
