@@ -23,6 +23,7 @@ import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import play.api.Logger
+import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
@@ -35,7 +36,7 @@ import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimation
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{ServiceCommissioningStatusConnector, LifecycleStatus}
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -114,14 +115,14 @@ class CatalogueController @Inject() (
           case ServiceConfigsService.ArtifactNameResult.ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName, hasBranchProtectionAuth).getOrElse(notFound)
           case ServiceConfigsService.ArtifactNameResult.ArtifactNameNotFound            => Future.successful(notFound)
           case ServiceConfigsService.ArtifactNameResult.ArtifactNameError(error)        => logger.error(error)
-                                                                                   Future.successful(InternalServerError)
+                                                                                           Future.successful(InternalServerError)
         }
 
       def buildServicePageFromRepoName(repoName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): OptionT[Future, Result] =
         OptionT(teamsAndRepositoriesConnector.repositoryDetails(repoName))
           .semiflatMap {
             case repositoryDetails if repositoryDetails.repoType == RepoType.Service => renderServicePage(serviceName, repositoryDetails, hasBranchProtectionAuth)
-            case _ => Future.successful(notFound)
+            case _                                                                   => Future.successful(notFound)
           }
 
       for {
@@ -129,7 +130,6 @@ class CatalogueController @Inject() (
         result                  <- buildServicePageFromRepoName(serviceName, hasBranchProtectionAuth)
                                     .getOrElseF(buildServicePageFromItsArtifactName(serviceName, hasBranchProtectionAuth))
       } yield result
-
     }
 
   private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[CostEstimationService.Zone]] =
@@ -556,10 +556,16 @@ object ChangePrototypePassword {
       IAAction("CHANGE_PROTOTYPE_PASSWORD")
     )
 
+  private val passwordConstraint =
+    Constraint("constraints.password") { input: String =>
+      if (input.matches("^[a-zA-Z0-9_]+$")) Valid
+      else Invalid("Should only contain uppercase letters, lowercase letters, numbers, underscores")
+    }
+
   def form(): Form[PrototypePassword] =
     Form(
       Forms.mapping(
-        "password" -> Forms.nonEmptyText
+        "password" -> Forms.nonEmptyText.verifying(passwordConstraint)
       )(PrototypePassword.apply)(PrototypePassword.unapply)
     )
 }

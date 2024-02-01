@@ -46,7 +46,8 @@ class PrototypePageSpec
       setupEnableBranchProtectionAuthEndpoint()
       setupPrototypeStatusEndpoint("2fa-prototype", 200, PrototypeStatus.Running)
       serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
-      serviceEndpoint(GET, "/api/jenkins-url/2fa-prototype"    , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsData)))
+      serviceEndpoint(GET, "/api/repository"                   , willRespondWith = (200, Some(JsonData.emptyList)))
+      serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype"   , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/2fa-prototype").withAuthToken("Token token").get().futureValue
 
@@ -78,7 +79,7 @@ class PrototypePageSpec
 
       response.status shouldBe 200
       response.body   should include("reset-password-enabled")
-      response.body   should include("stop-prototype-button")
+      response.body   should include("stop-prototype-enabled")
     }
 
     "not show the reset password form when user does not have permission" in {
@@ -97,6 +98,7 @@ class PrototypePageSpec
 
       response.status shouldBe 200
       response.body should include("reset-password-disabled")
+      response.body should include("stop-prototype-disabled")
     }
 
     "not show the reset password form when the prototype does not have a status of Running" in {
@@ -115,6 +117,7 @@ class PrototypePageSpec
 
       response.status shouldBe 200
       response.body should include("reset-password-disabled")
+      response.body should include("To reset the password, the prototype must have a status of Running.")
     }
 
     "display success message when password changed successfully" in {
@@ -173,7 +176,6 @@ class PrototypePageSpec
         .futureValue
 
       response.status shouldBe 400
-      response.body should include("password-change-error-msg")
       response.body should include(expectedError)
     }
   }

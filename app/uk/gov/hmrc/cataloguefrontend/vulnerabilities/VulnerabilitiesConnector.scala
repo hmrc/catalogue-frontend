@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.format.DateTimeFormatter

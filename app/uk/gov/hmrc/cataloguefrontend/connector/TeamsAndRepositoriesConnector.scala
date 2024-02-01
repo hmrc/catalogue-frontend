@@ -237,10 +237,13 @@ case class GitRepository(
   teamNames           : Seq[TeamName]            = Seq.empty,
   jenkinsJobs         : Seq[JenkinsJob]          = Seq.empty,
   prototypeName       : Option[String]           = None,
+  prototypeAutoPublish: Option[Boolean]          = None,
   zone                : Option[Zone]             = None,
 ) {
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
+
+  val descriptionAboveLimit: Boolean = description.length > 512
 }
 
 object GitRepository {
@@ -252,26 +255,27 @@ object GitRepository {
     implicit val zoneF: Format[Zone]        = Zone.format
     implicit val tnf  : Format[TeamName]    = TeamName.format
 
-    ( (__ \ "name"              ).format[String]
-    ~ (__ \ "description"       ).format[String]
-    ~ (__ \ "url"               ).format[String]
-    ~ (__ \ "createdDate"       ).format[Instant]
-    ~ (__ \ "lastActiveDate"    ).format[Instant]
-    ~ (__ \ "isPrivate"         ).formatWithDefault[Boolean](false)
-    ~ (__ \ "repoType"          ).format[RepoType]
-    ~ (__ \ "serviceType"       ).formatNullable[ServiceType]
-    ~ (__ \ "tags"              ).formatNullable[Set[Tag]]
-    ~ (__ \ "digitalServiceName").formatNullable[String]
-    ~ (__ \ "owningTeams"       ).formatWithDefault[Seq[TeamName]](Seq.empty)
-    ~ (__ \ "language"          ).formatNullable[String]
-    ~ (__ \ "isArchived"        ).formatWithDefault[Boolean](false)
-    ~ (__ \ "defaultBranch"     ).format[String]
-    ~ (__ \ "branchProtection"  ).formatNullable(BranchProtection.format)
-    ~ (__ \ "isDeprecated"      ).formatWithDefault[Boolean](false)
-    ~ (__ \ "teamNames"         ).formatWithDefault[Seq[TeamName]](Seq.empty)
-    ~ (__ \ "jenkinsJobs"       ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
-    ~ (__ \ "prototypeName"     ).formatNullable[String]
-    ~ (__ \ "zone"              ).formatNullable[Zone]
+    ( (__ \ "name"                ).format[String]
+    ~ (__ \ "description"         ).format[String]
+    ~ (__ \ "url"                 ).format[String]
+    ~ (__ \ "createdDate"         ).format[Instant]
+    ~ (__ \ "lastActiveDate"      ).format[Instant]
+    ~ (__ \ "isPrivate"           ).formatWithDefault[Boolean](false)
+    ~ (__ \ "repoType"            ).format[RepoType]
+    ~ (__ \ "serviceType"         ).formatNullable[ServiceType]
+    ~ (__ \ "tags"                ).formatNullable[Set[Tag]]
+    ~ (__ \ "digitalServiceName"  ).formatNullable[String]
+    ~ (__ \ "owningTeams"         ).formatWithDefault[Seq[TeamName]](Seq.empty)
+    ~ (__ \ "language"            ).formatNullable[String]
+    ~ (__ \ "isArchived"          ).formatWithDefault[Boolean](false)
+    ~ (__ \ "defaultBranch"       ).format[String]
+    ~ (__ \ "branchProtection"    ).formatNullable(BranchProtection.format)
+    ~ (__ \ "isDeprecated"        ).formatWithDefault[Boolean](false)
+    ~ (__ \ "teamNames"           ).formatWithDefault[Seq[TeamName]](Seq.empty)
+    ~ (__ \ "jenkinsJobs"         ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
+    ~ (__ \ "prototypeName"       ).formatNullable[String]
+    ~ (__ \ "prototypeAutoPublish").formatNullable[Boolean]
+    ~ (__ \ "zone"                ).formatNullable[Zone]
     ) (apply, unlift(unapply))
   }
 }
@@ -377,7 +381,7 @@ class TeamsAndRepositoriesConnector @Inject()(
       .execute[Seq[Team]]
 
   def repositoriesForTeam(teamName: TeamName, includeArchived: Option[Boolean] = None)(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
-    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?team=${teamName.asString}&archived=$includeArchived"
+    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?owningTeam=${teamName.asString}&archived=$includeArchived"
 
     httpClientV2
       .get(url)
@@ -390,18 +394,15 @@ class TeamsAndRepositoriesConnector @Inject()(
   }
 
   def allRepositories(
-     name       : Option[String] = None,
-     team       : Option[TeamName] = None,
-     archived   : Option[Boolean] = None,
-     repoType   : Option[RepoType] = None,
+     name       : Option[String]      = None,
+     team       : Option[TeamName]    = None,
+     archived   : Option[Boolean]     = None,
+     repoType   : Option[RepoType]    = None,
      serviceType: Option[ServiceType] = None
-   )(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
-
-    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&team=${team.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}"
+   )(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
     httpClientV2
-      .get(url)
+      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[Seq[GitRepository]]
-  }
 
   def allServices()(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
     httpClientV2
@@ -413,22 +414,21 @@ class TeamsAndRepositoriesConnector @Inject()(
       .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?archived=true")
       .execute[Seq[GitRepository]]
 
-  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[GitRepository]] = {
+  def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[GitRepository]] =
     for {
-      repo    <- httpClientV2
-                   .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
-                   .execute[Option[GitRepository]]
-      jobs    <- lookupLatestJenkinsJobs(name)
-      withJobs = repo.map(_.copy(jenkinsJobs = jobs))
+      repo     <- httpClientV2
+                    .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
+                    .execute[Option[GitRepository]]
+      jobs     <- lookupLatestJenkinsJobs(name)
+      withJobs =  repo.map(_.copy(jenkinsJobs = jobs))
     } yield withJobs
-  }
 
   def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
     for {
-      repos         <- httpClientV2
-                         .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
-                         .execute[Seq[GitRepository]]
-      teamsByService = repos.map(r => r.name -> r.teamNames).toMap
+      repos          <- httpClientV2
+                          .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
+                          .execute[Seq[GitRepository]]
+      teamsByService =  repos.map(r => r.name -> r.teamNames).toMap
     } yield teamsByService
 
   def enableBranchProtection(repoName: String)(implicit hc: HeaderCarrier): Future[Unit] =
@@ -441,12 +441,4 @@ class TeamsAndRepositoriesConnector @Inject()(
 object TeamsAndRepositoriesConnector {
 
   type ServiceName = String
-
-  sealed trait TeamsAndRepositoriesError
-
-  case class HTTPError(code: Int) extends TeamsAndRepositoriesError
-
-  case class ConnectionError(exception: Throwable) extends TeamsAndRepositoriesError {
-    override def toString: String = exception.getMessage
-  }
 }
