@@ -35,7 +35,7 @@
  , messagesProvider: MessagesProvider
  )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField = @{ helper.FieldConstructor(helper.bootstrapCompatibleFieldConstructor.f) }
 
 @standard_layout(s"Shutter ${shutterType.asString.capitalize}", active = "shuttering") {
 
@@ -50,12 +50,13 @@
         <div class="card-body">
             @helper.form(
                 action            =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step1Post
-                , Symbol("class") -> "px-2"
+                , Symbol("class") -> "px-2 needs-validation"
                 , Symbol("id")    -> "shutter-service-form"
+                , Symbol("novalidate")    -> ""
             ) {
 
                 @csrfFormField
-
+                <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
                 <div class="row">
                     <div class="col-2">
                         @select(

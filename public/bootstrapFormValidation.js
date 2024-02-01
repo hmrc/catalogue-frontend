@@ -3,7 +3,7 @@ let formErrorsElement = $("#formErrors");
 
 if (formErrorsElement.length > 0) {
 let errors = JSON.parse(formErrorsElement.val());
-    console.log(errors)
+
 for (const [key, [fieldError]] of Object.entries(errors)) {
     const input = document.querySelector(`input[name="${key}"], select[name="${key}"], input[name="${key}[]"], select[name="${key}[]"]`);
 
