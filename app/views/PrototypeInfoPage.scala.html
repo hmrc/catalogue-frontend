@@ -82,27 +82,9 @@ viewMessages           : ViewMessages
       </p>
     </div>
 
-  @* bootstrap form validation, the form is rendered in the modal in the ManagePrototypePartial.scala.html *@
   @* automatically displays the modal when errors are present. *@
   @if(hasPasswordChangeAuth.value && form.hasErrors) {
       <script @CSPNonce.attr type="text/javascript">
-          let errors = @Html(form.errorsAsJson.toString());
-
-          for (const [key, [fieldError]] of Object.entries(errors)) {
-              const field = document.getElementById(key);
-              const input = field?.querySelector('input');
-
-              if (input) {
-                  input.classList.add('is-invalid');
-
-                  const feedbackDiv = document.createElement('div');
-                  feedbackDiv.classList.add('invalid-feedback');
-                  feedbackDiv.innerHTML = fieldError;
-
-                  field.appendChild(feedbackDiv);
-              }
-          }
-
           let modal = new bootstrap.Modal(document.getElementById('password-reset-modal'));
           modal.show()
       </script>

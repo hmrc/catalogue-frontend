@@ -42,10 +42,11 @@
             Symbol("id")         -> "createRepoForm",
             Symbol("method")     -> "post",
             Symbol("class")      -> "needs-validation",
-            Symbol("novalidate") -> "novalidate"
+            Symbol("novalidate") -> ""
         ) {
             @csrfFormField
 
+            <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
             <div class="form-group row mb-2">
                 <div class="col-md-6 d-grid gap-2">
                     <label class="fw-bold" for="repoNameInput">Repository name:</label>
@@ -116,24 +117,4 @@
             </div>
        }
     </section>
-
-    <script @CSPNonce.attr>
-            // Form validation using bootstrap
-            let errors = @Html(form.errorsAsJson.toString());
-
-            for (const [key, [fieldError]] of Object.entries(errors)) {
-                const field = document.getElementById(key);
-                const input = field?.querySelector('input, select');
-
-                if (input) {
-                    input.classList.add('is-invalid');
-
-                    const feedbackDiv = document.createElement('div');
-                    feedbackDiv.classList.add('invalid-feedback');
-                    feedbackDiv.innerHTML = fieldError;
-
-                    field.appendChild(feedbackDiv);
-                }
-            }
-    </script>
 }
