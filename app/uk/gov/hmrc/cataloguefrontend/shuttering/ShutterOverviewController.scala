@@ -24,6 +24,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering._
@@ -79,7 +80,7 @@ class ShutterOverviewController @Inject() (
       for {
         envsAndWarnings <- Environment.values.traverse { env =>
                              shutterService
-                               .frontendRouteWarnings(env, serviceName)
+                               .frontendRouteWarnings(env, ServiceName(serviceName))
                                .recover {
                                  case NonFatal(ex) =>
                                    logger.error(s"Could not retrieve frontend route warnings for service '$serviceName' in env: '${env.asString}': ${ex.getMessage}", ex)

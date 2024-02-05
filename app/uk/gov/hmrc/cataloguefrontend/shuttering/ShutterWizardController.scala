@@ -37,6 +37,7 @@ import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import views.html.shuttering.shutterService._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -87,20 +88,14 @@ class ShutterWizardController @Inject() (
   //
   // --------------------------------------------------------------------------
 
-  def start(shutterType: ShutterType, env: Environment, serviceName: Option[String]) =
+  def start(shutterType: ShutterType, env: Environment, serviceName: Option[String], context: Option[String]) =
     auth.authenticatedAction(
-      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.start(shutterType, env, serviceName))
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.start(shutterType, env, serviceName, context))
     ).async { implicit request =>
       for {
-        updatedFlowState <- putSession(
-                              step0Key,
-                              Step0Out(
-                                shutterType = shutterType,
-                                env         = env
-                              )
-                            )
+        updatedFlowState <- putSession(step0Key, Step0Out(shutterType = shutterType, env = env))
       } yield
-        Redirect(appRoutes.ShutterWizardController.step1Get(serviceName))
+        Redirect(appRoutes.ShutterWizardController.step1Get(serviceName, context))
           .withSession(request.session + updatedFlowState)
     }
 
@@ -122,37 +117,32 @@ class ShutterWizardController @Inject() (
       envs          =  Environment.values
       statusValues  =  ShutterStatusValue.values
       shutterGroups <- shutterService.shutterGroups
-      back          =  appRoutes.ShutterOverviewController.allStates(shutterType)
-    } yield page1(form, shutterType, env, shutterStates, statusValues, shutterGroups, back)
+      back          =  appRoutes.ShutterOverviewController.allStatesForEnv(shutterType, env)
+    } yield page1(form, shutterType, env, shutterStates, shutterGroups, back)
 
-  def step1Get(serviceName: Option[String]) =
+  def step1Get(
+    serviceName: Option[String]
+  , context: Option[String]
+  ) =
     auth.authenticatedAction(
-      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step1Get(serviceName))
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step1Get(serviceName, context))
     ).async { implicit request =>
       (for {
          step0Out      <- getStep0Out
          shutterStates <- EitherT.liftF(shutterService.getShutterStates(step0Out.shutterType, step0Out.env))
-         step1f        <- if (serviceName.isDefined)
-                            EitherT.pure[Future, Result](
-                              Step1Form(
-                                serviceNames = serviceName.toSeq,
-                                status       = statusFor(shutterStates)(serviceName).fold("")(_.asString)
-                              )
-                            )
-                          else
-                            EitherT.liftF[Future, Result, Step1Form](
-                              getFromSession(step1Key)
-                                .map {
-                                  case Some(step1Out) => Step1Form(
-                                                           serviceNames = step1Out.serviceNames,
-                                                           status       = step1Out.status.asString
-                                                         )
-                                  case None           => Step1Form(
-                                                           serviceNames = Seq.empty,
-                                                           status       = ""
-                                                         )
-                                }
-                            )
+         step1f        <- serviceName match {
+                            case Some(sn) => EitherT.pure[Future, Result](Step1Form(
+                                               serviceNameAndContexts = ServiceNameAndContext(ServiceName(sn), context) :: Nil
+                                             , status                 = inverseShutterStatusValue(shutterStates)(ServiceName(sn), context).fold("")(_.asString)
+                                             ))
+                            case None     => EitherT.liftF[Future, Result, Step1Form](
+                                               getFromSession(step1Key)
+                                                 .map(_.fold(Step1Form(serviceNameAndContexts = Seq.empty, status = ""))(step1Out => Step1Form(
+                                                   serviceNameAndContexts = step1Out.serviceNameAndContexts
+                                                 , status                 = step1Out.status.asString
+                                                 )))
+                                            )
+                          }
          html          <- EitherT.liftF[Future, Result, Result] {
                             showPage1(step0Out.shutterType, step0Out.env, step1Form().fill(step1f))
                               .map(Ok(_))
@@ -161,60 +151,48 @@ class ShutterWizardController @Inject() (
       ).merge
     }
 
-  def statusFor(shutterStates: Seq[ShutterState])(optServiceName: Option[String]): Option[ShutterStatusValue] =
-    for {
-      serviceName <- optServiceName
-      status      <- shutterStates.find(_.name == serviceName).map(_.status.value)
-    } yield
-      status match {
+  private def inverseShutterStatusValue(shutterStates: Seq[ShutterState])(serviceName: ServiceName, context: Option[String]): Option[ShutterStatusValue] =
+    shutterStates
+      .find(x => x.serviceName == serviceName && x.context == context)
+      .map(_.status.value match {
         case ShutterStatusValue.Shuttered   => ShutterStatusValue.Unshuttered
         case ShutterStatusValue.Unshuttered => ShutterStatusValue.Shuttered
-      }
+      })
 
   def step1Post =
     auth.authenticatedAction(
-      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step1Get(None))
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step1Get(None, None))
     ).async { implicit request =>
       (for {
          step0Out      <- getStep0Out
          boundForm     =  step1Form().bindFromRequest()
-         sf            <- boundForm
-                            .fold(
-                              hasErrors = formWithErrors => EitherT.left(
-                                            showPage1(step0Out.shutterType, step0Out.env, formWithErrors)
-                                              .map(BadRequest(_))
-                                          ),
-                              success   = data => EitherT.pure[Future, Result](data)
-                            )
+         sf            <- boundForm.fold(
+                            hasErrors = formWithErrors => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, formWithErrors).map(BadRequest(_)))
+                          , success   = data           => EitherT.pure[Future, Result](data)
+                          )
          status        <- ShutterStatusValue.parse(sf.status) match {
                             case Some(status) => EitherT.pure[Future, Result](status)
-                            case None         => EitherT.left(
-                                                   showPage1(step0Out.shutterType, step0Out.env, boundForm)
-                                                     .map(BadRequest(_))
-                                                 )
+                            case None         => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, boundForm).map(BadRequest(_)))
                           }
          // check has permission to shutter selected services (TODO only display locations that can be shuttered)
-         serviceNames  <- EitherT
-                            .fromOption[Future](NonEmptyList.fromList(sf.serviceNames.toList), ())
+         serviceNameAndContexts
+                       <- EitherT
+                            .fromOption[Future](NonEmptyList.fromList(sf.serviceNameAndContexts.toList), ())
                             .leftFlatMap(_ =>
-                              EitherT.left[NonEmptyList[String]](
-                                showPage1(
-                                  step0Out.shutterType,
-                                  step0Out.env,
-                                  boundForm.withGlobalError(Messages("No services selected"))
-                                ).map(BadRequest(_))
+                              EitherT.left[NonEmptyList[ServiceNameAndContext]](
+                                showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages("No services selected"))).map(BadRequest(_))
                               )
                             )
          resources     <- EitherT.liftF(auth.authorised(predicate = None, retrieval = Retrieval.locations(Some(ResourceType("shutter-api")))))
          permsFor      =  if (resources.exists(_.resourceLocation.value == s"${step0Out.shutterType.asString}/*"))
-                            serviceNames.toList
+                            serviceNameAndContexts.map(_.serviceName.asString).toList
                           else {
                             val locationPrefix = step0Out.shutterType.asString + "/"
-                            resources.collect {
-                              case Resource(_, ResourceLocation(l)) if l.startsWith(locationPrefix) => l.stripPrefix(locationPrefix)
-                            }.toList
+                            resources
+                              .collect { case Resource(_, ResourceLocation(l)) if l.startsWith(locationPrefix) => l.stripPrefix(locationPrefix) }
+                              .toList
                           }
-         denied        =  serviceNames.toList.diff(permsFor)
+         denied        =  serviceNameAndContexts.map(_.serviceName.asString).toList.diff(permsFor)
          _             <- if (denied.isEmpty)
                             EitherT.pure[Future, Result](())
                           else
@@ -222,7 +200,7 @@ class ShutterWizardController @Inject() (
                               val errorMessage = s"You do not have permission to shutter service(s): ${denied.mkString(", ")}"
                               showPage1(step0Out.shutterType, step0Out.env, boundForm.withGlobalError(Messages(errorMessage))).map(Forbidden(_))
                             }
-         step1Out      =  Step1Out(sf.serviceNames, status)
+         step1Out      =  Step1Out(sf.serviceNameAndContexts, status)
          _             <- EitherT.liftF[Future, Result, (String, String)](
                             status match {
                               case ShutterStatusValue.Shuttered if step0Out.shutterType == ShutterType.Frontend =>
@@ -263,23 +241,24 @@ class ShutterWizardController @Inject() (
     step1Out: Step1Out
   )(implicit
     request: Request[Any]
-  ): Future[List[ServiceAndRouteWarnings]] =
-    step1Out.serviceNames.toList
-      .traverse(serviceName =>
+  ): Future[Seq[ServiceAndRouteWarnings]] =
+    step1Out
+      .serviceNameAndContexts
+      .traverse(service =>
         shutterService
-          .frontendRouteWarnings(env, serviceName)
-          .map(w => ServiceAndRouteWarnings(serviceName, w))
+          .frontendRouteWarnings(env, service.serviceName)
+          .map(w => ServiceAndRouteWarnings(service.serviceName, w))
       )
 
   private def showPage2a(
     form2a  : Form[Step2aForm],
-    env     : Environment,
+    step0Out: Step0Out,
     step1Out: Step1Out
   )(implicit
     request: Request[Any]
   ): Future[Html] =
-    frontendRouteWarnings(env, step1Out)
-      .map(w => page2a(form2a, env, step1Out, w, appRoutes.ShutterWizardController.step1Get(None)))
+    frontendRouteWarnings(step0Out.env, step1Out)
+      .map(w => page2a(form2a, step0Out, step1Out, w, appRoutes.ShutterWizardController.step1Get(None, None)))
 
   def step2aGet =
     auth.authenticatedAction(
@@ -298,7 +277,7 @@ class ShutterWizardController @Inject() (
          serviceAndRouteWarnings <- EitherT.right(frontendRouteWarnings(step0Out.env, step1Out))
          html     <- EitherT.right[Result](
                        if (serviceAndRouteWarnings.flatMap(_.warnings).nonEmpty)
-                         showPage2a(step2aForm().fill(step2af), step0Out.env, step1Out).map(Ok(_))
+                         showPage2a(step2aForm().fill(step2af), step0Out, step1Out).map(Ok(_))
                        else
                          //Skip straight to outage-page screen if there are no route warnings
                          putSession(step2aKey, Step2aOut(confirmed = false, skipped = true))
@@ -318,7 +297,7 @@ class ShutterWizardController @Inject() (
          sf       <- step2aForm().bindFromRequest()
                        .fold(
                          hasErrors = formWithErrors => EitherT.left(
-                                       showPage2a(formWithErrors, step0Out.env, step1Out).map(BadRequest(_))
+                                       showPage2a(formWithErrors, step0Out, step1Out).map(BadRequest(_))
                                      ),
                          success   = data => EitherT.pure[Future, Result](data)
                        )
@@ -347,12 +326,10 @@ class ShutterWizardController @Inject() (
     for {
       step0Out              <- getStep0Out
       outagePages           <- EitherT.liftF[Future, Result, List[OutagePage]](
-                                 step1Out.serviceNames.toList
-                                   .traverse[Future, Option[OutagePage]](serviceName =>
-                                     shutterService
-                                       .outagePage(step0Out.env, serviceName)
-                                   )
-                                   .map(_.collect { case Some(op) => op })
+                                 step1Out
+                                   .serviceNameAndContexts
+                                   .traverse[Future, Option[OutagePage]] { service => shutterService.outagePage(step0Out.env, service.serviceName) }
+                                   .map(_.toList.collect { case Some(op) => op })
                                )
       outageMessageTemplate =  outagePages
                                  .flatMap(op => op.templatedMessages.map((op, _)))
@@ -360,7 +337,7 @@ class ShutterWizardController @Inject() (
       requiresOutageMessage =  outageMessageTemplate.isDefined || outagePages.flatMap(_.warnings).nonEmpty
       outageMessageSrc      =  outageMessageTemplate.map(_._1)
       defaultOutageMessage  =  outageMessageTemplate.fold("")(_._2.innerHtml)
-      outagePageStatus      =  shutterService.toOutagePageStatus(step1Out.serviceNames, outagePages)
+      outagePageStatus      =  shutterService.toOutagePageStatus(step1Out.serviceNameAndContexts.map(_.serviceName), outagePages)
       back                  =  if (step1Out.status == ShutterStatusValue.Shuttered && !step2aOut.map(_.skipped).getOrElse(true))
                                  appRoutes.ShutterWizardController.step2aGet
                                else
@@ -375,7 +352,7 @@ class ShutterWizardController @Inject() (
     } yield
       page2b(
         form2b,
-        step0Out.env,
+        step0Out,
         step1Out,
         requiresOutageMessage,
         outageMessageSrc,
@@ -507,20 +484,18 @@ class ShutterWizardController @Inject() (
                           success   = data => EitherT.pure[Future, Result](())
                         )
          status    =  step1Out.status match {
-                        case ShutterStatusValue.Shuttered =>
-                          ShutterStatus.Shuttered(
-                            reason               = Some(step2bOut.reason).filter(_.nonEmpty),
-                            outageMessage        = Some(step2bOut.outageMessage).filter(_.nonEmpty),
-                            useDefaultOutagePage = step2bOut.useDefaultOutagePage
-                          )
+                        case ShutterStatusValue.Shuttered   => ShutterStatus.Shuttered(
+                                                                 reason               = Some(step2bOut.reason).filter(_.nonEmpty)
+                                                               , outageMessage        = Some(step2bOut.outageMessage).filter(_.nonEmpty)
+                                                               , useDefaultOutagePage = step2bOut.useDefaultOutagePage
+                                                               )
                         case ShutterStatusValue.Unshuttered => ShutterStatus.Unshuttered
                       }
-         _         <- step1Out.serviceNames.toList.traverse_[EitherT[Future, Result, *], Unit] { serviceName =>
-                        EitherT.right[Result](
-                          shutterService
-                            .updateShutterStatus(serviceName, step0Out.shutterType, step0Out.env, status)
-                        )
-                      }
+         _         <- EitherT.right[Result](
+                        step1Out
+                          .serviceNameAndContexts
+                          .traverse(service => shutterService.updateShutterStatus(service.serviceName, service.context, step0Out.shutterType, step0Out.env, status))
+                      )
        } yield Redirect(appRoutes.ShutterWizardController.step4Get)
       ).merge
     }
@@ -540,8 +515,8 @@ class ShutterWizardController @Inject() (
          step0Out     <- getStep0Out
          step1Out     <- getStep1Out
          serviceLinks <- EitherT.liftF[Future, Result, Map[String, Option[String]]](
-                           step1Out.serviceNames.toList
-                             .traverse(s => shutterService.lookupShutterRoute(s, step0Out.env).map((s, _)))
+                           step1Out.serviceNameAndContexts
+                             .traverse(service => shutterService.lookupShutterRoute(service.serviceName, step0Out.env).map((service.serviceName.asString, _)))
                              .map(_.toMap)
                          )
          html         =  page4(step0Out.shutterType, step0Out.env, step1Out, serviceLinks)
@@ -594,26 +569,49 @@ object ShutterWizardController {
 
   val step1Key = DataKey[Step1Out]("step1")
 
+  case class ServiceNameAndContext(serviceName: ServiceName, context: Option[String]) {
+    def asString = s"${serviceName.asString},${context.getOrElse("")}"
+  }
+
+  object ServiceNameAndContext {
+
+    def apply(asString: String) =
+      new ServiceNameAndContext(ServiceName(asString.take(asString.indexOf(","))), asString.split(",").drop(1).headOption)
+
+    def apply(serviceName: ServiceName, context: Option[String]) =
+      new ServiceNameAndContext(serviceName: ServiceName, context: Option[String])
+  }
+
   def step1Form() =
     Form(
       Forms.mapping(
-        "serviceName" -> Forms.seq(Forms.text).verifying(notEmptySeq),
-        "status"      -> Forms.text.verifying(notEmpty)
+        "selectedServices" -> Forms.seq(Forms.text.transform[ServiceNameAndContext](ServiceNameAndContext.apply, _.asString)).verifying(notEmptySeq)
+      , "status"           -> Forms.text.verifying(notEmpty)
       )(Step1Form.apply)(Step1Form.unapply)
     )
 
   case class Step1Form(
-    serviceNames: Seq[String],
-    status      : String
+    serviceNameAndContexts: Seq[ServiceNameAndContext],
+    status                : String
   )
 
   case class Step1Out(
-    serviceNames: Seq[String],
-    status      : ShutterStatusValue
+    serviceNameAndContexts: Seq[ServiceNameAndContext],
+    status                : ShutterStatusValue
   )
 
   val step1OutFormats = {
     implicit val ssf = ShutterStatusValue.format
+    implicit val osf = new Format[ServiceNameAndContext] {
+      import play.api.libs.json._
+
+      override def reads(json: JsValue): JsResult[ServiceNameAndContext] =
+        json.validate[String].map(ServiceNameAndContext.apply)
+
+      override def writes(e: ServiceNameAndContext) =
+        JsString(e.asString)
+    }
+
     Json.format[Step1Out]
   }
 
@@ -686,7 +684,7 @@ object ShutterWizardController {
   )
 
   case class ServiceAndRouteWarnings(
-    serviceName: String,
+    serviceName: ServiceName,
     warnings   : Seq[FrontendRouteWarning]
   )
 }
