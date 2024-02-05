@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
+import cats.implicits.toTraverseOps
 import play.api.Logging
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, UserLog}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, TeamName, UserLog}
+import uk.gov.hmrc.cataloguefrontend.search.{SearchController, SearchTerm}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -31,6 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class PlatopsAuditingConnector @Inject()(
   httpClientV2  : HttpClientV2
 , servicesConfig: ServicesConfig
+, userManagementConnector: UserManagementConnector
+, searchController: SearchController
 )(implicit
   ec: ExecutionContext
 ) extends Logging {
@@ -48,6 +52,24 @@ class PlatopsAuditingConnector @Inject()(
       .get(url)
       .execute[Option[UserLog]]
   }
+  
+  def teamLogs(teamName: TeamName)(implicit headerCarrier: HeaderCarrier): Future[Seq[Log]] =
+    for {
+      team            <- userManagementConnector.getTeam(teamName)
+      members         =  team.map(_.members).getOrElse(Seq.empty)
+      teamUserLogs    <- members.traverse(member => userLogs(member.username))
+      teamLogs        =  teamUserLogs.flatMap {
+        case Some(memberLogs) => memberLogs.logs
+        case None             => Seq.empty[Log]
+      }
+    } yield (teamLogs)
+  
+  def teamsLogs(teams: Seq[TeamName])(implicit headerCarrier: HeaderCarrier): Future[Seq[Log]] =
+    for {
+      manyLogs <- teams.traverse(team => teamLogs(team))
+      teamsLogs = manyLogs.flatten
+    } yield (teamsLogs)
+    
   
   def globalLogs()(implicit hc: HeaderCarrier): Future[Option[Seq[Log]]] = {
     val url: URL = url"$baseUrl/getGlobalLogs"

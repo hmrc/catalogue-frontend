@@ -24,6 +24,8 @@
 @import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
+@import uk.gov.hmrc.cataloguefrontend.search.SearchTerm
+
 
 @this(dependenciesTeamPartial: DependenciesTeamPartial, viewMessages: ViewMessages)
 
@@ -35,6 +37,7 @@
   hasLeaks              : String => Boolean,
   masterTeamDependencies: Seq[RepoAndDependencies],
   prodDependencies      : Map[String, Seq[Dependency]],
+  teamSearchTerms       : Seq[SearchTerm] = Seq.empty,
   gitHubUrl             : Option[String]
 )(implicit
   request: RequestHeader
@@ -130,6 +133,59 @@
                 </div>
             </div>
         </div>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="mb-1">@teamName.asString Recent Pages</h4>
+            </div>
+            <div class="card-body">
+              <table class="table table-striped sticky-header" id="recent-pages-table">
+                <thead id="user-table-headings">
+                  <tr>
+                    <th class="col-lg-2"><button role="button" id="page"   class="no-border fw-bold">Page </button></th>
+                    <th class="col-lg-2"><button role="button" id="type"   class="no-border fw-bold">Type </button></th>
+                    <th class="col-lg-1"><button role="button" id="count"  class="no-border fw-bold">Count </button></th>
+                  </tr>
+                </thead>
+                <tbody class="list">
+                @if(teamSearchTerms.nonEmpty) {
+                  @teamSearchTerms.zipWithIndex.map { case (searchTerm, i) =>
+                  <tr id="row@i">
+                    <td class="page" id="row@{
+                      i
+                    }_page">
+                      <a href="@searchTerm.link">@searchTerm.name</a>
+                    </td>
+
+                    <td class="type" id="row@{
+                      i
+                    }_type">
+                      <a>@searchTerm.linkType</a>
+                    </td>
+
+                    <td class="count" id="row@{
+                      i
+                    }_count">
+                      <a>@searchTerm.weight.toInt</a>
+                  </td>
+                  </tr>
+                  }
+                }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col md-1">
+          <div class="card">
+            @partials.servicesAndDependencies(masterTeamDependencies, teamName)
+          </div>
+        </div>
+      </div>
+
+
         <div class="row mb-3">
             @showRepositories(repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")
             @showRepositories(repos.getOrElse(RepoType.Library  , Seq.empty), "Libraries"   , "library")
