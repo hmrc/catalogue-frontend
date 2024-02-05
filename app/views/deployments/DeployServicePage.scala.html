@@ -125,9 +125,16 @@
     </div>
     <div class="col-md-8">
       @evaluations.map { case (configUpdates, configWarnings, optVulnerabilities) =>
-        <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
-          You are about to deploy <strong>@form.get.serviceName:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
-        </div>
+        @defining(releases.find(_.environment == form.get.environment)
+        .map(_.version)
+        .getOrElse(Version("0.0.0"))) { existingVersion =>
+          <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
+            <p class="card-text">You are about to deploy <strong>@form.get.serviceName:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>.</p>
+            @if(form.get.version < existingVersion){
+            <p class="card-text">The version entered is lower than the existing version <strong>(@existingVersion)</strong> in <strong>@form.get.environment.displayString</strong>. Please be certain this is what you intended.</p>
+            }
+          </div>
+        }
         <label class="form-label fw-bold">Please review before deploying:</label>
         <div class="accordion mb-3" id="accordion">
           <div class="accordion-item">
