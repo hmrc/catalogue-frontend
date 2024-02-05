@@ -51,24 +51,28 @@ class UsersController @Inject()(
      with play.api.i18n.I18nSupport {
   
   def user(username: String): Action[AnyContent] = BasicAuthAction.async { implicit request =>
-    val userFuture: Future[Option[User]] = userManagementConnector.getUser(username)
-    val userLogsFuture: Future[Option[UserLog]] = platopsAuditingConnector.userLogs(username)
-    val globalLogsFuture: Future[Option[Seq[Log]]] = platopsAuditingConnector.globalLogs()
-    
     for {
-      userOption <- userFuture
-      userLogsOption <- userLogsFuture
-      globalLogsOption <- globalLogsFuture
+      userOption <- userManagementConnector.getUser(username)
+      userLogsOption <- platopsAuditingConnector.userLogs(username)
+      teamsLogs <- userOption match{
+        case Some(user) => platopsAuditingConnector.teamsLogs(user.teamNames)
+        case _ => Future.successful(Seq.empty)
+      }
+      globalLogsOption <- platopsAuditingConnector.globalLogs()
     } yield {
-      (userOption, userLogsOption,globalLogsOption) match {
-        case (Some(user), Some(userLog), Some(globalLogs)) =>
+      (userOption, userLogsOption, teamsLogs, globalLogsOption) match {
+        case (Some(user), Some(userLog), teamsLogs, Some(globalLogs)) =>
+          println(s"------teamLogs$teamsLogs")
+          println(s"------userLogs$userLog")
+          Ok(userInfoPage(user = user
+          , umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
+          , userSearchTerms = searchController.searchByLogs(userLog.logs)
+          , teamsSearchTerms = searchController.searchByLogs(teamsLogs)
+          , globalSearchTerms = searchController.searchByLogs(globalLogs))
+          )
+        case (Some(user), None, teamsLogs, None) if teamsLogs.isEmpty=>
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
-          val userSearchTerms = Some(searchController.searchByLogs(userLog.logs))
-          val globalSearchTerms = Some(searchController.searchByLogs(globalLogs))
-          Ok(userInfoPage(user, umpProfileUrl, userSearchTerms, globalSearchTerms))
-        case (Some(user), None, None) =>
-          val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
-          Ok(userInfoPage(user, umpProfileUrl, None, None))
+          Ok(userInfoPage(user, umpProfileUrl))
         case _ =>
           NotFound(error_404_template())
       }

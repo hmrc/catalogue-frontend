@@ -19,61 +19,70 @@ package uk.gov.hmrc.cataloguefrontend.teams
 import cats.implicits._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, TeamName, UserLog}
+import uk.gov.hmrc.cataloguefrontend.connector.{PlatopsAuditingConnector, ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
+import uk.gov.hmrc.cataloguefrontend.search.{SearchController, SearchTerm}
+import uk.gov.hmrc.cataloguefrontend.users.LdapTeam
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.teams.{TeamInfoPage, teams_list}
 import views.html.OutOfDateTeamDependenciesPage
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class TeamsController @Inject()(
-  userManagementConnector      : UserManagementConnector,
-  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  serviceDependenciesConnector : ServiceDependenciesConnector,
-  leakDetectionService         : LeakDetectionService,
-  umpConfig                    : UserManagementPortalConfig,
-  teamInfoPage                 : TeamInfoPage,
-  outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
-  override val mcc             : MessagesControllerComponents,
-  override val auth            : FrontendAuthComponents
-)(implicit
-  override val ec: ExecutionContext
-) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
-
+                                 userManagementConnector      : UserManagementConnector,
+                                 platopsAuditingConnector     : PlatopsAuditingConnector,
+                                 teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+                                 serviceDependenciesConnector : ServiceDependenciesConnector,
+                                 leakDetectionService         : LeakDetectionService,
+                                 umpConfig                    : UserManagementPortalConfig,
+                                 teamInfoPage                 : TeamInfoPage,
+                                 outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
+                                 searchController             : SearchController,
+                                 override val mcc             : MessagesControllerComponents,
+                                 override val auth            : FrontendAuthComponents
+                               )(implicit
+                                 override val ec: ExecutionContext
+                               ) extends FrontendController(mcc)
+  with CatalogueAuthBuilders {
+  
   def team(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)).flatMap {
         case repo if repo.isEmpty => for {
-            maybeTeam <- userManagementConnector.getTeam(teamName)
-          } yield Ok(teamInfoPage(
-            teamName               = teamName,
-            repos                  = Map.empty,
-            maybeTeam              = maybeTeam,
-            umpMyTeamsUrl          = "",
-            leaksFoundForTeam      = false,
-            hasLeaks               = _ => false,
-            masterTeamDependencies = Seq.empty,
-            prodDependencies       = Map.empty
-          ))
-
+          maybeTeam <- userManagementConnector.getTeam(teamName)
+          teamLogs <- platopsAuditingConnector.teamLogs(teamName)
+        } yield Ok(teamInfoPage(
+          teamName               = teamName,
+          repos                  = Map.empty,
+          maybeTeam              = maybeTeam,
+          umpMyTeamsUrl          = "",
+          leaksFoundForTeam      = false,
+          hasLeaks               = _ => false,
+          masterTeamDependencies = Seq.empty,
+          prodDependencies       = Map.empty,
+          teamSearchTerms        = searchController.searchByLogs(teamLogs)
+        ))
+        
         case repos =>
           (
             userManagementConnector.getTeam(teamName),
             leakDetectionService.repositoriesWithLeaks,
             serviceDependenciesConnector.dependenciesForTeam(teamName),
             serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production)),
+            platopsAuditingConnector.teamLogs(teamName)
           ).mapN { (maybeTeam,
                     reposWithLeaks,
                     masterTeamDependencies,
                     prodDependencies,
+                    teamLogs
                    ) =>
             Ok(
               teamInfoPage(
@@ -84,7 +93,8 @@ class TeamsController @Inject()(
                 leaksFoundForTeam      = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name)),
                 hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks),
                 masterTeamDependencies = masterTeamDependencies.flatMap(mtd => repos.find(_.name == mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd))),
-                prodDependencies       = prodDependencies
+                prodDependencies       = prodDependencies,
+                teamSearchTerms        = searchController.searchByLogs(teamLogs)
               )
             )
           }
@@ -97,7 +107,7 @@ class TeamsController @Inject()(
         Ok(teams_list(response, name))
       )
     }
-
+  
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (
