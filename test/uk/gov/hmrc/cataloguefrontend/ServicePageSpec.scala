@@ -37,7 +37,6 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/frontend-route/service-1",    willRespondWith = (200, Some(JsonData.serviceConfigsServiceService1)))
     serviceEndpoint(GET, "/service-configs/frontend-route/service-name", willRespondWith = (200, Some(JsonData.serviceConfigsServiceService1)))
-    serviceEndpoint(GET, "/api/jenkins-url/service-1", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsData)))
     serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=latest",willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=0.0.1", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/service-relationships/service-1",    willRespondWith = (200, Some(JsonData.serviceRelationships)))
@@ -124,7 +123,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     }
 
     "show the teams owning the service with github, ci and environment links and info box" in new Setup {
-      serviceEndpoint(GET, s"/api/jenkins-jobs/$repoName", willRespondWith = (200, Some(JsonData.serviceJenkinsBuildData)))
+      serviceEndpoint(GET, s"/api/v2/repositories/$repoName/jenkins-jobs", willRespondWith = (200, Some(JsonData.serviceJenkinsBuildData)))
 
       serviceEndpoint(
         GET,

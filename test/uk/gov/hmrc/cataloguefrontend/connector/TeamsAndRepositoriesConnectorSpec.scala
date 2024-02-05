@@ -59,7 +59,7 @@ class TeamsAndRepositoriesConnectorSpec
   "lookupLatestJenkinsJobs" should {
     "return a Link if exists" in {
       stubFor(
-        get(urlEqualTo("/api/jenkins-jobs/serviceA"))
+        get(urlEqualTo("/api/v2/repositories/serviceA/jenkins-jobs"))
           .willReturn(aResponse().withBody("""
             {
               "jobs": [{
