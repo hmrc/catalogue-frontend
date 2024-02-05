@@ -132,6 +132,19 @@
         </div>
         <label class="form-label fw-bold">Please review before deploying:</label>
         <div class="accordion mb-3" id="accordion">
+          @defining(releases.find(_.environment == form.get.environment)
+          .map(_.version)
+          .getOrElse(Version("0.0.0"))) { existingVersion =>
+            @if(form.get.version < existingVersion){
+              <div class="accordion-item">
+                <div class="accordion-header" id="headingVersionWarning">
+                  <button class="accordion-button collapsed" type="button" aria-expanded="false" disabled>
+                    Lower version detected - Please be certain you intend to deploy a lower version into @form.get.environment.displayString
+                  </button>
+                </div>
+              </div>
+            }
+          }
           <div class="accordion-item">
             <div class="accordion-header" id="headingJvmChanges">
               <button class="accordion-button collapsed" type="button" disabled>
