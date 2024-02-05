@@ -28,6 +28,7 @@
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, routes => vulnerabilitiesRoutes}
 @import views.html.vulnerabilities.VulnerabilityDetails
 @import uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceForm
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceJDKVersion
 
 @this(viewMessages: ViewMessages)
 
@@ -41,6 +42,7 @@
                     Map[ServiceConfigsService.KeyName, (ServiceConfigsService.ConfigSourceValue, Boolean)]
                   , Seq[ServiceConfigsService.ConfigWarning]
                   , Option[Seq[VulnerabilitySummary]]
+                  , (Option[ServiceJDKVersion], ServiceJDKVersion)
                   )]
 )( implicit
   messages      : Messages
@@ -124,12 +126,29 @@
       </div>
     </div>
     <div class="col-md-8">
-      @evaluations.map { case (configUpdates, configWarnings, optVulnerabilities) =>
+      @evaluations.map { case (configUpdates, configWarnings, optVulnerabilities, jvmChanges) =>
         <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
           You are about to deploy <strong>@form.get.serviceName:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
         </div>
         <label class="form-label fw-bold">Please review before deploying:</label>
         <div class="accordion mb-3" id="accordion">
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingJvmChanges">
+              <button class="accordion-button collapsed" type="button" disabled>
+              @defining((jvmChanges._1, jvmChanges._2)) {
+                case (None, toDeploy) => {
+                  JVM: @toDeploy.version @toDeploy.vendor - First deployment
+                }
+                case (Some(current), toDeploy) if current != toDeploy => {
+                  JVM: @toDeploy.version @toDeploy.vendor - Previously @current.version @current.vendor
+                }
+                case (Some(current), toDeploy) => {
+                  JVM: @toDeploy.version @toDeploy.vendor - No change
+                }
+              }
+              </button>
+            </div>
+          </div>
           <div class="accordion-item">
             <div class="accordion-header" id="headingConfigUpdates">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(configUpdates.isEmpty) {disabled} >

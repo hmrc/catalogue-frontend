@@ -165,7 +165,8 @@ class DeployServiceController @Inject()(
                                   .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
                                   .map(_.sorted)
         _                    <- EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
-        _                    <- EitherT
+        currentSlug          <- EitherT.right[Result](serviceDependenciesConnector.getSlugInfo(formObject.serviceName, releases.find(_.environment == formObject.environment).map(_.version)))
+        slugToDeploy         <- EitherT
                                   .fromOptionF(
                                     serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                                     , BadRequest(deployServicePage(form.withGlobalError("Version not found"), hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
@@ -197,8 +198,9 @@ class DeployServiceController @Inject()(
                                       case xs                                                                    => Some(xs)
                                     })
                                   )
+        jvmChanges            =  (currentSlug.map(_.java), slugToDeploy.java)
       } yield
-        Ok(deployServicePage(form, hasPerm, accessibleServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils))))
+        Ok(deployServicePage(form, hasPerm, accessibleServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils, jvmChanges))))
       ).merge
     }
 

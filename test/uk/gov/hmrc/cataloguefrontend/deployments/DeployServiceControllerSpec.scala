@@ -117,6 +117,8 @@ class DeployServiceControllerSpec
         .thenReturn(Future.successful(someReleasesForService))
       when(mockServiceCommissioningConnector.commissioningStatus(eqTo("some-service"))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someCommissioningStatus))
+      when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.2.0"))))(any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(someSlugInfo.copy(version = Version("0.2.0")))))
       when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockServiceConfigsService.configByKeyWithNextDeployment(eqTo("some-service"), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
