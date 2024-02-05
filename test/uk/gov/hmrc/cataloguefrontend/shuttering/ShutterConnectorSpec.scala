@@ -23,6 +23,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -66,7 +67,7 @@ class ShutterConnectorSpec
     }
 
     "be filtered by serviceName and environment when a service name is specified" in new Fixture {
-      val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = Some("abc-frontend"))
+      val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = Some(ServiceName("abc-frontend")))
       stubFor(
         get(urlPathEqualTo("/shutter-api/events"))
           .willReturn(aResponse().withBody("[]"))

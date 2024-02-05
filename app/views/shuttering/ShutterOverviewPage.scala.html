@@ -16,12 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{routes, EventData, ShutterCause, ShutterStateChangeEvent, ShutterStateData, ShutterStatusValue, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{routes, EventData, ShutterCause, ShutterStateChangeEvent, ShutterState, ShutterStatusValue, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 
 @this(viewMessages: ViewMessages)
 
-@( shutterStates : Map[Environment, Seq[ShutterStateData]]
+@( shutterStates : Map[Environment, Seq[(ShutterState, Option[ShutterStateChangeEvent])]]
  , shutterType   : ShutterType
  , selectedEnv   : Environment
  , killSwitchLink: Option[String]
@@ -56,7 +56,7 @@
         </div>
 
         <p class="m-1">
-          Select a service from the list below or <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None)">
+          Select a service from the list below or <a href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.start(shutterType, selectedEnv, None, None)">
             click here to go to the shutter wizard
           </a>.
         </p>
@@ -66,6 +66,9 @@
                 <thead>
                   <tr>
                       <th id="service-header"><button role="button" class="sort no-border fw-bold" data-sort="shutter-service">Service</button></th>
+                      @if(shutterType != ShutterType.Frontend) {
+                        <th id="context-header"><button role="button" class="sort no-border fw-bold" data-sort="shutter-context">Context</button></th>
+                      }
                       <th id="status-header"><button role="button" class="sort no-border fw-bold" data-sort="shutter-state">Status</button></th>
                       <th id="last-update-by-header"><button role="button" class="sort no-border fw-bold" data-sort="shutter-user">Last Updated By</button></th>
                       <th id="date-header"><button role="button" class="sort no-border fw-bold" data-sort="shutter-date">Date</button></th>
@@ -100,7 +103,7 @@
         filterUnshuttered();
     });
 
-    let options = { valueNames: [ 'shutter-service', 'shutter-state', 'shutter-user', 'shutter-date' ] };
+    let options = { valueNames: [ 'shutter-service', @if(shutterType != ShutterType.Frontend) { 'shutter-context' }, 'shutter-state', 'shutter-user', 'shutter-date' ] };
     let serviceList = new List('service-list', options);
   </script>
 }
@@ -120,41 +123,46 @@
 }
 
 @shutteredCount(env: Environment) = {
-  @shutterStates.get(env).getOrElse(Seq.empty).filter(_.status.value == ShutterStatusValue.Shuttered).size
+  @shutterStates.get(env).getOrElse(Seq.empty).filter(_._1.status.value == ShutterStatusValue.Shuttered).size
 }
 
-@shutterRows(states: Seq[ShutterStateData]) = {
-    @states.zipWithIndex.map{case (state, i) =>
+@shutterRows(states: Seq[(ShutterState, Option[ShutterStateChangeEvent])]) = {
+    @states.zipWithIndex.map{case ((state, lastEvent), i) =>
       @defining(state.status.value == ShutterStatusValue.Shuttered) { isShuttered =>
           <tr id="row@i" class="shutter-row @if(isShuttered) {shuttered-row} else {unshuttered}">
               <td id="row@{i}_name" class="shutter-service">
-                  <a class="shutter-link " href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
-                  @state.serviceName
-                  </a>
+                <a class="shutter-link " href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName.asString)">
+                  @state.serviceName.asString
+                </a>
               </td>
+              @if(shutterType != ShutterType.Frontend) {
+                <td id="row@{i}_context" class="shutter-context">
+                  @state.context
+                </td>
+              }
               <td id="row@{i}_state" class="shutter-state">
               @state.status.value
               </td>
               <td id="row@{i}_user" class="shutter-user">
-              @usernameFor(state.lastEvent)
+              @usernameFor(lastEvent)
               </td>
               <td id="row@{i}_date" class="shutter-date font-monospace">
-              @state.lastEvent.map(_.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
+              @lastEvent.map(_.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)).getOrElse("")
               </td>
               <td id="row@{i}_event">
-              @if(state.lastEvent.isDefined) {
-                  <a id="event-history-link-@{state.serviceName}-@{state.environment.asString}"
+              @if(lastEvent.isDefined) {
+                  <a id="event-history-link-@{state.serviceName.asString}-@{state.environment.asString}"
                   class="medium-glyphicon glyphicon glyphicon-list"
                   data-bs-toggle="tooltip"
                   data-bs-placement="right"
                   data-bs-title="@messages("shutter-event.history")"
-                  href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
+                  href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName.asString))"></a>
               } else {
                   @Html("No events")
               }
               </td>
               <td id="row@{i}_update" class="shutter-update">
-                  <a id="shutter-link-@{state.serviceName}-@{state.environment.asString}" class="shutter-link " href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName))">
+                  <a id="shutter-link-@{state.serviceName.asString}-@{state.environment.asString}" class="shutter-link " href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName.asString), state.context)">
                       @if(isShuttered) {Unshutter} else {Shutter}
                   </a>
               </td>

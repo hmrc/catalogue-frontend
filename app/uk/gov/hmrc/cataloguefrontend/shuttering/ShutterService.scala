@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -33,25 +34,18 @@ class ShutterService @Inject() (
   ec: ExecutionContext
 ) {
 
-  def getShutterState(
+  def getShutterStates(
     st         : ShutterType,
     env        : Environment,
-    serviceName: String
-  )(implicit
-    hc: HeaderCarrier
-  ): Future[Option[ShutterState]] =
-    shutterConnector.shutterState(st, env, serviceName)
-
-  def getShutterStates(
-    st : ShutterType,
-    env: Environment
+    serviceName: Option[ServiceName] = None
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[ShutterState]] =
-    shutterConnector.shutterStates(st, env)
+    shutterConnector.shutterStates(st, env, serviceName)
 
   def updateShutterStatus(
-    serviceName: String,
+    serviceName: ServiceName,
+    context    : Option[String],
     st         : ShutterType,
     env        : Environment,
     status     : ShutterStatus
@@ -59,11 +53,11 @@ class ShutterService @Inject() (
     hc : HeaderCarrier,
     req: AuthenticatedRequest[_, _]
   ): Future[Unit] =
-    shutterConnector.updateShutterStatus(req.authorizationToken, serviceName, st, env, status)
+    shutterConnector.updateShutterStatus(req.authorizationToken, serviceName, context, st, env, status)
 
   def outagePage(
     env        : Environment,
-    serviceName: String
+    serviceName: ServiceName
   )(implicit
     hc: HeaderCarrier
   ): Future[Option[OutagePage]] =
@@ -71,7 +65,7 @@ class ShutterService @Inject() (
 
   def frontendRouteWarnings(
     env        : Environment,
-    serviceName: String
+    serviceName: ServiceName
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[FrontendRouteWarning]] =
@@ -82,29 +76,21 @@ class ShutterService @Inject() (
     env: Environment
   )(implicit
     hc: HeaderCarrier
-  ): Future[Seq[ShutterStateData]] =
+  ): Future[Seq[(ShutterState, Option[ShutterStateChangeEvent])]] =
     for {
       states <- shutterConnector.shutterStates(st, env)
       events <- shutterConnector.latestShutterEvents(st, env)
-      status =  states.map { state =>
-                  ShutterStateData(
-                    serviceName = state.name,
-                    shutterType = state.shutterType,
-                    environment = state.environment,
-                    status      = state.status,
-                    lastEvent   = events.find(_.serviceName == state.name)
-                  )
-                }
-      sorted =  status
-                  .sortWith { (l, r) =>
+      sorted =  states
+                  .map(state => (state, events.find(_.serviceName == state.serviceName.asString)))
+                  .sortWith { case ((l, _), (r, _)) =>
                     if (l.status.value == r.status.value)
-                      l.serviceName < r.serviceName
+                      l.serviceName.asString < r.serviceName.asString
                     else l.status.value == ShutterStatusValue.Shuttered
                   }
     } yield sorted
 
   /** Creates an [[OutagePageStatus]] for each service based on the contents of [[OutagePage]] */
-  def toOutagePageStatus(serviceNames: Seq[String], outagePages: List[OutagePage]): Seq[OutagePageStatus] =
+  def toOutagePageStatus(serviceNames: Seq[ServiceName], outagePages: List[OutagePage]): Seq[OutagePageStatus] =
     serviceNames.map { serviceName =>
       outagePages.find(_.serviceName == serviceName) match {
         case Some(outagePage) if outagePage.warnings.nonEmpty =>
@@ -146,9 +132,9 @@ class ShutterService @Inject() (
   def shutterGroups: Future[Seq[ShutterGroup]] =
     shutterGroupsConnector.shutterGroups
 
-  def lookupShutterRoute(serviceName: String, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] =
+  def lookupShutterRoute(serviceName: ServiceName, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] =
     for {
-      baseRoutes      <- routeRulesConnector.frontendRoutes(serviceName)
+      baseRoutes      <- routeRulesConnector.frontendRoutes(serviceName.asString)
       optFrontendPath =  for {
                            envRoute      <- baseRoutes.find(_.environment == env.asString).map(_.routes)
                            frontendRoute <- envRoute.find(_.isRegex == false)
@@ -156,11 +142,3 @@ class ShutterService @Inject() (
 
     } yield optFrontendPath
 }
-
-case class ShutterStateData(
-  serviceName: String,
-  shutterType: ShutterType,
-  environment: Environment,
-  status     : ShutterStatus,
-  lastEvent  : Option[ShutterStateChangeEvent]
-)

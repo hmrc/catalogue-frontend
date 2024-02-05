@@ -22,7 +22,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 object ShutterEnvironment {
   val format: Format[Environment] =
     new Format[Environment] {
@@ -154,7 +154,8 @@ object ShutterStatus {
 }
 
 case class ShutterState(
-  name       : String,
+  serviceName: ServiceName,
+  context    : Option[String],
   shutterType: ShutterType,
   environment: Environment,
   status     : ShutterStatus
@@ -166,7 +167,8 @@ object ShutterState {
     implicit val stf = ShutterType.format
     implicit val ef  = ShutterEnvironment.format
     implicit val ssf = ShutterStatus.format
-    ( (__ \ "name"       ).read[String]
+    ( (__ \ "name"       ).read[String].map(ServiceName.apply)
+    ~ (__ \ "context"    ).readNullable[String]
     ~ (__ \ "type"       ).read[ShutterType]
     ~ (__ \ "environment").read[Environment]
     ~ (__ \ "status"     ).read[ShutterStatus]
@@ -378,7 +380,7 @@ object OutagePageWarning {
 }
 
 case class OutagePage(
-  serviceName      : String,
+  serviceName      : ServiceName,
   environment      : Environment,
   outagePageURL    : String,
   warnings         : List[OutagePageWarning],
@@ -394,7 +396,7 @@ object OutagePage {
     implicit val ef  : Reads[Environment]       = ShutterEnvironment.format
     implicit val tcf : Reads[TemplatedContent]  = TemplatedContent.format
     implicit val opwr: Reads[OutagePageWarning] = OutagePageWarning.reads
-    ( (__ \ "serviceName"      ).read[String]
+    ( (__ \ "serviceName"      ).read[String].map(ServiceName.apply)
     ~ (__ \ "environment"      ).read[Environment]
     ~ (__ \ "outagePageURL"    ).read[String]
     ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
@@ -404,7 +406,7 @@ object OutagePage {
 }
 
 case class OutagePageStatus(
-  serviceName: String,
+  serviceName: ServiceName,
   warning    : Option[(String, String)]
 )
 

@@ -16,15 +16,15 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, OutagePageStatus, ShutterStatusValue}
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step1Out, Step2bForm}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, OutagePageStatus, ShutterStatusValue, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step0Out, Step1Out, Step2bForm}
 @import helper._
 @import partials.form_global_errors
 
 @this(viewMessages: ViewMessages)
 
 @( form                  : Form[Step2bForm]
- , env                   : Environment
+ , step0Out              : Step0Out
  , step1Out              : Step1Out
  , requiresOutageMessage : Boolean
  , outageMessageSrc      : Option[OutagePage]
@@ -54,14 +54,14 @@
                 @csrfFormField
 
                 <div class="card mb-3">
-                    <div class="card-header @if(env == Environment.Production) {bg-danger-subtle} else {bg-warning-subtle}">
+                    <div class="card-header @if(step0Out.env == Environment.Production) {bg-danger-subtle} else {bg-warning-subtle}">
                         <span class="glyphicon glyphicon-warning-sign"></span>
-                        You are about to <b>Shutter</b> the following frontends in <b>@env</b>:
+                        You are about to <b>Shutter</b> the following frontends in <b>@step0Out.env</b>:
                     </div>
                     <div class="card-body">
                         <ul class="mb-0">
-                            @step1Out.serviceNames.map { serviceName =>
-                                <li>@serviceName</li>
+                            @step1Out.serviceNameAndContexts.map { service =>
+                                <li>@service.serviceName.asString @if(step0Out.shutterType == ShutterType.Rate) { @service.context.fold("")(cntx => s"($cntx)") }</li>
                             }
                         </ul>
                     </div>
@@ -140,7 +140,7 @@
                                             </thead>
                                             @outagePages.map { outagePageStatus =>
                                                 <tr class="@if(outagePageStatus.warning.isDefined) { alert-warning } else {}">
-                                                    <td>@outagePageStatus.serviceName</td>
+                                                    <td>@outagePageStatus.serviceName.asString</td>
                                                     @outagePageStatus.warning match {
                                                         case Some((warning, consequence)) => {
                                                             <td>@Html(warning)</td>
@@ -169,7 +169,7 @@
                                       , Symbol("cols")        -> 60
                                       , Symbol("class")       -> "form-control"
                                     )
-                                    <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the ${src.serviceName} outage page for ${env.asString}.").getOrElse(""))</p>
+                                    <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the ${src.serviceName.asString} outage page for ${step0Out.env.asString}.").getOrElse(""))</p>
                                 </div>
                                 <div class="col-4 my-auto">
                                     <a id="revertToTemplate" class="btn btn-outline-secondary">
