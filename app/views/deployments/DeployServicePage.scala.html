@@ -125,18 +125,24 @@
     </div>
     <div class="col-md-8">
       @evaluations.map { case (configUpdates, configWarnings, optVulnerabilities) =>
-        @defining(releases.find(_.environment == form.get.environment)
-        .map(_.version)
-        .getOrElse(Version("0.0.0"))) { existingVersion =>
-          <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
-            <p class="card-text">You are about to deploy <strong>@form.get.serviceName:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>.</p>
-            @if(form.get.version < existingVersion){
-            <p class="card-text">The version entered is lower than the existing version <strong>(@existingVersion)</strong> in <strong>@form.get.environment.displayString</strong>. Please be certain this is what you intended.</p>
-            }
-          </div>
-        }
+        <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
+          You are about to deploy <strong>@form.get.serviceName:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
+        </div>
         <label class="form-label fw-bold">Please review before deploying:</label>
         <div class="accordion mb-3" id="accordion">
+          @defining(releases.find(_.environment == form.get.environment)
+          .map(_.version)
+          .getOrElse(Version("0.0.0"))) { existingVersion =>
+            @if(form.get.version < existingVersion){
+              <div class="accordion-item">
+                <div class="accordion-header" id="headingVersionWarning">
+                  <button class="accordion-button collapsed" type="button" aria-expanded="false" disabled>
+                    Lower version detected - Please be certain you intend to deploy a lower version into @form.get.environment.displayString
+                  </button>
+                </div>
+              </div>
+            }
+          }
           <div class="accordion-item">
             <div class="accordion-header" id="headingConfigUpdates">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(configUpdates.isEmpty) {disabled} >
