@@ -45,9 +45,9 @@ class PrototypePageSpec
     "show the teams owning the prototype" in {
       setupEnableBranchProtectionAuthEndpoint()
       setupPrototypeStatusEndpoint("2fa-prototype", 200, PrototypeStatus.Running)
-      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
-      serviceEndpoint(GET, "/api/repository"                   , willRespondWith = (200, Some(JsonData.emptyList)))
-      serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype"   , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype"             , willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/repository"                                , willRespondWith = (200, Some(JsonData.emptyList)))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype/jenkins-jobs", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/2fa-prototype").withAuthToken("Token token").get().futureValue
 
@@ -66,9 +66,9 @@ class PrototypePageSpec
     "show the reset password form and stop prototype button when logged in user has permission" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = true)
       setupPrototypeStatusEndpoint("2fa-prototype", 200, PrototypeStatus.Running)
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
-      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
-      serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
+      serviceEndpoint(GET, "/api/v2/repositories"                           , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype"             , willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype/jenkins-jobs", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
 
       val response = wsClient
@@ -85,9 +85,9 @@ class PrototypePageSpec
     "not show the reset password form when user does not have permission" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = false)
       setupPrototypeStatusEndpoint("2fa-prototype", 200, PrototypeStatus.Running)
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
-      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
-      serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
+      serviceEndpoint(GET, "/api/v2/repositories"                           , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype"             , willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype/jenkins-jobs", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
 
       val response = wsClient
@@ -104,9 +104,9 @@ class PrototypePageSpec
     "not show the reset password form when the prototype does not have a status of Running" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = true)
       setupPrototypeStatusEndpoint("2fa-prototype", 200, PrototypeStatus.Stopped)
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
-      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
-      serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
+      serviceEndpoint(GET, "/api/v2/repositories"                           , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype"             , willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype/jenkins-jobs", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
 
       val response = wsClient
@@ -123,9 +123,9 @@ class PrototypePageSpec
     "display success message when password changed successfully" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = true)
       setupPrototypeStatusEndpoint("2fa-prototype", 200, PrototypeStatus.Running)
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
-      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
-      serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
+      serviceEndpoint(GET, "/api/v2/repositories"                           , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype"             , willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype/jenkins-jobs", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
 
       val expectedMsg: String = "A password reset has been requested. This may take some time to take effect."
@@ -154,9 +154,9 @@ class PrototypePageSpec
     "display error message when password change failed downstream" in {
       setupChangePrototypePasswordAuthEndpoint(hasAuth = true)
       setupPrototypeStatusEndpoint("2fa-prototype", 200, PrototypeStatus.Running)
-      serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
-      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype", willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
-      serviceEndpoint(GET, "/api/jenkins-jobs/2fa-prototype", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
+      serviceEndpoint(GET, "/api/v2/repositories"                           , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData("2fa-prototype"))))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype"             , willRespondWith = (200, Some(JsonData.prototypeDetailsData)))
+      serviceEndpoint(GET, "/api/v2/repositories/2fa-prototype/jenkins-jobs", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.jenkinsBuildData)))
       serviceEndpoint(GET, "/pr-commenter/repositories/2fa-prototype/report", willRespondWith = (404, Some("")))
 
       val expectedError: String = "generic password change error"

@@ -338,7 +338,7 @@ class TeamsAndRepositoriesConnector @Inject()(
     implicit val dr: Reads[Seq[JenkinsJob]] =
       Reads.at(__ \ "jobs")(Reads.seq(JenkinsJob.apiFormat))
 
-    val url = url"$teamsAndServicesBaseUrl/api/jenkins-jobs/$service"
+    val url = url"$teamsAndServicesBaseUrl/api/v2/repositories/$service/jenkins-jobs"
     httpClientV2
       .get(url)
       .execute[Seq[JenkinsJob]]

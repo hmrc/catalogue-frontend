@@ -40,7 +40,6 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       val repoName = "other"
 
       serviceEndpoint(GET, s"/api/repositories/$repoName"       , willRespondWith = (404, None))
-      serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version-latest", willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get().futureValue
@@ -52,7 +51,6 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
 
       serviceEndpoint(GET, s"/api/v2/repositories/$repoName"    , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
-      serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get().futureValue
@@ -69,7 +67,6 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
 
       serviceEndpoint(GET, s"/api/v2/repositories/$repoName"    , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
-      serviceEndpoint(GET, s"/api/jenkins-url/$repoName"        , willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some(JsonData.repositoryModules(
                                                                                                 repoName,
                                                                                                 dependenciesCompile = JsonData.dependencies
