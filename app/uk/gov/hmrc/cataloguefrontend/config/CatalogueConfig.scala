@@ -21,12 +21,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
 class CatalogueConfig @Inject() (servicesConfig: ServicesConfig) {
-  private def killswitchJenkinsUrl(env: String) =
-    servicesConfig.getString(s"killswitch.jenkins-url.$env")
-
-  private def killswitchJenkinsJob(shutterType: String) =
+  def killSwitchLink(shutterType: String): String = {
     servicesConfig.getString(s"killswitch.jenkins-job.$shutterType")
-
-  def killSwitchLink(shutterType: String, env: String): String =
-    s"${killswitchJenkinsUrl(env)}/job/${killswitchJenkinsJob(shutterType)}/"
+  }
 }
