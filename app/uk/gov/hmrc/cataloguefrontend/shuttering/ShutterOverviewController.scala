@@ -17,13 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import cats.implicits._
+
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType.Rate
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -70,7 +71,7 @@ class ShutterOverviewController @Inject() (
                             .verify(
                               Retrieval.hasPredicate(Predicate.Permission(Resource.from("shutter-api", "mdtp"), IAAction("SHUTTER")))
                             ).map(_.exists(_ == true))
-        killSwitchLink =  if (hasGlobalPerm) Some(catalogueConfig.killSwitchLink(shutterType.asString, env.asString)) else None
+        killSwitchLink =  if (hasGlobalPerm && shutterType != Rate) Some(catalogueConfig.killSwitchLink(shutterType.asString)) else None
         page           =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
       } yield Ok(page)
     }
