@@ -36,9 +36,8 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
                 [
                   {
                     "name":"teamA",
-                    "createdDate": "2020-10-28T13:15:19Z",
                     "lastActiveDate": "2021-07-09T10:00:49Z",
-                    "repos": 7
+                    "repos": ["repo-one", "repo-two", "repo-three", "repo-four"]
                   }
                 ]
             """

@@ -41,7 +41,7 @@ class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
       , JDKVersion(name = "thing-service", version = Version("1.171.0"), vendor = Oracle , kind = JRE)
       )
 
-      val teams = List(Team(name = TeamName.apply("Team 1"), createdDate = None, lastActiveDate = None, repos = 2))
+      val teams = List(Team(name = TeamName.apply("Team 1"), lastActiveDate = None, repos = Seq("repo-one", "repo-two")))
 
       val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
@@ -59,7 +59,7 @@ class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
       implicit val request = FakeRequest()
 
       val versions = List(JDKVersion(name= "thing-service", version = Version("1.171.0"), vendor = Oracle, kind = JDK))
-      val teams    = List(Team(name = TeamName.apply("Team 1"), createdDate = None, lastActiveDate = None, repos = 1))
+      val teams    = List(Team(name = TeamName.apply("Team 1"), lastActiveDate = None, repos = Seq("repo-one")))
       val document = asDocument(new JdkVersionPage(msg)(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
       val slug = document.select("#jdk-slug-thing-service")

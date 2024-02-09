@@ -20,7 +20,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 object RepoOwningTeamsHelper {
-
   def teamNamesSortedByOwningTeam(repo: GitRepository): Seq[TeamName] =
-    repo.teamNames.sortWith((a, _) => repo.owningTeams.contains(a))
+    repo.teamNames.sortBy(tn => (!repo.isDeFactoOwner(tn), tn))
 }

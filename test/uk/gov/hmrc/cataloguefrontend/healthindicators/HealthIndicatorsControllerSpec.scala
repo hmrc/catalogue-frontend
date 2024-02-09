@@ -338,14 +338,12 @@ class HealthIndicatorsControllerSpec
     val teamsJSON: String =
       """[{
         "name"          : "Classic Services Manchester",
-        "createdDate"   : "2020-10-28T13:15:19Z",
         "lastActiveDate": "2021-07-09T10:00:49Z",
-        "repos"         : 7
+        "repos"         : ["repo-one", "repo-two", "repo-three", "repo-four", "repo-five", "repo-six", "repo-seven"]
       }, {
         "name"          : "Classic Services Telford",
-        "createdDate"   : "2020-10-28T13:15:19Z",
         "lastActiveDate": "2021-07-09T10:00:49Z",
-        "repos"         : 7
+        "repos"         : ["repo-one", "repo-two", "repo-three", "repo-four", "repo-five", "repo-six", "repo-seven"]
       }]"""
   }
 }

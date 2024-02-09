@@ -44,9 +44,6 @@
                             <button role="button" class="fw-bold sort no-border" data-sort="team-name">Team</button>
                         </th>
                         <th class="col-lg-2">
-                            <button role="button" class="fw-bold sort no-border" data-sort="created">Created</button>
-                        </th>
-                        <th class="col-lg-2">
                             <button role="button" class="fw-bold sort no-border" data-sort="last-active">Last Active</button>
                         </th>
                         <th class="col-lg-1">
@@ -60,14 +57,11 @@
                     <td class="team-name" id="row@{i}_name">
                         <a href="@teamsRoutes.TeamsController.team(team.name)">@team.name.asString</a>
                     </td>
-                    <td class="created font-monospace" id="row@{i}_created">
-                      @team.createdDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
-                    </td>
                     <td class="last-active font-monospace" id="row@{i}_lastActive">
                       @team.lastActiveDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
                     </td>
                     <td class="repo-count" id="row@{i}_repos">
-                      @team.repos
+                      @team.repos.length
                     </td>
                 </tr>
                 }

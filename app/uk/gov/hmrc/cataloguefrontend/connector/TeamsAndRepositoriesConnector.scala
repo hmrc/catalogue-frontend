@@ -243,6 +243,9 @@ case class GitRepository(
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
 
+  def isDeFactoOwner(teamName: TeamName): Boolean =
+    owningTeams.contains(teamName) && owningTeams.toSet != teamNames.toSet
+
   val descriptionAboveLimit: Boolean = description.length > 512
 }
 
@@ -301,18 +304,16 @@ object BranchProtection {
 
 case class Team(
   name           : TeamName,
-  createdDate    : Option[Instant],
   lastActiveDate : Option[Instant],
-  repos          : Int = 0
+  repos          : Seq[String]
 )
 
 object Team {
   val format: OFormat[Team] = {
     implicit val tnf = TeamName.format
     ( (__ \ "name"          ).format[TeamName]
-    ~ (__ \ "createdDate"   ).formatNullable[Instant]
     ~ (__ \ "lastActiveDate").formatNullable[Instant]
-    ~ (__ \ "repos"         ).format[Int]
+    ~ (__ \ "repos"         ).format[Seq[String]]
     )(apply, unlift(unapply))
   }
 }
