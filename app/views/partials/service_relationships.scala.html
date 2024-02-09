@@ -14,9 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{ServiceRelationship, ServiceRelationshipsEnriched}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
 
-@(serviceRelationships: ServiceConfigsService.ServiceRelationshipsWithHasRepo)
+@(serviceRelationships: ServiceRelationshipsEnriched)
 @hasTooManyRelationships = @{
     serviceRelationships.size > 3
 }
@@ -55,14 +56,26 @@
         }
     </div>
 
-@listServices(services: Seq[(String, Boolean)], idSnippet: String) = {
+@listServices(relationships: Seq[ServiceRelationship], idSnippet: String) = {
     <ul class="list-unstyled mb-0">
-    @for((name, hasRepo) <- services) {
+    @for(relationship <- relationships) {
         <li class="list-item">
-        @if(hasRepo) {
-            <a id="link-to-@idSnippet-@name" href="/repositories/@name">@name</a>
+        @if(relationship.hasRepo) {
+            <a id="link-to-@idSnippet-@{relationship.service}" href="/repositories/@{relationship.service}">@relationship.service</a>
+            @if(relationship.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) {
+                <a href="#"
+                tabindex="0"
+                data-bs-toggle="popover"
+                data-bs-trigger="hover"
+                data-bs-placement="right"
+                data-bs-content='Marked for decommissioning'>
+                    <span class="badge rounded-pill text-bg-warning">
+                        <i class="glyphicon glyphicon-alert"></i>
+                    </span>
+                </a>
+            }
         } else {
-            <span id="label-for-@idSnippet-@name">@name</span>
+            <span id="label-for-@idSnippet-@{relationship.service}">@relationship.service</span>
         }
         </li>
     }

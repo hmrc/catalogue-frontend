@@ -17,11 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
-import org.scalatest.concurrent.{ScalaFutures, IntegrationPatience}
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -214,6 +215,13 @@ class ServiceConfigsServiceSpec
     implicit val hc: HeaderCarrier        = mock[HeaderCarrier]
     val mockServiceConfigsConnector       = mock[ServiceConfigsConnector]
     val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
-    val serviceConfigsService             = new ServiceConfigsService(mockServiceConfigsConnector, mockTeamsAndRepositoriesConnector)
+    val mockServiceCommissioningConnector = mock[ServiceCommissioningStatusConnector]
+
+    val serviceConfigsService =
+      new ServiceConfigsService(
+        mockServiceConfigsConnector,
+        mockTeamsAndRepositoriesConnector,
+        mockServiceCommissioningConnector
+      )
   }
 }
