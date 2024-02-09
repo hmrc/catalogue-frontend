@@ -25,63 +25,53 @@ object TeamsAndRepositoriesJsonData {
       [
         {
           "name": "teamA",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 7
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four", "repo-five", "repo-six", "repo-seven"]
         },
         {
           "name": "teamB",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 9
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four", "repo-five", "repo-six", "repo-seven", "repo-eight", "repo-nine"]
         },
         {
           "name": "teamC",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 5
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four", "repo-five"]
         },
         {
           "name": "teamD",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 6
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four", "repo-five", "repo-six"]
         },
         {
           "name": "teamE",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 7
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four", "repo-five", "repo-six", "repo-seven"]
         },
         {
           "name": "teamF",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 8
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four", "repo-five", "repo-six", "repo-seven", "repo-eight"]
         },
         {
           "name": "teamG",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 4
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four"]
         },
         {
           "name": "teamH",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 4
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four"]
         },
         {
           "name": "teamI",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 4
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four"]
         },
         {
           "name": "teamJ",
-          "createdDate": "$createdAt",
           "lastActiveDate": "$lastActiveAt",
-          "repos": 4
+          "repos": ["repo-one", "repo-two", "repo-three", "repo-four"]
         }
       ]
     """

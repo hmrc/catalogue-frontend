@@ -46,7 +46,7 @@ class RepoOwningTeamsHelperSpec extends AnyWordSpec with Matchers {
         teamNames          = Seq(TeamName("Foo"), TeamName("Bar"), TeamName("Baz"), TeamName("Buz"), TeamName("Zoo"))
       )
 
-      RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(ghr) shouldBe Seq(TeamName("Zoo"), TeamName("Foo"), TeamName("Bar"), TeamName("Baz"), TeamName("Buz"))
+      RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(ghr) shouldBe Seq(TeamName("Zoo"), TeamName("Bar"), TeamName("Baz"), TeamName("Buz"), TeamName("Foo"))
     }
   }
 }
