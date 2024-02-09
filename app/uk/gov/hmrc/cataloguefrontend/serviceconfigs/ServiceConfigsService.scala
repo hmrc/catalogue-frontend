@@ -17,13 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import cats.implicits._
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -32,8 +32,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ServiceConfigsService @Inject()(
-  serviceConfigsConnector: ServiceConfigsConnector,
-  teamsAndReposConnector : TeamsAndRepositoriesConnector
+  serviceConfigsConnector      : ServiceConfigsConnector,
+  teamsAndReposConnector       : TeamsAndRepositoriesConnector,
+  serviceCommissioningConnector: ServiceCommissioningStatusConnector
 )(implicit
   ec: ExecutionContext
 ) {
@@ -130,13 +131,32 @@ class ServiceConfigsService @Inject()(
         case list                => ArtifactNameResult.ArtifactNameError(s"Different artifact names found for service in different environments - [${list.mkString(",")}]")
       }
 
-def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsWithHasRepo] =
+def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsEnriched] =
     for {
       repos    <- teamsAndReposConnector.allRepositories()
       srs      <- serviceConfigsConnector.serviceRelationships(serviceName)
-      inbound  =  srs.inboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
-      outbound =  srs.outboundServices.sorted.map(s => (s, repos.exists(_.name == s)))
-    } yield ServiceRelationshipsWithHasRepo(inbound, outbound)
+      outbound <- srs.outboundServices
+                    .filterNot(_ == serviceName)
+                    .foldLeftM[Future, Seq[ServiceRelationship]](Seq.empty) { (acc, service) =>
+                      val hasRepo = repos.exists(_.name == service)
+                      (if (hasRepo)
+                         serviceCommissioningConnector
+                           .getLifecycleStatus(service)
+                           .map(status => ServiceRelationship(service, hasRepo, status))
+                       else
+                         Future.successful(ServiceRelationship(service, hasRepo, lifecycleStatus = None))
+                      ).map(_ +: acc)
+                    }
+      inbound  =  srs.inboundServices
+                    .filterNot(_ == serviceName)
+                    .sorted
+                    .map { service =>
+                      ServiceRelationship(service, hasRepo = repos.exists(_.name == service), lifecycleStatus = None)
+                    }
+    } yield ServiceRelationshipsEnriched(
+      inbound,
+      outbound.sortBy(a => (if (a.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) 0 else 1, a.service.toLowerCase))
+    )
 
   def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
     serviceConfigsConnector.getConfigKeys(teamName)
@@ -290,11 +310,21 @@ object ServiceConfigsService {
       )(ServiceRelationships.apply _)
   }
 
-  case class ServiceRelationshipsWithHasRepo(
-    inboundServices : Seq[(String, Boolean)],
-    outboundServices: Seq[(String, Boolean)]
+  case class ServiceRelationship(
+    service        : String,
+    hasRepo        : Boolean,
+    lifecycleStatus: Option[LifecycleStatus]
+  )
+
+  case class ServiceRelationshipsEnriched(
+    inboundServices : Seq[ServiceRelationship],
+    outboundServices: Seq[ServiceRelationship]
   ) {
     def size: Int = Seq(inboundServices.size, outboundServices.size).max
+
+    def hasDecommissioningDownstream: Boolean =
+      outboundServices
+        .exists(_.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress))
   }
 
   def friendlySourceName(

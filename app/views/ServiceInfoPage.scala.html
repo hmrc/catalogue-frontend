@@ -45,7 +45,7 @@
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
   distinctVulnerabilitiesCount : Option[Int],
-  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsWithHasRepo,
+  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsEnriched,
   canMarkForDecommissioning    : Boolean,
   lifecycleStatus              : Option[LifecycleStatus],
   testJobMap                   : Map[String, Seq[JenkinsJob]]
@@ -76,6 +76,13 @@
     @defining(envDatas.get(SlugInfoFlag.ForEnvironment(Environment.Production)).toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)){ dependencies =>
       @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = false)
       @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = true )
+    }
+    @if(serviceRelationships.hasDecommissioningDownstream) {
+      <div class="alert alert-warning">
+          <strong>
+              One or more of your <a id="service-relationships-anchor-link" href="#service_relationships">downstream dependencies</a> has been marked for decommissioning.
+          </strong>
+      </div>
     }
 
     <section class="section-wrapper">
