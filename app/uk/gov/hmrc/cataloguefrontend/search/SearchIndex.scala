@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, UserLog}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthRoutes}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
@@ -107,15 +108,18 @@ class SearchIndex @Inject()(
       users         <- userManagementConnector.getAllUsers(None)
       userLinks     =  users.map(u => SearchTerm("users", u.username, userRoutes.UsersController.user(u.username).url, 0.5f))
       allLinks      =  hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
-    } yield cachedIndex.set(optimizeIndex(allLinks))
+      sortedLinks   = allLinks.sortWith(_.link.length > _.link.length) //sort needed to efficiently search URIs
+    } yield cachedIndex.set(optimizeIndex(sortedLinks))
   }
 
   def search(query: Seq[String]): Seq[SearchTerm] =
     SearchIndex.search(query, cachedIndex.get())
+    
+  def searchByUserLogs(logs: Seq[Log]) : Seq[SearchTerm] =
+    SearchIndex.searchURIs(logs, cachedIndex.get().values.flatten.toSeq)
 }
 
 object SearchIndex {
-
   def normalizeTerm(term: String): String =
     term.toLowerCase.replaceAll(" -_", "")
 
@@ -138,4 +142,31 @@ object SearchIndex {
       .view
       .mapValues(_.map(_._2))
       .toMap
+  
+  def searchURIs(logs: Seq[Log], index: Seq[SearchTerm]): Seq[SearchTerm] = {
+    //unlike search() .weight in this search represents visit counter instead of quality of match
+    val filteredLogs = logs.filter(log => index.exists(searchTerm => log.uri.contains(searchTerm.link))) //remove logs not in index
+    val weightedSearchTerms = for {
+      log <- filteredLogs
+      matchedTerm <- index.find(searchTerm => log.uri.contains(searchTerm.link))
+      weightedSearchTerm = SearchTerm(
+        linkType = matchedTerm.linkType
+      , name     = matchedTerm.name
+      , link     = matchedTerm.link
+      , weight   = log.count  //insert visit counter
+      )
+    } yield (weightedSearchTerm)
+    val distinctLinkSearchTerms = weightedSearchTerms.distinctBy(_.link) //group search terms with same links, weighting at this stage is incorrect
+    val reWeightedSearchTerms = for {
+      distinctTerm <- distinctLinkSearchTerms
+      summedWeight = weightedSearchTerms.filter(_.link.equals(distinctTerm.link)).foldLeft(0)(_ + _.weight.toInt) //find total weight for distinct terms
+      reWeightedSearchTerm = SearchTerm(
+        linkType = distinctTerm.linkType
+      , name     = distinctTerm.name
+      , link     = distinctTerm.link
+      , weight   = summedWeight  //insert total weight
+      )
+    } yield(reWeightedSearchTerm)
+    reWeightedSearchTerms.sortWith(_.weight > _.weight).take(20)
+  }
 }

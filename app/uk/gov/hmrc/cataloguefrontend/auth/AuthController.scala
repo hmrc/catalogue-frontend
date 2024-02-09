@@ -16,9 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.auth
 
+import play.api.libs.json.Json
+
+import scala.concurrent.{ExecutionContext, Future}
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Call, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
+import uk.gov.hmrc.cataloguefrontend.connector.PlatopsAuditingConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, UserLog}
+import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
@@ -27,7 +32,7 @@ import uk.gov.hmrc.play.bootstrap.binders.{OnlyRelative, RedirectUrl}
 @Singleton
 class AuthController @Inject() (
   auth: FrontendAuthComponents,
-  mcc : MessagesControllerComponents
+  mcc : MessagesControllerComponents,
 ) extends FrontendController(mcc) {
   import AuthController._
 

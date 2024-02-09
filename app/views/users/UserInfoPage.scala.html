@@ -15,14 +15,19 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.users.User
-@import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
-@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes }
+@import uk.gov.hmrc.cataloguefrontend.search.SearchTerm
+
+
 
 @this()
 
 @(
   user: User,
-  umpProfileUrl: String
+  umpProfileUrl: String,
+  userSearchTerms: Seq[SearchTerm] = Seq.empty,
+  teamsSearchTerms: Seq[SearchTerm] = Seq.empty,
+  globalSearchTerms: Seq[SearchTerm] = Seq.empty
 )(implicit
   request: RequestHeader
 )
@@ -31,7 +36,7 @@
   <h1 class="page-heading mt-4">@user.username</h1>
 
   <section class="section-wrapper">
-      <div class="row">
+      <div class="row mb-3">
           <div class="col-md-4">
               <div class="card">
                   <div class="card-header">
@@ -96,6 +101,141 @@
                   </div>
               </div>
           </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="mb-1">User Recent Pages (90d)</h4>
+            </div>
+            <div class="card-body">
+              <table class="table table-striped sticky-header" id="recent-pages-table">
+                <thead id="user-table-headings">
+                  <tr>
+                    <th class="col-lg-2"><button  id="page"   class="no-border fw-bold">Page </button></th>
+                    <th class="col-lg-2"><button  id="type"   class="no-border fw-bold">Type </button></th>
+                    <th class="col-lg-1"><button  id="count"  class="no-border fw-bold">Count </button></th>
+                  </tr>
+                </thead>
+                <tbody class="list">
+                  @if(userSearchTerms.nonEmpty) {
+                    @userSearchTerms.zipWithIndex.map { case (searchTerm, i) =>
+                    <tr id="row@i">
+                      <td class="page" id="row@{
+                        i
+                      }_page">
+                        <a href="@searchTerm.link">@searchTerm.name</a>
+                      </td>
+
+                      <td class="type" id="row@{
+                        i
+                      }_type">
+                        <a>@searchTerm.linkType</a>
+                      </td>
+
+                      <td class="count" id="row@{
+                        i
+                      }_count">
+                        <a>@searchTerm.weight.toInt</a>
+                    </td>
+                    </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="mb-1">All User Teams Recent Pages (90d)</h4>
+            </div>
+            <div class="card-body">
+              <table class="table table-striped sticky-header" id="recent-pages-table">
+                <thead id="user-table-headings">
+                  <tr>
+                    <th class="col-lg-2"><button role="button" id="page"   class="no-border fw-bold">Page </button></th>
+                    <th class="col-lg-2"><button role="button" id="type"   class="no-border fw-bold">Type </button></th>
+                    <th class="col-lg-1"><button role="button" id="count"  class="no-border fw-bold">Count </button></th>
+                  </tr>
+                </thead>
+                <tbody class="list">
+                  @if(teamsSearchTerms.nonEmpty) {
+                    @teamsSearchTerms.zipWithIndex.map { case (searchTerm, i) =>
+                    <tr id="row@i">
+                      <td class="page" id="row@{
+                        i
+                      }_page">
+                        <a href="@searchTerm.link">@searchTerm.name</a>
+                      </td>
+
+                      <td class="type" id="row@{
+                        i
+                      }_type">
+                        <a>@searchTerm.linkType</a>
+                      </td>
+
+                      <td class="count" id="row@{
+                        i
+                      }_count">
+                        <a>@searchTerm.weight.toInt</a>
+                    </td>
+                    </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="mb-1">Global Recent Pages (14d)</h4>
+            </div>
+            <div class="card-body">
+              <table class="table table-striped sticky-header" id="recent-pages-table">
+                <thead id="user-table-headings">
+                  <tr>
+                    <th class="col-lg-2"><button role="button" id="page"   class="no-border fw-bold">Page </button></th>
+                    <th class="col-lg-2"><button role="button" id="type"   class="no-border fw-bold">Type </button></th>
+                    <th class="col-lg-1"><button role="button" id="count"  class="no-border fw-bold">Count </button></th>
+                  </tr>
+                </thead>
+                <tbody class="list">
+                  @if(globalSearchTerms.nonEmpty) {
+                    @globalSearchTerms.zipWithIndex.map { case (searchTerm, i) =>
+                    <tr id="row@i">
+                      <td class="page" id="row@{
+                        i
+                      }_page">
+                        <a href="@searchTerm.link">@searchTerm.name</a>
+                      </td>
+
+                      <td class="type" id="row@{
+                        i
+                      }_type">
+                        <a>@searchTerm.linkType</a>
+                      </td>
+
+                      <td class="count" id="row@{
+                        i
+                      }_count">
+                        <a>@searchTerm.weight.toInt</a>
+                    </td>
+                    </tr>
+                    }
+                  } else {
+                    @println(s"----------fail $globalSearchTerms")
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
   </section>
 }

@@ -20,6 +20,7 @@ import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.search.SearchResults
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, UserLog}
 
 import javax.inject.{Inject, Singleton}
 
@@ -42,4 +43,7 @@ class SearchController @Inject()(
         highlight = if (config.highlight) new BoldHighlighter(searchTerms) else NoHighlighter
     ))
   }
+  
+  def searchByLogs(logs: Seq[Log]): Seq[SearchTerm] =
+    searchIndex.searchByUserLogs(logs)
 }

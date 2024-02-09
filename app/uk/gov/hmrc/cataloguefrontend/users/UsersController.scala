@@ -22,8 +22,9 @@ import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.{Team, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{PlatopsAuditingConnector, Team, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Log, TeamName, UserLog}
+import uk.gov.hmrc.cataloguefrontend.search.SearchController
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.error_404_template
@@ -36,6 +37,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class UsersController @Inject()(
   userManagementConnector      : UserManagementConnector
 , teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+, platopsAuditingConnector     : PlatopsAuditingConnector
+, searchController             : SearchController
 , userInfoPage                 : UserInfoPage
 , userListPage                 : UserListPage
 , umpConfig                    : UserManagementPortalConfig
@@ -44,21 +47,37 @@ class UsersController @Inject()(
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders
+     with CatalogueAuthBuilders 
      with play.api.i18n.I18nSupport {
-
-  def user(username: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      userManagementConnector.getUser(username)
-        .map {
-          case Some(user) =>
-            val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
-            Ok(userInfoPage(user, umpProfileUrl))
-          case None =>
-            NotFound(error_404_template())
-        }
+  
+  def user(username: String): Action[AnyContent] = BasicAuthAction.async { implicit request =>
+    for {
+      userOption <- userManagementConnector.getUser(username)
+      userLogsOption <- platopsAuditingConnector.userLogs(username)
+      teamsLogs <- userOption match{
+        case Some(user) => platopsAuditingConnector.teamsLogs(user.teamNames)
+        case _ => Future.successful(Seq.empty)
+      }
+      globalLogsOption <- platopsAuditingConnector.globalLogs()
+    } yield {
+      (userOption, userLogsOption, teamsLogs, globalLogsOption) match {
+        case (Some(user), Some(userLog), teamsLogs, Some(globalLogs)) =>
+          println(s"------teamLogs$teamsLogs")
+          println(s"------userLogs$userLog")
+          Ok(userInfoPage(user = user
+          , umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
+          , userSearchTerms = searchController.searchByLogs(userLog.logs)
+          , teamsSearchTerms = searchController.searchByLogs(teamsLogs)
+          , globalSearchTerms = searchController.searchByLogs(globalLogs))
+          )
+        case (Some(user), None, teamsLogs, None) if teamsLogs.isEmpty=>
+          val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
+          Ok(userInfoPage(user, umpProfileUrl))
+        case _ =>
+          NotFound(error_404_template())
+      }
     }
-
+  }
   def allUsers(username: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (
