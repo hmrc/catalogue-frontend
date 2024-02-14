@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{DisplayType, PlatformInitiative, routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -28,7 +28,7 @@
 @( initiatives : Seq[PlatformInitiative]
 ,  display     : DisplayType
 ,  team        : Option[TeamName]
-,  allTeams    : Seq[Team]
+,  allTeams    : Seq[GitHubTeam]
 ,  form        : Form[_]
 )(implicit
    messages    : Messages

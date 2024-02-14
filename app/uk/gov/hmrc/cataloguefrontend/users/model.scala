@@ -64,7 +64,7 @@ object SlackInfo {
   val reads: Reads[SlackInfo] = Reads.StringReads.map(SlackInfo.apply)
 }
 
-final case class LdapTeam(
+final case class UmpTeam(
   members          : Seq[Member]
 , teamName         : TeamName
 , description      : Option[String]
@@ -73,8 +73,8 @@ final case class LdapTeam(
 , slackNotification: Option[SlackInfo]
 )
 
-object LdapTeam {
-  val reads: Reads[LdapTeam] = {
+object UmpTeam {
+  val reads: Reads[UmpTeam] = {
     implicit val mr : Reads[Member]    = Member.reads
     implicit val sir: Reads[SlackInfo] = SlackInfo.reads
     implicit val tnr: Reads[TeamName]  = TeamName.format
@@ -84,7 +84,7 @@ object LdapTeam {
     ~ (__ \ "documentation"    ).readNullable[String]
     ~ (__ \ "slack"            ).readNullable[SlackInfo]
     ~ (__ \ "slackNotification").readNullable[SlackInfo]
-    )(LdapTeam.apply _)
+    )(UmpTeam.apply _)
   }
 }
 

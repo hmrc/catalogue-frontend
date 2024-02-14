@@ -15,12 +15,12 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.{IndicatorsWithTeams, RepoType}
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import views.html.helper.select
 
 @(indicatorsWithTeams: Seq[IndicatorsWithTeams]
 , repoTypes          : Seq[RepoType]
-, teams              : Seq[Team]
+, teams              : Seq[GitHubTeam]
 , form               : Form[_]
 )(implicit
   messages           : Messages

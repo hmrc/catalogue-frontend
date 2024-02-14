@@ -20,10 +20,11 @@ import cats.implicits._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, GitHubTeam, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
+import uk.gov.hmrc.cataloguefrontend.users.UmpTeam
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.teams.{TeamInfoPage, teams_list}
@@ -93,10 +94,12 @@ class TeamsController @Inject()(
 
   def allTeams(name: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      teamsAndRepositoriesConnector.allTeams().map(response =>
-        //TODO remove filter when UMP teams are surfaced
-        Ok(teams_list(response.filter(_.repos.nonEmpty), name))
-      )
+      for {
+        umpTeams       <- userManagementConnector.getAllTeams()
+        gitHubTeams    <- teamsAndRepositoriesConnector.allTeams()
+        gitHubTeamsMap =  gitHubTeams.map(team => team.name -> team).toMap
+        teamsInfo      =  umpTeams.map(team => (team, gitHubTeamsMap.get(team.teamName)))
+      } yield Ok(teams_list(teamsInfo, name))
     }
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =

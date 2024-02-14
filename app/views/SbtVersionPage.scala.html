@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model.SBTVersion
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
@@ -24,9 +24,9 @@
 
 @(sbtVersions : List[SBTVersion],
   flags       : Seq[SlugInfoFlag],
-  teams       : Seq[Team],
+  teams       : Seq[GitHubTeam],
   selectedFlag: SlugInfoFlag,
-  selectedTeam: Option[Team]
+  selectedTeam: Option[GitHubTeam]
 )(implicit
   request: RequestHeader
 )

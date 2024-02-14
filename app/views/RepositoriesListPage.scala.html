@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Team}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, GitHubTeam}
 @import views.html.helper.{select, checkbox}
 @import views.html.partials.RepoSearchResultsPage
 @import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => repoRoutes}
@@ -26,7 +26,7 @@
 )
 
 @(repositories: Seq[GitRepository],
-  teams       : Seq[Team],
+  teams       : Seq[GitHubTeam],
   form        : Form[_]
 )(implicit
   messages: Messages,

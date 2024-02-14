@@ -15,10 +15,13 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.users.UmpTeam
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
 
-@(teams: Seq[Team],
+@import views.html.helper.checkbox
+@import views.html.helper.form
+@(teams: Seq[(UmpTeam, Option[GitHubTeam])],
   name : Option[String]
 )(implicit
   request: RequestHeader
@@ -28,22 +31,36 @@
         <h1 class="page-heading mt-4">Teams</h1>
 
         <div id="teams-list">
-            <form action="/teams" method="get">
-                <div class="row mb-3">
-                    <label for="search" class="col-md-1 col-form-label fw-bold">Team:</label>
-                    <div class="col-md-4">
-                        <input id="search" type="text" name="name" class="search form-control" value="@name.getOrElse("")" autofocus>
+            <div class="row">
+                <form action="/teams" method="get">
+                    <div class="row mb-3">
+                        <label for="search" class="col-md-1 col-form-label fw-bold">Team:</label>
+                        <div class="col-md-4">
+                            <input id="search" type="text" name="name" class="search form-control" value="@name.getOrElse("")" autofocus>
+                        </div>
+                        <div class="col-md-2 d-flex align-content-end">
+                            <div class="form-check">
+                                <input id="github-only" class="form-check-input" type="checkbox" checked>
+                                <label class="form-check-label" for="github-only">Only Show GitHub Teams</label>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
 
             <table class="table table-striped sticky-header" id="service-list">
                 <thead>
                     <tr>
-                        <th class="col-lg-7">
+                        <th class="col-lg-5">
                             <button role="button" class="fw-bold sort no-border" data-sort="team-name">Team</button>
                         </th>
-                        <th class="col-lg-2">
+                        <th class="col-lg-1">
+                            <button role="button" class="fw-bold sort no-border" data-sort="members" title="Excluding common shared repos">Members</button>
+                        </th>
+                        <th class="col-lg-1">
+                            <span class="fw-bold no-border">GitHub</span>
+                        </th>
+                        <th class="col-lg-1">
                             <button role="button" class="fw-bold sort no-border" data-sort="last-active">Last Active</button>
                         </th>
                         <th class="col-lg-1">
@@ -52,16 +69,24 @@
                     </tr>
                 </thead>
                 <tbody class="list">
-                @teams.zipWithIndex.map { case (team, i) =>
-                <tr id="row@i">
+                @teams.zipWithIndex.map { case ((team, github), i) =>
+                <tr class="@github.fold("no-github")(_ => "github")" id="row@i">
                     <td class="team-name" id="row@{i}_name">
-                        <a href="@teamsRoutes.TeamsController.team(team.name)">@team.name.asString</a>
+                        <a href="@teamsRoutes.TeamsController.team(team.teamName)">@team.teamName.asString</a>
+                    </td>
+                    <td class="members" id="row@{i}_members">
+                      @team.members.length
+                    </td>
+                    <td class="github align-" id="row@{i}_github">
+                      @github.map{ team =>
+                          <a id="github-icon"><img src="@routes.Assets.versioned("blackgithubicon.svg")"/></a>
+                      }
                     </td>
                     <td class="last-active font-monospace" id="row@{i}_lastActive">
-                      @team.lastActiveDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")
+                      @github.map(_.lastActiveDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse(""))
                     </td>
                     <td class="repo-count" id="row@{i}_repos">
-                      @team.repos.length
+                      @github.map(_.repos.length).getOrElse("-")
                     </td>
                 </tr>
                 }
@@ -70,19 +95,40 @@
         </div>
     }
 
-    <script @CSPNonce.attr>
-        let options = {
-          valueNames: ['team-name', 'created', 'last-active', 'repo-count' ],
-          searchColumns: ['team-name']
-        };
+<script @CSPNonce.attr>
+    let options = {
+        valueNames: ['team-name', 'members', 'github', 'last-active', 'repo-count'],
+        searchColumns: ['team-name', 'github']
+    };
 
-        let teamList = new List('teams-list', options);
+    let teamList = new List('teams-list', options);
 
-        let searchBox = document.getElementById('search');
-        // set autofocus cursor to right of text in search box
-        let length = searchBox.value.length;
-        searchBox.focus();
-        searchBox.setSelectionRange(length, length);
-        // re-search the list upon page load.
-        teamList.search(searchBox.value);
-    </script>
+    let searchBox = document.getElementById('search');
+    // set autofocus cursor to right of text in search box
+    let length = searchBox.value.length;
+    searchBox.focus();
+    searchBox.setSelectionRange(length, length);
+    // re-search the list upon page load.
+    teamList.search(searchBox.value);
+
+    function filterNonGithubTeams() {
+        let checkBox = document.getElementById("github-only");
+        if (checkBox.checked === true) {
+            teamList.filter(function(item) {
+                return item.values().github.includes("github");
+            });
+        } else {
+            teamList.filter();
+        }
+    }
+
+    document.getElementById("github-only").addEventListener("change", function() {
+        filterNonGithubTeams();
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        filterNonGithubTeams();
+    });
+
+</script>
+

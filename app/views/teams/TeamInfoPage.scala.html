@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName}
-@import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, SlackInfo}
+@import uk.gov.hmrc.cataloguefrontend.users.{UmpTeam, SlackInfo}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
@@ -29,7 +29,7 @@
 
 @(teamName              : TeamName,
   repos                 : Map[RepoType, Seq[GitRepository]],
-  maybeTeam             : Option[LdapTeam],
+  maybeTeam             : Option[UmpTeam],
   umpMyTeamsUrl         : String,
   leaksFoundForTeam     : Boolean,
   hasLeaks              : String => Boolean,

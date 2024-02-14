@@ -65,7 +65,7 @@ class UserManagementConnectorSpec
 
       connector.getTeam(team).futureValue shouldBe
         Some(
-          LdapTeam(Seq.empty[Member], team, None, None, None, None)
+          UmpTeam(Seq.empty[Member], team, None, None, None, None)
         )
     }
 
