@@ -40,14 +40,14 @@ class UserManagementConnector @Inject()(
 
   private val baseUrl = servicesConfig.baseUrl("user-management")
 
-  def getTeam(team: TeamName)(implicit hc: HeaderCarrier): Future[Option[UmpTeam]] = {
+  def getTeam(team: TeamName)(implicit hc: HeaderCarrier): Future[UmpTeam] = {
     val url: URL = url"$baseUrl/user-management/teams/${team.asString}"
 
     implicit val ltr: Reads[UmpTeam] = UmpTeam.reads
 
     httpClientV2
       .get(url)
-      .execute[Option[UmpTeam]]
+      .execute[UmpTeam]
   }
 
     def getAllTeams()(implicit hc: HeaderCarrier): Future[Seq[UmpTeam]] = {

@@ -36,7 +36,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    setupAuthEndpoint()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/teamA/dependencies", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/CATO/dependencies", willRespondWith = (200, Some("[]")))
@@ -49,8 +48,9 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show a list of libraries, services, prototypes and repositories" in {
       val teamName = "teamA"
 
-      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"),  willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"),  willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
 
       val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -62,12 +62,29 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       findAnchor(anchorTags, "/repositories/teamA-other"  , "teamA-other"  ) shouldBe defined
     }
 
+    "not show a list of libraries, services, prototypes and repositories, if ump team does not have github" in {
+      val teamName = "teamA"
+
+      serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some("[]")))
+
+      val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
+      response.status shouldBe 200
+
+      val anchorTags =  asDocument(response.body).getElementsByTag("a").asScala.toList
+      findAnchor(anchorTags, "/repositories/teamA-library", "teamA-library") shouldBe empty
+      findAnchor(anchorTags, "/repositories/teamA-serv"   , "teamA-serv"   ) shouldBe empty
+      findAnchor(anchorTags, "/repositories/teamA-proto"  , "teamA-proto"  ) shouldBe empty
+      findAnchor(anchorTags, "/repositories/teamA-other"  , "teamA-other"  ) shouldBe empty
+    }
+
 
     "show a message if no services are found" in {
       val teamName = "teamA"
 
-      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -78,8 +95,9 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show team members correctly" in {
       val teamName = "CATO"
 
-      serviceEndpoint(GET, s"/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-five-members.json"))))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, s"/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -89,21 +107,12 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       verifyTeamMemberHrefLinks(document)
     }
 
-    "show error message if user-management is not available" in {
-      val teamName = "teamA"
-      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesData)))
-      serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (404, None))
-
-      val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
-      response.status shouldBe 200
-      response.body should include(s"Unable to find details for team $teamName.")
-      response.body should include(s"Unable to find members for team $teamName.")
-    }
-
     "show team details correctly" in {
       val teamName = "teamA"
-      serviceEndpoint(GET, s"/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesData)))
+
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, s"/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesData)))
 
       val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -112,13 +121,20 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
       document.select("#team-description").asScala.head.text()   shouldBe "Description: TEAM-A is a great team"
       document.select("#team-documentation").asScala.head.text() shouldBe "Documentation: Go to Confluence space"
       document.select("#team-documentation").asScala.head.toString() should include(
-        """href="https://some.documentation.url" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"""")
+        """href="https://some.documentation.url" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window""""
+      )
 
       document.select("#slack-team").toString() should include(
-        """href="https://slack.host/messages/team-A" target="_blank" rel="noreferrer noopener">#team-A<span class="glyphicon glyphicon-new-window"></span></a>""")
+        """href="https://slack.host/messages/team-A" target="_blank" rel="noreferrer noopener">#team-A<span class="glyphicon glyphicon-new-window"></span></a>"""
+      )
 
       document.select("#slack-notification").toString() should include(
-        """href="https://slack.host/messages/team-A-NOTIFICATION" target="_blank" rel="noreferrer noopener">#team-A-NOTIFICATION<span class="glyphicon glyphicon-new-window"></span></a>""")
+        """href="https://slack.host/messages/team-A-NOTIFICATION" target="_blank" rel="noreferrer noopener">#team-A-NOTIFICATION<span class="glyphicon glyphicon-new-window"></span></a>"""
+      )
+
+      document.select("#github").toString() should include(
+        """href="https://github.com/orgs/hmrc/teams/teama"""
+      )
     }
   }
 

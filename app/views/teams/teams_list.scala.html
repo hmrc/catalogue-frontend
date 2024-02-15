@@ -34,13 +34,13 @@
             <div class="row">
                 <form action="/teams" method="get">
                     <div class="row mb-3">
-                        <label for="search" class="col-md-1 col-form-label fw-bold">Team:</label>
-                        <div class="col-md-4">
+                        <label for="search" class="col-1 col-form-label fw-bold">Team:</label>
+                        <div class="col-5">
                             <input id="search" type="text" name="name" class="search form-control" value="@name.getOrElse("")" autofocus>
                         </div>
-                        <div class="col-md-2 d-flex align-content-end">
-                            <div class="form-check">
-                                <input id="github-only" class="form-check-input" type="checkbox" checked>
+                        <div class="col-6 col-form-label">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="github-only" checked>
                                 <label class="form-check-label" for="github-only">Only Show GitHub Teams</label>
                             </div>
                         </div>
