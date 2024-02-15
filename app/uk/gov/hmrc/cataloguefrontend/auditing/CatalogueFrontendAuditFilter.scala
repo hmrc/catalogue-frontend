@@ -45,6 +45,7 @@ class CatalogueFrontendAuditFilter @Inject()(
           username        = rh.session.data.get("username")  .getOrElse("GuestUser")
         , uri             = rh.headers.get("Raw-Request-URI").getOrElse("-")
         , statusCode      = res.header.status
+        , method          = rh.method
         , userAgentString = rh.headers.get("User-Agent")     .getOrElse("-")
         , deviceID        = rh.headers.get("Cookie")         .getOrElse("-")
         , referrer        = rh.headers.get("Referer")        .getOrElse("-")
@@ -60,6 +61,7 @@ case class Detail(
   username: String,
   uri: String,
   statusCode: Int,
+  method: String,
   userAgentString: String,
   deviceID: String,
   referrer: String,
@@ -67,12 +69,13 @@ case class Detail(
 
 object Detail {
   val format: OFormat[Detail] = {
-    ( ( __ \ "username"   ).format[String]
-    ~ ( __ \ "uri"        ).format[String]
-    ~ ( __ \ "statusCode" ).format[Int]
-    ~ ( __ \ "userAgentString" ).format[String]
-    ~ ( __ \ "deviceID" ).format[String]
-    ~ ( __ \ "referrer" ).format[String]
+    ( ( __ \ "username"       ).format[String]
+    ~ ( __ \ "uri"            ).format[String]
+    ~ ( __ \ "statusCode"     ).format[Int]
+    ~ ( __ \ "method"         ).format[String]
+    ~ ( __ \ "userAgentString").format[String]
+    ~ ( __ \ "deviceID"       ).format[String]
+    ~ ( __ \ "referrer"       ).format[String]
     )(Detail.apply, unlift(Detail.unapply))
   }
 }
