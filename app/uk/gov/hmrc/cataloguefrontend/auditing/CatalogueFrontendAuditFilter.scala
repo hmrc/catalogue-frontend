@@ -29,78 +29,50 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class CatalogueFrontendAuditFilter @Inject()(
-	override val mat: Materializer,
-	auditConnector : AuditConnector,
+  override val mat: Materializer,
+  auditConnector : AuditConnector,
 )(implicit
-	ec: ExecutionContext,
+  ec: ExecutionContext,
 )
-	extends Filter with FrontendHeaderCarrierProvider {
-	
-	override def apply(next: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
-		val headerCarrier = hc(rh)
-		
-		val username = rh.session.data.get("username") match{
-			case Some(username) => username
-			case _              => "GuestUser"
-		}
-		
-		val uri = rh.headers.get("Raw-Request-URI") match {
-			case Some(uri) => uri
-			case _         => "-"
-		}
-		
-		val userAgentString = rh.headers.get("User-Agent") match {
-			case Some(userAgentString) => userAgentString
-			case _                     => "-"
-		}
-		
-		val deviceID = rh.headers.get("Cookie") match {
-			case Some(deviceID) => deviceID
-			case _              => "-"
-		}
-		
-		val referrer = rh.headers.get("Referer") match {
-			case Some(referrer) => referrer
-			case _              => "-"
-		}
-		
-		println("-------------------Pass")
-		
-		next(rh).map { res =>
-			auditConnector.sendExplicitAudit(
-				auditType =  "FrontendInteraction",
-				detail = Detail(
-					username = username,
-					uri = uri,
-					statusCode = res.header.status,
-					userAgentString = userAgentString,
-					deviceID = deviceID,
-					referrer = referrer
-				)
-			)(headerCarrier, ec, Detail.format)
-			res
-		}
-	}
+  extends Filter with FrontendHeaderCarrierProvider {
+
+  override def apply(next: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
+    val headerCarrier = hc(rh)
+    next(rh).map { res =>
+      auditConnector.sendExplicitAudit(
+      	auditType =  "FrontendInteraction",
+      	detail = Detail(
+          username        = rh.session.data.get("username")  .getOrElse("GuestUser")
+        , uri             = rh.headers.get("Raw-Request-URI").getOrElse("-")
+        , statusCode      = res.header.status
+        , userAgentString = rh.headers.get("User-Agent")     .getOrElse("-")
+        , deviceID        = rh.headers.get("Cookie")         .getOrElse("-")
+        , referrer        = rh.headers.get("Referer")        .getOrElse("-")
+        )
+      )(headerCarrier, ec, Detail.format)
+      res
+    }
+  }
 }
 
 
 case class Detail(
-	username: String,
-	uri: String,
-	statusCode: Int,
-	userAgentString: String,
-	deviceID: String,
-	referrer: String,
+  username: String,
+  uri: String,
+  statusCode: Int,
+  userAgentString: String,
+  deviceID: String,
+  referrer: String,
 )
 
 object Detail {
-	val format: OFormat[Detail] = {
-		( ( __ \ "username"   ).format[String]
-			~ ( __ \ "uri"        ).format[String]
-			~ ( __ \ "statusCode" ).format[Int]
-			~ ( __ \ "userAgentString" ).format[String]
-			~ ( __ \ "deviceID" ).format[String]
-			~ ( __ \ "referrer" ).format[String]
-			)(Detail.apply, unlift(Detail.unapply))
-	}
+  val format: OFormat[Detail] = {
+    ( ( __ \ "username"   ).format[String]
+    ~ ( __ \ "uri"        ).format[String]
+    ~ ( __ \ "statusCode" ).format[Int]
+    ~ ( __ \ "userAgentString" ).format[String]
+    ~ ( __ \ "deviceID" ).format[String]
+    ~ ( __ \ "referrer" ).format[String]
+    )(Detail.apply, unlift(Detail.unapply))
+  }
 }
