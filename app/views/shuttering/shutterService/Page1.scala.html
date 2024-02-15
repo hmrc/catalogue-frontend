@@ -160,18 +160,15 @@
       let selectedServices = document.getElementById('selectedServices');
 
       let missingServices = [];
-      for (let group of groupData[groupOptions]) {
-        let i = indexOfServiceName(avalableServices, group);
+      for (let serviceName of groupData[groupOptions]) {
+        let i = indexOfServiceName(avalableServices, serviceName);
         if (i === -1) {
-          let j = indexOfServiceName(selectedServices, group);
+          let j = indexOfServiceName(selectedServices, serviceName);
           if (j === -1) {
-            missingServices.push(group);
+            missingServices.push(serviceName);
           }
         } else {
-          let option = document.createElement("option");
-          option.text = group;
-          selectedServices.add(option);
-
+          selectedServices.add(avalableServices[i]);
           avalableServices.remove(i);
         }
       };
