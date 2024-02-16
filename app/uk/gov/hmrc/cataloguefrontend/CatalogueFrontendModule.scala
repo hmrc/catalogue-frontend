@@ -16,14 +16,26 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.Clock
-import com.google.inject.AbstractModule
+import play.api.{Configuration, Environment}
+import play.api.inject.Binding
+import uk.gov.hmrc.cataloguefrontend.auditing.CatalogueFrontendAuditFilter
 import uk.gov.hmrc.cataloguefrontend.search.IndexScheduler
+import uk.gov.hmrc.play.bootstrap.frontend.FrontendModule
+import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 
-class CatalogueFrontendModule extends AbstractModule {
+import java.time.Clock
 
-  override def configure(): Unit = {
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    bind(classOf[IndexScheduler]).asEagerSingleton()
-  }
+class CatalogueFrontendModule extends FrontendModule {
+
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
+    super.bindings(environment, configuration)
+      .map(b =>
+        if (b.key.clazz.getName == classOf[AuditFilter].getName)
+          bind[AuditFilter].to[CatalogueFrontendAuditFilter]
+        else b
+      ) ++
+        Seq(
+          bind[Clock].toInstance(Clock.systemDefaultZone),
+          bind[IndexScheduler].toSelf.eagerly()
+       )
 }
