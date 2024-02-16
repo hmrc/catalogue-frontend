@@ -306,7 +306,10 @@ case class GitHubTeam(
   name           : TeamName,
   lastActiveDate : Option[Instant],
   repos          : Seq[String]
-)
+) {
+  val githubUrl =
+    s"https://github.com/orgs/hmrc/teams/${name.asString.toLowerCase.replace(" ", "-")}"
+}
 
 object GitHubTeam {
   val format: OFormat[GitHubTeam] = {

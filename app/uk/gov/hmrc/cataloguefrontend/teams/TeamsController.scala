@@ -52,16 +52,16 @@ class TeamsController @Inject()(
     BasicAuthAction.async { implicit request =>
       (
         for {
-        umpTeam     <- userManagementConnector.getTeam(teamName)
-        githubTeams <- teamsAndRepositoriesConnector.allTeams()
-        hasGithub   =  githubTeams.exists(_.name == umpTeam.teamName)
-        } yield {
-          if (hasGithub) {
+          umpTeam         <- userManagementConnector.getTeam(teamName)
+          githubTeams     <- teamsAndRepositoriesConnector.allTeams()
+          maybeGithubTeam =  githubTeams.find(_.name == umpTeam.teamName)
+        } yield maybeGithubTeam match {
+          case Some(githubTeam) =>
             (
               teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)),
               leakDetectionService.repositoriesWithLeaks,
-              serviceDependenciesConnector.dependenciesForTeam(umpTeam.teamName),
-              serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(umpTeam.teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
+              serviceDependenciesConnector.dependenciesForTeam(teamName),
+              serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
             ).mapN { (repos,
                       reposWithLeaks,
                       masterTeamDependencies,
@@ -77,11 +77,11 @@ class TeamsController @Inject()(
                   hasLeaks                = leakDetectionService.hasLeaks(reposWithLeaks),
                   masterTeamDependencies  = masterTeamDependencies.flatMap(mtd => repos.find(_.name == mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd))),
                   prodDependencies        = prodDependencies,
-                  gitHubUrl               = Some(s"https://github.com/orgs/hmrc/teams/${umpTeam.teamName.asString.toLowerCase.replace(" ", "-")}")
+                  gitHubUrl               = Some(githubTeam.githubUrl)
                 )
               )
             }
-          } else {
+          case _ =>
             Future.successful(Ok(
               teamInfoPage(
                 teamName               = teamName,
@@ -95,7 +95,6 @@ class TeamsController @Inject()(
                 gitHubUrl              = None
               )
             ))
-          }
         }
       ).flatten
     }
