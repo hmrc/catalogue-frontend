@@ -74,22 +74,22 @@
                                   <input class="form-control border-end-0 rounded-end-0" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)" />
                               </div>
                               <div class="col-2 col-md-2 ps-0">
-                                  <select id="lbInclusive" class="form-select rounded-start-0">
+                                  <select aria-label="Lower Bound Inclusive"  id="lbInclusive" class="form-select rounded-start-0">
                                       <option value="false" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
                                       <option value="true" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
                                   </select>
                               </div>
                               <div class="col-2 col-md-2 p-0">
-                                <input class="form-control form-control-plaintext text-center" type="text" value="version" tabindex="-1" readonly>
+                                <input aria-label="Version" class="form-control form-control-plaintext text-center" type="text" value="version" tabindex="-1" readonly>
                               </div>
                               <div class="col-2 col-md-2 pe-0">
-                                  <select id="ubInclusive" class="form-select border-end-0 rounded-end-0">
+                                  <select aria-label="Upper Bound Inclusive"  id="ubInclusive" class="form-select border-end-0 rounded-end-0">
                                       <option value="false" @if(versionRange.upperBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
                                       <option value="true" @if(versionRange.upperBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
                                   </select>
                               </div>
                               <div class="col-3 col-md-3 ps-0">
-                                  <input class="form-control rounded-start-0" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
+                                  <input aria-label="Upper Bound Value" class="form-control rounded-start-0" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
                               </div>
                             </div>
                           </dd>
