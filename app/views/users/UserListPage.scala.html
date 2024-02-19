@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
- @import uk.gov.hmrc.cataloguefrontend.connector.Team
+ @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.users.{User, UsersListFilter}
 @import uk.gov.hmrc.cataloguefrontend.users.UsersController.maxRows
@@ -27,7 +27,7 @@
 @(
   isTeamAdmin: Boolean,
   users      : Seq[User],
-  teams      : Seq[Team],
+  teams      : Seq[GitHubTeam],
   form       : Form[UsersListFilter],
 )(implicit
   messages: Messages,

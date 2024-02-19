@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import views.html.helper
 @import views.html.partials.form_global_errors
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
@@ -25,7 +25,7 @@
 @this()
 
 @(form     : Form[SearchCommissioning.SearchCommissioningForm],
-  allTeams : Seq[Team]
+  allTeams : Seq[GitHubTeam]
 , allChecks: Seq[(String, FormCheckType)]
 , results  : Option[List[CachedServiceCheck]] = None
 )(implicit

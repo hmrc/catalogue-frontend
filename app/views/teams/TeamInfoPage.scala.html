@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName}
-@import uk.gov.hmrc.cataloguefrontend.users.{LdapTeam, SlackInfo}
+@import uk.gov.hmrc.cataloguefrontend.users.{UmpTeam, SlackInfo}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
@@ -29,12 +29,13 @@
 
 @(teamName              : TeamName,
   repos                 : Map[RepoType, Seq[GitRepository]],
-  maybeTeam             : Option[LdapTeam],
+  umpTeam               : UmpTeam,
   umpMyTeamsUrl         : String,
   leaksFoundForTeam     : Boolean,
   hasLeaks              : String => Boolean,
   masterTeamDependencies: Seq[RepoAndDependencies],
-  prodDependencies      : Map[String, Seq[Dependency]]
+  prodDependencies      : Map[String, Seq[Dependency]],
+  gitHubUrl             : Option[String]
 )(implicit
   request: RequestHeader
 )
@@ -59,36 +60,34 @@
                         <h4 class="mb-0">Details</h4>
                     </div>
                     <div class="card-body">
-                        @maybeTeam match {
-                            case Some(team) => {
-                                <dl id="team-description" class="row mb-0">
-                                    <dt class="col-sm-4">Description:</dt>
-                                    <dd class="col-sm-8">@team.description.getOrElse("")</dd>
-                                </dl>
-                                <dl id="team-documentation" class="row mb-0">
-                                    <dt class="col-sm-4">Documentation:</dt>
-                                    <dd class="col-sm-8">
-                                        @team.documentation.map { docs =>
-                                          <a href="@docs" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
-                                        }
-                                    </dd>
-                                </dl>
-                                <dl id="team-slack-channels" class="row mb-0">
-                                    <dt class="col-sm-4">Slack:</dt>
-                                    <dd class="col-sm-8"></dd>
-                                </dl>
-                                @team.slack.map(addSlackInfo("Team", _))
-                                @team.slackNotification.map(addSlackInfo("Notification", _))
-                            }
-                            case None => {
-                              <p class="card-text">
-                                  Unable to find details for team @teamName.asString.
-                              </p>
-                            }
-                        }
-                        @if(maybeTeam.isDefined) {
-                            @umpUpdateLink(isMemberBox = false)
-                        }
+                        <dl id="team-description" class="row mb-0">
+                            <dt class="col-sm-4">Description:</dt>
+                            <dd class="col-sm-8">@umpTeam.description.getOrElse("")</dd>
+                        </dl>
+                        <dl id="team-documentation" class="row mb-0">
+                            <dt class="col-sm-4">Documentation:</dt>
+                            <dd class="col-sm-8">
+                                @umpTeam.documentation.map { docs =>
+                                  <a href="@docs" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
+                                }
+                            </dd>
+                        </dl>
+                        <dl id="team-slack-channels" class="row mb-0">
+                            <dt class="col-sm-4">Slack:</dt>
+                            <dd class="col-sm-8"></dd>
+                        </dl>
+                        @umpTeam.slack.map(addSlackInfo("Team", _))
+                        @umpTeam.slackNotification.map(addSlackInfo("Notification", _))
+                        @umpUpdateLink(isMemberBox = false)
+
+                        <dl id="github" class="row mb-0">
+                          <dt class="col-sm-4">GitHub:</dt>
+                          <dd class="col-sm-8">
+                              @gitHubUrl.map { url =>
+                                <a href=@url target="_blank" rel="noreferrer noopener"><img src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github"/> @umpTeam.teamName.asString<span class="glyphicon glyphicon-new-window"/></a>
+                              }
+                          </dd>
+                        </dl>
                     </div>
                 </div>
             </div>
@@ -99,48 +98,38 @@
                         <h4 class="mb-0">Team Members</h4>
                     </div>
                     <div class="card-body">
-                        @maybeTeam match {
-                            case Some(team) if team.members.isEmpty => {
-                                <p class="card-text col-6">
-                                    @teamName.asString has no members.
-                                </p>
-                            }
-                            case Some(team) => {
-                                <ul id="team_members" class="list-unstyled" style="column-count: 2;">
-                                    @for(teamMember <- team.members) {
-                                      <li>
-                                          <a href="@userRoutes.UsersController.user(teamMember.username)">
-                                              @teamMember.displayName
-                                          </a>
-                                          @if(!teamMember.role.isUser) {
-                                            <span class="badge rounded-pill text-bg-secondary">@teamMember.role.displayName</span>
-                                          }
-                                      </li>
+                        @if(umpTeam.members.isEmpty){
+                            <p class="card-text col-6">
+                               @teamName.asString has no members.
+                            </p>
+                        } else {
+                          <ul id="team_members" class="list-unstyled" style="column-count: 2;">
+                              @for(teamMember <- umpTeam.members) {
+                                <li>
+                                    <a href="@userRoutes.UsersController.user(teamMember.username)">
+                                        @teamMember.displayName
+                                    </a>
+                                    @if(!teamMember.role.isUser) {
+                                      <span class="badge rounded-pill text-bg-secondary">@teamMember.role.displayName</span>
                                     }
-                                </ul>
-                            }
-                            case None => {
-                                <p class="card-text">
-                                    Unable to find members for team @teamName.asString.
-                                </p>
-                                }
+                                </li>
+                              }
+                          </ul>
                         }
-                        @if(maybeTeam.isDefined) {
-                            @umpUpdateLink(isMemberBox = true)
-                        }
+                      @umpUpdateLink(isMemberBox = true)
                     </div>
                 </div>
             </div>
         </div>
 
-      <div class="row mb-3">
-        <div class="col md-1">
-          <div class="card">
-            @partials.servicesAndDependencies(masterTeamDependencies, teamName)
-          </div>
+      @if(gitHubUrl.isDefined){
+        <div class="row mb-3">
+            <div class="col md-1">
+                <div class="card">
+                  @partials.servicesAndDependencies(masterTeamDependencies, teamName)
+                </div>
+            </div>
         </div>
-      </div>
-
         <div class="row mb-3">
             @showRepositories(repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")
             @showRepositories(repos.getOrElse(RepoType.Library  , Seq.empty), "Libraries"   , "library")
@@ -148,6 +137,7 @@
             @showRepositories(repos.getOrElse(RepoType.Test     , Seq.empty), "Tests"       , "test")
             @showRepositories(repos.getOrElse(RepoType.Other    , Seq.empty), "Repositories", "repository")
         </div>
+      }
     </section>
 }
 

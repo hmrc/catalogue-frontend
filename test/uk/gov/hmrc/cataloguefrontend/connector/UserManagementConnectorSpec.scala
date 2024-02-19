@@ -63,24 +63,7 @@ class UserManagementConnectorSpec
           )
       )
 
-      connector.getTeam(team).futureValue shouldBe
-        Some(
-          LdapTeam(Seq.empty[Member], team, None, None, None, None)
-        )
-    }
-
-    "return None when not found" in {
-      val team = TeamName("non-existent-team")
-
-      stubFor(
-        get(urlPathEqualTo(s"/user-management/teams/${team.asString}"))
-          .willReturn(
-            aResponse()
-              .withStatus(404)
-          )
-      )
-
-      connector.getTeam(team).futureValue shouldBe None
+      connector.getTeam(team).futureValue shouldBe UmpTeam(Seq.empty[Member], team, None, None, None, None)
     }
   }
 

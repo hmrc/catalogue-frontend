@@ -19,7 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
 @import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, Oracle, OpenJDK, TeamName}
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import play.twirl.api.Html
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
@@ -28,7 +28,7 @@
 
 @(jdkVersions     : List[JDKVersion],
   flags           : Seq[SlugInfoFlag],
-  teams           : Seq[Team],
+  teams           : Seq[GitHubTeam],
   selectedFlag    : SlugInfoFlag,
   selectedTeamName: Option[TeamName]
 )(implicit

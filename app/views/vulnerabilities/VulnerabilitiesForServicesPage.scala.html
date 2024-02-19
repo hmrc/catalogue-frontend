@@ -19,14 +19,14 @@
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter
 @import views.html.helper.select
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 
 @this()
 
 
 @(vulnerabilities: Seq[TotalVulnerabilityCount],
-  teams          : Seq[Team],
+  teams          : Seq[GitHubTeam],
   form           : Form[VulnerabilitiesCountFilter]
 )(implicit
   messages       : Messages,
