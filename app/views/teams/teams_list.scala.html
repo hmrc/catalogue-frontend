@@ -79,14 +79,14 @@
                     </td>
                     <td class="github align-" id="row@{i}_github">
                       @github.map{ team =>
-                          <a id="github-icon"><img src="@routes.Assets.versioned("blackgithubicon.svg")"/></a>
+                          <a id="github-icon"><img src="@routes.Assets.versioned("githubicon.svg")"/></a>
                       }
                     </td>
                     <td class="last-active font-monospace" id="row@{i}_lastActive">
-                      @github.map(_.lastActiveDate.map(_.asPattern(`yyyy-MM-dd`)).getOrElse(""))
+                      @github.flatMap(_.lastActiveDate.map(_.asPattern(`yyyy-MM-dd`)))
                     </td>
                     <td class="repo-count" id="row@{i}_repos">
-                      @github.map(_.repos.length).getOrElse("-")
+                      @github.map(_.repos.length).getOrElse("")
                     </td>
                 </tr>
                 }

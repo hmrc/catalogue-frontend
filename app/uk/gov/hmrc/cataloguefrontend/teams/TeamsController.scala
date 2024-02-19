@@ -50,72 +50,81 @@ class TeamsController @Inject()(
 
   def team(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      (
-        for {
-          umpTeam         <- userManagementConnector.getTeam(teamName)
-          githubTeams     <- teamsAndRepositoriesConnector.allTeams()
-          maybeGithubTeam =  githubTeams.find(_.name == umpTeam.teamName)
-        } yield maybeGithubTeam match {
-          case Some(githubTeam) =>
-            (
-              teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)),
-              leakDetectionService.repositoriesWithLeaks,
-              serviceDependenciesConnector.dependenciesForTeam(teamName),
-              serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
-            ).mapN { (repos,
-                      reposWithLeaks,
-                      masterTeamDependencies,
-                      prodDependencies
-                     ) =>
-              Ok(
-                teamInfoPage(
-                  teamName                = teamName,
-                  repos                   = repos.groupBy(_.repoType),
-                  umpTeam                 = umpTeam,
-                  umpMyTeamsUrl           = umpConfig.umpMyTeamsPageUrl(teamName),
-                  leaksFoundForTeam       = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name)),
-                  hasLeaks                = leakDetectionService.hasLeaks(reposWithLeaks),
-                  masterTeamDependencies  = masterTeamDependencies.flatMap(mtd => repos.find(_.name == mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd))),
-                  prodDependencies        = prodDependencies,
-                  gitHubUrl               = Some(githubTeam.githubUrl)
+      ( userManagementConnector.getTeam(teamName)
+      , teamsAndRepositoriesConnector.allTeams()
+      ).mapN {
+        ( umpTeam
+        , githubTeams
+        ) =>
+          val optGithubTeam = githubTeams.find(_.name == umpTeam.teamName)
+          optGithubTeam match {
+            case Some(githubTeam) =>
+              ( teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false))
+              , leakDetectionService.repositoriesWithLeaks
+              , serviceDependenciesConnector.dependenciesForTeam(teamName)
+              , serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
+              ).mapN {
+                ( repos
+                , reposWithLeaks
+                , masterTeamDependencies
+                , prodDependencies
+                ) =>
+                  Ok(
+                    teamInfoPage(
+                      teamName               = teamName
+                    , repos                  = repos.groupBy(_.repoType)
+                    , umpTeam                = umpTeam
+                    , umpMyTeamsUrl          = umpConfig.umpMyTeamsPageUrl(teamName)
+                    , leaksFoundForTeam      = repos.exists(r => leakDetectionService.hasLeaks(reposWithLeaks)(r.name))
+                    , hasLeaks               = leakDetectionService.hasLeaks(reposWithLeaks)
+                    , masterTeamDependencies = masterTeamDependencies.flatMap(mtd => repos.find(_.name == mtd.repositoryName).map(gr => RepoAndDependencies(gr, mtd)))
+                    , prodDependencies       = prodDependencies
+                    , gitHubUrl              = Some(githubTeam.githubUrl)
+                    )
+                  )
+              }
+            case _ =>
+              Future.successful(
+                Ok(
+                  teamInfoPage(
+                    teamName               = teamName
+                  , repos                  = Map.empty
+                  , umpTeam                = umpTeam
+                  , umpMyTeamsUrl          = umpConfig.umpMyTeamsPageUrl(teamName)
+                  , leaksFoundForTeam      = false
+                  , hasLeaks               = _ => false
+                  , masterTeamDependencies = Seq.empty
+                  , prodDependencies       = Map.empty
+                  , gitHubUrl              = None
+                  )
                 )
               )
-            }
-          case _ =>
-            Future.successful(Ok(
-              teamInfoPage(
-                teamName               = teamName,
-                repos                  = Map.empty,
-                umpTeam                = umpTeam,
-                umpMyTeamsUrl          = umpConfig.umpMyTeamsPageUrl(teamName),
-                leaksFoundForTeam      = false,
-                hasLeaks               = _ => false,
-                masterTeamDependencies = Seq.empty,
-                prodDependencies       = Map.empty,
-                gitHubUrl              = None
-              )
-            ))
-        }
-      ).flatten
+          }
+      }.flatten
     }
 
-  def allTeams(name: Option[String]): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      for {
-        umpTeams       <- userManagementConnector.getAllTeams()
-        gitHubTeams    <- teamsAndRepositoriesConnector.allTeams()
-        gitHubTeamsMap =  gitHubTeams.map(team => team.name -> team).toMap
-        teamsInfo      =  umpTeams.map(team => (team, gitHubTeamsMap.get(team.teamName)))
-      } yield Ok(teams_list(teamsInfo, name))
-    }
+    def allTeams(name: Option[String]): Action[AnyContent] =
+      BasicAuthAction.async { implicit request =>
+        ( userManagementConnector.getAllTeams()
+        , teamsAndRepositoriesConnector.allTeams()
+        ).mapN { (umpTeams, gitHubTeams) =>
+          Ok(teams_list(
+            teams = umpTeams.map(umpTeam => (umpTeam, gitHubTeams.find(_.name == umpTeam.teamName))),
+            name
+          ))
+        }
+      }
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      (
-        teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false)),
-        serviceDependenciesConnector.dependenciesForTeam(teamName),
-        serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
-      ).mapN { (repos, masterTeamDependencies, prodDependencies) =>
+      ( teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false))
+      , serviceDependenciesConnector.dependenciesForTeam(teamName)
+      , serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
+      ).mapN {
+        ( repos
+        , masterTeamDependencies
+        , prodDependencies
+        ) =>
         val repoLookup = repos.map(r => r.name -> r).toMap
         Ok(outOfDateTeamDependenciesPage(
           teamName,
