@@ -229,13 +229,13 @@
         </nav>
 
         @preContent
-
-        <div id="standard-layout-container">
-            <section class="container">
-            @content
-            </section>
-        </div>
-
+        <main>
+          <div id="standard-layout-container">
+              <section class="container">
+              @content
+              </section>
+          </div>
+        </main>
         @postContent
 
         <script @CSPNonce.attr>
