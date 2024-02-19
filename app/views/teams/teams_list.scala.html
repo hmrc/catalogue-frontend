@@ -55,16 +55,16 @@
                             <button role="button" class="fw-bold sort no-border" data-sort="team-name">Team</button>
                         </th>
                         <th class="col-lg-1">
-                            <button role="button" class="fw-bold sort no-border" data-sort="members" title="Excluding common shared repos">Members</button>
+                            <button role="button" class="fw-bold sort no-border" data-sort="members" title="Team members in user management portal">Members</button>
                         </th>
                         <th class="col-lg-1">
                             <span class="fw-bold no-border">GitHub</span>
                         </th>
                         <th class="col-lg-1">
-                            <button role="button" class="fw-bold sort no-border" data-sort="last-active">Last Active</button>
+                            <button role="button" class="fw-bold sort no-border" data-sort="repo-count" title="Number of repos owned by the team">Repositories</button>
                         </th>
                         <th class="col-lg-1">
-                            <button role="button" class="fw-bold sort no-border" data-sort="repo-count" title="Excluding common shared repos">Repositories</button>
+                            <button role="button" class="fw-bold sort no-border" data-sort="last-active" title="Last activity on any repo owned by the team">Last Active</button>
                         </th>
                     </tr>
                 </thead>
@@ -82,11 +82,11 @@
                           <a id="github-icon"><img src="@routes.Assets.versioned("githubicon.svg")"/></a>
                       }
                     </td>
-                    <td class="last-active font-monospace" id="row@{i}_lastActive">
-                      @github.flatMap(_.lastActiveDate.map(_.asPattern(`yyyy-MM-dd`)))
-                    </td>
                     <td class="repo-count" id="row@{i}_repos">
                       @github.map(_.repos.length).getOrElse("")
+                    </td>
+                    <td class="last-active font-monospace" id="row@{i}_lastActive">
+                      @github.flatMap(_.lastActiveDate.map(_.asPattern(`yyyy-MM-dd`)))
                     </td>
                 </tr>
                 }
