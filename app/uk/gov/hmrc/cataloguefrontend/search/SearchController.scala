@@ -17,21 +17,28 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 import play.api.mvc.MessagesControllerComponents
+import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.search.SearchResults
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class SearchController @Inject()(
+class SearchController @Inject() (
+  override val mcc: MessagesControllerComponents,
   searchIndex: SearchIndex,
-  view       : SearchResults,
-  config     : SearchConfig,
-  cc         : MessagesControllerComponents
-) extends FrontendController(cc){
+  view: SearchResults,
+  config: SearchConfig,
+  override val auth: FrontendAuthComponents
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendController(mcc)
+  with CatalogueAuthBuilders {
 
-  def search(query: String, limit: Int) = Action { request =>
+  def search(query: String, limit: Int) = BasicAuthAction {
     val searchTerms =
       query.trim.split("\\s+") // query is space delimited
         .take(5)               // cap number of searchable terms at 5
