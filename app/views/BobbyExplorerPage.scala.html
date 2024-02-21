@@ -80,7 +80,7 @@
         @if(count == 0) {
             <span>0</span>
         } else {
-            <a href=@DependencyExplorerController.search(flag = env, scopes = Seq(DependencyScope.Compile), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
+            <a aria-label="dependency search" href=@DependencyExplorerController.search(flag = env, scopes = Seq(DependencyScope.Compile), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
             @{count}
             </a>
         }
@@ -93,7 +93,7 @@
     } else {
         @defining(UrlUtils.encodeQueryParam(s"rule-exemptions-${rule.id}")) { target =>
             <td>
-                <a data-bs-toggle="collapse" data-bs-target="#@target" href="#@target">
+                <a aria-label="exemptions" data-bs-toggle="collapse" data-bs-target="#@target" href="#@target">
                     @rule.exemptProjects.size Exemptions
                 </a>
                 <div id="@target" class="collapse">
@@ -111,7 +111,7 @@
 @bobbyRuleRow(inclViewSlugsLink: Boolean)(rule: BobbyRule) = {
             <tr id="rule-@rule.id" class="bobby-rule grid-row">
                 <td class="grid-item">
-                    <a  href="@appRoutes.BobbyExplorerController.list(selector = Some(rule.id))"  class="glyphicon glyphicon-link float-start" ></a>
+                    <a aria-label="list rule"  href="@appRoutes.BobbyExplorerController.list(selector = Some(rule.id))"  class="glyphicon glyphicon-link float-start" ></a>
                     @rule.group:@rule.artefact
                 </td>
         @defining(rule.range.rangeDescr) { rangeDescr =>
@@ -146,7 +146,7 @@
             <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest)</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA))</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.Production))</td>
-            <td><a id="see-trend-@rule.group-@rule.artefact-@rule.range" href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">
+            <td><a aria-label="see trend" id="see-trend-@rule.group-@rule.artefact-@rule.range" href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">
                 See trend</a></td>
         } else {
             <td></td>

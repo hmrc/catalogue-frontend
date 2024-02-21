@@ -39,7 +39,7 @@
 @standard_layout("Search Config", active = "explore") {
     <h1 class="page-heading mt-4">
         Search Config
-        <a class="float-end" role="button" data-bs-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+        <a aria-label="Shows information on how to use this page" class="float-end" role="button" data-bs-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
             <i class="glyphicon glyphicon-question-sign text-black"></i>
         </a>
     </h1>
@@ -86,6 +86,7 @@
                     field                 =  form("teamName"),
                     options               =  allTeams.map(t => t.name.asString -> t.name.asString),
                     Symbol("_default")    -> "All",
+                    Symbol("aria-label")  -> "Team",
                     Symbol("_label")      -> "Team",
                     Symbol("_labelClass") -> "form-label",
                     Symbol("id")          -> "team-filter",
@@ -132,6 +133,7 @@
                     field                 = form("serviceType"),
                     options               = ServiceType.values.toSeq.map(st => st.asString -> st.displayString),
                     Symbol("_default")    -> "All",
+                    Symbol("aria-label")  -> "Service Type",
                     Symbol("_label")      -> "Service Type",
                     Symbol("_labelClass") -> "form-label",
                     Symbol("class")       -> "form-select"
@@ -156,7 +158,7 @@
                                 <input class="form-control border-end-0 rounded-end-0" id="config-value" name="configValue" type="text" value='@form("configValue").value'>
                             </div>
                             <div class="col-xs-3 col-md-3 ps-0">
-                                <select class="form-select rounded-start-0" name="valueFilterType">
+                                <select aria-label="Filter TYpe" class="form-select rounded-start-0" name="valueFilterType">
                                     @for(x <- FormValueFilterType.values) {
                                         <option value="@x.asString" @if(form("valueFilterType").value.contains(x.asString)) {selected}>@x.displayString</option>
                                     }
@@ -185,7 +187,7 @@
         </div>
 
         @* Use a textarea to handle HTML encoding of values such as quotes *@
-        <textarea class="d-none" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
+        <textarea aria-label="Auto Complete Values" class="d-none" id="autocomplete-values-textarea">@allKeys.mkString("\n")</textarea>
     }
 
 
@@ -213,7 +215,7 @@
                         </tr>
                         @for((serviceName, configByEnv) <- configByService) {
                             <tr>
-                                <td><a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
+                                <td><a aria-label="Link to Service Page" href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a></td>
                                 @for(env <- form.get.showEnvironments) {
                                     <td id="@{env.asString}-td">@displayConfigSourceValue(serviceName, configKey, env, configByEnv.get(env))</td>
                                 }
@@ -225,7 +227,7 @@
                     @for((serviceName, configByKey) <- res) {
                         <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">
                             <td colspan="@(form.get.showEnvironments.size + 1)">
-                                Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
+                                Results for <a aria-label="Link to Service Page" href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
                             </td>
                         </tr>
                         @for((configKey, configByEnv) <- configByKey) {
@@ -285,6 +287,7 @@
     @result match {
         case None => {
             <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, false, Some(configKey) ).url"
+               aria-label="Not deployed in environment"
                data-bs-toggle="popover"
                data-bs-trigger="hover"
                data-bs-placement="bottom"
@@ -295,6 +298,7 @@
         }
         case Some(envData) => {
             <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, false, Some(configKey)).url"
+               aria-label="Environment data"
                data-bs-toggle="popover"
                data-bs-trigger="hover"
                data-bs-placement="bottom"
