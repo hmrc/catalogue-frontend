@@ -20,6 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
 @import views.html.partials.{TeamNamesPartial, form_global_errors}
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 @this(
   teamNamesPartial: TeamNamesPartial,
@@ -29,6 +30,7 @@
 @(form            : Form[_],
   teams           : Seq[TeamName],
   flags           : Seq[SlugInfoFlag],
+  repoTypes       : Seq[RepoType],
   scopes          : Seq[DependencyScope],
   groupArtefacts  : List[GroupArtefacts],
   versionRange    : BobbyVersionRange,
@@ -119,6 +121,17 @@
                         )
                     </div>
                     <div class="col-md-2">
+                    @helper.select(
+                        field                 =  form("repoType"),
+                        options               =  repoTypes.map(r => (r.asString, r.asString)),
+                        Symbol("_label")      -> "Repository Type",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("class")       -> "form-select",
+                        Symbol("size")        -> repoTypes.size,
+                        Symbol("multiple")    -> None
+                    )
+                    </div>
+                    <div class="col-md-2">
                         @helper.select(
                             field                 =  form("scope"),
                             options               =  scopes.map(s => (s.asString, s.displayString)),
@@ -156,6 +169,7 @@
                             <th rowspan="2" ><button class="sort no-border fw-bold" data-sort="service">Service</button></th>
                             <th rowspan="2" >Version</th>
                             <th rowspan="2" ><button class="sort no-border fw-bold" data-sort="teams">Team</button></th>
+                            <th rowspan="2" >Repository Type</th>
                             <th colspan="2" >
                                 <div class="text-center border-bottom">@{searchResults.head.depGroup}:@{searchResults.head.depArtefact}</div>
                                 <div class="row">
@@ -172,11 +186,12 @@
                     <tbody class="list">
                         @for(result <- searchResults) {
                             <tr>
-                                <td class="service"><a id="link-to-info-page-for-@{result.slugName}"href="@appRoutes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
-                                <td>@result.slugVersion</td>
+                                <td class="service"><a id="link-to-info-page-for-@{result.repoName}"href="@appRoutes.CatalogueController.service(result.repoName)">@result.repoName</a></td>
+                                <td>@result.repoVersion</td>
                                 <td class="teams">
-                                    @teamNamesPartial(result.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(result.slugName)}#owning-team")
+                                    @teamNamesPartial(result.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(result.repoName)}#owning-team")
                                 </td>
+                                <td>@result.repoType</td>
                                 <td class="dep-version">@result.depVersion</td>
                                 <td>@result.scopes.map(_.displayString).mkString(", ")</td>
                             </tr>

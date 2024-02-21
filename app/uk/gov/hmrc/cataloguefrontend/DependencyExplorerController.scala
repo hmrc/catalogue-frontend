@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.apache.pekko.stream.scaladsl.Source
-import org.apache.pekko.util.ByteString
 import cats.data.EitherT
 import cats.implicits._
-import javax.inject.{Inject, Singleton}
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.util.ByteString
 import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName}
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
@@ -35,6 +34,7 @@ import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependencyExplorerPage
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -65,34 +65,37 @@ class DependencyExplorerController @Inject() (
                                scope        = List(DependencyScope.Compile.asString),
                                group        = "",
                                artefact     = "",
-                               versionRange = ""
+                               versionRange = "",
+                               repoType     = List(Service.toString)
                              )
                            ),
           teams          = teams,
           flags          = SlugInfoFlag.values,
           scopes         = DependencyScope.values,
           groupArtefacts = groupArtefacts,
-          versionRange   = BobbyVersionRange(None, None, None, ""),
-          searchResults  = None,
-          pieData        = None
+          versionRange = BobbyVersionRange(None, None, None, ""),
+          searchResults = None,
+          pieData = None,
+          repoTypes = RepoType.values
         )
       )
     }
 
   def search(
-    team        : String = "",
-    flag        : String,
-    `scope[]`   : Seq[String],
-    group       : String,
-    artefact    : String,
+    team: String = "",
+    flag: String,
+    `scope[]`: Seq[String],
+    group: String,
+    artefact: String,
     versionRange: String,
-    asCsv       : Boolean,
+    asCsv: Boolean
   ) =
-    BasicAuthAction.async ( implicit request =>
+    BasicAuthAction.async(implicit request =>
       for {
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
         scopes         =  DependencyScope.values
+        repoTypes      =  RepoType.values
         groupArtefacts <- dependenciesService.getGroupArtefacts
         res <- {
           def pageWithError(msg: String) =
@@ -100,11 +103,12 @@ class DependencyExplorerController @Inject() (
               form().bindFromRequest().withGlobalError(msg),
               teams,
               flags,
+              repoTypes,
               scopes,
               groupArtefacts,
-              versionRange  = BobbyVersionRange(None, None, None, ""),
+              versionRange = BobbyVersionRange(None, None, None, ""),
               searchResults = None,
-              pieData       = None
+              pieData = None
             )
           form()
             .bindFromRequest()
@@ -112,7 +116,7 @@ class DependencyExplorerController @Inject() (
               hasErrors = formWithErrors =>
                 Future.successful(
                   BadRequest(
-                    page(formWithErrors, teams, flags, scopes, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)
+                    page(formWithErrors, teams, flags, repoTypes, scopes, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)
                   )
                 ),
               success = query =>
@@ -124,9 +128,13 @@ class DependencyExplorerController @Inject() (
                                     EitherT.fromEither[Future](DependencyScope.parse(s))
                                       .leftMap(msg => BadRequest(pageWithError(msg)))
                                   }
+                  repoType     <- query.repoType.traverse { s =>
+                                    EitherT.fromEither[Future](RepoType.parse(s))
+                                      .leftMap(msg => BadRequest(pageWithError(msg)))
+                                  }
                   results      <- EitherT.right[Result] {
                                     dependenciesService
-                                      .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
+                                      .getServicesWithDependency(team, flag, repoType, query.group, query.artefact, versionRange, scope)
                                   }
                   pieData      = if (results.nonEmpty)
                                    Some(
@@ -144,7 +152,7 @@ class DependencyExplorerController @Inject() (
                     val source = Source.single(ByteString(csv, "UTF-8"))
                     Result(
                       header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
-                      body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+                      body = HttpEntity.Streamed(source, None, Some("text/csv"))
                     )
                   } else
                     Ok(
@@ -152,6 +160,7 @@ class DependencyExplorerController @Inject() (
                         form().bindFromRequest(),
                         teams,
                         flags,
+                        repoTypes,
                         scopes,
                         groupArtefacts,
                         versionRange,
@@ -168,6 +177,7 @@ class DependencyExplorerController @Inject() (
   case class SearchForm(
     team        : String,
     flag        : String,
+    repoType    : List[String],
     scope       : List[String],
     group       : String,
     artefact    : String,
@@ -181,6 +191,7 @@ class DependencyExplorerController @Inject() (
       Forms.mapping(
         "team"         -> Forms.default(Forms.text, ""),
         "flag"         -> Forms.text.verifying(notEmpty),
+        "repoType"     -> Forms.list(Forms.text).verifying(notEmptySeq),
         "scope"        -> Forms.list(Forms.text).verifying(notEmptySeq),
         "group"        -> Forms.text.verifying(notEmpty),
         "artefact"     -> Forms.text.verifying(notEmpty),
@@ -200,8 +211,8 @@ object DependencyExplorerController {
   def toRows(seq: Seq[ServiceWithDependency]): Seq[Seq[(String, String)]] =
     seq.flatMap { serviceWithDependency =>
       val xs = Seq(
-        "slugName"    -> serviceWithDependency.slugName,
-        "slugVersion" -> serviceWithDependency.slugVersion.toString,
+        "slugName"    -> serviceWithDependency.repoName,
+        "slugVersion" -> serviceWithDependency.repoVersion.toString,
         "team"        -> "",
         "depGroup"    -> serviceWithDependency.depGroup,
         "depArtefact" -> serviceWithDependency.depArtefact,

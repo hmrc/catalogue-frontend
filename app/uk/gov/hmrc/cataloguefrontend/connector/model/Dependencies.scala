@@ -21,6 +21,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.data.format.Formatter
 import play.api.data.FormError
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 sealed trait VersionState
 object VersionState {
@@ -346,9 +347,10 @@ object Version {
 }
 
 case class ServiceWithDependency(
-  slugName          : String,
-  slugVersion       : Version,
+  repoName          : String,
+  repoVersion       : Version,
   teams             : List[TeamName],
+  repoType          : RepoType,
   depGroup          : String,
   depArtefact       : String,
   depVersion        : Version,
@@ -362,12 +364,14 @@ object ServiceWithDependency {
     implicit val tnf = TeamName.format
     implicit val vf  = Version.format
     implicit val dsf = DependencyScope.format
-    ( (__ \ "slugName"   ).read[String]
-    ~ (__ \ "slugVersion").read[Version]
+    implicit val rTf = RepoType.format
+    ( (__ \ "repoName"   ).read[String]
+    ~ (__ \ "repoVersion").read[Version]
     ~ (__ \ "teams"      ).read[List[TeamName]]
-    ~ (__ \ "depGroup"   ).read[String]
-    ~ (__ \ "depArtefact").read[String]
-    ~ (__ \ "depVersion" ).read[Version]
+    ~ (__ \ "repoType"   ).read[RepoType]
+    ~ (__ \ "group"   ).read[String]
+    ~ (__ \ "artefact").read[String]
+    ~ (__ \ "artefactVersion" ).read[Version]
     ~ (__ \ "scopes").read[Set[DependencyScope]]
     )(ServiceWithDependency.apply _)
   }
