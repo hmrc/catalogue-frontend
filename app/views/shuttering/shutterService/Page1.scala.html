@@ -65,6 +65,7 @@
                                                          case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
                                                        }
                             , Symbol("_label")      -> "Status"
+                            , Symbol("aria-label")  -> "Status"
                             , Symbol("_labelClass") -> "form-label"
                             , Symbol("class")       -> "form-select"
                         )
@@ -97,11 +98,12 @@
                             <div class="row">
                                 <div class="col d-flex justify-content-center">
                                     @select(
-                                          field              =  form("shutterGroup")
-                                        , options            =  Seq("" -> "Add from Group") ++ shutterGroups.map(s => (s.name, s.name))
-                                        , Symbol("_label")   -> ""
-                                        , Symbol("id")       -> "shutter-group"
-                                        , Symbol("class")    -> "form-select"
+                                          field                =  form("shutterGroup")
+                                        , options              =  Seq("" -> "Add from Group") ++ shutterGroups.map(s => (s.name, s.name))
+                                        , Symbol("_label")     -> ""
+                                        , Symbol("aria-label") -> "Shutter Group"
+                                        , Symbol("id")         -> "shutter-group"
+                                        , Symbol("class")      -> "form-select"
                                     )
                                 </div>
                             </div>

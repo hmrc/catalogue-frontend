@@ -66,13 +66,13 @@
             </ul>
             <div class="tab-content mb-4">
                 <div class="tab-pane active d-flex justify-content-between align-items-center" role="tabpanel">
-                    <select class="form-select" id="profile_name" name="profile_name" style="width: 200px">
+                    <select aria-label="Profile Name" class="form-select" id="profile_name" name="profile_name" style="width: 200px">
                         @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
                             @options.map(selectOption(form("profile_name").value))
                         }
                     </select>
 
-                    <select class="form-select" id="view_mode" name="view_mode" style="width: 200px">
+                    <select aria-label="View Mode" class="form-select" id="view_mode" name="view_mode" style="width: 200px">
                         <option @if(viewMode == ViewMode.Versions) {selected="selected"} value="versions">Versions</option>
                         <option @if(viewMode == ViewMode.Instances){selected="selected"} value="instances">Instances</option>
                     </select>
