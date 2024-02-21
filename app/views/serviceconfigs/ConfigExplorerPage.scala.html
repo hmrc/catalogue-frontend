@@ -39,7 +39,7 @@
     env == ServiceConfigsService.ConfigEnvironment.Local || findDeployment(env).isDefined
 }
 
-<html>
+<html lang="en">
     <head>
         <title>Config - @serviceName</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -91,11 +91,11 @@
 
                     <div id="config-row-@key.asString" class="grid-row @if(envSources.forall(_._2.map(_._1).forall(_.isReferenceConf))) {refconf-only}">
                         <div id="config-key-@key.asString" class="grid-item sticky-column truncate-content" style="width:310px;">
-                            <a id="config-url-@key.asString" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings, selector = Some(key))" class="glyphicon glyphicon-link float-start"></a>
+                            <a aria-label="config for @key.asString" id="config-url-@key.asString" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings, selector = Some(key))" class="glyphicon glyphicon-link float-start"></a>
                             <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@key.asString'>
                                 @key.asString
                             </span>
-                            <a href="@{serviceConfigsRoutes.ServiceConfigsController.searchResults(Some(key.asString)).url}" class="glyphicon glyphicon-search pull-right"></a>
+                            <a aria-label="search for @key.asString" href="@{serviceConfigsRoutes.ServiceConfigsController.searchResults(Some(key.asString)).url}" class="glyphicon glyphicon-search pull-right"></a>
                         </div>
                         @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
                             <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
@@ -123,7 +123,7 @@
                                             }
                                         }
                                         @sourceValue.sourceUrl.map { url =>
-                                            <a class="glyphicon glyphicon-circle-arrow-right" target="raw" href="@url"></a>
+                                            <a aria-label="source link" class="glyphicon glyphicon-circle-arrow-right" target="raw" href="@url"></a>
                                         }
                                     </li>
                                     }
@@ -177,7 +177,7 @@
         <aside id="help">
             <h5>What am I seeing?</h5>
             <ul>
-                <li>Configuration is composed from multiple sources in a hierarchy of precedence. This table shows the end result and hierarchical eviction for each configuration key and for each environment. See <a id="link-to-confluence" href="https://confluence.tools.tax.service.gov.uk/display/DTRG/Service+configuration+explained" target="_blank">Confluence</a> for more details on how configuration is composed.</li>
+                <li>Configuration is composed from multiple sources in a hierarchy of precedence. This table shows the end result and hierarchical eviction for each configuration key and for each environment. See <a aria-label="link to confluence" id="link-to-confluence" href="https://confluence.tools.tax.service.gov.uk/display/DTRG/Service+configuration+explained" target="_blank">Confluence</a> for more details on how configuration is composed.</li>
                 <li>Crossed out values indicate an eviction according to their precendence in the config hierarchy</li>
                 <li>Amber values show what the value will change to when redeployed</li>
                 <li>The Microservice <code>reference.conf</code> files and <code>application.conf</code> config are extracted from the build of the deployed slug. The version of the slug is shown under the environment.</li>

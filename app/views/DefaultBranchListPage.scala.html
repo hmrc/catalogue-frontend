@@ -124,7 +124,7 @@
             @repositories.zipWithIndex.map{case (repo, i) =>
             <tr id="row@i">
                 <td class="service-name" id="row@{i}_name">
-                    <a class="repo-name" id="link-to-@{repo.name}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+                    <a aria-label="Link to @{repo.name}" class="repo-name" id="link-to-@{repo.name}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
                 </td>
                 <td class="teams" id="row@{i}_teamNames">
                   @teamNamesPartial(repo.owningTeams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#owning-team")
