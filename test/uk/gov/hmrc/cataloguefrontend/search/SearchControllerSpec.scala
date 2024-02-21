@@ -25,9 +25,11 @@ import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
+import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import views.html.search.SearchResults
+
+import scala.concurrent.ExecutionContext
 
 
 class SearchControllerSpec
@@ -38,6 +40,8 @@ class SearchControllerSpec
      with OptionValues
      with ScalaFutures
      with IntegrationPatience {
+
+
 
   "Search controller" should {
     "limit results" in new Setup {
@@ -70,12 +74,13 @@ class SearchControllerSpec
   }
 
   private trait Setup {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+    implicit val ec: ExecutionContext = ExecutionContext.global
 
-    val mcc             = app.injector.instanceOf[MessagesControllerComponents]
-    val view            = app.injector.instanceOf[SearchResults]
-    val config          = app.injector.instanceOf[SearchConfig]
-    val mockSearchIndex = mock[SearchIndex]
-    val controller      = new SearchController(mockSearchIndex, view, config, mcc)
+    val mcc                = app.injector.instanceOf[MessagesControllerComponents]
+    val view               = app.injector.instanceOf[SearchResults]
+    val config             = app.injector.instanceOf[SearchConfig]
+    val mockAuthComponents = mock[FrontendAuthComponents]
+    val mockSearchIndex    = mock[SearchIndex]
+    val controller         = new SearchController(mcc, mockSearchIndex, view, config, mockAuthComponents)
   }
 }

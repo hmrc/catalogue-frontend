@@ -15,8 +15,8 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Team}
-@import views.html.helper.{select, checkbox}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, GitHubTeam}
+@import views.html.helper.select
 @import views.html.partials.RepoSearchResultsPage
 @import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => repoRoutes}
 
@@ -26,7 +26,7 @@
 )
 
 @(repositories: Seq[GitRepository],
-  teams       : Seq[Team],
+  teams       : Seq[GitHubTeam],
   form        : Form[_]
 )(implicit
   messages: Messages,
@@ -103,18 +103,12 @@
                     Symbol("class")       -> "form-select"
                 )
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                  <div class="d-flex align-items-center">
-                    @checkbox(
-                      field                 = form("showArchived"),
-                      Symbol("_default")    -> Option(false),
-                      Symbol("_label")      -> "",
-                      Symbol("_labelClass") -> "showArchived",
-                      Symbol("id")          -> "show-archived",
-                      Symbol("class")       -> "form-check-input"
-                    )
-                    <label class="ms-1">Include Archived</label>
-                  </div>
+                <div class="col-md-2 col-form-label" style="margin-top: 35px;">
+                    <div class="form-check form-switch">
+                        <input aria-label="Show Archived" class="form-check-input" name="showArchived" type="checkbox" role="switch" id="show-archived" checkedvalue=true @if(form("showArchived").value.contains("true")) {checked}>
+                        <label class="form-check-label" for="github-only">Include Archived</label>
+                    </div>
+
                 </div>
             </div>
         </form>

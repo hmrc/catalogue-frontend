@@ -43,6 +43,24 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
             """
           ))
       )
+      serviceEndpoint(
+        GET,
+        "/user-management/teams",
+        willRespondWith = (
+          200,
+          Some(
+            s"""
+                [
+                  {
+                    "members": [],
+                    "teamName":"teamA",
+                    "description": "team a",
+                    "documentation": "stuff"
+                  }
+                ]
+            """
+          ))
+      )
 
       val response = wsClient.url(s"http://localhost:$port/teams").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200

@@ -16,15 +16,15 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{SBTUsageByEnv, SBTVersion}
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(viewMessages: ViewMessages)
 
 @(envdata     : List[SBTUsageByEnv],
   sbts        : List[SBTVersion],
-  teams       : Seq[Team],
-  selectedTeam: Option[Team]
+  teams       : Seq[GitHubTeam],
+  selectedTeam: Option[GitHubTeam]
 )(implicit
   request     : RequestHeader
 )

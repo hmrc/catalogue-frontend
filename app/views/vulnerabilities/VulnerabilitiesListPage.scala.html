@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.Team
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitySummary}
 @import views.html.helper.select
 @import views.html.vulnerabilities.VulnerabilityDetails
@@ -24,7 +24,7 @@
 @this(viewMessages: ViewMessages)
 
 @(maybeSummaries: Option[Seq[VulnerabilitySummary]],
-  teams    : Seq[Team],
+  teams    : Seq[GitHubTeam],
   form     : Form[_]
 )(implicit
   messages : Messages,
@@ -107,24 +107,31 @@
             @if(summaries.isEmpty) {
                 No vulnerabilities found matching the search criteria.
             } else {
-                <table class="table table-striped sticky-header text-break">
+                <table class="table table-striped sticky-header text-break" role="treegrid">
                     <thead>
                         <tr>
-                            <th></th>
-                            <th class="col-2"><button class="sort no-border fw-bold" data-sort="vuln-id">Vulnerability ID</button></th>
-                            <th class="col-2">Vulnerable Component</th>
-                            <th class="col-3">Assessment</th>
-                            <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="curation-status">Curation Status</button></th>
-                            <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="score">Score</button></th>
-                            <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="services">Services</button></th>
-                            <th class="col-1 text-center"><button class="sort no-border fw-bold" data-sort="first-detected">First Detected</button></th>
-                            @* maintain the column count for accessibility *@
-                            <th class="d-none"></th>
-                            <th class="d-none"></th>
-                            <th class="d-none"></th>
-                            <th class="d-none"></th>
-                            <th class="d-none"></th>
-                            <th class="d-none"></th>
+                            @defining("Hidden Text") { hiddenText =>
+                                <th><span class="visually-hidden">@hiddenText</span></th>
+                                <th class="col-2"><button class="sort no-border fw-bold" data-sort="vuln-id">
+                                    Vulnerability ID</button></th>
+                                <th class="col-2">Vulnerable Component</th>
+                                <th class="col-3">Assessment</th>
+                                <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="curation-status">
+                                    Curation Status</button></th>
+                                <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="score">
+                                    Score</button></th>
+                                <th class="col-1 text-right"><button class="sort no-border fw-bold" data-sort="services">
+                                    Services</button></th>
+                                <th class="col-1 text-center"><button class="sort no-border fw-bold" data-sort="first-detected">
+                                    First Detected</button></th>
+                                @* maintain the column count for accessibility *@
+                                <th><span class="visually-hidden">@hiddenText</span></th>
+                                <th><span class="visually-hidden">@hiddenText</span></th>
+                                <th><span class="visually-hidden">@hiddenText</span></th>
+                                <th><span class="visually-hidden">@hiddenText</span></th>
+                                <th><span class="visually-hidden">@hiddenText</span></th>
+                                <th><span class="visually-hidden">@hiddenText</span></th>
+                            }
                         </tr>
                     </thead>
                     <tbody class="list">

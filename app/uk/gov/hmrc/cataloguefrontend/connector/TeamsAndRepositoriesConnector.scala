@@ -302,14 +302,17 @@ object BranchProtection {
     )(apply, unlift(unapply))
 }
 
-case class Team(
+case class GitHubTeam(
   name           : TeamName,
   lastActiveDate : Option[Instant],
   repos          : Seq[String]
-)
+) {
+  val githubUrl =
+    s"https://github.com/orgs/hmrc/teams/${name.asString.toLowerCase.replace(" ", "-")}"
+}
 
-object Team {
-  val format: OFormat[Team] = {
+object GitHubTeam {
+  val format: OFormat[GitHubTeam] = {
     implicit val tnf = TeamName.format
     ( (__ \ "name"          ).format[TeamName]
     ~ (__ \ "lastActiveDate").formatNullable[Instant]
@@ -331,7 +334,7 @@ class TeamsAndRepositoriesConnector @Inject()(
   private val teamsAndServicesBaseUrl: String =
     servicesConfig.baseUrl("teams-and-repositories")
 
-  private implicit val tf  : Format[Team]          = Team.format
+  private implicit val tf  : Format[GitHubTeam]    = GitHubTeam.format
   private implicit val ghrf: Format[GitRepository] = GitRepository.apiFormat // v2 model
 
   def lookupLatestJenkinsJobs(service: String)(implicit hc: HeaderCarrier): Future[Seq[JenkinsJob]] = {
@@ -376,10 +379,10 @@ class TeamsAndRepositoriesConnector @Inject()(
       }
   }
 
-  def allTeams()(implicit hc: HeaderCarrier): Future[Seq[Team]] =
+  def allTeams()(implicit hc: HeaderCarrier): Future[Seq[GitHubTeam]] =
     httpClientV2
       .get(url"$teamsAndServicesBaseUrl/api/v2/teams")
-      .execute[Seq[Team]]
+      .execute[Seq[GitHubTeam]]
 
   def repositoriesForTeam(teamName: TeamName, includeArchived: Option[Boolean] = None)(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] = {
     val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?owningTeam=${teamName.asString}&archived=$includeArchived"
