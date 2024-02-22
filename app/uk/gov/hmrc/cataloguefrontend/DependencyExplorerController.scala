@@ -20,7 +20,9 @@ import cats.data.EitherT
 import cats.implicits._
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
-import play.api.data.{Form, Forms}
+import play.api.data.format.Formatter
+import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
+import play.api.data.{Form, FormError, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -113,12 +115,13 @@ class DependencyExplorerController @Inject() (
           form()
             .bindFromRequest()
             .fold(
-              hasErrors = formWithErrors =>
+              hasErrors = formWithErrors => {
                 Future.successful(
                   BadRequest(
                     page(formWithErrors, teams, flags, repoTypes, scopes, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)
                   )
-                ),
+                )
+              },
               success = query =>
                 (for {
                   versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
@@ -154,7 +157,7 @@ class DependencyExplorerController @Inject() (
                       header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
                       body = HttpEntity.Streamed(source, None, Some("text/csv"))
                     )
-                  } else
+                  } else {
                     Ok(
                       page(
                         form().bindFromRequest(),
@@ -167,7 +170,8 @@ class DependencyExplorerController @Inject() (
                         Some(results),
                         pieData
                       )
-                    )).merge
+                    )
+                  }).merge
             )
         }
       } yield res
@@ -185,7 +189,7 @@ class DependencyExplorerController @Inject() (
     asCsv       : Boolean = false
   )
 
-  def form() = {
+  def form(): Form[SearchForm] = {
     import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
     Form(
       Forms.mapping(
@@ -197,9 +201,19 @@ class DependencyExplorerController @Inject() (
         "artefact"     -> Forms.text.verifying(notEmpty),
         "versionRange" -> Forms.default(Forms.text, ""),
         "asCsv"        -> Forms.boolean
-      )(SearchForm.apply)(SearchForm.unapply)
+      )(SearchForm.apply)(SearchForm.unapply).verifying(flagConstraint)
     )
   }
+
+  val flagConstraint: Constraint[SearchForm] = Constraint("")({
+    form => {
+      if (form.flag != SlugInfoFlag.Latest.asString && form.repoType != List(Service.asString)) {
+        Invalid(Seq(ValidationError(s"Cannot search environments for repositories of type ${RepoType.values.filterNot(_ == Service).map(_.asString.toLowerCase).mkString(", ")}. Change flag to 'Latest' or remove the invalid repositories from the repository type selector.")))
+      } else {
+        Valid
+      }
+    }
+  })
 }
 
 object DependencyExplorerController {

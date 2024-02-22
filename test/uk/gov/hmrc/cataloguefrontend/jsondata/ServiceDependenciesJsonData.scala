@@ -34,21 +34,23 @@ object ServiceDependenciesJsonData {
 
   val serviceDepsForBootstrapBackendPlay: String =
     """[
-      { "slugName"   : "service-dependencies",
-        "slugVersion": "0.12.0",
+      { "repoName"   : "service-dependencies",
+        "repoVersion": "0.12.0",
         "teams"      : ["teamA"],
-        "depGroup"   : "uk.gov.hmrc",
-        "depArtefact": "bootstrap-frontend-play-28",
-        "depVersion" : "1.7.25",
-        "scopes"     : ["compile"]
+        "group"   : "uk.gov.hmrc",
+        "artefact": "bootstrap-frontend-play-28",
+        "artefactVersion" : "1.7.25",
+        "scopes"     : ["compile"],
+        "repoType"   : "Service"
       },
-      { "slugName"   : "teams-amd-repositories",
-        "slugVersion": "0.30.0",
+      { "repoName"   : "teams-amd-repositories",
+        "repoVersion": "0.30.0",
         "teams"      : ["teamA", "teamB", "teamC", "teamD", "teamE", "teamF", "teamG", "teamH", "teamI"],
-        "depGroup"   : "uk.gov.hmrc",
-        "depArtefact": "bootstrap-frontend-play-28",
-        "depVersion" : "1.7.22",
-        "scopes"     : ["compile"]
+        "group"   : "uk.gov.hmrc",
+        "artefact": "bootstrap-frontend-play-28",
+        "artefactVersion" : "1.7.22",
+        "scopes"     : ["compile"],
+        "repoType"   : "Service"
       }
     ]"""
 }

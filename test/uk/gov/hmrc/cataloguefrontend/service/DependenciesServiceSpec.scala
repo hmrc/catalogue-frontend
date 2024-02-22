@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import org.mockito.MockitoSugar
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
@@ -38,35 +39,38 @@ class SlugInfoServiceSpec
 
   val v100 =
     ServiceWithDependency(
-      slugName           = "service1",
-      slugVersion        = Version("v1"),
+      repoName           = "service1",
+      repoVersion        = Version("v1"),
       teams              = List(TeamName("T1")),
       depGroup           = group,
       depArtefact        = artefact,
       depVersion         = Version("1.0.0"),
-      scopes             = Set(DependencyScope.Compile)
+      scopes             = Set(DependencyScope.Compile),
+      repoType           = Service
     )
 
   val v200 =
     ServiceWithDependency(
-      slugName           = "service1",
-      slugVersion        = Version("v1"),
+      repoName           = "service1",
+      repoVersion        = Version("v1"),
       teams              = List(TeamName("T1"), TeamName("T2")),
       depGroup           = group,
       depArtefact        = artefact,
       depVersion         = Version("2.0.0"),
-      scopes             = Set(DependencyScope.Compile)
+      scopes             = Set(DependencyScope.Compile),
+      repoType           = Service
     )
 
   val v205 =
     ServiceWithDependency(
-      slugName           = "service1",
-      slugVersion        = Version("v1"),
+      repoName           = "service1",
+      repoVersion        = Version("v1"),
       teams              = List(TeamName("T2")),
       depGroup           = group,
       depArtefact        = artefact,
       depVersion         = Version("2.0.5"),
-      scopes             = Set(DependencyScope.Compile)
+      scopes             = Set(DependencyScope.Compile),
+      repoType           = Service
     )
 
   val scopes = List(DependencyScope.Compile)
@@ -76,11 +80,11 @@ class SlugInfoServiceSpec
 
       val boot = Boot.init
 
-      when(boot.mockedServiceDependenciesConnector.getServicesWithDependency(SlugInfoFlag.Latest, group, artefact, versionRange, scopes))
+      when(boot.mockedServiceDependenciesConnector.getDependenciesFromMetaData(SlugInfoFlag.Latest, group, artefact, List(Service), versionRange, scopes))
         .thenReturn(Future.successful(Seq(v100, v200, v205)))
 
-      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, group, artefact, versionRange, scopes).futureValue shouldBe Seq(v200, v100)
-      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, group, artefact, versionRange, scopes).futureValue shouldBe Seq(v205, v200)
+      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, List(Service), group, artefact, versionRange, scopes).futureValue shouldBe Seq(v200, v100)
+      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, List(Service), group, artefact, versionRange, scopes).futureValue shouldBe Seq(v205, v200)
     }
   }
 
