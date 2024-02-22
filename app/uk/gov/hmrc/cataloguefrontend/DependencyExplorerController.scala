@@ -87,6 +87,7 @@ class DependencyExplorerController @Inject() (
     team: String = "",
     flag: String,
     `scope[]`: Seq[String],
+    `repoType[]`: Seq[String],
     group: String,
     artefact: String,
     versionRange: String,
