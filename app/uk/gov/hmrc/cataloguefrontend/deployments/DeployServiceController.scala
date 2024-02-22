@@ -169,7 +169,7 @@ class DeployServiceController @Inject()(
         slugToDeploy         <- EitherT
                                   .fromOptionF(
                                     serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
-                                    , BadRequest(deployServicePage(form.withGlobalError("Version not found"), hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
+                                  , BadRequest(deployServicePage(form.withGlobalError("Version not found. If this is a recent build, it may take a few minutes to be picked up"), hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
                                   )
         confNew              <- EitherT
                                   .right[Result](serviceConfigsService.configByKeyWithNextDeployment(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
