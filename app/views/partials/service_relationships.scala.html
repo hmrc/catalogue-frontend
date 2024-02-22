@@ -22,15 +22,15 @@
     serviceRelationships.size > 3
 }
     <div id="service_relationships" class="card">
-        <div class="card-header"><h4 class="mb-0">
+        <div class="card-header"><div class="h4 mb-0">
             Service Relationships
-        </h4>
+        </div>
         </div>
         <div class="content-grow @if(hasTooManyRelationships){ content-grow-gradient }">
             <div class="card-body content-grow-wrapper">
                 <div class="row gy-3">
                     <div class="col-6">
-                        <h4 class="board__sub-heading">Inbound Services:</h4>
+                        <div class="h4 board__sub-heading">Inbound Services:</div>
                         @if(serviceRelationships.inboundServices.isEmpty) {
                             <p>No services are <abbr title="Derived from application.conf">configured</abbr> to call this service</p>
                         } else {
@@ -38,7 +38,7 @@
                         }
                     </div>
                     <div class="col-6">
-                        <h4 class="board__sub-heading">Outbound Services:</h4>
+                        <div class="h4 board__sub-heading">Outbound Services:</div>
                         @if(serviceRelationships.outboundServices.isEmpty) {
                             <p>This service is not <abbr title="Derived from application.conf">configured</abbr> to make calls to any other services</p>
                         } else {
