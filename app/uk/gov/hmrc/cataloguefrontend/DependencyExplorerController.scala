@@ -208,7 +208,7 @@ class DependencyExplorerController @Inject() (
   val flagConstraint: Constraint[SearchForm] = Constraint("")({
     form => {
       if (form.flag != SlugInfoFlag.Latest.asString && form.repoType != List(Service.asString)) {
-        Invalid(Seq(ValidationError(s"Cannot search environments for repositories of type ${RepoType.values.filterNot(_ == Service).map(_.asString.toLowerCase).mkString(", ")}. Change flag to 'Latest' or remove the invalid repositories from the repository type selector.")))
+        Invalid(Seq(ValidationError(s"Flag Integration is only applicable to Service")))
       } else {
         Valid
       }
