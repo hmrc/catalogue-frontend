@@ -50,7 +50,7 @@
                 }-pane" type="button" role="tab" aria-controls="@slugInfoFlag.asString-pane" >
                     <span>
                         <span>
-                            <h5 id="environment-name" class="mb-0">@slugInfoFlag.displayString</h5>
+                            <div id="environment-name" class="h5 mb-0">@slugInfoFlag.displayString</div>
                             @renderVersion(optEnvData.map(_.version))
                         </span>
                         <span>
@@ -76,7 +76,7 @@
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
           <div id="@{slugInfoFlag.asString}-telemetry" class="card mb-3">
             <div class="card-header">
-                <h3 class="mb-0">Telemetry</h3>
+                <div class="h4 mb-0">Telemetry</div>
             </div>
             <div class="card-body container">
                 <ul class="list-unstyled mb-0 row row-cols-4">

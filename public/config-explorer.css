@@ -17,6 +17,11 @@ h5 {
   font-size: 1.5em;
 }
 
+.cfgH5 {
+  color: #008770;
+  font-size: 1.5em;
+}
+
 header {
   position: fixed;
   margin: 0px;

@@ -86,7 +86,7 @@
                     @environments.map { env =>
                         <th class="wrw-environment-head">@env.displayString</th>
                     }
-                    <th></th>
+                    <th class="d-none visually-hidden">-</th>
                 } else {
                     @environments.map { env =>
                         <th class="wrw-environment-head"><button role="button" class="sort no-border fw-bold" data-sort="@env.asString">@env.displayString</button></th>
