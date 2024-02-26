@@ -21,24 +21,21 @@
 @import views.html.helper.select
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 
-@import java.text.NumberFormat
-
 @this(viewMessages: ViewMessages)
 
 @(
-        serviceNameAndConfigs: Map[String, Seq[DeploymentConfig]],
-        teams: Seq[GitHubTeam],
-        form: Form[_],
-        costEstimateConfig: CostEstimateConfig
-)(implicit messages: Messages, request: RequestHeader)
+  serviceNameAndConfigs: Map[String, Seq[DeploymentConfig]]
+, teams                : Seq[GitHubTeam]
+, form                 : Form[_]
+, costEstimateConfig   : CostEstimateConfig
+)(implicit messages    : Messages, request: RequestHeader)
 
 @implicitField = @{
     helper.FieldConstructor(helper.catalogueFieldConstructor.f)
 }
 
 @formatToCurrency(value: Double) = @{
-    val formatter: NumberFormat = java.text.NumberFormat.getIntegerInstance
-    formatter.format(value)
+    java.text.NumberFormat.getIntegerInstance.format(value)
 }
 
 @standard_layout("Estimated Cost Explorer", active = "explore") {
@@ -95,7 +92,7 @@
                     </tr>
                 </thead>
                 <tbody class="list" id="matches">
-                @serviceNameAndConfigs.zipWithIndex.map { case ((serviceName, configs), index) =>
+                @serviceNameAndConfigs.toSeq.sortBy(_._1).zipWithIndex.map { case ((serviceName, configs), index) =>
                 <tr>
                     <td class="repo-name" id="row@{
                         index
@@ -118,8 +115,6 @@
             <p>No frontend or backend services found for this team.</p>
         }
     </div>
-
-
 }
     <!-- listjs configuration -->
 <script @CSPNonce.attr>
