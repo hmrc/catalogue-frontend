@@ -143,6 +143,6 @@ object LifecycleStatus {
     }
 
   def canDecommission(lifecycleStatus: LifecycleStatus): Boolean =
-    uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDecommissionButton.isEnabled && (lifecycleStatus == Archived || lifecycleStatus == DecommissionInProgress)
+    lifecycleStatus == Archived || (uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDecommissionButton.isEnabled && lifecycleStatus == DecommissionInProgress)
 
 }
