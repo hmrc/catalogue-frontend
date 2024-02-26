@@ -89,10 +89,15 @@
 
     </head>
     <body>
-        <div class="collapse bg-black" id="navbarToggleExternalContent">
-            <div class="bg-dark">
-                <h4 class="text-white">Collapsed content</h4>
-                <span class="text-muted">Toggleable via the navbar brand.</span>
+        <div class="collapse" id="navbarToggleExternalContent">
+            <div class="bg-black pt-2">
+                <div class="container">
+                    <select class="form-select-sm" style="width: 140px" id="logType" name="logType" >
+                        <option selected="selected" value="recent">My Recent</option>
+                        <option value="My Teams Recent" value="myTeamsRecent">My Teams Recent</option>
+                        <option value="Popular" value="Popular">Popular</option>
+                    </select>
+                </div>
             </div>
         </div>
         <nav class="navbar navbar-expand-md navbar-dark bg-black">
@@ -100,7 +105,7 @@
                 <a href="/" class="navbar-brand">
                     MDTP
                 </a>
-                <ul id="main-menu-bar" class="navbar-nav me-auto mb-2 mb-lg-0">
+                <ul id="main-menu-bar" class="navbar-nav me-auto mb-lg-0">
                     <li class="nav-item pt-1" >
                         <button class="btn btn-dark btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
                             <span class="navbar-toggler-icon"></span>
