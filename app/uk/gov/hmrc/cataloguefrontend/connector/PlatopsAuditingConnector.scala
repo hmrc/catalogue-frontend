@@ -56,7 +56,7 @@ class PlatopsAuditingConnector @Inject()(
   def teamLogs(teamName: TeamName)(implicit headerCarrier: HeaderCarrier): Future[Seq[Log]] =
     for {
       team            <- userManagementConnector.getTeam(teamName)
-      members         =  team.map(_.members).getOrElse(Seq.empty)
+      members         =  team.members
       teamUserLogs    <- members.traverse(member => userLogs(member.username))
       teamLogs        =  teamUserLogs.flatMap {
         case Some(memberLogs) => memberLogs.logs

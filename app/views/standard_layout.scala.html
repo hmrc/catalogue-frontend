@@ -88,17 +88,6 @@
 
     </head>
     <body>
-        <div class="collapse" id="navbarToggleExternalContent">
-            <div class="bg-black pt-2">
-                <div class="container">
-                    <select class="form-select-sm" style="width: 140px" id="logType" name="logType" >
-                        <option selected="selected" value="recent">My Recent</option>
-                        <option value="My Teams Recent" value="myTeamsRecent">My Teams Recent</option>
-                        <option value="Popular" value="Popular">Popular</option>
-                    </select>
-                </div>
-            </div>
-        </div>
         <nav class="navbar navbar-expand-md navbar-dark bg-black">
             <div class="container">
                 <a href="/" class="navbar-brand">
@@ -242,16 +231,32 @@
                 </ul>
             </div>
         </nav>
+        <div class="row">
+          <div class="col-md-auto">
+            <div class="collapse-horizontal side-bar-params collapse" id="navbarToggleExternalContent">
+              <div class="text-white bg-black pb-2">
+                My Recent Links
 
-        @preContent
-        <main>
-          <div id="standard-layout-container">
-              <section class="container">
-              @content
-              </section>
+
+
+
+                Popular Links
+              </div>
+            </div>
+
           </div>
-        </main>
-        @postContent
+          <div class="col-md-auto flex-fill">
+            @preContent
+            <main>
+              <div id="standard-layout-container">
+                  <section class="container">
+                  @content
+                  </section>
+              </div>
+            </main>
+            @postContent
+          </div>
+        </div>
 
         <script @CSPNonce.attr>
             (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function()
