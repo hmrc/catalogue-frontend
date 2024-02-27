@@ -226,6 +226,21 @@
             }
         ]
 
+        function hideRepoType() {
+            var repoTypes = document.getElementById("repoType");
+            var flag = document.getElementById("flag");
+            if (flag.value !== "latest") {
+                repoTypes.disabled = true
+            } else {
+                repoTypes.disabled = false
+            }
+        }
+
+        document.getElementById("flag").addEventListener("click", function () {
+            hideRepoType();
+        });
+
+
         function exportAsCsv() {
             document.getElementById('asCsv').value = true;
             document.getElementById('search-by-dependency-form').dispatchEvent(new Event("submit")); // Call form listener
@@ -269,6 +284,8 @@
             ignoreCase:    true,
             values:        allGroupArtefacts
         });
+
+        window.onload = hideRepoType();
     </script>
 
     <script @CSPNonce.attr type="text/javascript">

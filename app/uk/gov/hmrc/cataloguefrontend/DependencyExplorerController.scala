@@ -20,18 +20,18 @@ import cats.data.EitherT
 import cats.implicits._
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
-import play.api.data.format.Formatter
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
-import play.api.data.{Form, FormError, Forms}
+import play.api.data.{Form, Forms, Mapping}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType.{Library, Service}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
+import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependencyExplorerPage
@@ -84,13 +84,13 @@ class DependencyExplorerController @Inject() (
     }
 
   def search(
-    team: String = "",
-    flag: String,
-    `scope[]`: Seq[String],
-    `repoType[]`: Seq[String],
     group: String,
     artefact: String,
-    versionRange: String,
+    team: Option[String],
+    flag: Option[String],
+    `scope[]`: Option[List[String]],
+    `repoType[]`: Option[List[String]],
+    versionRange: Option[String],
     asCsv: Boolean
   ) =
     BasicAuthAction.async(implicit request =>
@@ -100,10 +100,21 @@ class DependencyExplorerController @Inject() (
         scopes         =  DependencyScope.values
         repoTypes      =  RepoType.values
         groupArtefacts <- dependenciesService.getGroupArtefacts
+        filledForm     = {
+          SearchForm(
+            group         = group,
+            artefact      = artefact,
+            versionRange  = versionRange.getOrElse(BobbyVersionRange("[0.0.0,]").range),
+            team          = team.getOrElse(""),
+            flag          = flag.getOrElse(SlugInfoFlag.Latest.asString),
+            scope         = `scope[]`.getOrElse(List(DependencyScope.Compile.asString)),
+            repoType      = `repoType[]`.getOrElse(List(RepoType.Service.asString))
+          )
+        }
         res <- {
           def pageWithError(msg: String) =
             page(
-              form().bindFromRequest().withGlobalError(msg),
+              form().withGlobalError(msg),
               teams,
               flags,
               repoTypes,
@@ -114,7 +125,7 @@ class DependencyExplorerController @Inject() (
               pieData = None
             )
           form()
-            .bindFromRequest()
+            .fill(filledForm)
             .fold(
               hasErrors = formWithErrors => {
                 Future.successful(
@@ -161,7 +172,7 @@ class DependencyExplorerController @Inject() (
                   } else {
                     Ok(
                       page(
-                        form().bindFromRequest(),
+                        form().fill(filledForm),
                         teams,
                         flags,
                         repoTypes,
@@ -196,8 +207,8 @@ class DependencyExplorerController @Inject() (
       Forms.mapping(
         "team"         -> Forms.default(Forms.text, ""),
         "flag"         -> Forms.text.verifying(notEmpty),
-        "repoType"     -> Forms.list(Forms.text).verifying(notEmptySeq),
-        "scope"        -> Forms.list(Forms.text).verifying(notEmptySeq),
+        "repoType"     -> Forms.list(Forms.text),
+        "scope"        -> Forms.list(Forms.text),
         "group"        -> Forms.text.verifying(notEmpty),
         "artefact"     -> Forms.text.verifying(notEmpty),
         "versionRange" -> Forms.default(Forms.text, ""),
@@ -250,14 +261,15 @@ object DependencyExplorerController {
     group       : String,
     artefact    : String,
     versionRange: BobbyVersionRange
-  ): String =
+  ): String = {
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search(
-      `scope[]`    = scopes.map(_.asString),
-      flag         = flag.asString,
       group        = group,
-      team         = team,
       artefact     = artefact,
-      versionRange = versionRange.range,
+      `scope[]`    = Some(scopes.map(_.asString).toList),
+      flag         = Some(flag.asString),
+      team         = Some(team),
+      versionRange = Some(versionRange.range),
       asCsv        = false,
     ).toString
+  }
 }
