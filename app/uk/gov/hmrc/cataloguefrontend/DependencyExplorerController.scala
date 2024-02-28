@@ -86,13 +86,13 @@ class DependencyExplorerController @Inject() (
   def search(
     group: String,
     artefact: String,
+    versionRange: Option[String],
     team: Option[String],
     flag: Option[String],
     `scope[]`: Option[List[String]],
     `repoType[]`: Option[List[String]],
-    versionRange: Option[String],
     asCsv: Boolean
-  ) =
+  ): Action[AnyContent] =
     BasicAuthAction.async(implicit request =>
       for {
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
@@ -100,7 +100,7 @@ class DependencyExplorerController @Inject() (
         scopes         =  DependencyScope.values
         repoTypes      =  RepoType.values
         groupArtefacts <- dependenciesService.getGroupArtefacts
-        filledForm     = {
+        filledForm     =
           SearchForm(
             group         = group,
             artefact      = artefact,
@@ -110,7 +110,6 @@ class DependencyExplorerController @Inject() (
             scope         = `scope[]`.getOrElse(List(DependencyScope.Compile.asString)),
             repoType      = `repoType[]`.getOrElse(List(RepoType.Service.asString))
           )
-        }
         res <- {
           def pageWithError(msg: String) =
             page(

@@ -226,18 +226,19 @@
             }
         ]
 
-        function hideRepoType() {
-            var repoTypes = document.getElementById("repoType");
-            var flag = document.getElementById("flag");
+        function setRepoTypeVisibilty() {
+            repoType.disabled = (flag.value !== "latest");
             if (flag.value !== "latest") {
-                repoTypes.disabled = true
-            } else {
-                repoTypes.disabled = false
+                var repoTypes = document.getElementById("repoType").options;
+                for (var i = 0; i < repoTypes.length; i++) {
+                    if (repoTypes[i].value !== "Service")
+                        repoTypes[i].selected = false;
+                }
             }
         }
 
         document.getElementById("flag").addEventListener("click", function () {
-            hideRepoType();
+            setRepoTypeVisibilty();
         });
 
 
@@ -285,7 +286,7 @@
             values:        allGroupArtefacts
         });
 
-        window.onload = hideRepoType();
+        window.onload = setRepoTypeVisibilty();
     </script>
 
     <script @CSPNonce.attr type="text/javascript">
