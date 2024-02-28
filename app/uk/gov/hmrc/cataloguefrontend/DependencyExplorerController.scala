@@ -113,7 +113,7 @@ class DependencyExplorerController @Inject() (
         res <- {
           def pageWithError(msg: String) =
             page(
-              form().withGlobalError(msg),
+              form().fill(filledForm).withGlobalError(msg),
               teams,
               flags,
               repoTypes,
