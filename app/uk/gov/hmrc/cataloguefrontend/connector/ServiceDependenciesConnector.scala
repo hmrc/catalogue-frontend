@@ -104,6 +104,29 @@ class ServiceDependenciesConnector @Inject() (
       .execute[Seq[ServiceWithDependency]]
   }
 
+  def getDependenciesFromMetaData(
+                                 flag: SlugInfoFlag,
+                                 group: String,
+                                 artefact: String,
+                                 repoType: List[RepoType],
+                                 versionRange: BobbyVersionRange,
+                                 scopes: List[DependencyScope]
+                               )(implicit
+                                 hc: HeaderCarrier
+                               ): Future[Seq[ServiceWithDependency]] = {
+    implicit val r = ServiceWithDependency.reads
+    val queryParams = Seq(
+      "flag" -> flag.asString,
+      "group" -> group,
+      "artefact" -> artefact,
+      "versionRange" -> versionRange.range
+    )
+
+    httpClientV2
+      .get(url"$servicesDependenciesBaseUrl/api/repoDependencies?$queryParams&scope=${scopes.map(_.asString)}&repoType=${repoType.map(_.asString)}")
+      .execute[Seq[ServiceWithDependency]]
+  }
+
   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] = {
     implicit val r = GroupArtefacts.apiFormat
     httpClientV2

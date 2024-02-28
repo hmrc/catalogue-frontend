@@ -75,7 +75,7 @@ GET        /dependencies/:name/:version                 uk.gov.hmrc.cataloguefro
 GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefrontend.DependenciesController.graphs(name, version, scope: String ?= "compile")
 
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.landing
-GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search(team: String ?= "", flag: String ?= "", `scope[]`: Seq[String] ?= Seq.empty, group: String ?= "", artefact: String ?= "", versionRange: String ?= "", asCsv: Boolean ?= false)
+GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search(group: String ?= "", artefact: String ?= "", versionRange: Option[String] ?= None, team: Option[String] ?= None, flag: Option[String] ?= None, `scope[]`: Option[List[String]] ?= None, `repoType[]`: Option[List[String]] ?= None, asCsv: Boolean ?= false)
 
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 

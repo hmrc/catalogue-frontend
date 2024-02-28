@@ -17,15 +17,15 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import play.api.libs.json.{Json, Reads}
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.util.DependencyGraphParser
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import javax.inject._
 import java.time.Instant
+import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -54,6 +54,7 @@ class DependenciesService @Inject() (
   def getServicesWithDependency(
     optTeam     : Option[TeamName],
     flag        : SlugInfoFlag,
+    repoType    : List[RepoType],
     group       : String,
     artefact    : String,
     versionRange: BobbyVersionRange,
@@ -62,7 +63,7 @@ class DependenciesService @Inject() (
     hc: HeaderCarrier
   ): Future[Seq[ServiceWithDependency]] =
     serviceDependenciesConnector
-      .getServicesWithDependency(flag, group, artefact, versionRange, scope)
+      .getDependenciesFromMetaData(flag, group, artefact, repoType, versionRange, scope)
       .map { l =>
         optTeam match {
           case None       => l
@@ -70,7 +71,7 @@ class DependenciesService @Inject() (
         }
       }
       .map(
-        _.sortBy(_.slugName)
+        _.sortBy(_.repoName)
           .sorted(Ordering.by((_: ServiceWithDependency).depVersion).reverse)
       )
 

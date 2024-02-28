@@ -16,25 +16,27 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.apache.pekko.stream.scaladsl.Source
-import org.apache.pekko.util.ByteString
 import cats.data.EitherT
 import cats.implicits._
-import javax.inject.{Inject, Singleton}
-import play.api.data.{Form, Forms}
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.util.ByteString
+import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
+import play.api.data.{Form, Forms, Mapping}
 import play.api.http.HttpEntity
 import play.api.mvc._
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType.{Library, Service}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName}
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
+import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependencyExplorerPage
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -65,56 +67,72 @@ class DependencyExplorerController @Inject() (
                                scope        = List(DependencyScope.Compile.asString),
                                group        = "",
                                artefact     = "",
-                               versionRange = ""
+                               versionRange = "",
+                               repoType     = List(Service.toString)
                              )
                            ),
           teams          = teams,
           flags          = SlugInfoFlag.values,
           scopes         = DependencyScope.values,
           groupArtefacts = groupArtefacts,
-          versionRange   = BobbyVersionRange(None, None, None, ""),
-          searchResults  = None,
-          pieData        = None
+          versionRange = BobbyVersionRange(None, None, None, ""),
+          searchResults = None,
+          pieData = None,
+          repoTypes = RepoType.values
         )
       )
     }
 
   def search(
-    team        : String = "",
-    flag        : String,
-    `scope[]`   : Seq[String],
-    group       : String,
-    artefact    : String,
-    versionRange: String,
-    asCsv       : Boolean,
-  ) =
-    BasicAuthAction.async ( implicit request =>
+    group: String,
+    artefact: String,
+    versionRange: Option[String],
+    team: Option[String],
+    flag: Option[String],
+    `scope[]`: Option[List[String]],
+    `repoType[]`: Option[List[String]],
+    asCsv: Boolean
+  ): Action[AnyContent] =
+    BasicAuthAction.async(implicit request =>
       for {
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
         scopes         =  DependencyScope.values
+        repoTypes      =  RepoType.values
         groupArtefacts <- dependenciesService.getGroupArtefacts
+        filledForm     =
+          SearchForm(
+            group         = group,
+            artefact      = artefact,
+            versionRange  = versionRange.getOrElse(BobbyVersionRange("[0.0.0,]").range),
+            team          = team.getOrElse(""),
+            flag          = flag.getOrElse(SlugInfoFlag.Latest.asString),
+            scope         = `scope[]`.getOrElse(List(DependencyScope.Compile.asString)),
+            repoType      = `repoType[]`.getOrElse(List(RepoType.Service.asString))
+          )
         res <- {
           def pageWithError(msg: String) =
             page(
-              form().bindFromRequest().withGlobalError(msg),
+              form().fill(filledForm).withGlobalError(msg),
               teams,
               flags,
+              repoTypes,
               scopes,
               groupArtefacts,
-              versionRange  = BobbyVersionRange(None, None, None, ""),
+              versionRange = BobbyVersionRange(None, None, None, ""),
               searchResults = None,
-              pieData       = None
+              pieData = None
             )
           form()
-            .bindFromRequest()
+            .fill(filledForm)
             .fold(
-              hasErrors = formWithErrors =>
+              hasErrors = formWithErrors => {
                 Future.successful(
                   BadRequest(
-                    page(formWithErrors, teams, flags, scopes, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)
+                    page(formWithErrors, teams, flags, repoTypes, scopes, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)
                   )
-                ),
+                )
+              },
               success = query =>
                 (for {
                   versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
@@ -124,9 +142,13 @@ class DependencyExplorerController @Inject() (
                                     EitherT.fromEither[Future](DependencyScope.parse(s))
                                       .leftMap(msg => BadRequest(pageWithError(msg)))
                                   }
+                  repoType     <- query.repoType.traverse { s =>
+                                    EitherT.fromEither[Future](RepoType.parse(s))
+                                      .leftMap(msg => BadRequest(pageWithError(msg)))
+                                  }
                   results      <- EitherT.right[Result] {
                                     dependenciesService
-                                      .getServicesWithDependency(team, flag, query.group, query.artefact, versionRange, scope)
+                                      .getServicesWithDependency(team, flag, repoType, query.group, query.artefact, versionRange, scope)
                                   }
                   pieData      = if (results.nonEmpty)
                                    Some(
@@ -144,21 +166,23 @@ class DependencyExplorerController @Inject() (
                     val source = Source.single(ByteString(csv, "UTF-8"))
                     Result(
                       header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
-                      body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+                      body = HttpEntity.Streamed(source, None, Some("text/csv"))
                     )
-                  } else
+                  } else {
                     Ok(
                       page(
-                        form().bindFromRequest(),
+                        form().fill(filledForm),
                         teams,
                         flags,
+                        repoTypes,
                         scopes,
                         groupArtefacts,
                         versionRange,
                         Some(results),
                         pieData
                       )
-                    )).merge
+                    )
+                  }).merge
             )
         }
       } yield res
@@ -168,6 +192,7 @@ class DependencyExplorerController @Inject() (
   case class SearchForm(
     team        : String,
     flag        : String,
+    repoType    : List[String],
     scope       : List[String],
     group       : String,
     artefact    : String,
@@ -175,20 +200,31 @@ class DependencyExplorerController @Inject() (
     asCsv       : Boolean = false
   )
 
-  def form() = {
+  def form(): Form[SearchForm] = {
     import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
     Form(
       Forms.mapping(
         "team"         -> Forms.default(Forms.text, ""),
         "flag"         -> Forms.text.verifying(notEmpty),
-        "scope"        -> Forms.list(Forms.text).verifying(notEmptySeq),
+        "repoType"     -> Forms.list(Forms.text),
+        "scope"        -> Forms.list(Forms.text),
         "group"        -> Forms.text.verifying(notEmpty),
         "artefact"     -> Forms.text.verifying(notEmpty),
         "versionRange" -> Forms.default(Forms.text, ""),
         "asCsv"        -> Forms.boolean
-      )(SearchForm.apply)(SearchForm.unapply)
+      )(SearchForm.apply)(SearchForm.unapply).verifying(flagConstraint)
     )
   }
+
+  val flagConstraint: Constraint[SearchForm] = Constraint("")({
+    form => {
+      if (form.flag != SlugInfoFlag.Latest.asString && form.repoType != List(Service.asString)) {
+        Invalid(Seq(ValidationError(s"Flag Integration is only applicable to Service")))
+      } else {
+        Valid
+      }
+    }
+  })
 }
 
 object DependencyExplorerController {
@@ -200,8 +236,8 @@ object DependencyExplorerController {
   def toRows(seq: Seq[ServiceWithDependency]): Seq[Seq[(String, String)]] =
     seq.flatMap { serviceWithDependency =>
       val xs = Seq(
-        "slugName"    -> serviceWithDependency.slugName,
-        "slugVersion" -> serviceWithDependency.slugVersion.toString,
+        "slugName"    -> serviceWithDependency.repoName,
+        "slugVersion" -> serviceWithDependency.repoVersion.toString,
         "team"        -> "",
         "depGroup"    -> serviceWithDependency.depGroup,
         "depArtefact" -> serviceWithDependency.depArtefact,
@@ -224,14 +260,15 @@ object DependencyExplorerController {
     group       : String,
     artefact    : String,
     versionRange: BobbyVersionRange
-  ): String =
+  ): String = {
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search(
-      `scope[]`    = scopes.map(_.asString),
-      flag         = flag.asString,
       group        = group,
-      team         = team,
       artefact     = artefact,
-      versionRange = versionRange.range,
+      `scope[]`    = Some(scopes.map(_.asString).toList),
+      flag         = Some(flag.asString),
+      team         = Some(team),
+      versionRange = Some(versionRange.range),
       asCsv        = false,
     ).toString
+  }
 }

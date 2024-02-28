@@ -51,9 +51,9 @@ class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeAppli
       serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
       serviceEndpoint(GET, "/pr-commenter/reports", willRespondWith = (200, Some(JsonData.emptyList)))
       serviceEndpoint(GET, "/api/groupArtefacts", willRespondWith = (200, Some(ServiceDependenciesJsonData.groupArtefactsFromHMRC)))
-      serviceEndpoint(GET, "/api/serviceDeps?flag=latest&group=uk.gov.hmrc&artefact=bootstrap-backend-play-28&versionRange=%5B0.0.0,%5D&scope=compile", willRespondWith = (200,Some(ServiceDependenciesJsonData.serviceDepsForBootstrapBackendPlay) ))
+      serviceEndpoint(GET, "/api/repoDependencies?flag=latest&group=uk.gov.hmrc&artefact=bootstrap-backend-play-28&versionRange=%5B0.0.0,%5D&scope=compile&repoType=Service", willRespondWith = (200,Some(ServiceDependenciesJsonData.serviceDepsForBootstrapBackendPlay) ))
 
-      val response = wsClient.url(s"http://localhost:$port/dependencyexplorer/results?group=uk.gov.hmrc&artefact=bootstrap-backend-play-28&versionRange=[0.0.0%2C]&asCsv=false&team=&flag=latest&scope[]=compile").withAuthToken("Token token").get().futureValue
+      val response = wsClient.url(s"http://localhost:$port/dependencyexplorer/results?group=uk.gov.hmrc&artefact=bootstrap-backend-play-28&versionRange=[0.0.0%2C]&asCsv=false&team=&flag=latest&scope[]=compile&repoType[]=Service").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       response.body should include("Dependency Explorer")
 

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
+import play.api.data.validation.Constraint
+
 trait FormUtils {
 
   /** Like Forms.nonEmpty, but has no constraint info label */

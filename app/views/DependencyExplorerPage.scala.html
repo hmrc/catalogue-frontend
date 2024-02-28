@@ -20,6 +20,8 @@
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
 @import views.html.partials.{TeamNamesPartial, form_global_errors}
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
 
 @this(
   teamNamesPartial: TeamNamesPartial,
@@ -29,6 +31,7 @@
 @(form            : Form[_],
   teams           : Seq[TeamName],
   flags           : Seq[SlugInfoFlag],
+  repoTypes       : Seq[RepoType],
   scopes          : Seq[DependencyScope],
   groupArtefacts  : List[GroupArtefacts],
   versionRange    : BobbyVersionRange,
@@ -39,7 +42,7 @@
   messagesProvider: MessagesProvider
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField = @{ helper.FieldConstructor(helper.bootstrapCompatibleFieldConstructor.f) }
 
 @standard_layout("Dependency Explorer", active = "explore") {
     <h1 class="page-heading mt-4" id="search-service-header">Dependency Explorer</h1>
@@ -49,10 +52,16 @@
 
         @form_global_errors(form)
 
-        <form id="search-by-dependency-form" action="@appRoutes.DependencyExplorerController.search().url" method="get">
+        @helper.form(
+            action            =  appRoutes.DependencyExplorerController.search()
+            , Symbol("class") -> "px-2 needs-validation"
+            , Symbol("id")    -> "search-by-dependency-form"
+            , Symbol("novalidate")    -> ""
+        ) {
+            <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
             <div class="form-group">
                 <div class="row">
-                    <div class="col-md-7">
+                    <div class="col-md-7 mb-3">
                         <dl>
                           <dt><label class="form-label" for="group-artefact-search">Group:Artefact</label></dt>
                           <dd class="position-relative">
@@ -120,6 +129,17 @@
                     </div>
                     <div class="col-md-2">
                         @helper.select(
+                            field                 =  form("repoType"),
+                            options               =  repoTypes.map(r => (r.asString, r.asString)),
+                            Symbol("_label")      -> "Repository Type",
+                            Symbol("_labelClass") -> "form-label",
+                            Symbol("class")       -> "form-select",
+                            Symbol("size")        -> repoTypes.size,
+                            Symbol("multiple")    -> None
+                        )
+                    </div>
+                    <div class="col-md-2">
+                        @helper.select(
                             field                 =  form("scope"),
                             options               =  scopes.map(s => (s.asString, s.displayString)),
                             Symbol("_label")      -> "Scope",
@@ -135,7 +155,7 @@
                     <input type="button" id="export-button-1" class="btn btn-outline-secondary" value="Export as CSV"/>
                 </div>
             </div>
-        </form>
+        }
 
         @searchResults match {
             case None                => {
@@ -156,6 +176,7 @@
                             <th rowspan="2" ><button class="sort no-border fw-bold" data-sort="service">Service</button></th>
                             <th rowspan="2" >Version</th>
                             <th rowspan="2" ><button class="sort no-border fw-bold" data-sort="teams">Team</button></th>
+                            <th rowspan="2" >Repository Type</th>
                             <th colspan="2" >
                                 <div class="text-center border-bottom">@{searchResults.head.depGroup}:@{searchResults.head.depArtefact}</div>
                                 <div class="row">
@@ -172,11 +193,14 @@
                     <tbody class="list">
                         @for(result <- searchResults) {
                             <tr>
-                                <td class="service"><a aria-label="Link to page info for @{result.slugName}" id="link-to-info-page-for-@{result.slugName}"href="@appRoutes.CatalogueController.service(result.slugName)">@result.slugName</a></td>
-                                <td>@result.slugVersion</td>
-                                <td class="teams">
-                                    @teamNamesPartial(result.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(result.slugName)}#owning-team")
+                                <td class="service"><a aria-label="Link to page info for @{result.repoName}" id="link-to-info-page-for-@{result.repoName}"
+                                href=@{if(result.repoType == Service) appRoutes.CatalogueController.service(result.repoName) else appRoutes.CatalogueController.repository(result.repoName) }>@result.repoName</a>
                                 </td>
+                                <td>@result.repoVersion</td>
+                                <td class="teams">
+                                    @teamNamesPartial(result.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(result.repoName)}#owning-team")
+                                </td>
+                                <td>@result.repoType</td>
                                 <td class="dep-version">@result.depVersion</td>
                                 <td>@result.scopes.map(_.displayString).mkString(", ")</td>
                             </tr>
@@ -201,6 +225,22 @@
                 }
             }
         ]
+
+        function setRepoTypeVisibilty() {
+            repoType.disabled = (flag.value !== "latest");
+            if (flag.value !== "latest") {
+                var repoTypes = document.getElementById("repoType").options;
+                for (var i = 0; i < repoTypes.length; i++) {
+                    if (repoTypes[i].value !== "Service")
+                        repoTypes[i].selected = false;
+                }
+            }
+        }
+
+        document.getElementById("flag").addEventListener("click", function () {
+            setRepoTypeVisibilty();
+        });
+
 
         function exportAsCsv() {
             document.getElementById('asCsv').value = true;
@@ -245,6 +285,8 @@
             ignoreCase:    true,
             values:        allGroupArtefacts
         });
+
+        window.onload = setRepoTypeVisibilty();
     </script>
 
     <script @CSPNonce.attr type="text/javascript">
