@@ -130,7 +130,7 @@ class ShutterService @Inject() (
     }
 
   def shutterGroups: Future[Seq[ShutterGroup]] =
-    shutterGroupsConnector.shutterGroups
+    shutterGroupsConnector.shutterGroups.map(_.sortBy(_.name))
 
   def lookupShutterRoute(serviceName: ServiceName, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] =
     for {
