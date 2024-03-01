@@ -153,25 +153,24 @@
       let groupOptions = selectElmt.options[selectElmt.selectedIndex].value;
 
       let groupData = @Html(shutterGroups.map { g =>
-                         defining(g.services.map("\"" + _ + "\"").mkString("[", ",", "]")){ values =>
+                         defining(g.services.sorted.map("\"" + _ + "\"").mkString("[", ",", "]")){ values =>
                            "\"" + g.name + "\": " + values
                          }
                        }.mkString("{", ",", "}"));
-
       let avalableServices = document.getElementById('avalableServices');
       let selectedServices = document.getElementById('selectedServices');
 
       let missingServices = [];
       for (let serviceName of groupData[groupOptions]) {
+
         let i = indexOfServiceName(avalableServices, serviceName);
+
         if (i === -1) {
-          let j = indexOfServiceName(selectedServices, serviceName);
-          if (j === -1) {
+          if (indexOfServiceName(selectedServices, serviceName) === -1) {
             missingServices.push(serviceName);
           }
         } else {
           selectedServices.add(avalableServices[i]);
-          avalableServices.remove(i);
         }
       };
       sort('selectedServices');
@@ -204,20 +203,9 @@
       $('#selectedServices option').prop('selected', true);
     }
 
-    function indexOf(selectElement, value) {
-      let options = selectElement.options;
-      for (var i = 0, optionsLength = options.length; i < optionsLength; i++) {
-        if (options[i].value === value) {
-          return i;
-        }
-      }
-      return -1;
-    }
-
     function indexOfServiceName(selectElement, value) {
-      let options = selectElement.options;
-      for (var i = 0, optionsLength = options.length; i < optionsLength; i++) {
-        if (options[i].value.split(',')[0] === value) {
+      for (var i = 0, optionsLength = selectElement.options.length; i < optionsLength; i++) {
+        if (selectElement.options[i].value.split(',')[0] === value) {
           return i;
         }
       }
@@ -267,10 +255,11 @@
       selectedOpts.each(function()
       {
         let value = $(this).val();
-        let i = indexOf(avalableServices, value);
+        let i = indexOfServiceName(avalableServices, value);
         avalableServices.remove(i);
       });
     });
+
   </script>
 }
 
