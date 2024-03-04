@@ -21,17 +21,16 @@ import cats.implicits._
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
-import play.api.data.{Form, Forms, Mapping}
+import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType.{Library, Service}
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType.{Prototype, Service}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
-import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependencyExplorerPage
@@ -78,7 +77,7 @@ class DependencyExplorerController @Inject() (
           versionRange = BobbyVersionRange(None, None, None, ""),
           searchResults = None,
           pieData = None,
-          repoTypes = RepoType.values
+          repoTypes = RepoType.values.filterNot(_ == Prototype)
         )
       )
     }
@@ -98,7 +97,7 @@ class DependencyExplorerController @Inject() (
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
         scopes         =  DependencyScope.values
-        repoTypes      =  RepoType.values
+        repoTypes      =  RepoType.values.filterNot(_ == Prototype)
         groupArtefacts <- dependenciesService.getGroupArtefacts
         filledForm     =
           SearchForm(
@@ -201,7 +200,7 @@ class DependencyExplorerController @Inject() (
   )
 
   def form(): Form[SearchForm] = {
-    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
+    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmpty
     Form(
       Forms.mapping(
         "team"         -> Forms.default(Forms.text, ""),
