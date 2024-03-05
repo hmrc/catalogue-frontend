@@ -369,9 +369,9 @@ object ServiceWithDependency {
     ~ (__ \ "repoVersion").read[Version]
     ~ (__ \ "teams"      ).read[List[TeamName]]
     ~ (__ \ "repoType"   ).read[RepoType]
-    ~ (__ \ "group"   ).read[String]
-    ~ (__ \ "artefact").read[String]
-    ~ (__ \ "artefactVersion" ).read[Version]
+    ~ (__ \ "depGroup"   ).read[String]
+    ~ (__ \ "depArtefact").read[String]
+    ~ (__ \ "depVersion" ).read[Version]
     ~ (__ \ "scopes").read[Set[DependencyScope]]
     )(ServiceWithDependency.apply _)
   }
