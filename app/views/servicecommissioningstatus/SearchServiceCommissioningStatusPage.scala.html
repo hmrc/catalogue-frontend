@@ -232,10 +232,10 @@
     <div>
         <strong>State:</strong>
         @result match {
-            case None                                                                     => { Not applicable      }
-            case Some(Left(missing))                                                      => { Not found           }
-            case Some(Right(present)) if LifecycleStatus.canDecommission(lifecycleStatus) => { Should decommission }
-            case Some(Right(present))                                                     => { Found               }
+            case None                                                                     => { Not applicable }
+            case Some(Left(missing))                                                      => { Not found      }
+            case Some(Right(present)) if LifecycleStatus.canDecommission(lifecycleStatus) => { Needs removing }
+            case Some(Right(present))                                                     => { Found          }
         }
     </div>
 }
