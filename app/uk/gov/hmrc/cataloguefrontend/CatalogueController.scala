@@ -33,7 +33,7 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
@@ -84,7 +84,7 @@ class CatalogueController @Inject() (
   defaultBranchListPage              : DefaultBranchListPage,
   costEstimationPage                 : CostEstimationPage,
   serviceMetricsConnector            : ServiceMetricsConnector,
-  userManagementConnector            : UserManagementConnector,
+  serviceConfigsConnector            : ServiceConfigsConnector,
   override val auth                  : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
@@ -111,11 +111,10 @@ class CatalogueController @Inject() (
   def service(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       def buildServicePageFromItsArtifactName(serviceName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): Future[Result] =
-        serviceConfigsService.findArtifactName(serviceName).flatMap {
-          case ServiceConfigsService.ArtifactNameResult.ArtifactNameFound(artifactName) => buildServicePageFromRepoName(artifactName, hasBranchProtectionAuth).getOrElse(notFound)
-          case ServiceConfigsService.ArtifactNameResult.ArtifactNameNotFound            => Future.successful(notFound)
-          case ServiceConfigsService.ArtifactNameResult.ArtifactNameError(error)        => logger.error(error)
-                                                                                           Future.successful(InternalServerError)
+        serviceConfigsConnector.repoNameForService(serviceName).flatMap {
+          case Some(repoName) => buildServicePageFromRepoName(repoName, hasBranchProtectionAuth).getOrElse(notFound)
+          case _              => logger.info(s"Not found repo name for the service: $serviceName")
+                                 Future.successful(notFound)
         }
 
       def buildServicePageFromRepoName(repoName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): OptionT[Future, Result] =

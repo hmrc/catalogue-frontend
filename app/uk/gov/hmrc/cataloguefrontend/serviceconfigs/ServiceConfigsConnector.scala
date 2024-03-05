@@ -48,6 +48,11 @@ class ServiceConfigsConnector @Inject() (
   implicit val cser: Reads[ConfigSourceEntries]  = ConfigSourceEntries.reads
   implicit val srr : Reads[ServiceRelationships] = ServiceRelationships.reads
 
+  def repoNameForService(service: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/service-configs/services/repo-name?serviceName=$service")
+      .execute[Option[String]]
+
   def configByEnv(
     service     : String
   , environments: Seq[Environment]

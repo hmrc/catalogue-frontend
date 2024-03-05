@@ -113,24 +113,6 @@ class ServiceConfigsService @Inject()(
                              }
     } yield (newConfig)
 
-  def findArtifactName(serviceName: String)(implicit hc: HeaderCarrier): Future[ArtifactNameResult] =
-    configByKey(serviceName, environments = Nil, version = None, latest = true)
-      .map(
-        _.getOrElse(KeyName("artifact_name"), Map.empty)
-          .view
-          .mapValues(_.headOption.map(_.value))
-          .values
-          .flatten
-          .groupBy(identity)
-          .keys
-          .toList
-      )
-      .map {
-        case Nil                 => ArtifactNameResult.ArtifactNameNotFound
-        case artifactName :: Nil => ArtifactNameResult.ArtifactNameFound(artifactName)
-        case list                => ArtifactNameResult.ArtifactNameError(s"Different artifact names found for service in different environments - [${list.mkString(",")}]")
-      }
-
 def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsEnriched] =
     for {
       repos    <- teamsAndReposConnector.allRepositories()
@@ -256,8 +238,6 @@ object ServiceConfigsService {
     }
   }
 
-  // type ConfigByKey = Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]
-
   case class ConfigSourceEntries(
     source   : String,
     sourceUrl: Option[String],
@@ -359,14 +339,6 @@ object ServiceConfigsService {
       case "Unencrypted"         => "Value looks like it should be encrypted"
       case _                     => ""
     }
-
-  sealed trait ArtifactNameResult
-
-  object ArtifactNameResult {
-    case class ArtifactNameFound(name: String)  extends ArtifactNameResult
-    case object ArtifactNameNotFound            extends ArtifactNameResult
-    case class ArtifactNameError(error: String) extends ArtifactNameResult
-  }
 
   case class AppliedConfig(
     serviceName  : ServiceName
