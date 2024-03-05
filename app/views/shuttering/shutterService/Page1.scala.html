@@ -48,41 +48,43 @@
         </div>
         <div class="card-body">
             @helper.form(
-                action            =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step1Post
-                , Symbol("class") -> "px-2 needs-validation"
-                , Symbol("id")    -> "shutter-service-form"
-                , Symbol("novalidate")    -> ""
+              action          =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step1Post
+            , Symbol("class") -> "px-2 needs-validation"
+            , Symbol("id")    -> "shutter-service-form"
             ) {
 
                 @csrfFormField
                 <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
                 <div class="row">
-                    <div class="col-2">
+                    <div class="col-5">
                         @select(
-                              field                 =  form("status")
-                            , options               =  Seq("" -> "Please select") ++ ShutterStatusValue.values.map {
-                                                         case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
-                                                         case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
-                                                       }
-                            , Symbol("_label")      -> "Status"
-                            , Symbol("aria-label")  -> "Status"
-                            , Symbol("_labelClass") -> "form-label"
-                            , Symbol("class")       -> "form-select"
+                          field                 =  form("status")
+
+                        , options               =  ShutterStatusValue.values.map {
+                                                      case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
+                                                      case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
+                                                    }
+                        , Symbol("_default")    -> "Please choose"
+                        , Symbol("_label")      -> "Status"
+                        , Symbol("aria-label")  -> "Status"
+                        , Symbol("_labelClass") -> "form-label"
+                        , Symbol("class")       -> "form-select"
+                        , Symbol("required")    -> "required" // Prevent form from submitting since it clears service selection
                         )
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-5">
                         @select(
-                              field                 =  form("avalableServices")
-                            , options               =  shutterStates
-                                                         .map(x => ServiceNameAndContext(x.serviceName, x.context))
-                                                         .map(x => (x.asString, displayService(x)))
-                            , Symbol("_label")      -> s"Available ${shutterType}s"
-                            , Symbol("_labelClass") -> "form-label"
-                            , Symbol("multiple")    -> "multiple"
-                            , Symbol("size")        -> 10
-                            , Symbol("class")       -> "form-select"
+                          field                 =  form("availableServices")
+                        , options               =  shutterStates
+                                                      .map(x => ServiceNameAndContext(x.serviceName, x.context))
+                                                      .map(x => (x.asString, displayService(x)))
+                        , Symbol("_label")      -> s"Available ${shutterType}s"
+                        , Symbol("_labelClass") -> "form-label"
+                        , Symbol("multiple")    -> "multiple"
+                        , Symbol("size")        -> 10
+                        , Symbol("class")       -> "form-select"
                         )
                     </div>
                     <div class="col-2 my-auto"> @* class my-auto is a bootstrap utility class to vertically centre the content `margin y auto` *@
@@ -98,12 +100,12 @@
                             <div class="row">
                                 <div class="col d-flex justify-content-center">
                                     @select(
-                                          field                =  form("shutterGroup")
-                                        , options              =  Seq("" -> "Add from Group") ++ shutterGroups.map(s => (s.name, s.name))
-                                        , Symbol("_label")     -> ""
-                                        , Symbol("aria-label") -> "Shutter Group"
-                                        , Symbol("id")         -> "shutter-group"
-                                        , Symbol("class")      -> "form-select"
+                                      field                =  form("shutterGroup")
+                                    , options              =  Seq("" -> "Add from Group") ++ shutterGroups.map(s => (s.name, s.name))
+                                    , Symbol("_label")     -> ""
+                                    , Symbol("aria-label") -> "Shutter Group"
+                                    , Symbol("id")         -> "shutter-group"
+                                    , Symbol("class")      -> "form-select"
                                     )
                                 </div>
                             </div>
@@ -111,13 +113,13 @@
                     </div>
                     <div class="col-5">
                         @select(
-                              field                 =  form("selectedServices")
-                            , options               =  scala.util.Try(form.get.serviceNameAndContexts).getOrElse(Nil).map(sn => (sn.asString, displayService(sn)))
-                            , Symbol("_label")      -> s"Selected ${shutterType}s"
-                            , Symbol("_labelClass") -> "form-label"
-                            , Symbol("multiple")    -> "multiple"
-                            , Symbol("size")        -> 10
-                            , Symbol("class")       -> "form-select"
+                          field                 =  form("selectedServices")
+                        , options               =  scala.util.Try(form.get.serviceNameAndContexts).getOrElse(Nil).map(sn => (sn.asString, displayService(sn)))
+                        , Symbol("_label")      -> s"Selected ${shutterType}s"
+                        , Symbol("_labelClass") -> "form-label"
+                        , Symbol("multiple")    -> "multiple"
+                        , Symbol("size")        -> 10
+                        , Symbol("class")       -> "form-select"
                         )
                     </div>
                 </div>
@@ -149,6 +151,9 @@
     </div>
 
   <script @CSPNonce.attr type="text/javascript">
+    let availableServices = document.getElementById('availableServices');
+    let selectedServices  = document.getElementById('selectedServices');
+
     function onChangeGroup(selectElmt) {
       let groupOptions = selectElmt.options[selectElmt.selectedIndex].value;
 
@@ -157,20 +162,18 @@
                            "\"" + g.name + "\": " + values
                          }
                        }.mkString("{", ",", "}"));
-      let avalableServices = document.getElementById('avalableServices');
-      let selectedServices = document.getElementById('selectedServices');
 
       let missingServices = [];
       for (let serviceName of groupData[groupOptions]) {
 
-        let i = indexOfServiceName(avalableServices, serviceName);
+        let i = indexOfServiceName(availableServices, serviceName);
 
         if (i === -1) {
           if (indexOfServiceName(selectedServices, serviceName) === -1) {
             missingServices.push(serviceName);
           }
         } else {
-          selectedServices.add(avalableServices[i]);
+          selectedServices.add(availableServices[i]);
         }
       };
       sort('selectedServices');
@@ -192,11 +195,11 @@
     });
 
     $('#btnRight').click(function (e) {
-      move(e, 'avalableServices', 'selectedServices');
+      move(e, 'availableServices', 'selectedServices');
     });
 
     $('#btnLeft').click(function (e) {
-      move(e, 'selectedServices', 'avalableServices');
+      move(e, 'selectedServices', 'availableServices');
     });
 
     function selectAllOptions() {
@@ -211,7 +214,6 @@
       }
       return -1;
     }
-
 
     function move(e, from, to) {
       let selectedOpts = $('#' + from + ' option:selected');
@@ -243,21 +245,21 @@
       $('#group-warning-row').toggleClass('d-none');
     }
 
-    $(document).ready(function() {
-      // remove options in selectedServices from avalableServices
-      let selectedOpts = $('#selectedServices option');
-      selectedOpts.prop('selected', false);
+    document.addEventListener("DOMContentLoaded", () => {
+      var indexes = [];
+      for (var i = 0; i < selectedServices.options.length; i++) {
+        selectedServices.options[i].selected = false;
 
-      let avalableServices = document.getElementById('avalableServices');
-      sort('avalableServices');
-      sort('selectedServices');
+        let serviceName    = selectedServices.options[i].value.split(',')[0];
+        let serviceNameIdx = indexOfServiceName(availableServices, serviceName);
 
-      selectedOpts.each(function()
-      {
-        let value = $(this).val();
-        let i = indexOfServiceName(avalableServices, value);
-        avalableServices.remove(i);
-      });
+        if (serviceNameIdx === -1) {
+          indexes.push(i); // Can't remove selectedServices here as breaks loop
+        } else {
+          availableServices.remove(serviceNameIdx);
+        }
+      }
+      indexes.forEach(idx => selectedServices.remove(0));
     });
 
   </script>
