@@ -109,10 +109,12 @@
                         <li class="nav-item dropdown">
                             <a id="deployments-dropdown" class="nav-link dropdown-toggle @if(active == "deployments") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Deployments
-                            <span style="color: violet;">
-                                *
-                                <span class="visually-hidden">new pages in dropdown</span>
-                            </span>
+                            @if(isNew) {
+                                <span style="color: violet;">
+                                    *
+                                    <span class="visually-hidden">new pages in dropdown</span>
+                                </span>
+                            }
                         </a>
                         <ul id="deployments-menu" class="dropdown-menu">
                             <li>
