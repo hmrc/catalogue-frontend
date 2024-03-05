@@ -169,7 +169,6 @@
                                       , Symbol("cols")        -> 60
                                       , Symbol("class")       -> "form-control"
                                     )
-                                    <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the ${src.serviceName.asString} outage page for ${step0Out.env.asString}.").getOrElse(""))</p>
                                 </div>
                                 <div class="col-4 my-auto">
                                     <a id="revertToTemplate" class="btn btn-outline-secondary">
@@ -182,6 +181,7 @@
                                     </script>
                                 </div>
                             </div>
+                            <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the ${src.serviceName.asString} outage page for ${step0Out.env.asString}.").getOrElse(""))</p>
                         } else {
                             <input type="hidden" name="outageMessage" value=""/>
                             <p class="card-text">Outage page(s) will be sent as is.</p>
