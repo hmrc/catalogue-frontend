@@ -116,6 +116,7 @@
                         </a>
                         <ul id="deployments-menu" class="dropdown-menu">
                             <li>
+                                <button type="button" class="btn-outline-secondary" id="toggle-favourite"></button>
                                 <a id="link-to-deploy-service" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeployServiceController.step1(None)">
                                     Deploy Service
                                     @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
@@ -227,6 +228,11 @@
                 </ul>
             </div>
         </nav>
+        <div class="collapse show" id="navbarToggleExternalContent">
+            <div class="bg-dark p-4">
+                <h5 class="text-white h4">Collapsed content</h5>
+            </div>
+        </div>
 
         @preContent
         <main>
@@ -258,4 +264,5 @@
     <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("bootstrapFormValidation.js")"></script>
     <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("search.js")" defer></script>
     <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("auditing.js")"></script>
+    <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("favourites.js")"></script>
 </html>
