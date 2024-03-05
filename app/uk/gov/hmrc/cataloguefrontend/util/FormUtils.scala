@@ -21,14 +21,14 @@ import play.api.data.validation.Constraint
 trait FormUtils {
 
   /** Like Forms.nonEmpty, but has no constraint info label */
-  def notEmpty = {
+  def notEmpty: Constraint[String] = {
     import play.api.data.validation._
     Constraint[String]("") { o =>
       if (o == null || o.trim.isEmpty) Invalid(ValidationError("error.required")) else Valid
     }
   }
 
-  def notEmptySeq = {
+  def notEmptySeq: Constraint[Seq[_]] = {
     import play.api.data.validation._
     Constraint[Seq[_]]("") { o =>
       if (o == null || o.isEmpty) Invalid(ValidationError("error.required")) else Valid

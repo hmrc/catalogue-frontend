@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.auditing
 
-import org.apache.pekko.stream.Materializer
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{OFormat, __}
-import play.api.mvc.{EssentialAction, Filter, RequestHeader, Result}
+import play.api.mvc.{EssentialAction, RequestHeader}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class CatalogueFrontendAuditFilter @Inject()(
   auditConnector : AuditConnector
@@ -35,24 +34,22 @@ class CatalogueFrontendAuditFilter @Inject()(
      with FrontendHeaderCarrierProvider {
 
   override def apply(nextFilter: EssentialAction): EssentialAction =
-    new EssentialAction {
-      override def apply(rh: RequestHeader) = {
-        val headerCarrier = hc(rh)
-        nextFilter(rh).map { res =>
-          auditConnector.sendExplicitAudit(
-            auditType =  "FrontendInteraction",
-            detail = Detail(
-              username        = rh.session.data.get("username")  .getOrElse("GuestUser")
-            , uri             = rh.headers.get("Raw-Request-URI").getOrElse("-")
-            , statusCode      = res.header.status
-            , method          = rh.method
-            , userAgentString = rh.headers.get("User-Agent")     .getOrElse("-")
-            , deviceID        = rh.headers.get("Cookie")         .getOrElse("-")
-            , referrer        = rh.headers.get("Referer")        .getOrElse("-")
-            )
-          )(headerCarrier, ec, Detail.format)
-          res
-        }
+    (rh: RequestHeader) => {
+      val headerCarrier = hc(rh)
+      nextFilter(rh).map { res =>
+        auditConnector.sendExplicitAudit(
+          auditType = "FrontendInteraction",
+          detail = Detail(
+            username = rh.session.data.getOrElse("username", default = "GuestUser")
+            , uri = rh.headers.get("Raw-Request-URI").getOrElse("-")
+            , statusCode = res.header.status
+            , method = rh.method
+            , userAgentString = rh.headers.get("User-Agent").getOrElse("-")
+            , deviceID = rh.headers.get("Cookie").getOrElse("-")
+            , referrer = rh.headers.get("Referer").getOrElse("-")
+          )
+        )(headerCarrier, ec, Detail.format)
+        res
       }
     }
 }
