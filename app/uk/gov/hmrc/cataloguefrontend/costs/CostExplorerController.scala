@@ -36,9 +36,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.costs.CostExplorerPage
 
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
-import scala.collection.immutable.ListMap
 import scala.concurrent.ExecutionContext
 
 class CostsSummaryController @Inject() (
@@ -71,59 +69,27 @@ class CostsSummaryController @Inject() (
     }.toSeq
   }
 
-  private def sortAndFilter(
-    name: Option[String],
-    appNameSort: Option[String],
-    costSort: Option[String],
-    configs: Seq[DeploymentConfig]
-  ): Map[String, Seq[DeploymentConfig]] = {
-
-    val groupConfigs = configs.groupBy(_.serviceName).toSeq.sortBy(_._1)
-
-    val filterName = name match {
-      case Some(value) if value.nonEmpty => groupConfigs.filter(_._1.contains(value))
-      case _                             => groupConfigs
-    }
-
-    val nameSorting = appNameSort match {
-      case Some("appName.asc") => filterName.sortBy(_._1)
-      case Some("appName.des") => filterName.sortBy(_._1).reverse
-      case _                   => filterName
-    }
-
-    val costSorting = costSort match {
-      case Some("cost.asc") => nameSorting.sortBy(_._2.map(_.deploymentSize.totalSlots.costGbp(costEstimateConfig)).sum).reverse
-      case Some("cost.des") => nameSorting.sortBy(_._2.map(_.deploymentSize.totalSlots.costGbp(costEstimateConfig)).sum)
-      case _                => nameSorting
-    }
-
-    ListMap(costSorting:_*) // ListMap to maintain order
-  }
-
   def costExplorer(
-    name: Option[String] = None,
     team: Option[String] = None,
-    asCSV: Option[Boolean] = None,
-    appNameSort: Option[String] = None,
-    costSort: Option[String] = None
+    asCSV: Boolean = false
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        teams   <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
-        configs <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.trim.isEmpty))
+        teams           <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
+        configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.trim.isEmpty))
+        groupedConfigs  = configs.groupBy(_.serviceName)
       } yield {
-        asCSV match {
-          case Some(true) =>
-            val sortedConfigs = sortAndFilter(name, appNameSort, costSort, configs)
-            val csv = s"${team.getOrElse("")} ,Integration, ,Development, ,QA, ,Staging, ,ExternalTest, ,Production\n" + // CSV header
-              CsvUtils.toCsv(toRows(sortedConfigs)).replaceAll(""".\{.*?(})""", "")
-            val source = Source.single(ByteString(csv, "UTF-8"))
+        if (asCSV) {
+          val csv = s"${team.getOrElse("")} ,Integration, ,Development, ,QA, ,Staging, ,ExternalTest, ,Production\n" + // CSV header
+            CsvUtils.toCsv(toRows(groupedConfigs)).replaceAll(""".\{.*?(})""", "")
+          val source = Source.single(ByteString(csv, "UTF-8"))
 
-              Result(
-                header = ResponseHeader(200, Map("Content-Disposition" -> s"inline; filename=\"cost-explorer-${Instant.now()}.csv\"")),
-                body = HttpEntity.Streamed(source, None, Some("text/csv"))
-              )
-          case _ => Ok(costExplorerPage(configs.groupBy(_.serviceName), teams, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
+          Result(
+            header = ResponseHeader(200, Map("Content-Disposition" -> s"inline; filename=\"cost-explorer-${Instant.now()}.csv\"")),
+            body = HttpEntity.Streamed(source, None, Some("text/csv"))
+          )
+        } else {
+          Ok(costExplorerPage(groupedConfigs, teams, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
         }
       }
     }

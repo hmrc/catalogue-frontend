@@ -68,8 +68,6 @@
                 )
                 </div>
                 <input type="hidden" id="asCSV"        name="asCSV" value="false" />
-                <input type="hidden" id="appNameSort" name="appNameSort" />
-                <input type="hidden" id="costSort"    name="costSort" value="false" />
                 <div class="col-md-3 align-self-end" style="padding-bottom: 1rem">
                     <input type="button" id="export-button-1" class="btn btn-outline-secondary" value="Export as CSV"/>
                 </div>
@@ -154,26 +152,6 @@
             document.getElementById('costs-summary-form').submit();
             document.getElementById('asCSV').value = false;  // fixes browser back button issue
         }
-
-        document.getElementById("yearlyCost").addEventListener("click", function() {
-            let appNameSort = document.getElementById('costSort').value;
-            if (appNameSort === "cost.des" || appNameSort === "") {
-                document.getElementById('costSort').value = "cost.asc";
-            } else {
-                document.getElementById('costSort').value = "cost.des";
-            }
-            document.getElementById('appNameSort').value = "";
-        });
-
-        document.getElementById("name").addEventListener("click", function() {
-            let appNameSort = document.getElementById('appNameSort').value;
-            if (appNameSort === "appName.des" || appNameSort === "") {
-                document.getElementById('appNameSort').value = "appName.asc";
-            } else {
-                document.getElementById('appNameSort').value = "appName.des";
-            }
-            document.getElementById('costSort').value = "";
-        });
 
         document.getElementById("export-button-1").addEventListener("click", function() {
             exportAsCsv()
