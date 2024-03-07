@@ -91,7 +91,7 @@ GET        /config/search/results                       uk.gov.hmrc.cataloguefro
 GET        /config/warnings/search                      uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningLanding()
 GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningResults()
 
-GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.costs.CostsSummaryController.costExplorer(team: Option[String] ?= None)
+GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.costs.CostsSummaryController.costExplorer(team: Option[String] ?= None, asCSV: Boolean ?= false)
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list(selector: Option[String] ?= None)
 

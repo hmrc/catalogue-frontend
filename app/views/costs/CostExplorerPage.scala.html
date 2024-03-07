@@ -67,6 +67,10 @@
                     Symbol("class") -> "form-select"
                 )
                 </div>
+                <input type="hidden" id="asCSV"        name="asCSV" value="false" />
+                <div class="col-md-3 align-self-end" style="padding-bottom: 1rem">
+                    <input type="button" id="export-button-1" class="btn btn-outline-secondary" value="Export as CSV"/>
+                </div>
             </div>
         </form>
         @if(serviceNameAndConfigs.nonEmpty) {
@@ -141,4 +145,15 @@
                         document.getElementById("costs-summary-form").submit();
                     });
                 });
+
+        function exportAsCsv() {
+            document.getElementById('asCSV').value = true;
+            document.getElementById('costs-summary-form').dispatchEvent(new Event("submit")); // Call form listener
+            document.getElementById('costs-summary-form').submit();
+            document.getElementById('asCSV').value = false;  // fixes browser back button issue
+        }
+
+        document.getElementById("export-button-1").addEventListener("click", function() {
+            exportAsCsv()
+        });
 </script>
