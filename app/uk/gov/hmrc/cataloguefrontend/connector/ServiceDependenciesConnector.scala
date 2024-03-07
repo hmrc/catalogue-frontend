@@ -105,20 +105,20 @@ class ServiceDependenciesConnector @Inject() (
   }
 
   def getDependenciesFromMetaData(
-                                 flag: SlugInfoFlag,
-                                 group: String,
-                                 artefact: String,
-                                 repoType: List[RepoType],
-                                 versionRange: BobbyVersionRange,
-                                 scopes: List[DependencyScope]
-                               )(implicit
-                                 hc: HeaderCarrier
-                               ): Future[Seq[ServiceWithDependency]] = {
+    flag        : SlugInfoFlag,
+    group       : String,
+    artefact    : String,
+    repoType    : List[RepoType],
+    versionRange: BobbyVersionRange,
+    scopes      : List[DependencyScope]
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Seq[ServiceWithDependency]] = {
     implicit val r = ServiceWithDependency.reads
     val queryParams = Seq(
-      "flag" -> flag.asString,
-      "group" -> group,
-      "artefact" -> artefact,
+      "flag"         -> flag.asString,
+      "group"        -> group,
+      "artefact"     -> artefact,
       "versionRange" -> versionRange.range
     )
 

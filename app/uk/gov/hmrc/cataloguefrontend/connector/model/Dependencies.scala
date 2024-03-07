@@ -25,10 +25,10 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 sealed trait VersionState
 object VersionState {
-  case object NewVersionAvailable extends VersionState
-  case object Invalid             extends VersionState
+  case object NewVersionAvailable                             extends VersionState
+  case object Invalid                                         extends VersionState
   case class BobbyRuleViolated(violation: BobbyRuleViolation) extends VersionState
-  case class BobbyRulePending(violation: BobbyRuleViolation) extends VersionState
+  case class BobbyRulePending(violation: BobbyRuleViolation)  extends VersionState
 }
 
 // TODO avoid caching LocalDate, and provide to isActive function
@@ -37,7 +37,8 @@ case class BobbyRuleViolation(
   range : BobbyVersionRange,
   from  : LocalDate
 )(implicit now: LocalDate = LocalDate.now()) {
-  def isActive: Boolean = now.isAfter(from)
+  def isActive: Boolean =
+    now.isAfter(from)
 }
 
 object BobbyRuleViolation {
@@ -55,9 +56,11 @@ object BobbyRuleViolation {
       def compare(x: BobbyRuleViolation, y: BobbyRuleViolation): Int = {
         implicit val vo: Ordering[Version] = Version.ordering.reverse
         implicit val bo: Ordering[Boolean] = Ordering.Boolean.reverse
-        implicit val ldo: Ordering[LocalDate] = new Ordering[LocalDate] {
-          def compare(x: LocalDate, y: LocalDate) = x.compareTo(y)
-        }.reverse
+        implicit val ldo: Ordering[LocalDate] =
+          new Ordering[LocalDate] {
+            def compare(x: LocalDate, y: LocalDate) = x.compareTo(y)
+          }.reverse
+
         (x.range.upperBound.map(_.version), x.range.upperBound.map(_.inclusive), x.from)
           .compare(
             (y.range.upperBound.map(_.version), y.range.upperBound.map(_.inclusive), y.from)
@@ -189,7 +192,10 @@ case class BobbyVersionRange(
   def rangeDescr: Option[(String, String)] = {
     def comp(v: BobbyVersion) = if (v.inclusive) " <= " else " < "
     if (lowerBound.isDefined || upperBound.isDefined)
-      Some((lowerBound.map(v => s"${v.version} ${comp(v)}").getOrElse("0.0.0 <="), upperBound.map(v => s"${comp(v)} ${v.version}").getOrElse("<= ∞")))
+      Some((
+        lowerBound.map(v => s"${v.version} ${comp(v)}").getOrElse("0.0.0 <="),
+        upperBound.map(v => s"${comp(v)} ${v.version}").getOrElse("<= ∞")
+      ))
     else None
   }
 
@@ -214,24 +220,24 @@ object BobbyVersionRange {
             BobbyVersionRange(
               lowerBound = Some(fixed),
               upperBound = Some(fixed),
-              qualifier = None,
-              range = trimmedRange
+              qualifier  = None,
+              range      = trimmedRange
             )
         case fixedUpper(v) =>
           val ub = BobbyVersion(Version(v), inclusive = trimmedRange.endsWith("]"))
           BobbyVersionRange(
             lowerBound = None,
             upperBound = Some(ub),
-            qualifier = None,
-            range = trimmedRange
+            qualifier  = None,
+            range      = trimmedRange
           )
         case fixedLower(v) =>
           val lb = BobbyVersion(Version(v), inclusive = trimmedRange.startsWith("["))
           BobbyVersionRange(
             lowerBound = Some(lb),
             upperBound = None,
-            qualifier = None,
-            range = trimmedRange
+            qualifier  = None,
+            range      = trimmedRange
           )
         case rangeRegex(v1, v2) =>
           val lb = BobbyVersion(Version(v1), inclusive = trimmedRange.startsWith("["))
@@ -239,15 +245,15 @@ object BobbyVersionRange {
           BobbyVersionRange(
             lowerBound = Some(lb),
             upperBound = Some(ub),
-            qualifier = None,
-            range = trimmedRange
+            qualifier  = None,
+            range      = trimmedRange
           )
         case qualifier(q) if q.length > 1 =>
           BobbyVersionRange(
             lowerBound = None,
             upperBound = None,
-            qualifier = Some(q),
-            range = trimmedRange
+            qualifier  = Some(q),
+            range      = trimmedRange
           )
       }
   }
@@ -347,14 +353,15 @@ object Version {
 }
 
 case class ServiceWithDependency(
-  repoName          : String,
-  repoVersion       : Version,
-  teams             : List[TeamName],
-  repoType          : RepoType,
-  depGroup          : String,
-  depArtefact       : String,
-  depVersion        : Version,
-  scopes            : Set[DependencyScope])
+  repoName    : String,
+  repoVersion : Version,
+  teams       : List[TeamName],
+  repoType    : RepoType,
+  depGroup    : String,
+  depArtefact : String,
+  depVersion  : Version,
+  scopes      : Set[DependencyScope]
+)
 
 object ServiceWithDependency {
   import play.api.libs.functional.syntax._
@@ -372,7 +379,7 @@ object ServiceWithDependency {
     ~ (__ \ "depGroup"   ).read[String]
     ~ (__ \ "depArtefact").read[String]
     ~ (__ \ "depVersion" ).read[Version]
-    ~ (__ \ "scopes").read[Set[DependencyScope]]
+    ~ (__ \ "scopes"     ).read[Set[DependencyScope]]
     )(ServiceWithDependency.apply _)
   }
 }

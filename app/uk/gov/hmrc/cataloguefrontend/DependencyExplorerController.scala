@@ -25,12 +25,11 @@ import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType.{Prototype, Service}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
+import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, FormUtils}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.DependencyExplorerPage
@@ -67,47 +66,47 @@ class DependencyExplorerController @Inject() (
                                group        = "",
                                artefact     = "",
                                versionRange = "",
-                               repoType     = List(Service.toString)
+                               repoType     = List(RepoType.Service.asString)
                              )
                            ),
           teams          = teams,
           flags          = SlugInfoFlag.values,
           scopes         = DependencyScope.values,
           groupArtefacts = groupArtefacts,
-          versionRange = BobbyVersionRange(None, None, None, ""),
-          searchResults = None,
-          pieData = None,
-          repoTypes = RepoType.values.filterNot(_ == Prototype)
+          versionRange   = BobbyVersionRange(None, None, None, ""),
+          searchResults  = None,
+          pieData        = None,
+          repoTypes      = RepoType.values.filterNot(_ == RepoType.Prototype)
         )
       )
     }
 
   def search(
-    group: String,
-    artefact: String,
+    group       : String,
+    artefact    : String,
     versionRange: Option[String],
-    team: Option[String],
-    flag: Option[String],
-    `scope[]`: Option[List[String]],
+    team        : Option[String],
+    flag        : Option[String],
+    `scope[]`   : Option[List[String]],
     `repoType[]`: Option[List[String]],
-    asCsv: Boolean
+    asCsv       : Boolean
   ): Action[AnyContent] =
     BasicAuthAction.async(implicit request =>
       for {
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
         scopes         =  DependencyScope.values
-        repoTypes      =  RepoType.values.filterNot(_ == Prototype)
+        repoTypes      =  RepoType.values.filterNot(_ == RepoType.Prototype)
         groupArtefacts <- dependenciesService.getGroupArtefacts
         filledForm     =
           SearchForm(
-            group         = group,
-            artefact      = artefact,
-            versionRange  = versionRange.getOrElse(BobbyVersionRange("[0.0.0,]").range),
-            team          = team.getOrElse(""),
-            flag          = flag.getOrElse(SlugInfoFlag.Latest.asString),
-            scope         = `scope[]`.getOrElse(List(DependencyScope.Compile.asString)),
-            repoType      = `repoType[]`.getOrElse(List(RepoType.Service.asString))
+            group        = group,
+            artefact     = artefact,
+            versionRange = versionRange.getOrElse(BobbyVersionRange("[0.0.0,]").range),
+            team         = team.getOrElse(""),
+            flag         = flag.getOrElse(SlugInfoFlag.Latest.asString),
+            scope        = `scope[]`.getOrElse(List(DependencyScope.Compile.asString)),
+            repoType     = `repoType[]`.getOrElse(List(RepoType.Service.asString))
           )
         res <- {
           def pageWithError(msg: String) =
@@ -118,9 +117,9 @@ class DependencyExplorerController @Inject() (
               repoTypes,
               scopes,
               groupArtefacts,
-              versionRange = BobbyVersionRange(None, None, None, ""),
+              versionRange  = BobbyVersionRange(None, None, None, ""),
               searchResults = None,
-              pieData = None
+              pieData       = None
             )
           form()
             .fill(filledForm)
@@ -135,7 +134,7 @@ class DependencyExplorerController @Inject() (
               success = query =>
                 (for {
                   versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
-                  team         =  if (query.team.isEmpty) None else Some(TeamName(query.team))
+                  team         =  Option.when(query.team.nonEmpty)(TeamName(query.team))
                   flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
                   scope        <- query.scope.traverse { s =>
                                     EitherT.fromEither[Future](DependencyScope.parse(s))
@@ -165,9 +164,9 @@ class DependencyExplorerController @Inject() (
                     val source = Source.single(ByteString(csv, "UTF-8"))
                     Result(
                       header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
-                      body = HttpEntity.Streamed(source, None, Some("text/csv"))
+                      body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                     )
-                  } else {
+                  } else
                     Ok(
                       page(
                         form().fill(filledForm),
@@ -181,7 +180,7 @@ class DependencyExplorerController @Inject() (
                         pieData
                       )
                     )
-                  }).merge
+                ).merge
             )
         }
       } yield res
@@ -199,31 +198,27 @@ class DependencyExplorerController @Inject() (
     asCsv       : Boolean = false
   )
 
-  def form(): Form[SearchForm] = {
-    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmpty
+  def form(): Form[SearchForm] =
     Form(
       Forms.mapping(
         "team"         -> Forms.default(Forms.text, ""),
-        "flag"         -> Forms.text.verifying(notEmpty),
+        "flag"         -> Forms.text.verifying(FormUtils.notEmpty),
         "repoType"     -> Forms.list(Forms.text),
         "scope"        -> Forms.list(Forms.text),
-        "group"        -> Forms.text.verifying(notEmpty),
-        "artefact"     -> Forms.text.verifying(notEmpty),
+        "group"        -> Forms.text.verifying(FormUtils.notEmpty),
+        "artefact"     -> Forms.text.verifying(FormUtils.notEmpty),
         "versionRange" -> Forms.default(Forms.text, ""),
         "asCsv"        -> Forms.boolean
       )(SearchForm.apply)(SearchForm.unapply).verifying(flagConstraint)
     )
-  }
 
-  val flagConstraint: Constraint[SearchForm] = Constraint("")({
-    form => {
-      if (form.flag != SlugInfoFlag.Latest.asString && form.repoType != List(Service.asString)) {
+  val flagConstraint: Constraint[SearchForm] =
+    Constraint(""){ form =>
+      if (form.flag != SlugInfoFlag.Latest.asString && form.repoType != List(RepoType.Service.asString))
         Invalid(Seq(ValidationError(s"Flag Integration is only applicable to Service")))
-      } else {
+      else
         Valid
-      }
     }
-  })
 }
 
 object DependencyExplorerController {
@@ -259,7 +254,7 @@ object DependencyExplorerController {
     group       : String,
     artefact    : String,
     versionRange: BobbyVersionRange
-  ): String = {
+  ): String =
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search(
       group        = group,
       artefact     = artefact,
@@ -269,5 +264,4 @@ object DependencyExplorerController {
       versionRange = Some(versionRange.range),
       asCsv        = false,
     ).toString
-  }
 }
