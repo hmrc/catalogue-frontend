@@ -83,22 +83,19 @@ class ServiceCommissioningStatusController @Inject() (
                               allChecks <- serviceCommissioningStatusConnector.allChecks()
                             } yield BadRequest(searchServiceCommissioningStatusPage(formWithErrors, allTeams, allChecks))
         , formObject     => for {
-                                allTeams  <- teamsAndRepositoriesConnector.allTeams()
-                                allChecks <- serviceCommissioningStatusConnector.allChecks()
-                                results   <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType, formObject.lifecycleStatus)
-                                checks    =  if (formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
-
-                                filteredResults = results.filter { result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
-                                  result.checks.exists {
-                                    case check: Check.SimpleCheck =>
-                                      check.checkResult.isRight
-                                    case check: Check.EnvCheck =>
-                                      check.checkResults.values.exists(_.isRight)
-                                  }
-                                }
+                              allTeams   <- teamsAndRepositoriesConnector.allTeams()
+                              allChecks  <- serviceCommissioningStatusConnector.allChecks()
+                              checks      = if (formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
+                              allResults <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType, formObject.lifecycleStatus)
+                              results     = allResults.filter { result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
+                                              result.checks.exists {
+                                                case check: Check.SimpleCheck => check.checkResult.isRight
+                                                case check: Check.EnvCheck    => check.checkResults.values.exists(_.isRight)
+                                              }
+                                            }
                             } yield
                               if (formObject.asCsv) {
-                                val rows   = toRows(allChecks.filter { case (title, _) => checks.contains(title) }, formObject.environments, filteredResults)
+                                val rows   = toRows(allChecks.filter { case (title, _) => checks.contains(title) }, formObject.environments, results)
                                 val csv    = CsvUtils.toCsv(rows)
                                 val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
                                 Result(
@@ -106,7 +103,7 @@ class ServiceCommissioningStatusController @Inject() (
                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                                 )
                               } else {
-                                Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(filteredResults)))
+                                Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(results)))
                               }
         )
     }

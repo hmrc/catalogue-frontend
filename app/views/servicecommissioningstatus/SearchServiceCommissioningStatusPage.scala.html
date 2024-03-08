@@ -99,21 +99,19 @@
                     Symbol("class")       -> "form-select"
                 )
             </div>
-            @if(uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showDecommissionButton.isEnabled) {
-                <div class="col-md-2">
-                    <dl>
-                        <dt><label>Service Status</label></dt>
-                        <dd>
-                            @for(x <-  LifecycleStatus.values) {
-                                <div class="checkbox-group">
-                                    <input name="lifecycleStatus[]" id="@{x.asString}-checkbox" type="checkbox" value="@x.asString" @if(form.get.lifecycleStatus.contains(x)) {checked} />
-                                    <label class="form-check-label" for="@{x.asString}-checkbox">@x.displayName</label>
-                                </div>
-                            }
-                        </dd>
-                    </dl>
-                </div>
-            }
+            <div class="col-md-2">
+                <dl>
+                    <dt><label>Service Status</label></dt>
+                    <dd>
+                        @for(x <-  LifecycleStatus.values) {
+                            <div class="checkbox-group">
+                                <input name="lifecycleStatus[]" id="@{x.asString}-checkbox" type="checkbox" value="@x.asString" @if(form.get.lifecycleStatus.contains(x)) {checked} />
+                                <label class="form-check-label" for="@{x.asString}-checkbox">@x.displayName</label>
+                            </div>
+                        }
+                    </dd>
+                </dl>
+            </div>
             <div class="col-md-3">
                 @helper.select(
                     field                 = form("checks"),
@@ -173,7 +171,13 @@
                 <tbody>
                     @results.getOrElse(Nil).map { result =>
                         <tr>
-                            <td><a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a></td>
+                            <td>
+                                @if(result.lifecycleStatus == LifecycleStatus.Deleted) {
+                                    <del>@result.serviceName.asString</del>
+                                } else {
+                                    <a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a>
+                                }
+                            </td>
                             @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
                                 @(result.checks.find(_.title == title), formCheckType) match {
                                     case (Some(check: Check.SimpleCheck), _                        ) => {<td>@displayResult(title, None, result.lifecycleStatus, Some(check.checkResult))</td><td></td>}
