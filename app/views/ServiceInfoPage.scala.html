@@ -26,7 +26,9 @@
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => comRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.DecommissionInProgress
 @import java.time.Instant
 
 @this(
@@ -83,6 +85,14 @@
               One or more of your <a id="service-relationships-anchor-link" href="#service_relationships">downstream dependencies</a> has been marked for decommissioning.
           </strong>
       </div>
+    }
+
+    @if(lifecycleStatus.contains(DecommissionInProgress)) {
+        <div class="alert alert-warning">
+            <strong>
+                This service is marked for decommissioning, see <a id="decommission-state" href="@{comRoutes.ServiceCommissioningStatusController.getCommissioningState(repositoryDetails.name).url}">commissioning state</a> for progress. If this is unexpected contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target=\"_blank\" rel=\"noreferrer noopener\">#team-platops<span class="glyphicon glyphicon-new-window"/></a> for help.
+            </strong>
+        </div>
     }
 
     <section class="section-wrapper">
