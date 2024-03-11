@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, BuildJobType}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
 @(repo                   : GitRepository,
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
@@ -35,8 +36,9 @@
           @if(repo.repoType == RepoType.Test) {
             <th>Description</th>
           }
-          <th>Latest Result</th>
-        </tr>
+            <th>Latest Result</th>
+            <th>Last Run</th>
+          </tr>
       </thead>
         <tbody>
         @for(ciLink <- repo.jenkinsJobs.filterNot(_.jobType == BuildJobType.PullRequest).sortBy(job => (job.jobType, job.name))) {
@@ -62,11 +64,15 @@
                             <span class="badge fs-6 @badgeColour">@{ciLink.latestBuild.get.result}</span>
                         </td>
                     }
+                    <td>
+                       @{ciLink.latestBuild.get.timestamp.displayFormat}
+                    </td>
                 } else {
                     <td></td>
                     <td>
                         <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
                     </td>
+                    <td></td>
                 }
             </tr>
         }
