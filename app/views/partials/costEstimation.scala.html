@@ -31,7 +31,7 @@
         <div class="card-header"><div class="h4 mb-0">Estimated Cost</div></div>
         <div class="card-body">
             <p>
-                <b>@formatGbp(serviceCostEstimate.totalYearlyCostGbp(costEstimateConfig))</b> per year.
+                <b id="service-costs">@formatGbp(serviceCostEstimate.totalYearlyCostGbp(costEstimateConfig))</b> per year.
                 @if(linkToCostsPage) {
                     <a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)">
                         See costs over time.
