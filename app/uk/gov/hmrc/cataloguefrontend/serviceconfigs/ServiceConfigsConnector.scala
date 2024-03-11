@@ -85,13 +85,13 @@ class ServiceConfigsConnector @Inject() (
     hc         : HeaderCarrier
   ): Future[Seq[DeploymentConfig]] = {
     implicit val dcr = DeploymentConfig.reads
-    val qsParams = Seq(
+    val queryParams = Seq(
       environment.map("environment" -> _.asString),
       service.map("serviceName" -> _),
       team.map("teamName" -> _)
     ).flatten.toMap
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$qsParams")
+      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$queryParams&applied=true")
       .execute[Seq[DeploymentConfig]]
       .recover {
         case UpstreamErrorResponse.WithStatusCode(404) =>

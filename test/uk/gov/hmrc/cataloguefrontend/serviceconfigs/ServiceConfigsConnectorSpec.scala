@@ -49,7 +49,7 @@ final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Suppor
   "deploymentConfig" should {
     "return the deployment configuration for a service in an environment" in {
       stubFor(
-        get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service"))
+        get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service&applied=true"))
           .willReturn(aResponse().withBody("""[{ "name" : "test1", "slots": 11, "instances": 3, "environment": "production", "zone": "protected" }]"""))
       )
 
@@ -63,7 +63,7 @@ final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Suppor
 
     "return None when the deployment configuration cannot be found" in {
       stubFor(
-        get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service"))
+        get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service&applied=true"))
           .willReturn(aResponse().withBody("""[]"""))
       )
 
@@ -81,14 +81,14 @@ final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Suppor
       stubFor(
         get(urlEqualTo("/service-configs/search?environment=production&key=test.key&keyFilterType=contains&value=testValue&valueFilterType=equalTo"))
           .willReturn(aResponse().withBody("""[
-              |  {
-              |    "serviceName": "test-service",
-              |    "key": "test.key",
-              |    "environments": {
-              |      "production": { "source": "some-source", "sourceUrl": "some-url", "value": "testValue" }
-              |     }
-              |  }
-              |]""".stripMargin))
+            {
+              "serviceName": "test-service",
+              "key": "test.key",
+              "environments": {
+                "production": { "source": "some-source", "sourceUrl": "some-url", "value": "testValue" }
+               }
+            }
+          ]""".stripMargin))
       )
 
       serviceConfigsConnector
