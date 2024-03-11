@@ -22,7 +22,7 @@ import play.api.data.{Form, Forms}
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.mvc._
-import play.api.Logger
+import play.api.{Configuration, Logger}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
@@ -58,6 +58,7 @@ case class EnvData(
 
 @Singleton
 class CatalogueController @Inject() (
+  config                             : Configuration,
   teamsAndRepositoriesConnector      : TeamsAndRepositoriesConnector,
   serviceConfigsService              : ServiceConfigsService,
   costEstimationService              : CostEstimationService,
@@ -101,7 +102,7 @@ class CatalogueController @Inject() (
     BasicAuthAction.async { implicit request =>
       confluenceConnector
         .getBlogs()
-        .map(blogs => Ok(indexPage(blogs)))
+        .map(blogs => Ok(indexPage(blogs, config.get[String]("confluence.allBlogsUrl"))))
     }
 
   /** Renders the service page by either the repository name, or the artefact name (if configured).
