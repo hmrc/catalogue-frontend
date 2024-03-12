@@ -44,12 +44,12 @@
                   , Option[Seq[VulnerabilitySummary]]
                   , (Option[ServiceJDKVersion], ServiceJDKVersion)
                   )]
-)( implicit
+)(implicit
   messages      : Messages
 , request       : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField = @{helper.FieldConstructor(helper.catalogueFieldConstructor.f)}
 
 @standard_layout("Deploy Service", "deployments") {
   <h1 class="page-heading mt-4">Deploy Service</h1>
@@ -70,7 +70,6 @@
               <div id="service-name-matches" class="search-matches-dropdown d-none"></div>
             </dd>
           </dl>
-
         }
 
         @if(form("serviceName").value.isDefined && latestVersion.nonEmpty && environments.nonEmpty) {
@@ -147,29 +146,44 @@
           }
           <div class="accordion-item">
             <div class="accordion-header" id="headingJvmChanges">
-              <button class="accordion-button collapsed" type="button" disabled>
-              @defining((jvmChanges._1, jvmChanges._2)) {
-                case (None, toDeploy) => {
-                  JVM: @toDeploy.version @toDeploy.vendor - First deployment
+              @defining((jvmChanges._1, jvmChanges._2)) { case (oldJvm, newJvm) =>
+                @defining(oldJvm.map(_ != newJvm).getOrElse(true)){ isJvmChanged =>
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJvmChanges" aria-expanded="false" aria-controls="collapseJvmChanges" @if(!isJvmChanged) {disabled}>
+                    JVM Changes
+                    @changesBadge(if (isJvmChanged) 1 else 0)
+                  </button>
                 }
-                case (Some(current), toDeploy) if current != toDeploy => {
-                  JVM: @toDeploy.version @toDeploy.vendor - Previously @current.version @current.vendor
-                }
-                case (Some(current), toDeploy) => {
-                  JVM: @toDeploy.version @toDeploy.vendor - No change
-                }
+
+                <div id="collapseJvmChanges" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+                  <div class="accordion-body">
+                    <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+                      <thead>
+                        <tr>
+                          <th>Previously</th>
+                          <th>New</th>
+                        </tr>
+                      </thead>
+                      <tbody id="config-updates-rows">
+                        <tr>
+                          @oldJvm match {
+                            case None => { <td>-</td> }
+                            case Some(current) => { <td>@current.version @current.vendor</td> }
+                          }
+                          <td>@newJvm.version @newJvm.vendor</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               }
-              </button>
+
             </div>
           </div>
           <div class="accordion-item">
             <div class="accordion-header" id="headingConfigUpdates">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(configUpdates.isEmpty) {disabled} >
                 Config Updates
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(configUpdates.isEmpty) {text-bg-secondary} else {text-bg-info}">
-                  @configUpdates.size
-                  <span class="visually-hidden">Number of config changes</span>
-                </span>
+                @changesBadge(configUpdates.size)
               </button>
             </div>
             <div id="collapseConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
@@ -202,10 +216,7 @@
             <div class="accordion-header" id="headingConfigWarnings">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigWarnings" aria-expanded="false" aria-controls="collapseConfigWarnings" @if(configWarnings.isEmpty) {disabled}>
                 Config Warnings
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(configWarnings.isEmpty) {text-bg-secondary} else {text-bg-info}">
-                  @configWarnings.size
-                  <span class="visually-hidden">Number of config warnings</span>
-                </span>
+                @changesBadge(configWarnings.size)
               </button>
             </div>
             <div id="collapseConfigWarnings" class="accordion-collapse collapse" aria-labelledby="headingConfigWarnings" data-bs-parent="#accordion">
@@ -237,10 +248,7 @@
                   Vulnerabilities unknown - needs to be already deployed in an environment
                 } else {
                   Vulnerabilities - action required
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(optVulnerabilities.getOrElse(Nil).isEmpty) {text-bg-secondary} else {text-bg-info}">
-                    @optVulnerabilities.getOrElse(Nil).size
-                    <span class="visually-hidden">Number of vulnerabilities</span>
-                  </span>
+                  @changesBadge(optVulnerabilities.getOrElse(Nil).size)
                 }
               </button>
             </div>
@@ -417,4 +425,10 @@
           </td>
       </tr>
   }
+}
+
+@changesBadge(changeCount: Int) = {
+  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(changeCount == 0) {text-bg-secondary} else {text-bg-info}">
+  @changeCount
+  <span class="visually-hidden">Number of changes</span>
 }
