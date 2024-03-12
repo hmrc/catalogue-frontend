@@ -190,7 +190,7 @@ class DeployServiceController @Inject()(
         confUpdates          =  (confNew.view.mapValues(x => (x, true)) ++ confRemoves.view.mapValues(x => (x, false))).toMap
         confWarnings         <- EitherT
                                   .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), Some(formObject.version), latest = true))
-        vulnerabils          <- EitherT
+        vulnerabilites       <- EitherT
                                   .right[Result](
                                     vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired))
                                     .map(_.flatMap {
@@ -199,8 +199,18 @@ class DeployServiceController @Inject()(
                                     })
                                   )
         jvmChanges            =  (currentSlug.map(_.java), slugToDeploy.java)
+        deploymentConfigUpdates <- EitherT
+                                     .right[Result](serviceConfigsService.deploymentConfigChanges(ServiceConfigsService.ServiceName(formObject.serviceName), formObject.environment))
       } yield
-        Ok(deployServicePage(form, hasPerm, accessibleServices, latest, releases, environments, Some((confUpdates, confWarnings, vulnerabils, jvmChanges))))
+        Ok(deployServicePage(
+          form,
+          hasPerm,
+          accessibleServices,
+          latest,
+          releases,
+          environments,
+          Some((confUpdates, confWarnings, vulnerabilites, jvmChanges, deploymentConfigUpdates))
+        ))
       ).merge
     }
 

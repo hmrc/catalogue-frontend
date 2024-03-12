@@ -81,6 +81,7 @@ class ServiceConfigsConnector @Inject() (
     service    : Option[String]      = None
   , environment: Option[Environment] = None
   , team       : Option[String]      = None
+  , applied    : Boolean             = true
   )(implicit
     hc         : HeaderCarrier
   ): Future[Seq[DeploymentConfig]] = {
@@ -91,11 +92,11 @@ class ServiceConfigsConnector @Inject() (
       team.map("teamName" -> _)
     ).flatten.toMap
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$queryParams&applied=true")
+      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$queryParams&applied=$applied")
       .execute[Seq[DeploymentConfig]]
       .recover {
         case UpstreamErrorResponse.WithStatusCode(404) =>
-          logger.info(s"No deployments found for ${service.getOrElse("")} ${environment.getOrElse("")}")
+          logger.info(s"No deployments found for $queryParams")
           Seq.empty
       }
   }

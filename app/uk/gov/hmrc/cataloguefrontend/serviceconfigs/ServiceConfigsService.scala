@@ -190,7 +190,54 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
       .groupBy(_.serviceName)
       .view
       .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.groupBy(_.environment)).toMap)(Ordering.by(_.asString))).toMap
-}
+
+
+  def deploymentConfigChanges(service: ServiceName, environment: Environment)(implicit hc: HeaderCarrier): Future[Seq[ConfigChange]] =
+    for {
+      appliedConfig  <- serviceConfigsConnector.deploymentConfig(service = Some(service.asString), environment = Some(environment), applied = true ).map(_.headOption)
+      newConfig      <- serviceConfigsConnector.deploymentConfig(service = Some(service.asString), environment = Some(environment), applied = false).map(_.headOption)
+      slots          =  valChanges(
+                          "slots",
+                          appliedConfig.map(_.deploymentSize.slots.toString),
+                          newConfig.map(_.deploymentSize.slots.toString)
+                        )
+      instances      =  valChanges(
+                          "instances",
+                          appliedConfig.map(_.deploymentSize.instances.toString),
+                          newConfig.map(_.deploymentSize.instances.toString)
+                        )
+      envVars        =  mapChanges(
+                          "environment",
+                          appliedConfig.fold(Map.empty[String, String])(_.envVars),
+                          newConfig.fold(Map.empty[String, String])(_.envVars)
+                        )
+      jvm            =  mapChanges(
+                          "jvm",
+                          appliedConfig.fold(Map.empty[String, String])(_.jvm),
+                          newConfig.fold(Map.empty[String, String])(_.jvm)
+                        )
+    } yield (slots ++ instances ++ envVars ++ jvm).sortBy(_.k)
+
+    private def valChanges(key: String, appliedVal: Option[String], newVal: Option[String]): Seq[ConfigChange] =
+      (appliedVal, newVal) match {
+        case (Some(appliedVal), Some(newVal)) if appliedVal != newVal => Seq(ConfigChange.ChangedConfig(key, appliedVal, newVal))
+        case (None            , Some(newVal))                         => Seq(ConfigChange.NewConfig(key, newVal))
+        case (Some(appliedVal), None        )                         => Seq(ConfigChange.DeletedConfig(key, appliedVal))
+        case _                                                        => Seq.empty
+      }
+
+    private def mapChanges(keyPrefix: String, appliedConf: Map[String, String], newConf: Map[String, String]): Seq[ConfigChange] =
+      appliedConf.toSeq.collect { case (k, v) if newConf.get(k).isEmpty =>
+        ConfigChange.DeletedConfig(s"$keyPrefix.${k}", v)
+      } ++
+        newConf.toSeq.flatMap { case (k, v) =>
+          appliedConf.get(k) match {
+            case Some(appliedV) if appliedV != v => Seq(ConfigChange.ChangedConfig(s"$keyPrefix.${k}", appliedV, v))
+            case None                            => Seq(ConfigChange.NewConfig(s"$keyPrefix.${k}", v))
+            case _                               => Seq.empty
+          }
+        }
+  }
 
 object ServiceConfigsService {
 
@@ -381,4 +428,11 @@ object ServiceConfigsService {
       )(ConfigWarning.apply _)
     }
   }
+}
+
+sealed trait ConfigChange { def k: String }
+object ConfigChange {
+  case class NewConfig(k: String, v: String)                           extends ConfigChange
+  case class DeletedConfig(k: String, previousV: String)               extends ConfigChange
+  case class ChangedConfig(k: String, previousV: String, newV: String) extends ConfigChange
 }

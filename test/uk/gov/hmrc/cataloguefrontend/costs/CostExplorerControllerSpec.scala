@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.costs
 
-import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
@@ -33,7 +32,12 @@ import uk.gov.hmrc.internalauth.client.test.StubBehaviour
 
 import scala.concurrent.Future
 
-class CostExplorerControllerSpec extends AnyWordSpec with FakeApplicationBuilder with OptionValues {
+class CostExplorerControllerSpec
+  extends AnyWordSpec
+     with FakeApplicationBuilder
+     with MockitoSugar
+     with ArgumentMatchersSugar
+     with OptionValues {
 
   private val mockAuthStubBehaviour             = mock[StubBehaviour]
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
@@ -48,14 +52,13 @@ class CostExplorerControllerSpec extends AnyWordSpec with FakeApplicationBuilder
   }
 
   "must return OK and the correct view for a GET" in {
-
     when(mockAuthStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
       .thenReturn(Future.unit)
 
-    when(mockTeamsAndRepositoriesConnector.allTeams()(any()))
+    when(mockTeamsAndRepositoriesConnector.allTeams()(any))
       .thenReturn(Future.successful(Seq.empty))
 
-    when(mockServiceConfigConnector.deploymentConfig(any(), any(), any())(any()))
+    when(mockServiceConfigConnector.deploymentConfig(any, any, any, any)(any))
       .thenReturn(Future.successful(Seq.empty))
 
     val request = FakeRequest(GET, routes.CostsSummaryController.costExplorer().url)

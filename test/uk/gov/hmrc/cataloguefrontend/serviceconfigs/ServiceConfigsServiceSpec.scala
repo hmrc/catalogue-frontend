@@ -22,6 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -208,6 +209,90 @@ class ServiceConfigsServiceSpec
           )
         ))
       )
+    }
+
+    "serviceConfigsService.deploymentConfigChanges" should {
+      "show changed deployment sizes" in new Setup {
+        val serviceName = ServiceName("test-service")
+        val environment = Environment.Production
+        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName.asString), Some(environment), applied = true))
+          .thenReturn(Future.successful(Seq(
+            DeploymentConfig(
+              serviceName.asString,
+              DeploymentSize(slots = 1, instances = 2),
+              environment = environment,
+              zone        = Zone.Protected,
+              envVars     = Map("k1" -> "v1"),
+              jvm         = Map("k2" -> "v2")
+            )
+          )))
+        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName.asString), Some(environment), applied = false))
+          .thenReturn(Future.successful(Seq(
+            DeploymentConfig(
+              serviceName.asString,
+              DeploymentSize(slots = 3, instances = 4),
+              environment = environment,
+              zone        = Zone.Protected,
+              envVars     = Map("k1" -> "v1"),
+              jvm         = Map("k2" -> "v2")
+            )
+          )))
+        serviceConfigsService.deploymentConfigChanges(serviceName, environment).futureValue shouldBe Seq(
+          ConfigChange.ChangedConfig("instances", previousV = "2", newV = "4"),
+          ConfigChange.ChangedConfig("slots"    , previousV = "1", newV = "3")
+        )
+      }
+
+      "show changed envvars and jvm" in new Setup {
+        val serviceName = ServiceName("test-service")
+        val environment = Environment.Production
+        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName.asString), Some(environment), applied = true))
+          .thenReturn(Future.successful(Seq(
+            DeploymentConfig(
+              serviceName.asString,
+              DeploymentSize(slots = 1, instances = 2),
+              environment = environment,
+              zone        = Zone.Protected,
+              envVars     = Map(
+                              "evk1" -> "evv1",
+                              "evk2" -> "evv2b",
+                              "evk3" -> "evv3"
+                            ),
+              jvm         = Map(
+                              "jk1" -> "jv1",
+                              "jk2" -> "jv2b",
+                              "jk3" -> "jv3"
+                            )
+            )
+          )))
+        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName.asString), Some(environment), applied = false))
+          .thenReturn(Future.successful(Seq(
+            DeploymentConfig(
+              serviceName.asString,
+              DeploymentSize(slots = 1, instances = 2),
+              environment = environment,
+              zone        = Zone.Protected,
+              envVars     = Map(
+                              "evk1" -> "evv1",
+                              "evk2" -> "evv2",
+                              "evk4" -> "evv4"
+                            ),
+              jvm         = Map(
+                              "jk1" -> "jv1",
+                              "jk2" -> "jv2",
+                              "jk4" -> "jv4"
+                            )
+            )
+          )))
+        serviceConfigsService.deploymentConfigChanges(serviceName, environment).futureValue shouldBe Seq(
+          ConfigChange.ChangedConfig("environment.evk2", "evv2b", "evv2"),
+          ConfigChange.DeletedConfig("environment.evk3", "evv3"),
+          ConfigChange.NewConfig("environment.evk4", "evv4"),
+          ConfigChange.ChangedConfig("jvm.jk2", "jv2b", "jv2"),
+          ConfigChange.DeletedConfig("jvm.jk3", "jv3"),
+          ConfigChange.NewConfig("jvm.jk4", "jv4")
+        )
+      }
     }
   }
 

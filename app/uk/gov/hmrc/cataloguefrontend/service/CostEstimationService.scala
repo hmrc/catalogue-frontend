@@ -142,7 +142,7 @@ object CostEstimationService {
     val empty = DeploymentSize(slots = 0, instances = 0)
 
     val reads: Reads[DeploymentSize] =
-      ( (__ \ "slots").read[Int]
+      ( (__ \ "slots"    ).read[Int]
       ~ (__ \ "instances").read[Int]
       )(DeploymentSize.apply _)
   }
@@ -152,6 +152,8 @@ object CostEstimationService {
     deploymentSize: DeploymentSize,
     environment   : Environment,
     zone          : Zone,
+    envVars       : Map[String, String],
+    jvm           : Map[String, String]
   )
 
   case class TotalSlots(asInt: Int) extends AnyVal {
@@ -191,27 +193,15 @@ object CostEstimationService {
     implicit val ds: Reads[DeploymentSize] = DeploymentSize.reads
     implicit val zf: Reads[Zone]           = Zone.format
 
-    def apply(
-      serviceName: String,
-      slots:       Int,
-      instances:   Int,
-      environment: Environment,
-      zone:        Zone,
-    ): DeploymentConfig =
-      DeploymentConfig(
-        serviceName,
-        DeploymentSize(slots, instances),
-        environment,
-        zone,
-      )
-
     val reads: Reads[DeploymentConfig] =
       ( (__ \ "name"       ).read[String]
       ~ (__ \ "slots"      ).read[Int]
       ~ (__ \ "instances"  ).read[Int]
       ~ (__ \ "environment").read[Environment]
       ~ (__ \ "zone"       ).read[Zone]
-      )(DeploymentConfig.apply(_, _, _, _, _))
+      ~ (__ \ "envVars"    ).read[Map[String, String]]
+      ~ (__ \ "jvm"        ).read[Map[String, String]]
+      ){ (n, s, i, e, z, ev, j) => DeploymentConfig(n, DeploymentSize(s, i), e, z, ev, j) }
   }
 
   final case class HistoricEstimatedCostCharts(
