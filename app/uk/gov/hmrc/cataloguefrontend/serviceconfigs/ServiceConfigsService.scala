@@ -190,6 +190,49 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
       .groupBy(_.serviceName)
       .view
       .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.groupBy(_.environment)).toMap)(Ordering.by(_.asString))).toMap
+
+
+  def deploymentConfigChanges(service: ServiceName, environment: Environment)(implicit hc: HeaderCarrier): Future[Seq[ConfigChange]] =
+    for {
+      appliedConfig  <- serviceConfigsConnector.deploymentConfig(service = Some(service.asString), environment = Some(environment), applied = true ).map(_.headOption)
+      newConfig      <- serviceConfigsConnector.deploymentConfig(service = Some(service.asString), environment = Some(environment), applied = false).map(_.headOption)
+      slots          =  (appliedConfig.map(_.deploymentSize.slots), newConfig.map(_.deploymentSize.slots)) match {
+                          case (Some(appliedSlots), Some(newSlots)) if appliedSlots != newSlots => Seq(ConfigChange.ChangedConfig("slots", appliedSlots.toString, newSlots.toString))
+                          case (None              , Some(newSlots))                             => Seq(ConfigChange.NewConfig("slots", newSlots.toString))
+                          case (Some(appliedSlots), None          )                             => Seq(ConfigChange.DeletedConfig("slots", appliedSlots.toString))
+                          case _                                                                => Seq.empty
+                        }
+      instances      =  (appliedConfig.map(_.deploymentSize.instances), newConfig.map(_.deploymentSize.instances)) match {
+                          case (Some(appliedInstances), Some(newInstances)) if appliedInstances != newInstances => Seq(ConfigChange.ChangedConfig("instances", appliedInstances.toString, newInstances.toString))
+                          case (None                  , Some(newInstances))                                     => Seq(ConfigChange.NewConfig("instances", newInstances.toString))
+                          case (Some(appliedInstances), None              )                                     => Seq(ConfigChange.DeletedConfig("instances", appliedInstances.toString))
+                          case _                                                                                => Seq.empty
+                        }
+      appliedEnvVars =  appliedConfig.fold(Map.empty[String, String])(_.envVars)
+      newEnvVars     =  newConfig.fold(Map.empty[String, String])(_.envVars)
+      envVars        =  appliedEnvVars.toSeq.collect { case (k, v) if newEnvVars.get(k).isEmpty =>
+                          ConfigChange.DeletedConfig(s"environment.${k}", v)
+                        } ++
+                          newEnvVars.toSeq.flatMap { case (k, v) =>
+                            appliedEnvVars.get(k) match {
+                              case Some(appliedV) if appliedV != v => Seq(ConfigChange.ChangedConfig(s"environment.${k}", appliedV, v))
+                              case None                            => Seq(ConfigChange.NewConfig(s"environment.${k}", v))
+                              case _                               => Seq.empty
+                            }
+                          }
+      appliedJvm     =  appliedConfig.fold(Map.empty[String, String])(_.jvm)
+      newJvm         =  newConfig.fold(Map.empty[String, String])(_.jvm)
+      jvm            =  appliedJvm.toSeq.collect { case (k, v) if newJvm.get(k).isEmpty =>
+                              ConfigChange.DeletedConfig(s"jvm.${k}", v)
+                            } ++
+                              newJvm.toSeq.flatMap { case (k, v) =>
+                                appliedJvm.get(k) match {
+                                  case Some(appliedV) if appliedV != v => Seq(ConfigChange.ChangedConfig(s"jvm.${k}", appliedV, v))
+                                  case None                            => Seq(ConfigChange.NewConfig(s"jvm.${k}", v))
+                                  case _                               => Seq.empty
+                                }
+                              }
+    } yield (slots ++ instances ++ envVars ++ jvm).sortBy(_.k)
 }
 
 object ServiceConfigsService {
@@ -381,4 +424,11 @@ object ServiceConfigsService {
       )(ConfigWarning.apply _)
     }
   }
+}
+
+sealed trait ConfigChange { def k: String }
+object ConfigChange {
+  case class NewConfig(k: String, v: String)                           extends ConfigChange
+  case class DeletedConfig(k: String, previousV: String)               extends ConfigChange
+  case class ChangedConfig(k: String, previousV: String, newV: String) extends ConfigChange
 }

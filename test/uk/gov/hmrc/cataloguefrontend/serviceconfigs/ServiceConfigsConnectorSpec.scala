@@ -30,7 +30,11 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Support with WireMockSupport with MockitoSugar {
+final class ServiceConfigsConnectorSpec
+  extends UnitSpec
+     with HttpClientV2Support
+     with WireMockSupport
+     with MockitoSugar {
 
   val servicesConfig =
     new ServicesConfig(
@@ -50,7 +54,15 @@ final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Suppor
     "return the deployment configuration for a service in an environment" in {
       stubFor(
         get(urlEqualTo("/service-configs/deployment-config?environment=production&serviceName=some-service&applied=true"))
-          .willReturn(aResponse().withBody("""[{ "name" : "test1", "slots": 11, "instances": 3, "environment": "production", "zone": "protected" }]"""))
+          .willReturn(aResponse().withBody("""[{
+            "name"       : "test1",
+            "slots"      : 11,
+            "instances"  : 3,
+            "environment": "production",
+            "zone"       : "protected",
+            "envVars"    : { "k1": "v1"},
+            "jvm"        : { "k2": "v2"}
+          }]"""))
       )
 
       val deploymentConfig =
@@ -58,7 +70,16 @@ final class ServiceConfigsConnectorSpec extends UnitSpec with HttpClientV2Suppor
           .deploymentConfig(Some("some-service"), Some(Environment.Production))
           .futureValue
 
-      deploymentConfig.headOption shouldBe Some(DeploymentConfig("test1", DeploymentSize(slots = 11, instances = 3), environment = Environment.Production, zone = Zone.Protected))
+      deploymentConfig shouldBe Seq(
+        DeploymentConfig(
+          "test1",
+          DeploymentSize(slots = 11, instances = 3),
+          environment = Environment.Production,
+          zone        = Zone.Protected,
+          envVars     = Map("k1" -> "v1"),
+          jvm         = Map("k2" -> "v2")
+        )
+      )
     }
 
     "return None when the deployment configuration cannot be found" in {

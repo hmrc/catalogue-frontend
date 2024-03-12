@@ -31,7 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, ServiceDependenci
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
@@ -129,6 +129,8 @@ class DeployServiceControllerSpec
         .thenReturn(Future.successful(Seq(someConfigWarning)))
       when(mockVulnerabilitiesConnector.vulnerabilitySummaries(eqTo(None), eqTo(Some(CurationStatus.ActionRequired)), eqTo(Some("some-service")), eqTo(Some(Version("0.3.0"))), eqTo(None), eqTo(None))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
+      when(mockServiceConfigsService.deploymentConfigChanges(eqTo(ServiceName("some-service")), eqTo(Environment.QA))(any[HeaderCarrier]))
+        .thenReturn(Future.successful(someDeploymentConfigChanges))
 
       val futResult = underTest.step2()(
         FakeRequest()
@@ -150,13 +152,13 @@ class DeployServiceControllerSpec
       jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 2
       jsoupDocument.select("#config-warnings-rows").first.children.size shouldBe 1
       jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
+      jsoupDocument.select("#deployment-config-updates-rows").first.children.size shouldBe 1
       jsoupDocument.select("#deploy-btn").size shouldBe 1
     }
   }
 
   "Deploy Service Page step3" should {
     "deploy service" in new Setup {
-
       when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
@@ -291,6 +293,10 @@ class DeployServiceControllerSpec
                             )
   , occurrences           = Nil
   , teams                 = Seq("some-team")
+  )
+
+  private val someDeploymentConfigChanges = Seq(
+    ConfigChange.ChangedConfig("k", "previousV", "newV")
   )
 
   private trait Setup {
