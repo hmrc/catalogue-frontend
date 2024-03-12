@@ -118,12 +118,14 @@ object FormCheckType extends Enum[FormCheckType] {
 sealed trait LifecycleStatus { val asString: String; val displayName: String }
 
 object LifecycleStatus {
-  object Active                 extends LifecycleStatus { val asString: String = "Active";                 val displayName: String = "Active" }
-  object Archived               extends LifecycleStatus { val asString: String = "Archived";               val displayName: String = "Archived" }
+  object Active                 extends LifecycleStatus { val asString: String = "Active";                 val displayName: String = "Active"          }
+  object Archived               extends LifecycleStatus { val asString: String = "Archived";               val displayName: String = "Archived"        }
   object DecommissionInProgress extends LifecycleStatus { val asString: String = "DecommissionInProgress"; val displayName: String = "Decommissioning" }
-  object Deprecated             extends LifecycleStatus { val asString: String = "Deprecated";             val displayName: String = "Deprecated" }
+  object Deprecated             extends LifecycleStatus { val asString: String = "Deprecated";             val displayName: String = "Deprecated"      }
+  object Deleted                extends LifecycleStatus { val asString: String = "Deleted";                val displayName: String = "Deleted"         }
 
-  val values: List[LifecycleStatus] = List(Active, Archived, DecommissionInProgress, Deprecated)
+
+  val values: List[LifecycleStatus] = List(Active, Archived, DecommissionInProgress, Deprecated, Deleted)
 
   def parse(s: String): Either[String, LifecycleStatus] =
     values
@@ -143,6 +145,6 @@ object LifecycleStatus {
     }
 
   def canDecommission(lifecycleStatus: LifecycleStatus): Boolean =
-    List(Archived, DecommissionInProgress).contains(lifecycleStatus)
+    List(Archived, DecommissionInProgress, Deleted).contains(lifecycleStatus)
 
 }

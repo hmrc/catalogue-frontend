@@ -30,9 +30,6 @@ object CatalogueFrontendSwitches {
   def requiresLogin: FeatureSwitch =
     FeatureSwitch.forName("requires-login")
 
-  def showDecommissionButton: FeatureSwitch =
-    FeatureSwitch.forName("show-decommission-button")
-
   def showTestRepoRelationships: FeatureSwitch =
     FeatureSwitch.forName("show-test-repo-relationships")
 }

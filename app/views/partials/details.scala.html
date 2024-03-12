@@ -35,9 +35,7 @@
 @configOptions = @{
     val markForDecommissioningOption = lifecycleStatus.flatMap(s =>
         Option.when(
-            CatalogueFrontendSwitches.showDecommissionButton.isEnabled
-                && canMarkForDecommissioning
-                && !Seq(LifecycleStatus.Archived, LifecycleStatus.DecommissionInProgress).contains(s)
+            canMarkForDecommissioning && !Seq(LifecycleStatus.Archived, LifecycleStatus.DecommissionInProgress).contains(s)
         ){
             <li>
                 <button type="button" class="dropdown-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning">Mark for decommissioning</button>
