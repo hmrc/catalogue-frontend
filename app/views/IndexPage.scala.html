@@ -27,8 +27,8 @@
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 
 @this(viewMessages: ViewMessages)
-
 @(blogs : List[ConfluenceConnector.Blog]
+, allBlogsUrl: String
 )(implicit
  request: RequestHeader
 )
@@ -56,14 +56,20 @@
             <div id="blog-posts" class="recent-box">
                 <div class="content-grow content-grow-gradient">
                     <div class='content-grow-wrapper'>
-                    <table>
-                        @blogs.map { blog =>
-                            <tr>
-                                <td>@{blog.createdDate.displayFormat}</td>
-                                <td><a aria-label="link to blog" id="link-to-@{blog.title.toLowerCase.replace(" ", "-")}-blog-post" href="@{blog.url}">@{blog.title}</a></td>
-                            </tr>
-                        }
-                    </table>
+                        <table>
+                            @blogs.map { blog =>
+                                <tr>
+                                    <td>@{
+                                        blog.createdDate.dateOnlyFormat
+                                    }</td>
+                                    <td>
+                                        <a aria-label="link to blog" id="link-to-@{blog.title.toLowerCase.replace(" ", "-")}-blog-post" href="@{blog.url}">@{blog.title}
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                        <a aria-label="link to more blogs" id="link-to-more-blogs" href="@allBlogsUrl"> See more blogs</a>
                     </div>
                 </div>
                 <div class="text-center">
