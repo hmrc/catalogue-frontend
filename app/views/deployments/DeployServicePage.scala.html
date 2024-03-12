@@ -149,27 +149,25 @@
               @defining((jvmChanges._1, jvmChanges._2)) { case (oldJvm, newJvm) =>
                 @defining(oldJvm.map(_ != newJvm).getOrElse(true)){ isJvmChanged =>
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJvmChanges" aria-expanded="false" aria-controls="collapseJvmChanges" @if(!isJvmChanged) {disabled}>
-                    JVM Changes
+                    JVM: @newJvm.version @newJvm.vendor
                     @changesBadge(if (isJvmChanged) 1 else 0)
                   </button>
                 }
 
-                <div id="collapseJvmChanges" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+                <div id="collapseJvmChanges" class="accordion-collapse collapse" aria-labelledby="headingJvmChanges" data-bs-parent="#accordion">
                   <div class="accordion-body">
                     <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
                       <thead>
                         <tr>
                           <th>Previously</th>
-                          <th>New</th>
                         </tr>
                       </thead>
-                      <tbody id="config-updates-rows">
+                      <tbody id="jvm-changes-rows">
                         <tr>
                           @oldJvm match {
-                            case None => { <td>-</td> }
+                            case None => { <td>Not deployed</td> }
                             case Some(current) => { <td>@current.version @current.vendor</td> }
                           }
-                          <td>@newJvm.version @newJvm.vendor</td>
                         </tr>
                       </tbody>
                     </table>
