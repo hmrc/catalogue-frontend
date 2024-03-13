@@ -61,25 +61,25 @@ class WhatsRunningWhereServiceSpec
 
       when(serviceConfigsConnector.allDeploymentConfig()).thenReturn(
         Future.successful(Seq(
-          ServiceDeploymentConfig(serviceName= "address-lookup", environment = "development", slots = 2, instances = 2),
-          ServiceDeploymentConfig(serviceName= "address-lookup", environment = "qa", slots = 2, instances = 2),
-          ServiceDeploymentConfig(serviceName= "address-lookup", environment = "production", slots = 4, instances = 4),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "development", slots = 3, instances = 3),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "qa", slots = 3, instances = 2),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "staging", slots = 5, instances = 5),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "production", slots = 8, instances = 4),
-          ServiceDeploymentConfig(serviceName= "PODS", environment = "production", slots = 16, instances = 2),
-          ServiceDeploymentConfig(serviceName= "file-upload", environment = "qa", slots = 2, instances = 1)
+          ServiceDeploymentConfig(serviceName= "address-lookup"   , environment = "development", slots = 2 , instances = 2),
+          ServiceDeploymentConfig(serviceName= "address-lookup"   , environment = "qa"         , slots = 2 , instances = 2),
+          ServiceDeploymentConfig(serviceName= "address-lookup"   , environment = "production" , slots = 4 , instances = 4),
+          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "development", slots = 3 , instances = 3),
+          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "qa"         , slots = 3 , instances = 2),
+          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "staging"    , slots = 5 , instances = 5),
+          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "production" , slots = 8 , instances = 4),
+          ServiceDeploymentConfig(serviceName= "PODS"             , environment = "production" , slots = 16, instances = 2),
+          ServiceDeploymentConfig(serviceName= "file-upload"      , environment = "qa"         , slots = 2 , instances = 1)
         ))
       )
 
       val expectedResult = Seq(
         ServiceDeploymentConfigSummary("address-lookup", Seq(
           ServiceDeploymentConfig(serviceName= "address-lookup", environment = "development", slots = 2, instances = 2),
-          ServiceDeploymentConfig(serviceName= "address-lookup", environment = "production", slots = 4, instances = 4))),
+          ServiceDeploymentConfig(serviceName= "address-lookup", environment = "production" , slots = 4, instances = 4))),
         ServiceDeploymentConfigSummary("health-indicators", Seq(
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "qa", slots = 3, instances = 2),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "staging", slots = 5, instances = 5),
+          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "qa"        , slots = 3, instances = 2),
+          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "staging"   , slots = 5, instances = 5),
           ServiceDeploymentConfig(serviceName= "health-indicators", environment = "production", slots = 8, instances = 4)
         ))
       )
