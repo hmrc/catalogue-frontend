@@ -16,6 +16,9 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.JenkinsJob
 @import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildData
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
+
 
 @(testJobMap: Map[String, Seq[JenkinsJob]])
 
@@ -31,6 +34,7 @@
                         <th>Test Repository</th>
                         <th>Test Job</th>
                         <th>Latest Result</th>
+                        <th>Last Run</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,8 +48,8 @@
                                 <td>
                                     <a id="link-to-job-@{firstJob.name}" href="@{firstJob.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{firstJob.name}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
-                                @defining(firstJob.latestBuild.flatMap(_.result)) {
-                                    case Some(result) => {
+                                @defining(firstJob.latestBuild) {
+                                    case Some(BuildData(_, _, timestamp, Some(result), _)) => {
                                         @defining({
                                             result match {
                                                 case "SUCCESS" => "text-bg-success"
@@ -58,11 +62,15 @@
                                                 <span class="badge fs-6 @badgeColour">@{result}</span>
                                             </td>
                                         }
+                                        <td>
+                                            @{timestamp.displayFormat}
+                                        </td>
                                     }
                                     case None => {
                                         <td>
                                             <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
                                         </td>
+                                        <td></td>
                                     }
                                 }
                             </tr>
@@ -73,8 +81,8 @@
                                 <td>
                                     <a id="link-to-job-@{job.name}" href="@{job.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{job.name}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
-                                @defining(job.latestBuild.flatMap(_.result)) {
-                                    case Some(result) => {
+                                @defining(job.latestBuild) {
+                                    case Some(BuildData(_, _, timestamp, Some(result), _)) => {
                                         @defining({
                                             result match {
                                                 case "SUCCESS" => "text-bg-success"
@@ -87,11 +95,15 @@
                                                 <span class="badge fs-6 @badgeColour">@{result}</span>
                                             </td>
                                         }
+                                        <td>
+                                            @{timestamp.displayFormat}
+                                        </td>
                                     }
                                     case None => {
                                         <td>
                                             <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
                                         </td>
+                                        <td></td>
                                     }
                                 }
                             </tr>
