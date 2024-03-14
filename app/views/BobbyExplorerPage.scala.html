@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 @this(viewMessages: ViewMessages)
 
@@ -75,12 +76,12 @@
     }
 }
 
-@bobbyViolationLink(rule: BobbyRule, env: SlugInfoFlag) = {
+@bobbyViolationLink(rule: BobbyRule, env: SlugInfoFlag, dependencyScopes: Seq[DependencyScope]) = {
     @defining(counts.getOrElse((rule, env), 0)){ count =>
         @if(count == 0) {
             <span>0</span>
         } else {
-            <a aria-label="dependency search" href=@DependencyExplorerController.search(flag = env, scopes = Seq(DependencyScope.Compile), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
+            <a aria-label="dependency search" href=@DependencyExplorerController.search(flag = env, scopes = dependencyScopes, repoTypes = Some(RepoType.values), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
             @{count}
             </a>
         }
@@ -114,22 +115,24 @@
                     <a aria-label="list rule"  href="@appRoutes.BobbyExplorerController.list(selector = Some(rule.id))"  class="glyphicon glyphicon-link float-start" ></a>
                     @rule.group:@rule.artefact
                 </td>
-        @defining(rule.range.rangeDescr) { rangeDescr =>
-            @rangeDescr match {
-                case Some((lbDescr, upDescr)) => {
-                    <td class="bobby-range" style="white-space: nowrap; padding-right: 0; text-align: right">
-                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">@lbDescr</span>
-                    </td>
-                    <td class="bobby-range">
-                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">x</span>
-                    </td>
-                    <td class="bobby-range" style="white-space: nowrap; padding-left: 0; text-align: left">
-                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">@upDescr</span>
-                    </td>
-                }
-                case None => {
-                    <td colspan="3">@rule.range.range</td>
-                }
+        @defining(rule.range.rangeDescr) {
+            case Some((lbDescr, upDescr)) => {
+                <td class="bobby-range" style="white-space: nowrap;
+                    padding-right: 0;
+                    text-align: right">
+                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">@lbDescr</span>
+                </td>
+                <td class="bobby-range">
+                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">x</span>
+                </td>
+                <td class="bobby-range" style="white-space: nowrap;
+                    padding-left: 0;
+                    text-align: left">
+                    <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@rule.range.range">@upDescr</span>
+                </td>
+            }
+            case None => {
+                <td colspan="3">@rule.range.range</td>
             }
         }
         <td>@MarkdownLoader.markdownFromString(rule.reason) match {
@@ -143,9 +146,9 @@
         @exemptionsTableData(rule)
         <td>@rule.from</td>
         @if(inclViewSlugsLink) {
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest)</td>
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA))</td>
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.Production))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest, DependencyScope.values)</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA), Seq(DependencyScope.Compile))</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.Production), Seq(DependencyScope.Compile))</td>
             <td><a aria-label="see trend" id="see-trend-@rule.group-@rule.artefact-@rule.range" href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">
                 See trend</a></td>
         } else {

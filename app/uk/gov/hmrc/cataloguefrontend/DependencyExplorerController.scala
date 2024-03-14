@@ -251,6 +251,7 @@ object DependencyExplorerController {
     team        : String = "",
     flag        : SlugInfoFlag,
     scopes      : Seq[DependencyScope],
+    repoTypes   : Option[Seq[RepoType]] = None,
     group       : String,
     artefact    : String,
     versionRange: BobbyVersionRange
@@ -259,6 +260,7 @@ object DependencyExplorerController {
       group        = group,
       artefact     = artefact,
       `scope[]`    = Some(scopes.map(_.asString).toList),
+      `repoType[]` = repoTypes.map(_.map(_.asString).toList),
       flag         = Some(flag.asString),
       team         = Some(team),
       versionRange = Some(versionRange.range),
