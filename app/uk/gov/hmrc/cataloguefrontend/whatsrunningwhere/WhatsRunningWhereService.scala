@@ -17,12 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentSize
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
-
-import javax.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class WhatsRunningWhereService @Inject()(
@@ -40,15 +40,17 @@ class WhatsRunningWhereService @Inject()(
     releasesConnector.releasesForService(service)
 
   def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
-    val releasesPerEnv = releases.map(r => (r.serviceName.asString, r.versions.map(_.environment.asString))).toMap
-    serviceConfigsConnector.allDeploymentConfig()
+    val releasesPerEnv = releases.map(r => (r.serviceName.asString, r.versions.map(_.environment))).toMap
+    serviceConfigsConnector.deploymentConfig()
       .map(
         _
           .filter(config =>
             releasesPerEnv.getOrElse(config.serviceName, List.empty).contains(config.environment)
           )
           .groupBy(_.serviceName)
-          .map { case (serviceName, deploymentConfigs) => ServiceDeploymentConfigSummary(serviceName, deploymentConfigs) }
+          .map { case (serviceName, deploymentConfigs) =>
+            ServiceDeploymentConfigSummary(serviceName, deploymentConfigs.groupBy(_.environment).view.mapValues(_.head.deploymentSize).toMap)
+          }
           .toSeq
       )
   }
@@ -59,3 +61,8 @@ class WhatsRunningWhereServiceConfig @Inject()(configuration: Configuration) {
     configuration
       .get[Double]("whats-running-where.max-memory")
 }
+
+case class ServiceDeploymentConfigSummary(
+  serviceName    : String,
+  deploymentSizes: Map[Environment, DeploymentSize]
+)

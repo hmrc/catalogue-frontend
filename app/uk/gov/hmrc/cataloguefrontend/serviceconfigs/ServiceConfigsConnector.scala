@@ -22,7 +22,6 @@ import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfig
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -93,19 +92,11 @@ class ServiceConfigsConnector @Inject() (
     ).flatten.toMap
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$queryParams&applied=$applied")
-      .execute[Seq[DeploymentConfig]]
-      .recover {
-        case UpstreamErrorResponse.WithStatusCode(404) =>
-          logger.info(s"No deployments found for $queryParams")
-          Seq.empty
-      }
-  }
-
-  def allDeploymentConfig()(implicit hc: HeaderCarrier): Future[Seq[ServiceDeploymentConfig]] = {
-    implicit val adsr = ServiceDeploymentConfig.reads
-    httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?applied=true")
-      .execute[Seq[ServiceDeploymentConfig]]
+      .execute[Option[Seq[DeploymentConfig]]]
+      .map(_.getOrElse {
+        logger.info(s"No deployments found for $queryParams")
+        Seq.empty
+      })
   }
 
   private val configKeysCacheExpiration: Duration =

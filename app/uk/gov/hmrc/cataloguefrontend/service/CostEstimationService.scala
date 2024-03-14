@@ -136,6 +136,12 @@ object CostEstimationService {
   ) {
     def totalSlots: TotalSlots =
       TotalSlots(slots * instances)
+
+    val slotsToMemory: Int =
+      slots * 128
+
+    val slotsAndInstancesToMemory: Int =
+      slotsToMemory * instances
   }
 
   object DeploymentSize {
