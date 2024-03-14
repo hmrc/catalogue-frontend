@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.ServiceDeploymentConfigSummary
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceDeploymentConfigSummary
 
 @(serviceDeployments: Seq[ServiceDeploymentConfigSummary]
 , environments      : Seq[Environment]
@@ -29,11 +29,11 @@
         <a aria-label="Link to info page for @{sdcSummary.serviceName}" id="link-to-info-page-for-@{sdcSummary.serviceName}" href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName}</a>
     </td>
     @environments.map { env =>
-      @sdcSummary.environments.find(_.environment == env.asString).map { sdc =>
-        <td id="row@{i}_version_@{env.asString}" style="background: rgba(246, 124, 27, @{sdc.slotsAndInstancesToMemory/maxMemory});">
-            <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128MB) instances:@sdc.instances slots:@sdc.slots">
-                <span class="@env.asString visually-hidden">@sdc.slotsAndInstancesToMemory</span>
-                @sdc.instances x @{sdc.slotsToMemory}MB
+      @sdcSummary.deploymentSizes.get(env).map { deploymentSize =>
+        <td id="row@{i}_version_@{env.asString}" style="background: rgba(246, 124, 27, @{deploymentSize.slotsAndInstancesToMemory / maxMemory});">
+            <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128MB) instances:@deploymentSize.instances slots:@deploymentSize.slots">
+                <span class="@env.asString visually-hidden">@deploymentSize.slotsAndInstancesToMemory</span>
+                @deploymentSize.instances x @{deploymentSize.slotsToMemory}MB
             </abbr>
         </td>
       }.getOrElse {

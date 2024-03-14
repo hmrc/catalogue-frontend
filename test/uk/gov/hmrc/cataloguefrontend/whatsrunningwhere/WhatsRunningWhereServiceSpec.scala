@@ -20,10 +20,10 @@ import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.ScalaFutures
+import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.model.{ServiceDeploymentConfig, ServiceDeploymentConfigSummary}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -34,24 +34,29 @@ class WhatsRunningWhereServiceSpec
      with Matchers
      with ScalaFutures {
 
-  private val release1 = WhatsRunningWhere(ServiceName("address-lookup"),
-    List(
-      WhatsRunningWhereVersion(Environment.Development, Version("1.011"), Nil),
-      WhatsRunningWhereVersion(Environment.Production,  Version("1.011"), Nil)
+  private val release1 =
+    WhatsRunningWhere(
+      ServiceName("address-lookup"),
+      List(
+        WhatsRunningWhereVersion(Environment.Development, Version("1.011"), Nil),
+        WhatsRunningWhereVersion(Environment.Production,  Version("1.011"), Nil)
+      )
     )
-  )
 
-  private val release2 = WhatsRunningWhere(ServiceName("health-indicators"),
-    List(
-      WhatsRunningWhereVersion(Environment.QA,         Version("1.011"), Nil),
-      WhatsRunningWhereVersion(Environment.Staging,    Version("1.011"), Nil),
-      WhatsRunningWhereVersion(Environment.Production, Version("1.011"), Nil)
+  private val release2 =
+    WhatsRunningWhere(
+      ServiceName("health-indicators"),
+      List(
+        WhatsRunningWhereVersion(Environment.QA,         Version("1.011"), Nil),
+        WhatsRunningWhereVersion(Environment.Staging,    Version("1.011"), Nil),
+        WhatsRunningWhereVersion(Environment.Production, Version("1.011"), Nil)
+      )
     )
-  )
 
   private val releases: Seq[WhatsRunningWhere] = Seq(release1, release2)
+
   private val serviceConfigsConnector: ServiceConfigsConnector = mock[ServiceConfigsConnector]
-  private val releasesConnector: ReleasesConnector = mock[ReleasesConnector]
+  private val releasesConnector      : ReleasesConnector       = mock[ReleasesConnector]
 
   val testService = new WhatsRunningWhereService(releasesConnector, serviceConfigsConnector)
 
@@ -59,32 +64,31 @@ class WhatsRunningWhereServiceSpec
     "return the expected data structure and be filtered by releases" in {
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
-      when(serviceConfigsConnector.allDeploymentConfig()).thenReturn(
+      when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
-          ServiceDeploymentConfig(serviceName= "address-lookup"   , environment = "development", slots = 2 , instances = 2),
-          ServiceDeploymentConfig(serviceName= "address-lookup"   , environment = "qa"         , slots = 2 , instances = 2),
-          ServiceDeploymentConfig(serviceName= "address-lookup"   , environment = "production" , slots = 4 , instances = 4),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "development", slots = 3 , instances = 3),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "qa"         , slots = 3 , instances = 2),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "staging"    , slots = 5 , instances = 5),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "production" , slots = 8 , instances = 4),
-          ServiceDeploymentConfig(serviceName= "PODS"             , environment = "production" , slots = 16, instances = 2),
-          ServiceDeploymentConfig(serviceName= "file-upload"      , environment = "qa"         , slots = 2 , instances = 1)
+          DeploymentConfig(serviceName= "address-lookup"   , environment = Environment.Development, deploymentSize = DeploymentSize(slots = 2 , instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName= "address-lookup"   , environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName= "address-lookup"   , environment = Environment.Production , deploymentSize = DeploymentSize(slots = 4 , instances = 4), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName= "health-indicators", environment = Environment.Development, deploymentSize = DeploymentSize(slots = 3 , instances = 3), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName= "health-indicators", environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 3 , instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName= "health-indicators", environment = Environment.Staging    , deploymentSize = DeploymentSize(slots = 5 , instances = 5), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName= "health-indicators", environment = Environment.Production , deploymentSize = DeploymentSize(slots = 8 , instances = 4), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName= "PODS"             , environment = Environment.Production , deploymentSize = DeploymentSize(slots = 16, instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName= "file-upload"      , environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 1), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty)
         ))
       )
 
-      val expectedResult = Seq(
-        ServiceDeploymentConfigSummary("address-lookup", Seq(
-          ServiceDeploymentConfig(serviceName= "address-lookup", environment = "development", slots = 2, instances = 2),
-          ServiceDeploymentConfig(serviceName= "address-lookup", environment = "production" , slots = 4, instances = 4))),
-        ServiceDeploymentConfigSummary("health-indicators", Seq(
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "qa"        , slots = 3, instances = 2),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "staging"   , slots = 5, instances = 5),
-          ServiceDeploymentConfig(serviceName= "health-indicators", environment = "production", slots = 8, instances = 4)
+      testService.allDeploymentConfigs(releases).futureValue shouldBe Seq(
+        ServiceDeploymentConfigSummary("address-lookup", Map(
+          Environment.Development -> DeploymentSize(slots = 2, instances = 2),
+          Environment.Production  -> DeploymentSize(slots = 4, instances = 4)
+        )),
+        ServiceDeploymentConfigSummary("health-indicators", Map(
+          Environment.QA         -> DeploymentSize(slots = 3, instances = 2),
+          Environment.Staging    -> DeploymentSize(slots = 5, instances = 5),
+          Environment.Production -> DeploymentSize(slots = 8, instances = 4)
         ))
       )
-
-      testService.allDeploymentConfigs(releases).futureValue shouldBe expectedResult
     }
   }
 }
