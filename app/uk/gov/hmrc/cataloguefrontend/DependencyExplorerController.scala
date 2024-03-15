@@ -159,8 +159,8 @@ class DependencyExplorerController @Inject() (
                                    )
                                  else None
                 } yield
-                  if (query.asCsv) {
-                    val csv    = CsvUtils.toCsv(toRows(results))
+                  if (asCsv) {
+                    val csv    = CsvUtils.toCsv(toRows(results, team))
                     val source = Source.single(ByteString(csv, "UTF-8"))
                     Result(
                       header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
@@ -227,18 +227,23 @@ object DependencyExplorerController {
     results: Map[String, Int]
   )
 
-  def toRows(seq: Seq[ServiceWithDependency]): Seq[Seq[(String, String)]] =
-    seq.flatMap { serviceWithDependency =>
-      val xs = Seq(
-        "slugName"    -> serviceWithDependency.repoName,
-        "slugVersion" -> serviceWithDependency.repoVersion.toString,
-        "team"        -> "",
-        "depGroup"    -> serviceWithDependency.depGroup,
-        "depArtefact" -> serviceWithDependency.depArtefact,
-        "depVersion"  -> serviceWithDependency.depVersion.toString
-      )
-      if (serviceWithDependency.teams.isEmpty) Seq(xs)
-      else serviceWithDependency.teams.map(team => xs ++ Seq("team" -> team.asString))
+  def toRow(serviceWithDependency: ServiceWithDependency, teamName: String): Seq[(String, String)] = {
+    Seq(
+      "repoName"    -> serviceWithDependency.repoName,
+      "repoVersion" -> serviceWithDependency.repoVersion.toString,
+      "team"        -> teamName,
+      "depGroup"    -> serviceWithDependency.depGroup,
+      "depArtefact" -> serviceWithDependency.depArtefact,
+      "depVersion"  -> serviceWithDependency.depVersion.toString
+    )
+  }
+
+  def toRows(seq: Seq[ServiceWithDependency], teamFilter: Option[TeamName]): Seq[Seq[(String, String)]] =
+    seq.flatMap { serviceDependency =>
+      if (serviceDependency.teams.nonEmpty)
+        teamFilter.fold(serviceDependency.teams)(List(_))
+          .map(team => toRow(serviceDependency, team.asString))
+      else Seq(toRow(serviceDependency, ""))
     }
 
   def groupArtefactFromForm(form: Form[_]): Option[String] =
