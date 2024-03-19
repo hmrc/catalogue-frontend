@@ -1,0 +1,48 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
+
+@(repositoryName: String)(implicit request : RequestHeader)
+
+<div class="modal fade" id="confirm-mark-for-decommissioning" tabindex="-1" role="dialog" aria-labelledby="confirm-mark-for-decommissioning-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirm-mark-for-decommissioning-label">Warning: Service Decommissioning</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="body">
+                    Are you sure you want to mark this service for decommissioning?
+                </p>
+                <p class="body">
+                    This action will let MDTP users know that the  <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/prepare-for-decommissioning.html#alert-teams-that-own-dependent-services">decommission process</a> has started. Please ensure that you want to decommission @repositoryName before proceeding.
+                </p>
+                <p class="body">
+                    If you have flagged this service by mistake, please contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<i class="glyphicon glyphicon-new-window"></i></a>.
+                </p>
+                <form id="mark-for-decommissioning" action="@{catalogueRoutes.CatalogueController.markForDecommissioning(repositoryName)}" method="post">
+                @csrfFormField
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-danger" form="mark-for-decommissioning">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>

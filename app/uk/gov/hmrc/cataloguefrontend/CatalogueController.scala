@@ -215,23 +215,27 @@ class CatalogueController @Inject() (
                                 }
       canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(serviceName).map(_.value)
       lifecycleStatus           <- serviceCommissioningStatusConnector.getLifecycleStatus(serviceName)
-    } yield Ok(serviceInfoPage(
-      serviceName                  = serviceName,
-      repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = zone),
-      costEstimate                 = costEstimate,
-      costEstimateConfig           = serviceCostEstimateConfig,
-      repositoryCreationDate       = repositoryDetails.createdDate,
-      envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
-      linkToLeakDetection          = urlIfLeaksFound,
-      serviceRoutes                = serviceRoutes,
-      hasBranchProtectionAuth      = hasBranchProtectionAuth,
-      commenterReport              = commenterReport,
-      distinctVulnerabilitiesCount = vulnerabilitiesCount,
-      serviceRelationships         = serviceRelationships,
-      canMarkForDecommissioning    = canMarkForDecommissioning,
-      lifecycleStatus              = lifecycleStatus,
-      testJobMap                   = testJobMap
-    ))
+      isGuest                   = request.session.get(AuthController.SESSION_USERNAME).exists(_.startsWith("guest-"))
+    } yield {
+      Ok(serviceInfoPage(
+        serviceName                  = serviceName,
+        repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = zone),
+        costEstimate                 = costEstimate,
+        costEstimateConfig           = serviceCostEstimateConfig,
+        repositoryCreationDate       = repositoryDetails.createdDate,
+        envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
+        linkToLeakDetection          = urlIfLeaksFound,
+        serviceRoutes                = serviceRoutes,
+        hasBranchProtectionAuth      = hasBranchProtectionAuth,
+        commenterReport              = commenterReport,
+        distinctVulnerabilitiesCount = vulnerabilitiesCount,
+        serviceRelationships         = serviceRelationships,
+        canMarkForDecommissioning    = canMarkForDecommissioning,
+        lifecycleStatus              = lifecycleStatus,
+        testJobMap                   = testJobMap,
+        isGuest                      = isGuest
+      ))
+    }
   }
 
   def library(name: String): Action[AnyContent] =

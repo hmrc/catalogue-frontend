@@ -14,53 +14,63 @@
  * limitations under the License.
  *@
 
-@import helper._
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-@import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes }
-@import views.partials.githubBadgeType
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
-@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.DecommissionInProgress
+@import views.html.partials.decommissionWarnModal
+@import views.partials.githubBadgeType
+@import views.html.partials.decommissionErrorModal
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.Archived
 
 @(
   repositoryDetails        : GitRepository,
   version                  : Option[Version] = None,
+  hideDecommissioning      : Boolean = true,
   canMarkForDecommissioning: Boolean = false,
+  isGuest                  : Boolean = false,
   lifecycleStatus          : Option[LifecycleStatus] = None,
 )(implicit
   request                      : RequestHeader
 )
 
-@configOptions = @{
-    val markForDecommissioningOption = lifecycleStatus.flatMap(s =>
-        Option.when(
-            canMarkForDecommissioning && !Seq(LifecycleStatus.Archived, LifecycleStatus.DecommissionInProgress).contains(s)
-        ){
-            <li>
-                <button type="button" class="dropdown-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning">Mark for decommissioning</button>
-            </li>
-        }
-    )
-    markForDecommissioningOption.toList
+<style>
+.dropdown-item {
+    color: rgba(var(--bs-link-color-rgb),var(--bs-link-opacity,1))
 }
+
+.dropdown-item:disabled,
+.dropdown-item[disabled]{
+    color: #666666;
+}
+
+</style>
 
 <div id="details" class="card">
     <div class="card-header">
-      <div class="h4 mb-0">
+        <div class="h4 mb-0">
         Details
-
-        @if(configOptions.nonEmpty){
+          @if(!hideDecommissioning) {
             <div class="dropdown d-inline">
-              <button class="btn btn-default border-0" type="button" id="config-menu" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="glyphicon glyphicon-cog" ></i>
-              </button>
-              <ul class="dropdown-menu" aria-labelledby="config-menu">
-                @configOptions
-              </ul>
+                <button class="btn btn-default border-0" type="button" id="config-menu" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="glyphicon glyphicon-cog"></i>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="config-menu">
+                    <li>
+                        <span
+                        data-bs-toggle="popover"
+                        data-bs-trigger="hover"
+                        data-bs-placement="right"
+                        data-bs-html="true"
+                        data-bs-content='@{if(isGuest) "You are currently logged onto a guest account, login using your LDAP credentials to decommission" else if(!canMarkForDecommissioning) "You must be a team admin for the team that owns this service to decommission" }'>
+                         <button type="button" class="dropdown-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning" @if(isGuest | !canMarkForDecommissioning){ disabled }>Mark for decommissioning</button>
+                        </span>
+                    </li>
+                </ul>
             </div>
-        }
-      </div>
+          }
+        </div>
     </div>
     <div class="card-body">
         <div class="row gy-3">
@@ -134,32 +144,14 @@
     </div>
 </div>
 
-<div class="modal fade" id="confirm-mark-for-decommissioning" tabindex="-1" role="dialog" aria-labelledby="confirm-mark-for-decommissioning-label" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="confirm-mark-for-decommissioning-label">Warning: Service Decommissioning</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <p class="body">
-              Are you sure you want to mark this service for decommissioning?
-            </p>
-            <p class="body">
-                This action will let MDTP users know that the  <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/prepare-for-decommissioning.html#alert-teams-that-own-dependent-services">decommission process</a> has started. Please ensure that you want to decommission @repositoryDetails.name before proceeding.
-            </p>
-            <p class="body">
-                If you have flagged this service by mistake, please contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<i class="glyphicon glyphicon-new-window"></i></a>.
-            </p>
-            <form id="mark-for-decommissioning" action="@{catalogueRoutes.CatalogueController.markForDecommissioning(repositoryDetails.name)}" method="post">
-                @csrfFormField
-            </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-danger" form="mark-for-decommissioning">Confirm</button>
-        </div>
-      </div>
-    </div>
-  </div>
+@{
+    lifecycleStatus match {
+        case None                         => decommissionErrorModal("Cannot determine repository status", "You cannot decommission this service as the status is unknown.")
+        case Some(DecommissionInProgress) => decommissionErrorModal("Repository is already marked for decommissioning", "You cannot decommission this service as decommissioning is already in progress.")
+        case Some(Archived)               => decommissionErrorModal("Repository is archived", "You cannot decommission a service that is already archived.")
+        case _                            => decommissionWarnModal(repositoryDetails.name)
+    }
+}
+
+
 
