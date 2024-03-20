@@ -49,13 +49,13 @@
                                     <a id="link-to-job-@{firstJob.name}" href="@{firstJob.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{firstJob.name}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
                                 @defining(firstJob.latestBuild) {
-                                    case Some(BuildData(_, _, timestamp, Some(result), _)) => {
+                                    case Some(BuildData(_, _, timestamp, result, _)) => {
                                         @defining({
                                             result match {
-                                                case "SUCCESS" => "text-bg-success"
-                                                case "FAILURE" => "text-bg-danger"
-                                                case "UNSTABLE" => "text-bg-warning"
-                                                case _ => "text-bg-secondary"
+                                                case Some("SUCCESS")  => "text-bg-success"
+                                                case Some("FAILURE")  => "text-bg-danger"
+                                                case Some("UNSTABLE") => "text-bg-warning"
+                                                case _                => "text-bg-secondary"
                                             }
                                         }) { badgeColour =>
                                             <td>
@@ -66,7 +66,7 @@
                                             @{timestamp.displayFormat}
                                         </td>
                                     }
-                                    case None => {
+                                    case _ => {
                                         <td>
                                             <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
                                         </td>
@@ -82,13 +82,13 @@
                                     <a id="link-to-job-@{job.name}" href="@{job.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{job.name}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
                                 @defining(job.latestBuild) {
-                                    case Some(BuildData(_, _, timestamp, Some(result), _)) => {
+                                    case Some(BuildData(_, _, timestamp, result, _)) => {
                                         @defining({
                                             result match {
-                                                case "SUCCESS" => "text-bg-success"
-                                                case "FAILURE" => "text-bg-danger"
-                                                case "UNSTABLE" => "text-bg-warning"
-                                                case _ => "text-bg-secondary"
+                                                case Some("SUCCESS")  => "text-bg-success"
+                                                case Some("FAILURE")  => "text-bg-danger"
+                                                case Some("UNSTABLE") => "text-bg-warning"
+                                                case _                => "text-bg-secondary"
                                             }
                                         }) { badgeColour =>
                                             <td>
@@ -99,7 +99,7 @@
                                             @{timestamp.displayFormat}
                                         </td>
                                     }
-                                    case None => {
+                                    case _ => {
                                         <td>
                                             <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
                                         </td>
