@@ -50,7 +50,8 @@
   serviceRelationships         : ServiceConfigsService.ServiceRelationshipsEnriched,
   canMarkForDecommissioning    : Boolean,
   lifecycleStatus              : Option[LifecycleStatus],
-  testJobMap                   : Map[String, Seq[JenkinsJob]]
+  testJobMap                   : Map[String, Seq[JenkinsJob]],
+  isGuest                      : Boolean
 )(implicit
   messages                     : Messages,
   request                      : RequestHeader,
@@ -99,7 +100,7 @@
 
         <div class="row mb-3">
             <div class="col-md-6">
-                @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, lifecycleStatus = lifecycleStatus)
+                @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, lifecycleStatus = lifecycleStatus, isGuest = isGuest, hideDecommissioning = false)
             </div>
             <div class="col-md-6">
                 @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
