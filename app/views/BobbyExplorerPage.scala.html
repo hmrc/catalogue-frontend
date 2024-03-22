@@ -33,43 +33,40 @@
 
 @standard_layout(s"Bobby rules", active = "health") {
     <h1 class="page-heading mt-4">Bobby Rules</h1>
-    @bobbyRulesTimeSection(rules.upcoming, "Upcoming")
-    @bobbyRulesTimeSection(rules.active  , "Active")
+    @bobbyRulesTimeSection("Upcoming", rules.upcoming)
+    @bobbyRulesTimeSection("Active"  , rules.active)
 }
 
-@bobbyRulesTimeSection(rulesByTime: BobbyRuleSet, heading: String) = {
+@bobbyRulesTimeSection(heading: String, rulesByTime: BobbyRuleSet) = {
     @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
-        <h2 class="fw-bold">@heading</h2>
-        @bobbyRulesArtifactTypeSection(rulesByTime.libraries, "Library", inclViewSlugsLink = true )
-        @bobbyRulesArtifactTypeSection(rulesByTime.plugins  , "Plugin" , inclViewSlugsLink = false)
+        @bobbyRulesArtifactTypeSection(heading, rulesByTime.libraries, "Library", inclViewSlugsLink = true )
+        @bobbyRulesArtifactTypeSection(heading, rulesByTime.plugins  , "Plugin" , inclViewSlugsLink = false)
     }
 }
 
-@bobbyRulesArtifactTypeSection(rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
+@bobbyRulesArtifactTypeSection(heading: String, rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
     @if(rulesByArtifactType.nonEmpty) {
         <table class="@{artifactType.toLowerCase}-rules table table-striped sticky-header">
             <thead>
-
-            <tr>
-                <th class="visually-hidden" colspan="6">-</th>
-                <th colspan="4" class="text-center border-bottom">Services Affected</th>
-                <th class="visually-hidden">-</th>
-            </tr>
-
-            <tr>
-                <th class="col-3" colspan="1">@artifactType</th>
-                <th class="col-2" colspan="3" style="text-align: center">Banned Versions</th>
-                <th class="col-4">Reason</th>
-                <th class="">Exemptions</th>
-                <th class="col-1">Active from</th>
-                <th class="">Latest</th>
-                <th class="">QA</th>
-                <th class="">Prod</th>
-                <th class="visually-hidden">-</th>
-            </tr>
-        </thead>
+                <tr>
+                    <th colspan="11" class="border-bottom">
+                        <span class="h2 fw-bold" style="margin-left: -8px;" >@heading</span>
+                    </th>
+                </tr>
+                <tr>
+                    <th class="col-3" colspan="1">@artifactType</th>
+                    <th class="col-2" colspan="3" style="text-align: center">Banned Versions</th>
+                    <th class="col-4">Reason</th>
+                    <th class="">Exemptions</th>
+                    <th class="col-1">Active from</th>
+                    <th class="">Latest</th>
+                    <th class="">QA</th>
+                    <th class="">Prod</th>
+                    <th class="visually-hidden">-</th>
+                </tr>
+            </thead>
         <tbody>
-        @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
+            @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
         </tbody>
     </table>
 
@@ -95,7 +92,7 @@
         @defining(UrlUtils.encodeQueryParam(s"rule-exemptions-${rule.id}")) { target =>
             <td>
                 <a aria-label="exemptions" data-bs-toggle="collapse" data-bs-target="#@target" href="#@target">
-                    @rule.exemptProjects.size Exemptions
+                    @rule.exemptProjects.size Exempt
                 </a>
                 <div id="@target" class="collapse">
                     <ul>
