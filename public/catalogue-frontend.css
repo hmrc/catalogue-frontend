@@ -129,6 +129,10 @@ th {
     width: 35em;
 }
 
+.search-width-initial {
+    width: 15em;
+}
+
 .navbar-search-matches-dropdown {
     position: absolute;
     overflow-y: scroll;
@@ -366,4 +370,10 @@ table.table-striped-columns-custom > :not(caption) > tr > td:nth-child(even) {
     border: 2px solid #ffbf00;
     padding-top: 0.5em;
     padding-bottom: 0.5em;
+}
+
+@media (max-width: 1182px){
+    .hidden-for-small-screens {
+        display: none;
+    }
 }

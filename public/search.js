@@ -2,6 +2,7 @@
 
 
 let bar = document.getElementById("catalogue-search-bar")
+let searchBox = document.getElementById("catalogue-search-box")
 let input = document.getElementById("catalogue-search")
 let matches = document.getElementById("catalogue-search-matches")
 let mainmenu = document.getElementById("main-menu-bar")
@@ -44,7 +45,7 @@ function search(q) {
 
 // show and hide the whole search bar
 function toggleSearch() {
-    if (bar.classList.contains("d-none")) {
+    if (searchBox.classList.contains("search-width-initial")) {
         showSearchBar()
     } else {
         hideSearchBar()
@@ -52,14 +53,18 @@ function toggleSearch() {
 }
 
 function showSearchBar() {
-    bar.classList.remove("d-none")
+    bar.classList.remove("hidden-for-small-screens")
+    searchBox.classList.remove("search-width-initial")
+    searchBox.classList.add("search-width")
     mainmenu.classList.add("d-none")
     input.focus()
     input.value = ""
 }
 
 function hideSearchBar() {
-    bar.classList.add("d-none")
+    bar.classList.add("hidden-for-small-screens")
+    searchBox.classList.remove("search-width")
+    searchBox.classList.add("search-width-initial")
     matches.classList.add("d-none")
     mainmenu.classList.remove("d-none")
     input.value = ""
@@ -139,6 +144,12 @@ document.getElementById("searchicon").addEventListener("click", function (e) {
     e.stopImmediatePropagation();
     toggleSearch();
 }, true)
+
+document.getElementById("catalogue-search").addEventListener("focus", function (e) {
+    e.stopImmediatePropagation();
+    showSearchBar();
+}, true)
+
 input.addEventListener("keyup", searchInputListener, false)
 input.addEventListener("keydown", disableArrowKeys, false)
 document.getElementById("standard-layout-container").addEventListener("click", e => hideSearchBar(), true)
