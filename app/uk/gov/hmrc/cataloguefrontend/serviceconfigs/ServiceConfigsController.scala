@@ -22,7 +22,7 @@ import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import play.api.http.HttpEntity
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName
@@ -132,7 +132,7 @@ class ServiceConfigsController @Inject()(
     BasicAuthAction.async { implicit request =>
       for {
         allTeams    <- teamsAndReposConnector.allTeams()
-        allServices <- teamsAndReposConnector.allServices()
+        allServices <- teamsAndReposConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false))
       } yield Ok(configWarningPage(ConfigWarning.form, allServices))
     }
 
@@ -143,10 +143,10 @@ class ServiceConfigsController @Inject()(
         .bindFromRequest()
         .fold(
           _          => for {
-                          allServices <- teamsAndReposConnector.allServices()
+                          allServices <- teamsAndReposConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false))
                         } yield Ok(configWarningPage(ConfigWarning.form, allServices, None))
         , formObject => for {
-                          allServices      <- teamsAndReposConnector.allServices()
+                          allServices      <- teamsAndReposConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false))
                           deployments      <- whatsRunningWhereService.releasesForService(formObject.serviceName.asString).map(_.versions)
                           results          <- serviceConfigsService.configWarnings(formObject.serviceName, deployments.map(_.environment), version = None, latest = true)
                           groupedByService =  serviceConfigsService.toServiceKeyEnvironmentWarningMap(results)

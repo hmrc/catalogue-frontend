@@ -21,7 +21,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
@@ -82,7 +82,7 @@ class DeployServiceController @Inject()(
       retrieval   =  servicesRetrieval
     ).async { implicit request =>
       (for {
-        allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allServices())
+        allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
         accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos)
         hasPerm              <- serviceName match {
@@ -133,7 +133,7 @@ class DeployServiceController @Inject()(
     , retrieval   = servicesRetrieval
     ).async { implicit request =>
       (for {
-        allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allServices())
+        allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
         accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos)
         form                 =  DeployServiceForm.form.bindFromRequest()
@@ -222,7 +222,7 @@ class DeployServiceController @Inject()(
     ).async { implicit request =>
       val username ~ locations = request.retrieval
       (for {
-        allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allServices())
+        allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(locations))
         accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos)
         form                 =  DeployServiceForm.form.bindFromRequest()
