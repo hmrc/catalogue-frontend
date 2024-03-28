@@ -408,16 +408,6 @@ class TeamsAndRepositoriesConnector @Inject()(
       .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[Seq[GitRepository]]
 
-  def allServices()(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
-    httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?repoType=Service")
-      .execute[Seq[GitRepository]]
-
-  def archivedRepositories()(implicit hc: HeaderCarrier): Future[Seq[GitRepository]] =
-    httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?archived=true")
-      .execute[Seq[GitRepository]]
-
   def repositoryDetails(name: String)(implicit hc: HeaderCarrier): Future[Option[GitRepository]] =
     for {
       repo     <- httpClientV2

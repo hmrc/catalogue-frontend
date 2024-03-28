@@ -71,7 +71,13 @@ class DeploymentTimelineControllerSpec
 
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
-      when(mockedTeamsAndRepositoriesConnector.allServices()(any))
+      when(mockedTeamsAndRepositoriesConnector.allRepositories(
+        name        = eqTo(None)
+      , team        = eqTo(None)
+      , archived    = eqTo(None)
+      , repoType    = eqTo(Some(RepoType.Service))
+      , serviceType = eqTo(None)
+      )(any))
         .thenReturn(Future.successful(Seq.empty))
       when(mockedDeploymentGraphService.findEvents(service = any, start = any, end = any))
         .thenReturn(Future.successful(Seq(DeploymentTimelineEvent(Integration, Version(1, 0, 0, ""), "ua", Instant.now(), Instant.now()))))

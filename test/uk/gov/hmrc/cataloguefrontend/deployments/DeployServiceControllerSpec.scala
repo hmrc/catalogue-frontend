@@ -27,7 +27,7 @@ import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
@@ -57,7 +57,13 @@ class DeployServiceControllerSpec
 
   "Deploy Service Page step1" should {
     "allow a service to be specified" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
+      when(mockTeamsAndRepositoriesConnector.allRepositories(
+        name        = eqTo(None)
+      , team        = eqTo(None)
+      , archived    = eqTo(Some(false))
+      , repoType    = eqTo(Some(RepoType.Service))
+      , serviceType = eqTo(None)
+      )(any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
         .thenReturn(Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))))
@@ -72,7 +78,13 @@ class DeployServiceControllerSpec
     }
 
     "allow a service to be provided" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
+      when(mockTeamsAndRepositoriesConnector.allRepositories(
+        name        = eqTo(None)
+      , team        = eqTo(None)
+      , archived    = eqTo(Some(false))
+      , repoType    = eqTo(Some(RepoType.Service))
+      , serviceType = eqTo(None)
+      )(any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
       // Matching on retrieval ANY since the type is erased and the mocks get confused
@@ -104,7 +116,13 @@ class DeployServiceControllerSpec
   import ServiceConfigsService._
   "Deploy Service Page step2" should {
     "help evaluate deployment" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
+      when(mockTeamsAndRepositoriesConnector.allRepositories(
+        name        = eqTo(None)
+      , team        = eqTo(None)
+      , archived    = eqTo(Some(false))
+      , repoType    = eqTo(Some(RepoType.Service))
+      , serviceType = eqTo(None)
+      )(any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
       // Matching on retrieval ANY since the type is erased and the mocks get confused
@@ -159,7 +177,13 @@ class DeployServiceControllerSpec
 
   "Deploy Service Page step3" should {
     "deploy service" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allServices()(any[HeaderCarrier]))
+      when(mockTeamsAndRepositoriesConnector.allRepositories(
+        name        = eqTo(None)
+      , team        = eqTo(None)
+      , archived    = eqTo(Some(false))
+      , repoType    = eqTo(Some(RepoType.Service))
+      , serviceType = eqTo(None)
+      )(any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
       // Matching on retrieval ANY since the type is erased and the mocks get confused

@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.deployments
 import cats.implicits._
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -48,7 +48,7 @@ class DeploymentTimelineController @Inject()(
     val end    = from.atTime(23,59,59).toInstant(ZoneOffset.UTC)
 
     for {
-      services    <- teamsAndRepositoriesConnector.allServices()
+      services    <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service))
       serviceNames = services.map(_.name.toLowerCase).sorted
       data        <- deploymentGraphService.findEvents(service, start, end)
       slugInfo    <- data
