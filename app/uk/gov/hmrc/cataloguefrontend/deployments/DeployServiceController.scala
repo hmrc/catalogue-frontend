@@ -107,10 +107,6 @@ class DeployServiceController @Inject()(
                                     .right[Result](releasesConnector.releasesForService(sn))
                                     .map(_.versions.toSeq)
                                 )
-        _                    <- serviceName match {
-                                  case Some(_) => EitherT.fromOption[Future](releases.headOption, BadRequest(deployServicePage(form.withGlobalError("No versions found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
-                                  case None    => EitherT.right[Result](Future.unit)
-                                }
         environments         <- serviceName.fold(EitherT.rightT[Future, Result](Seq.empty[Environment]))(sn =>
                                   EitherT
                                     .right[Result](serviceCommissioningConnector.commissioningStatus(sn))
@@ -159,7 +155,6 @@ class DeployServiceController @Inject()(
         releases             <- EitherT
                                   .right[Result](releasesConnector.releasesForService(formObject.serviceName))
                                   .map(_.versions.toSeq)
-        _                    <- EitherT.fromOption[Future](releases.headOption, BadRequest(deployServicePage(form.withGlobalError("No releases found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
         environments         <- EitherT
                                   .right[Result](serviceCommissioningConnector.commissioningStatus(formObject.serviceName))
                                   .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
