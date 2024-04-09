@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.auditing
 
+import play.api.Configuration
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{OFormat, __}
 import play.api.mvc.{EssentialAction, RequestHeader}
+import play.api.routing.Router.Attrs
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
@@ -27,7 +29,8 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class CatalogueFrontendAuditFilter @Inject()(
-  auditConnector : AuditConnector
+  auditConnector : AuditConnector,
+  configuration  : Configuration
 )(implicit
   ec: ExecutionContext
 ) extends AuditFilter
@@ -37,21 +40,29 @@ class CatalogueFrontendAuditFilter @Inject()(
     (rh: RequestHeader) => {
       val headerCarrier = hc(rh)
       nextFilter(rh).map { res =>
-        auditConnector.sendExplicitAudit(
-          auditType = "FrontendInteraction",
-          detail = Detail(
-            username = rh.session.data.getOrElse("username", default = "GuestUser")
-            , uri = rh.headers.get("Raw-Request-URI").getOrElse("-")
-            , statusCode = res.header.status
-            , method = rh.method
-            , userAgentString = rh.headers.get("User-Agent").getOrElse("-")
-            , deviceID = rh.headers.get("Cookie").getOrElse("-")
-            , referrer = rh.headers.get("Referer").getOrElse("-")
-          )
-        )(headerCarrier, ec, Detail.format)
+        if (needsAuditing(rh))
+          auditConnector.sendExplicitAudit(
+            auditType = "FrontendInteraction",
+            detail    = Detail(
+                          username        = rh.session.data.getOrElse("username", default = "GuestUser")
+                        , uri             = rh.headers.get("Raw-Request-URI").getOrElse("-")
+                        , statusCode      = res.header.status
+                        , method          = rh.method
+                        , userAgentString = rh.headers.get("User-Agent").getOrElse("-")
+                        , deviceID        = rh.headers.get("Cookie").getOrElse("-")
+                        , referrer        = rh.headers.get("Referer").getOrElse("-")
+                        )
+          )(headerCarrier, ec, Detail.format)
         res
       }
     }
+
+  private def needsAuditing(rh: RequestHeader): Boolean =
+    configuration.get[Boolean]("auditing.enabled") &&
+      rh.attrs.get(Attrs.HandlerDef).map(_.controller).forall(controllerNeedsAuditing)
+
+  private def controllerNeedsAuditing(controllerName: String): Boolean =
+    configuration.getOptional[Boolean](s"controllers.$controllerName.needsAuditing").getOrElse(true)
 }
 
 case class Detail(
