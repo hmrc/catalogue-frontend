@@ -123,8 +123,8 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
                       val hasRepo = repos.exists(_.name == service)
                       (if (hasRepo)
                          serviceCommissioningConnector
-                           .getLifecycleStatus(service)
-                           .map(status => ServiceRelationship(service, hasRepo, status))
+                           .getLifecycle(service)
+                           .map(status => ServiceRelationship(service, hasRepo, status.map(_.lifecycleStatus)))
                        else
                          Future.successful(ServiceRelationship(service, hasRepo, lifecycleStatus = None))
                       ).map(_ +: acc)

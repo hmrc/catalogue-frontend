@@ -17,12 +17,12 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.DecommissionInProgress
 @import views.html.partials.decommissionWarnModal
 @import views.partials.githubBadgeType
 @import views.html.partials.decommissionErrorModal
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.Archived
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 
 @(
   repositoryDetails        : GitRepository,
@@ -30,7 +30,7 @@
   hideDecommissioning      : Boolean = true,
   canMarkForDecommissioning: Boolean = false,
   isGuest                  : Boolean = false,
-  lifecycleStatus          : Option[LifecycleStatus] = None,
+  lifecycle                : Option[Lifecycle] = None,
 )(implicit
   request                      : RequestHeader
 )
@@ -119,10 +119,23 @@
                 </div>
             }
 
-            @lifecycleStatus.map { status =>
+            @lifecycle.map { lifecycle =>
                 <div class="col-6">
                     <label class="fw-bold">Status: </label>
-                    @status.displayName
+                    @lifecycle.lifecycleStatus.displayName
+                    @lifecycle match {
+                        case Lifecycle(DecommissionInProgress, Some(username), Some(createdDate)) => {
+                            <span class="glyphicon glyphicon-info-sign ms-1"
+                            title=""
+                            data-bs-toggle="popover"
+                            data-bs-trigger="hover"
+                            data-bs-placement="bottom"
+                            data-bs-html="true"
+                            data-bs-content='<div>Since: @{createdDate.displayFormat}</div><div>By: @{username}</div>'>
+                            </span>
+                        }
+                        case _ => {}
+                    }
                 </div>
             }
 
@@ -145,7 +158,7 @@
 </div>
 
 @{
-    lifecycleStatus match {
+    lifecycle.map(_.lifecycleStatus) match {
         case None                         => decommissionErrorModal("Cannot determine repository status", "You cannot decommission this service as the status is unknown.")
         case Some(DecommissionInProgress) => decommissionErrorModal("Repository is already marked for decommissioning", "You cannot decommission this service as decommissioning is already in progress.")
         case Some(Archived)               => decommissionErrorModal("Repository is archived", "You cannot decommission a service that is already archived.")

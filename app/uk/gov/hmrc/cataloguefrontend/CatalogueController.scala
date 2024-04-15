@@ -214,7 +214,7 @@ class CatalogueController @Inject() (
                                     )
                                 }
       canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(serviceName).map(_.value)
-      lifecycleStatus           <- serviceCommissioningStatusConnector.getLifecycleStatus(serviceName)
+      lifecycle                 <- serviceCommissioningStatusConnector.getLifecycle(serviceName)
       isGuest                   = request.session.get(AuthController.SESSION_USERNAME).exists(_.startsWith("guest-"))
     } yield {
       Ok(serviceInfoPage(
@@ -231,7 +231,7 @@ class CatalogueController @Inject() (
         distinctVulnerabilitiesCount = vulnerabilitiesCount,
         serviceRelationships         = serviceRelationships,
         canMarkForDecommissioning    = canMarkForDecommissioning,
-        lifecycleStatus              = lifecycleStatus,
+        lifecycle                    = lifecycle,
         testJobMap                   = testJobMap,
         isGuest                      = isGuest
       ))

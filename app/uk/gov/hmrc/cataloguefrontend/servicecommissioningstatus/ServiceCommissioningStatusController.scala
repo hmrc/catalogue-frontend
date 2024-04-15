@@ -47,7 +47,7 @@ class ServiceCommissioningStatusController @Inject() (
   def getCommissioningState(serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        lifecycleStatus <- serviceCommissioningStatusConnector.getLifecycleStatus(serviceName).map(_.getOrElse(LifecycleStatus.Active))
+        lifecycleStatus <- serviceCommissioningStatusConnector.getLifecycle(serviceName).map(_.map(_.lifecycleStatus).getOrElse(LifecycleStatus.Active))
         results         <- serviceCommissioningStatusConnector.commissioningStatus(serviceName)
       } yield {
         Ok(serviceCommissioningStatusPage(serviceName, lifecycleStatus, results))

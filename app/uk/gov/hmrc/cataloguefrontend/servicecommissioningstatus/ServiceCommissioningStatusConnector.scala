@@ -70,10 +70,10 @@ class ServiceCommissioningStatusConnector @Inject() (
       .execute[Unit]
   }
 
-  def getLifecycleStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[LifecycleStatus]] = {
-    implicit val lifecycleStatusFormat = LifecycleStatus.format
+  def getLifecycle(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[Lifecycle]] = {
+    implicit val reads: Reads[Lifecycle] = Lifecycle.format
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/$serviceName/lifecycleStatus")
-      .execute[Option[LifecycleStatus]]
+      .execute[Option[Lifecycle]]
   }
 }
