@@ -120,6 +120,9 @@
                                       </span>
                                     }
                                   }
+                                  @sourceValue.sourceUrl.map { url =>
+                                      <a aria-label="source link" class="glyphicon glyphicon-circle-arrow-right" target="raw" href="@url"></a>
+                                  }
                                 </li>
                             }
                         </ul>
