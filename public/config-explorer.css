@@ -121,7 +121,7 @@ aside ul label {
 
 .gutter-horizontal {
   width: 10px;
-  cursor: ew-resize;
+  cursor: col-resize;
 }
 
 .environment-header {
@@ -174,14 +174,14 @@ aside ul label {
   display: grid;
   grid-template-columns: repeat(15, auto);
   justify-content: start;
-  background-color: #f9f9f9;
+  background-color: white;
   border-top: 1px solid #ddd;
   padding-top: 0.2em;
   padding-bottom: 0.2em;
 }
 
-.grid-row:nth-child(odd) {
-  background-color: white;
+.grid-row:not(.grid-sub-header):hover {
+  background-color: #f9f9f9;
 }
 
 .grid-item {
@@ -218,6 +218,10 @@ aside ul label {
 }
 
 .hide-refconf-only .refconf-only {
+  display: none;
+}
+
+.hide-deploymentconf .deployment-config {
   display: none;
 }
 
@@ -370,4 +374,16 @@ aside ul label {
 
 .grid-container.collapsed:not(:last-child) {
   margin-bottom: 0;
+}
+
+.grid-sub-header {
+  width: 100%;
+  background-color: lightgrey;
+}
+
+.grid-sub-header h5 {
+  text-indent: 1.2em;
+  color: #000000;
+  font-weight: bold;
+  font-size: 1.2em;
 }
