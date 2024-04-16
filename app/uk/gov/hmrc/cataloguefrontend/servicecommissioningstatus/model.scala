@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 
-import play.api.libs.json.{Format, JsValue, JsSuccess, JsError, JsResult, JsString, Reads, __}
-import play.api.libs.functional.syntax._
+import java.time.Instant
 
 sealed trait Check {
   val id        : String = title.toLowerCase.replaceAll("\\s+", "-").replaceAll("-+", "-")
@@ -113,6 +114,17 @@ object FormCheckType extends Enum[FormCheckType] {
   case object Environment extends FormCheckType { val asString = "environment"}
 
   override val values: List[FormCheckType] = List(Simple, Environment)
+}
+
+case class Lifecycle(
+    lifecycleStatus: LifecycleStatus
+  , username: Option[String]     = None
+  , createDate: Option[Instant]  = None
+)
+
+object Lifecycle {
+  implicit val lctf = LifecycleStatus.format
+  val format: OFormat[Lifecycle] = Json.format[Lifecycle]
 }
 
 sealed trait LifecycleStatus { val asString: String; val displayName: String }

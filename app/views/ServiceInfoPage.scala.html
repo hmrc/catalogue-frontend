@@ -27,7 +27,7 @@
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => comRoutes}
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.DecommissionInProgress
 @import java.time.Instant
 
@@ -49,7 +49,7 @@
   distinctVulnerabilitiesCount : Option[Int],
   serviceRelationships         : ServiceConfigsService.ServiceRelationshipsEnriched,
   canMarkForDecommissioning    : Boolean,
-  lifecycleStatus              : Option[LifecycleStatus],
+  lifecycle                    : Option[Lifecycle],
   testJobMap                   : Map[String, Seq[JenkinsJob]],
   isGuest                      : Boolean
 )(implicit
@@ -88,7 +88,7 @@
       </div>
     }
 
-    @if(lifecycleStatus.contains(DecommissionInProgress)) {
+    @if(lifecycle.map(_.lifecycleStatus).contains(DecommissionInProgress)) {
         <div class="alert alert-warning">
             <strong>
                 This service is marked for decommissioning, see <a id="decommission-state" href="@{comRoutes.ServiceCommissioningStatusController.getCommissioningState(repositoryDetails.name).url}">commissioning state</a> for progress. If this is unexpected contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target=\"_blank\" rel=\"noreferrer noopener\">#team-platops<span class="glyphicon glyphicon-new-window"/></a> for help.
@@ -100,7 +100,7 @@
 
         <div class="row mb-3">
             <div class="col-md-6">
-                @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, lifecycleStatus = lifecycleStatus, isGuest = isGuest, hideDecommissioning = false)
+                @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, lifecycle = lifecycle, isGuest = isGuest, hideDecommissioning = false)
             </div>
             <div class="col-md-6">
                 @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
