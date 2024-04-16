@@ -151,6 +151,35 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
   ): Future[Seq[DeploymentConfig]] =
     serviceConfigsConnector.deploymentConfig(serviceName, environment)
 
+  def deploymentConfigByKeyWithNextDeployment(serviceName: String)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
+    for {
+      applied        <- serviceConfigsConnector.deploymentConfig(service = Some(serviceName), applied = true )
+      nextDeployment <- serviceConfigsConnector.deploymentConfig(service = Some(serviceName), applied = false)
+      allEnvs        =  (applied ++ nextDeployment).map(_.environment).distinct
+      allKeys        =  (applied ++ nextDeployment).flatMap(_.asMap.keys).distinct
+    } yield {
+      allKeys.map { key =>
+        val keyValues = for {
+          env <- allEnvs
+        } yield {
+          val appliedValue = applied.find(_.environment == env).flatMap(_.asMap.get(key)).map(value => ConfigSourceValue("appConfigEnvironment", None, value))
+          val nextValue    = nextDeployment.find(_.environment == env).flatMap(_.asMap.get(key)).map(value => ConfigSourceValue("appConfigEnvironment", None, value))
+
+          (appliedValue, nextValue) match {
+            case (Some(applied), Some(next)) if applied == next => Seq((applied, false))
+            case (Some(applied), Some(next)) => Seq((applied, false), (next, true))
+            case (Some(applied), None) => Seq((applied, false))
+            case (None, Some(next)) => Seq((next, true))
+            case _ => Seq.empty
+          }
+        }
+
+        val configEnvs: Seq[ConfigEnvironment] = allEnvs.map(ConfigEnvironment.ForEnvironment)
+
+        KeyName(key) -> configEnvs.zip(keyValues).toMap
+      }.toMap
+    }
+
   def configSearch(
     teamName       : Option[TeamName]
   , environments   : Seq[Environment]
@@ -242,6 +271,19 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
 object ServiceConfigsService {
 
   case class KeyName(asString: String) extends AnyVal
+  object KeyName {
+    implicit val keyNameOrdering: Ordering[KeyName] = Ordering.by(_.asString)
+
+    val deploymentConfigOrder: Ordering[KeyName] = Ordering.by((key: KeyName) => {
+      key.asString match {
+        case "instances"                       => (0, key)
+        case "slots"                           => (1, key)
+        case s if s.startsWith("jvm.")         => (2, key)
+        case s if s.startsWith("environment.") => (3, key)
+        case _                                 => (4, key)
+      }
+    })
+  }
   case class ServiceName(asString: String) extends AnyVal
 
   trait ConfigEnvironment { def asString: String; def displayString: String }

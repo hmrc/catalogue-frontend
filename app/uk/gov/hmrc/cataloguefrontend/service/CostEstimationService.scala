@@ -160,7 +160,12 @@ object CostEstimationService {
     zone          : Zone,
     envVars       : Map[String, String],
     jvm           : Map[String, String]
-  )
+  ) {
+    def asMap: Map[String, String] = Map(
+      "instances" -> deploymentSize.instances.toString,
+      "slots" -> deploymentSize.slots.toString
+    ) ++ jvm.map{ case (key, value) => (s"jvm.$key", value) } ++ envVars.map{ case (key, value) => (s"environment.$key", value) }
+  }
 
   case class TotalSlots(asInt: Int) extends AnyVal {
     def costGbp(costEstimateConfig: CostEstimateConfig) =
