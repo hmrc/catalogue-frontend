@@ -21,7 +21,7 @@
 @import views.html.partials.decommissionWarnModal
 @import views.partials.githubBadgeType
 @import views.html.partials.decommissionErrorModal
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.Archived
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{Deprecated, Archived}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 
 @(
@@ -86,7 +86,7 @@
                         data-bs-trigger="focus"
                         data-bs-placement="left"
                         data-bs-html="true"
-                        data-bs-content='Description is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. You will need to add the `description` key to this file if it is missing. Changes can take up to 30 minutes to appear in the catalogue.'>
+                        data-bs-content='Description is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. You will need to add the `description` key to this file if it is missing. Changes can take a few minutes to appear in the catalogue.'>
                             <span class="glyphicon glyphicon-question-sign"/>
                         </a>: </label>
                     @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
@@ -121,7 +121,22 @@
 
             @lifecycle.map { lifecycle =>
                 <div class="col-6">
-                    <label class="fw-bold">Status: </label>
+                    @lifecycle match {
+                        case Lifecycle(Deprecated, _, _) => {
+                            <label class="fw-bold">Status <a href="#"
+                            tabindex="0"
+                            aria-label="Status"
+                            data-bs-toggle="popover"
+                            data-bs-trigger="focus"
+                            data-bs-placement="left"
+                            data-bs-html="true"
+                            data-bs-content='Deprecated status is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. To change this you will need to either remove the `deprecated` key or change its value to `false`. Changes can take a few minutes to appear in the catalogue.'>
+                                <span class="glyphicon glyphicon-question-sign"/>
+                            </a>: </label>
+                        }
+                        case _                           => {
+                           <label class="fw-bold">Status: </label> }
+                    }
                     @lifecycle.lifecycleStatus.displayName
                     @lifecycle match {
                         case Lifecycle(DecommissionInProgress, Some(username), Some(createdDate)) => {

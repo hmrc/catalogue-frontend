@@ -120,15 +120,14 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
       outbound <- srs.outboundServices
                     .filterNot(_ == serviceName)
                     .foldLeftM[Future, Seq[ServiceRelationship]](Seq.empty) { (acc, service) =>
-                      val repository = repos.find(_.name == service)
-                      (repository match {
-                          case Some(repository) =>
-                            serviceCommissioningConnector
-                              .getLifecycle(service)
-                              .map(status => ServiceRelationship(service, hasRepo = true, status.map(_.lifecycleStatus)))
-                          case None         =>
-                            Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None))
-                      }).map(_ +: acc)
+                      val hasRepo = repos.exists(_.name == service)
+                      (if (hasRepo)
+                        serviceCommissioningConnector
+                          .getLifecycle(service)
+                          .map(status => ServiceRelationship(service, hasRepo = true, status.map(_.lifecycleStatus)))
+                      else
+                        Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None))
+                        ).map(_ +: acc)
                     }
       inbound  =  srs.inboundServices
                     .filterNot(_ == serviceName)

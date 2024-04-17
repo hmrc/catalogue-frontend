@@ -28,7 +28,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => comRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.DecommissionInProgress
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{DecommissionInProgress, Deprecated}
 @import java.time.Instant
 
 @this(
@@ -80,15 +80,24 @@
       @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = false)
       @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = true )
     }
-    @if(serviceRelationships.hasDeprecatedDownstream | serviceRelationships.hasDecommissioningDownstream) {
+
+    @if(serviceRelationships.hasDeprecatedDownstream) {
       <div class="alert alert-warning">
           <strong>
-              One or more of your <a id="service-relationships-anchor-link" href="#service_relationships">downstream dependencies</a> has been marked for decommissioning.
+              One or more of your <a id="service-relationships-deprecated-anchor-link" href="#service_relationships">downstream dependencies</a> has been deprecated.
           </strong>
       </div>
     }
 
-    @if(repositoryDetails.isDeprecated | lifecycle.map(_.lifecycleStatus).contains(DecommissionInProgress)) {
+    @if(serviceRelationships.hasDecommissioningDownstream) {
+        <div class="alert alert-warning">
+            <strong>
+                One or more of your <a id="service-relationships-decommission-anchor-link" href="#service_relationships">downstream dependencies</a> has been marked for decommissioning.
+            </strong>
+        </div>
+    }
+
+    @if(lifecycle.map(_.lifecycleStatus).contains(DecommissionInProgress)) {
         <div class="alert alert-warning">
             <strong>
                 This service is marked for decommissioning, see <a id="decommission-state" href="@{comRoutes.ServiceCommissioningStatusController.getCommissioningState(repositoryDetails.name).url}">commissioning state</a> for progress. If this is unexpected contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target=\"_blank\" rel=\"noreferrer noopener\">#team-platops<span class="glyphicon glyphicon-new-window"/></a> for help.
