@@ -54,10 +54,11 @@ class ServiceConfigsController @Inject()(
   def configExplorer(serviceName: String, showWarnings: Boolean, selector: Option[KeyName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        deployments <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
-        configByKey <- serviceConfigsService.configByKeyWithNextDeployment(serviceName)
-        warnings    <- serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), version = None, latest = true)
-      } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings))
+        deployments      <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
+        configByKey      <- serviceConfigsService.configByKeyWithNextDeployment(serviceName)
+        warnings         <- serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), version = None, latest = true)
+        deploymentConfig <- serviceConfigsService.deploymentConfigByKeyWithNextDeployment(serviceName)
+      } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings, deploymentConfig))
     }
 
   def searchLanding(): Action[AnyContent] =
