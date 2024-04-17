@@ -62,7 +62,7 @@
         <li class="list-item">
         @if(relationship.hasRepo) {
             <a id="link-to-@idSnippet-@{relationship.service}" href="/repositories/@{relationship.service}">@relationship.service</a>
-            @if(relationship.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) {
+            @if(relationship.lifecycleStatus.contains(LifecycleStatus.Deprecated) | relationship.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) {
                 <a href="#"
                 tabindex="0"
                 data-bs-toggle="popover"
