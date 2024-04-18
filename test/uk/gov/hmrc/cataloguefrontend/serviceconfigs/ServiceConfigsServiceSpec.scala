@@ -351,34 +351,6 @@ class ServiceConfigsServiceSpec
     }
   }
 
-  "serviceConfigsService.ServiceRelationshipsEnriched.hasDecommissioningDownstream" should {
-
-    "return true if an outbound service lifecycle status is DecommissionInProgress" in {
-
-      val serviceRelationshipsEnriched = ServiceRelationshipsEnriched(
-        inboundServices = Seq.empty,
-        outboundServices = Seq(
-          ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Active)),
-          ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = Some(DecommissionInProgress)))
-      )
-
-      serviceRelationshipsEnriched.hasDecommissioningDownstream shouldBe true
-    }
-
-    "return false if no lifecycle status is DecommissionInProgress" in {
-
-      val serviceRelationshipsEnriched = ServiceRelationshipsEnriched(
-        inboundServices = Seq.empty,
-        outboundServices = Seq(
-          ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Active)),
-          ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = None))
-      )
-
-      serviceRelationshipsEnriched.hasDecommissioningDownstream shouldBe false
-    }
-
-  }
-
   "serviceConfigsService.ServiceRelationshipsEnriched.hasDeprecatedDownstream" should {
 
     "return true if an outbound service lifecycle status is Deprecated" in {

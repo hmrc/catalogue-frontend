@@ -89,14 +89,6 @@
       </div>
     }
 
-    @if(serviceRelationships.hasDecommissioningDownstream) {
-        <div class="alert alert-warning">
-            <strong>
-                One or more of your <a id="service-relationships-decommission-anchor-link" href="#service_relationships">downstream dependencies</a> has been marked for decommissioning.
-            </strong>
-        </div>
-    }
-
     @if(lifecycle.map(_.lifecycleStatus).contains(DecommissionInProgress)) {
         <div class="alert alert-warning">
             <strong>

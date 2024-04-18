@@ -399,10 +399,6 @@ object ServiceConfigsService {
   ) {
     def size: Int = Seq(inboundServices.size, outboundServices.size).max
 
-    def hasDecommissioningDownstream: Boolean =
-      outboundServices
-        .exists(_.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress))
-
     def hasDeprecatedDownstream: Boolean =
       outboundServices
         .exists(_.lifecycleStatus.contains(LifecycleStatus.Deprecated))
