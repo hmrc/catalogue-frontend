@@ -28,7 +28,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{EnvData, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => comRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.DecommissionInProgress
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{DecommissionInProgress, Deprecated}
 @import java.time.Instant
 
 @this(
@@ -80,10 +80,11 @@
       @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = false)
       @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = true )
     }
-    @if(serviceRelationships.hasDecommissioningDownstream) {
+
+    @if(serviceRelationships.hasDeprecatedDownstream) {
       <div class="alert alert-warning">
           <strong>
-              One or more of your <a id="service-relationships-anchor-link" href="#service_relationships">downstream dependencies</a> has been marked for decommissioning.
+              One or more of your <a id="service-relationships-deprecated-anchor-link" href="#service_relationships">downstream dependencies</a> has been deprecated.
           </strong>
       </div>
     }

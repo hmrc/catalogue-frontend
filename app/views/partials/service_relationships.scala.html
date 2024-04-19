@@ -14,8 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{ServiceRelationship, ServiceRelationshipsEnriched}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.Deprecated
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{ServiceRelationship, ServiceRelationshipsEnriched}
 
 @(serviceRelationships: ServiceRelationshipsEnriched)
 @hasTooManyRelationships = @{
@@ -62,13 +63,13 @@
         <li class="list-item">
         @if(relationship.hasRepo) {
             <a id="link-to-@idSnippet-@{relationship.service}" href="/repositories/@{relationship.service}">@relationship.service</a>
-            @if(relationship.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) {
+            @if(relationship.lifecycleStatus.contains(LifecycleStatus.Deprecated) | relationship.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) {
                 <a href="#"
                 tabindex="0"
                 data-bs-toggle="popover"
                 data-bs-trigger="hover"
                 data-bs-placement="right"
-                data-bs-content='Marked for decommissioning'>
+                data-bs-content='@popoverContent(relationship.lifecycleStatus)'>
                     <span class="badge rounded-pill text-bg-warning">
                         <i class="glyphicon glyphicon-alert"></i>
                     </span>
@@ -80,4 +81,11 @@
         </li>
     }
     </ul>
+}
+
+@popoverContent(lifecycleStatus: Option[LifecycleStatus]) = {
+    @lifecycleStatus match {
+      case Some(Deprecated) => { "Deprecated" }
+      case _                => { "Marked for decommissioning" }
+    }
 }

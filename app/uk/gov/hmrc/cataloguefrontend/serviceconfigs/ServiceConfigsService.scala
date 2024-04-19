@@ -123,12 +123,12 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
                     .foldLeftM[Future, Seq[ServiceRelationship]](Seq.empty) { (acc, service) =>
                       val hasRepo = repos.exists(_.name == service)
                       (if (hasRepo)
-                         serviceCommissioningConnector
-                           .getLifecycle(service)
-                           .map(status => ServiceRelationship(service, hasRepo, status.map(_.lifecycleStatus)))
-                       else
-                         Future.successful(ServiceRelationship(service, hasRepo, lifecycleStatus = None))
-                      ).map(_ +: acc)
+                        serviceCommissioningConnector
+                          .getLifecycle(service)
+                          .map(status => ServiceRelationship(service, hasRepo = true, status.map(_.lifecycleStatus)))
+                      else
+                        Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None))
+                        ).map(_ +: acc)
                     }
       inbound  =  srs.inboundServices
                     .filterNot(_ == serviceName)
@@ -399,9 +399,9 @@ object ServiceConfigsService {
   ) {
     def size: Int = Seq(inboundServices.size, outboundServices.size).max
 
-    def hasDecommissioningDownstream: Boolean =
+    def hasDeprecatedDownstream: Boolean =
       outboundServices
-        .exists(_.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress))
+        .exists(_.lifecycleStatus.contains(LifecycleStatus.Deprecated))
   }
 
   def friendlySourceName(
