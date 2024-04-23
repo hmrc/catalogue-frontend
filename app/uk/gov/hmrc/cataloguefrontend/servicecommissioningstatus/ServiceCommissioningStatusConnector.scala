@@ -71,7 +71,7 @@ class ServiceCommissioningStatusConnector @Inject() (
   }
 
   def getLifecycle(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[Lifecycle]] = {
-    implicit val reads: Reads[Lifecycle] = Lifecycle.format
+    implicit val reads: Reads[Lifecycle] = Lifecycle.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/$serviceName/lifecycleStatus")
       .execute[Option[Lifecycle]]

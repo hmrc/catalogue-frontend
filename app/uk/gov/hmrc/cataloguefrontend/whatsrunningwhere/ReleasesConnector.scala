@@ -77,10 +77,7 @@ class ReleasesConnector @Inject() (
     httpClientV2
       .get(url)
       .execute[Option[WhatsRunningWhere]]
-      .map(_.getOrElse {
-        logger.error(s"Service $service not found, returning placeholder whatsrunningwhere")
-        WhatsRunningWhere(ServiceName(service), Nil)
-      })
+      .map(_.getOrElse(WhatsRunningWhere(ServiceName(service), Nil)))
       .recover {
         case ex =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)

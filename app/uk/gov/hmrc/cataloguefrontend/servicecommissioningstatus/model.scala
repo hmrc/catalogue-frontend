@@ -100,7 +100,7 @@ object CachedServiceCheck {
   val reads: Reads[CachedServiceCheck] = {
     implicit val readsCheck = Check.reads
     ( (__ \ "serviceName"    ).read[String].map(ServiceName.apply)
-    ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.format)
+    ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "checks"         ).read[Seq[Check]]
     )(CachedServiceCheck.apply _)
   }
@@ -117,14 +117,17 @@ object FormCheckType extends Enum[FormCheckType] {
 }
 
 case class Lifecycle(
-    lifecycleStatus: LifecycleStatus
-  , username: Option[String]     = None
-  , createDate: Option[Instant]  = None
+  lifecycleStatus: LifecycleStatus
+, username       : Option[String]  = None
+, createDate     : Option[Instant] = None
 )
 
 object Lifecycle {
-  implicit val lctf = LifecycleStatus.format
-  val format: OFormat[Lifecycle] = Json.format[Lifecycle]
+  val reads: Reads[Lifecycle] =
+    ( (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
+    ~ (__ \ "username"       ).readNullable[String]
+    ~ (__ \ "createDate"     ).readNullable[Instant]
+    )(Lifecycle.apply _)
 }
 
 sealed trait LifecycleStatus { val asString: String; val displayName: String }
@@ -144,19 +147,12 @@ object LifecycleStatus {
       .find(_.asString == s)
       .toRight(s"Invalid service status - should be one of: ${values.map(_.asString).mkString(", ")}")
 
-  val format: Format[LifecycleStatus] =
-    new Format[LifecycleStatus] {
-      override def reads(json: JsValue): JsResult[LifecycleStatus] =
-        json match {
-          case JsString(s) => parse(s).fold(msg => JsError(msg), rt => JsSuccess(rt))
-          case _           => JsError("String value expected")
-        }
-
-      override def writes(rt: LifecycleStatus): JsValue =
-        JsString(rt.asString)
-    }
+  val reads: Reads[LifecycleStatus] =
+    (json: JsValue) =>
+      json
+        .validate[String]
+        .flatMap(s => parse(s).fold(msg => JsError(msg), rt => JsSuccess(rt)))
 
   def canDecommission(lifecycleStatus: LifecycleStatus): Boolean =
     List(Archived, DecommissionInProgress, Deleted).contains(lifecycleStatus)
-
 }
