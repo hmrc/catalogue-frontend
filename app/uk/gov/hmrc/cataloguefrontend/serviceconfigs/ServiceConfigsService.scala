@@ -126,9 +126,9 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
                         serviceCommissioningConnector
                           .getLifecycle(service)
                           .map(status => ServiceRelationship(service, hasRepo = true, status.map(_.lifecycleStatus)))
-                      else
-                        Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None))
-                        ).map(_ +: acc)
+                       else
+                         Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None))
+                      ).map(_ +: acc)
                     }
       inbound  =  srs.inboundServices
                     .filterNot(_ == serviceName)

@@ -299,22 +299,20 @@ class ServiceConfigsServiceSpec
   }
 
   "serviceConfigsService.serviceRelationships" should {
-
     def gitRepository(name: String) =
       GitRepository(
-        name = name,
-        description = "test",
-        githubUrl = "test",
-        createdDate = Instant.now(),
+        name           = name,
+        description    = "test",
+        githubUrl      = "test",
+        createdDate    = Instant.now(),
         lastActiveDate = Instant.now(),
-        language = Some("en"),
-        isArchived = false,
-        defaultBranch = "test",
-        serviceType = None
+        language       = Some("en"),
+        isArchived     = false,
+        defaultBranch  = "test",
+        serviceType    = None
       )
 
     "return list of service relationships with lifecycle status for outbound services when found in teams and repositories" in new Setup  {
-
       when(mockTeamsAndRepositoriesConnector.allRepositories())
         .thenReturn(Future.successful(Seq(gitRepository("test-repo-1"), gitRepository("inbound-repo-1"), gitRepository("outbound-repo-1"))))
 
@@ -333,7 +331,6 @@ class ServiceConfigsServiceSpec
     }
 
     "return list of service relationships without lifecycle status when not found in teams and repositories" in new Setup {
-
       when(mockTeamsAndRepositoriesConnector.allRepositories())
         .thenReturn(Future.successful(Seq.empty))
 
@@ -352,11 +349,9 @@ class ServiceConfigsServiceSpec
   }
 
   "serviceConfigsService.ServiceRelationshipsEnriched.hasDeprecatedDownstream" should {
-
     "return true if an outbound service lifecycle status is Deprecated" in {
-
       val serviceRelationshipsEnriched = ServiceRelationshipsEnriched(
-        inboundServices = Seq.empty,
+        inboundServices  = Seq.empty,
         outboundServices = Seq(
           ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Deprecated)),
           ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = Some(Active)),
@@ -369,7 +364,7 @@ class ServiceConfigsServiceSpec
     "return false if all service lifecycle status' are not Deprecated" in {
 
       val serviceRelationshipsEnriched = ServiceRelationshipsEnriched(
-        inboundServices = Seq.empty,
+        inboundServices  = Seq.empty,
         outboundServices = Seq(
           ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Active)),
           ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = None))
