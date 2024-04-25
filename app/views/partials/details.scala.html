@@ -105,14 +105,14 @@
                 @githubBadgeType(repositoryDetails)
             </div>
 
-            @repositoryDetails.zone.map{ zone =>
+            @repositoryDetails.zone.map { zone =>
                 <div id="repository-zone" class="col-6">
                     <label class="fw-bold">Zone: </label>
                     @zone
                 </div>
             }
 
-            @repositoryDetails.serviceType.map{ serviceType =>
+            @repositoryDetails.serviceType.map { serviceType =>
                 <div id="repository-service-type" class="col-6">
                     <label class="fw-bold">Service type: </label>
                     @serviceType
@@ -167,6 +167,16 @@
                   <label class="fw-bold">Latest Version: </label>
                   @version.toString
                 </div>
+            }
+
+            @repositoryDetails.tags match {
+                case Some(tags) if tags.nonEmpty => {
+                    <div id="repository-tags" class="col-6">
+                        <label class="fw-bold">Tags: </label>
+                        @tags.map { tag => <span class="repository-tags badge rounded-pill text-bg-secondary">@tag.asString</span> }
+                    </div>
+                }
+                case _ => {}
             }
         </div>
     </div>
