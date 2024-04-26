@@ -108,22 +108,32 @@ sealed trait Tag {
 
 object Tag {
   case object AdminFrontend extends Tag {
-    def asString = "admin";
+    def asString      = "admin"
     val displayString = "Admin Frontend"
   }
 
   case object Api extends Tag {
-    def asString = "api";
+    def asString      = "api"
     val displayString = "API"
   }
 
+  case object BuiltOffPlatform extends Tag {
+    def asString      = "built-off-platform"
+    val displayString = "Built Off Platform"
+  }
+
+  case object Maven extends Tag {
+    def asString      = "maven"
+    val displayString = "Maven"
+  }
+
   case object Stub extends Tag {
-    def asString = "stub";
+    def asString      = "stub"
     val displayString = "Stub"
   }
 
   val values =
-    Set(AdminFrontend, Api, Stub)
+    Set(AdminFrontend, Api, BuiltOffPlatform, Maven, Stub)
 
   def parse(s: String): Either[String, Tag] =
     values
