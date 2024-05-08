@@ -323,8 +323,8 @@ class ServiceConfigsServiceSpec
         .thenReturn(Future.successful(Some(Lifecycle(DecommissionInProgress, None, None))))
 
       val expectedResult: ServiceRelationshipsEnriched = ServiceRelationshipsEnriched(
-        Seq(ServiceRelationship("inbound-repo-1",  hasRepo = true, lifecycleStatus = None)),
-        Seq(ServiceRelationship("outbound-repo-1", hasRepo = true, Some(DecommissionInProgress)))
+        Seq(ServiceRelationship("inbound-repo-1",  hasRepo = true, lifecycleStatus = None, endOfLifeDate = None)),
+        Seq(ServiceRelationship("outbound-repo-1", hasRepo = true, Some(DecommissionInProgress), endOfLifeDate = None))
       )
 
       serviceConfigsService.serviceRelationships("test-repo-1").futureValue shouldBe expectedResult
@@ -338,8 +338,8 @@ class ServiceConfigsServiceSpec
         .thenReturn(Future.successful(ServiceRelationships(Seq("inbound-repo-1"), Seq("outbound-repo-1"))))
 
       val expectedResult = ServiceRelationshipsEnriched(
-        Seq(ServiceRelationship("inbound-repo-1",  hasRepo = false, lifecycleStatus = None)),
-        Seq(ServiceRelationship("outbound-repo-1", hasRepo = false, lifecycleStatus = None))
+        Seq(ServiceRelationship("inbound-repo-1",  hasRepo = false, lifecycleStatus = None, endOfLifeDate = None)),
+        Seq(ServiceRelationship("outbound-repo-1", hasRepo = false, lifecycleStatus = None, endOfLifeDate = None))
       )
 
       serviceConfigsService.serviceRelationships("test-repo-1").futureValue shouldBe expectedResult
@@ -353,9 +353,9 @@ class ServiceConfigsServiceSpec
       val serviceRelationshipsEnriched = ServiceRelationshipsEnriched(
         inboundServices  = Seq.empty,
         outboundServices = Seq(
-          ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Deprecated)),
-          ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = Some(Active)),
-          ServiceRelationship("test-3", hasRepo = false, lifecycleStatus = None))
+          ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Deprecated), endOfLifeDate = None),
+          ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = Some(Active), endOfLifeDate = None),
+          ServiceRelationship("test-3", hasRepo = false, lifecycleStatus = None, endOfLifeDate = None))
       )
 
       serviceRelationshipsEnriched.hasDeprecatedDownstream shouldBe true
@@ -366,8 +366,8 @@ class ServiceConfigsServiceSpec
       val serviceRelationshipsEnriched = ServiceRelationshipsEnriched(
         inboundServices  = Seq.empty,
         outboundServices = Seq(
-          ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Active)),
-          ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = None))
+          ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Active), endOfLifeDate = None),
+          ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = None, endOfLifeDate = None))
       )
 
       serviceRelationshipsEnriched.hasDeprecatedDownstream shouldBe false

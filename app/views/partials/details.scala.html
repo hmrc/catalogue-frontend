@@ -23,6 +23,7 @@
 @import views.html.partials.decommissionErrorModal
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{Deprecated, Archived}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
+@import java.time.Instant
 
 @(
   repositoryDetails        : GitRepository,
@@ -112,6 +113,7 @@
                 </div>
             }
 
+
             @repositoryDetails.serviceType.map { serviceType =>
                 <div id="repository-service-type" class="col-6">
                     <label class="fw-bold">Service type: </label>
@@ -121,6 +123,7 @@
 
             @lifecycle.map { lifecycle =>
                 <div class="col-6">
+
                     @lifecycle match {
                         case Lifecycle(Deprecated, _, _) => {
                             <label class="fw-bold">Status <a href="#"
@@ -130,14 +133,17 @@
                             data-bs-trigger="focus"
                             data-bs-placement="left"
                             data-bs-html="true"
-                            data-bs-content='Deprecated status is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. To change this you will need to either remove the `deprecated` key or change its value to `false`. Changes can take a few minutes to appear in the MDTP catalogue.'>
+                            data-bs-content='@deprecatedStatusPopoverContent(repositoryDetails.endOfLifeDate)'>
                                 <span class="glyphicon glyphicon-question-sign"/>
                             </a>: </label>
+                            @lifecycle.lifecycleStatus.displayName @repositoryDetails.endOfLifeDate.map(date => Html(s"(<abbr title='End of life date' >EOL ${date.dateOnlyFormat}</abbr>)"))
                         }
-                        case _                           => {
-                           <label class="fw-bold">Status: </label> }
+                        case _ => {
+                            <label class="fw-bold">Status: </label>
+                            @lifecycle.lifecycleStatus.displayName
+                        }
                     }
-                    @lifecycle.lifecycleStatus.displayName
+
                     @lifecycle match {
                         case Lifecycle(DecommissionInProgress, Some(username), Some(createdDate)) => {
                             <span class="glyphicon glyphicon-info-sign ms-1"
@@ -158,10 +164,12 @@
                 <label class="fw-bold">Created: </label>
                 @repositoryDetails.createdDate.displayFormat
             </div>
+
             <div id="repository-last-active" class="col-6">
                 <label class="fw-bold">Last Active: </label>
                 @repositoryDetails.lastActiveDate.displayFormat
             </div>
+
             @version.map { version =>
                 <div class="col-6">
                   <label class="fw-bold">Latest Version: </label>
@@ -188,6 +196,14 @@
         case Some(DecommissionInProgress) => decommissionErrorModal("Repository is already marked for decommissioning", "You cannot decommission this service as decommissioning is already in progress.")
         case Some(Archived)               => decommissionErrorModal("Repository is archived", "You cannot decommission a service that is already archived.")
         case _                            => decommissionWarnModal(repositoryDetails.name)
+    }
+}
+
+
+@deprecatedStatusPopoverContent(endOfLifeDate: Option[Instant]) = {
+    @endOfLifeDate match {
+        case Some(_)    => { Deprecated status and end of life date is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. To change deprecated status you will need to either remove the `deprecated` key or change its value to `false`. To change the end of life date you will need to update the value of `end-of-life-date` key. Changes can take a few minutes to appear in the MDTP catalogue. }
+        case _          => { Deprecated status is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. To change this you will need to either remove the `deprecated` key or change its value to `false`. Changes can take a few minutes to appear in the MDTP catalogue. }
     }
 }
 
