@@ -27,6 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus
 import uk.gov.hmrc.cataloguefrontend.util.Base64Util
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.collection.immutable.TreeMap
 import scala.concurrent.{ExecutionContext, Future}
@@ -121,20 +122,20 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
       outbound <- srs.outboundServices
                     .filterNot(_ == serviceName)
                     .foldLeftM[Future, Seq[ServiceRelationship]](Seq.empty) { (acc, service) =>
-                      val hasRepo = repos.exists(_.name == service)
-                      (if (hasRepo)
-                        serviceCommissioningConnector
-                          .getLifecycle(service)
-                          .map(status => ServiceRelationship(service, hasRepo = true, status.map(_.lifecycleStatus)))
-                       else
-                         Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None))
+                      val hasRepo = repos.find(_.name == service)
+                      (hasRepo.map {
+                        repo =>
+                          serviceCommissioningConnector
+                            .getLifecycle(service)
+                            .map(status => ServiceRelationship(service, hasRepo = true, status.map(_.lifecycleStatus), repo.endOfLifeDate))
+                        }.getOrElse(Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None, endOfLifeDate = None)))
                       ).map(_ +: acc)
                     }
       inbound  =  srs.inboundServices
                     .filterNot(_ == serviceName)
                     .sorted
                     .map { service =>
-                      ServiceRelationship(service, hasRepo = repos.exists(_.name == service), lifecycleStatus = None)
+                      ServiceRelationship(service, hasRepo = repos.exists(_.name == service), lifecycleStatus = None, endOfLifeDate = None)
                     }
     } yield ServiceRelationshipsEnriched(
       inbound,
@@ -390,7 +391,8 @@ object ServiceConfigsService {
   case class ServiceRelationship(
     service        : String,
     hasRepo        : Boolean,
-    lifecycleStatus: Option[LifecycleStatus]
+    lifecycleStatus: Option[LifecycleStatus],
+    endOfLifeDate  : Option[Instant]
   )
 
   case class ServiceRelationshipsEnriched(

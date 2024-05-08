@@ -17,7 +17,10 @@
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.Deprecated
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{ServiceRelationship, ServiceRelationshipsEnriched}
+@import java.time.Instant
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.DecommissionInProgress
 @(serviceRelationships: ServiceRelationshipsEnriched)
 @hasTooManyRelationships = @{
     serviceRelationships.size > 3
@@ -69,7 +72,7 @@
                 data-bs-toggle="popover"
                 data-bs-trigger="hover"
                 data-bs-placement="right"
-                data-bs-content='@popoverContent(relationship.lifecycleStatus)'>
+                data-bs-content='@popoverContent(relationship.lifecycleStatus, relationship.endOfLifeDate)'>
                     <span class="badge rounded-pill text-bg-warning">
                         <i class="glyphicon glyphicon-alert"></i>
                     </span>
@@ -83,9 +86,10 @@
     </ul>
 }
 
-@popoverContent(lifecycleStatus: Option[LifecycleStatus]) = {
+@popoverContent(lifecycleStatus: Option[LifecycleStatus], endOfLifeDate: Option[Instant]) = {
     @lifecycleStatus match {
-      case Some(Deprecated) => { "Deprecated" }
-      case _                => { "Marked for decommissioning" }
+      case Some(Deprecated)                 => { "Deprecated@{endOfLifeDate.map(date => s" with an end of life date of ${date.dateOnlyFormat}" )}" }
+      case Some(DecommissionInProgress)     => { "Marked for decommissioning" }
+      case _                                => { "" }
     }
 }
