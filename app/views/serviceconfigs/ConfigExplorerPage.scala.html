@@ -90,7 +90,7 @@
                 </div>
                 <div class="grid-row grid-sub-header deployment-config">
                     <div class="sticky-column">
-                        <h5>Deployment Config</h5>
+                        <h2 class="grid-sub-header">Deployment Config</h2>
                     </div>
                 </div>
                 @for((key, envSources) <- deploymentConfig.toSeq.sortBy(_._1)(KeyName.deploymentConfigOrder)) {
@@ -142,7 +142,7 @@
                 }
                 <div class="grid-row grid-sub-header">
                     <div class="sticky-column">
-                        <h5>Application Config</h5>
+                        <h2 class="grid-sub-header">Application Config</h2>
                     </div>
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
