@@ -18,11 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.data.{Form, Forms}
 import play.api.data.Forms.{boolean, mapping, optional, text}
-import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.vulnerabilities.{VulnerabilitiesForServicesPage, VulnerabilitiesListPage, VulnerabilitiesTimelinePage}
@@ -30,6 +28,7 @@ import views.html.vulnerabilities.{VulnerabilitiesForServicesPage, Vulnerabiliti
 import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 @Singleton
 class VulnerabilitiesController @Inject() (
@@ -45,12 +44,12 @@ class VulnerabilitiesController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def distinctVulnerabilitySummaries(
+  def vulnerabilitiesList(
     vulnerability : Option[String],
     curationStatus: Option[String],
     service       : Option[String],
     team          : Option[String],
-    component     : Option[String]
+    flag          : Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       VulnerabilitiesExplorerFilter.form
@@ -60,12 +59,17 @@ class VulnerabilitiesController @Inject() (
           validForm =>
             for {
               teams     <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-              summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(validForm.vulnerability.filterNot(_.isEmpty), validForm.curationStatus, validForm.service, version = None, validForm.team, validForm.component)
+              summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(
+                             flag           = Some(validForm.flag)
+                           , serviceName    = validForm.service
+                           , team           = validForm.team
+                           , curationStatus = validForm.curationStatus
+                           )
             } yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
           )
     }
 
-  def vulnerabilitiesCountForServices(
+  def vulnerabilitiesForServices(
     teamName: Option[String] = None //TeamName is read from form, this param only exists for reverse routes
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
@@ -76,20 +80,14 @@ class VulnerabilitiesController @Inject() (
           formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
           validForm =>
           for {
-            teams      <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-            counts     <- vulnerabilitiesConnector.vulnerabilityCounts(
-                              service     = None // Use listjs filtering
-                            , team        = validForm.team
-                            , environment = validForm.environment
-                            )
+            teams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
+            counts <- vulnerabilitiesConnector.vulnerabilityCounts(
+                        flag        = validForm.flag
+                      , serviceName = None // Use listJS filters
+                      , team        = validForm.team
+                      )
           } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
         )
-    }
-
-  def getDistinctVulnerabilities(service: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      vulnerabilitiesConnector.distinctVulnerabilities(service)
-        .map(result => Ok(Json.toJson(result)))
     }
 
   def vulnerabilitiesTimeline(
@@ -112,7 +110,7 @@ class VulnerabilitiesController @Inject() (
               sortedTeams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
               teamNames    =  sortedTeams.map(_.name.asString)
               counts       <- vulnerabilitiesConnector.timelineCounts(
-                                service        = validForm.service,
+                                serviceName    = validForm.service,
                                 team           = validForm.team,
                                 vulnerability  = validForm.vulnerability,
                                 curationStatus = validForm.curationStatus,
@@ -127,11 +125,11 @@ class VulnerabilitiesController @Inject() (
 
 
   case class VulnerabilitiesExplorerFilter(
+    flag          : SlugInfoFlag           = SlugInfoFlag.Latest,
     vulnerability : Option[String]         = None,
     curationStatus: Option[CurationStatus] = None,
     service       : Option[String]         = None,
     team          : Option[String]         = None,
-    component     : Option[String]         = None
   )
 
 object VulnerabilitiesExplorerFilter {
@@ -141,31 +139,33 @@ object VulnerabilitiesExplorerFilter {
   lazy val form: Form[VulnerabilitiesExplorerFilter] =
     Form(
       mapping(
+        "flag"           -> optional(text).transform[SlugInfoFlag](
+                              opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
+                            , flag => Some(flag.asString)
+                            ),
         "vulnerability"  -> optional(text),
         "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
         "service"        -> optional(text),
         "team"           -> optional(text),
-        "component"      -> optional(text)
       )(VulnerabilitiesExplorerFilter.apply)(VulnerabilitiesExplorerFilter.unapply)
     )
 }
 
 case class VulnerabilitiesCountFilter(
-  service    : Option[String]      = None,
-  team       : Option[String]      = None,
-  environment: Option[Environment] = None
+  flag   : SlugInfoFlag   = SlugInfoFlag.Latest,
+  service: Option[String] = None,
+  team   : Option[String] = None,
 )
 
 object VulnerabilitiesCountFilter {
   lazy val form: Form[VulnerabilitiesCountFilter] = Form(
     mapping(
-      "service"     -> optional(text),
-      "team"        -> optional(text),
-      "environment" -> optional(text)
-                         .transform[Option[Environment]](
-                           o => Environment.parse(o.getOrElse(Environment.Production.asString)),
-                           _.map(_.asString)
-                         )
+      "flag"    -> optional(text).transform[SlugInfoFlag](
+                     opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
+                   , flag => Some(flag.asString)
+                   ),
+      "service" -> optional(text),
+      "team"    -> optional(text),
     )(VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
   )
 }
@@ -191,17 +191,13 @@ object VulnerabilitiesTimelineFilter {
     val dateFormat = "yyyy-MM-dd"
     Form(
       mapping(
-        "service"       -> optional(text),
-        "team"          -> optional(text),
-        "vulnerability" -> optional(text),
-        "curationStatus"-> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
-        "from"          -> optional(Forms.localDate(dateFormat))
-                                .transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply),
-                                //Default to 6 months ago if loading initial page/value not set
-        "to"            -> optional(Forms.localDate(dateFormat))
-                                .transform[LocalDate](_.getOrElse(defaultToTime()), Some.apply),
-                                //Default to now if loading initial page/value not set
-        "showDelta"     ->  boolean
+        "service"        -> optional(text),
+        "team"           -> optional(text),
+        "vulnerability"  -> optional(text),
+        "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
+        "from"           -> optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply), // Default to 6 months ago if loading initial page/value not set
+        "to"             -> optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultToTime()  ), Some.apply), // Default to now if loading initial page/value not set
+        "showDelta"      -> boolean
       )(VulnerabilitiesTimelineFilter.apply)(VulnerabilitiesTimelineFilter.unapply)
         .verifying("To Date must be greater than From Date", form => form.to.isAfter(form.from))
     )
