@@ -21,6 +21,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus.ActionRequired
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -50,7 +51,7 @@ class VulnerabilitiesConnectorSpec
   "timelineCounts" should {
     "return a sequence of VulnerabilitiesTimelineCounts" in {
       stubFor(
-        get(urlMatching("/vulnerabilities/api/vulnerabilities/timeline\\?from=2023-01-16T00:00:00Z&to=2023-01-30T23:59:59Z"))
+        get(urlMatching("/vulnerabilities/api/reports/timeline\\?from=2023-01-16T00:00:00Z&to=2023-01-30T23:59:59Z"))
           .willReturn(aResponse().withBody(
             """[
               |{"weekBeginning": "2023-01-16T00:00:00.00Z", "count": 5},
@@ -71,102 +72,108 @@ class VulnerabilitiesConnectorSpec
   "vulnerabilitySummaries" should {
     "return a sequence of vulnerabilitySummaries" in {
       stubFor(
-        get(urlMatching("/vulnerabilities/api/vulnerabilities/distinct"))
+        get(urlMatching("/vulnerabilities/api/summaries"))
           .willReturn(aResponse().withBody(
-            """
-              |[{
-              |"distinctVulnerability": {
-              |   "vulnerableComponentName": "deb://ubuntu/xenial:test",
-              |   "vulnerableComponentVersion": "1.2.5.4-1",
-              |   "vulnerableComponents": [{
-              |     "component": "deb://ubuntu/xenial:test",
-              |     "version": "1.2.5.4-1"
-              |   }],
-              |   "id": "CVE-123",
-              |   "score": 10,
-              |   "description": "testing",
-              |   "fixedVersions": ["2.5.2"],
-              |   "references": ["http://test.com"],
-              |   "publishedDate": "2019-08-20T10:53:37.00Z",
-              |   "firstDetected": "2019-08-20T10:53:37.00Z",
-              |   "assessment": "Serious",
-              |   "curationStatus": "ACTION_REQUIRED",
-              |   "ticket": "ticket1"
-              | },
-              | "occurrences": [{
-              |   "service": "service1",
-              |   "serviceVersion": "2.0",
-              |   "componentPathInSlug": "some/test/path"
-              | }],
-              | "teams": ["TeamA", "TeamB"]
-              |}]
-              |""".stripMargin
+            """[{
+              "distinctVulnerability": {
+                "vulnerableComponentName": "deb://ubuntu/xenial:test",
+                "vulnerableComponentVersion": "1.2.5.4-1",
+                "vulnerableComponents": [{"component": "deb://ubuntu/xenial:test", "version": "1.2.5.4-1"}],
+                "id": "CVE-123",
+                "score": 10,
+                "description": "testing",
+                "fixedVersions": ["2.5.2"],
+                "references": ["http://test.com"],
+                "publishedDate": "2019-08-20T10:53:37.00Z",
+                "firstDetected": "2019-08-20T10:53:37.00Z",
+                "assessment": "Serious",
+                "curationStatus": "ACTION_REQUIRED",
+                "ticket": "ticket1"
+              },
+              "occurrences": [{"service": "service1", "serviceVersion": "2.0", "componentPathInSlug": "some/test/path"}],
+              "teams": ["TeamA", "TeamB"]
+            }]""".stripMargin
           ))
       )
 
       vulnerabilitiesConnector.vulnerabilitySummaries(None, None, None, None, None).futureValue shouldBe Some(Seq(
         VulnerabilitySummary(
           distinctVulnerability = DistinctVulnerability(
-            vulnerableComponentName = "deb://ubuntu/xenial:test",
-            vulnerableComponentVersion = "1.2.5.4-1",
-            vulnerableComponents = Seq(VulnerableComponent("deb://ubuntu/xenial:test", "1.2.5.4-1")),
-            id = "CVE-123",
-            score = Some(10.0),
-            description = "testing",
-            fixedVersions = Some(Seq("2.5.2")),
-            references = Seq("http://test.com"),
-            publishedDate = Instant.parse("2019-08-20T10:53:37.00Z"),
-            firstDetected = Some(Instant.parse("2019-08-20T10:53:37.00Z")),
-            assessment = Some("Serious"),
-            curationStatus = Some(ActionRequired),
-            ticket = Some("ticket1")
-          ),
-          occurrences = Seq(VulnerabilityOccurrence(
-            service = "service1",
-            serviceVersion = "2.0",
-            componentPathInSlug = "some/test/path"
-          )),
-          teams = Seq("TeamA", "TeamB")
+                                    vulnerableComponentName    = "deb://ubuntu/xenial:test",
+                                    vulnerableComponentVersion = "1.2.5.4-1",
+                                    vulnerableComponents       = Seq(VulnerableComponent("deb://ubuntu/xenial:test", "1.2.5.4-1")),
+                                    id                         = "CVE-123",
+                                    score                      = Some(10.0),
+                                    description                = "testing",
+                                    fixedVersions              = Some(Seq("2.5.2")),
+                                    references                 = Seq("http://test.com"),
+                                    publishedDate              = Instant.parse("2019-08-20T10:53:37.00Z"),
+                                    firstDetected              = Some(Instant.parse("2019-08-20T10:53:37.00Z")),
+                                    assessment                 = Some("Serious"),
+                                    curationStatus             = Some(ActionRequired),
+                                    ticket                     = Some("ticket1")
+                                  ),
+          occurrences           = Seq(VulnerabilityOccurrence(
+                                    service             = "service1",
+                                    serviceVersion      = "2.0",
+                                    componentPathInSlug = "some/test/path"
+                                  )),
+          teams                 = Seq("TeamA", "TeamB")
         )
       ))
     }
   }
 
-  "distinctVulnerablities" should {
+  "deployedVulnerabilityCount" should {
     "return a count of distinct vulnerabilities for the given service" in {
       stubFor(
-        get(urlMatching("/vulnerabilities/api/vulnerabilities/count\\?service=service1"))
-          .willReturn(aResponse().withBody("5")
-        ))
+        get(urlMatching("/vulnerabilities/api/services/service1/deployed-report-count"))
+          .willReturn(aResponse().withBody(
+            """{
+              "service": "service1",
+              "actionRequired": 5,
+              "noActionRequired": 4,
+              "investigationOngoing": 3,
+              "uncurated": 2
+            }"""
+          ))
+      )
 
-      vulnerabilitiesConnector.distinctVulnerabilities("service1").futureValue shouldBe Some(5)
+      vulnerabilitiesConnector.deployedVulnerabilityCount("service1").futureValue shouldBe Some(
+        TotalVulnerabilityCount(
+          service              = "service1",
+          actionRequired       = 5,
+          noActionRequired     = 4,
+          investigationOngoing = 3,
+          uncurated            = 2
+        )
+      )
     }
   }
 
   "vulnerabilitiesCounts" should {
     "return a sequence of TotalVulnerabilityCounts" in {
       stubFor(
-        get(urlMatching("/vulnerabilities/api/vulnerabilities/counts"))
+        get(urlMatching("/vulnerabilities/api/reports/latest/counts"))
           .willReturn(aResponse().withBody(
-            """
-              | [{
-              |   "service": "service1",
-              |   "actionRequired": 5,
-              |   "noActionRequired": 4,
-              |   "investigationOngoing": 3,
-              |   "uncurated": 2
-              | }]
-              |""".stripMargin
+            """[{
+              "service": "service1",
+              "actionRequired": 5,
+              "noActionRequired": 4,
+              "investigationOngoing": 3,
+              "uncurated": 2
+            }]"""
           ))
       )
 
-      vulnerabilitiesConnector.vulnerabilityCounts(None, None, None).futureValue shouldBe Seq(
+      vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest, None, None).futureValue shouldBe Seq(
         TotalVulnerabilityCount(
-          service = "service1",
-          actionRequired = 5,
-          noActionRequired = 4,
+          service              = "service1",
+          actionRequired       = 5,
+          noActionRequired     = 4,
           investigationOngoing = 3,
-          uncurated = 2)
+          uncurated            = 2
+        )
       )
     }
   }

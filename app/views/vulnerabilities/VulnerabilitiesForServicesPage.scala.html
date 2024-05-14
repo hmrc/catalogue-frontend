@@ -15,8 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
-@import uk.gov.hmrc.cataloguefrontend.model.Environment.Integration
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter
 @import views.html.helper.select
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
@@ -65,11 +64,11 @@
                 </div>
                 <div class="col-md-3">
                     @select(
-                        field                 =  form("environment"),
-                        options               =  Environment.values.filterNot(Set(Integration)).map(env => env.asString -> env.displayString),
-                        Symbol("_label")      -> "Environment",
+                        field                 =  form("flag"),
+                        options               =  SlugInfoFlag.values.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString),
+                        Symbol("_label")      -> "Flag",
                         Symbol("_labelClass") -> "form-label",
-                        Symbol("id")          -> "environment-filter",
+                        Symbol("id")          -> "flag-filter",
                         Symbol("class")       -> "form-select"
                     )
                 </div>
@@ -93,15 +92,26 @@
 }
 
 
-@vulnerabilitiesCountForService(totalVulnerabilityCount: TotalVulnerabilityCount) = {
+@vulnerabilitiesCountForService(tvc: TotalVulnerabilityCount) = {
     <tr>
-        <td><a class="service" id="link-to-@totalVulnerabilityCount.service" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(totalVulnerabilityCount.service)">@totalVulnerabilityCount.service</a></td>
-        <td class="text-center"><a class="action-required" id="@totalVulnerabilityCount.service-action-required-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.actionRequired</a></td>
-        <td class="text-center"><a class="investigation-ongoing" id="@totalVulnerabilityCount.service-investigation-ongoing-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.InvestigationOngoing.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.investigationOngoing</a></td>
-        <td class="text-center"><a class="no-action-required" id="@totalVulnerabilityCount.service-no-action-required-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.NoActionRequired.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.noActionRequired</a></td>
-        <td class="text-center"><a class="uncurated" id="@totalVulnerabilityCount.service-uncurated-required-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.Uncurated.asString), Some(s"\"${totalVulnerabilityCount.service}\""), form("team").value)">@totalVulnerabilityCount.uncurated</a></td>
+        <td><a class="service" id="link-to-@tvc.service" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(tvc.service)">@tvc.service</a></td>
+        <td class="text-center"><a class="action-required" id="@tvc.service-action-required-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.ActionRequired)">@tvc.actionRequired</a></td>
+        <td class="text-center"><a class="investigation-ongoing" id="@tvc.service-investigation-ongoing-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.InvestigationOngoing)">@tvc.investigationOngoing</a></td>
+        <td class="text-center"><a class="no-action-required" id="@tvc.service-no-action-required-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.NoActionRequired)">@tvc.noActionRequired</a></td>
+        <td class="text-center"><a class="uncurated" id="@tvc.service-uncurated-required-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.Uncurated)">@tvc.uncurated</a></td>
     </tr>
 }
+
+@vulnerabilitiesListHref(service: String, curationStatus: CurationStatus) = {
+     @uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesList(
+        vulnerability  = None,
+        curationStatus = Some(curationStatus.asString),
+        service        = Some(s"\"${service}\""),
+        team           = form("team").value,
+        flag           = form("flag").value
+    )
+}
+
 
 <!-- listjs configuration -->
 <script @CSPNonce.attr>
@@ -110,7 +120,8 @@
         searchColumns: ['service'],
         searchDelay: 350
     };
-    serviceList = new List('service-list', options);
+
+    let serviceList = new List('service-list', options);
 
     let searchBox = document.getElementById("search");
     // set autofocus cursor to right of text in search box
@@ -121,7 +132,7 @@
     serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
-  ["team-filter", "environment-filter"]
+  ["team-filter", "flag-filter"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("form").submit();

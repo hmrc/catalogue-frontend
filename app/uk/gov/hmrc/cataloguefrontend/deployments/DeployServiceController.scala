@@ -187,11 +187,12 @@ class DeployServiceController @Inject()(
                                   .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), Some(formObject.version), latest = true))
         vulnerabilites       <- EitherT
                                   .right[Result](
-                                    vulnerabilitiesConnector.vulnerabilitySummaries(service = Some(formObject.serviceName), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired))
-                                    .map(_.flatMap {
-                                      case xs if xs.isEmpty && !releases.exists(_.version == formObject.version) => None
-                                      case xs                                                                    => Some(xs)
-                                    })
+                                    vulnerabilitiesConnector
+                                      .vulnerabilitySummaries(serviceName = Some(formObject.serviceName), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired))
+                                      .map(_.flatMap {
+                                        case xs if xs.isEmpty && !releases.exists(_.version == formObject.version) => None
+                                        case xs                                                                    => Some(xs)
+                                      })
                                   )
         jvmChanges            =  (currentSlug.map(_.java), slugToDeploy.java)
         deploymentConfigUpdates <- EitherT

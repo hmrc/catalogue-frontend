@@ -145,7 +145,7 @@ class DeployServiceControllerSpec
         .thenReturn(Future.successful(someRemoveConfig))
       when(mockServiceConfigsService.configWarnings(eqTo(ServiceName("some-service")), eqTo(List(Environment.QA)), eqTo(Some(Version("0.3.0"))), eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(someConfigWarning)))
-      when(mockVulnerabilitiesConnector.vulnerabilitySummaries(eqTo(None), eqTo(Some(CurationStatus.ActionRequired)), eqTo(Some("some-service")), eqTo(Some(Version("0.3.0"))), eqTo(None), eqTo(None))(any[HeaderCarrier]))
+      when(mockVulnerabilitiesConnector.vulnerabilitySummaries(flag = eqTo(None), serviceName = eqTo(Some("some-service")), version = eqTo(Some(Version("0.3.0"))), team = eqTo(None), curationStatus = eqTo(Some(CurationStatus.ActionRequired)))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
       when(mockServiceConfigsService.deploymentConfigChanges(eqTo(ServiceName("some-service")), eqTo(Environment.QA))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someDeploymentConfigChanges))
