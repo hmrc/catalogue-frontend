@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -38,51 +38,47 @@ class VulnerabilitiesConnector @Inject() (
   private val url: String = servicesConfig.baseUrl("vulnerabilities")
 
   def vulnerabilitySummaries(
-    flag          : Option[SlugInfoFlag]   = None
-  , serviceName   : Option[String]         = None
-  , version       : Option[Version]        = None
-  , team          : Option[String]         = None
-  , curationStatus: Option[CurationStatus] = None
+    vulnerability : Option[String]         = None,
+    curationStatus: Option[CurationStatus] = None,
+    service       : Option[String]         = None,
+    version       : Option[Version]        = None,
+    team          : Option[String]         = None,
+    component     : Option[String]         = None
   )(implicit
     hc            : HeaderCarrier
   ): Future[Option[Seq[VulnerabilitySummary]]] = {
     implicit val vsrs: Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
     httpClientV2
-      .get(url"$url/vulnerabilities/api/summaries?flag=${flag.map(_.asString)}&service=$serviceName&version=${version.map(_.original)}&team=$team&curationStatus=${curationStatus.map(_.asString)}")
+      .get(url"$url/vulnerabilities/api/vulnerabilities/distinct?vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&service=$service&version=${version.map(_.original)}&team=$team&component=$component")
       .execute[Option[Seq[VulnerabilitySummary]]]
   }
 
+  def distinctVulnerabilities(service: String)(implicit hc: HeaderCarrier): Future[Option[Int]] = {
+    httpClientV2
+      .get(url"$url/vulnerabilities/api/vulnerabilities/count?service=$service")
+      .execute[Option[Int]]
+  }
+
   def vulnerabilityCounts(
-    flag       : SlugInfoFlag
-  , serviceName: Option[String] = None
-  , team       : Option[String] = None
+    service    : Option[String],
+    team       : Option[String],
+    environment: Option[Environment]
   )(implicit
     hc         : HeaderCarrier
   ): Future[Seq[TotalVulnerabilityCount]] = {
     implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
     httpClientV2
-      .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=$serviceName&team=$team")
+      .get(url"$url/vulnerabilities/api/vulnerabilities/counts?service=$service&team=$team&environment=${environment.map(_.asString)}")
       .execute[Seq[TotalVulnerabilityCount]]
   }
 
-  def deployedVulnerabilityCount(
-    serviceName: String
-  )(implicit
-    hc         : HeaderCarrier
-  ): Future[Option[TotalVulnerabilityCount]] = {
-    implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
-    httpClientV2
-      .get(url"$url/vulnerabilities/api/services/$serviceName/deployed-report-count")
-      .execute[Option[TotalVulnerabilityCount]]
-  }
-
   def timelineCounts(
-    serviceName   : Option[String]
-  , team          : Option[String]
-  , vulnerability : Option[String]
-  , curationStatus: Option[CurationStatus]
-  , from          : LocalDate
-  , to            : LocalDate
+    service       : Option[String],
+    team          : Option[String],
+    vulnerability : Option[String],
+    curationStatus: Option[CurationStatus],
+    from          : LocalDate,
+    to            : LocalDate
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[VulnerabilitiesTimelineCount]] = {
@@ -92,7 +88,7 @@ class VulnerabilitiesConnector @Inject() (
     val toInstant   = DateTimeFormatter.ISO_INSTANT.format(to.atTime(23,59,59).toInstant(ZoneOffset.UTC))
 
     httpClientV2
-      .get(url"$url/vulnerabilities/api/reports/timeline?service=$serviceName&team=$team&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
+      .get(url"$url/vulnerabilities/api/vulnerabilities/timeline?service=$service&team=$team&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
       .execute[Seq[VulnerabilitiesTimelineCount]]
   }
 }

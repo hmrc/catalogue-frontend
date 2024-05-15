@@ -57,8 +57,8 @@
             }
             @if(repo.repoType == RepoType.Service) {
                 <li>
-                    <a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesList(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${repo.name}\""), None)">
-                        Vulnerabilities (@distinctVulnerabilitiesCount.getOrElse(0))
+                    <a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.distinctVulnerabilitySummaries(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${repo.name}\""), None)">
+                        Vulnerabilities (@distinctVulnerabilitiesCount.getOrElse(0)) 
                     </a>
                     @distinctVulnerabilitiesCount.collect { case dvc if dvc > 0 =>
                         <span class="glyphicon glyphicon-info-sign ms-1"

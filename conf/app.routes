@@ -137,8 +137,8 @@ GET        /deployment-timeline                                            uk.go
 +nocsrf
 POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()
 
-GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesList(vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, service: Option[String] ?= None, team: Option[String] ?= None, flag: Option[String] ?= None)
-GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(team: Option[String] ?= None)
+GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.distinctVulnerabilitySummaries(vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, service: Option[String] ?= None, team: Option[String] ?= None, component: Option[String] ?= None)
+GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesCountForServices(team: Option[String] ?= None)
 GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[String] ?= None, team: Option[String] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
 GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.allUsers(username: Option[String] ?= None)

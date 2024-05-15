@@ -200,7 +200,7 @@ class CatalogueController @Inject() (
       optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(repositoryName)
       costEstimate              <- costEstimationService.estimateServiceCost(repositoryName)
       commenterReport           <- prCommenterConnector.report(repositoryName)
-      vulnerabilitiesCount      <- vulnerabilitiesConnector.deployedVulnerabilityCount(serviceName)
+      vulnerabilitiesCount      <- vulnerabilitiesConnector.distinctVulnerabilities(serviceName)
       serviceRelationships      <- serviceConfigsService.serviceRelationships(serviceName)
       zone                      <- retrieveZone(serviceName)
       optLatestData             =  optLatestServiceInfo.map { latestServiceInfo =>
@@ -228,7 +228,7 @@ class CatalogueController @Inject() (
         serviceRoutes                = serviceRoutes,
         hasBranchProtectionAuth      = hasBranchProtectionAuth,
         commenterReport              = commenterReport,
-        distinctVulnerabilitiesCount = vulnerabilitiesCount.map(_.actionRequired),
+        distinctVulnerabilitiesCount = vulnerabilitiesCount,
         serviceRelationships         = serviceRelationships,
         canMarkForDecommissioning    = canMarkForDecommissioning,
         lifecycle                    = lifecycle,
