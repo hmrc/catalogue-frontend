@@ -117,7 +117,7 @@ object DeploymentEventsController {
           "service" -> Forms.optional(Forms.text),
           "page"    -> Forms.optional(Forms.number(min = 0))
         )(SearchForm.apply)(SearchForm.unapply)
-        .verifying("To Date must be greater than or equal to From Date", f => f.to.isAfter(f.from))
+        .verifying("To Date must be greater than or equal to From Date", f => !f.to.isBefore(f.from))
     )
   }
 }
