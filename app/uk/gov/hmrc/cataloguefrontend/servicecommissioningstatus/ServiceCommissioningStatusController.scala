@@ -61,11 +61,12 @@ class ServiceCommissioningStatusController @Inject() (
         allChecks <- serviceCommissioningStatusConnector.allChecks()
         form      =  SearchCommissioning.searchForm.fill(
                        SearchCommissioning.SearchCommissioningForm(
-                         teamName        = None
-                       , serviceType     = None
-                       , lifecycleStatus = LifecycleStatus.values
-                       , checks          = allChecks.map(_._1).toList
-                       , environments    = Environment.values.filterNot(_ == Environment.Integration)
+                         teamName           = None
+                       , serviceType        = None
+                       , lifecycleStatus    = LifecycleStatus.values
+                       , checks             = allChecks.map(_._1).toList
+                       , environments       = Environment.values.filterNot(_ == Environment.Integration)
+                       , groupByEnvironment = Option(false)
                        )
                      )
       } yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
@@ -138,41 +139,43 @@ import play.api.data.{Form, Forms}
 
 object SearchCommissioning {
   case class SearchCommissioningForm(
-    teamName       : Option[TeamName]
-  , serviceType    : Option[ServiceType]
-  , lifecycleStatus: List[LifecycleStatus]
-  , checks         : List[String]
-  , environments   : List[Environment]
-  , asCsv          : Boolean = false
+    teamName          : Option[TeamName]
+  , serviceType       : Option[ServiceType]
+  , lifecycleStatus   : List[LifecycleStatus]
+  , checks            : List[String]
+  , environments      : List[Environment]
+  , asCsv             : Boolean = false
+  , groupByEnvironment: Option[Boolean] = None
   )
 
   lazy val searchForm: Form[SearchCommissioningForm] = Form(
     Forms.mapping(
-      "team"            -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
-    , "serviceType"     -> Forms.optional(Forms.text.transform[ServiceType](x =>
-                             ServiceType.parse(x).getOrElse(ServiceType.Backend)
-                           , _.asString
-                           ))
-    , "lifecycleStatus" -> Forms.default(
-                             Forms
-                               .list(Forms.text)
-                               .transform[List[LifecycleStatus]](
-                                 xs => xs.map(x => LifecycleStatus.parse(x).toOption).flatten
-                               , x  => identity(x).map(_.asString)
-                               )
-                           , LifecycleStatus.values
-                           )
-    , "checks"          -> Forms.list(Forms.text)
-    , "environments"    -> Forms.default(
-                             Forms
-                               .list(Forms.text)
-                               .transform[List[Environment]](
-                                 xs => xs.map(Environment.parse).flatten
-                               , x  => identity(x).map(_.asString)
-                               )
-                           , Environment.values.filterNot(_ == Environment.Integration)
-                           )
-    , "asCsv"           -> Forms.boolean
+      "team"               -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+    , "serviceType"        -> Forms.optional(Forms.text.transform[ServiceType](x =>
+                                ServiceType.parse(x).getOrElse(ServiceType.Backend)
+                              , _.asString
+                              ))
+    , "lifecycleStatus"    -> Forms.default(
+                                Forms
+                                  .list(Forms.text)
+                                  .transform[List[LifecycleStatus]](
+                                    xs => xs.map(x => LifecycleStatus.parse(x).toOption).flatten
+                                  , x  => identity(x).map(_.asString)
+                                  )
+                              , LifecycleStatus.values
+                              )
+    , "checks"             -> Forms.list(Forms.text)
+    , "environments"       -> Forms.default(
+                                Forms
+                                  .list(Forms.text)
+                                  .transform[List[Environment]](
+                                    xs => xs.map(Environment.parse).flatten
+                                  , x  => identity(x).map(_.asString)
+                                  )
+                              , Environment.values.filterNot(_ == Environment.Integration)
+                              )
+    , "asCsv"              -> Forms.boolean
+    , "groupByEnvironment" -> Forms.optional(Forms.boolean)
     )(SearchCommissioningForm.apply)(SearchCommissioningForm.unapply)
   )
 
