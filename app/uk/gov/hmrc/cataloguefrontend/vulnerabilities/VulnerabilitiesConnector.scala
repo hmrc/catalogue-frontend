@@ -59,10 +59,11 @@ class VulnerabilitiesConnector @Inject() (
   )(implicit
     hc         : HeaderCarrier
   ): Future[Seq[TotalVulnerabilityCount]] = {
-    implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
-    httpClientV2
-      .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=$serviceName&team=$team")
-      .execute[Seq[TotalVulnerabilityCount]]
+    Future.successful(Nil)
+    // implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
+    // httpClientV2
+    //   .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=$serviceName&team=$team")
+    //   .execute[Seq[TotalVulnerabilityCount]]
   }
 
   def deployedVulnerabilityCount(
@@ -70,10 +71,11 @@ class VulnerabilitiesConnector @Inject() (
   )(implicit
     hc         : HeaderCarrier
   ): Future[Option[TotalVulnerabilityCount]] = {
-    implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
-    httpClientV2
-      .get(url"$url/vulnerabilities/api/services/$serviceName/deployed-report-count")
-      .execute[Option[TotalVulnerabilityCount]]
+    Future.successful(None)
+    // implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
+    // httpClientV2
+    //   .get(url"$url/vulnerabilities/api/services/$serviceName/deployed-report-count")
+    //   .execute[Option[TotalVulnerabilityCount]]
   }
 
   def timelineCounts(
@@ -86,13 +88,14 @@ class VulnerabilitiesConnector @Inject() (
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[VulnerabilitiesTimelineCount]] = {
-    implicit val stcr: Reads[VulnerabilitiesTimelineCount] = VulnerabilitiesTimelineCount.reads
+    Future.successful(Nil)
+    // implicit val stcr: Reads[VulnerabilitiesTimelineCount] = VulnerabilitiesTimelineCount.reads
 
-    val fromInstant = DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))
-    val toInstant   = DateTimeFormatter.ISO_INSTANT.format(to.atTime(23,59,59).toInstant(ZoneOffset.UTC))
+    // val fromInstant = DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))
+    // val toInstant   = DateTimeFormatter.ISO_INSTANT.format(to.atTime(23,59,59).toInstant(ZoneOffset.UTC))
 
-    httpClientV2
-      .get(url"$url/vulnerabilities/api/reports/timeline?service=$serviceName&team=$team&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
-      .execute[Seq[VulnerabilitiesTimelineCount]]
+    // httpClientV2
+    //   .get(url"$url/vulnerabilities/api/reports/timeline?service=$serviceName&team=$team&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
+    //   .execute[Seq[VulnerabilitiesTimelineCount]]
   }
 }
