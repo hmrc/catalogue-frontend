@@ -88,10 +88,6 @@
                     Symbol("class")       -> "form-select",
                     Symbol("title")       -> "On change updates 'Config Key' autocomplete"
                 )
-                <div class="form-check form-switch">
-                    <input aria-label="Group By Environment" class="form-check-input" name="groupByEnvironment" type="checkbox" role="switch" id="show-archived" value=true @if(form("groupByEnvironment").value.contains("true")) {checked}>
-                    <label class="form-check-label" for="github-only">Group By Environment</label>
-                </div>
             </div>
             <div class="col-md-2">
                 @helper.select(
@@ -142,15 +138,27 @@
             </div>
         </div>
 
-        <button id="config-search" class="btn btn-success" type="submit">Search</button>
-        <input type="hidden" id="teamChange" name="teamChange" value="false" />
-        <input type="hidden" id="asCsv" name="asCsv" value="false" />
-        <input type="button" id="export-as-csv-btn" class="btn btn-outline-secondary" value="Export as CSV"/>
+        <div class="row">
+            <div class="col-md-auto">
+                <button id="config-search" class="btn btn-success" type="submit">Search</button>
+                <input type="hidden" id="teamChange" name="teamChange" value="false" />
+                <input type="hidden" id="asCsv" name="asCsv" value="false" />
+                <input type="button" id="export-as-csv-btn" class="btn btn-outline-secondary" value="Export as CSV"/>
+            </div>
+            <div class="col-sm-auto form-check form-switch align-content-around ">
+                <input aria-label="Group By Environment" class="form-check-input"  name="groupByEnvironment" type="checkbox" role="switch" id="group-by-environment" value=true @if(form("groupByEnvironment").value.contains("true")) {checked}>
+                <label class="form-check-label" >Group By Environment</label>
+            </div>
+            <div class="col-md-auto align-content-around">
+                @if(results.exists(_.isEmpty)){
+                    <span class="ms-2">No results found.</span>
+                }else if(results.nonEmpty) {
+                <span class="ms-2">Found @{results.getOrElse(Nil).size} results.</span>
+                }
+            </div>
+        </div>
 
-        @if(results.exists(_.isEmpty)) {
-            <span class="ms-2">No results found.</span>
-        } else if (results.nonEmpty) {
-            <span class="ms-2">Found @{results.getOrElse(Nil).size} results.</span>
+        @if(results.nonEmpty) {
             <p class="mt-2">Please note this page queries a 10 minute cache, for performance, whereas viewing per service uses live data.</p>
             <table id="search-results" class="table table-sm table-sm-no-side-padding table-striped table-striped-columns-custom always-wrap sticky-header text-break">
                 @if(form.get.groupByEnvironment.isDefined) {
@@ -306,3 +314,12 @@
         }
     </div>
 }
+
+<script @CSPNonce.attr>
+    ["group-by-environment"]
+        .forEach(function(id) {
+            document.getElementById(id).addEventListener("change", function() {
+                document.getElementById("form").submit();
+            });
+        });
+</script>
