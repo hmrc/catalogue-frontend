@@ -138,37 +138,107 @@
             </div>
         </div>
 
-        <button id="config-search" class="btn btn-success" type="submit">Search</button>
-        <input type="hidden" id="teamChange" name="teamChange" value="false" />
-        <input type="hidden" id="asCsv" name="asCsv" value="false" />
-        <input type="button" id="export-as-csv-btn" class="btn btn-outline-secondary" value="Export as CSV"/>
+        <div class="row">
+            <div class="col-md-auto">
+                <button id="config-search" class="btn btn-success" type="submit">Search</button>
+                <input type="hidden" id="teamChange" name="teamChange" value="false" />
+                <input type="hidden" id="asCsv" name="asCsv" value="false" />
+                <input type="button" id="export-as-csv-btn" class="btn btn-outline-secondary" value="Export as CSV"/>
+            </div>
+            <div class="col-sm-auto form-check form-switch align-content-around ">
+                <input aria-label="Group By Environment" class="form-check-input"  name="groupByEnvironment" type="checkbox" role="switch" id="group-by-environment" value=true @if(form("groupByEnvironment").value.contains("true")) {checked}>
+                <label class="form-check-label" >Group By Environment</label>
+            </div>
+            <div class="col-md-auto align-content-around">
+                @if(results.exists(_.isEmpty)){
+                    <span class="ms-2">No results found.</span>
+                }else if(results.nonEmpty) {
+                <span class="ms-2">Found @{results.getOrElse(Nil).size} results.</span>
+                }
+            </div>
+        </div>
 
-        @if(results.exists(_.isEmpty)) {
-            <span class="ms-2">No results found.</span>
-        } else if (results.nonEmpty) {
-            <span class="ms-2">Found @{results.getOrElse(Nil).size} results.</span>
+        @if(results.nonEmpty) {
             <p class="mt-2">Please note this page queries a 10 minute cache, for performance, whereas viewing per service uses live data.</p>
             <table id="search-results" class="table table-sm table-sm-no-side-padding table-striped table-striped-columns-custom always-wrap sticky-header text-break">
-                <thead>
-                    <tr>
-                        <th>Service</th>
-                        @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
-                            @formCheckType match {
-                                case FormCheckType.Simple      => {
-                                    <th class="rotate"><div><span>@title</span></div></th>
-                                    <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                @if(form.get.groupByEnvironment.isDefined) {
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            @for((title, formCheckType) <- allChecks.filter(check => form.get.checks.contains(check._1) && check._2 == FormCheckType.Simple)) {
+                                <th class="rotate "><div><span>@title</span></div></th>
+                                <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                            }
+                            @for(env <- form.get.environments) {
+                                <th class="rotate"><div><span>@env.displayString</span></div></th>
+                                @for((title, _) <- allChecks.filter(check =>
+                                    form.get.checks.contains(check._1)
+                                    && check._2 == FormCheckType.Environment
+                                    && (check._1 == "Internal Auth Configs" && (env == Environment.QA || env == Environment.Production) || check._1 != "Internal Auth Configs")
+                                )) {
+                                    <th class="rotate sub-heading text-success"><div><span>@title</span></div></th>
                                 }
-                                case FormCheckType.Environment => {
-                                    <th class="rotate"><div><span>@title</span></div></th>
-                                    @availableEnvironments(title).map { case env => <th class="rotate sub-heading text-success"><div><span>@env.displayString</span></div></th> }
-                                    <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                            }
+                            <th class="visually-hidden">-</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @results.getOrElse(Nil).map { result =>
+                        <tr>
+                            <td>
+                                @if(result.lifecycleStatus == LifecycleStatus.Deleted) {
+                                    <del>@result.serviceName.asString</del>
+                                } else {
+                                    <a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a>
+                                }
+                            </td>
+                            @for((title, _) <- allChecks.filter(check => form.get.checks.contains(check._1) && check._2 == FormCheckType.Simple)) {
+                                <td>@displayResult(title, None, result.lifecycleStatus, result.checks.flatMap {
+                                    case check: Check.SimpleCheck if check.title == title => Some(check.checkResult)
+                                    case _ => None
+                                }.headOption)</td>
+                                <td></td>
+                            }
+                            @for(env <- form.get.environments) {
+                                <td></td>
+                                @for((title, _) <- allChecks.filter(check =>
+                                    form.get.checks.contains(check._1)
+                                    && check._2 == FormCheckType.Environment
+                                    && (check._1 == "Internal Auth Configs" && (env == Environment.QA || env == Environment.Production) || check._1 != "Internal Auth Configs")
+                                )) {
+                                    <td>@displayResult(title, Some(env), result.lifecycleStatus, result.checks.flatMap {
+                                        case check: Check.EnvCheck if check.title == title => check.checkResults.get(env)
+                                        case _ => None
+                                    }.headOption)</td>
+                                }
+                                <td></td>
+                            }
+                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName.asString).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
+                            </tr>
+                    }
+                    </tbody>
+                }else {
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
+                                @formCheckType match {
+                                    case FormCheckType.Simple      => {
+                                        <th class="rotate"><div><span>@title</span></div></th>
+                                        <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                    }
+                                    case FormCheckType.Environment => {
+                                        <th class="rotate"><div><span>@title</span></div></th>
+                                        @availableEnvironments(title).map { case env => <th class="rotate sub-heading text-success"><div><span>@env.displayString</span></div></th> }
+                                        <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                    }
                                 }
                             }
-                        }
-                        <th class="visually-hidden">-</th>
-                    </tr>
-                </thead>
-                <tbody>
+                            <th class="visually-hidden">-</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     @results.getOrElse(Nil).map { result =>
                         <tr>
                             <td>
@@ -189,7 +259,8 @@
                             <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName.asString).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
                         </tr>
                     }
-                </tbody>
+                    </tbody>
+                }
             </table>
         }
     }
@@ -243,3 +314,12 @@
         }
     </div>
 }
+
+<script @CSPNonce.attr>
+    ["group-by-environment"]
+        .forEach(function(id) {
+            document.getElementById(id).addEventListener("change", function() {
+                document.getElementById("form").submit();
+            });
+        });
+</script>
