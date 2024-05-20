@@ -20,6 +20,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 object RepoOwningTeamsHelper {
-  def teamNamesSortedByOwningTeam(repo: GitRepository): Seq[TeamName] =
-    repo.teamNames.sortBy(tn => (!repo.isDeFactoOwner(tn), tn))
+  def teamNamesSortedByOwningTeam(repo: GitRepository): Seq[TeamName] = {
+      val ownersAndTeamNames = (repo.teamNames ++ repo.owningTeams).distinct
+      ownersAndTeamNames.sortBy(tn => (!repo.isDeFactoOwner(tn), tn))
+    }
 }
