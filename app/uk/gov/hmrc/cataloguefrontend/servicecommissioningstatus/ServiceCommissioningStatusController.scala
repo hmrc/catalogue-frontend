@@ -87,7 +87,7 @@ class ServiceCommissioningStatusController @Inject() (
                               allTeams   <- teamsAndRepositoriesConnector.allTeams()
                               allChecks  <- serviceCommissioningStatusConnector.allChecks()
                               checks      = if (formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
-                              allResults <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType, formObject.lifecycleStatus)
+                              allResults <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType, formObject.lifecycleStatus) //-------------------------
                               results     = allResults.filter { result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
                                               result.checks.exists {
                                                 case check: Check.SimpleCheck => check.checkResult.isRight

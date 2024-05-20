@@ -59,7 +59,7 @@ class ServiceCommissioningStatusConnector @Inject() (
   ): Future[List[CachedServiceCheck]] = {
     implicit val cscReads = CachedServiceCheck.reads
     httpClientV2
-      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&lifecycleStatus=${lifecycleStatus.map(_.asString)}")
+      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&lifecycleStatus=${lifecycleStatus.map(_.asString)}") //---------------
       .execute[List[CachedServiceCheck]]
   }
 

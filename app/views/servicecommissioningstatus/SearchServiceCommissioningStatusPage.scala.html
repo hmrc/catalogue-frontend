@@ -19,7 +19,7 @@
 @import views.html.helper
 @import views.html.partials.form_global_errors
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{SearchCommissioning, LifecycleStatus, routes, FormCheckType, Check, CachedServiceCheck }
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{SearchCommissioning, Warning, LifecycleStatus, routes, FormCheckType, Check, CachedServiceCheck }
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, ServiceType}
 
 @this()
@@ -191,6 +191,7 @@
                                     <del>@result.serviceName.asString</del>
                                 } else {
                                     <a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a>
+                                    @displayWarnings(result.warnings)
                                 }
                             </td>
                             @for((title, _) <- allChecks.filter(check => form.get.checks.contains(check._1) && check._2 == FormCheckType.Simple)) {
@@ -246,6 +247,7 @@
                                     <del>@result.serviceName.asString</del>
                                 } else {
                                     <a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a>
+                                    @displayWarnings(result.warnings)
                                 }
                             </td>
                             @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
@@ -283,6 +285,37 @@
     } else {
         form.get.environments
     }
+}
+
+@displayWarnings(warnings: Seq[Warning]) = {
+    @if(!warnings.isEmpty) {
+        <span
+            class="glyphicon glyphicon-exclamation-sign float-end pe-2"
+            style="font-size: 1.2em"
+            data-bs-toggle="popover"
+            data-bs-trigger="hover"
+            data-bs-placement="bottom"
+            data-bs-html="true"
+            data-bs-content='@warningContent(warnings)'
+        ></span>
+    }
+}
+
+@warningContent(warnings: Seq[Warning]) = {
+    <div>
+        <div class="fs-5 fw-bold">Warning</div>
+        @warnings.map { w =>
+            <div>
+                <div class="d-flex align-items-start">
+                    <strong class="me-2">@w.title:</strong>
+                    <span class="flex-grow-1">@w.message</span>
+                </div>
+                @if(!w.equals(warnings.last)) {
+                    <hr class="my-2">
+                    }
+            </div>
+        }
+    </div>
 }
 
 @displayResult(title: String, env: Option[Environment], lifecycleStatus: LifecycleStatus, result: Option[Check.Result]) = {

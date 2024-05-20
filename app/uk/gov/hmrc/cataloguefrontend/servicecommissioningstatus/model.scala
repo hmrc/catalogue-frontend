@@ -22,6 +22,19 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 import java.time.Instant
 
+case class Warning(
+  title: String
+, message: String
+)
+
+object Warning {
+  val reads: Reads[Warning] = {
+    ( (__ \ "title"  ).format[String]
+      ~ (__ \ "message").format[String]
+      )(Warning.apply, unlift(Warning.unapply))
+  }
+}
+
 sealed trait Check {
   val id        : String = title.toLowerCase.replaceAll("\\s+", "-").replaceAll("-+", "-")
   val title     : String
@@ -90,18 +103,21 @@ object Check {
 
 case class ServiceName(asString: String) extends AnyVal
 
-case class CachedServiceCheck(
+case class CachedServiceCheck( //------------------------------
   serviceName    : ServiceName
 , lifecycleStatus: LifecycleStatus
 , checks         : Seq[Check]
+, warnings       : Seq[Warning]
 )
 
 object CachedServiceCheck {
   val reads: Reads[CachedServiceCheck] = {
-    implicit val readsCheck = Check.reads
+    implicit val readsWarning = Warning.reads
+    implicit val readsCheck   = Check.reads
     ( (__ \ "serviceName"    ).read[String].map(ServiceName.apply)
     ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "checks"         ).read[Seq[Check]]
+    ~ (__ \ "warnings"       ).read[Seq[Warning]]
     )(CachedServiceCheck.apply _)
   }
 }
