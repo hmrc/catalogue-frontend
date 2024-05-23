@@ -109,6 +109,10 @@
                                 <label class="form-check-label" for="@{x.asString}-checkbox">@x.displayName</label>
                             </div>
                         }
+                        <div class="checkbox-group">
+                            <input name="warningFilter" id="warning-checkbox" type="checkbox" value="true" @if(form.get.warningFilter.getOrElse(false)) {checked} />
+                            <label class="form-check-label" for="warning-checkbox">Has Warning</label>
+                        </div>
                     </dd>
                 </dl>
             </div>
@@ -191,7 +195,7 @@
                                     <del>@result.serviceName.asString</del>
                                 } else {
                                     <a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a>
-                                    @displayWarnings(result.warnings)
+                                    @displayWarnings(result.warnings.getOrElse(Seq.empty[Warning]))
                                 }
                             </td>
                             @for((title, _) <- allChecks.filter(check => form.get.checks.contains(check._1) && check._2 == FormCheckType.Simple)) {
@@ -247,7 +251,7 @@
                                     <del>@result.serviceName.asString</del>
                                 } else {
                                     <a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a>
-                                    @displayWarnings(result.warnings)
+                                    @displayWarnings(result.warnings.getOrElse(Seq.empty[Warning]))
                                 }
                             </td>
                             @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
@@ -291,7 +295,7 @@
     @if(!warnings.isEmpty) {
         <span
             class="glyphicon glyphicon-exclamation-sign float-end pe-2"
-            style="font-size: 1.2em"
+            style="font-size: 1.2em; color:orange"
             data-bs-toggle="popover"
             data-bs-trigger="hover"
             data-bs-placement="bottom"
@@ -312,7 +316,7 @@
                 </div>
                 @if(!w.equals(warnings.last)) {
                     <hr class="my-2">
-                    }
+                }
             </div>
         }
     </div>

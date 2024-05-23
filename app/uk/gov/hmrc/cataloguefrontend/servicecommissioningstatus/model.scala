@@ -30,8 +30,8 @@ case class Warning(
 object Warning {
   val reads: Reads[Warning] = {
     ( (__ \ "title"  ).format[String]
-      ~ (__ \ "message").format[String]
-      )(Warning.apply, unlift(Warning.unapply))
+    ~ (__ \ "message").format[String]
+    )(Warning.apply, unlift(Warning.unapply))
   }
 }
 
@@ -103,11 +103,11 @@ object Check {
 
 case class ServiceName(asString: String) extends AnyVal
 
-case class CachedServiceCheck( //------------------------------
+case class CachedServiceCheck(
   serviceName    : ServiceName
 , lifecycleStatus: LifecycleStatus
 , checks         : Seq[Check]
-, warnings       : Seq[Warning]
+, warnings       : Option[Seq[Warning]]
 )
 
 object CachedServiceCheck {
@@ -117,7 +117,7 @@ object CachedServiceCheck {
     ( (__ \ "serviceName"    ).read[String].map(ServiceName.apply)
     ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "checks"         ).read[Seq[Check]]
-    ~ (__ \ "warnings"       ).read[Seq[Warning]]
+    ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]
     )(CachedServiceCheck.apply _)
   }
 }

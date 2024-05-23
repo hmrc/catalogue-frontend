@@ -67,6 +67,7 @@ class ServiceCommissioningStatusController @Inject() (
                        , checks             = allChecks.map(_._1).toList
                        , environments       = Environment.values.filterNot(_ == Environment.Integration)
                        , groupByEnvironment = Option(false)
+                       , warningFilter      = Option(false)
                        )
                      )
       } yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
@@ -87,12 +88,14 @@ class ServiceCommissioningStatusController @Inject() (
                               allTeams   <- teamsAndRepositoriesConnector.allTeams()
                               allChecks  <- serviceCommissioningStatusConnector.allChecks()
                               checks      = if (formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
-                              allResults <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType, formObject.lifecycleStatus) //-------------------------
+                              allResults <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType, formObject.lifecycleStatus)
                               results     = allResults.filter { result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
-                                              result.checks.exists {
+                                              val hasChecks = result.checks.exists {
                                                 case check: Check.SimpleCheck => check.checkResult.isRight
                                                 case check: Check.EnvCheck    => check.checkResults.values.exists(_.isRight)
                                               }
+                                              val hasWarnings = result.warnings.nonEmpty
+                                              hasWarnings || (!formObject.warningFilter.getOrElse(false) && hasChecks)
                                             }
                             } yield
                               if (formObject.asCsv) {
@@ -146,6 +149,7 @@ object SearchCommissioning {
   , environments      : List[Environment]
   , asCsv             : Boolean = false
   , groupByEnvironment: Option[Boolean] = None
+  , warningFilter     : Option[Boolean] = None
   )
 
   lazy val searchForm: Form[SearchCommissioningForm] = Form(
@@ -176,6 +180,7 @@ object SearchCommissioning {
                               )
     , "asCsv"              -> Forms.boolean
     , "groupByEnvironment" -> Forms.optional(Forms.boolean)
+    , "warningFilter"      -> Forms.optional(Forms.boolean)
     )(SearchCommissioningForm.apply)(SearchCommissioningForm.unapply)
   )
 
