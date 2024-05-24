@@ -296,6 +296,10 @@ table.table-striped-columns-custom > :not(caption) > tr > td:nth-child(even) {
     font-size: 13px;
 }
 
+.large-glyphicon {
+    font-size: 20px;
+}
+
 .shuttered-row {
     border-style: dashed;
     border-width: 3px!important;
