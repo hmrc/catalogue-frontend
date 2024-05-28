@@ -53,8 +53,7 @@ class HealthIndicatorsControllerSpec
 
       val response = wsClient.url(s"http://localhost:$port/health-indicators/team-indicator-dashboard-frontend").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
-      response.body   should include("""frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)""")
-      response.body   should include("""<td id="section_2_row_0_col_2">No Readme defined</td>""")
+      response.body should include("""<td id="section_1_row_0_col_2">No Readme defined</td>""")
     }
 
     "respond with status 404 when repository is not found" in new Setup {
@@ -235,22 +234,8 @@ class HealthIndicatorsControllerSpec
       """{
         "repoName": "team-indicator-dashboard-frontend",
         "repoType": "Service",
-        "overallScore": -450,
+        "overallScore": -50,
         "weightedMetrics": [
-          {
-            "metricType": "bobby-rule",
-            "score": -400,
-            "breakdown": [
-              {
-                "points": -100,
-                "description": "frontend-bootstrap - Bug in Metrics Reporting"
-              },
-              {
-                "points": -100,
-                "description": "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)"
-              }
-            ]
-          },
           {
             "metricType": "leak-detection",
             "score": 0,
@@ -273,7 +258,7 @@ class HealthIndicatorsControllerSpec
       """[{
           "repoName": "team-indicator-dashboard-frontend",
           "repoType": "Service",
-          "overallScore": -450,
+          "overallScore": 100,
           "weightedMetrics": []
         },
         {

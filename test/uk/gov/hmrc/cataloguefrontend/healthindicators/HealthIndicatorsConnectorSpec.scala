@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.cataloguefrontend.healthindicators.MetricType.{BobbyRule, BuildStability, GitHub, LeakDetection}
+import uk.gov.hmrc.cataloguefrontend.healthindicators.MetricType.{BuildStability, GitHub, LeakDetection}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 
@@ -62,14 +62,6 @@ class HealthIndicatorsConnectorSpec
         .futureValue.value
 
       val weightedMetrics = Seq(
-        WeightedMetric(
-          BobbyRule,
-          -400,
-          Seq(
-            Breakdown(-100, "frontend-bootstrap - Bug in Metrics Reporting", None),
-            Breakdown(-100, "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)", None)
-          )
-        ),
         WeightedMetric(LeakDetection, 0, Seq()),
         WeightedMetric(GitHub, -50, Seq(Breakdown(-50, "No Readme defined", None))),
         WeightedMetric(BuildStability, 0, Seq(Breakdown(0, "Build Not Found", None)))
@@ -121,20 +113,6 @@ class HealthIndicatorsConnectorSpec
         "overallScore": -450,
         "weightedMetrics": [
           {
-            "metricType": "bobby-rule",
-            "score": -400,
-            "breakdown": [
-              {
-                "points": -100,
-                "description": "frontend-bootstrap - Bug in Metrics Reporting"
-              },
-              {
-                "points": -100,
-                "description": "frontend-bootstrap - Critical security upgrade: [CVE](https://confluence.tools.tax.service.gov.uk/x/sNukC)"
-              }
-            ]
-          },
-          {
             "metricType": "leak-detection",
             "score": 0,
             "breakdown": []
@@ -149,7 +127,7 @@ class HealthIndicatorsConnectorSpec
               }
             ]
           },
-      {
+          {
             "metricType": "build-stability",
             "score": 0,
             "breakdown": [
