@@ -73,7 +73,6 @@ object MetricType {
       json.validate[String].flatMap {
         case "github"          => JsSuccess(GitHub)
         case "leak-detection"  => JsSuccess(LeakDetection)
-        case "bobby-rule"      => JsSuccess(BobbyRule)
         case "build-stability" => JsSuccess(BuildStability)
         case "alert-config"    => JsSuccess(AlertConfig)
         case s                 => JsError(s"Invalid MetricType: $s")
@@ -82,7 +81,6 @@ object MetricType {
 
   case object GitHub         extends MetricType
   case object LeakDetection  extends MetricType
-  case object BobbyRule      extends MetricType
   case object BuildStability extends MetricType
   case object AlertConfig    extends MetricType
 }
