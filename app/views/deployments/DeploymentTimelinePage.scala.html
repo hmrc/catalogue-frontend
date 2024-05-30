@@ -24,6 +24,8 @@
 @import uk.gov.hmrc.cataloguefrontend.deployments.TimelinePalette
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.deployments.DeploymentGraphService
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 
 @this()
 
@@ -43,6 +45,16 @@
       "color: #ccc"
     } else {
       TimelinePalette.rgb(Math.abs(version.hashCode) % TimelinePalette.rgb.length)
+    }
+}
+
+@previousJavaVersion(env: Environment, version: Version, events: Seq[DeploymentTimelineEvent], slugInfo: Seq[ServiceDependencies]): String = @{
+    val currentIndex = events.indexWhere(e => e.env == env && e.version == version)
+    if (currentIndex > 0) {
+        val previousVersion = events(currentIndex - 1).version
+        slugInfo.find(_.version == previousVersion).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")
+    } else {
+        "unknown"
     }
 }
 
@@ -71,6 +83,7 @@
                         '@{e.displayEnd.getOrElse(e.end).displayFormat}',
                         @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
                         '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")}',
+                        '@previousJavaVersion(e.env, e.version, events, slugInfo)'
                     ),
                     '@colorForVersion(e.version.toString)',
                     new Date(@{e.start.toEpochMilli}),
@@ -95,7 +108,8 @@
             chart.draw(dataTable, options);
         }
 
-        function makeToolTip(ver, user, start, end, days, java) {
+        function makeToolTip(ver, user, start, end, days, java, previousJava) {
+            let javaVersionChange = (java !== previousJava) ? `Changed from ${previousJava} to ${java}` : `${java}`;
             if (ver === "@DeploymentGraphService.notDeployedMessage") {
                 return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
             }
@@ -105,7 +119,7 @@
                             <tr><th class="text-dark">By</th><td>${user}</td></tr>
                             <tr><th class="text-dark">From</th><td>${start} UTC</td></tr>
                             <tr><th class="text-dark">To</th><td>${end} UTC</td></tr>
-                            <tr><th class="text-dark">Java</th><td>${java}</td></tr>
+                            <tr><th class="text-dark">Java</th><td>${javaVersionChange}</td></tr>
                         </table>
                     </div>`
         }
