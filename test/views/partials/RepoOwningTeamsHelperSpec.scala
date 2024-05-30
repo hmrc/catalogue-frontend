@@ -33,63 +33,20 @@ class RepoOwningTeamsHelperSpec extends AnyWordSpec with Matchers {
         githubUrl          = "https://github.com/hmrc/a",
         createdDate        = Instant.now(),
         lastActiveDate     = Instant.now(),
+        isPrivate          = false,
         repoType           = RepoType.Service,
         serviceType        = None,
         digitalServiceName = None,
-        owningTeams        = Seq(TeamName("Zoo"), TeamName("Baz")),
+        owningTeams        = Seq(TeamName("Zoo")),
         language           = None,
         isArchived         = false,
         defaultBranch      = "main",
         branchProtection   = None,
+        isDeprecated       = false,
         teamNames          = Seq(TeamName("Foo"), TeamName("Bar"), TeamName("Baz"), TeamName("Buz"), TeamName("Zoo"))
       )
 
-      RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(ghr) shouldBe Seq( TeamName("Baz"), TeamName("Zoo"), TeamName("Bar"), TeamName("Buz"), TeamName("Foo"))
-      RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(ghr).length shouldBe 5
-    }
-
-    "sort teamNames by owningTeams and add unique team" in {
-      val ghr = GitRepository(
-        name = "a",
-        description = "b",
-        githubUrl = "https://github.com/hmrc/a",
-        createdDate = Instant.now(),
-        lastActiveDate = Instant.now(),
-        repoType = RepoType.Service,
-        serviceType = None,
-        digitalServiceName = None,
-        owningTeams = Seq(TeamName("Zoo"), TeamName("Bar")),
-        language = None,
-        isArchived = false,
-        defaultBranch = "main",
-        branchProtection = None,
-        teamNames = Seq(TeamName("Foo"), TeamName("Baz"), TeamName("Buz"), TeamName("Zoo"))
-      )
-
-      RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(ghr) shouldBe Seq(TeamName("Bar"), TeamName("Zoo"), TeamName("Baz"), TeamName("Buz"), TeamName("Foo"))
-      RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(ghr).length shouldBe 5
-    }
-
-    "sort teamNames by owningTeams when owning team is unique" in {
-      val ghr = GitRepository(
-        name = "a",
-        description = "b",
-        githubUrl = "https://github.com/hmrc/a",
-        createdDate = Instant.now(),
-        lastActiveDate = Instant.now(),
-        repoType = RepoType.Service,
-        serviceType = None,
-        digitalServiceName = None,
-        owningTeams = Seq(TeamName("Bar")),
-        language = None,
-        isArchived = false,
-        defaultBranch = "main",
-        branchProtection = None,
-        teamNames = Seq(TeamName("Foo"), TeamName("Baz"), TeamName("Buz"), TeamName("Zoo"))
-      )
-
-      RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(ghr) shouldBe Seq(TeamName("Bar"), TeamName("Baz"), TeamName("Buz"), TeamName("Foo"), TeamName("Zoo"))
-      RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(ghr).length shouldBe 5
+      RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(ghr) shouldBe Seq(TeamName("Zoo"), TeamName("Bar"), TeamName("Baz"), TeamName("Buz"), TeamName("Foo"))
     }
   }
 }
