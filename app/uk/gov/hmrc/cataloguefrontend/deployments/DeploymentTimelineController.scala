@@ -20,14 +20,18 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
-import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.deployments.DeploymentTimelinePage
-
 import cats.implicits._
+
 import java.time.{LocalDate, ZoneOffset}
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
+import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -35,6 +39,7 @@ class DeploymentTimelineController @Inject()(
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   serviceDependenciesConnector : ServiceDependenciesConnector,
   deploymentGraphService       : DeploymentGraphService,
+  serviceConfigsService        : ServiceConfigsService,
   page                         : DeploymentTimelinePage,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
@@ -52,6 +57,7 @@ class DeploymentTimelineController @Inject()(
       services    <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service))
       serviceNames = services.map(_.name.toLowerCase).sorted
       data        <- deploymentGraphService.findEvents(service, start, end).map(_.filter(_.env != Environment.Integration)) // filter as only platform teams are interested in this env
+      dataWithConfigChanges <- addConfigChangedFlags(service, data)
       slugInfo    <- data
                       .groupBy(_.version)
                       .keys
@@ -62,7 +68,23 @@ class DeploymentTimelineController @Inject()(
                           case None    => xs
                         }
                       }
-      view         = page(service, start, end, data, slugInfo, serviceNames)
+      view         = page(service, start, end, dataWithConfigChanges, slugInfo, serviceNames)
     } yield Ok(view)
+  }
+
+  private def addConfigChangedFlags(service: String, events: Seq[DeploymentTimelineEvent])
+                                   (implicit hc: HeaderCarrier): Future[Seq[DeploymentTimelineEvent]] = {
+    val updatedEventsFutures = events.zipWithIndex.map { case (event, index) =>
+      val previousEventOpt = events.take(index).findLast(_.env == event.env)
+      previousEventOpt match {
+        case Some(previousEvent) =>
+          serviceConfigsService.configChangedBetweenVersions(service, event.env, event.version, previousEvent.version).map { configChanged =>
+            event.copy(configChanged = configChanged)
+          }
+        case None =>
+          Future.successful(event)
+      }
+    }
+    Future.sequence(updatedEventsFutures)
   }
 }

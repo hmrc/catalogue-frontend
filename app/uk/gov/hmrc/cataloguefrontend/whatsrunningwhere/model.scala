@@ -168,6 +168,7 @@ object JsonCodecs {
     ~ (__ \ "end"         ).read[Instant]
     ~ (__ \ "displayStart").readNullable[Instant]
     ~ (__ \ "displayEnd"  ).readNullable[Instant]
+    ~ (__ \ "configChanged"  ).readWithDefault(false)
     )(DeploymentTimelineEvent.apply _ )
   }
 }
@@ -296,5 +297,6 @@ case class DeploymentTimelineEvent(
   start       : Instant,
   end         : Instant,
   displayStart: Option[Instant] = None, // set on the first/last event to the actual end date rather than the end of the chart
-  displayEnd  : Option[Instant] = None
+  displayEnd  : Option[Instant] = None,
+  configChanged: Boolean = false
 )
