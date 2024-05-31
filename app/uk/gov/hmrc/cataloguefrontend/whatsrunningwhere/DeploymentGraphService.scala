@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.UpstreamErrorResponse.Upstream4xxResponse
 import java.time._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 
 @Singleton
 class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector)(implicit ec: ExecutionContext) {
@@ -47,6 +48,6 @@ object DeploymentGraphService {
 
   // generates a placeholder timeline event so that the timeline still shows the environment but with nothing deployed in it
   def noEventsPlaceholder(env: String, start: Instant, end: Instant): Seq[DeploymentTimelineEvent] =
-    Environment.parse(env).fold(Seq.empty[DeploymentTimelineEvent])(e => Seq(DeploymentTimelineEvent(e, notDeployedMessage, "", start.plusSeconds(1), end.minusSeconds(1))))
+    Environment.parse(env).fold(Seq.empty[DeploymentTimelineEvent])(e => Seq(DeploymentTimelineEvent(e, Version(notDeployedMessage), "", start.plusSeconds(1), end.minusSeconds(1))))
 
 }
