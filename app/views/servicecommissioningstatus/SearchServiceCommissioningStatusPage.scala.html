@@ -109,10 +109,6 @@
                                 <label class="form-check-label" for="@{x.asString}-checkbox">@x.displayName</label>
                             </div>
                         }
-                        <div class="checkbox-group">
-                            <input name="warningFilter" id="warning-checkbox" type="checkbox" value="true" @if(form.get.warningFilter.getOrElse(false)) {checked} />
-                            <label class="form-check-label" for="warning-checkbox">Has Warning</label>
-                        </div>
                     </dd>
                 </dl>
             </div>
@@ -149,16 +145,22 @@
                 <input type="hidden" id="asCsv" name="asCsv" value="false" />
                 <input type="button" id="export-as-csv-btn" class="btn btn-outline-secondary" value="Export as CSV"/>
             </div>
-            <div class="col-sm-auto form-check form-switch align-content-around ">
-                <input aria-label="Group By Environment" class="form-check-input"  name="groupByEnvironment" type="checkbox" role="switch" id="group-by-environment" value=true @if(form("groupByEnvironment").value.contains("true")) {checked}>
-                <label class="form-check-label" >Group By Environment</label>
-            </div>
             <div class="col-md-auto align-content-around">
                 @if(results.exists(_.isEmpty)){
                     <span class="ms-2">No results found.</span>
                 }else if(results.nonEmpty) {
                 <span class="ms-2">Found @{results.getOrElse(Nil).size} results.</span>
                 }
+            </div>
+            <div class="col-md-auto ms-auto d-flex">
+                <div class="form-check form-switch me-3">
+                    <input aria-label="Group By Environment" class="form-check-input" name="groupByEnvironment" type="checkbox" role="switch" id="group-by-environment" value=true @if(form("groupByEnvironment").value.contains("true")) {checked}>
+                    <label class="form-check-label" for="group-by-environment">Group By Environment</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input aria-label="Has Warning" class="form-check-input" name="warningFilter" type="checkbox" role="switch" id="warning-filter" value="true" @if(form("warningFilter").value.contains("true")) {checked} />
+                    <label class="form-check-label" for="warning-filter">Has Warning</label>
+                </div>
             </div>
         </div>
 
@@ -294,7 +296,7 @@
 @displayWarnings(warnings: Seq[Warning]) = {
     @if(!warnings.isEmpty) {
         <span
-            class="glyphicon large-glyphicon text-warning glyphicon-exclamation-sign float-end pe-2"
+            class="glyphicon large-glyphicon text-warning glyphicon-alert float-end pe-2"
             data-bs-toggle="popover"
             data-bs-trigger="hover"
             data-bs-placement="bottom"
@@ -352,7 +354,7 @@
 }
 
 <script @CSPNonce.attr>
-    ["group-by-environment"]
+    ["group-by-environment", "warning-filter"]
         .forEach(function(id) {
             document.getElementById(id).addEventListener("change", function() {
                 document.getElementById("form").submit();
