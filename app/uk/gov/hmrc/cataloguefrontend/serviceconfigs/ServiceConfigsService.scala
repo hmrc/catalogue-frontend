@@ -21,7 +21,6 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.deployments.DeploymentGraphService.notDeployedMessage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
@@ -116,21 +115,7 @@ class ServiceConfigsService @Inject()(
                              }
     } yield (newConfig)
 
-  def configChangedBetweenVersions(
-                                    serviceName    : String,
-                                    environment    : Environment,
-                                    version        : Version,
-                                    compareVersion : Version
-                                  )(implicit hc: HeaderCarrier): Future[Boolean] = {
-    if(version == Version(notDeployedMessage) || compareVersion == Version(notDeployedMessage)) Future.successful(false) else {
-      for {
-        currentConfig <- serviceConfigsConnector.configByEnv(serviceName, Seq(environment), Some(version), latest = false)
-        compareConfig <- serviceConfigsConnector.configByEnv(serviceName, Seq(environment), Some(compareVersion), latest = false)
-      } yield currentConfig != compareConfig
-    }
-  }
-
-  def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsEnriched] =
+def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsEnriched] =
     for {
       repos    <- teamsAndReposConnector.allRepositories()
       srs      <- serviceConfigsConnector.serviceRelationships(serviceName)
