@@ -37,12 +37,12 @@
 )
 
 <style>
-.dropdown-item {
+.dropdown-button-item {
     color: rgba(var(--bs-link-color-rgb),var(--bs-link-opacity,1))
 }
 
-.dropdown-item:disabled,
-.dropdown-item[disabled]{
+.dropdown-button-item:disabled,
+.dropdown-button-item[disabled]{
     color: #666666;
 }
 
@@ -65,7 +65,7 @@
                         data-bs-placement="right"
                         data-bs-html="true"
                         data-bs-content='@{if(isGuest) "You are currently logged onto a guest account, login using your LDAP credentials to decommission" else if(!canMarkForDecommissioning) "You must be a team admin for the team that owns this service to decommission" }'>
-                         <button type="button" class="dropdown-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning" @if(isGuest | !canMarkForDecommissioning){ disabled }>Mark for decommissioning</button>
+                         <button type="button" class="dropdown-item dropdown-button-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning" @if(isGuest | !canMarkForDecommissioning){ disabled }>Mark for decommissioning</button>
                         </span>
                     </li>
                 </ul>
