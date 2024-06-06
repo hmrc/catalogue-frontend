@@ -16,7 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{Format, Json, __}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.{Enum, WithAsString}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
+
+import java.time.Instant
 
 sealed trait KeyFilterType extends WithAsString
 
@@ -86,4 +92,33 @@ object ServiceType extends Enum[ServiceType] {
 
   override val values: List[ServiceType] =
     List(Frontend, Backend)
+}
+
+case class DeploymentEventsRequest(serviceName: String, deploymentIds: Seq[String])
+
+object DeploymentEventsRequest {
+  implicit val format: Format[DeploymentEventsRequest] = Json.format[DeploymentEventsRequest]
+}
+
+case class DeploymentConfigEvent(
+                            serviceName    : String,
+                            environment    : Environment,
+                            deploymentId   : String,
+                            configChanged  : Boolean,
+                            configId       : String,
+                            lastUpdated    : Instant
+                          )
+
+object DeploymentConfigEvent {
+  implicit val mongoFormats: Format[DeploymentConfigEvent] = {
+    implicit val instantFormat = MongoJavatimeFormats.instantFormat
+    implicit val ef = Environment.format
+    ((__ \ "serviceName").format[String]
+      ~ (__ \ "environment").format[Environment]
+      ~ (__ \ "deploymentId").format[String]
+      ~ (__ \ "configChanged").format[Boolean]
+      ~ (__ \ "configId").format[String]
+      ~ (__ \ "lastUpdated").format[Instant]
+      )(DeploymentConfigEvent.apply, unlift(DeploymentConfigEvent.unapply))
+  }
 }

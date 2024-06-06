@@ -161,13 +161,16 @@ object JsonCodecs {
 
   val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] = {
     implicit val ef  = environmentFormat
-    ( (__ \ "environment" ).read[Environment]
-    ~ (__ \ "version"     ).read[Version](Version.format)
-    ~ (__ \ "username"    ).read[String]
-    ~ (__ \ "start"       ).read[Instant]
-    ~ (__ \ "end"         ).read[Instant]
-    ~ (__ \ "displayStart").readNullable[Instant]
-    ~ (__ \ "displayEnd"  ).readNullable[Instant]
+    ( (__ \ "environment"  ).read[Environment]
+    ~ (__ \ "version"      ).read[Version](Version.format)
+    ~ (__ \ "deploymentId" ).read[String]
+    ~ (__ \ "username"     ).read[String]
+    ~ (__ \ "start"        ).read[Instant]
+    ~ (__ \ "end"          ).read[Instant]
+    ~ (__ \ "displayStart" ).readNullable[Instant]
+    ~ (__ \ "displayEnd"   ).readNullable[Instant]
+    ~ (__ \ "configChanged").readNullable[Boolean]
+    ~ (__ \ "configId"     ).readNullable[String]
     )(DeploymentTimelineEvent.apply _ )
   }
 }
@@ -290,11 +293,18 @@ object Pagination {
 }
 
 case class DeploymentTimelineEvent(
-  env         : Environment,
-  version     : Version,
-  userName    : String,
-  start       : Instant,
-  end         : Instant,
-  displayStart: Option[Instant] = None, // set on the first/last event to the actual end date rather than the end of the chart
-  displayEnd  : Option[Instant] = None
-)
+  env          : Environment,
+  version      : Version,
+  deploymentId : String,
+  userName     : String,
+  start        : Instant,
+  end          : Instant,
+  displayStart : Option[Instant] = None, // set on the first/last event to the actual end date rather than the end of the chart
+  displayEnd   : Option[Instant] = None,
+  configChanged: Option[Boolean] = None,
+  configId     : Option[String] = None,
+) {
+  //Artificial deploymentId to be used for old deployments until B&D can provide us with a unique deploymentId
+  def uniqueDeploymentId(serviceName: String) =
+    if(deploymentId.startsWith("arn")) s"${serviceName}-${env.asString}-${version}-${start}" else deploymentId
+}
