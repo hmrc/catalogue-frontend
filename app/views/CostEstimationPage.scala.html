@@ -90,7 +90,7 @@
 
           var totalsChartOptions = {
             legend: { position: 'none' },
-            interpolateNulls: true,
+            interpolateNulls: false,
             vAxis: { title: 'Yearly Cost', format: 'currency' }
           };
 
@@ -101,9 +101,12 @@
           var byEnvChartData =
             google.visualization.arrayToDataTable(@Html(historicEstimatedCostCharts.byEnvChart.render));
 
-          var byEnvChartOptions = {
+
+            @println(s"-------->${historicEstimatedCostCharts.totalsChart.render}")
+
+            var byEnvChartOptions = {
             legend: { position: 'bottom' },
-            interpolateNulls: true,
+            interpolateNulls: false,
             vAxis: { title: 'Yearly Cost', format: 'currency' }
           };
 

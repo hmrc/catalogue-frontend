@@ -75,9 +75,13 @@ class CostEstimationService @Inject() (
         )
       )
 
-  private def formatForChart(totalSlots: TotalSlots): String = {
+  private def formatForChart(totalSlots: TotalSlots): JsObject = {
     val yearlyCostGbp = totalSlots.costGbp(costEstimateConfig)
-    s"""{ v: $yearlyCostGbp, f: "${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = ${totalSlots.asInt})" }"""
+    val value = if(yearlyCostGbp == double2Double(0)) {JsNull} else {JsNumber(yearlyCostGbp)}
+    Json.obj(
+      "v" -> value,
+      "f" -> JsString(CurrencyFormatter.formatGbp(yearlyCostGbp) + s" (slots = ${totalSlots.asInt})")
+    )
   }
 
   private def toChartDataTableByEnv(resourceUsages: List[ResourceUsage]): ChartDataTable = {
