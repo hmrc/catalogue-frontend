@@ -34,14 +34,14 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "8.5.0"
-val hmrcMongoVersion     = "1.9.0"
+val bootstrapPlayVersion = "9.0.0"
+val hmrcMongoVersion     = "2.0.0"
 
 val compile = Seq(
   ehcache,
   "uk.gov.hmrc"               %% "bootstrap-frontend-play-30"   % bootstrapPlayVersion,
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-30"           % hmrcMongoVersion,
-  "uk.gov.hmrc"               %% "internal-auth-client-play-30" % "2.0.0",
+  "uk.gov.hmrc"               %% "internal-auth-client-play-30" % "3.0.0",
   "org.typelevel"             %% "cats-core"                    % "2.10.0",
   "org.yaml"                  %  "snakeyaml"                    % "2.2",
   "org.apache.httpcomponents" %  "httpclient"                   % "4.5.14",
