@@ -34,7 +34,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
           |}""".stripMargin) shouldBe DependencyGraph.empty
     }
 
-    "Extract a set of nodes" in {
+    "extract a set of nodes" in {
       DependencyGraphParser
         .parse(
           """"com.typesafe:config:1.4.1"[label=<com.typesafe<BR/><B>config</B><BR/>1.4.1> style=""]
@@ -42,7 +42,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
         .nodes shouldBe Set(Node("com.typesafe:config:1.4.1"), Node("org.yaml:snakeyaml:1.25"))
     }
 
-    "Extract a set of arrows pointing to two nodes" in {
+    "extract a set of arrows pointing to two nodes" in {
       DependencyGraphParser.parse(
         """    "uk.gov.hmrc:sbt-auto-build:2.13.0" -> "org.yaml:snakeyaml:1.25"
           |    "io.methvin:directory-watcher:0.10.1" -> "net.java.dev.jna:jna:5.6.0"""".stripMargin
@@ -52,7 +52,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
       )
     }
 
-    "Separates direct dependencies from transitive ones" in {
+    "separate direct dependencies from transitive ones" in {
       val root = ServiceDependency("foo", "root", "1.0.0")
       val bar = ServiceDependency("foo", "bar", "1.0.0")
       val baz = ServiceDependency("foo", "baz", "0.1.1")
@@ -71,24 +71,23 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
       )
     }
 
-    "Should be able to ignore packaging and scala version" in {
+    "ignore packaging" in {
       DependencyGraphParser
         .parse(
           """
             |digraph "test" {
             |	"group:main_2.11:1.0.0" -> "group:component_2.11:jar:1.0.1"
-            |	"group:subcomponent:1.0.2:compile" -> "group:component_2:1.0.3"
+            |	"group:subcomponent:1.0.2:compile" -> "group:component_3:1.0.3"
             |}""".stripMargin)
         .dependencies should contain theSameElementsAs Seq(
           ServiceDependency("group", "main", "1.0.0"),
           ServiceDependency("group", "component", "1.0.1"),
           ServiceDependency("group", "subcomponent", "1.0.2"),
-          ServiceDependency("group", "component_2", "1.0.3")
+          ServiceDependency("group", "component", "1.0.3")
         )
     }
 
-
-    "Should be able to read maven generated graph" in {
+    "read maven generated graph" in {
       DependencyGraphParser
         .parse(
           """
@@ -107,7 +106,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
         )
     }
 
-    "Should be able to read maven generated dependencies" in {
+    "read maven generated dependencies" in {
       DependencyGraphParser
         .parse(
           """
@@ -126,7 +125,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
         )
     }
 
-    "Should be able to read maven generated transitive dependencies" in {
+    "read maven generated transitive dependencies" in {
       DependencyGraphParser
         .parse(
           """
@@ -152,7 +151,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
       )
     }
 
-    "Should be able to separate maven generated transitive dependencies from direct ones" in {
+    "separate maven generated transitive dependencies from direct ones" in {
       val emcs = ServiceDependency("uk.gov.hmrc.jdc", "emcs", "3.226.0")
       val reauthenticationClientApp = ServiceDependency("uk.gov.hmrc.portal", "reauthentication-client-app", "2.2.0")
       val reauthdecrypt = ServiceDependency("uk.gov.hmrc.portal", "reauthdecrypt", "3.3.0")
@@ -188,7 +187,7 @@ class DependencyGraphParserSpec extends AnyWordSpecLike with Matchers {
         )
     }
 
-    "Should work with trailing spaces" in {
+    "work with trailing spaces" in {
       // note the trailing spaces and tabs
       val input = "digraph \"uk.gov.hmrc.jdc:platops-example-classic-service:war:0.53.0\" { \n" +
         "\t\"uk.gov.hmrc.jdc:platops-example-classic-service:war:0.53.0\" -> \"uk.gov.hmrc.jdc:platops-example-classic-service-business:jar:0.53.0:compile\" ; \n" +
