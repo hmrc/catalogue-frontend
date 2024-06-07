@@ -85,33 +85,26 @@
         google.charts.setOnLoadCallback(drawCharts);
 
         function drawCharts() {
-          var totalsChartData =
-            google.visualization.arrayToDataTable(@Html(historicEstimatedCostCharts.totalsChart.render));
-
-          var totalsChartOptions = {
+          var totalsChartData = google.visualization.jsonToDataTable(historicEstimatedCostCharts.totalsChart);
+            @println(s"------totalsChartData-->${historicEstimatedCostCharts.totalsChart}")
+            var totalsChartOptions = {
             legend: { position: 'none' },
             interpolateNulls: false,
             vAxis: { title: 'Yearly Cost', format: 'currency' }
           };
-
           @* SteppedChart displays the date on the right, rather than the left, which was confusing *@
-          var totalsChart =
-            new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-chart'));
-
-          var byEnvChartData =
-            google.visualization.arrayToDataTable(@Html(historicEstimatedCostCharts.byEnvChart.render));
+          var totalsChart = new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-chart'));
 
 
-            @println(s"-------->${historicEstimatedCostCharts.totalsChart.render}")
-
+          var byEnvChartData = google.visualization.jsonToDataTable(historicEstimatedCostChart.byEnvChart);
+            @println(s"------byEnvChartData-->${historicEstimatedCostCharts.byEnvChart}")
             var byEnvChartOptions = {
             legend: { position: 'bottom' },
             interpolateNulls: false,
             vAxis: { title: 'Yearly Cost', format: 'currency' }
           };
 
-          var byEnvChart =
-            new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-per-env-chart'));
+          var byEnvChart = new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-per-env-chart'));
 
           byEnvChart.draw(byEnvChartData, byEnvChartOptions);
           totalsChart.draw(totalsChartData, totalsChartOptions);

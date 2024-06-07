@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
-import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
+import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs.environmentFormat
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -84,51 +84,46 @@ class CostEstimationService @Inject() (
     )
   }
 
-  private def toChartDataTableByEnv(resourceUsages: List[ResourceUsage]): ChartDataTable = {
+  private def toChartDataTableByEnv(resourceUsages: List[ResourceUsage]): JsArray = {
     val applicableEnvironments =
       resourceUsages
         .foldLeft(Set.empty[Environment])((acc, ru) => acc ++ ru.values.collect { case (env, deploymentSize) if deploymentSize != DeploymentSize.empty => env })
         .toList
         .sorted
 
-    val headerRow =
-      "'Date'" +: applicableEnvironments.map(e => s"'${e.displayString}'")
+    val headerRow = {
+      JsString("Date") +: JsArray(applicableEnvironments.map(e => JsString(e.displayString)))
+    }
 
     val dataRows =
-      resourceUsages
+      JsArray(resourceUsages
         .map { ru =>
-          s"new Date(${ru.date.toEpochMilli})" +:
-            applicableEnvironments.map(e => s"${ru.values.get(e).map(dc => formatForChart(dc.totalSlots)).getOrElse("null")}")
-        }
+          JsString(s"new Date(${ru.date.toEpochMilli})") +:
+            JsArray(applicableEnvironments.map(e =>  ru.values.get(e).map(dc => formatForChart(dc.totalSlots)).getOrElse(JsNull)))
+        })
 
-    ChartDataTable(headerRow +: dataRows)
+    val res = headerRow +: dataRows
+    println(s"-----res--->$res")
+    res
   }
 
-  private def toChartDataTableTotal(resourceUsages: List[ResourceUsage]): ChartDataTable = {
-    val headerRow =
-      List("'Date'", "'Yearly Cost'")
+  private def toChartDataTableTotal(resourceUsages: List[ResourceUsage]): JsArray = {
+    val headerRow = JsArray(Seq(JsString("Date"), JsString("Yearly Cost")))
+    val dataRows = JsArray(resourceUsages.map { resourceUsage =>
+      val totalSlots = TotalSlots(resourceUsage.values.values.map(_.totalSlots.asInt).sum)
+      JsArray(Seq( JsString(s"new Date(${resourceUsage.date.toEpochMilli})"), formatForChart(totalSlots)))
+    })
+    headerRow +: dataRows
+  }
 
-    val dataRows =
-      resourceUsages.map { resourceUsage =>
-        val totalSlots = TotalSlots(resourceUsage.values.values.map(_.totalSlots.asInt).sum)
-        List(s"new Date(${resourceUsage.date.toEpochMilli})", formatForChart(totalSlots))
+  private def toChartDataTableTotalByEnv(slotsByEnv: Seq[(Environment, TotalSlots)]): JsArray = {
+    val headerRow = JsArray(Seq(JsString("Environment"), JsString("Estimated Cost")))
+    val dataRows = JsArray(
+      slotsByEnv.map { case (environment, totalSlots) =>
+        JsArray(Seq(JsString(s"${environment.displayString}"), formatForChart(totalSlots)))
       }
-      .toList
-
-    ChartDataTable(headerRow +: dataRows)
-  }
-
-  private def toChartDataTableTotalByEnv(slotsByEnv: Seq[(Environment, TotalSlots)]): ChartDataTable = {
-    val headerRow =
-      List("'Environment'", "'Estimated Cost'")
-
-    val dataRows =
-      slotsByEnv
-        .map { case (environment, totalSlots) =>
-          List(s"'${environment.displayString}'", formatForChart(totalSlots))
-        }
-        .toList
-    ChartDataTable(headerRow +: dataRows)
+    )
+    headerRow +: dataRows
   }
 }
 
@@ -220,13 +215,13 @@ object CostEstimationService {
   }
 
   final case class HistoricEstimatedCostCharts(
-    totalsChart: ChartDataTable,
-    byEnvChart : ChartDataTable
+    totalsChart: JsArray,
+    byEnvChart : JsArray
   )
 
   final case class ServiceCostEstimate(
     slotsByEnv: Seq[(Environment, TotalSlots)],
-    chart     : ChartDataTable
+    chart     : JsArray
   ) {
     lazy val totalSlots: TotalSlots =
       TotalSlots(slotsByEnv.map(_._2.asInt).sum)

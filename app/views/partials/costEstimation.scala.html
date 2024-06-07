@@ -58,7 +58,7 @@
     google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
-        var data = google.visualization.arrayToDataTable(@Html(serviceCostEstimate.chart.render));
+        var data = google.visualization.arrayToDataTable(@serviceCostEstimate.chart);
         var options = {};
         var chart = new google.visualization.PieChart(document.getElementById('chart'));
         chart.draw(data, options);
