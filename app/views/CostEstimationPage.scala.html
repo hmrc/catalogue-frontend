@@ -85,7 +85,9 @@
         google.charts.setOnLoadCallback(drawCharts);
 
         function drawCharts() {
-          var totalsChartData = google.visualization.jsonToDataTable(historicEstimatedCostCharts.totalsChart);
+          var totalsChartData = new google.visualization.DataTable(historicEstimatedCostCharts.totalsChart);
+            totalsChartData.addColumn("date", "Date")
+            totalsChartData.addColumn("number", "Number")
             @println(s"------totalsChartData-->${historicEstimatedCostCharts.totalsChart}")
             var totalsChartOptions = {
             legend: { position: 'none' },
@@ -108,6 +110,27 @@
 
           byEnvChart.draw(byEnvChartData, byEnvChartOptions);
           totalsChart.draw(totalsChartData, totalsChartOptions);
+
+            var data = new google.visualization.DataTable();
+                data.addColumn('date', 'Date');
+                data.addColumn('number', 'Value');
+
+                data.addRows([
+                    [new Date(2013, 0, 1), 3],
+                    [new Date(2013, 0, 2), 5],
+                    [new Date(2013, 0, 3), 4],
+                    [new Date(2013, 0, 4), 7],
+                    [new Date(2013, 0, 6), null],
+                    [new Date(2013, 0, 7), 4],
+                    [new Date(2013, 0, 8), 4],
+                    [new Date(2013, 0, 9), 6]
+                ]);
+
+                var chart = new google.visualization.LineChart(document.querySelector('#chart_div'));
+                chart.draw(data, {
+                    height: 300,
+                    width: 400
+                });
         }
     </script>
 }

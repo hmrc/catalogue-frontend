@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
-import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter
+import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs.environmentFormat
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -75,13 +75,14 @@ class CostEstimationService @Inject() (
         )
       )
 
-  private def formatForChart(totalSlots: TotalSlots): JsObject = {
+  private def formatAsSeqForChart(totalSlots: TotalSlots):Seq[Any] = {
     val yearlyCostGbp = totalSlots.costGbp(costEstimateConfig)
-    val value = if(yearlyCostGbp == double2Double(0)) {JsNull} else {JsNumber(yearlyCostGbp)}
-    Json.obj(
-      "v" -> value,
-      "f" -> JsString(CurrencyFormatter.formatGbp(yearlyCostGbp) + s" (slots = ${totalSlots.asInt})")
-    )
+    Seq(yearlyCostGbp, s"""{"${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = ${totalSlots.asInt})"}""")
+  }
+
+  private def formatAsStringForChart(totalSlots: TotalSlots): String = {
+    val yearlyCostGbp = totalSlots.costGbp(costEstimateConfig)
+    s"""{ v: $yearlyCostGbp, f: "${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = ${totalSlots.asInt})" }"""
   }
 
   private def toChartDataTableByEnv(resourceUsages: List[ResourceUsage]): JsArray = {
@@ -97,33 +98,33 @@ class CostEstimationService @Inject() (
 
     val dataRows =
       JsArray(resourceUsages
-        .map { ru =>
-          JsString(s"new Date(${ru.date.toEpochMilli})") +:
-            JsArray(applicableEnvironments.map(e =>  ru.values.get(e).map(dc => formatForChart(dc.totalSlots)).getOrElse(JsNull)))
+        .map { resourceUsage =>
+          Json.toJson(resourceUsage.date) +:
+            JsArray(applicableEnvironments.map(e =>  resourceUsage.values.get(e).map(dc => formatAsSeqForChart(dc.totalSlots)).getOrElse(JsNull)))
         })
-
-    val res = headerRow +: dataRows
-    println(s"-----res--->$res")
-    res
+    dataRows
   }
 
   private def toChartDataTableTotal(resourceUsages: List[ResourceUsage]): JsArray = {
     val headerRow = JsArray(Seq(JsString("Date"), JsString("Yearly Cost")))
     val dataRows = JsArray(resourceUsages.map { resourceUsage =>
       val totalSlots = TotalSlots(resourceUsage.values.values.map(_.totalSlots.asInt).sum)
-      JsArray(Seq( JsString(s"new Date(${resourceUsage.date.toEpochMilli})"), formatForChart(totalSlots)))
+      JsArray(Seq( Json.toJson(resourceUsage.date), formatAsSeqForChart(totalSlots)))
     })
     headerRow +: dataRows
   }
 
-  private def toChartDataTableTotalByEnv(slotsByEnv: Seq[(Environment, TotalSlots)]): JsArray = {
-    val headerRow = JsArray(Seq(JsString("Environment"), JsString("Estimated Cost")))
-    val dataRows = JsArray(
-      slotsByEnv.map { case (environment, totalSlots) =>
-        JsArray(Seq(JsString(s"${environment.displayString}"), formatForChart(totalSlots)))
-      }
-    )
-    headerRow +: dataRows
+  private def toChartDataTableTotalByEnv(slotsByEnv: Seq[(Environment, TotalSlots)]): ChartDataTable = {
+    val headerRow =
+      List("'Environment'", "'Estimated Cost'")
+
+    val dataRows =
+      slotsByEnv
+        .map { case (environment, totalSlots) =>
+          List(s"'${environment.displayString}'", formatAsStringForChart(totalSlots))
+        }
+        .toList
+    ChartDataTable(headerRow +: dataRows)
   }
 }
 
@@ -221,7 +222,7 @@ object CostEstimationService {
 
   final case class ServiceCostEstimate(
     slotsByEnv: Seq[(Environment, TotalSlots)],
-    chart     : JsArray
+    chart     : ChartDataTable
   ) {
     lazy val totalSlots: TotalSlots =
       TotalSlots(slotsByEnv.map(_._2.asInt).sum)
