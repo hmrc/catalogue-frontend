@@ -41,20 +41,19 @@ class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector, se
                                 case (env, data) => env -> data
                               }.toMap
       dataSeq              =  dataWithPlaceholders.values.flatten.toSeq.sortBy(_.env)
-      deploymentConfig     <- serviceConfigsConnector.deploymentEvents(service, dataSeq.map(_.uniqueDeploymentId(service)))
-    } yield updateTimelineEventsWithConfig(service, dataSeq, deploymentConfig)
+      deploymentConfigSeq  <- serviceConfigsConnector.deploymentEvents(service, dataSeq.map(_.deploymentId))
+    } yield updateTimelineEventsWithConfig(dataSeq, deploymentConfigSeq)
 
   }
 
   private def updateTimelineEventsWithConfig(
-    serviceName: String,
     timelineEvents: Seq[DeploymentTimelineEvent],
     configEvents: Seq[DeploymentConfigEvent]
   ): Seq[DeploymentTimelineEvent] = {
     val configEventMap: Map[String, DeploymentConfigEvent] = configEvents.map(event => event.deploymentId -> event).toMap
 
     timelineEvents.map { timelineEvent =>
-      configEventMap.get(timelineEvent.uniqueDeploymentId(serviceName)) match {
+      configEventMap.get(timelineEvent.deploymentId) match {
         case Some(configEvent) =>
           timelineEvent.copy(
             configChanged = Some(configEvent.configChanged),

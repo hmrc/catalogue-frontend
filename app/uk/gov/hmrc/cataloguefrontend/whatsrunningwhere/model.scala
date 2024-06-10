@@ -303,8 +303,4 @@ case class DeploymentTimelineEvent(
   displayEnd   : Option[Instant] = None,
   configChanged: Option[Boolean] = None,
   configId     : Option[String] = None,
-) {
-  //Artificial deploymentId to be used for old deployments until B&D can provide us with a unique deploymentId
-  def uniqueDeploymentId(serviceName: String) =
-    if(deploymentId.startsWith("arn")) s"${serviceName}-${env.asString}-${version}-${start}" else deploymentId
-}
+)
