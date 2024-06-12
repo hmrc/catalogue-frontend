@@ -52,15 +52,11 @@ class ServiceConfigsConnector @Inject() (
       .get(url"$serviceConfigsBaseUrl/service-configs/services/repo-name?serviceName=$service")
       .execute[Option[String]]
 
-  def deploymentEvents(
-    service      : String
-  , deploymentIds: Seq[String]
-  )(implicit
+  def deploymentEvents(service: String)(implicit
     hc           : HeaderCarrier
    ): Future[Seq[DeploymentConfigEvent]] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events")
-      .withBody(Json.toJson(DeploymentEventsRequest(service, deploymentIds)))
+      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events/$service")
       .execute[Seq[DeploymentConfigEvent]]
 
   def configByEnv(

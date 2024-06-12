@@ -94,12 +94,6 @@ object ServiceType extends Enum[ServiceType] {
     List(Frontend, Backend)
 }
 
-case class DeploymentEventsRequest(serviceName: String, deploymentIds: Seq[String])
-
-object DeploymentEventsRequest {
-  implicit val format: Format[DeploymentEventsRequest] = Json.format[DeploymentEventsRequest]
-}
-
 case class DeploymentConfigEvent(
                             serviceName    : String,
                             environment    : Environment,

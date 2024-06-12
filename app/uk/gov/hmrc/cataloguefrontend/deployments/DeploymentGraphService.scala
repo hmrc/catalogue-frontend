@@ -41,9 +41,8 @@ class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector, se
                                 case (env, data) => env -> data
                               }.toMap
       dataSeq              =  dataWithPlaceholders.values.flatten.toSeq.sortBy(_.env)
-      deploymentConfigSeq  <- serviceConfigsConnector.deploymentEvents(service, dataSeq.map(_.deploymentId))
+      deploymentConfigSeq  <- serviceConfigsConnector.deploymentEvents(service)
     } yield updateTimelineEventsWithConfig(dataSeq, deploymentConfigSeq)
-
   }
 
   private def updateTimelineEventsWithConfig(
@@ -56,8 +55,8 @@ class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector, se
       configEventMap.get(timelineEvent.deploymentId) match {
         case Some(configEvent) =>
           timelineEvent.copy(
-            configChanged = Some(configEvent.configChanged),
-            configId = Some(configEvent.configId)
+            configChanged = if(configEvent.configId == "") None else Some(configEvent.configChanged), //Fix for early data where config details are not available
+            configId = if(configEvent.configId == "") None else Some(configEvent.configId)
           )
         case None =>
           timelineEvent
