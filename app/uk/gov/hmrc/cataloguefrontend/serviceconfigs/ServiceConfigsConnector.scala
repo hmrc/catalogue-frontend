@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{ExecutionContext, Future}
@@ -52,11 +53,15 @@ class ServiceConfigsConnector @Inject() (
       .get(url"$serviceConfigsBaseUrl/service-configs/services/repo-name?serviceName=$service")
       .execute[Option[String]]
 
-  def deploymentEvents(service: String)(implicit
+  def deploymentEvents(
+    service: String,
+    from:    Instant,
+    to:      Instant
+  )(implicit
     hc           : HeaderCarrier
    ): Future[Seq[DeploymentConfigEvent]] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events/$service")
+      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events/$service?from=$from&to=$to")
       .execute[Seq[DeploymentConfigEvent]]
 
   def configByEnv(
