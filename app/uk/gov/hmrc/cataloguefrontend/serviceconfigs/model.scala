@@ -98,8 +98,8 @@ case class DeploymentConfigEvent(
                             serviceName    : String,
                             environment    : Environment,
                             deploymentId   : String,
-                            configChanged  : Boolean,
-                            configId       : String,
+                            configChanged  : Option[Boolean],
+                            configId       : Option[String],
                             lastUpdated    : Instant
                           )
 
@@ -110,8 +110,8 @@ object DeploymentConfigEvent {
     ((__ \ "serviceName").format[String]
       ~ (__ \ "environment").format[Environment]
       ~ (__ \ "deploymentId").format[String]
-      ~ (__ \ "configChanged").format[Boolean]
-      ~ (__ \ "configId").format[String]
+      ~ (__ \ "configChanged").formatNullable[Boolean]
+      ~ (__ \ "configId").formatNullable[String]
       ~ (__ \ "lastUpdated").format[Instant]
       )(DeploymentConfigEvent.apply, unlift(DeploymentConfigEvent.unapply))
   }
