@@ -19,13 +19,13 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import cats.data.{EitherT, NonEmptyList, OptionT}
 import cats.instances.all._
 import cats.syntax.all._
+
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
 import play.api.i18n.Messages
 import play.api.libs.json.{Format, Json, Reads, Writes}
 import play.api.mvc.{MessagesControllerComponents, Request, Result}
 import play.twirl.api.Html
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
@@ -357,6 +357,7 @@ class ShutterWizardController @Inject() (
         requiresOutageMessage,
         outageMessageSrc,
         defaultOutageMessage,
+        outagePages,
         outagePageStatus,
         back
       )
@@ -390,6 +391,41 @@ class ShutterWizardController @Inject() (
          html      <- showPage2b(step2bForm().fill(step2bf), step1Out, step2aOut)
        } yield Ok(html)
       ).merge
+    }
+
+  def step2bPreview(
+    serviceName: ServiceName,
+    environment: Environment,
+    templatedDate: Option[String]
+  ) =
+    auth.authenticatedAction(
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step2bGet)
+    ).async { implicit request =>
+      (for {
+         outagePage <- OptionT(shutterService.outagePage(environment, serviceName))
+         template   =  shutterService.getOutagePageTemplate(templatedDate, outagePage)
+       } yield Html(template.outerHtml)
+      ).value.map {
+        case Some(html) => Ok(html)
+        case None => InternalServerError("Something went wrong") //TODO proper error handling
+      }
+    }
+
+  def step2bPreviewDefault(
+    environment: Environment,
+    templatedDate: Option[String]
+  ) =
+    auth.authenticatedAction(
+      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step2bGet)
+    ).async { implicit request =>
+      (for {
+        outagePage <- OptionT(shutterService.defaultOutagePage(environment))
+        template   =  shutterService.getOutagePageTemplate(templatedDate, outagePage)
+      } yield Html(template.outerHtml)
+        ).value.map {
+        case Some(html) => Ok(html)
+        case None => InternalServerError("Something went wrong") //TODO proper error handling
+      }
     }
 
   def step2bPost =

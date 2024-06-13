@@ -380,15 +380,20 @@ object OutagePageWarning {
 }
 
 case class OutagePage(
-  serviceName      : ServiceName,
-  environment      : Environment,
-  outagePageURL    : String,
-  warnings         : List[OutagePageWarning],
-  templatedElements: List[TemplatedContent]
+  serviceName       : ServiceName,
+  serviceDisplayName: Option[String],
+  environment       : Environment,
+  outagePageURL     : String,
+  warnings          : List[OutagePageWarning],
+  mainContent       : String,
+  templatedElements : List[TemplatedContent]
 ) {
   def templatedMessages: List[TemplatedContent] =
     templatedElements
       .filter(_.elementId == "templatedMessage")
+
+  def isDefault: Boolean =
+    warnings.exists(_.name == "UnableToRetrievePage")
 }
 
 object OutagePage {
@@ -396,11 +401,13 @@ object OutagePage {
     implicit val ef  : Reads[Environment]       = ShutterEnvironment.format
     implicit val tcf : Reads[TemplatedContent]  = TemplatedContent.format
     implicit val opwr: Reads[OutagePageWarning] = OutagePageWarning.reads
-    ( (__ \ "serviceName"      ).read[String].map(ServiceName.apply)
-    ~ (__ \ "environment"      ).read[Environment]
-    ~ (__ \ "outagePageURL"    ).read[String]
-    ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
-    ~ (__ \ "templatedElements").read[List[TemplatedContent]]
+    ( (__ \ "serviceName"       ).read[String].map(ServiceName.apply)
+    ~ (__ \ "serviceDisplayName").readNullable[String]
+    ~ (__ \ "environment"       ).read[Environment]
+    ~ (__ \ "outagePageURL"     ).read[String]
+    ~ (__ \ "warnings"          ).read[List[OutagePageWarning]]
+    ~ (__ \ "mainContent"       ).read[String]
+    ~ (__ \ "templatedElements" ).read[List[TemplatedContent]]
     )(OutagePage.apply _)
   }
 }

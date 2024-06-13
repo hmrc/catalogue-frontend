@@ -20,7 +20,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType",
       "uk.gov.hmrc.cataloguefrontend.binders.Binders._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl",
-      "uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus"
+      "uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus",
+      "uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName"
     ),
     TwirlKeys.templateImports ++= Seq(
       "uk.gov.hmrc.cataloguefrontend.util.ViewHelper.csrfFormField",
@@ -46,6 +47,7 @@ val compile = Seq(
   "org.yaml"                  %  "snakeyaml"                    % "2.2",
   "org.apache.httpcomponents" %  "httpclient"                   % "4.5.14",
   "org.planet42"              %% "laika-core"                   % "0.19.5",
+  "org.jsoup"                 %  "jsoup"                        % "1.17.2",
 )
 
 val test = Seq(

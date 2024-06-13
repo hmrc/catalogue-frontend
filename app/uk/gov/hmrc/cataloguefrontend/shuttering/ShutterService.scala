@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -23,7 +26,10 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{Instant, ZoneId}
+import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
+import scala.io.Source
 
 @Singleton
 class ShutterService @Inject() (
@@ -63,6 +69,13 @@ class ShutterService @Inject() (
   ): Future[Option[OutagePage]] =
     shutterConnector.outagePage(env, serviceName)
 
+  def defaultOutagePage(
+    env: Environment
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[Option[OutagePage]] =
+    shutterConnector.defaultOutagePage(env)
+
   def frontendRouteWarnings(
     env        : Environment,
     serviceName: ServiceName
@@ -88,6 +101,38 @@ class ShutterService @Inject() (
                     else l.status.value == ShutterStatusValue.Shuttered
                   }
     } yield sorted
+
+  def getOutagePageTemplate(templatedDate: Option[String], outagePage: OutagePage): Document = {
+    //TODO get from github raw or expose endpoint in shutter-api
+    val template: Document = //mutable 🤢
+      Jsoup.parse(
+        Source.fromInputStream(getClass.getResourceAsStream("/default-outage-page.html.tmpl"))
+          .getLines()
+          .mkString("\n")
+      )
+
+    if(!outagePage.isDefault) {
+      template.getElementById("main-content").html(outagePage.mainContent)
+    }
+
+    outagePage.serviceDisplayName.map { displayName =>
+      val current = template.title()
+      val updated = current.split("–").mkString(s"– $displayName –")
+      template.title(updated)
+      template.getElementById("header-service-name").text(displayName)
+    }
+
+    templatedDate.map { dateStr =>
+      val regex = "(?i)(am|pm)".r
+      val formatted =
+        DateTimeFormatter.ofPattern("'on' MMMM d yyyy 'at' h:mm a")
+          .format(Instant.parse(dateStr).atZone(ZoneId.systemDefault))
+      val replaced = regex.replaceAllIn(formatted, _.group(1).toUpperCase)
+      template.getElementById("templatedMessage").text(replaced)
+    }
+
+    template
+  }
 
   /** Creates an [[OutagePageStatus]] for each service based on the contents of [[OutagePage]] */
   def toOutagePageStatus(serviceNames: Seq[ServiceName], outagePages: List[OutagePage]): Seq[OutagePageStatus] =

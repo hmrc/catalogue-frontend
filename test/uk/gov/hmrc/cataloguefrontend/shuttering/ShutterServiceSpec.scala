@@ -200,10 +200,11 @@ class ShutterServiceSpec
 
   def mkOutagePage(serviceName: ServiceName, warnings: List[OutagePageWarning]): OutagePage =
     OutagePage(
-        serviceName      = serviceName
-      , environment      = Environment.Production
-      , outagePageURL    = ""
-      , warnings         = warnings
+        serviceName       = serviceName
+      , environment       = Environment.Production
+      , outagePageURL     = ""
+      , warnings          = warnings
+      , mainContent       = ""
       , templatedElements = List.empty
       )
 

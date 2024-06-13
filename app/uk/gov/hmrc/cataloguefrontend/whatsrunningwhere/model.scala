@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import org.apache.http.client.utils.URIBuilder
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 
@@ -185,6 +186,15 @@ case class ServiceName(asString: String) extends AnyVal
 object ServiceName {
   implicit val serviceNameOrdering: Ordering[ServiceName] =
     Ordering.by(_.asString)
+
+  implicit val pathBindable: PathBindable[ServiceName] =
+    new PathBindable[ServiceName] {
+      override def bind(key: String, value: String): Either[String, ServiceName] =
+        Right(ServiceName(value))
+
+      override def unbind(key: String, value: ServiceName): String =
+        value.asString
+    }
 }
 
 case class ProfileName(asString: String) extends AnyVal

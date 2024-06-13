@@ -106,6 +106,8 @@ POST       /shuttering/1                                uk.gov.hmrc.cataloguefro
 GET        /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step2aGet
 POST       /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step2aPost
 GET        /shuttering/2b                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step2bGet
+GET        /shuttering/2b/preview/:env/default          uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step2bPreviewDefault(env: Environment, templatedDate: Option[String] ?= None)
+GET        /shuttering/2b/preview/:env/:serviceName     uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step2bPreview(serviceName: ServiceName, env: Environment, templatedDate: Option[String] ?= None)
 POST       /shuttering/2b                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step2bPost
 GET        /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step3Get
 POST       /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step3Post

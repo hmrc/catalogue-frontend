@@ -114,6 +114,13 @@ class ShutterConnector @Inject() (
       .execute[Option[OutagePage]]
   }
 
+  def defaultOutagePage(env: Environment)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
+    implicit val ssf = OutagePage.reads
+    httpClientV2
+      .get(url"$baseUrl/shutter-api/${env.asString}/outage-pages/default")
+      .execute[Option[OutagePage]]
+  }
+
   /**
     * GET
     * /shutter-api/{environment}/frontend-route-warnings/{serviceName}
