@@ -83,7 +83,8 @@
                         '@{e.displayEnd.getOrElse(e.end).displayFormat}',
                         @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
                         '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")}',
-                        '@previousJavaVersion(e.env, e.version, events, slugInfo)'
+                        '@previousJavaVersion(e.env, e.version, events, slugInfo)',
+                        '@{e.configChanged.getOrElse("undefined")}'
                     ),
                     '@colorForVersion(e.version.toString)',
                     new Date(@{e.start.toEpochMilli}),
@@ -108,8 +109,14 @@
             chart.draw(dataTable, options);
         }
 
-        function makeToolTip(ver, user, start, end, days, java, previousJava) {
+        function makeToolTip(ver, user, start, end, days, java, previousJava, configChanged) {
             let javaVersionChange = (java !== previousJava) ? `Changed from ${previousJava} to ${java}` : `${java}`;
+            let configChangeRow = '';
+
+            if (configChanged !== "undefined") {
+                configChangeRow = `<tr><th class="text-dark">Config Changed</th><td>${configChanged === "true" ? 'Yes' : 'No'}</td></tr>`;
+            }
+
             if (ver === "@DeploymentGraphService.notDeployedMessage") {
                 return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
             }
@@ -120,6 +127,7 @@
                             <tr><th class="text-dark">From</th><td>${start} UTC</td></tr>
                             <tr><th class="text-dark">To</th><td>${end} UTC</td></tr>
                             <tr><th class="text-dark">Java</th><td>${javaVersionChange}</td></tr>
+                            ${configChangeRow}
                         </table>
                     </div>`
         }

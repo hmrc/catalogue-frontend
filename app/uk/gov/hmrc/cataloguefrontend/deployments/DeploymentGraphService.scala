@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.deployments
 
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{DeploymentConfigEvent, ServiceConfigsConnector}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentTimelineEvent, ReleasesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.UpstreamErrorResponse.Upstream4xxResponse
@@ -27,7 +28,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector)(implicit ec: ExecutionContext) {
+class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector, serviceConfigsConnector: ServiceConfigsConnector)(implicit ec: ExecutionContext) {
 
   def findEvents(service: String, start: Instant, end: Instant): Future[Seq[DeploymentTimelineEvent]] = {
     import DeploymentGraphService._
@@ -39,7 +40,25 @@ class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector)(im
                                 case (env, Nil)  => env -> noEventsPlaceholder(env, start,end)
                                 case (env, data) => env -> data
                               }.toMap
-    } yield dataWithPlaceholders.values.flatten.toSeq.sortBy(_.env)
+      dataSeq              =  dataWithPlaceholders.values.flatten.toSeq.sortBy(_.env)
+      deploymentConfigSeq  <- serviceConfigsConnector.deploymentEvents(service, start, end).recover{ case Upstream4xxResponse(_) => Seq.empty[DeploymentConfigEvent]}
+    } yield updateTimelineEventsWithConfig(dataSeq, deploymentConfigSeq)
+  }
+
+  private def updateTimelineEventsWithConfig(
+    timelineEvents: Seq[DeploymentTimelineEvent],
+    configEvents: Seq[DeploymentConfigEvent]
+  ): Seq[DeploymentTimelineEvent] = {
+    val configEventMap: Map[String, DeploymentConfigEvent] = configEvents.map(event => event.deploymentId -> event).toMap
+
+    timelineEvents.map { timelineEvent =>
+      configEventMap.get(timelineEvent.deploymentId).fold(timelineEvent) { configEvent =>
+        timelineEvent.copy(
+          configChanged = configEvent.configChanged,
+          configId = configEvent.configId
+        )
+      }
+    }
   }
 }
 
@@ -49,6 +68,6 @@ object DeploymentGraphService {
 
   // generates a placeholder timeline event so that the timeline still shows the environment but with nothing deployed in it
   def noEventsPlaceholder(env: String, start: Instant, end: Instant): Seq[DeploymentTimelineEvent] =
-    Environment.parse(env).fold(Seq.empty[DeploymentTimelineEvent])(e => Seq(DeploymentTimelineEvent(e, Version(notDeployedMessage), "", start.plusSeconds(1), end.minusSeconds(1))))
+    Environment.parse(env).fold(Seq.empty[DeploymentTimelineEvent])(e => Seq(DeploymentTimelineEvent(e, Version(notDeployedMessage), "", "", start.plusSeconds(1), end.minusSeconds(1))))
 
 }

@@ -80,7 +80,7 @@ class DeploymentTimelineControllerSpec
       )(any))
         .thenReturn(Future.successful(Seq.empty))
       when(mockedDeploymentGraphService.findEvents(service = any, start = any, end = any))
-        .thenReturn(Future.successful(Seq(DeploymentTimelineEvent(Integration, Version(1, 0, 0, ""), "ua", Instant.now(), Instant.now()))))
+        .thenReturn(Future.successful(Seq(DeploymentTimelineEvent(Integration, Version(1, 0, 0, ""), "deploymentId", "ua", Instant.now(), Instant.now()))))
       when(mockedServiceDependenciesConnector.getSlugInfo(any, any)(any))
         .thenReturn(Future.successful(None))
 

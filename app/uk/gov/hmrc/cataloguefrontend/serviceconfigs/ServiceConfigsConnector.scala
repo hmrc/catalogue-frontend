@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import play.api.Logger
 import play.api.cache.AsyncCacheApi
-import play.api.libs.json.Reads
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,6 +52,17 @@ class ServiceConfigsConnector @Inject() (
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/services/repo-name?serviceName=$service")
       .execute[Option[String]]
+
+  def deploymentEvents(
+    service: String,
+    from:    Instant,
+    to:      Instant
+  )(implicit
+    hc           : HeaderCarrier
+   ): Future[Seq[DeploymentConfigEvent]] =
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events/$service?from=$from&to=$to")
+      .execute[Seq[DeploymentConfigEvent]]
 
   def configByEnv(
     service     : String
