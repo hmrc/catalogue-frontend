@@ -32,17 +32,14 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-sealed trait RepoType { def asString: String }
+enum RepoType(val asString: String):
+  case Service   extends RepoType("Service"  )
+  case Library   extends RepoType("Library"  )
+  case Prototype extends RepoType("Prototype")
+  case Test      extends RepoType("Test"     )
+  case Other     extends RepoType("Other"    )
 
-object RepoType {
-  case object Service   extends RepoType { override val asString = "Service"   }
-  case object Library   extends RepoType { override val asString = "Library"   }
-  case object Prototype extends RepoType { override val asString = "Prototype" }
-  case object Test      extends RepoType { override val asString = "Test"      }
-  case object Other     extends RepoType { override val asString = "Other"     }
-
-  val values: List[RepoType] = List(Service, Library, Prototype, Test, Other)
-
+object RepoType:
   def parse(s: String): Either[String, RepoType] =
     values
       .find(_.asString == s)
@@ -59,38 +56,19 @@ object RepoType {
       override def writes(rt: RepoType): JsValue =
         JsString(rt.asString)
     }
-}
 
-sealed trait ServiceType {
-  def asString: String
-  val displayString: String
-}
+enum ServiceType(val asString: String, val displayString: String):
+  case Frontend extends ServiceType(asString = "frontend", displayString = "Service (Frontend)")
+  case Backend  extends ServiceType(asString = "backend" , displayString = "Service (Backend)")
 
 object ServiceType {
-  case object Frontend extends ServiceType {
-    override val asString      = "frontend"
-    override val displayString = "Service (Frontend)"
-  }
-
-  case object Backend extends ServiceType {
-    override val asString = "backend"
-    override val displayString = "Service (Backend)"
-  }
-
-  val values =
-    Set(
-      Frontend,
-      Backend
-    )
-
-  def displayString = s"Service ($ServiceType)"
-
   def parse(s: String): Either[String, ServiceType] =
     values
       .find(_.asString.equalsIgnoreCase(s))
       .toRight(s"Invalid serviceType - should be one of: ${values.map(_.asString).mkString(", ")}")
 
-  def apply(value: String): Option[ServiceType] = values.find(_.asString == value)
+  def apply(value: String): Option[ServiceType] =
+    values.find(_.asString == value)
 
   val stFormat: Format[ServiceType] = new Format[ServiceType] {
     override def reads(json: JsValue): JsResult[ServiceType] =
@@ -102,40 +80,15 @@ object ServiceType {
   }
 }
 
-sealed trait Tag {
-  def asString: String
-  val displayString: String
-}
+enum Tag(val asString: String, val displayString: String):
+  case AdminFrontend    extends Tag(asString = "admin"             , displayString = "Admin Frontend"    )
+  case Api              extends Tag(asString = "api"               , displayString = "API"               )
+  case BuiltOffPlatform extends Tag(asString = "built-off-platform", displayString = "Built Off Platform")
+  case Maven            extends Tag(asString = "maven"             , displayString = "Maven"             )
+  case Stub             extends Tag(asString = "stub"              , displayString = "Stub"              )
+
 
 object Tag {
-  case object AdminFrontend extends Tag {
-    def asString      = "admin"
-    val displayString = "Admin Frontend"
-  }
-
-  case object Api extends Tag {
-    def asString      = "api"
-    val displayString = "API"
-  }
-
-  case object BuiltOffPlatform extends Tag {
-    def asString      = "built-off-platform"
-    val displayString = "Built Off Platform"
-  }
-
-  case object Maven extends Tag {
-    def asString      = "maven"
-    val displayString = "Maven"
-  }
-
-  case object Stub extends Tag {
-    def asString      = "stub"
-    val displayString = "Stub"
-  }
-
-  val values =
-    Set(AdminFrontend, Api, BuiltOffPlatform, Maven, Stub)
-
   def parse(s: String): Either[String, Tag] =
     values
       .find(_.asString.equalsIgnoreCase(s))
@@ -182,17 +135,13 @@ object BuildData {
   )(apply, bd => Tuple.fromProductTyped(bd))
 }
 
-sealed trait BuildJobType { def asString: String }
+enum BuildJobType(val asString: String):
+  case Job         extends BuildJobType("job"         )
+  case Pipeline    extends BuildJobType("pipeline"    )
+  case PullRequest extends BuildJobType("pull-request")
 
 object BuildJobType {
-  case object Job         extends BuildJobType { override val asString = "job"          }
-  case object Pipeline    extends BuildJobType { override val asString = "pipeline"     }
-  case object PullRequest extends BuildJobType { override val asString = "pull-request" }
-
   private val logger = Logger(this.getClass)
-
-  val values: List[BuildJobType] =
-    List(Job, Pipeline, PullRequest)
 
   implicit val ordering: Ordering[BuildJobType] =
     new Ordering[BuildJobType] {

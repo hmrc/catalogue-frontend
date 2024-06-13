@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, Oracle, OpenJDK, TeamName}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, TeamName, Vendor}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 @this()
@@ -161,11 +161,11 @@
         <td><a id="link-to-@{version.name}" href="@appRoutes.CatalogueController.repository(version.name)">@version.name</a></td>
         <td>
           @version.vendor match {
-            case Oracle  => { <img src="@routes.Assets.versioned("img/oracle2.gif")" width="70px" alt="Oracle" /> }
-            case OpenJDK => { <img src="@routes.Assets.versioned("img/openjdk.png")" width="70px" alt="OpenJDK"/> }
+            case Vendor.Oracle  => { <img src="@routes.Assets.versioned("img/oracle2.gif")" width="70px" alt="@version.vendor.asString" /> }
+            case Vendor.OpenJDK => { <img src="@routes.Assets.versioned("img/openjdk.png")" width="70px" alt="@version.vendor.asString"/> }
           }
         </td>
         <td>@version.version</td>
-        <td>@version.kind</td>
+        <td>@version.kind.asString</td>
     </tr>
 }

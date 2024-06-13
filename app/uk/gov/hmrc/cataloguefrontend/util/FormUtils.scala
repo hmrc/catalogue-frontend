@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 import play.api.data.validation.Constraint
 
-trait FormUtils {
+object FormUtils {
 
   /** Like Forms.nonEmpty, but has no constraint info label */
   def notEmpty: Constraint[String] = {
@@ -35,5 +35,3 @@ trait FormUtils {
     }
   }
 }
-
-object FormUtils extends FormUtils

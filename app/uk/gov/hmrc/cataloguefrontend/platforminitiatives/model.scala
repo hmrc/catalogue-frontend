@@ -54,15 +54,11 @@ object PlatformInitiative {
     )(apply, pi => Tuple.fromProductTyped(pi))
 }
 
-sealed trait DisplayType {
-  def asString: String
-}
+enum DisplayType(val asString: String):
+  case Progress  extends DisplayType("Progress")
+  case Chart     extends DisplayType("Chart"   )
+
 object DisplayType {
-  case object Progress  extends DisplayType { override val asString = "Progress" }
-  case object Chart     extends DisplayType { override val asString = "Chart"    }
-
-  val values: List[DisplayType] = List(Chart, Progress)
-
   def parse(s: String): Option[DisplayType] =
     values.find(_.asString == s)
 

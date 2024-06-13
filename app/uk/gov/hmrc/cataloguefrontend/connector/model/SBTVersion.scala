@@ -20,14 +20,13 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
-case class SBTVersion(
+case class SBTVersion( // TODO rename SbtVersion
   serviceName: String,
   version    : Version
 )
 
-trait SBTVersionFormats {
-
-  val sbtVersionReads: Reads[SBTVersion] = {
+object SBTVersion {
+  val reads: Reads[SBTVersion] = {
     implicit val vf: Reads[Version]  = Version.format
     ( (__ \ "serviceName").read[String]
     ~ (__ \ "version"    ).read[Version]
@@ -35,7 +34,6 @@ trait SBTVersionFormats {
   }
 }
 
-object SBTVersionFormats extends SBTVersionFormats
 
 case class SBTUsageByEnv(
   env  : SlugInfoFlag,

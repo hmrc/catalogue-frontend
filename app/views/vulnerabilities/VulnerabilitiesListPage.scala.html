@@ -72,7 +72,7 @@
                 <div class="col-md-2">
                     @select(
                         field                 =  form("curationStatus"),
-                        options               =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display),
+                        options               =  (""->"All") :: CurationStatus.values.map(cs => cs.asString -> cs.display).toList,
                         Symbol("_label")      -> "Curation status:",
                         Symbol("_labelClass") -> "form-label",
                         Symbol("id")          -> "curation-status-search",

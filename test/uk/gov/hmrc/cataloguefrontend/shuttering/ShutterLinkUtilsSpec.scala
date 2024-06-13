@@ -28,7 +28,7 @@ class ShutterLinkUtilsSpec extends AnyWordSpec with Matchers {
     }
 
     "make a link for every non-production environment" in {
-      val envs = Environment.values.filterNot(_ == Environment.Production)
+      val envs = Environment.valuesAsSeq.filterNot(_ == Environment.Production)
 
       envs.foreach(env => ShutterLinkUtils.mkLink(env, "/xyz") shouldBe s"https://www.${env.asString}.tax.service.gov.uk/xyz/platops-shutter-testing")
     }

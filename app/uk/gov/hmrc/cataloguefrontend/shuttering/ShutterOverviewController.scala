@@ -57,7 +57,7 @@ class ShutterOverviewController @Inject() (
   def allStatesForEnv(shutterType: ShutterType, env: Environment): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        envAndCurrentStates <- Environment.values.traverse { env =>
+        envAndCurrentStates <- Environment.values.toList.traverse { env =>
                                  shutterService
                                    .findCurrentStates(shutterType, env)
                                    .recover {
@@ -79,7 +79,7 @@ class ShutterOverviewController @Inject() (
   def frontendRouteWarnings(env: Environment, serviceName: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
-        envsAndWarnings <- Environment.values.traverse { env =>
+        envsAndWarnings <- Environment.values.toList.traverse { env =>
                              shutterService
                                .frontendRouteWarnings(env, ServiceName(serviceName))
                                .recover {

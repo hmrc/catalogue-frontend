@@ -21,24 +21,17 @@ import play.api.mvc.{PathBindable, QueryStringBindable}
 import play.api.data.format.Formatter
 import play.api.data.FormError
 
-sealed trait Environment { def asString: String; def displayString: String }
+enum Environment(val asString: String, val displayString: String):
+  case Integration  extends Environment(asString = "integration" , displayString = "Integration"  )
+  case Development  extends Environment(asString = "development" , displayString = "Development"  )
+  case QA           extends Environment(asString = "qa"          , displayString = "QA"           )
+  case Staging      extends Environment(asString = "staging"     , displayString = "Staging"      )
+  case ExternalTest extends Environment(asString = "externaltest", displayString = "External Test")
+  case Production   extends Environment(asString = "production"  , displayString = "Production"   )
 
 object Environment {
-  case object Integration  extends Environment { val asString = "integration" ; override def displayString = "Integration"   }
-  case object Development  extends Environment { val asString = "development" ; override def displayString = "Development"   }
-  case object QA           extends Environment { val asString = "qa"          ; override def displayString = "QA"            }
-  case object Staging      extends Environment { val asString = "staging"     ; override def displayString = "Staging"       }
-  case object ExternalTest extends Environment { val asString = "externaltest"; override def displayString = "External Test" }
-  case object Production   extends Environment { val asString = "production"  ; override def displayString = "Production"    }
-
-  val values: List[Environment] =
-    List(Integration, Development, QA, Staging, ExternalTest, Production)
-
   implicit val ordering: Ordering[Environment] =
-    new Ordering[Environment] {
-      def compare(x: Environment, y: Environment): Int =
-        values.indexOf(x).compare(values.indexOf(y))
-    }
+    Ordering.by(_.ordinal)
 
   def parse(s: String): Option[Environment] =
     values.find(_.asString == s)
@@ -86,7 +79,7 @@ object SlugInfoFlag {
   case class ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString; override def displayString = env.displayString }
 
   val values: List[SlugInfoFlag] =
-    Latest :: Environment.values.map(ForEnvironment.apply)
+    Latest :: Environment.values.map(ForEnvironment.apply).toList
 
   implicit val ordering: Ordering[SlugInfoFlag] =
     new Ordering[SlugInfoFlag] {

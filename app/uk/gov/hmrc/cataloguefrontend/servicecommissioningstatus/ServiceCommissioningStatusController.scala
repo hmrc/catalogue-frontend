@@ -65,7 +65,7 @@ class ServiceCommissioningStatusController @Inject() (
                        , serviceType        = None
                        , lifecycleStatus    = LifecycleStatus.values
                        , checks             = allChecks.map(_._1).toList
-                       , environments       = Environment.values.filterNot(_ == Environment.Integration)
+                       , environments       = Environment.values.filterNot(_ == Environment.Integration).toList
                        , groupByEnvironment = Option(false)
                        , warningFilter      = Option(false)
                        )
@@ -177,7 +177,7 @@ object SearchCommissioning {
                                       xs => xs.map(Environment.parse).flatten
                                     , x  => identity(x).map(_.asString)
                                     )
-                                , Environment.values.filterNot(_ == Environment.Integration)
+                                , Environment.values.filterNot(_ == Environment.Integration).toList
                                 )
       , "asCsv"              -> Forms.boolean
       , "groupByEnvironment" -> Forms.optional(Forms.boolean)

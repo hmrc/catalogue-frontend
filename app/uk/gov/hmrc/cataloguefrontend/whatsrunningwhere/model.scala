@@ -25,11 +25,6 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import java.net.URI
 import java.time.Instant
 
-sealed trait Platform {
-  def asString: String
-  def displayName: String
-}
-
 case class WhatsRunningWhere(
   serviceName: ServiceName,
   versions   : List[WhatsRunningWhereVersion]
@@ -197,49 +192,26 @@ object ProfileName {
     Ordering.by(_.asString)
 }
 
-sealed trait ViewMode {
-  def asString: String
-}
+enum ViewMode(val asString: String):
+  case Versions  extends ViewMode("versions")
+  case Instances extends ViewMode("instances")
 
 object ViewMode {
   def parse(s: String): Either[String, ViewMode] =
     values
       .find(_.asString == s)
       .toRight(s"Invalid viewMode - should be one of ${values.map(_.asString).mkString(", ")}")
-
-  val values: List[ViewMode] = List(
-    Versions,
-    Instances
-  )
-
-  case object Versions extends ViewMode {
-    override val asString: String = "versions"
-  }
-
-  case object Instances extends ViewMode {
-    override val asString: String = "instances"
-  }
 }
 
-sealed trait ProfileType {
-  def asString: String
-}
+enum ProfileType(val asString: String):
+  case Team           extends ProfileType("team")
+  case ServiceManager extends ProfileType("servicemanager")
+
 object ProfileType {
   def parse(s: String): Either[String, ProfileType] =
     values
       .find(_.asString == s)
       .toRight(s"Invalid profileType - should be one of: ${values.map(_.asString).mkString(", ")}")
-
-  val values: List[ProfileType] = List(
-    Team,
-    ServiceManager
-  )
-  case object Team extends ProfileType {
-    override val asString: String = "team"
-  }
-  case object ServiceManager extends ProfileType {
-    override val asString: String = "servicemanager"
-  }
 }
 
 case class Profile(

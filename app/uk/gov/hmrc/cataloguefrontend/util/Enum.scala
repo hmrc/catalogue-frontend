@@ -20,8 +20,10 @@ import play.api.libs.json.{Reads, JsError, JsSuccess}
 import play.api.data.format.Formatter
 import play.api.data.FormError
 
+// TODO remove this or use consistently?
 trait WithAsString {def asString: String}
 
+// TODO remove this or use consistently?
 trait Enum[T <: WithAsString] {
   val values: List[T]
 

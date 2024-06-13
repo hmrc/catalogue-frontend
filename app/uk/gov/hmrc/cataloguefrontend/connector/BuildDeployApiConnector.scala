@@ -225,15 +225,12 @@ object BuildDeployApiConnector {
 
   final case class AsyncRequestId(request: JsValue)
 
-  sealed trait PrototypeStatus { def asString: String; def displayString: String }
+  enum PrototypeStatus(val asString: String, val displayString: String):
+    case Running      extends PrototypeStatus(asString = "running"     , displayString = "Running"     )
+    case Stopped      extends PrototypeStatus(asString = "stopped"     , displayString = "Stopped"     )
+    case Undetermined extends PrototypeStatus(asString = "undetermined", displayString = "Undetermined")
 
   object PrototypeStatus {
-    case object Running      extends PrototypeStatus { val asString = "running"     ; override def displayString = "Running"      }
-    case object Stopped      extends PrototypeStatus { val asString = "stopped"     ; override def displayString = "Stopped"      }
-    case object Undetermined extends PrototypeStatus { val asString = "undetermined"; override def displayString = "Undetermined" }
-
-    val values: List[PrototypeStatus] =
-      List(Running, Stopped, Undetermined)
 
     def parse(s: String): Option[PrototypeStatus] =
       values.find(_.asString == s)

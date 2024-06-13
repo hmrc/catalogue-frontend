@@ -41,14 +41,12 @@ object ShutterEnvironment {
     }
 }
 
-sealed trait ShutterType { def asString: String }
+enum ShutterType(val asString: String):
+  case Frontend extends ShutterType("frontend")
+  case Api      extends ShutterType("api"    )
+  case Rate     extends ShutterType("rate"   )
+
 object ShutterType {
-  case object Frontend extends ShutterType { val asString = "frontend" }
-  case object Api      extends ShutterType { val asString = "api" }
-  case object Rate     extends ShutterType { val asString = "rate" }
-
-  val values: List[ShutterType] = List(Frontend, Api, Rate)
-
   def parse(s: String): Option[ShutterType] =
     values.find(_.asString == s)
 
@@ -78,13 +76,12 @@ object ShutterType {
     }
 }
 
-sealed trait ShutterStatusValue { def asString: String }
+enum ShutterStatusValue(val asString: String):
+  case Shuttered   extends ShutterStatusValue("shuttered"  )
+  case Unshuttered extends ShutterStatusValue("unshuttered")
+
+
 object ShutterStatusValue {
-  case object Shuttered   extends ShutterStatusValue { val asString = "shuttered" }
-  case object Unshuttered extends ShutterStatusValue { val asString = "unshuttered" }
-
-  val values = List(Shuttered, Unshuttered)
-
   def parse(s: String): Option[ShutterStatusValue] =
     values.find(_.asString == s)
 
@@ -104,16 +101,15 @@ object ShutterStatusValue {
   }
 }
 
-sealed trait ShutterStatus { def value: ShutterStatusValue }
-
-object ShutterStatus {
-  case class Shuttered(
+enum ShutterStatus(val value: ShutterStatusValue):
+  case Shuttered(
     reason              : Option[String],
     outageMessage       : Option[String],
     useDefaultOutagePage: Boolean
-  ) extends ShutterStatus { def value = ShutterStatusValue.Shuttered }
-  case object Unshuttered extends ShutterStatus { def value = ShutterStatusValue.Unshuttered }
+  ) extends ShutterStatus(ShutterStatusValue.Shuttered)
+  case Unshuttered extends ShutterStatus(ShutterStatusValue.Unshuttered)
 
+object ShutterStatus {
   val format: Format[ShutterStatus] =
     new Format[ShutterStatus] {
       override def reads(json: JsValue) = {
@@ -177,15 +173,13 @@ object ShutterState {
 
 // -------------- Events ---------------------
 
-sealed trait EventType { def asString: String }
+enum EventType(val asString: String):
+  case ShutterStateCreate    extends EventType("shutter-state-create"   )
+  case ShutterStateDelete    extends EventType("shutter-state-delete"   )
+  case ShutterStateChange    extends EventType("shutter-state-change"   )
+  case KillSwitchStateChange extends EventType("killswitch-state-change")
+
 object EventType {
-  case object ShutterStateCreate    extends EventType { override val asString = "shutter-state-create" }
-  case object ShutterStateDelete    extends EventType { override val asString = "shutter-state-delete" }
-  case object ShutterStateChange    extends EventType { override val asString = "shutter-state-change" }
-  case object KillSwitchStateChange extends EventType { override val asString = "killswitch-state-change" }
-
-  val values = List(ShutterStateCreate, ShutterStateDelete, ShutterStateChange, KillSwitchStateChange)
-
   def parse(s: String): Option[EventType] =
     values.find(_.asString == s)
 
@@ -205,15 +199,13 @@ object EventType {
   }
 }
 
-sealed trait ShutterCause { def asString: String }
+enum ShutterCause(val asString: String):
+  case Scheduled      extends ShutterCause("scheduled"      )
+  case UserCreated    extends ShutterCause("user-shutter"   )
+  case AutoReconciled extends ShutterCause("auto-reconciled")
+  case Legacy         extends ShutterCause("legacy-shutter" )
+
 object ShutterCause {
-  case object Scheduled      extends ShutterCause { override val asString = "scheduled" }
-  case object UserCreated    extends ShutterCause { override val asString = "user-shutter" }
-  case object AutoReconciled extends ShutterCause { override val asString = "auto-reconciled" }
-  case object Legacy         extends ShutterCause { override val asString = "legacy-shutter" }
-
-  val values = List(Scheduled, UserCreated, AutoReconciled, Legacy)
-
   def parse(s: String): Option[ShutterCause] =
     values.find(_.asString == s)
 
@@ -234,17 +226,16 @@ object ShutterCause {
 
 }
 
-sealed trait EventData
-object EventData {
-  case class ShutterStateCreateData(
+enum EventData:
+  case ShutterStateCreateData(
     serviceName: String
   ) extends EventData
 
-  case class ShutterStateDeleteData(
+  case ShutterStateDeleteData(
     serviceName: String
   ) extends EventData
 
-  case class ShutterStateChangeData(
+  case ShutterStateChangeData(
     serviceName: String,
     environment: Environment,
     shutterType: ShutterType,
@@ -252,11 +243,12 @@ object EventData {
     cause      : ShutterCause
   ) extends EventData
 
-  case class KillSwitchStateChangeData(
+  case KillSwitchStateChangeData(
     environment: Environment,
     status     : ShutterStatusValue
   ) extends EventData
 
+object EventData {
   val shutterStateCreateDataFormat: Format[ShutterStateCreateData] =
     (__ \ "serviceName")
       .format[String]

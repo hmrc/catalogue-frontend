@@ -24,13 +24,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 import java.time.LocalDate
 
-sealed trait VersionState
-object VersionState {
-  case object NewVersionAvailable                             extends VersionState
-  case class BobbyRuleViolated(violation: BobbyRuleViolation) extends VersionState
-  case class BobbyRulePending(violation: BobbyRuleViolation)  extends VersionState
-}
-
 // TODO avoid caching LocalDate, and provide to isActive function
 case class BobbyRuleViolation(
   reason: String,
@@ -68,6 +61,11 @@ object BobbyRuleViolation {
       }
     }
 }
+
+enum VersionState:
+  case NewVersionAvailable                                  extends VersionState
+  case BobbyRuleViolated(val violation: BobbyRuleViolation) extends VersionState
+  case BobbyRulePending(val violation: BobbyRuleViolation)  extends VersionState
 
 
 case class ImportedBy(
@@ -389,23 +387,20 @@ object GroupArtefacts {
     )(GroupArtefacts.apply, ga => Tuple.fromProductTyped(ga))
 }
 
-sealed trait DependencyScope {
-  def asString: String
+enum DependencyScope(val asString: String):
+  case Compile  extends DependencyScope("compile" )
+  case Provided extends DependencyScope("provided")
+  case Test     extends DependencyScope("test"    )
+  case It       extends DependencyScope("it"      )
+  case Build    extends DependencyScope("build"   )
+
   def displayString = asString match {
     case "it"  => "Integration Test"
     case other => other.capitalize
   }
-}
+
+
 object DependencyScope {
-  case object Compile  extends DependencyScope { override val asString = "compile"  }
-  case object Provided extends DependencyScope { override val asString = "provided" }
-  case object Test     extends DependencyScope { override val asString = "test"     }
-  case object It       extends DependencyScope { override val asString = "it"       }
-  case object Build    extends DependencyScope { override val asString = "build"    }
-
-  val values: List[DependencyScope] =
-    List(Compile, Provided, Test, It, Build)
-
   def parse(s: String): Either[String, DependencyScope] =
     values
       .find(_.asString == s)

@@ -117,16 +117,10 @@ object User {
   }
 }
 
-sealed trait Organisation { def asString: String }
-
-object Organisation {
-  case object Mdtp  extends Organisation { val asString = "MDTP"  }
-  case object Voa   extends Organisation { val asString = "VOA"   }
-  case object Other extends Organisation { val asString = "Other" }
-
-  val values: List[Organisation] =
-    List(Mdtp, Voa, Other)
-}
+enum Organisation(val asString: String):
+  case Mdtp  extends Organisation("MDTP" )
+  case Voa   extends Organisation("VOA"  )
+  case Other extends Organisation("Other")
 
 case class CreateUserRequest(
   givenName         : String,

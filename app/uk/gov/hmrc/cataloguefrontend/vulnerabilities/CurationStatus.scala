@@ -18,18 +18,13 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue}
 
-sealed trait CurationStatus { def asString: String; def display: String}
+enum CurationStatus(val asString: String, val display: String):
+  case InvestigationOngoing extends CurationStatus(asString = "INVESTIGATION_ONGOING", display = "Investigation ongoing")
+  case NoActionRequired     extends CurationStatus(asString = "NO_ACTION_REQUIRED"   , display = "No action required"   )
+  case ActionRequired       extends CurationStatus(asString = "ACTION_REQUIRED"      , display = "Action required"      )
+  case Uncurated            extends CurationStatus(asString = "UNCURATED"            , display = "Uncurated"            )
 
 object CurationStatus {
-
-  case object InvestigationOngoing extends CurationStatus { override val asString = "INVESTIGATION_ONGOING"; override val display = "Investigation ongoing"}
-  case object NoActionRequired     extends CurationStatus { override val asString = "NO_ACTION_REQUIRED"   ; override val display = "No action required"   }
-  case object ActionRequired       extends CurationStatus { override val asString = "ACTION_REQUIRED"      ; override val display = "Action required"      }
-  case object Uncurated            extends CurationStatus { override val asString = "UNCURATED"            ; override val display = "Uncurated"            }
-
-  val values: List[CurationStatus] =
-    List(InvestigationOngoing, NoActionRequired, ActionRequired, Uncurated)
-
   def parse(s: String): Either[String, CurationStatus] =
     values
       .find(_.asString.equalsIgnoreCase(s))

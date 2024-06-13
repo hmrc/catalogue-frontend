@@ -15,8 +15,8 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, Oracle, OpenJDK, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, TeamName, Vendor}
 
 @this()
 
@@ -63,8 +63,8 @@
                 <th>Environment</th>
                 @for(jdk <- jdks) {
                   @jdk.vendor match {
-                      case Oracle  => { <th> <img src="@routes.Assets.versioned("img/oracle2.gif")" width="68px" alt="Oracle"/> @jdk.version </th> }
-                      case OpenJDK => { <th> <img src="@routes.Assets.versioned("img/openjdk.png")" width="55px" alt="OpenJDK"/> @jdk.version </th> }
+                      case Vendor.Oracle  => { <th><img src="@routes.Assets.versioned("img/oracle2.gif")" width="68px" alt="@jdk.vendor.asString"/>@jdk.version</th> }
+                      case Vendor.OpenJDK => { <th><img src="@routes.Assets.versioned("img/openjdk.png")" width="55px" alt="@jdk.vendor.asString"/>@jdk.version</th> }
                   }
                 }
             </tr>

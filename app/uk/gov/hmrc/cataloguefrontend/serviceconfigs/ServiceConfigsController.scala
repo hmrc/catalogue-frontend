@@ -198,7 +198,7 @@ object SearchConfig {
   , configValue          : Option[String]      = None
   , configValueIgnoreCase: Boolean             = true
   , valueFilterType      : FormValueFilterType = FormValueFilterType.Contains
-  , showEnvironments     : List[Environment]   = Environment.values.filterNot(_ == Environment.Integration)
+  , showEnvironments     : List[Environment]   = Environment.values.filterNot(_ == Environment.Integration).toList
   , serviceType          : Option[ServiceType] = None
   , teamChange           : Boolean             = false
   , asCsv                : Boolean             = false
@@ -217,7 +217,7 @@ object SearchConfig {
       , "showEnvironments"      -> Forms.list(Forms.text)
                                         .transform[List[Environment]](
                                           xs => { val ys = xs.map(Environment.parse).flatten
-                                                  if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration) // populate environments for config explorer link
+                                                  if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration).toList // populate environments for config explorer link
                                                 }
                                         , x  => identity(x).map(_.asString)
                                         )

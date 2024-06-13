@@ -64,10 +64,13 @@ class HealthIndicatorsConnector @Inject() (
       .execute[Option[AveragePlatformScore]]
 }
 
-sealed trait MetricType
+enum MetricType:
+  case GitHub         extends MetricType
+  case LeakDetection  extends MetricType
+  case BuildStability extends MetricType
+  case AlertConfig    extends MetricType
 
 object MetricType {
-
   val reads: Reads[MetricType] = new Reads[MetricType] {
     override def reads(json: JsValue): JsResult[MetricType] =
       json.validate[String].flatMap {
@@ -78,11 +81,6 @@ object MetricType {
         case s                 => JsError(s"Invalid MetricType: $s")
       }
   }
-
-  case object GitHub         extends MetricType
-  case object LeakDetection  extends MetricType
-  case object BuildStability extends MetricType
-  case object AlertConfig    extends MetricType
 }
 
 case class Breakdown(

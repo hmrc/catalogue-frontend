@@ -172,21 +172,18 @@ object CostEstimationService {
       asInt * costEstimateConfig.slotCostPerYear
   }
 
-  sealed trait Zone {
-    val name: String
-    def displayName: String = name.capitalize
-  }
+  enum Zone(val name: String):
+    case Protected      extends Zone("protected"      )
+    case Public         extends Zone("public"         )
+    case ProtectedRate  extends Zone("protected-rate" )
+    case PublicMonolith extends Zone("public-monolith")
+    case PublicRate     extends Zone("public-rate"    )
+    case Private        extends Zone("private"        )
+
+    def displayName: String =
+      name.capitalize
 
   object Zone {
-    case object Protected      extends Zone { val name: String = "protected"       }
-    case object ProtectedRate  extends Zone { val name: String = "protected-rate"  }
-    case object Public         extends Zone { val name: String = "public"          }
-    case object PublicMonolith extends Zone { val name: String = "public-monolith" }
-    case object PublicRate     extends Zone { val name: String = "public-rate"     }
-    case object Private        extends Zone { val name: String = "private"         }
-
-    val values = Seq(Protected, Public, ProtectedRate, PublicMonolith, PublicRate, Private)
-
     def parse(zone: String): Either[String, Zone] =
       values.find(_.name == zone)
         .toRight(s"Invalid deployment zone '$zone' - valid values are ${values.map(_.name).mkString(", ")}")

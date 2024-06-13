@@ -69,7 +69,7 @@ class HealthIndicatorsController @Inject() (
                                      )
               teams               <- teamsAndRepositoriesConnector.allTeams()
               indicators          =  indicatorsFilteredByTeam(indicatorsWithTeams, validForm.team)
-            } yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.values, teams.sortBy(_.name), form.fill(validForm)))
+            } yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.values.toSeq, teams.sortBy(_.name), form.fill(validForm)))
         )
     }
 
@@ -111,9 +111,13 @@ object HealthIndicatorsFilter {
     )
 }
 
-sealed trait RepoType {
-  def asString: String
-}
+enum RepoType(val asString: String):
+  case Service   extends RepoType("Service"  )
+  case Library   extends RepoType("Library"  )
+  case Prototype extends RepoType("Prototype")
+  case Test      extends RepoType("Test"     )
+  case Other     extends RepoType("Other"    )
+  case AllTypes  extends RepoType("All Types")
 
 object RepoType {
   val format: Format[RepoType] = new Format[RepoType] {
@@ -142,20 +146,4 @@ object RepoType {
     values
       .find(_.asString == s)
       .toRight(s"Invalid repoType - should be one of: ${values.map(_.asString).mkString(", ")}")
-
-  val values: List[RepoType] = List(
-    Service,
-    Library,
-    Prototype,
-    Test,
-    Other,
-    AllTypes
-  )
-
-  case object Service   extends RepoType { override def asString: String = "Service"   }
-  case object Library   extends RepoType { override def asString: String = "Library"   }
-  case object Prototype extends RepoType { override def asString: String = "Prototype" }
-  case object Test      extends RepoType { override def asString: String = "Test"      }
-  case object Other     extends RepoType { override def asString: String = "Other"     }
-  case object AllTypes  extends RepoType { override def asString: String = "All Types" }
 }
