@@ -19,8 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
-@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-@import views.html.helper.select
+@import views.html.helper.{FieldConstructor, select}
 @import views.html.partials.TeamNamesPartial
 
 @this(
@@ -37,7 +36,7 @@
   request     : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("PR-Commenter Recommendations", active = "health") {
     <h1 id="search-service-header" class="page-heading mt-4">PR-Commenter Recommendations</h1>

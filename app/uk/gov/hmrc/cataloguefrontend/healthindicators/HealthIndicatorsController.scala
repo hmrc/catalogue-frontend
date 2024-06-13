@@ -97,17 +97,18 @@ case class HealthIndicatorsFilter(
 )
 
 object HealthIndicatorsFilter {
-  lazy val form: Form[HealthIndicatorsFilter] = Form(
-    mapping(
-      "repoName" -> optional(text),
-      "team"     -> optional(text),
-      "repoType" -> optional(text)
-                      .transform[Option[RepoType]](
-                        _.flatMap(s => RepoType.parse(s).toOption),
-                        _.map(_.asString)
-                      )
-    )(HealthIndicatorsFilter.apply)(HealthIndicatorsFilter.unapply)
-  )
+  lazy val form: Form[HealthIndicatorsFilter] =
+    Form(
+      mapping(
+        "repoName" -> optional(text),
+        "team"     -> optional(text),
+        "repoType" -> optional(text)
+                        .transform[Option[RepoType]](
+                          _.flatMap(s => RepoType.parse(s).toOption),
+                          _.map(_.asString)
+                        )
+      )(HealthIndicatorsFilter.apply)(r => Some(Tuple.fromProductTyped(r)))
+    )
 }
 
 sealed trait RepoType {

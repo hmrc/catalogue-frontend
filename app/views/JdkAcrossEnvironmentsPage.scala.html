@@ -14,15 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
-@import uk.gov.hmrc.cataloguefrontend.service.ServiceDependency
-@import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, Vendor, Oracle, OpenJDK, TeamName}
+@import uk.gov.hmrc.cataloguefrontend.{ViewMessages, routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, Oracle, OpenJDK, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import play.twirl.api.Html
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 
 @this(viewMessages: ViewMessages)
 
@@ -46,9 +41,9 @@
             <div class="col-md-3">
                 <label for="teamName" class="form-label fw-bold">Team:</label>
                 <select class="form-select" id="teamName" name="teamName">
-                    <option value="" @{if(selectedTeamName.isEmpty) "selected"}>All</option>
+                    <option value="" @{if(selectedTeamName.isEmpty) "selected" else ""}>All</option>
                     @teams.map { team =>
-                        <option value="@{team.name.asString}" @{if(Some(team.name) == selectedTeamName) "selected"}>
+                        <option value="@{team.name.asString}" @{if(Some(team.name) == selectedTeamName) "selected" else ""}>
                             @team.name.asString
                         </option>
                     }

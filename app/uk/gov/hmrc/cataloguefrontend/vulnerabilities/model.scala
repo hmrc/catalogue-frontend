@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{OFormat, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, Version}
 
@@ -53,7 +53,7 @@ object VulnerableComponent {
   val format: OFormat[VulnerableComponent] =
     ( (__ \ "component").format[String]
     ~ (__ \ "version"  ).format[String]
-    )(apply, unlift(unapply))
+    )(apply, vc => Tuple.fromProductTyped(vc))
 }
 
 case class DistinctVulnerability(
@@ -77,7 +77,6 @@ object DistinctVulnerability {
   val apiFormat: OFormat[DistinctVulnerability] = {
     implicit val csf = CurationStatus.format
     implicit val vcf = VulnerableComponent.format
-
     ( (__ \ "vulnerableComponentName"   ).format[String]
     ~ (__ \ "vulnerableComponentVersion").format[String]
     ~ (__ \ "vulnerableComponents"      ).format[Seq[VulnerableComponent]]
@@ -91,7 +90,7 @@ object DistinctVulnerability {
     ~ (__ \ "assessment"                ).formatNullable[String]
     ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
     ~ (__ \ "ticket"                    ).formatNullable[String]
-    )(apply, unlift(unapply))
+    )(apply, dv => Tuple.fromProductTyped(dv))
   }
 }
 
@@ -106,7 +105,7 @@ object VulnerabilityOccurrence {
     ( (__ \ "service"            ).format[String]
     ~ (__ \ "serviceVersion"     ).format[String]
     ~ (__ \ "componentPathInSlug").format[String]
-    )(apply, unlift(unapply))
+    )(apply, vo => Tuple.fromProductTyped(vo))
 }
 
 case class VulnerabilitySummary(
@@ -123,7 +122,7 @@ object VulnerabilitySummary {
     ( (__ \ "distinctVulnerability").format[DistinctVulnerability]
     ~ (__ \ "occurrences"          ).format[Seq[VulnerabilityOccurrence]]
     ~ (__ \ "teams"                ).format[Seq[String]]
-    ) (apply, unlift(unapply))
+    ) (apply, vs => Tuple.fromProductTyped(vs))
   }
 }
 

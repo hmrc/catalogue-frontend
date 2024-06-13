@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.Mockito.{verifyNoInteractions, when}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
@@ -35,7 +37,6 @@ class ServiceConfigsServiceSpec
   extends AnyWordSpecLike
      with Matchers
      with MockitoSugar
-     with ArgumentMatchersSugar
      with ScalaFutures
      with IntegrationPatience {
   import ServiceConfigsService._
@@ -344,7 +345,7 @@ class ServiceConfigsServiceSpec
 
       serviceConfigsService.serviceRelationships("test-repo-1").futureValue shouldBe expectedResult
 
-      verifyZeroInteractions(mockServiceCommissioningConnector)
+      verifyNoInteractions(mockServiceCommissioningConnector)
     }
   }
 

@@ -84,5 +84,5 @@ object Detail {
     ~ ( __ \ "userAgentString").format[String]
     ~ ( __ \ "deviceID"       ).format[String]
     ~ ( __ \ "referrer"       ).format[String]
-    )(Detail.apply, unlift(Detail.unapply))
+    )(Detail.apply, d => Tuple.fromProductTyped(d))
 }

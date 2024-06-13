@@ -34,7 +34,7 @@
  , messagesProvider: MessagesProvider
  )
 
-@implicitField = @{ helper.FieldConstructor(helper.bootstrapCompatibleFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.bootstrapCompatibleFieldConstructor.f) }
 
 @standard_layout(s"Shutter ${shutterType.asString.capitalize}", active = "shuttering") {
 

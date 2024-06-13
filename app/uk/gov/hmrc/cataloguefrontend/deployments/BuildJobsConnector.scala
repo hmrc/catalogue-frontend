@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.deployments
 
 import play.api.{Configuration, Logging}
+import play.api.libs.ws.writeableOf_urlEncodedForm
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -120,11 +121,11 @@ object BuildJobsConnector {
       implicit val f: Format[QueueExecutable] =
         ( (__ \ "number").format[Int]
         ~ (__ \ "url"   ).format[String]
-        )(QueueExecutable.apply, unlift(QueueExecutable.unapply))
+        )(QueueExecutable.apply, qe => Tuple.fromProductTyped(qe))
 
       ( (__ \ "cancelled" ).formatNullable[Boolean]
       ~ (__ \ "executable").formatNullable[QueueExecutable]
-      )(QueueStatus.apply, unlift(QueueStatus.unapply))
+      )(QueueStatus.apply, qs => Tuple.fromProductTyped(qs))
     }
   }
 
@@ -142,6 +143,6 @@ object BuildJobsConnector {
       ~ (__ \ "timestamp"  ).format[Instant]
       ~ (__ \ "result"     ).formatNullable[String]
       ~ (__ \ "description").formatNullable[String]
-      )(BuildStatus.apply, unlift(BuildStatus.unapply))
+      )(BuildStatus.apply, bs => Tuple.fromProductTyped(bs))
   }
 }

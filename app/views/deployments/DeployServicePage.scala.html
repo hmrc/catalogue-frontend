@@ -15,20 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Link}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-@import uk.gov.hmrc.cataloguefrontend.deployments.{routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes }
-@import uk.gov.hmrc.cataloguefrontend.service.SlugVersionInfo
+@import uk.gov.hmrc.cataloguefrontend.deployments.{DeployServiceForm, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceJDKVersion
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, routes => vulnerabilitiesRoutes}
-@import uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceForm
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ConfigChange
-@import uk.gov.hmrc.cataloguefrontend.service.ServiceJDKVersion
-@import views.html.partials.{form_global_errors, form_fields_warnings}
+@import views.html.partials.form_global_errors
+@import views.html.helper.{FieldConstructor, select}
 @import views.html.vulnerabilities.VulnerabilityDetails
 
 @this(viewMessages: ViewMessages)
@@ -51,7 +46,7 @@
 , request       : RequestHeader
 )
 
-@implicitField = @{helper.FieldConstructor(helper.catalogueFieldConstructor.f)}
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("Deploy Service", "deployments") {
   <h1 class="page-heading mt-4">Deploy Service</h1>

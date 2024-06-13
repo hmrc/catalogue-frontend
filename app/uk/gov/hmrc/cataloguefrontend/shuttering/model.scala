@@ -261,12 +261,12 @@ object EventData {
   val shutterStateCreateDataFormat: Format[ShutterStateCreateData] =
     (__ \ "serviceName")
       .format[String]
-      .inmap(ShutterStateCreateData.apply, unlift(ShutterStateCreateData.unapply))
+      .inmap(ShutterStateCreateData.apply, _.serviceName)
 
   val shutterStateDeleteDataFormat: Format[ShutterStateDeleteData] =
     (__ \ "serviceName")
       .format[String]
-      .inmap(ShutterStateDeleteData.apply, unlift(ShutterStateDeleteData.unapply))
+      .inmap(ShutterStateDeleteData.apply, _.serviceName)
 
   val shutterStateChangeDataFormat: Format[ShutterStateChangeData] = {
     implicit val ef   = ShutterEnvironment.format
@@ -279,7 +279,7 @@ object EventData {
     ~ (__ \ "shutterType").format[ShutterType]
     ~ (__ \ "status"     ).format[ShutterStatus]
     ~ (__ \ "cause"      ).format[ShutterCause]
-    )(ShutterStateChangeData.apply, unlift(ShutterStateChangeData.unapply))
+    )(ShutterStateChangeData.apply, d => Tuple.fromProductTyped(d))
   }
 
   val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] = {
@@ -288,7 +288,7 @@ object EventData {
 
     ( (__ \ "environment").format[Environment]
     ~ (__ \ "status"     ).format[ShutterStatusValue]
-    )(KillSwitchStateChangeData.apply, unlift(KillSwitchStateChangeData.unapply))
+    )(KillSwitchStateChangeData.apply, d => Tuple.fromProductTyped(d))
   }
 
   def reads(et: EventType) =
@@ -364,7 +364,7 @@ object TemplatedContent {
   val format: Format[TemplatedContent] =
     ( (__ \ "elementID").format[String]
     ~ (__ \ "innerHTML").format[String]
-    )(TemplatedContent.apply, unlift(TemplatedContent.unapply))
+    )(TemplatedContent.apply, c => Tuple.fromProductTyped(c))
 }
 
 case class OutagePageWarning(

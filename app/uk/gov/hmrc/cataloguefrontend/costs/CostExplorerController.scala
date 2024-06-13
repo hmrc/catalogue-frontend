@@ -40,14 +40,14 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class CostsSummaryController @Inject() (
-  serviceConfigsConnector: ServiceConfigsConnector,
+  serviceConfigsConnector      : ServiceConfigsConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  costExplorerPage: CostExplorerPage,
-  costEstimateConfig: CostEstimateConfig,
-  override val mcc: MessagesControllerComponents,
-  override val auth: FrontendAuthComponents
+  costExplorerPage             : CostExplorerPage,
+  costEstimateConfig           : CostEstimateConfig,
+  override val mcc             : MessagesControllerComponents,
+  override val auth            : FrontendAuthComponents
 )(implicit
-  override val ec: ExecutionContext
+  override val ec              : ExecutionContext
 ) extends FrontendController(mcc)
     with CatalogueAuthBuilders {
 
@@ -70,8 +70,8 @@ class CostsSummaryController @Inject() (
   }
 
   def costExplorer(
-    team: Option[String] = None,
-    asCSV: Boolean = false
+    team : Option[String] = None,
+    asCSV: Boolean        = false
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
@@ -100,7 +100,7 @@ object RepoListFilter {
     Form(
       mapping(
         "team" -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString))
-      )(RepoListFilter.apply)(RepoListFilter.unapply)
+      )(RepoListFilter.apply)(r => Some(r.team))
     )
 }
 

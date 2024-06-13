@@ -16,7 +16,6 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.users.Organisation
-@import views.html.partials.form_fields_warnings
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 @this(viewMessages: ViewMessages)
@@ -103,7 +102,7 @@
           <div class="mb-2">
             <select class="form-select" id="organisationInput" name="organisation">
               @organisations.map { org =>
-                <option value="@{org.asString}" @if(form.data.getOrElse("organisation", "").equals(org.asString)) { selected="selected" }>
+                <option value="@{org.asString}" @if(form.data.getOrElse("organisation", "").equals(org.asString)) { selected="selected" else ""}>
                   @org.asString
                 </option>
               }
@@ -116,7 +115,7 @@
           <label class="fw-bold" for="teamInput">Team:</label>
           <select class="form-select @if(teamNames.isEmpty) { is-invalid }" id="teamInput" name="team">
             @teamNames.map { tn =>
-              <option value="@{tn.asString}" @if(form.data.getOrElse("team", TeamName("")).toString.equals(tn.asString)) { selected="selected" }>@tn.asString</option>
+              <option value="@{tn.asString}" @if(form.data.getOrElse("team", TeamName("")).toString.equals(tn.asString)) { selected="selected" else ""}>@tn.asString</option>
             }
           </select>
           @if(teamNames.isEmpty) {

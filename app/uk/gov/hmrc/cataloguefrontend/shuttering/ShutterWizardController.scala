@@ -144,7 +144,7 @@ class ShutterWizardController @Inject() (
                                             )
                           }
          html          <- EitherT.liftF[Future, Result, Result] {
-                            showPage1(step0Out.shutterType, step0Out.env, step1Form().fill(step1f))
+                            showPage1(step0Out.shutterType, step0Out.env, step1Form.fill(step1f))
                               .map(Ok(_))
                           }
        } yield html
@@ -165,7 +165,7 @@ class ShutterWizardController @Inject() (
     ).async { implicit request =>
       (for {
          step0Out      <- getStep0Out
-         boundForm     =  step1Form().bindFromRequest()
+         boundForm     =  step1Form.bindFromRequest()
          sf            <- boundForm.fold(
                             hasErrors = formWithErrors => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, formWithErrors).map(BadRequest(_)))
                           , success   = data           => EitherT.pure[Future, Result](data)
@@ -277,7 +277,7 @@ class ShutterWizardController @Inject() (
          serviceAndRouteWarnings <- EitherT.right(frontendRouteWarnings(step0Out.env, step1Out))
          html     <- EitherT.right[Result](
                        if (serviceAndRouteWarnings.flatMap(_.warnings).nonEmpty)
-                         showPage2a(step2aForm().fill(step2af), step0Out, step1Out).map(Ok(_))
+                         showPage2a(step2aForm.fill(step2af), step0Out, step1Out).map(Ok(_))
                        else
                          //Skip straight to outage-page screen if there are no route warnings
                          putSession(step2aKey, Step2aOut(confirmed = false, skipped = true))
@@ -294,7 +294,7 @@ class ShutterWizardController @Inject() (
       (for {
          step0Out <- getStep0Out
          step1Out <- getStep1Out
-         sf       <- step2aForm().bindFromRequest()
+         sf       <- step2aForm.bindFromRequest()
                        .fold(
                          hasErrors = formWithErrors => EitherT.left(
                                        showPage2a(formWithErrors, step0Out, step1Out).map(BadRequest(_))
@@ -342,7 +342,7 @@ class ShutterWizardController @Inject() (
                                  appRoutes.ShutterWizardController.step2aGet
                                else
                                  appRoutes.ShutterWizardController.step1Post
-      form2b                =  step2bForm().fill {
+      form2b                =  step2bForm.fill {
                                  val s2f = form.get
                                  if (s2f.outageMessage.isEmpty)
                                    s2f.copy(outageMessage = defaultOutageMessage)
@@ -361,7 +361,7 @@ class ShutterWizardController @Inject() (
         back
       )
 
-  def step2bGet =
+  val step2bGet =
     auth.authenticatedAction(
       continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step2bGet)
     ).async { implicit request =>
@@ -387,19 +387,19 @@ class ShutterWizardController @Inject() (
                               )
                           }
                       )
-         html      <- showPage2b(step2bForm().fill(step2bf), step1Out, step2aOut)
+         html      <- showPage2b(step2bForm.fill(step2bf), step1Out, step2aOut)
        } yield Ok(html)
       ).merge
     }
 
-  def step2bPost =
+  val step2bPost =
     auth.authenticatedAction(
       continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step2bGet)
     ).async { implicit request =>
       (for {
          step1Out  <- getStep1Out
          step2aOut <- EitherT.liftF(getFromSession(step2aKey))
-         sf        <- step2bForm().bindFromRequest()
+         sf        <- step2bForm.bindFromRequest()
                         .fold(
                           hasErrors = formWithErrors => EitherT.left(
                                         showPage2b(formWithErrors, step1Out, step2aOut).map(BadRequest(_)).merge
@@ -438,7 +438,7 @@ class ShutterWizardController @Inject() (
     page3(form3, shutterType, env, step1Out, step2Out, back)
   }
 
-  def step3Get =
+  val step3Get =
     auth.authenticatedAction(
       continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step3Get)
     ).async { implicit request =>
@@ -447,7 +447,7 @@ class ShutterWizardController @Inject() (
          step1Out  <- OptionT(getFromSession(step1Key))
          step2bOut <- OptionT(getFromSession(step2bKey))
          html      =  showPage3(
-                        step3Form().fill(Step3Form(confirm = false)),
+                        step3Form.fill(Step3Form(confirm = false)),
                         step0Out.shutterType,
                         step0Out.env,
                         step1Out,
@@ -457,7 +457,7 @@ class ShutterWizardController @Inject() (
       ).getOrElse(Redirect(appRoutes.ShutterWizardController.step1Post))
     }
 
-  def step3Post =
+  val step3Post =
     auth.authenticatedAction(
       continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step3Get)
     ).async { implicit request =>
@@ -468,7 +468,7 @@ class ShutterWizardController @Inject() (
                         getFromSession(step2bKey),
                         Redirect(appRoutes.ShutterWizardController.step2bGet)
                       )
-         _         <- step3Form().bindFromRequest()
+         _         <- step3Form.bindFromRequest()
                         .fold(
                           hasErrors = formWithErrors => EitherT.leftT[Future, Unit](
                                         BadRequest(
@@ -507,7 +507,7 @@ class ShutterWizardController @Inject() (
   //
   // --------------------------------------------------------------------------
 
-  def step4Get =
+  val step4Get =
     auth.authenticatedAction(
       continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step4Get)
     ).async { implicit request =>
@@ -582,12 +582,12 @@ object ShutterWizardController {
       new ServiceNameAndContext(serviceName: ServiceName, context: Option[String])
   }
 
-  def step1Form() =
+  val step1Form =
     Form(
       Forms.mapping(
         "selectedServices" -> Forms.seq(Forms.text.transform[ServiceNameAndContext](ServiceNameAndContext.apply, _.asString)).verifying(notEmptySeq)
       , "status"           -> Forms.text.verifying(notEmpty)
-      )(Step1Form.apply)(Step1Form.unapply)
+      )(Step1Form.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
   case class Step1Form(
@@ -601,8 +601,8 @@ object ShutterWizardController {
   )
 
   val step1OutFormats = {
-    implicit val ssf = ShutterStatusValue.format
-    implicit val osf = new Format[ServiceNameAndContext] {
+    implicit val ssf: Format[ShutterStatusValue] = ShutterStatusValue.format
+    implicit val osf: Format[ServiceNameAndContext] = new Format[ServiceNameAndContext] {
       import play.api.libs.json._
 
       override def reads(json: JsValue): JsResult[ServiceNameAndContext] =
@@ -619,12 +619,12 @@ object ShutterWizardController {
 
   val step2aKey = DataKey[Step2aOut]("step2a")
 
-  def step2aForm() =
+  val step2aForm =
     Form(
       Forms
         .mapping(
           "confirm" -> Forms.boolean
-        )(Step2aForm.apply)(Step2aForm.unapply)
+        )(Step2aForm.apply)(r => Some(r.confirm))
         .verifying("You must tick to confirm you have acknowledged the frontend-route warnings", _.confirm == true)
     )
   case class Step2aForm(confirm: Boolean)
@@ -641,14 +641,14 @@ object ShutterWizardController {
 
   val step2bKey = DataKey[Step2bOut]("step2b")
 
-  def step2bForm() =
+  val step2bForm =
     Form(
       Forms.mapping(
         "reason"                -> Forms.text,
         "outageMessage"         -> Forms.text,
         "requiresOutageMessage" -> Forms.boolean,
         "useDefaultOutagePage"  -> Forms.boolean
-      )(Step2bForm.apply)(Step2bForm.unapply)
+      )(Step2bForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
   case class Step2bForm(
@@ -670,12 +670,12 @@ object ShutterWizardController {
 
   // -- Step 3 -------------------------
 
-  def step3Form() =
+  val step3Form =
     Form(
       Forms
         .mapping(
           "confirm" -> Forms.boolean
-        )(Step3Form.apply)(Step3Form.unapply)
+        )(Step3Form.apply)(r => Some(r.confirm))
         .verifying("You must tick to confirm you have acknowledged you are changing production services!", _.confirm == true)
     )
 

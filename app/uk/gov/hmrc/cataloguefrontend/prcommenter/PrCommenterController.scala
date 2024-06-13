@@ -45,13 +45,14 @@ class PrCommenterController @Inject() (
     commentType: Option[String]
   )
 
-  lazy val form: Form[Filter] = Form(
-    Forms.mapping(
-      "name"        -> Forms.optional(Forms.text),
-      "teamName"    -> Forms.optional(Forms.text).transform[Option[TeamName]](_.map(TeamName.apply), _.map(_.asString)),
-      "commentType" -> Forms.optional(Forms.text)
-    )(Filter.apply)(Filter.unapply)
-  )
+  lazy val form: Form[Filter] =
+    Form(
+      Forms.mapping(
+        "name"        -> Forms.optional(Forms.text),
+        "teamName"    -> Forms.optional(Forms.text).transform[Option[TeamName]](_.map(TeamName.apply), _.map(_.asString)),
+        "commentType" -> Forms.optional(Forms.text)
+      )(Filter.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 
   def recommendations(
     name       : Option[String],

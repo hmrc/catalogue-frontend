@@ -28,34 +28,36 @@ case class JDKVersion(
 
 trait JDKVersionFormats {
 
-  import play.api.libs.json._
+  import play.api.libs.json.{Format, JsPath, Reads, __}
 
   val versionFormat: Format[Version] =
     Format.of[String].inmap(Version.apply, _.toString)
 
-  val vendorRead: Reads[Vendor] = JsPath
-    .read[String]
-    .map(_.toUpperCase match {
-      case "OPENJDK" => OpenJDK
-      case "ORACLE"  => Oracle
-      case _         => Oracle // default to oracle
-    })
+  val vendorRead: Reads[Vendor] =
+    JsPath
+      .read[String]
+      .map(_.toUpperCase match {
+        case "OPENJDK" => OpenJDK
+        case "ORACLE"  => Oracle
+        case _         => Oracle // default to oracle
+      })
 
-  val kindRead: Reads[Kind] = JsPath
-    .read[String]
-    .map(_.toUpperCase match {
-      case "JRE" => JRE
-      case "JDK" => JDK
-      case _     => JDK // default to JDK
-    })
+  val kindRead: Reads[Kind] =
+    JsPath
+      .read[String]
+      .map(_.toUpperCase match {
+        case "JRE" => JRE
+        case "JDK" => JDK
+        case _     => JDK // default to JDK
+      })
 
   val jdkFormat: Reads[JDKVersion] = {
-    implicit val vf  = Version.format
+    implicit val vf: Reads[Version]  = Version.format
     ( (__ \ "name"   ).read[String]
     ~ (__ \ "version").read[Version]
     ~ (__ \ "vendor" ).read[Vendor](vendorRead)
     ~ (__ \ "kind"   ).read[Kind](kindRead)
-    )(JDKVersion)
+    )(JDKVersion.apply)
   }
 }
 

@@ -103,17 +103,17 @@ class TeamsController @Inject()(
       }.flatten
     }
 
-    def allTeams(name: Option[String]): Action[AnyContent] =
-      BasicAuthAction.async { implicit request =>
-        ( userManagementConnector.getAllTeams()
-        , teamsAndRepositoriesConnector.allTeams()
-        ).mapN { (umpTeams, gitHubTeams) =>
-          Ok(teams_list(
-            teams = umpTeams.map(umpTeam => (umpTeam, gitHubTeams.find(_.name == umpTeam.teamName))),
-            name
-          ))
-        }
+  def allTeams(name: Option[String]): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      ( userManagementConnector.getAllTeams()
+      , teamsAndRepositoriesConnector.allTeams()
+      ).mapN { (umpTeams, gitHubTeams) =>
+        Ok(teams_list(
+          teams = umpTeams.map(umpTeam => (umpTeam, gitHubTeams.find(_.name == umpTeam.teamName))),
+          name
+        ))
       }
+    }
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>

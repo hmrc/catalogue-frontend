@@ -101,6 +101,6 @@ object UsersListFilter {
       mapping(
         "team"     -> optional(text).transform[Option[TeamName]](_.map(TeamName.apply), _.map(_.asString)),
         "username" -> optional(text)
-      )(UsersListFilter.apply)(UsersListFilter.unapply)
+      )(UsersListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

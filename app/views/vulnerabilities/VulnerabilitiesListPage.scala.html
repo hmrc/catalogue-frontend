@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitySummary}
-@import views.html.helper.select
+@import views.html.helper.{FieldConstructor, select}
 @import views.html.vulnerabilities.VulnerabilityDetails
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
@@ -32,7 +32,7 @@
   request  : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout(s"Vulnerabilities", active = "health") {
     <h1 class="page-heading mt-4">Vulnerabilities</h1>

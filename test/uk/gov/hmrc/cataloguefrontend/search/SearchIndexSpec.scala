@@ -16,15 +16,18 @@
 
 package uk.gov.hmrc.cataloguefrontend.search
 
-import org.mockito.MockitoSugar.mock
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SearchIndexSpec extends AnyWordSpec with Matchers {
+class SearchIndexSpec
+  extends AnyWordSpec
+     with Matchers
+     with MockitoSugar {
 
   "optimiseIndex" should {
     "Return the expected index structure" in {

@@ -330,50 +330,49 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
   "CreateAppConfigs" should {
-     "return the Async request id when the request is accepted by the B&D async api" in {
-        val payload = CreateAppConfigsForm(
-          appConfigBase        = false,
-          appConfigDevelopment = false,
-          appConfigQA          = false,
-          appConfigStaging     = false,
-          appConfigProduction  = false
-        )
+    "return the Async request id when the request is accepted by the B&D async api" in {
+      val payload = CreateAppConfigsForm(
+        appConfigBase        = false,
+        appConfigDevelopment = false,
+        appConfigQA          = false,
+        appConfigStaging     = false,
+        appConfigProduction  = false
+      )
 
-        val expectedBody =
-          s"""{
-            "microserviceName": "test-service",
-            "microserviceType": "Backend microservice",
-            "hasMongo"        : true,
-            "environments"    : [],
-            "zone"            : "protected"
-          }"""
+      val expectedBody =
+        s"""{
+          "microserviceName": "test-service",
+          "microserviceType": "Backend microservice",
+          "hasMongo"        : true,
+          "environments"    : [],
+          "zone"            : "protected"
+        }"""
 
-        stubFor(
-          post("/create-app-configs")
-            .withRequestBody(equalToJson(expectedBody))
-            .willReturn(
-              aResponse()
-                .withStatus(202)
-                .withBody("""{
-                  "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
-                  "details": {
-                     "bnd_api_request_id": "1234",
-                     "start_timestamp_milliseconds": 1687852118708
-                  }
-                }""")
-            )
-        )
+      stubFor(
+        post("/create-app-configs")
+          .withRequestBody(equalToJson(expectedBody))
+          .willReturn(
+            aResponse()
+              .withStatus(202)
+              .withBody("""{
+                "message": "Your request has been queued for processing. You can call /GetRequestState with the contents of get_request_state_payload to track the progress of your request..",
+                "details": {
+                    "bnd_api_request_id": "1234",
+                    "start_timestamp_milliseconds": 1687852118708
+                }
+              }""")
+          )
+      )
 
-        val result =
-          connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
-            .futureValue
+      val result =
+        connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
+          .futureValue
 
-        result shouldBe Right(AsyncRequestId(JsObject(Seq(
-          "start_timestamp_milliseconds" -> JsNumber(1687852118708L),
-          "bnd_api_request_id"           -> JsString("1234")
-        ))))
-     }
-
+      result shouldBe Right(AsyncRequestId(JsObject(Seq(
+        "start_timestamp_milliseconds" -> JsNumber(1687852118708L),
+        "bnd_api_request_id"           -> JsString("1234")
+      ))))
+    }
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
       val payload = CreateAppConfigsForm(

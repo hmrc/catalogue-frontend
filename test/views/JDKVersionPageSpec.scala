@@ -16,9 +16,9 @@
 
 package views
 import org.jsoup.Jsoup
-import org.mockito.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.ViewMessages
@@ -28,7 +28,10 @@ import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 import views.html.JdkVersionPage
 
 
-class JDKVersionPageSpec extends AnyWordSpec with MockitoSugar with Matchers {
+class JDKVersionPageSpec
+  extends AnyWordSpec
+     with MockitoSugar
+     with Matchers {
   private val msg: ViewMessages = mock[ViewMessages]
 
   "JDK Usage list" should {

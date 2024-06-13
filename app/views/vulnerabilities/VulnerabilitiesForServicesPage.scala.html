@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter
-@import views.html.helper.select
+@import views.html.helper.{FieldConstructor, select}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 
@@ -32,7 +32,7 @@
   request        : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout(s"service vulnerabilities", active = "health") {
 

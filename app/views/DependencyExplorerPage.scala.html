@@ -19,9 +19,10 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
-@import views.html.partials.{TeamNamesPartial, form_global_errors}
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
+@import views.html.helper.FieldConstructor
+@import views.html.partials.{TeamNamesPartial, form_global_errors}
 
 @this(
   teamNamesPartial: TeamNamesPartial,
@@ -42,7 +43,7 @@
   messagesProvider: MessagesProvider
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.bootstrapCompatibleFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.bootstrapCompatibleFieldConstructor.f) }
 
 @standard_layout("Dependency Explorer", active = "explore") {
     <h1 class="page-heading mt-4" id="search-service-header">Dependency Explorer</h1>

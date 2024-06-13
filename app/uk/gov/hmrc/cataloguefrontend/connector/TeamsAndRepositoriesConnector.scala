@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import play.api.Logger
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.config.Constant
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.Zone
@@ -178,7 +179,7 @@ object BuildData {
     ~ (__ \ "timestamp"  ).format[Instant]
     ~ (__ \ "result"     ).formatNullable[String]
     ~ (__ \ "description").formatNullable[String]
-  )(apply, unlift(unapply))
+  )(apply, bd => Tuple.fromProductTyped(bd))
 }
 
 sealed trait BuildJobType { def asString: String }
@@ -224,7 +225,7 @@ object JenkinsJob {
     ~ (__ \ "jenkinsURL" ).format[String]
     ~ (__ \ "jobType"    ).format[BuildJobType]
     ~ (__ \ "latestBuild").formatNullable[BuildData]
-  )(apply, unlift(unapply))
+  )(apply, j => Tuple.fromProductTyped(j))
 }
 
 case class GitRepository(
@@ -291,7 +292,7 @@ object GitRepository {
     ~ (__ \ "prototypeName"       ).formatNullable[String]
     ~ (__ \ "prototypeAutoPublish").formatNullable[Boolean]
     ~ (__ \ "zone"                ).formatNullable[Zone]
-    ) (apply, unlift(unapply))
+    ) (apply, r => Tuple.fromProductTyped(r))
   }
 }
 
@@ -311,7 +312,7 @@ object BranchProtection {
     ( (__ \ "requiresApprovingReviews").format[Boolean]
     ~ (__ \ "dismissesStaleReviews"   ).format[Boolean]
     ~ (__ \ "requiresCommitSignatures").format[Boolean]
-    )(apply, unlift(unapply))
+    )(apply, bp => Tuple.fromProductTyped(bp))
 }
 
 case class GitHubTeam(
@@ -329,7 +330,7 @@ object GitHubTeam {
     ( (__ \ "name"          ).format[TeamName]
     ~ (__ \ "lastActiveDate").formatNullable[Instant]
     ~ (__ \ "repos"         ).format[Seq[String]]
-    )(apply, unlift(unapply))
+    )(apply, t => Tuple.fromProductTyped(t))
   }
 }
 

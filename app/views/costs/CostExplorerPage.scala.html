@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
-@import views.html.helper.select
+@import views.html.helper.{FieldConstructor, select}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 @this(viewMessages: ViewMessages)
@@ -30,9 +30,7 @@
 , costEstimateConfig   : CostEstimateConfig
 )(implicit messages    : Messages, request: RequestHeader)
 
-@implicitField = @{
-    helper.FieldConstructor(helper.catalogueFieldConstructor.f)
-}
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @formatToCurrency(value: Double) = @{
     java.text.NumberFormat.getIntegerInstance.format(value)

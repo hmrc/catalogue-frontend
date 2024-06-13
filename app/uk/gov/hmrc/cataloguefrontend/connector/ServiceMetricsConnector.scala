@@ -28,8 +28,6 @@ import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-import ServiceMetricsConnector._
-
 @Singleton
 class ServiceMetricsConnector @Inject() (
   httpClientV2  : HttpClientV2,
@@ -37,6 +35,7 @@ class ServiceMetricsConnector @Inject() (
 )(implicit
   ec: ExecutionContext
 ) {
+  import ServiceMetricsConnector._
   import HttpReads.Implicits._
 
   private val serviceMetricsBaseUrl: String =

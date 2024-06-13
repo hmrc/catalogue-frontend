@@ -109,10 +109,10 @@ object RepoListFilter {
   lazy val form =
     Form(
       mapping(
-        "name"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"            -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
-        "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "showArchived"    -> optional(boolean)
-      )(RepoListFilter.apply)(RepoListFilter.unapply)
+        "name"         -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "team"         -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
+        "repoType"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "showArchived" -> optional(boolean)
+      )(RepoListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

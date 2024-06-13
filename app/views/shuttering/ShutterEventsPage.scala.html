@@ -37,7 +37,7 @@
                 <input id="environment" name="environment" type="hidden" value="@form("environment").value">
 
                 <datalist id="servicenames">
-                    @services.map { s: String => <option>@s</option> }
+                    @services.map { (s: String) => <option>@s</option> }
                 </datalist>
 
                 <div class="row mb-4">

@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend.costs
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalatest.OptionValues
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
@@ -34,9 +36,9 @@ import scala.concurrent.Future
 
 class CostExplorerControllerSpec
   extends AnyWordSpec
+     with Matchers
      with FakeApplicationBuilder
      with MockitoSugar
-     with ArgumentMatchersSugar
      with OptionValues {
 
   private val mockAuthStubBehaviour             = mock[StubBehaviour]

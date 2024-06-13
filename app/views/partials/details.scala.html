@@ -17,12 +17,9 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.DecommissionInProgress
-@import views.html.partials.decommissionWarnModal
-@import views.partials.githubBadgeType
-@import views.html.partials.decommissionErrorModal
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{Deprecated, Archived}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{DecommissionInProgress, Deprecated, Archived}
+@import views.partials.githubBadgeType
 @import java.time.Instant
 
 @(
@@ -64,8 +61,8 @@
                         data-bs-trigger="hover"
                         data-bs-placement="right"
                         data-bs-html="true"
-                        data-bs-content='@{if(isGuest) "You are currently logged onto a guest account, login using your LDAP credentials to decommission" else if(!canMarkForDecommissioning) "You must be a team admin for the team that owns this service to decommission" }'>
-                         <button type="button" class="dropdown-item dropdown-button-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning" @if(isGuest | !canMarkForDecommissioning){ disabled }>Mark for decommissioning</button>
+                        data-bs-content='@{if(isGuest) "You are currently logged onto a guest account, login using your LDAP credentials to decommission" else if(!canMarkForDecommissioning) "You must be a team admin for the team that owns this service to decommission" else ""}'>
+                         <button type="button" class="dropdown-item dropdown-button-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning" @{if(isGuest | !canMarkForDecommissioning) "disabled" else ""}>Mark for decommissioning</button>
                         </span>
                     </li>
                 </ul>
@@ -206,6 +203,3 @@
         case _          => { Deprecated status is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. To change this you will need to either remove the `deprecated` key or change its value to `false`. Changes can take a few minutes to appear in the MDTP catalogue. }
     }
 }
-
-
-

@@ -58,7 +58,7 @@ class CreateAppConfigsController @Inject()(
   import scala.jdk.CollectionConverters._
 
   private val envsToHide: Set[Environment] =
-    configuration.underlying.getStringList("environmentsToHideByDefault").asScala.toSet.map { str: String =>
+    configuration.underlying.getStringList("environmentsToHideByDefault").asScala.toSet.map { str =>
       Environment.parse(str).getOrElse(sys.error(s"config 'environmentsToHideByDefault' contains an invalid environment: $str"))
     }
 
@@ -198,22 +198,23 @@ case class CreateAppConfigsForm(
 )
 
 object CreateAppConfigsForm {
-  val form: Form[CreateAppConfigsForm] = Form(
-    mapping(
-      "appConfigBase"         -> boolean,
-      "appConfigDevelopment"  -> boolean,
-      "appConfigQA"           -> boolean,
-      "appConfigStaging"      -> boolean,
-      "appConfigProduction"   -> boolean
-    )(CreateAppConfigsForm.apply)(CreateAppConfigsForm.unapply)
-      .verifying("No update requested", form =>
-        Seq(
-          form.appConfigBase,
-          form.appConfigDevelopment,
-          form.appConfigQA,
-          form.appConfigStaging,
-          form.appConfigProduction
-        ).contains(true)
-      )
-  )
+  val form: Form[CreateAppConfigsForm] =
+    Form(
+      mapping(
+        "appConfigBase"         -> boolean,
+        "appConfigDevelopment"  -> boolean,
+        "appConfigQA"           -> boolean,
+        "appConfigStaging"      -> boolean,
+        "appConfigProduction"   -> boolean
+      )(CreateAppConfigsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
+        .verifying("No update requested", form =>
+          Seq(
+            form.appConfigBase,
+            form.appConfigDevelopment,
+            form.appConfigQA,
+            form.appConfigStaging,
+            form.appConfigProduction
+          ).contains(true)
+        )
+    )
 }

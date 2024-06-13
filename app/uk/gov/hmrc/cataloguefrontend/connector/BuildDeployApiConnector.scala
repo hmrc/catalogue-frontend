@@ -20,6 +20,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.libs.ws.writeableOf_JsValue
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
@@ -279,7 +280,7 @@ object BuildDeployApiConnector {
     val writes: Writes[ChangePrototypePasswordRequest] =
       ( (__ \ "repositoryName").write[String]
       ~ (__ \ "password"      ).write[String]
-      )(unlift(ChangePrototypePasswordRequest.unapply))
+      )(r => Tuple.fromProductTyped(r))
   }
 
   case class GetPrototypeStatusRequest(
@@ -300,7 +301,7 @@ object BuildDeployApiConnector {
     val writes: Writes[SetPrototypeStatusRequest] =
       ( (__ \ "prototype").write[String]
       ~ (__ \ "status"   ).write[String]
-      )(unlift(SetPrototypeStatusRequest.unapply _))
+      )(r => Tuple.fromProductTyped(r))
   }
 
   case class CreateServiceRepoRequest(
@@ -319,7 +320,7 @@ object BuildDeployApiConnector {
       ~ (__ \ "makePrivate"              ).write[Boolean]
       ~ (__ \ "repositoryType"           ).write[String]
       ~ (__ \ "slackNotificationChannels").write[String]
-      )(unlift(CreateServiceRepoRequest.unapply _))
+      )(r => Tuple.fromProductTyped(r))
     }
   }
 
@@ -337,7 +338,7 @@ object BuildDeployApiConnector {
       ~ (__ \ "teamName"                 ).write[TeamName]
       ~ (__ \ "password"                 ).write[String]
       ~ (__ \ "slackNotificationChannels").write[String]
-      )(unlift(CreatePrototypeRepoRequest.unapply _))
+      )(r => Tuple.fromProductTyped(r))
     }
   }
 
@@ -355,7 +356,7 @@ object BuildDeployApiConnector {
       ~ (__ \ "teamName"             ).write[TeamName]
       ~ (__ \ "makePrivate"          ).write[Boolean]
       ~ (__ \ "repositoryType"       ).write[String]
-      )(unlift(CreateTestRepoRequest.unapply _))
+      )(r => Tuple.fromProductTyped(r))
     }
   }
 
@@ -374,6 +375,6 @@ object BuildDeployApiConnector {
       ~ (__ \ "hasMongo"        ).write[Boolean]
       ~ (__ \ "environments"    ).write[Seq[String]]
       ~ (__ \ "zone"            ).write[String]
-    )(unlift(CreateAppConfigsRequest.unapply _))
+    )(r => Tuple.fromProductTyped(r))
   }
 }

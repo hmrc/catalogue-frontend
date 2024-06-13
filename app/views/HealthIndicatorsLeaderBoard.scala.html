@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.{IndicatorsWithTeams, RepoType}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import views.html.helper.select
+@import views.html.helper.{FieldConstructor, select}
 
 @(indicatorsWithTeams: Seq[IndicatorsWithTeams]
 , repoTypes          : Seq[RepoType]
@@ -27,7 +27,7 @@
 , request            : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("Service Health Indicators", active = "health") {
 

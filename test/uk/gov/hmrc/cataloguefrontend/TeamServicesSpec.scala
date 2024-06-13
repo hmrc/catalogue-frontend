@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.scalatest.BeforeAndAfter
+import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositoriesJsonData
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 

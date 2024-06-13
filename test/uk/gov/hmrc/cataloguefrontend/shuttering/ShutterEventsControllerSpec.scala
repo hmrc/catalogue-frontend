@@ -19,10 +19,12 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import java.time.Instant
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.Mockito.when
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
@@ -44,7 +46,6 @@ import scala.concurrent.Future
 class ShutterEventsControllerSpec
   extends AnyWordSpec
      with MockitoSugar
-     with ArgumentMatchersSugar
      with Matchers
      with GuiceOneAppPerSuite
      with DefaultAwaitTimeout

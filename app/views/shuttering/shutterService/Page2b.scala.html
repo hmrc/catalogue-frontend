@@ -16,9 +16,9 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, OutagePageStatus, ShutterStatusValue, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, OutagePageStatus, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step0Out, Step1Out, Step2bForm}
-@import helper._
+@import views.html.helper.{FieldConstructor, textarea}
 @import partials.form_global_errors
 
 @this(viewMessages: ViewMessages)
@@ -36,7 +36,7 @@
  , messagesProvider      : MessagesProvider
  )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("Shutter Frontend", active = "shuttering") {
 

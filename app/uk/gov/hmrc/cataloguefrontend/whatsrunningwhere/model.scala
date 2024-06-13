@@ -56,11 +56,11 @@ object JsonCodecs {
       case Left(l)  => JsError(__, l)
     }
 
-  val serviceNameFormat     : Format[ServiceName]      = format(ServiceName.apply     , unlift(ServiceName.unapply))
-  val timeSeenFormat        : Format[TimeSeen]         = format(TimeSeen.apply        , unlift(TimeSeen.unapply))
-  val teamNameFormat        : Format[TeamName]         = format(TeamName.apply        , unlift(TeamName.unapply))
-  val usernameReads         : Format[Username]         = format(Username.apply        , unlift(Username.unapply))
-  val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, unlift(DeploymentStatus.unapply))
+  val serviceNameFormat     : Format[ServiceName]      = format(ServiceName.apply     , _.asString)
+  val timeSeenFormat        : Format[TimeSeen]         = format(TimeSeen.apply        , _.time    )
+  val teamNameFormat        : Format[TeamName]         = format(TeamName.apply        , _.asString)
+  val usernameReads         : Format[Username]         = format(Username.apply        , _.asString)
+  val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, _.asString)
 
   val environmentFormat: Format[Environment] = new Format[Environment] {
     override def reads(json: JsValue): JsResult[Environment] =
@@ -110,14 +110,14 @@ object JsonCodecs {
   }
 
   val profileNameFormat: Format[ProfileName] =
-    format(ProfileName.apply, unlift(ProfileName.unapply))
+    format(ProfileName.apply, _.asString)
 
   val profileFormat: OFormat[Profile] = {
     implicit val ptf = profileTypeFormat
     implicit val pnf = profileNameFormat
     ( (__ \ "type").format[ProfileType]
     ~ (__ \ "name").format[ProfileName]
-    )(Profile.apply, unlift(Profile.unapply))
+    )(Profile.apply, p => Tuple.fromProductTyped(p))
   }
 
   // Deployment Event
@@ -129,7 +129,7 @@ object JsonCodecs {
     ~ (__ \ "status"      ).format[DeploymentStatus]
     ~ (__ \ "version"     ).format[Version]
     ~ (__ \ "time"        ).format[TimeSeen]
-    )(DeploymentEvent.apply, unlift(DeploymentEvent.unapply))
+    )(DeploymentEvent.apply, de => Tuple.fromProductTyped(de))
   }
 
   val serviceDeploymentsFormat: Format[ServiceDeployment] = {
@@ -140,7 +140,7 @@ object JsonCodecs {
     ~ (__ \ "environment"     ).format[Environment]
     ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
     ~ (__ \ "lastCompleted"   ).formatNullable[DeploymentEvent]
-    )(ServiceDeployment.apply, unlift(ServiceDeployment.unapply))
+    )(ServiceDeployment.apply, sd => Tuple.fromProductTyped(sd))
   }
 
   val deploymentHistoryReads: Reads[DeploymentHistory] = {

@@ -20,8 +20,6 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
-@import play.api.mvc._
-@import helper._
 
 @this(viewMessages: ViewMessages)
 
@@ -74,7 +72,7 @@
                     <select id="teamName" name="team" class="form-select">
                         <option class="blank" value>All</option>
                         @for(team <- allTeams.map(_.name.asString).distinct.sorted) {
-                            <option value="@team" @if(form("team").value.contains(team)) {selected="selected"}>@team</option>
+                            <option value="@team" @{if(form("team").value.contains(team)) "selected" else ""}>@team</option>
                         }
                     </select>
                 </div>

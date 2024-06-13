@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest.BeforeAndAfter
+import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 

@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
 import play.api.libs.json.{Json, Reads}
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, UmpTeam, User}
 import uk.gov.hmrc.http.client.HttpClientV2

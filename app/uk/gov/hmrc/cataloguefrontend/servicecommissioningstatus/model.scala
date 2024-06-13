@@ -31,7 +31,7 @@ object Warning {
   val reads: Reads[Warning] = {
     ( (__ \ "title"  ).format[String]
     ~ (__ \ "message").format[String]
-    )(Warning.apply, unlift(Warning.unapply))
+    )(Warning.apply, w => Tuple.fromProductTyped(w))
   }
 }
 

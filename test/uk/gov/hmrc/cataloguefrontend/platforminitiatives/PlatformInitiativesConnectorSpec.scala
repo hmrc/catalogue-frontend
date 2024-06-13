@@ -17,10 +17,10 @@
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -78,7 +78,7 @@ class PlatformInitiativesConnectorSpec
       initiatives mustBe result
     }
 
-   "return correct JSON for Platform Initiatives for a specified team" in {
+    "return correct JSON for Platform Initiatives for a specified team" in {
       stubFor(
         get(urlEqualTo(s"/platform-initiatives/teams/team/initiatives"))
           .willReturn(aResponse().withBodyFile("platform-initiatives.json"))

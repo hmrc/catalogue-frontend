@@ -19,8 +19,6 @@
 @import uk.gov.hmrc.cataloguefrontend.users.UmpTeam
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
 
-@import views.html.helper.checkbox
-@import views.html.helper.form
 @(teams: Seq[(UmpTeam, Option[GitHubTeam])],
   name : Option[String]
 )(implicit
@@ -131,4 +129,3 @@
     });
 
 </script>
-

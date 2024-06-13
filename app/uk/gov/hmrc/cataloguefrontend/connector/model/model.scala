@@ -21,13 +21,13 @@ import play.api.libs.json.{__, Format, Reads}
 
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
-case class Username(value: String) extends AnyVal
+case class Username(value: String) extends AnyVal // TODO asString
 
 case class TeamName(asString: String) extends AnyVal
 
 object TeamName {
   lazy val format: Format[TeamName] =
-    Format.of[String].inmap(TeamName.apply, unlift(TeamName.unapply))
+    Format.of[String].inmap(TeamName.apply, _.asString)
 
   implicit val ordering: Ordering[TeamName] =
     new Ordering[TeamName] {

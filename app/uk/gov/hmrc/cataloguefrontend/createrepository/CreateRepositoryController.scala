@@ -55,7 +55,7 @@ class CreateRepositoryController @Inject()(
   private def createRepositoryPermission(teamName: TeamName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_REPOSITORY"))
 
-  def createServiceRepositoryLanding(): Action[AnyContent] =
+  val createServiceRepositoryLanding: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createServiceRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
@@ -64,7 +64,7 @@ class CreateRepositoryController @Inject()(
       Ok(createRepositoryPage(CreateServiceRepoForm.form, userTeams, CreateServiceRepositoryType.values))
     }
 
-  def createServiceRepository(): Action[AnyContent] =
+  val createServiceRepository: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createServiceRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
@@ -89,7 +89,7 @@ class CreateRepositoryController @Inject()(
       ).merge
     }
 
-  def createPrototypeRepositoryLanding(): Action[AnyContent] =
+  val createPrototypeRepositoryLanding: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createPrototypeRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
@@ -98,7 +98,7 @@ class CreateRepositoryController @Inject()(
       Ok(createPrototypePage(CreatePrototypeRepoForm.form, userTeams))
     }
 
-  def createPrototypeRepository(): Action[AnyContent] =
+  val createPrototypeRepository: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createPrototypeRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
@@ -123,7 +123,7 @@ class CreateRepositoryController @Inject()(
       ).merge
     }
 
-  def createTestRepositoryLanding(): Action[AnyContent] =
+  val createTestRepositoryLanding: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createTestRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
@@ -132,7 +132,7 @@ class CreateRepositoryController @Inject()(
       Ok(createTestRepositoryPage(CreateTestRepoForm.form, userTeams, CreateTestRepositoryType.values))
     }
 
-  def createTestRepository(): Action[AnyContent] =
+  val createTestRepository: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createTestRepositoryLanding(),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))

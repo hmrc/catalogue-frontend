@@ -103,7 +103,7 @@ class ConfluenceConnector @Inject()(
   case class History(createdDate: Instant)
 
   private val readsHistory: Reads[History] =
-    (__ \ "createdDate").read[Instant].map(History)
+    (__ \ "createdDate").read[Instant].map(History.apply)
 
   private def history(path: String): Future[History] = {
     implicit val rd = readsHistory

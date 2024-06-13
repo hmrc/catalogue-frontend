@@ -55,7 +55,7 @@ private object DataFormat {
 
 object BobbyRulesSummary {
   val reads: Reads[BobbyRulesSummary] = {
-    implicit val df = DataFormat.dataReads[Int]
+    implicit val df: Reads[Map[(BobbyRule, SlugInfoFlag), Int]] = DataFormat.dataReads[Int]
     ( (__ \ "date"   ).read[LocalDate]
     ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), Int]]
     )(BobbyRulesSummary.apply _)
@@ -64,7 +64,7 @@ object BobbyRulesSummary {
 
 object HistoricBobbyRulesSummary {
   val reads: Reads[HistoricBobbyRulesSummary] = {
-    implicit val df = DataFormat.dataReads[List[Int]]
+    implicit val df: Reads[Map[(BobbyRule, SlugInfoFlag), List[Int]]] = DataFormat.dataReads[List[Int]]
     ( (__ \ "date"   ).read[LocalDate]
     ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), List[Int]]]
     )(HistoricBobbyRulesSummary.apply _)

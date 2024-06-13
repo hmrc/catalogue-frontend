@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{OFormat, __}
 import play.api.mvc.QueryStringBindable
 
@@ -33,7 +33,7 @@ object Progress {
   implicit val format: OFormat[Progress] =
     ( (__ \ "current").format[Int]
     ~ (__ \ "target" ).format[Int]
-    )(Progress.apply,unlift(Progress.unapply))
+    )(Progress.apply, p => Tuple.fromProductTyped(p))
 }
 
 case class PlatformInitiative(
@@ -46,12 +46,12 @@ case class PlatformInitiative(
 
 object PlatformInitiative {
   val format: OFormat[PlatformInitiative] =
-    ( (__ \ "initiativeName").format[String]
+    ( (__ \ "initiativeName"       ).format[String]
     ~ (__ \ "initiativeDescription").format[String]
-    ~ (__ \ "progress"    ).format[Progress]
-    ~ (__ \ "completedLegend").format[String]
-    ~ (__ \ "inProgressLegend").format[String]
-    )(apply, unlift(unapply))
+    ~ (__ \ "progress"             ).format[Progress]
+    ~ (__ \ "completedLegend"      ).format[String]
+    ~ (__ \ "inProgressLegend"     ).format[String]
+    )(apply, pi => Tuple.fromProductTyped(pi))
 }
 
 sealed trait DisplayType {

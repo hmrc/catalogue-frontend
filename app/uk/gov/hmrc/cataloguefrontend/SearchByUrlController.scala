@@ -70,7 +70,7 @@ class SearchByUrlController @Inject() (
     lazy val form = Form(
       mapping(
         "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
-      )(UrlSearchFilter.apply)(UrlSearchFilter.unapply)
+      )(UrlSearchFilter.apply)(f => Some(f.name))
     )
   }
 }

@@ -54,7 +54,7 @@ class ServiceCommissioningStatusController @Inject() (
       }
     }
 
-  def searchLanding(): Action[AnyContent] =
+  val searchLanding: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         allTeams  <- teamsAndRepositoriesConnector.allTeams()
@@ -73,8 +73,8 @@ class ServiceCommissioningStatusController @Inject() (
       } yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
     }
 
-    //Params exist so they can be provided for deep linking
-    def searchResults(teamName: Option[TeamName]): Action[AnyContent] =
+  //Params exist so they can be provided for deep linking
+  def searchResults(teamName: Option[TeamName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchCommissioning
         .searchForm
@@ -152,37 +152,38 @@ object SearchCommissioning {
   , warningFilter     : Option[Boolean] = None
   )
 
-  lazy val searchForm: Form[SearchCommissioningForm] = Form(
-    Forms.mapping(
-      "team"               -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
-    , "serviceType"        -> Forms.optional(Forms.text.transform[ServiceType](x =>
-                                ServiceType.parse(x).getOrElse(ServiceType.Backend)
-                              , _.asString
-                              ))
-    , "lifecycleStatus"    -> Forms.default(
-                                Forms
-                                  .list(Forms.text)
-                                  .transform[List[LifecycleStatus]](
-                                    xs => xs.map(x => LifecycleStatus.parse(x).toOption).flatten
-                                  , x  => identity(x).map(_.asString)
-                                  )
-                              , LifecycleStatus.values
-                              )
-    , "checks"             -> Forms.list(Forms.text)
-    , "environments"       -> Forms.default(
-                                Forms
-                                  .list(Forms.text)
-                                  .transform[List[Environment]](
-                                    xs => xs.map(Environment.parse).flatten
-                                  , x  => identity(x).map(_.asString)
-                                  )
-                              , Environment.values.filterNot(_ == Environment.Integration)
-                              )
-    , "asCsv"              -> Forms.boolean
-    , "groupByEnvironment" -> Forms.optional(Forms.boolean)
-    , "warningFilter"      -> Forms.optional(Forms.boolean)
-    )(SearchCommissioningForm.apply)(SearchCommissioningForm.unapply)
-  )
+  lazy val searchForm: Form[SearchCommissioningForm] =
+    Form(
+      Forms.mapping(
+        "team"               -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+      , "serviceType"        -> Forms.optional(Forms.text.transform[ServiceType](x =>
+                                  ServiceType.parse(x).getOrElse(ServiceType.Backend)
+                                , _.asString
+                                ))
+      , "lifecycleStatus"    -> Forms.default(
+                                  Forms
+                                    .list(Forms.text)
+                                    .transform[List[LifecycleStatus]](
+                                      xs => xs.map(x => LifecycleStatus.parse(x).toOption).flatten
+                                    , x  => identity(x).map(_.asString)
+                                    )
+                                , LifecycleStatus.values
+                                )
+      , "checks"             -> Forms.list(Forms.text)
+      , "environments"       -> Forms.default(
+                                  Forms
+                                    .list(Forms.text)
+                                    .transform[List[Environment]](
+                                      xs => xs.map(Environment.parse).flatten
+                                    , x  => identity(x).map(_.asString)
+                                    )
+                                , Environment.values.filterNot(_ == Environment.Integration)
+                                )
+      , "asCsv"              -> Forms.boolean
+      , "groupByEnvironment" -> Forms.optional(Forms.boolean)
+      , "warningFilter"      -> Forms.optional(Forms.boolean)
+      )(SearchCommissioningForm.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 
   case class TeamCommissioningForm(
     checkType: String
@@ -192,6 +193,6 @@ object SearchCommissioning {
     Form(
       Forms.mapping(
         "checkType" -> Forms.text
-      )(TeamCommissioningForm.apply)(TeamCommissioningForm.unapply)
+      )(TeamCommissioningForm.apply)(r => Some(r.checkType))
     )
 }

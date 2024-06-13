@@ -83,11 +83,12 @@ case class PlatformInitiativesFilter(
 }
 
 object PlatformInitiativesFilter {
-  lazy val form: Form[PlatformInitiativesFilter] = Form(
-    mapping(
-      "initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "team"           -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-      )
-    (PlatformInitiativesFilter.apply)(PlatformInitiativesFilter.unapply)
-  )
+  lazy val form: Form[PlatformInitiativesFilter] =
+    Form(
+      mapping(
+        "initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "team"           -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+        )
+      (PlatformInitiativesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 }

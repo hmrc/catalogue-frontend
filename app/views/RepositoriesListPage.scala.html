@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, GitHubTeam}
-@import views.html.helper.select
+@import views.html.helper.{FieldConstructor, select}
 @import views.html.partials.RepoSearchResultsPage
 @import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => repoRoutes}
 
@@ -33,7 +33,7 @@
   request : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("Repositories", "repositories") {
     <h1 class="page-heading mt-4">

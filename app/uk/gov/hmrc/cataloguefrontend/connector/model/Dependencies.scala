@@ -82,7 +82,7 @@ object ImportedBy {
     ( (__ \ "name"          ).format[String]
     ~ (__ \ "group"         ).format[String]
     ~ (__ \ "currentVersion").format[Version]
-    )(ImportedBy.apply, unlift(ImportedBy.unapply))
+    )(ImportedBy.apply, ib => Tuple.fromProductTyped(ib))
   }
 }
 
@@ -393,7 +393,7 @@ object GroupArtefacts {
   val apiFormat: OFormat[GroupArtefacts] =
     ( (__ \ "group"    ).format[String]
     ~ (__ \ "artefacts").format[List[String]]
-    )(GroupArtefacts.apply, unlift(GroupArtefacts.unapply))
+    )(GroupArtefacts.apply, ga => Tuple.fromProductTyped(ga))
 }
 
 sealed trait DependencyScope {

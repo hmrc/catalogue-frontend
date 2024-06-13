@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionRepositorySummary, routes => appRoutes}
-@import views.html.helper.select
+@import views.html.helper.{FieldConstructor, select}
 
 @this(viewMessages: ViewMessages)
 
@@ -35,7 +35,7 @@
   request          : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout(s"Leak detection repositories", active = "health") {
     <h1 class="page-heading mt-4">Leak Detection Repositories</h1>

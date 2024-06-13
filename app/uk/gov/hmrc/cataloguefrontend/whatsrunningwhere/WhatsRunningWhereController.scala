@@ -113,28 +113,29 @@ object WhatsRunningWhereFilter {
   private def filterEmptyString(x: Option[String]) =
     x.filter(_.trim.nonEmpty)
 
-  lazy val form: Form[WhatsRunningWhereFilter] = Form(
-    mapping(
-      "profile_name" -> optional(text)
-                          .transform[Option[ProfileName]](
-                            _.map(ProfileName.apply),
+  lazy val form: Form[WhatsRunningWhereFilter] =
+    Form(
+      mapping(
+        "profile_name" -> optional(text)
+                            .transform[Option[ProfileName]](
+                              _.map(ProfileName.apply),
+                              _.map(_.asString)
+                            ),
+        "profile_type" -> optional(text)
+                            .transform[Option[ProfileType]](
+                              _.flatMap(s => ProfileType.parse(s).toOption),
+                              _.map(_.asString)
+                            ),
+        "service_name" -> optional(text)
+                            .transform[Option[ServiceName]](
+                              filterEmptyString(_).map(ServiceName.apply),
+                              _.map(_.asString)
+                            ),
+        "view_mode"    -> optional(text)
+                          .transform[Option[ViewMode]](
+                            _.flatMap(s => ViewMode.parse(s).toOption),
                             _.map(_.asString)
-                          ),
-      "profile_type" -> optional(text)
-                          .transform[Option[ProfileType]](
-                            _.flatMap(s => ProfileType.parse(s).toOption),
-                            _.map(_.asString)
-                          ),
-      "service_name" -> optional(text)
-                          .transform[Option[ServiceName]](
-                            filterEmptyString(_).map(ServiceName.apply),
-                            _.map(_.asString)
-                          ),
-      "view_mode"    -> optional(text)
-                         .transform[Option[ViewMode]](
-                           _.flatMap(s => ViewMode.parse(s).toOption),
-                           _.map(_.asString)
-                         )
-    )(WhatsRunningWhereFilter.apply)(WhatsRunningWhereFilter.unapply)
-  )
+                          )
+      )(WhatsRunningWhereFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 }

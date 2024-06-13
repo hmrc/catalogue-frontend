@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
@@ -32,6 +33,7 @@ import scala.concurrent.Future
 class WhatsRunningWhereServiceSpec
   extends AnyWordSpec
      with Matchers
+     with MockitoSugar
      with ScalaFutures {
 
   private val release1 =

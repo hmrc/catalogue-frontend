@@ -26,7 +26,7 @@ import java.time.Instant
 
 sealed trait KeyFilterType extends WithAsString
 
-object KeyFilterType extends {
+object KeyFilterType {
 
   case object Contains           extends KeyFilterType { val asString = "contains"}
   case object ContainsIgnoreCase extends KeyFilterType { val asString = "containsIgnoreCase"}
@@ -95,24 +95,24 @@ object ServiceType extends Enum[ServiceType] {
 }
 
 case class DeploymentConfigEvent(
-                            serviceName    : String,
-                            environment    : Environment,
-                            deploymentId   : String,
-                            configChanged  : Option[Boolean],
-                            configId       : Option[String],
-                            lastUpdated    : Instant
-                          )
+  serviceName  : String,
+  environment  : Environment,
+  deploymentId : String,
+  configChanged: Option[Boolean],
+  configId     : Option[String],
+  lastUpdated  : Instant
+)
 
 object DeploymentConfigEvent {
   implicit val mongoFormats: Format[DeploymentConfigEvent] = {
     implicit val instantFormat = MongoJavatimeFormats.instantFormat
     implicit val ef = Environment.format
-    ((__ \ "serviceName").format[String]
-      ~ (__ \ "environment").format[Environment]
-      ~ (__ \ "deploymentId").format[String]
-      ~ (__ \ "configChanged").formatNullable[Boolean]
-      ~ (__ \ "configId").formatNullable[String]
-      ~ (__ \ "lastUpdated").format[Instant]
-      )(DeploymentConfigEvent.apply, unlift(DeploymentConfigEvent.unapply))
+    ( (__ \ "serviceName"  ).format[String]
+    ~ (__ \ "environment"  ).format[Environment]
+    ~ (__ \ "deploymentId" ).format[String]
+    ~ (__ \ "configChanged").formatNullable[Boolean]
+    ~ (__ \ "configId"     ).formatNullable[String]
+    ~ (__ \ "lastUpdated"  ).format[Instant]
+    )(DeploymentConfigEvent.apply, dce => Tuple.fromProductTyped(dce))
   }
 }

@@ -17,11 +17,12 @@
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import com.github.tomakehurst.wiremock.http.RequestMethod.GET
-import org.mockito.MockitoSugar
 import org.scalatest.OptionValues
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
+import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 

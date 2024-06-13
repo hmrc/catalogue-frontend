@@ -98,7 +98,7 @@ class CatalogueController @Inject() (
   private def notFound(implicit request: Request[_]) =
     NotFound(error_404_template())
 
-  def index(): Action[AnyContent] =
+  val index: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       confluenceConnector
         .getBlogs()
@@ -512,7 +512,7 @@ object TeamFilter {
   lazy val form = Form(
     mapping(
       "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(TeamFilter.apply)(TeamFilter.unapply)
+    )(TeamFilter.apply)(f => Some.apply(f.name))
   )
 }
 
@@ -524,7 +524,7 @@ object DigitalServiceNameFilter {
   lazy val form = Form(
     mapping(
       "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(DigitalServiceNameFilter.apply)(DigitalServiceNameFilter.unapply)
+    )(DigitalServiceNameFilter.apply)(f => Some(f.value))
   )
 }
 
@@ -565,7 +565,7 @@ object ChangePrototypePassword {
     )
 
   private val passwordConstraint =
-    Constraint("constraints.password") { input: String =>
+    Constraint[String]("constraints.password") { input =>
       if (input.matches("^[a-zA-Z0-9_]+$")) Valid
       else Invalid("Should only contain uppercase letters, lowercase letters, numbers, underscores")
     }
@@ -574,7 +574,7 @@ object ChangePrototypePassword {
     Form(
       Forms.mapping(
         "password" -> Forms.nonEmptyText.verifying(passwordConstraint)
-      )(PrototypePassword.apply)(PrototypePassword.unapply)
+      )(PrototypePassword.apply)(f => Some(f.value))
     )
 }
 
@@ -582,16 +582,18 @@ case class DefaultBranchesFilter(
    name           : Option[String]   = None,
    teamNames      : Option[TeamName] = None,
    defaultBranch  : Option[String]   = None
- ) {
-  def isEmpty: Boolean = name.isEmpty && teamNames.isEmpty && defaultBranch.isEmpty
+) {
+  def isEmpty: Boolean =
+    name.isEmpty && teamNames.isEmpty && defaultBranch.isEmpty
 }
 
 object DefaultBranchesFilter {
-  lazy val form: Form[DefaultBranchesFilter] = Form(
-    mapping(
-      "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "teamNames"     -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
-      "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(DefaultBranchesFilter.apply)(DefaultBranchesFilter.unapply)
-  )
+  lazy val form: Form[DefaultBranchesFilter] =
+    Form(
+      mapping(
+        "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "teamNames"     -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
+        "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+      )(DefaultBranchesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 }

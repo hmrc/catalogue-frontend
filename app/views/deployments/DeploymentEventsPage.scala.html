@@ -34,7 +34,7 @@
   request           : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("Deployment Events", "deployments") {
     <h1 class="page-heading mt-4">

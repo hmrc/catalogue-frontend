@@ -30,7 +30,7 @@ trait CatalogueAuthBuilders {
   private val readPerm = Predicate.Permission(Resource(ResourceType("catalogue-frontend"), ResourceLocation("*")), IAAction("READ"))
 
   def BasicAuthAction =
-    new ActionBuilder[MessagesRequest[*], AnyContent] {
+    new ActionBuilder[MessagesRequest, AnyContent] {
       override def executionContext: ExecutionContext = ec
       override def parser: BodyParser[AnyContent] = mcc.parsers.anyContent
       override def invokeBlock[A](request: Request[A], block: MessagesRequest[A] => Future[Result]): Future[Result] =

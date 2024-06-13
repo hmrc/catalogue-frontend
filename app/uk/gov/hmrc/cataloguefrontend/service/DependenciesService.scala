@@ -174,7 +174,7 @@ object ServiceDependencies {
     ( (__ \ "version").read[String]
     ~ (__ \ "vendor" ).read[String]
     ~ (__ \ "kind"   ).read[String]
-    )(ServiceJDKVersion)
+    )(ServiceJDKVersion.apply)
 
   private val serviceDependencyReads: Reads[ServiceDependency] =
     Json.using[Json.WithDefaultValues].reads[ServiceDependency]
