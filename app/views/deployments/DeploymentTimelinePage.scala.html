@@ -14,9 +14,7 @@
  * limitations under the License.
  *@
 
-@import helper._
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 @import uk.gov.hmrc.cataloguefrontend.deployments.{DeploymentGraphService, TimelinePalette}
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -26,7 +24,6 @@
 @import java.time.Instant
 
 @this()
-
 
 @(service: String,
   start   : Instant,

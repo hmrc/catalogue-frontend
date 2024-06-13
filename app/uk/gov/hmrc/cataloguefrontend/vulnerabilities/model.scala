@@ -141,7 +141,7 @@ object TotalVulnerabilityCount {
     ~ (__ \ "noActionRequired"      ).read[Int]
     ~ (__ \ "investigationOngoing"  ).read[Int]
     ~ (__ \ "uncurated"             ).read[Int]
-    )(apply _)
+    )(apply)
 }
 
 case class VulnerabilitiesTimelineCount(
@@ -153,5 +153,5 @@ object VulnerabilitiesTimelineCount {
   val reads: Reads[VulnerabilitiesTimelineCount] =
     ( (__ \ "weekBeginning").read[Instant]
     ~ (__ \ "count"        ).read[Int]
-    )(VulnerabilitiesTimelineCount.apply _)
+    )(VulnerabilitiesTimelineCount.apply)
 }

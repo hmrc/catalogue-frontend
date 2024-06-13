@@ -14,12 +14,12 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{ViewMessages, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, Oracle, OpenJDK, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(jdkVersions     : List[JDKVersion],
   flags           : Seq[SlugInfoFlag],

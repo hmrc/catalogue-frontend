@@ -87,7 +87,7 @@ class ConfluenceConnector @Inject()(
     ( (__ \ "title"                  ).read[String]
     ~ (__ \ "_links" \ "tinyui"      ).read[String]
     ~ (__ \ "_expandable" \ "history").read[String]
-    )(Result.apply _)
+    )(Result.apply)
 
     (__ \ "results").read[List[Result]]
   }

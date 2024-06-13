@@ -14,19 +14,17 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitySummary}
 @import views.html.helper.{FieldConstructor, select}
-@import views.html.vulnerabilities.VulnerabilityDetails
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(maybeSummaries: Option[Seq[VulnerabilitySummary]],
   teams    : Seq[GitHubTeam],
-  form     : Form[_]
+  form     : Form[?]
 )(implicit
   messages : Messages,
   request  : RequestHeader

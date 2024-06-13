@@ -150,7 +150,7 @@ object CostEstimationService {
     val reads: Reads[DeploymentSize] =
       ( (__ \ "slots"    ).read[Int]
       ~ (__ \ "instances").read[Int]
-      )(DeploymentSize.apply _)
+      )(DeploymentSize.apply)
   }
 
   final case class DeploymentConfig(

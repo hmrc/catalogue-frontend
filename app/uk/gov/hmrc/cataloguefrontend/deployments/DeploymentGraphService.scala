@@ -21,7 +21,6 @@ import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{DeploymentConfigEvent, ServiceConfigsConnector}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentTimelineEvent, ReleasesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.UpstreamErrorResponse.Upstream4xxResponse
 
 import java.time._
 import javax.inject.{Inject, Singleton}

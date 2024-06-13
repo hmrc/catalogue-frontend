@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
-import play.api.libs.json.{Format, Json, __}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.{Format, __}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.util.{Enum, WithAsString}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats

@@ -14,15 +14,15 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{BobbyRulesTrendController, ViewMessages, routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.{BobbyRulesTrendController, routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRule
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import helper._
 @import views.html.partials.form_global_errors
 
-@this(viewMessages: ViewMessages)
+@this()
 
-@( form    : Form[_]
+@( form    : Form[?]
  , allRules: Seq[BobbyRule]
  , flags   : List[SlugInfoFlag]
  , data    : Option[Map[SlugInfoFlag, BobbyRulesTrendController.GraphData]]

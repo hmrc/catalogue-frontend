@@ -14,22 +14,19 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{ViewMessages, routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
-@import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController
-@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-@import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
 @import views.html.helper.FieldConstructor
 @import views.html.partials.{TeamNamesPartial, form_global_errors}
 
 @this(
-  teamNamesPartial: TeamNamesPartial,
-  viewMessages    : ViewMessages
+  teamNamesPartial: TeamNamesPartial
 )
 
-@(form            : Form[_],
+@(form            : Form[?],
   teams           : Seq[TeamName],
   flags           : Seq[SlugInfoFlag],
   repoTypes       : Seq[RepoType],
@@ -195,7 +192,7 @@
                         @for(result <- searchResults) {
                             <tr>
                                 <td class="service"><a aria-label="Link to page info for @{result.repoName}" id="link-to-info-page-for-@{result.repoName}"
-                                href=@{if(result.repoType == Service) appRoutes.CatalogueController.service(result.repoName) else appRoutes.CatalogueController.repository(result.repoName) }>@result.repoName</a>
+                                href=@{if(result.repoType == RepoType.Service) appRoutes.CatalogueController.service(result.repoName) else appRoutes.CatalogueController.repository(result.repoName) }>@result.repoName</a>
                                 </td>
                                 <td>@result.repoVersion</td>
                                 <td class="teams">

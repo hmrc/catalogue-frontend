@@ -14,25 +14,24 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterGroup, ShutterStatusValue, ShutterState, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step1Form, ServiceNameAndContext}
 @import helper._
 @import partials.form_global_errors
 
-@this(viewMessages: ViewMessages)
+@this()
 
-@( form         : Form[Step1Form]
- , shutterType  : ShutterType
- , env          : Environment
- , shutterStates: Seq[ShutterState]
- , shutterGroups: Seq[ShutterGroup]
- , back         : Call
- )(implicit
-   request         : RequestHeader
- , messagesProvider: MessagesProvider
- )
+@(form         : Form[Step1Form]
+, shutterType  : ShutterType
+, env          : Environment
+, shutterStates: Seq[ShutterState]
+, shutterGroups: Seq[ShutterGroup]
+, back         : Call
+)(implicit
+  request         : RequestHeader
+, messagesProvider: MessagesProvider
+)
 
 @implicitField: FieldConstructor = @{ FieldConstructor(helper2.bootstrapCompatibleFieldConstructor.f) }
 

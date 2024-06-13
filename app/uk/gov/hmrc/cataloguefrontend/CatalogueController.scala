@@ -95,7 +95,7 @@ class CatalogueController @Inject() (
 
   private val logger = Logger(getClass)
 
-  private def notFound(implicit request: Request[_]) =
+  private def notFound(implicit request: Request[?]) =
     NotFound(error_404_template())
 
   val index: Action[AnyContent] =
@@ -132,7 +132,7 @@ class CatalogueController @Inject() (
       } yield result
     }
 
-  private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[CostEstimationService.Zone]] =
+  private def retrieveZone(serviceName: String)(implicit request: Request[?]): Future[Option[CostEstimationService.Zone]] =
     serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
       .map{deploymentConfigs =>
         val zones = deploymentConfigs.map(_.zone).distinct
@@ -146,7 +146,7 @@ class CatalogueController @Inject() (
     repositoryDetails      : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(implicit
-    request : Request[_]
+    request : Request[?]
   ): Future[Result] = {
     for {
       deployments               <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
@@ -355,7 +355,7 @@ class CatalogueController @Inject() (
   def renderLibrary(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[_]): Future[Result] =
+  )(implicit request: Request[?]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesAllVersions(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
@@ -379,9 +379,9 @@ class CatalogueController @Inject() (
   private def renderPrototype(
     repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-    form                   : Form[_]        = ChangePrototypePassword.form(),
+    form                   : Form[?]        = ChangePrototypePassword.form(),
     successMessage         : Option[String] = None
-  )(implicit request: Request[_]): Future[Html] =
+  )(implicit request: Request[?]): Future[Html] =
     for {
       urlIfLeaksFound       <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
       commenterReport       <- prCommenterConnector.report(repoDetails.name)
@@ -403,7 +403,7 @@ class CatalogueController @Inject() (
   private def renderTest(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[_]): Future[Result] =
+  )(implicit request: Request[?]): Future[Result] =
     for {
       jenkinsJobs       <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name)
       repoModules       <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name)
@@ -422,7 +422,7 @@ class CatalogueController @Inject() (
   private def renderOther(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[_]): Future[Result] =
+  )(implicit request: Request[?]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),

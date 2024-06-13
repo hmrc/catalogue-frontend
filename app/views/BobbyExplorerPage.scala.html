@@ -14,16 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, ViewMessages, routes => appRoutes}
-
+@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, BobbyRulesTrendController, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet, DependencyScope}
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
-@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
-@import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
-@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+@import uk.gov.hmrc.cataloguefrontend.util.{MarkdownLoader, UrlUtils}
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(rules: BobbyRulesView,
     counts: Map[(BobbyRule, SlugInfoFlag), Int]

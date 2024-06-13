@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import cats.data.EitherT
 import cats.implicits._
-import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import play.api.http.HttpEntity
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -39,7 +38,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class ServiceConfigsController @Inject()(
   override val mcc        : MessagesControllerComponents
 , override val auth       : FrontendAuthComponents
-, configuration           : Configuration
 , teamsAndReposConnector  : TeamsAndRepositoriesConnector
 , serviceConfigsService   : ServiceConfigsService
 , whatsRunningWhereService: WhatsRunningWhereService

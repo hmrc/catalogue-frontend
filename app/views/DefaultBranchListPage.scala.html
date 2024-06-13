@@ -14,14 +14,12 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import views.html.helper.{FieldConstructor, select}
 @import views.html.partials.TeamNamesPartial
 
 @this(
-  viewMessages    : ViewMessages,
   teamNamesPartial: TeamNamesPartial
 )
 
@@ -29,7 +27,7 @@
   teamNames      : Seq[TeamName],
   singleOwnership: Boolean,
   includeArchived: Boolean,
-  form           : Form[_]
+  form           : Form[?]
 )(implicit
   messages       : Messages,
   request        : RequestHeader
@@ -44,7 +42,7 @@
         <div class="alert alert-danger" role="alert">
             <ul class="list">
                 @form.errors.map { error =>
-                    <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+                    <li class="alert-danger"> @Messages(error.message, error.args*)</li>
                 }
             </ul>
         </div>

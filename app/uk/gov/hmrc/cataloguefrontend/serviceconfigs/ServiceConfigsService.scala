@@ -60,7 +60,7 @@ class ServiceConfigsService @Inject()(
             key -> (envMap + (e -> (values :+ ConfigSourceValue(cse.source, cse.sourceUrl, value))))
           }
         }
-      }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString): _*)) // sort by keys
+      }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString)*)) // sort by keys
 
   def removedConfig(
     serviceName : String,
@@ -348,7 +348,7 @@ object ServiceConfigsService {
       ( (__ \ "source"   ).read[String]
       ~ (__ \ "sourceUrl").readNullable[String]
       ~ (__ \ "entries"  ).read[Map[String, String]].map(_.map { case (k, v) => KeyName(k) -> v }.toMap)
-      )(ConfigSourceEntries.apply _)
+      )(ConfigSourceEntries.apply)
   }
 
   case class ConfigSourceValue(
@@ -373,7 +373,7 @@ object ServiceConfigsService {
       ( (__ \ "source"   ).read[String]
       ~ (__ \ "sourceUrl").readNullable[String]
       ~ (__ \ "value"    ).read[String]
-      )(ConfigSourceValue.apply _)
+      )(ConfigSourceValue.apply)
   }
 
   case class ServiceRelationships(
@@ -385,7 +385,7 @@ object ServiceConfigsService {
     val reads: Reads[ServiceRelationships] =
       ( (__ \ "inboundServices" ).read[Seq[String]]
       ~ (__ \ "outboundServices").read[Seq[String]]
-      )(ServiceRelationships.apply _)
+      )(ServiceRelationships.apply)
   }
 
   case class ServiceRelationship(
@@ -456,7 +456,7 @@ object ServiceConfigsService {
       ( (__ \ "serviceName"  ).read[String].map(ServiceName.apply)
       ~ (__ \ "key"          ).read[String].map(KeyName.apply)
       ~ (__ \ "environments" ).read[Map[Environment, ConfigSourceValue]]
-      )(AppliedConfig.apply _)
+      )(AppliedConfig.apply)
     }
   }
 
@@ -477,7 +477,7 @@ object ServiceConfigsService {
       ~ (__ \ "key"        ).read[String].map(KeyName.apply)
       ~ (__ \ "value"      ).read[ConfigSourceValue]
       ~ (__ \ "warning"    ).read[String]
-      )(ConfigWarning.apply _)
+      )(ConfigWarning.apply)
     }
   }
 }

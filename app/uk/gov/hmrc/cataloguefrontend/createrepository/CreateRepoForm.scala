@@ -62,12 +62,12 @@ object CreateServiceRepoForm {
   val form: Form[CreateServiceRepoForm] =
     Form(
       mapping(
-        "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None) :_*),
+        "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> boolean,
         "teamName"       -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
         "repoType"       -> nonEmptyText.verifying(repoTypeConstraint),
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
-        .verifying(repoTypeAndNameConstraints :_*)
+        .verifying(repoTypeAndNameConstraints*)
     )
 }
 
@@ -87,12 +87,12 @@ object CreateTestRepoForm {
   val form: Form[CreateServiceRepoForm] =
     Form(
       mapping(
-        "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None): _*),
+        "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> boolean,
         "teamName"       -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
         "repoType"       -> nonEmptyText.verifying(repoTestTypeConstraint),
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
-        .verifying(repoTypeAndNameConstraints: _*)
+        .verifying(repoTypeAndNameConstraints*)
     )
 }
 
@@ -129,10 +129,10 @@ object CreatePrototypeRepoForm {
   val form: Form[CreatePrototypeRepoForm] =
     Form(
       mapping(
-        "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype")) :_*),
+        "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype"))*),
         "password"            -> nonEmptyText.verifying(passwordConstraint),
         "teamName"            -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
-        "slackChannels"       -> text.verifying(slackChannelConstraint :_*),
+        "slackChannels"       -> text.verifying(slackChannelConstraint*),
       )(CreatePrototypeRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
     )
 }

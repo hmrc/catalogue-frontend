@@ -21,7 +21,7 @@
 @(
   services    : Seq[String],
   events      : Seq[ShutterStateChangeEvent],
-  form        : Form[_],
+  form        : Form[?],
   environments: List[Environment]
 )(implicit
   request : RequestHeader

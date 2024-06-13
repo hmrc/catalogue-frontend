@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{__, Format, Reads}
-
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
 case class Username(value: String) extends AnyVal // TODO asString
@@ -76,7 +75,7 @@ object RepositoryModules {
     ~ (__ \ "version"          ).readNullable[Version](Version.format)
     ~ (__ \ "dependenciesBuild").read[Seq[Dependency]]
     ~ (__ \ "modules"          ).read[Seq[RepositoryModule]]
-    )(RepositoryModules.apply _)
+    )(RepositoryModules.apply)
   }
 }
 
@@ -106,6 +105,6 @@ object RepositoryModule {
     ~ (__ \ "crossScalaVersions"  ).read[Seq[Version]]
     ~ (__ \ "activeBobbyRules"    ).read[Seq[BobbyRuleViolation]]
     ~ (__ \ "pendingBobbyRules"   ).read[Seq[BobbyRuleViolation]]
-    )(RepositoryModule.apply _)
+    )(RepositoryModule.apply)
   }
 }

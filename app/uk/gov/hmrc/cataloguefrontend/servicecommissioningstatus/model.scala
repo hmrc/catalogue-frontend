@@ -78,7 +78,7 @@ object Check {
       ~ (__ \ "simpleCheck").read[Result]
       ~ (__ \ "helpText"   ).read[String]
       ~ (__ \ "linkToDocs" ).readNullable[String]
-      ) (SimpleCheck.apply _)
+      ) (SimpleCheck.apply)
 
     implicit val mapFormat: Reads[Map[Environment, Result]] =
       Reads
@@ -92,7 +92,7 @@ object Check {
       ~ (__ \ "environmentCheck").read[Map[Environment, Result]]
       ~ (__ \ "helpText"        ).read[String]
       ~ (__ \ "linkToDocs"      ).readNullable[String]
-      ) (EnvCheck.apply _)
+      ) (EnvCheck.apply)
 
     def reads(json: JsValue) =
       json
@@ -118,7 +118,7 @@ object CachedServiceCheck {
     ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "checks"         ).read[Seq[Check]]
     ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]
-    )(CachedServiceCheck.apply _)
+    )(CachedServiceCheck.apply)
   }
 }
 
@@ -143,7 +143,7 @@ object Lifecycle {
     ( (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "username"       ).readNullable[String]
     ~ (__ \ "createDate"     ).readNullable[Instant]
-    )(Lifecycle.apply _)
+    )(Lifecycle.apply)
 }
 
 sealed trait LifecycleStatus { val asString: String; val displayName: String }

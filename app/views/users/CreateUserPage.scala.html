@@ -14,14 +14,12 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.users.Organisation
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.users.Organisation
 
-@this(viewMessages: ViewMessages)
+@this()
 
-
-@(form: Form[_],
+@(form: Form[?],
   teamNames       : Seq[TeamName],
   organisations   : Seq[Organisation],
   isServiceAccount: Boolean

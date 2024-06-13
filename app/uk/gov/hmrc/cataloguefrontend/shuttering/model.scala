@@ -130,7 +130,6 @@ object ShutterStatus {
                   useDefaultOutagePage = (json \ "useDefaultOutagePage").as[Boolean]
                 )
               )
-            case s => JsError(__, s"Invalid ShutterStatus '$s'")
           }
       }
 
@@ -172,7 +171,7 @@ object ShutterState {
     ~ (__ \ "type"       ).read[ShutterType]
     ~ (__ \ "environment").read[Environment]
     ~ (__ \ "status"     ).read[ShutterStatus]
-    )(ShutterState.apply _)
+    )(ShutterState.apply)
   }
 }
 
@@ -351,7 +350,7 @@ object ShutterEvent {
     ~ (__ \ "type"     ).read[EventType]
     ~ (__ \ "type"     ).read[EventType]
                         .flatMap[EventData](et => (__ \ "data").read(EventData.reads(et)))
-    )(ShutterEvent.apply _)
+    )(ShutterEvent.apply)
   }
 }
 
@@ -376,7 +375,7 @@ object OutagePageWarning {
   val reads: Reads[OutagePageWarning] =
     ( (__ \ "type"   ).read[String]
     ~ (__ \ "message").read[String]
-    )(OutagePageWarning.apply _)
+    )(OutagePageWarning.apply)
 }
 
 case class OutagePage(
@@ -401,7 +400,7 @@ object OutagePage {
     ~ (__ \ "outagePageURL"    ).read[String]
     ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
     ~ (__ \ "templatedElements").read[List[TemplatedContent]]
-    )(OutagePage.apply _)
+    )(OutagePage.apply)
   }
 }
 
@@ -423,5 +422,5 @@ object FrontendRouteWarning {
     ~ (__ \ "message"             ).read[String]
     ~ (__ \ "consequence"         ).read[String]
     ~ (__ \ "ruleConfigurationURL").read[String]
-    )(FrontendRouteWarning.apply _)
+    )(FrontendRouteWarning.apply)
 }

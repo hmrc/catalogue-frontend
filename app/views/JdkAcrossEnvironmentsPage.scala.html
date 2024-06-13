@@ -14,12 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{ViewMessages, routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, Oracle, OpenJDK, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import play.twirl.api.Html
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(envdata         : List[JDKUsageByEnv],
   jdks            : List[JDKVersion],

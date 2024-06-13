@@ -28,7 +28,7 @@
   teams             : Seq[GitHubTeam],
   userProfileBaseUrl: Option[String],
   pagination        : Pagination,
-  form              : Form[_]
+  form              : Form[?]
 )(implicit
   messages          : Messages,
   request           : RequestHeader
@@ -45,7 +45,7 @@
       <div class="alert alert-danger" role="alert">
         <ul class="list">
             @form.errors.map { error =>
-              <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+              <li class="alert-danger"> @Messages(error.message, error.args*)</li>
             }
         </ul>
       </div>

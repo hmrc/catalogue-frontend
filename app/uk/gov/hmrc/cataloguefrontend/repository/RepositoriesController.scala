@@ -26,7 +26,6 @@ import uk.gov.hmrc.cataloguefrontend.repository
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.RepositoriesListPage
-import views.html.partials.RepoSearchResultsPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -36,7 +35,6 @@ class RepositoriesController @Inject() (
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   override val mcc             : MessagesControllerComponents,
   repositoriesListPage         : RepositoriesListPage,
-  repositoriesSearchResultsPage: RepoSearchResultsPage,
   override val auth            : FrontendAuthComponents
  )(implicit
    override val ec: ExecutionContext

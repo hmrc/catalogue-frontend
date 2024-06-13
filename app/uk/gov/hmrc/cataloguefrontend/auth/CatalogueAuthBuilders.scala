@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.auth
 
-import scala.concurrent.{ExecutionContext, Future}
+import play.api.mvc.{ActionBuilder, AnyContent, BodyParser, Call, MessagesControllerComponents, MessagesRequest, Result, Request}
 import uk.gov.hmrc.internalauth.client.{IAAction, FrontendAuthComponents, Predicate, ResourceType, ResourceLocation, Resource}
 import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
-import play.api.mvc.{ActionBuilder, AnyContent, BodyParser, Call, MessagesControllerComponents, MessagesRequest, Result, Request}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait CatalogueAuthBuilders {
 

@@ -14,12 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{SBTUsageByEnv, SBTVersion}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{SBTUsageByEnv, SBTVersion}
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(envdata     : List[SBTUsageByEnv],
   sbts        : List[SBTVersion],

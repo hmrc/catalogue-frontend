@@ -16,16 +16,14 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
-@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
-@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
-@import views.html.partials.form_global_errors
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{PrototypeDetails, PrototypeStatus}
 
 @this()
 
 @(repo                  : GitRepository,
   prototypeDetails      : PrototypeDetails,
   hasPasswordChangeAuth : Boolean,
-  form                  : Form[_]
+  form                  : Form[?]
 )(implicit
   request               : RequestHeader,
   messages              : Messages

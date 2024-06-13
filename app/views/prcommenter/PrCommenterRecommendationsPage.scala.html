@@ -15,7 +15,6 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
@@ -23,11 +22,10 @@
 @import views.html.partials.TeamNamesPartial
 
 @this(
-  viewMessages    : ViewMessages,
   teamNamesPartial: TeamNamesPartial
 )
 
-@(form        : Form[_],
+@(form        : Form[?],
   teams       : Seq[GitHubTeam],
   reports     : Seq[PrCommenterReport],
   commentTypes: Set[String]

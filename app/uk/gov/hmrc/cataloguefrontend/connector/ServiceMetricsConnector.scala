@@ -68,7 +68,7 @@ object ServiceMetricsConnector {
       ( (__ \ "service"    ).read[String]
       ~ (__ \ "environment").read[Environment](Environment.format)
       ~ (__ \ "queryTypes" ).read[Seq[String]]
-      )(NonPerformantQueries.apply _)
+      )(NonPerformantQueries.apply)
   }
 
   case class MongoCollectionSize(
@@ -89,7 +89,7 @@ object ServiceMetricsConnector {
       ~ (__ \ "date"       ).read[LocalDate]
       ~ (__ \ "environment").read[Environment]
       ~ (__ \ "service"    ).readNullable[String]
-      )(apply _)
+      )(apply)
     }
   }
 }

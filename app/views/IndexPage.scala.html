@@ -15,7 +15,6 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.ConfluenceConnector
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
@@ -26,7 +25,8 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => shutterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 
-@this(viewMessages: ViewMessages)
+@this()
+
 @(blogs : List[ConfluenceConnector.Blog]
 , allBlogsUrl: String
 )(implicit

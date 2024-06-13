@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import java.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
+
+import java.time.LocalDate
 
 
 case class BobbyRule(
@@ -42,7 +43,7 @@ object BobbyRule {
     ~ (__ \ "reason"       ).read[String]
     ~ (__ \ "from"         ).read[LocalDate]
     ~(__ \ "exemptProjects").read[Seq[String]]
-    )(BobbyRule.apply _)
+    )(BobbyRule.apply)
   }
 }
 

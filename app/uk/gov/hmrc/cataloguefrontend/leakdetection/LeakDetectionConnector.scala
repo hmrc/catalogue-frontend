@@ -175,7 +175,7 @@ object LeakDetectionSummary {
     implicit val ldrsr: Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
     ( (__ \ "rule" ).read[LeakDetectionRule]
     ~ (__ \ "leaks").read[Seq[LeakDetectionRepositorySummary]]
-    )(LeakDetectionSummary.apply _)
+    )(LeakDetectionSummary.apply)
   }
 }
 
@@ -203,7 +203,7 @@ object LeakDetectionRule {
     ~ (__ \ "ignoredContent"   ).read[List[String]]
     ~ (__ \ "priority"         ).read[Priority]
     ~ (__ \ "draft"            ).read[Boolean]
-    )(LeakDetectionRule.apply _)
+    )(LeakDetectionRule.apply)
   }
 }
 
@@ -232,7 +232,7 @@ object LeakDetectionRepositorySummary {
     ~ (__ \ "excludedCount"  ).read[Int]
     ~ (__ \ "unresolvedCount").read[Int]
     ~ (__ \ "branchSummary"  ).readNullable[Seq[LeakDetectionBranchSummary]]
-    )(LeakDetectionRepositorySummary.apply _)
+    )(LeakDetectionRepositorySummary.apply)
   }
 }
 
@@ -288,7 +288,7 @@ object LeakDetectionReport {
     ~ (__ \ "rulesViolated"   ).read[Map[String, Int]]
     ~ (__ \ "exclusions"      ).read[Map[String, Int]]
     ~ (__ \ "unusedExemptions").read[Seq[UnusedExemption]]
-    )(LeakDetectionReport.apply _)
+    )(LeakDetectionReport.apply)
   }
 }
 
@@ -319,7 +319,7 @@ object LeakDetectionLeak {
     ~ (__ \ "matches"    ).read[List[Match]]
     ~ (__ \ "priority"   ).read[Priority]
     ~ (__ \ "isExcluded" ).read[Boolean]
-    )(LeakDetectionLeak.apply _)
+    )(LeakDetectionLeak.apply)
   }
 }
 
@@ -332,7 +332,7 @@ object Match {
   val reads: Reads[Match] =
     ( (__ \ "start").read[Int]
     ~ (__ \ "end"  ).read[Int]
-    )(Match.apply _)
+    )(Match.apply)
 }
 
 final case class LeakDetectionWarning(message: String)

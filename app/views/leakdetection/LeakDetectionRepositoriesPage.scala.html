@@ -15,17 +15,16 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionRepositorySummary, routes => appRoutes}
 @import views.html.helper.{FieldConstructor, select}
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(rules            : Seq[String],
   summaries        : Seq[LeakDetectionRepositorySummary],
   teams            : Seq[GitHubTeam],
-  form             : Form[_],
+  form             : Form[?],
   includeWarnings  : Boolean,
   includeExemptions: Boolean,
   includeViolations: Boolean,

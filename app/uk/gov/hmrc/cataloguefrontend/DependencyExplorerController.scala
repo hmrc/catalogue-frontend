@@ -247,7 +247,7 @@ object DependencyExplorerController {
       else Seq(toRow(serviceDependency, ""))
     }
 
-  def groupArtefactFromForm(form: Form[_]): Option[String] =
+  def groupArtefactFromForm(form: Form[?]): Option[String] =
     for {
       g <- form("group").value.filter(_.nonEmpty)
       a <- form("artefact").value.filter(_.nonEmpty)

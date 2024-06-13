@@ -15,13 +15,10 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeaksByRule
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionWarning
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionReport
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionLeaksByRule, LeakDetectionReport, LeakDetectionWarning}
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(report           : LeakDetectionReport,
   exemptions       : Map[String, Int],

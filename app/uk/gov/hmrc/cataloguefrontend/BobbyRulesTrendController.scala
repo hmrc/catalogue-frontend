@@ -27,7 +27,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
-import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.BobbyRulesTrendPage
@@ -38,7 +37,6 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class BobbyRulesTrendController @Inject() (
   override val mcc : MessagesControllerComponents,
-  service          : DependenciesService,
   configConnector  : ServiceConfigsConnector,
   serviceDeps      : ServiceDependenciesConnector,
   page             : BobbyRulesTrendPage,

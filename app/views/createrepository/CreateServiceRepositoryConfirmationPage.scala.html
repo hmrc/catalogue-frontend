@@ -14,10 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commRoutes }
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commRoutes}
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(repoName: String)(implicit request: RequestHeader)
 
@@ -27,7 +26,6 @@
         <h1 class="page-heading">Creating service repository: @repoName</h1>
 
         <p>The service repository @repoName is being added to the MDTP catalogue. This can take around 30 minutes to appear and for all catalogue features to be available.</p>
-
     </section>
 
     <section class="section-wrapper">

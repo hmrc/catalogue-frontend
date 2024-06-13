@@ -14,18 +14,17 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterWizardController, ShutterType}
 
-@this(viewMessages: ViewMessages)
+@this()
 
-@( shutterType: ShutterType
-, env          : Environment
-, step1Out     : ShutterWizardController.Step1Out
-, serviceLinks : Map[String, Option[String]]
+@(shutterType : ShutterType
+, env         : Environment
+, step1Out    : ShutterWizardController.Step1Out
+, serviceLinks: Map[String, Option[String]]
 )(implicit
-  request      : RequestHeader
+  request     : RequestHeader
 )
 
 @standard_layout(s"Shutter ${shutterType.asString.capitalize}", active = "shuttering") {

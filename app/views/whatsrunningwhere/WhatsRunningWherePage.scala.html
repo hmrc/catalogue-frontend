@@ -14,18 +14,17 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, ServiceDeploymentConfigSummary, WhatsRunningWhere, ViewMode}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @( environments       : Seq[Environment]
  , whatsRunning       : Seq[WhatsRunningWhere]
  , selectedProfileType: ProfileType
  , profileNames       : Seq[ProfileName]
- , form               : Form[_]
+ , form               : Form[?]
  , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
  , maxMemory          : Double
  , viewMode           : ViewMode
@@ -43,7 +42,7 @@
         <div class="alert alert-danger" role="alert">
             <ul class="list">
             @form.errors.map { error =>
-                <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+                <li class="alert-danger"> @Messages(error.message, error.args*)</li>
             }
             </ul>
         </div>

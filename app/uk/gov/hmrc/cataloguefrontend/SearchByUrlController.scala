@@ -40,7 +40,7 @@ class SearchByUrlController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  private val serviceNameToUrl = routes.CatalogueController.service _
+  private val serviceNameToUrl = routes.CatalogueController.service
 
   def searchLanding: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>

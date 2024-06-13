@@ -16,17 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import java.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.data.format.Formatter
 import play.api.data.FormError
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
+import java.time.LocalDate
+
 sealed trait VersionState
 object VersionState {
   case object NewVersionAvailable                             extends VersionState
-  case object Invalid                                         extends VersionState
   case class BobbyRuleViolated(violation: BobbyRuleViolation) extends VersionState
   case class BobbyRulePending(violation: BobbyRuleViolation)  extends VersionState
 }
@@ -47,7 +47,7 @@ object BobbyRuleViolation {
     ( (__ \ "reason").read[String]
     ~ (__ \ "range" ).read[BobbyVersionRange]
     ~ (__ \ "from"  ).read[LocalDate]
-    )(BobbyRuleViolation.apply _)
+    )(BobbyRuleViolation.apply)
   }
 
   implicit val ordering: Ordering[BobbyRuleViolation] =
@@ -109,11 +109,9 @@ case class Dependency(
       Some(VersionState.BobbyRulePending(pendingBobbyRuleViolations.sorted.head))
     else
       latestVersion.fold[Option[VersionState]](None){ latestVersion =>
-        Version.isNewVersionAvailable(currentVersion, latestVersion) match {
-          case Some(true)  => Some(VersionState.NewVersionAvailable)
-          case Some(false) => None
-          case None        => Some(VersionState.Invalid)
-        }
+        if Version.isNewVersionAvailable(currentVersion, latestVersion)
+          then Some(VersionState.NewVersionAvailable)
+        else None
       }
 
   def hasBobbyViolations: Boolean =
@@ -147,7 +145,7 @@ object Dependency {
     ~ (__ \ "bobbyRuleViolations").read[Seq[BobbyRuleViolation]]
     ~ (__ \ "importBy"           ).readNullable[ImportedBy]
     ~ (__ \ "scope"              ).read[DependencyScope]
-    )(Dependency.apply _)
+    )(Dependency.apply)
   }
 }
 
@@ -174,7 +172,7 @@ object Dependencies {
     ~ (__ \ "libraryDependencies"   ).read[Seq[Dependency]]
     ~ (__ \ "sbtPluginsDependencies").read[Seq[Dependency]]
     ~ (__ \ "otherDependencies"     ).read[Seq[Dependency]]
-    )(Dependencies.apply _)
+    )(Dependencies.apply)
   }
 }
 
@@ -299,17 +297,12 @@ object Version {
       x.compare(y)
   }
 
-  def isNewVersionAvailable(currentVersion: Version, latestVersion: Version): Option[Boolean] =
+  def isNewVersionAvailable(currentVersion: Version, latestVersion: Version): Boolean =
     latestVersion.diff(currentVersion) match {
-      case (major, minor, patch)
-          if (major >  0                           ) ||
-             (major == 0 && minor >  0             ) ||
-             (major == 0 && minor == 0 && patch > 0)
-        => Some(true)
-      case (major, minor, patch)
-        => Some(false)
-      case _
-        => None
+      case (major, minor, patch) =>
+        (major > 0)
+          || (major == 0 && minor > 0)
+          || (major == 0 && minor == 0 && patch > 0)
     }
 
   def apply(s: String): Version = {
@@ -380,7 +373,7 @@ object ServiceWithDependency {
     ~ (__ \ "depArtefact").read[String]
     ~ (__ \ "depVersion" ).read[Version]
     ~ (__ \ "scopes"     ).read[Set[DependencyScope]]
-    )(ServiceWithDependency.apply _)
+    )(ServiceWithDependency.apply)
   }
 }
 

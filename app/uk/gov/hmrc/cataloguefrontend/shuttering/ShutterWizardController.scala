@@ -28,8 +28,6 @@ import play.twirl.api.Html
 
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.auth.AuthController
-import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
@@ -52,8 +50,6 @@ class ShutterWizardController @Inject() (
   page3               : Page3,
   page4               : Page4,
   override val auth   : FrontendAuthComponents,
-  catalogueConfig     : CatalogueConfig,
-  routeRulesConnector : RouteRulesConnector,
   mongoComponent      : MongoComponent,
   servicesConfig      : ServicesConfig,
   timestampSupport    : TimestampSupport
@@ -527,22 +523,22 @@ class ShutterWizardController @Inject() (
 
   // -- Session -------------------------
 
-  private def getStep0Out(implicit request: Request[_], ec: ExecutionContext) =
+  private def getStep0Out(implicit request: Request[?], ec: ExecutionContext) =
     EitherT.fromOptionF[Future, Result, Step0Out](
       getFromSession(step0Key),
       Redirect(appRoutes.ShutterOverviewController.allStates(ShutterType.Frontend))
     )
 
-  private def getStep1Out(implicit request: Request[_], ec: ExecutionContext) =
+  private def getStep1Out(implicit request: Request[?], ec: ExecutionContext) =
     EitherT.fromOptionF[Future, Result, Step1Out](
       getFromSession(step1Key),
       Redirect(appRoutes.ShutterWizardController.step1Post)
     )
 
-  private def getFromSession[A : Reads](dataKey: DataKey[A])(implicit request: Request[_]): Future[Option[A]] =
+  private def getFromSession[A : Reads](dataKey: DataKey[A])(implicit request: Request[?]): Future[Option[A]] =
     cacheRepo.getFromSession(dataKey)
 
-  private def putSession[A : Writes](dataKey: DataKey[A], data: A)(implicit request: Request[_]): Future[(String, String)] =
+  private def putSession[A : Writes](dataKey: DataKey[A], data: A)(implicit request: Request[?]): Future[(String, String)] =
     cacheRepo.putSession(dataKey, data)
 }
 

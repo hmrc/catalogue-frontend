@@ -14,12 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsService, routes => serviceConfigsRoutes }
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsService, routes => serviceConfigsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(serviceName: String,
   configByKey     : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ConfigEnvironment, Seq[(ServiceConfigsService.ConfigSourceValue, Boolean)]]],

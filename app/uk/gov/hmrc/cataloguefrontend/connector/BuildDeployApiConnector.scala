@@ -220,7 +220,7 @@ object BuildDeployApiConnector {
     val reads: Reads[BuildDeployResponse] =
       ( (__ \ "message").read[String]
       ~ (__ \ "details").readWithDefault[JsValue](JsNull)
-      )(BuildDeployResponse.apply _)
+      )(BuildDeployResponse.apply)
   }
 
   final case class AsyncRequestId(request: JsValue)
@@ -267,7 +267,7 @@ object BuildDeployApiConnector {
       implicit val psR: Reads[PrototypeStatus] = PrototypeStatus.reads
       ( (__ \ "prototypeUrl").readNullable[String]
       ~ (__ \ "status").read[PrototypeStatus]
-      )(PrototypeDetails.apply _)
+      )(PrototypeDetails.apply)
     }
   }
 

@@ -84,12 +84,12 @@ object JsonCodecs {
       ( (__ \ "repoName").read[String]
       ~ (__ \ "fileName").read[String]
       ~ (__ \ "commitId").read[String]
-      )(WhatsRunningWhereConfig.apply _)
+      )(WhatsRunningWhereConfig.apply)
 
     ( (__ \ "environment"  ).read[Environment]
     ~ (__ \ "versionNumber").read[Version]
     ~ (__ \ "config"       ).read[List[WhatsRunningWhereConfig]]
-    )(WhatsRunningWhereVersion.apply _)
+    )(WhatsRunningWhereVersion.apply)
   }
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
@@ -97,7 +97,7 @@ object JsonCodecs {
     implicit val wrwvf = whatsRunningWhereVersionReads
     ( (__ \ "applicationName").read[ServiceName]
     ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
-    )(WhatsRunningWhere.apply _)
+    )(WhatsRunningWhere.apply)
   }
 
   val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {
@@ -156,7 +156,7 @@ object JsonCodecs {
     ~ (__ \ "teams"      ).read[Seq[TeamName]]
     ~ (__ \ "time"       ).read[TimeSeen]
     ~ (__ \ "username"   ).read[Username]
-    )(DeploymentHistory.apply _)
+    )(DeploymentHistory.apply)
   }
 
   val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] = {
@@ -171,7 +171,7 @@ object JsonCodecs {
     ~ (__ \ "displayEnd"   ).readNullable[Instant]
     ~ (__ \ "configChanged").readNullable[Boolean]
     ~ (__ \ "configId"     ).readNullable[String]
-    )(DeploymentTimelineEvent.apply _ )
+    )(DeploymentTimelineEvent.apply)
   }
 }
 

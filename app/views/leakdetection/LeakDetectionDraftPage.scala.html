@@ -15,16 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionReport
-@import views.html.helper.{FieldConstructor, select}
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionRule
+@import views.html.helper.{FieldConstructor, select}
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(rules     : Seq[LeakDetectionRule],
   summaries : Seq[LeakDetectionReport],
-  form      : Form[_]
+  form      : Form[?]
 )(implicit
   messages : Messages,
   request  : RequestHeader

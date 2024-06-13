@@ -17,9 +17,8 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{routes, ShutterCause, ShutterStateChangeEvent, ShutterState, ShutterStatusValue, ShutterType}
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @( shutterStates : Map[Environment, Seq[(ShutterState, Option[ShutterStateChangeEvent])]]
  , shutterType   : ShutterType

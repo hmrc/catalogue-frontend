@@ -96,7 +96,7 @@ object Breakdown {
     ( (__ \ "points"     ).read[Int]
     ~ (__ \ "description").read[String]
     ~ (__ \ "href"       ).readNullable[String]
-    )(Breakdown.apply _)
+    )(Breakdown.apply)
 }
 
 case class WeightedMetric(
@@ -112,7 +112,7 @@ object WeightedMetric {
     ( (__ \ "metricType").read[MetricType]
     ~ (__ \ "score"     ).read[Int]
     ~ (__ \ "breakdown" ).read[Seq[Breakdown]]
-    )(WeightedMetric.apply _)
+    )(WeightedMetric.apply)
   }
 }
 
@@ -131,7 +131,7 @@ object Indicator {
     ~ (__ \ "repoType"       ).read[RepoType]
     ~ (__ \ "overallScore"   ).read[Int]
     ~ (__ \ "weightedMetrics").read[Seq[WeightedMetric]]
-    )(Indicator.apply _)
+    )(Indicator.apply)
   }
 }
 

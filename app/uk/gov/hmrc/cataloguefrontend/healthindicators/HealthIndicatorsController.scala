@@ -136,7 +136,6 @@ object RepoType {
         case Test      => JsString("Test")
         case Other     => JsString("Other")
         case AllTypes  => JsString("All Types")
-        case s         => JsString(s"$s")
       }
   }
   def parse(s: String): Either[String, RepoType] =

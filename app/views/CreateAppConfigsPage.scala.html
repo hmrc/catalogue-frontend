@@ -14,15 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import views.html.partials.{form_global_errors, form_fields_warnings}
 @import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.connector.Tag
 
-@this(viewMessages: ViewMessages)
+@this()
 
-@(form: Form[_],
+@(form: Form[?],
   serviceName  : String,
   serviceType  : ServiceType,
   isApi        : Boolean,
@@ -59,7 +58,7 @@
             <input class="form-control" type="text" id="serviceType" name="serviceType" value="@serviceType @if(isApi) { (@Tag.Api.displayString) }" disabled readonly="true">
           <span class="text-muted">
             Service type that was selected when creating the repository - if incorrect please contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<i class="glyphicon glyphicon-new-window"></i></a>
-          </span> 
+          </span>
         </div>
       </div>
 

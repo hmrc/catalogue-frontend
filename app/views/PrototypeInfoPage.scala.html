@@ -18,22 +18,21 @@
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
-@import play.twirl.api.Html
 @import partials.{PrototypeDetailsPartial, ManagePrototypePartial}
 @import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword
 @import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
 
 @this(
-prototypeDetailsPartial: PrototypeDetailsPartial,
-managePrototypePartial : ManagePrototypePartial,
-viewMessages           : ViewMessages
+  prototypeDetailsPartial: PrototypeDetailsPartial,
+  managePrototypePartial : ManagePrototypePartial,
+  viewMessages           : ViewMessages
 )
 
 @(prototype              : GitRepository,
   linkToLeakDetection    : Option[String],
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   hasPasswordChangeAuth  : ChangePrototypePassword.HasAuthorisation,
-  form                   : Form[_],
+  form                   : Form[?],
   successMessage         : Option[String],
   commenterReport        : Option[PrCommenterReport],
   prototypeDetails       : PrototypeDetails
