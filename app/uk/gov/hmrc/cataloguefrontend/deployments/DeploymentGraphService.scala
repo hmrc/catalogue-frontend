@@ -41,7 +41,7 @@ class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector, se
                                 case (env, data) => env -> data
                               }.toMap
       dataSeq              =  dataWithPlaceholders.values.flatten.toSeq.sortBy(_.env)
-      deploymentConfigSeq  <- serviceConfigsConnector.deploymentEvents(service, start, end)
+      deploymentConfigSeq  <- serviceConfigsConnector.deploymentEvents(service, start, end).recover { case Upstream4xxResponse(_) => Seq.empty }
     } yield updateTimelineEventsWithConfig(dataSeq, deploymentConfigSeq)
   }
 
