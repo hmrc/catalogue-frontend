@@ -84,7 +84,7 @@ class DeploymentTimelineControllerSpec
       when(mockedServiceDependenciesConnector.getSlugInfo(any, any)(any))
         .thenReturn(Future.successful(None))
 
-      val response = controller.graph("foo", start, end)(FakeRequest(GET, "/deployment-timeline").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.graph(Some("foo"), start, end)(FakeRequest(GET, "/deployment-timeline").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
     }
   }

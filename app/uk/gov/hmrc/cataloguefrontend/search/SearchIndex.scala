@@ -98,7 +98,7 @@ class SearchIndex @Inject()(
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
                             .flatMap(r => List(SearchTerm("deploy",              r.name, depRoutes.DeployServiceController.step1(Some(r.name)).url),
                                                SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(r.name).url ),
-                                               SearchTerm("timeline",            r.name, depRoutes.DeploymentTimelineController.graph(r.name).url),
+                                               SearchTerm("timeline",            r.name, depRoutes.DeploymentTimelineController.graph(Some(r.name)).url),
                                                SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(r.name).url)
                                           )
                                     )
