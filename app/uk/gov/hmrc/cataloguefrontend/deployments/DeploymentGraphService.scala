@@ -52,14 +52,11 @@ class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector, se
     val configEventMap: Map[String, DeploymentConfigEvent] = configEvents.map(event => event.deploymentId -> event).toMap
 
     timelineEvents.map { timelineEvent =>
-      configEventMap.get(timelineEvent.deploymentId) match {
-        case Some(configEvent) =>
-          timelineEvent.copy(
-            configChanged = configEvent.configChanged,
-            configId = configEvent.configId
-          )
-        case None =>
-          timelineEvent
+      configEventMap.get(timelineEvent.deploymentId).fold(timelineEvent) { configEvent =>
+        timelineEvent.copy(
+          configChanged = configEvent.configChanged,
+          configId = configEvent.configId
+        )
       }
     }
   }
