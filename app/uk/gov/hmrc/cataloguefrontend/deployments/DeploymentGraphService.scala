@@ -35,7 +35,7 @@ class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector, se
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     for {
-      data                 <- releasesConnector.deploymentTimeline(service, start, end).recover { case Upstream4xxResponse(_) => Map.empty }
+      data                 <- releasesConnector.deploymentTimeline(service, start, end)
       dataWithPlaceholders =  data.toSeq.map {
                                 case (env, Nil)  => env -> noEventsPlaceholder(env, start,end)
                                 case (env, data) => env -> data
