@@ -21,6 +21,7 @@ import play.api.libs.json._
 import play.api.data.format.Formatter
 import play.api.data.FormError
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.LocalDate
 
@@ -387,42 +388,18 @@ object GroupArtefacts {
     )(GroupArtefacts.apply, ga => Tuple.fromProductTyped(ga))
 }
 
-enum DependencyScope(val asString: String):
+enum DependencyScope(val asString: String) extends FromString:
   case Compile  extends DependencyScope("compile" )
   case Provided extends DependencyScope("provided")
   case Test     extends DependencyScope("test"    )
   case It       extends DependencyScope("it"      )
   case Build    extends DependencyScope("build"   )
 
-  def displayString = asString match {
-    case "it"  => "Integration Test"
-    case other => other.capitalize
-  }
-
-
-object DependencyScope {
-  val valuesAsSeq: Seq[DependencyScope] =
-    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
-
-  def parse(s: String): Either[String, DependencyScope] =
-    values
-      .find(_.asString == s)
-      .toRight(s"Invalid dependency scope - should be one of: ${values.map(_.asString).mkString(", ")}")
-
-  private def toResult[A](e: Either[String, A]): JsResult[A] =
-    e match {
-      case Right(r) => JsSuccess(r)
-      case Left(l)  => JsError(__, l)
+  def displayString: String =
+    asString match {
+      case "it"  => "Integration Test"
+      case other => other.capitalize
     }
 
-  lazy val format: Format[DependencyScope] =
-    Format(
-      _.validate[String].flatMap(s => toResult(DependencyScope.parse(s))),
-      f => JsString(f.asString)
-    )
 
-  implicit val dependencyScopeOrdering: Ordering[DependencyScope] = new Ordering[DependencyScope] {
-    def compare(x: DependencyScope, y: DependencyScope): Int =
-      values.indexOf(x) - values.indexOf(y)
-  }
-}
+object DependencyScope extends FromStringEnum[DependencyScope]

@@ -30,11 +30,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.scalatest.concurrent.IntegrationPatience
 
 final class CostEstimationServiceSpec
   extends AnyWordSpec
      with Matchers
      with ScalaFutures
+     with IntegrationPatience
      with MockitoSugar {
   import CostEstimationService._
 
@@ -119,7 +121,7 @@ final class CostEstimationServiceSpec
 
         val result = Zone.parse(invalidZone)
 
-        result shouldBe Left("Invalid deployment zone 'invalid-zone' - valid values are protected, public, protected-rate, public-monolith, public-rate, private")
+        result shouldBe Left("Invalid value: \"invalid-zone\" - should be one of: protected, public, protected-rate, public-monolith, public-rate, private")
       }
     }
   }

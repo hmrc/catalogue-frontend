@@ -21,6 +21,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.net.URI
 import java.time.Instant
@@ -62,10 +63,11 @@ object JsonCodecs {
       json
         .validate[String]
         .flatMap { s =>
-          Environment.parse(s) match {
-            case Some(env) => JsSuccess(env)
-            case None      => JsError(__, s"Invalid Environment '$s'")
-          }
+          Environment.parse(s)
+            .fold(
+              _   => JsError(__, s"Invalid Environment '$s'")
+            , env => JsSuccess(env)
+            )
         }
 
     override def writes(e: Environment) =
@@ -173,10 +175,8 @@ object JsonCodecs {
 case class TimeSeen(time: Instant)
 
 object TimeSeen {
-  implicit val timeSeenOrdering: Ordering[TimeSeen] = {
-    implicit val io: Ordering[Instant] = Ordering.by(_.toEpochMilli)
-    Ordering.by(_.time)
-  }
+  implicit val timeSeenOrdering: Ordering[TimeSeen] =
+    Ordering.by(_.time.toEpochMilli)
 }
 
 case class ServiceName(asString: String) extends AnyVal
@@ -192,27 +192,17 @@ object ProfileName {
     Ordering.by(_.asString)
 }
 
-enum ViewMode(val asString: String):
+enum ViewMode(val asString: String) extends FromString:
   case Versions  extends ViewMode("versions")
   case Instances extends ViewMode("instances")
 
-object ViewMode {
-  def parse(s: String): Either[String, ViewMode] =
-    values
-      .find(_.asString == s)
-      .toRight(s"Invalid viewMode - should be one of ${values.map(_.asString).mkString(", ")}")
-}
+object ViewMode extends FromStringEnum[ViewMode]
 
-enum ProfileType(val asString: String):
+enum ProfileType(val asString: String) extends FromString:
   case Team           extends ProfileType("team")
   case ServiceManager extends ProfileType("servicemanager")
 
-object ProfileType {
-  def parse(s: String): Either[String, ProfileType] =
-    values
-      .find(_.asString == s)
-      .toRight(s"Invalid profileType - should be one of: ${values.map(_.asString).mkString(", ")}")
-}
+object ProfileType extends FromStringEnum[ProfileType]
 
 case class Profile(
   profileType: ProfileType,

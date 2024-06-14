@@ -316,10 +316,7 @@ object ServiceConfigsService {
             .validate[String]
             .flatMap {
               case "local" => JsSuccess(ConfigEnvironment.Local)
-              case s       => Environment.parse(s) match {
-                                case Some(env) => JsSuccess(ForEnvironment(env))
-                                case None      => JsError(__, s"Invalid Environment '$s'")
-                              }
+              case s       => Environment.parse(s).fold(_ => JsError(__, s"Invalid Environment '$s'"), env => JsSuccess(ForEnvironment(env)))
             }
       }
   }

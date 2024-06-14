@@ -19,49 +19,41 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Format, __}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.util.{Enum, WithAsString}
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
 
-sealed trait KeyFilterType extends WithAsString
+enum KeyFilterType(val asString: String) extends FromString:
+  case Contains           extends KeyFilterType(asString = "contains"          )
+  case ContainsIgnoreCase extends KeyFilterType(asString = "containsIgnoreCase")
 
-object KeyFilterType {
-
-  case object Contains           extends KeyFilterType { val asString = "contains"}
-  case object ContainsIgnoreCase extends KeyFilterType { val asString = "containsIgnoreCase"}
-
+object KeyFilterType extends FromStringEnum[KeyFilterType]:
   def toKeyFilterType(isIgnoreCase: Boolean): KeyFilterType =
     if (isIgnoreCase) ContainsIgnoreCase else Contains
-}
 
-sealed trait FormValueFilterType extends WithAsString {val displayString: String;}
+enum FormValueFilterType(val asString: String, val displayString: String) extends FromString:
+  case Contains       extends FormValueFilterType(asString = "contains"      , displayString = "Contains"        )
+  case DoesNotContain extends FormValueFilterType(asString = "doesNotContain", displayString = "Does not contain")
+  case EqualTo        extends FormValueFilterType(asString = "equalTo"       , displayString = "Equal to"        )
+  case NotEqualTo     extends FormValueFilterType(asString = "notEqualTo"    , displayString = "Not Equal to"    )
+  case IsEmpty        extends FormValueFilterType(asString = "isEmpty"       , displayString = "Is Empty"        )
+object FormValueFilterType extends FromStringEnum[FormValueFilterType]
 
-object FormValueFilterType extends Enum[FormValueFilterType] {
 
-  case object Contains       extends FormValueFilterType { val asString = "contains";       val displayString = "Contains"         }
-  case object DoesNotContain extends FormValueFilterType { val asString = "doesNotContain"; val displayString = "Does not contain" }
-  case object EqualTo        extends FormValueFilterType { val asString = "equalTo";        val displayString = "Equal to"         }
-  case object NotEqualTo     extends FormValueFilterType { val asString = "notEqualTo";     val displayString = "Not Equal to"     }
-  case object IsEmpty        extends FormValueFilterType { val asString = "isEmpty";        val displayString = "Is Empty"         }
+enum ValueFilterType(val asString: String) extends FromString:
+  case Contains                 extends ValueFilterType("contains"                )
+  case ContainsIgnoreCase       extends ValueFilterType("containsIgnoreCase"      )
+  case DoesNotContain           extends ValueFilterType("doesNotContain"          )
+  case DoesNotContainIgnoreCase extends ValueFilterType("doesNotContainIgnoreCase")
+  case EqualTo                  extends ValueFilterType("equalTo"                 )
+  case EqualToIgnoreCase        extends ValueFilterType("equalToIgnoreCase"       )
+  case NotEqualTo               extends ValueFilterType("notEqualTo"              )
+  case NotEqualToIgnoreCase     extends ValueFilterType("notEqualToIgnoreCase"    )
+  case IsEmpty                  extends ValueFilterType("isEmpty"                 )
 
-  override val values: List[FormValueFilterType] =
-    List(Contains, DoesNotContain, EqualTo, NotEqualTo, IsEmpty)
-}
-
-sealed trait ValueFilterType extends WithAsString
-object ValueFilterType {
-
-  case object Contains                 extends ValueFilterType { val asString = "contains"                }
-  case object ContainsIgnoreCase       extends ValueFilterType { val asString = "containsIgnoreCase"      }
-  case object DoesNotContain           extends ValueFilterType { val asString = "doesNotContain"          }
-  case object DoesNotContainIgnoreCase extends ValueFilterType { val asString = "doesNotContainIgnoreCase"}
-  case object EqualTo                  extends ValueFilterType { val asString = "equalTo"                 }
-  case object EqualToIgnoreCase        extends ValueFilterType { val asString = "equalToIgnoreCase"       }
-  case object NotEqualTo               extends ValueFilterType { val asString = "notEqualTo"              }
-  case object NotEqualToIgnoreCase     extends ValueFilterType { val asString = "notEqualToIgnoreCase"    }
-  case object IsEmpty                  extends ValueFilterType { val asString = "isEmpty"                 }
-
+object ValueFilterType extends FromStringEnum[ValueFilterType]:
+  // TODO move toValueFilterType(ignoreCase: Boolean) to FormValueFilterType
   def toValueFilterType(formValueFilterType: FormValueFilterType, isIgnoreCase: Boolean): ValueFilterType  =
     formValueFilterType match {
       case FormValueFilterType.Contains       => if (isIgnoreCase) ContainsIgnoreCase       else Contains
@@ -70,29 +62,18 @@ object ValueFilterType {
       case FormValueFilterType.NotEqualTo     => if (isIgnoreCase) NotEqualToIgnoreCase     else NotEqualTo
       case FormValueFilterType.IsEmpty        => IsEmpty
     }
-}
 
-sealed trait GroupBy extends WithAsString {val displayString: String;}
+enum GroupBy(val asString: String, val displayString: String) extends FromString:
+  case Key     extends GroupBy(asString = "key"    , displayString = "Key"    )
+  case Service extends GroupBy(asString = "service", displayString = "Service")
 
-object GroupBy extends Enum[GroupBy] {
+object GroupBy extends FromStringEnum[GroupBy]
 
-  case object Key     extends GroupBy { val asString = "key";     val displayString = "Key"     }
-  case object Service extends GroupBy { val asString = "service"; val displayString = "Service" }
+enum ServiceType(val asString: String, val displayString: String) extends FromString:
+  case Frontend extends ServiceType(asString = "frontend", displayString = "Frontend")
+  case Backend  extends ServiceType(asString = "backend" , displayString = "Backend" )
 
-  override val values: List[GroupBy] =
-    List(Key, Service)
-}
-
-sealed trait ServiceType extends WithAsString {val displayString: String;}
-
-object ServiceType extends Enum[ServiceType] {
-
-  case object Frontend extends ServiceType { val asString = "frontend"; val displayString = "Frontend"}
-  case object Backend  extends ServiceType { val asString = "backend";  val displayString = "Backend" }
-
-  override val values: List[ServiceType] =
-    List(Frontend, Backend)
-}
+object ServiceType extends FromStringEnum[ServiceType]
 
 case class DeploymentConfigEvent(
   serviceName  : String,
