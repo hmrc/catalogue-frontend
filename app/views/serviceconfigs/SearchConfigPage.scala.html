@@ -178,7 +178,7 @@
         <div class="dl-horizontal float-end">
             @helper.inputRadioGroup(
                 field                 =  form("groupBy"),
-                options               =  GroupBy.values.map(t => t.asString -> t.displayString),
+                options               =  GroupBy.valuesAsSeq.map(t => t.asString -> t.displayString),
                 Symbol("_class")       -> "form-check form-check-inline m-0",
                 Symbol("_label")      -> "Group By",
                 Symbol("_labelClass") -> "form-check-label",

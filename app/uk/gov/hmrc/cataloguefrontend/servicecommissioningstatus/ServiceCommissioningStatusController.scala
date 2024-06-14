@@ -156,15 +156,15 @@ object SearchCommissioning {
     Form(
       Forms.mapping(
         "team"               -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
-      , "serviceType"        -> Forms.optional(Forms.text.transform[ServiceType](x =>
-                                  ServiceType.parse(x).getOrElse(ServiceType.Backend)
+      , "serviceType"        -> Forms.optional(Forms.text.transform[ServiceType](
+                                  ServiceType.parse(_).getOrElse(ServiceType.Backend)
                                 , _.asString
                                 ))
       , "lifecycleStatus"    -> Forms.default(
                                   Forms
                                     .seq(Forms.text)
                                     .transform[Seq[LifecycleStatus]](
-                                      xs => xs.map(x => LifecycleStatus.parse(x).toOption).flatten
+                                      xs => xs.map(LifecycleStatus.parse(_).toOption).flatten
                                     , x  => identity(x).map(_.asString)
                                     )
                                 , LifecycleStatus.values
@@ -174,7 +174,7 @@ object SearchCommissioning {
                                   Forms
                                     .seq(Forms.text)
                                     .transform[Seq[Environment]](
-                                      xs => xs.map(Environment.parse).flatten
+                                      xs => xs.map(Environment.parse(_).toOption).flatten
                                     , x  => identity(x).map(_.asString)
                                     )
                                 , Environment.valuesAsSeq.filterNot(_ == Environment.Integration)

@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
-import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
+import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter, FromString, FromStringEnum}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs.environmentFormat
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -172,7 +172,7 @@ object CostEstimationService {
       asInt * costEstimateConfig.slotCostPerYear
   }
 
-  enum Zone(val name: String):
+  enum Zone(val asString: String) extends FromString:
     case Protected      extends Zone("protected"      )
     case Public         extends Zone("public"         )
     case ProtectedRate  extends Zone("protected-rate" )
@@ -181,20 +181,9 @@ object CostEstimationService {
     case Private        extends Zone("private"        )
 
     def displayName: String =
-      name.capitalize
+      asString.capitalize
 
-  object Zone {
-    def parse(zone: String): Either[String, Zone] =
-      values.find(_.name == zone)
-        .toRight(s"Invalid deployment zone '$zone' - valid values are ${values.map(_.name).mkString(", ")}")
-
-    val format: Format[Zone] = new Format[Zone] {
-      override def reads(json: JsValue): JsResult[Zone] =
-        json.validate[String].flatMap(s => parse(s).fold(msg => JsError(msg.toString), t => JsSuccess(t)))
-
-      override def writes(z: Zone): JsValue = JsString(z.displayName)
-    }
-  }
+  object Zone extends FromStringEnum[Zone]
 
   object DeploymentConfig {
     implicit val ef: Reads[Environment]    = environmentFormat

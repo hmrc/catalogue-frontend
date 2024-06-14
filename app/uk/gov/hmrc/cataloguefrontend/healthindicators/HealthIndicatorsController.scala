@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}

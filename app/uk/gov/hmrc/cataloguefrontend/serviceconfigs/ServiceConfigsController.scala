@@ -216,7 +216,7 @@ object SearchConfig {
       , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType](FormValueFilterType.formFormat), FormValueFilterType.Contains)
       , "showEnvironments"      -> Forms.seq(Forms.text)
                                         .transform[Seq[Environment]](
-                                          xs => { val ys = xs.map(Environment.parse).flatten
+                                          xs => { val ys = xs.map(Environment.parse(_).toOption).flatten
                                                   if (ys.nonEmpty) ys else Environment.valuesAsSeq.filterNot(_ == Environment.Integration) // populate environments for config explorer link
                                                 }
                                         , x  => identity(x).map(_.asString)

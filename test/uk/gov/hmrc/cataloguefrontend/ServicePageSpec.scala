@@ -73,7 +73,6 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       response.status shouldBe 404
     }
 
-
     "return a 404 when no repo exist with that name and does not have a service to repo name mapping in service configs" in {
       val serviceName = "serv"
       serviceEndpoint(GET, s"/api/v2/repositories/$serviceName", willRespondWith = (404, None))
@@ -137,7 +136,6 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     }
 
     "show shuttered environments when they are shuttered" in new Setup {
-
       val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       val document = Jsoup.parse(response.body)

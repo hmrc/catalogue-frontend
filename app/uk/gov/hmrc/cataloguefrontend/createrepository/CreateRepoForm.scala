@@ -41,7 +41,7 @@ object CreateServiceRepoForm {
     )(r => Tuple.fromProductTyped(r))
 
   val repoTypeValidation: String => Boolean =
-    str => CreateServiceRepositoryType.parse(str).nonEmpty
+    str => CreateServiceRepositoryType.parse(str).isRight
 
   val conflictingFieldsValidation1 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("backend")  && crf.repositoryName.toLowerCase.contains("frontend"))
   val conflictingFieldsValidation2 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
@@ -73,7 +73,7 @@ object CreateServiceRepoForm {
 
 object CreateTestRepoForm {
   private val repoTestTypeValidation: String => Boolean =
-    str => CreateTestRepositoryType.parse(str).nonEmpty
+    str => CreateTestRepositoryType.parse(str).isRight
 
   private val repoTestTypeConstraint: Constraint[String] =
     mkConstraint("constraints.repoTypeCheck")(constraint = repoTestTypeValidation, error = CreateTestRepositoryType.parsingError)

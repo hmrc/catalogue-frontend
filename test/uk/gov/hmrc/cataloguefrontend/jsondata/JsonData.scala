@@ -37,11 +37,6 @@ object JsonData {
            "jenkinsURL": "http://jenkins/service-1/"
         },
         {
-           "jobName": "service-1-performance",
-           "jobType": "performance",
-           "jenkinsURL": "http://jenkins/service-1/"
-        },
-        {
            "jobName": "service-1",
            "jobType": "job",
            "jenkinsURL": "http://jenkins/service-1/"

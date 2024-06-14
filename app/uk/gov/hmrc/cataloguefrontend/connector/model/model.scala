@@ -29,10 +29,7 @@ object TeamName {
     Format.of[String].inmap(TeamName.apply, _.asString)
 
   implicit val ordering: Ordering[TeamName] =
-    new Ordering[TeamName] {
-      def compare(x: TeamName, y: TeamName): Int =
-        x.asString.compare(y.asString)
-    }
+    Ordering.by(_.asString)
 
   implicit val pathBindable: PathBindable[TeamName] =
     new PathBindable[TeamName] {

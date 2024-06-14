@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.Instant
 
@@ -122,15 +123,11 @@ object CachedServiceCheck {
   }
 }
 
-import uk.gov.hmrc.cataloguefrontend.util.{Enum, WithAsString}
+enum FormCheckType(val asString: String) extends FromString:
+  case Simple      extends FormCheckType("simple"     )
+  case Environment extends FormCheckType("environment")
 
-sealed trait FormCheckType extends WithAsString
-object FormCheckType extends Enum[FormCheckType] {
-  case object Simple      extends FormCheckType { val asString = "simple"     }
-  case object Environment extends FormCheckType { val asString = "environment"}
-
-  override val values: List[FormCheckType] = List(Simple, Environment)
-}
+object FormCheckType extends FromStringEnum[FormCheckType]
 
 case class Lifecycle(
   lifecycleStatus: LifecycleStatus

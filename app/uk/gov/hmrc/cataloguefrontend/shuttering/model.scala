@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 
 import java.time.Instant
@@ -32,10 +32,10 @@ object ShutterEnvironment {
         json
           .validate[String]
           .flatMap { s =>
-            Environment.parse(s) match {
-              case Some(env) => JsSuccess(env)
-              case None      => JsError(__, s"Invalid Environment '$s'")
-            }
+            Environment.parse(s).fold(
+              _   => JsError(__, s"Invalid Environment '$s'")
+            ,  env => JsSuccess(env)
+            )
           }
 
       override def writes(e: Environment) =
@@ -43,71 +43,18 @@ object ShutterEnvironment {
     }
 }
 
-enum ShutterType(val asString: String):
+enum ShutterType(val asString: String) extends FromString:
   case Frontend extends ShutterType("frontend")
   case Api      extends ShutterType("api"    )
   case Rate     extends ShutterType("rate"   )
 
-object ShutterType {
-  val valuesAsSeq: Seq[ShutterType] =
-    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+object ShutterType extends FromStringEnum[ShutterType]
 
-  def parse(s: String): Option[ShutterType] =
-    values.find(_.asString == s)
-
-  val format: Format[ShutterType] =
-    new Format[ShutterType] {
-      override def reads(json: JsValue) =
-        json
-          .validate[String]
-          .flatMap { s =>
-            parse(s) match {
-              case Some(st) => JsSuccess(st)
-              case None     => JsError(__, s"Invalid ShutterType '$s'")
-            }
-          }
-
-      override def writes(st: ShutterType) =
-        JsString(st.asString)
-    }
-
-  implicit val pathBindable: PathBindable[ShutterType] =
-    new PathBindable[ShutterType] {
-      override def bind(key: String, value: String): Either[String, ShutterType] =
-        parse(value).toRight(s"Invalid ShutterType '$value'")
-
-      override def unbind(key: String, value: ShutterType): String =
-        value.asString
-    }
-}
-
-enum ShutterStatusValue(val asString: String):
+enum ShutterStatusValue(val asString: String) extends FromString:
   case Shuttered   extends ShutterStatusValue("shuttered"  )
   case Unshuttered extends ShutterStatusValue("unshuttered")
 
-
-object ShutterStatusValue {
-  val valuesAsSeq: Seq[ShutterStatusValue] =
-    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
-
-  def parse(s: String): Option[ShutterStatusValue] =
-    values.find(_.asString == s)
-
-  val format: Format[ShutterStatusValue] = new Format[ShutterStatusValue] {
-    override def reads(json: JsValue) =
-      json
-        .validate[String]
-        .flatMap { s =>
-          parse(s) match {
-            case Some(env) => JsSuccess(env)
-            case None      => JsError(__, s"Invalid ShutterStatusValue '$s'")
-          }
-        }
-
-    override def writes(e: ShutterStatusValue) =
-      JsString(e.asString)
-  }
-}
+object ShutterStatusValue extends FromStringEnum[ShutterStatusValue]
 
 enum ShutterStatus(val value: ShutterStatusValue):
   case Shuttered(
@@ -181,58 +128,21 @@ object ShutterState {
 
 // -------------- Events ---------------------
 
-enum EventType(val asString: String):
+enum EventType(val asString: String) extends FromString:
   case ShutterStateCreate    extends EventType("shutter-state-create"   )
   case ShutterStateDelete    extends EventType("shutter-state-delete"   )
   case ShutterStateChange    extends EventType("shutter-state-change"   )
   case KillSwitchStateChange extends EventType("killswitch-state-change")
 
-object EventType {
-  def parse(s: String): Option[EventType] =
-    values.find(_.asString == s)
+object EventType extends FromStringEnum[EventType]
 
-  val format: Format[EventType] = new Format[EventType] {
-    override def reads(json: JsValue) =
-      json
-        .validate[String]
-        .flatMap { s =>
-          parse(s) match {
-            case Some(et) => JsSuccess(et)
-            case None     => JsError(__, s"Invalid EventType '$s'")
-          }
-        }
-
-    override def writes(e: EventType) =
-      JsString(e.asString)
-  }
-}
-
-enum ShutterCause(val asString: String):
+enum ShutterCause(val asString: String) extends FromString:
   case Scheduled      extends ShutterCause("scheduled"      )
   case UserCreated    extends ShutterCause("user-shutter"   )
   case AutoReconciled extends ShutterCause("auto-reconciled")
   case Legacy         extends ShutterCause("legacy-shutter" )
 
-object ShutterCause {
-  def parse(s: String): Option[ShutterCause] =
-    values.find(_.asString == s)
-
-  val format: Format[ShutterCause] = new Format[ShutterCause] {
-    override def reads(json: JsValue) =
-      json
-        .validate[String]
-        .flatMap { s =>
-          parse(s) match {
-            case Some(et) => JsSuccess(et)
-            case None     => JsError(__, s"Invalid ShutterCause '$s'")
-          }
-        }
-
-    override def writes(e: ShutterCause) =
-      JsString(e.asString)
-  }
-
-}
+object ShutterCause extends FromStringEnum[ShutterCause]
 
 enum EventData:
   case ShutterStateCreateData(

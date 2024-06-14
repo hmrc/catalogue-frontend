@@ -16,18 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
-enum CreateTestRepositoryType(val asString: String):
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+
+enum CreateTestRepositoryType(val asString: String) extends FromString:
   case UITest          extends CreateTestRepositoryType("UI Journey Test" )
   case APITest         extends CreateTestRepositoryType("API Test"        )
   case PerformanceTest extends CreateTestRepositoryType("Performance Test")
 
-object CreateTestRepositoryType {
+object CreateTestRepositoryType extends FromStringEnum[CreateTestRepositoryType]{
   val parsingError: String =
     s"Not a valid CreateTestRepositoryType. Should be one of ${values.mkString(", ")}"
-
-  val valuesAsSeq: Seq[CreateTestRepositoryType] =
-    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
-
-  def parse(str: String): Option[CreateTestRepositoryType] =
-    values.find(_.asString == str)
 }
