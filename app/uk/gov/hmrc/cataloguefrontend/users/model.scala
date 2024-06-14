@@ -122,6 +122,11 @@ enum Organisation(val asString: String):
   case Voa   extends Organisation("VOA"  )
   case Other extends Organisation("Other")
 
+object Organisation:
+  val valuesAsSeq: Seq[Organisation] =
+    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+
+
 case class CreateUserRequest(
   givenName         : String,
   familyName        : String,

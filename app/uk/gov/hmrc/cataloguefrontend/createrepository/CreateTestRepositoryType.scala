@@ -25,6 +25,9 @@ object CreateTestRepositoryType {
   val parsingError: String =
     s"Not a valid CreateTestRepositoryType. Should be one of ${values.mkString(", ")}"
 
+  val valuesAsSeq: Seq[CreateTestRepositoryType] =
+    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+
   def parse(str: String): Option[CreateTestRepositoryType] =
     values.find(_.asString == str)
 }

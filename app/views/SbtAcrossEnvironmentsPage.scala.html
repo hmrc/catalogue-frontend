@@ -20,8 +20,8 @@
 
 @this()
 
-@(envdata     : List[SBTUsageByEnv],
-  sbts        : List[SBTVersion],
+@(envdata     : Seq[SBTUsageByEnv],
+  sbts        : Seq[SBTVersion],
   teams       : Seq[GitHubTeam],
   selectedTeam: Option[GitHubTeam]
 )(implicit

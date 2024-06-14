@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import java.time.Instant
-
+import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
+
+import java.time.Instant
+
 object ShutterEnvironment {
   val format: Format[Environment] =
     new Format[Environment] {
@@ -47,6 +49,9 @@ enum ShutterType(val asString: String):
   case Rate     extends ShutterType("rate"   )
 
 object ShutterType {
+  val valuesAsSeq: Seq[ShutterType] =
+    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+
   def parse(s: String): Option[ShutterType] =
     values.find(_.asString == s)
 
@@ -82,6 +87,9 @@ enum ShutterStatusValue(val asString: String):
 
 
 object ShutterStatusValue {
+  val valuesAsSeq: Seq[ShutterStatusValue] =
+    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+
   def parse(s: String): Option[ShutterStatusValue] =
     values.find(_.asString == s)
 

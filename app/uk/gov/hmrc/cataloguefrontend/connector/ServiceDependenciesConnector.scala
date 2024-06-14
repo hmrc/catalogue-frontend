@@ -108,9 +108,9 @@ class ServiceDependenciesConnector @Inject() (
     flag        : SlugInfoFlag,
     group       : String,
     artefact    : String,
-    repoType    : List[RepoType],
+    repoType    : Seq[RepoType],
     versionRange: BobbyVersionRange,
-    scopes      : List[DependencyScope]
+    scopes      : Seq[DependencyScope]
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[ServiceWithDependency]] = {

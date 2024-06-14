@@ -101,7 +101,7 @@
 
         <div class="row container">
             <ul id="environment" class="nav nav-tabs mb-2">
-                @Environment.values.map(envOption)
+                @Environment.valuesAsSeq.map(envOption)
             </ul>
         </div>
 

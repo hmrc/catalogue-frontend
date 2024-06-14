@@ -72,30 +72,6 @@ class HealthIndicatorsControllerSpec
   }
 
   "HealthIndicatorsController.indicatorsForRepoType" should {
-    "respond with status 200 and default to repoType=Service when no query params set" in new Setup {
-      serviceEndpoint(
-        GET,
-        "/health-indicators/indicators?sort=desc&repoType=Service",
-        willRespondWith = (200, Some(testJsonRepoTypeService))
-      )
-
-      serviceEndpoint(
-        GET,
-        "/api/v2/repositories",
-        willRespondWith = (200, Some(repositoriesJson))
-      )
-
-      serviceEndpoint(
-        GET,
-        "/api/v2/teams",
-        willRespondWith = (200, Some(teamsJSON))
-      )
-
-      val response = wsClient.url(s"http://localhost:$port/health-indicators").withAuthToken("Token token").get().futureValue
-      response.status shouldBe 200
-      response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
-    }
-
     "respond with status 200 and include repo type service when repoType=Service" in new Setup {
       serviceEndpoint(
         GET,
@@ -120,7 +96,7 @@ class HealthIndicatorsControllerSpec
       response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
     }
 
-    "respond with status 200 and include all repo types when repoType=AllTypes" in new Setup {
+    "respond with status 200 and include all repo types when no repoType" in new Setup {
       serviceEndpoint(
         GET,
         "/health-indicators/indicators?sort=desc",
@@ -139,7 +115,7 @@ class HealthIndicatorsControllerSpec
         willRespondWith = (200, Some(teamsJSON))
       )
 
-      val response = wsClient.url(s"http://localhost:$port/health-indicators?repoType=All+Types").withAuthToken("Token token").get().futureValue
+      val response = wsClient.url(s"http://localhost:$port/health-indicators").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
       response.body should include("""<a href="/health-indicators/api-platform-scripts"><span class="repoName">api-platform-scripts</span></a>""")

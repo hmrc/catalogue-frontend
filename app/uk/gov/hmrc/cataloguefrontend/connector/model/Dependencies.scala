@@ -401,6 +401,9 @@ enum DependencyScope(val asString: String):
 
 
 object DependencyScope {
+  val valuesAsSeq: Seq[DependencyScope] =
+    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+
   def parse(s: String): Either[String, DependencyScope] =
     values
       .find(_.asString == s)

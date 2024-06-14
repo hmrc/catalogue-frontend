@@ -76,7 +76,7 @@
         @if(count == 0) {
             <span>0</span>
         } else {
-            <a aria-label="dependency search" href=@DependencyExplorerController.search(flag = env, scopes = dependencyScopes, repoTypes = Some(RepoType.values), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
+            <a aria-label="dependency search" href=@DependencyExplorerController.search(flag = env, scopes = dependencyScopes, repoTypes = Some(RepoType.valuesAsSeq), group = rule.group, artefact = rule.artefact, versionRange = rule.range)>
             @{count}
             </a>
         }
@@ -141,7 +141,7 @@
         @exemptionsTableData(rule)
         <td>@rule.from</td>
         @if(inclViewSlugsLink) {
-            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest, DependencyScope.values)</td>
+            <td>@bobbyViolationLink(rule, SlugInfoFlag.Latest, DependencyScope.valuesAsSeq)</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.QA), Seq(DependencyScope.Compile))</td>
             <td>@bobbyViolationLink(rule, SlugInfoFlag.ForEnvironment(Environment.Production), Seq(DependencyScope.Compile))</td>
             <td><a aria-label="see trend" id="see-trend-@rule.group-@rule.artefact-@rule.range" href="@BobbyRulesTrendController.display(group = rule.group, artefact = rule.artefact, versionRange = rule.range)">

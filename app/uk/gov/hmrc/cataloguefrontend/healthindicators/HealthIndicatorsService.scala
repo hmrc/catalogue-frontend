@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.ServiceName
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -33,13 +34,13 @@ class HealthIndicatorsService @Inject() (
 ) {
 
   def findIndicatorsWithTeams(
-    repoType      : RepoType,
+    repoType      : Option[RepoType],
     repoNameFilter: Option[String]
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[IndicatorsWithTeams]] = {
     val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService()
-    val eventualIndicators: Future[Seq[Indicator]]                  = healthIndicatorsConnector.getAllIndicators(repoType)
+    val eventualIndicators: Future[Seq[Indicator]]                  = healthIndicatorsConnector.getIndicators(repoType)
 
     for {
       repoToTeams        <- eventualTeamLookUp

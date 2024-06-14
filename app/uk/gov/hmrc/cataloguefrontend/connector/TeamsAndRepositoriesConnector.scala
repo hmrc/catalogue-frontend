@@ -40,6 +40,9 @@ enum RepoType(val asString: String):
   case Other     extends RepoType("Other"    )
 
 object RepoType:
+  val valuesAsSeq: Seq[RepoType] =
+    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+
   def parse(s: String): Either[String, RepoType] =
     values
       .find(_.asString == s)

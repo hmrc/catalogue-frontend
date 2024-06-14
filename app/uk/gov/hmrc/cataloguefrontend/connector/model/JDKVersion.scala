@@ -61,9 +61,9 @@ case class JDKUsageByEnv(
   usage: Map[JDKVersion, Int]
 )
 
-enum Vendor(val asString: String):
-  case Oracle  extends Vendor("Oracle")
-  case OpenJDK extends Vendor("OpenJDK")
+enum Vendor(val asString: String, val imgPath: String):
+  case Oracle  extends Vendor("Oracle" , "img/oracle2.gif")
+  case OpenJDK extends Vendor("OpenJDK", "img/openjdk.png")
 
   override def toString(): String = // TODO remove this - for backward compatibility only
     asString

@@ -64,7 +64,7 @@ class ShutterEventsController @Inject() (
                                   logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
                                   Seq.empty
                               }
-        page = ShutterEventsPage(services, events, form, Environment.values.toList)
+        page     =  ShutterEventsPage(services, events, form, Environment.valuesAsSeq)
       } yield Ok(page)
     }
 

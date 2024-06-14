@@ -21,7 +21,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -39,10 +39,10 @@ class HealthIndicatorsServiceSpec
       when(mockTeamsAndReposConnector.allTeamsByService())
         .thenReturn(Future.successful(Map.empty))
 
-      when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
-        Future.successful(Seq.empty)
+      when(mockHealthIndicatorsConnector.getIndicators(Some(RepoType.Service)))
+        .thenReturn(Future.successful(Seq.empty))
 
-      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service, None).futureValue shouldBe
+      healthIndicatorsService.findIndicatorsWithTeams(Some(RepoType.Service), None).futureValue shouldBe
         Seq()
     }
 
@@ -50,10 +50,10 @@ class HealthIndicatorsServiceSpec
       when(mockTeamsAndReposConnector.allTeamsByService())
         .thenReturn(Future.successful(Map.empty))
 
-      when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
-        Future.successful(Seq(Indicator(repoName = "foo", RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty)))))
+      when(mockHealthIndicatorsConnector.getIndicators(Some(RepoType.Service)))
+        .thenReturn(Future.successful(Seq(Indicator(repoName = "foo", RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))))
 
-      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service, None).futureValue shouldBe
+      healthIndicatorsService.findIndicatorsWithTeams(Some(RepoType.Service), None).futureValue shouldBe
         Seq(IndicatorsWithTeams(repoName = "foo", owningTeams = Seq.empty, RepoType.Service, overallScore = 10, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))
     }
 
@@ -63,10 +63,10 @@ class HealthIndicatorsServiceSpec
           Map("bar" -> Seq(TeamName("foo")))
         ))
 
-      when(mockHealthIndicatorsConnector.getAllIndicators(RepoType.Service)) thenReturn
-        Future.successful(Seq(Indicator(repoName = "bar", RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty)))))
+      when(mockHealthIndicatorsConnector.getIndicators(Some(RepoType.Service)))
+        .thenReturn(Future.successful(Seq(Indicator(repoName = "bar", RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))))
 
-      healthIndicatorsService.findIndicatorsWithTeams(RepoType.Service, None).futureValue shouldBe
+      healthIndicatorsService.findIndicatorsWithTeams(Some(RepoType.Service), None).futureValue shouldBe
         Seq(IndicatorsWithTeams(repoName = "bar", owningTeams = Seq(TeamName("foo")), RepoType.Service, overallScore = 10, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))))
     }
 
@@ -80,7 +80,7 @@ class HealthIndicatorsServiceSpec
           "world"     -> Seq(TeamName("e"))
         )))
 
-      when(mockHealthIndicatorsConnector.getAllIndicators(repoType = RepoType.Service))
+      when(mockHealthIndicatorsConnector.getIndicators(repoType = Some(RepoType.Service)))
         .thenReturn(Future.successful(
           Seq(
             Indicator(repoName = "bAr",       RepoType.Service, overallScore = 10, weightedMetrics = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))),
@@ -92,11 +92,11 @@ class HealthIndicatorsServiceSpec
         ))
 
       Seq("bar", "BaR", "BAR") foreach { searchTerm =>
-        healthIndicatorsService.findIndicatorsWithTeams(repoType = RepoType.Service, repoNameFilter = Some(searchTerm)).futureValue shouldBe
+        healthIndicatorsService.findIndicatorsWithTeams(repoType = Some(RepoType.Service), repoNameFilter = Some(searchTerm)).futureValue shouldBe
           Seq(
-            IndicatorsWithTeams(repoName = "bAr", owningTeams = Seq(TeamName("a")), RepoType.Service, overallScore = 10, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))),
+            IndicatorsWithTeams(repoName = "bAr"      , owningTeams = Seq(TeamName("a")), RepoType.Service, overallScore = 10, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 10, Seq.empty))),
             IndicatorsWithTeams(repoName = "foobaRfoo", owningTeams = Seq(TeamName("b")), RepoType.Service, overallScore = 11, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 11, Seq.empty))),
-            IndicatorsWithTeams(repoName = "foobar", owningTeams = Seq(TeamName("c")), RepoType.Service, overallScore = 12, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 12, Seq.empty))),
+            IndicatorsWithTeams(repoName = "foobar"   , owningTeams = Seq(TeamName("c")), RepoType.Service, overallScore = 12, weightedMetric = Seq(WeightedMetric(MetricType.GitHub, 12, Seq.empty))),
           )
       }
     }

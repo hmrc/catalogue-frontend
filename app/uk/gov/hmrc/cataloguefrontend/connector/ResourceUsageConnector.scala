@@ -56,14 +56,14 @@ class ResourceUsageConnector @Inject() (
           .foldLeft(List.empty[ResourceUsage]) { case (acc, (date, resourceUsages)) =>
             val values: Map[Environment, DeploymentSize] = acc.lastOption match {
               case Some(previous) =>
-                Environment.values.map(env =>
+                Environment.valuesAsSeq.map(env =>
                   env -> resourceUsages
                            .find(_.environment == env).map(_.deploymentSize)
                            .orElse(previous.values.get(env))
                            .getOrElse(DeploymentSize.empty)
                 ).toMap
               case None =>
-                Environment.values.map(env =>
+                Environment.valuesAsSeq.map(env =>
                   env -> resourceUsages
                            .find(_.environment == env).map(_.deploymentSize)
                            .getOrElse(DeploymentSize.empty)

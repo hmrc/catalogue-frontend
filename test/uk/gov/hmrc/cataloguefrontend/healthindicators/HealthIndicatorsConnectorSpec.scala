@@ -24,6 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.healthindicators.MetricType.{BuildStability, GitHub, LeakDetection}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
@@ -62,12 +63,12 @@ class HealthIndicatorsConnectorSpec
         .futureValue.value
 
       val weightedMetrics = Seq(
-        WeightedMetric(LeakDetection, 0, Seq()),
-        WeightedMetric(GitHub, -50, Seq(Breakdown(-50, "No Readme defined", None))),
-        WeightedMetric(BuildStability, 0, Seq(Breakdown(0, "Build Not Found", None)))
+        WeightedMetric(LeakDetection , 0  , Seq()),
+        WeightedMetric(GitHub        , -50, Seq(Breakdown(-50, "No Readme defined", None))),
+        WeightedMetric(BuildStability, 0  , Seq(Breakdown(0  , "Build Not Found"  , None)))
       )
 
-      val expectedResponse = Indicator("team-indicator-dashboard-frontend",RepoType.Service, -450, weightedMetrics)
+      val expectedResponse = Indicator("team-indicator-dashboard-frontend", RepoType.Service, -450, weightedMetrics)
 
       response shouldBe expectedResponse
     }
@@ -86,20 +87,20 @@ class HealthIndicatorsConnectorSpec
     }
   }
 
-  "getAllIndicators()" should {
+  "getIndicators()" should {
     "return a list of indicators" in {
       stubFor(
         get(urlEqualTo("/health-indicators/indicators?sort=desc"))
           .willReturn(aResponse().withBody(testJson3Repo))
       )
 
-      val response = healthIndicatorsConnector.getAllIndicators(RepoType.AllTypes)
+      val response = healthIndicatorsConnector.getIndicators(None)
         .futureValue
 
       val expectedResponse = Seq(
-        Indicator("team-indicator-dashboard-frontend",RepoType.Service, -450, Seq.empty),
-        Indicator("api-platform-scripts",  RepoType.Other, 50, Seq.empty),
-        Indicator("the-childcare-service-prototype", RepoType.Prototype, 50, Seq.empty)
+        Indicator("team-indicator-dashboard-frontend", RepoType.Service  , -450, Seq.empty),
+        Indicator("api-platform-scripts"             , RepoType.Other    , 50  , Seq.empty),
+        Indicator("the-childcare-service-prototype"  , RepoType.Prototype, 50  , Seq.empty)
       )
 
       response shouldBe expectedResponse

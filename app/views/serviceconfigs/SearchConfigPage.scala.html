@@ -119,7 +119,7 @@
                 <dl>
                     <dt><label>Environments</label></dt>
                     <dd>
-                        @for(env <-  Environment.values) {
+                        @for(env <-  Environment.valuesAsSeq) {
                             <div class="checkbox-group">
                                 <input name="showEnvironments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.showEnvironments.contains(env)) {checked} />
                                 <label class="form-check-label" for="@{env.asString}-checkbox">@env.displayString</label>

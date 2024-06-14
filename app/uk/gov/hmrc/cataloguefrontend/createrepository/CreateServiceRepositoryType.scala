@@ -30,6 +30,9 @@ object CreateServiceRepositoryType {
   val parsingError: String =
     s"Not a valid CreateServiceRepositoryType. Should be one of ${values.mkString(", ")}"
 
+  val valuesAsSeq: Seq[CreateServiceRepositoryType] =
+    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+
   def parse(str: String): Option[CreateServiceRepositoryType] =
     values.find(_.asString == str)
 }

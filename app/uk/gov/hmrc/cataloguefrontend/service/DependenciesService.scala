@@ -54,11 +54,11 @@ class DependenciesService @Inject() (
   def getServicesWithDependency(
     optTeam     : Option[TeamName],
     flag        : SlugInfoFlag,
-    repoType    : List[RepoType],
+    repoType    : Seq[RepoType],
     group       : String,
     artefact    : String,
     versionRange: BobbyVersionRange,
-    scope       : List[DependencyScope]
+    scope       : Seq[DependencyScope]
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[ServiceWithDependency]] =

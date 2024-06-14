@@ -306,8 +306,8 @@ object ServiceConfigsService {
       override def displayString = env.displayString
     }
 
-    val values: List[ConfigEnvironment] =
-      Local :: Environment.values.map(ForEnvironment.apply).toList
+    val values: Seq[ConfigEnvironment] =
+      Local +: Environment.valuesAsSeq.map(ForEnvironment.apply)
 
     val reads: Reads[ConfigEnvironment] =
       new Reads[ConfigEnvironment] {

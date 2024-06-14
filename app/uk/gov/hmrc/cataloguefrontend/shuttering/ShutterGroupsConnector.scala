@@ -16,10 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import cats.instances.all._
-import cats.syntax.all._
-
-import javax.inject.{Inject, Singleton}
+import cats.implicits._
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.MessagesControllerComponents
@@ -30,6 +27,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -50,21 +48,21 @@ class ShutterGroupsConnector @Inject() (
 
   val logger = Logger(this.getClass)
 
-  def shutterGroups: Future[List[ShutterGroup]] = {
+  def shutterGroups: Future[Seq[ShutterGroup]] = {
     val url = url"$gitHubProxyBaseURL/platops-github-proxy/github-raw/outage-pages/HEAD/conf/shutter-groups.json"
     implicit val hc: HeaderCarrier = HeaderCarrier()
     implicit val gr = ShutterGroup.reads
     httpClientV2
       .get(url)
-      .execute[Option[List[ShutterGroup]]]
+      .execute[Option[Seq[ShutterGroup]]]
       .map(_.getOrElse {
         logger.info(s"No shutter groups found at $url, defaulting to an empty list")
-        List.empty[ShutterGroup]
+        Seq.empty[ShutterGroup]
       })
       .recover {
         case NonFatal(ex) =>
           logger.error(s"Problem retrieving shutter groups at $url, defaulting to an empty list: ${ex.getMessage}", ex)
-          List.empty
+          Seq.empty
       }
   }
 }
@@ -90,8 +88,8 @@ object ShutterGroup {
         }
     }
 
-  val reads = new Reads[List[ShutterGroup]] {
-    def reads(js: JsValue): JsResult[List[ShutterGroup]] =
+  val reads = new Reads[Seq[ShutterGroup]] {
+    def reads(js: JsValue): JsResult[Seq[ShutterGroup]] =
       js.validate[JsObject]
         .flatMap(
           _.fields.toList.traverse {

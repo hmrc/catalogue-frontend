@@ -51,15 +51,13 @@
             , Symbol("class") -> "px-2 needs-validation"
             , Symbol("id")    -> "shutter-service-form"
             ) {
-
                 @csrfFormField
                 <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
                 <div class="row">
                     <div class="col-5">
                         @select(
                           field                 =  form("status")
-
-                        , options               =  ShutterStatusValue.values.map {
+                        , options               =  ShutterStatusValue.valuesAsSeq.map {
                                                       case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
                                                       case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
                                                     }

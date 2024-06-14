@@ -16,12 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, TeamName, Vendor}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 @this()
 
-@(jdkVersions     : List[JDKVersion],
+@(jdkVersions     : Seq[JDKVersion],
   flags           : Seq[SlugInfoFlag],
   teams           : Seq[GitHubTeam],
   selectedFlag    : SlugInfoFlag,
@@ -156,16 +156,13 @@
     </script>
 }
 
-@jdkVersion(version: JDKVersion) = {
-    <tr id="jdk-slug-@version.name">
-        <td><a id="link-to-@{version.name}" href="@appRoutes.CatalogueController.repository(version.name)">@version.name</a></td>
+@jdkVersion(jdk: JDKVersion) = {
+    <tr id="jdk-slug-@jdk.name">
+        <td><a id="link-to-@{jdk.name}" href="@appRoutes.CatalogueController.repository(jdk.name)">@jdk.name</a></td>
         <td>
-          @version.vendor match {
-            case Vendor.Oracle  => { <img src="@routes.Assets.versioned("img/oracle2.gif")" width="70px" alt="@version.vendor.asString" /> }
-            case Vendor.OpenJDK => { <img src="@routes.Assets.versioned("img/openjdk.png")" width="70px" alt="@version.vendor.asString"/> }
-          }
+          <img src="@routes.Assets.versioned(jdk.vendor.imgPath)" width="70px" alt="@jdk.vendor.asString" />
         </td>
-        <td>@version.version</td>
-        <td>@version.kind.asString</td>
+        <td>@jdk.version</td>
+        <td>@jdk.kind.asString</td>
     </tr>
 }

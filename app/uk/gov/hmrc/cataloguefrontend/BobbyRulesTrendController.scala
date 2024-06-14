@@ -55,7 +55,7 @@ class BobbyRulesTrendController @Inject() (
           form.fill(SearchForm(rules = Seq.empty, from = LocalDate.now().minusYears(2) , to = LocalDate.now())),
           allRules,
           flags = SlugInfoFlag.values,
-          data = None
+          data  = None
         )
       )
     }

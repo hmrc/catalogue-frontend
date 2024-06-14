@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
+import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
@@ -45,13 +46,10 @@ class HealthIndicatorsConnector @Inject() (
       .get(url"$healthIndicatorsBaseUrl/health-indicators/indicators/$repoName")
       .execute[Option[Indicator]]
 
-  def getAllIndicators(repoType: RepoType)(implicit hc: HeaderCarrier): Future[Seq[Indicator]] = {
-    // AllTypes is represented on the backend by sending no RepoType parameter
-    val optRepoType = Option(repoType).filter(_ != RepoType.AllTypes).map(_.asString)
+  def getIndicators(repoType: Option[RepoType])(implicit hc: HeaderCarrier): Future[Seq[Indicator]] =
     httpClientV2
-      .get(url"$healthIndicatorsBaseUrl/health-indicators/indicators?sort=desc&repoType=$optRepoType")
+      .get(url"$healthIndicatorsBaseUrl/health-indicators/indicators?sort=desc&repoType=$repoType")
       .execute[Seq[Indicator]]
-  }
 
   def getHistoricIndicators(repoName: String)(implicit hc: HeaderCarrier): Future[Option[HistoricIndicatorAPI]] =
     httpClientV2

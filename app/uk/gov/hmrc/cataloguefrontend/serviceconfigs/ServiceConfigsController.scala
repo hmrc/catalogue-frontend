@@ -198,7 +198,7 @@ object SearchConfig {
   , configValue          : Option[String]      = None
   , configValueIgnoreCase: Boolean             = true
   , valueFilterType      : FormValueFilterType = FormValueFilterType.Contains
-  , showEnvironments     : List[Environment]   = Environment.values.filterNot(_ == Environment.Integration).toList
+  , showEnvironments     : Seq[Environment]    = Environment.valuesAsSeq.filterNot(_ == Environment.Integration)
   , serviceType          : Option[ServiceType] = None
   , teamChange           : Boolean             = false
   , asCsv                : Boolean             = false
@@ -214,10 +214,10 @@ object SearchConfig {
       , "configValue"           -> Forms.optional(Forms.text)
       , "configValueIgnoreCase" -> Forms.default(Forms.boolean, false)
       , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType](FormValueFilterType.formFormat), FormValueFilterType.Contains)
-      , "showEnvironments"      -> Forms.list(Forms.text)
-                                        .transform[List[Environment]](
+      , "showEnvironments"      -> Forms.seq(Forms.text)
+                                        .transform[Seq[Environment]](
                                           xs => { val ys = xs.map(Environment.parse).flatten
-                                                  if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration).toList // populate environments for config explorer link
+                                                  if (ys.nonEmpty) ys else Environment.valuesAsSeq.filterNot(_ == Environment.Integration) // populate environments for config explorer link
                                                 }
                                         , x  => identity(x).map(_.asString)
                                         )

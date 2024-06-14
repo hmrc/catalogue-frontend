@@ -30,6 +30,9 @@ enum Environment(val asString: String, val displayString: String):
   case Production   extends Environment(asString = "production"  , displayString = "Production"   )
 
 object Environment {
+  val valuesAsSeq: Seq[Environment] =
+    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+
   implicit val ordering: Ordering[Environment] =
     Ordering.by(_.ordinal)
 
@@ -78,8 +81,8 @@ object SlugInfoFlag {
   case object Latest                          extends SlugInfoFlag { override def asString = "latest"    ; override def displayString = "Latest"          }
   case class ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString; override def displayString = env.displayString }
 
-  val values: List[SlugInfoFlag] =
-    Latest :: Environment.values.map(ForEnvironment.apply).toList
+  val values: Seq[SlugInfoFlag] =
+    Latest +: Environment.valuesAsSeq.map(ForEnvironment.apply)
 
   implicit val ordering: Ordering[SlugInfoFlag] =
     new Ordering[SlugInfoFlag] {
