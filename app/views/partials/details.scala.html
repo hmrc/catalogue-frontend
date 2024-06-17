@@ -14,6 +14,7 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.MarkForDecommissioning
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Version
@@ -24,13 +25,13 @@
 
 @(
   repositoryDetails        : GitRepository,
-  version                  : Option[Version] = None,
-  hideDecommissioning      : Boolean = true,
-  canMarkForDecommissioning: Boolean = false,
-  isGuest                  : Boolean = false,
-  lifecycle                : Option[Lifecycle] = None,
+  version                  : Option[Version]                         = None,
+  hideDecommissioning      : Boolean                                 = true,
+  canMarkForDecommissioning: MarkForDecommissioning.HasAuthorisation = MarkForDecommissioning.HasAuthorisation(false),
+  isGuest                  : Boolean                                 = false,
+  lifecycle                : Option[Lifecycle]                       = None,
 )(implicit
-  request                      : RequestHeader
+  request                  : RequestHeader
 )
 
 <style>
@@ -61,8 +62,8 @@
                         data-bs-trigger="hover"
                         data-bs-placement="right"
                         data-bs-html="true"
-                        data-bs-content='@{if(isGuest) "You are currently logged onto a guest account, login using your LDAP credentials to decommission" else if(!canMarkForDecommissioning) "You must be a team admin for the team that owns this service to decommission" else ""}'>
-                         <button type="button" class="dropdown-item dropdown-button-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning" @{if(isGuest | !canMarkForDecommissioning) "disabled" else ""}>Mark for decommissioning</button>
+                        data-bs-content='@{if(isGuest) "You are currently logged onto a guest account, login using your LDAP credentials to decommission" else if(!canMarkForDecommissioning.value) "You must be a team admin for the team that owns this service to decommission" else ""}'>
+                         <button type="button" class="dropdown-item dropdown-button-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning" @{if(isGuest | !canMarkForDecommissioning.value) "disabled" else ""}>Mark for decommissioning</button>
                         </span>
                     </li>
                 </ul>

@@ -15,6 +15,7 @@
  *@
 
 @import partials.DependenciesByEnvironmentPartial
+@import uk.gov.hmrc.cataloguefrontend.{EnableBranchProtection, EnvData, MarkForDecommissioning, ViewMessages}
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
 @import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
@@ -23,7 +24,6 @@
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
-@import uk.gov.hmrc.cataloguefrontend.{EnableBranchProtection, EnvData, ViewMessages}
 
 @import java.time.Instant
 
@@ -44,7 +44,7 @@
   commenterReport              : Option[PrCommenterReport],
   distinctVulnerabilitiesCount : Option[Int],
   serviceRelationships         : ServiceConfigsService.ServiceRelationshipsEnriched,
-  canMarkForDecommissioning    : Boolean,
+  canMarkForDecommissioning    : MarkForDecommissioning.HasAuthorisation,
   lifecycle                    : Option[Lifecycle],
   testJobMap                   : Map[String, Seq[JenkinsJob]],
   isGuest                      : Boolean

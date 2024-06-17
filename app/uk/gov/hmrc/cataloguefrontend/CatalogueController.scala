@@ -213,7 +213,7 @@ class CatalogueController @Inject() (
                                       nonPerformantQueryLinks = Seq.empty,
                                     )
                                 }
-      canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(serviceName).map(_.value)
+      canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(serviceName)
       lifecycle                 <- serviceCommissioningStatusConnector.getLifecycle(serviceName)
       isGuest                   = request.session.get(AuthController.SESSION_USERNAME).exists(_.startsWith("guest-"))
     } yield {
@@ -530,7 +530,13 @@ object DigitalServiceNameFilter {
 
 object EnableBranchProtection {
 
-  final case class HasAuthorisation(value: Boolean) extends AnyVal
+  opaque type HasAuthorisation = Boolean
+
+  object HasAuthorisation:
+    def apply(b: Boolean): HasAuthorisation = b
+
+  extension (ha: HasAuthorisation)
+    def value: Boolean = ha
 
   def permission(repoName: String): Permission =
     Predicate.Permission(
@@ -541,7 +547,13 @@ object EnableBranchProtection {
 
 object MarkForDecommissioning {
 
-  final case class HasAuthorisation(value: Boolean) extends AnyVal
+  opaque type HasAuthorisation = Boolean
+
+  object HasAuthorisation:
+    def apply(b: Boolean): HasAuthorisation = b
+
+  extension (ha: HasAuthorisation)
+    def value: Boolean = ha
 
   def permission(repoName: String): Permission =
     Predicate.Permission(
@@ -552,10 +564,17 @@ object MarkForDecommissioning {
 
 object ChangePrototypePassword {
 
-  final case class HasAuthorisation(value: Boolean) extends AnyVal
+  opaque type HasAuthorisation = Boolean
 
-  final case class PrototypePassword(value: String) extends AnyVal {
-    override def toString: String = "PrototypePassword(...)"
+  object HasAuthorisation:
+    def apply(b: Boolean): HasAuthorisation = b
+
+  extension (ha: HasAuthorisation)
+    def value: Boolean = ha
+
+  // We can't use an opaque type since we want to override toString
+  case class PrototypePassword(value: String) extends AnyVal {
+    override def toString(): String = "PrototypePassword(...)"
   }
 
   def permission(repoName: String): Permission =
