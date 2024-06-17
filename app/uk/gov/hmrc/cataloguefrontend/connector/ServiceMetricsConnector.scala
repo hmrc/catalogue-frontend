@@ -28,8 +28,6 @@ import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-import ServiceMetricsConnector._
-
 @Singleton
 class ServiceMetricsConnector @Inject() (
   httpClientV2  : HttpClientV2,
@@ -37,6 +35,7 @@ class ServiceMetricsConnector @Inject() (
 )(implicit
   ec: ExecutionContext
 ) {
+  import ServiceMetricsConnector._
   import HttpReads.Implicits._
 
   private val serviceMetricsBaseUrl: String =
@@ -69,7 +68,7 @@ object ServiceMetricsConnector {
       ( (__ \ "service"    ).read[String]
       ~ (__ \ "environment").read[Environment](Environment.format)
       ~ (__ \ "queryTypes" ).read[Seq[String]]
-      )(NonPerformantQueries.apply _)
+      )(NonPerformantQueries.apply)
   }
 
   case class MongoCollectionSize(
@@ -90,7 +89,7 @@ object ServiceMetricsConnector {
       ~ (__ \ "date"       ).read[LocalDate]
       ~ (__ \ "environment").read[Environment]
       ~ (__ \ "service"    ).readNullable[String]
-      )(apply _)
+      )(apply)
     }
   }
 }

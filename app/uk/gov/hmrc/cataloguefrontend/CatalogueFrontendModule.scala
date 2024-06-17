@@ -27,7 +27,7 @@ import java.time.Clock
 
 class CatalogueFrontendModule extends FrontendModule {
 
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[?]] =
     super.bindings(environment, configuration)
       .map(b =>
         if (b.key.clazz.getName == classOf[AuditFilter].getName)

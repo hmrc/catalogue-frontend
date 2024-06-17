@@ -58,7 +58,7 @@ class DependencyExplorerController @Inject() (
         groupArtefacts <- dependenciesService.getGroupArtefacts
       } yield Ok(
         page(
-          form           = form().fill(
+          form           = form.fill(
                              SearchForm(
                                team         = "",
                                flag         = SlugInfoFlag.Latest.asString,
@@ -111,7 +111,7 @@ class DependencyExplorerController @Inject() (
         res <- {
           def pageWithError(msg: String) =
             page(
-              form().fill(filledForm).withGlobalError(msg),
+              form.fill(filledForm).withGlobalError(msg),
               teams,
               flags,
               repoTypes,
@@ -121,7 +121,7 @@ class DependencyExplorerController @Inject() (
               searchResults = None,
               pieData       = None
             )
-          form()
+          form
             .fill(filledForm)
             .fold(
               hasErrors = formWithErrors => {
@@ -169,7 +169,7 @@ class DependencyExplorerController @Inject() (
                   } else
                     Ok(
                       page(
-                        form().fill(filledForm),
+                        form.fill(filledForm),
                         teams,
                         flags,
                         repoTypes,
@@ -198,7 +198,7 @@ class DependencyExplorerController @Inject() (
     asCsv       : Boolean = false
   )
 
-  def form(): Form[SearchForm] =
+  val form: Form[SearchForm] =
     Form(
       Forms.mapping(
         "team"         -> Forms.default(Forms.text, ""),
@@ -209,7 +209,8 @@ class DependencyExplorerController @Inject() (
         "artefact"     -> Forms.text.verifying(FormUtils.notEmpty),
         "versionRange" -> Forms.default(Forms.text, ""),
         "asCsv"        -> Forms.boolean
-      )(SearchForm.apply)(SearchForm.unapply).verifying(flagConstraint)
+      )(SearchForm.apply)(f => Some(Tuple.fromProductTyped(f)))
+        .verifying(flagConstraint)
     )
 
   val flagConstraint: Constraint[SearchForm] =
@@ -246,7 +247,7 @@ object DependencyExplorerController {
       else Seq(toRow(serviceDependency, ""))
     }
 
-  def groupArtefactFromForm(form: Form[_]): Option[String] =
+  def groupArtefactFromForm(form: Form[?]): Option[String] =
     for {
       g <- form("group").value.filter(_.nonEmpty)
       a <- form("artefact").value.filter(_.nonEmpty)

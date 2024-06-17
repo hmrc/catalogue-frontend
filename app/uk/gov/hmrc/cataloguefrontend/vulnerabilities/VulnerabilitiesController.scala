@@ -147,7 +147,7 @@ object VulnerabilitiesExplorerFilter {
         "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
         "service"        -> optional(text),
         "team"           -> optional(text),
-      )(VulnerabilitiesExplorerFilter.apply)(VulnerabilitiesExplorerFilter.unapply)
+      )(VulnerabilitiesExplorerFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }
 
@@ -158,16 +158,17 @@ case class VulnerabilitiesCountFilter(
 )
 
 object VulnerabilitiesCountFilter {
-  lazy val form: Form[VulnerabilitiesCountFilter] = Form(
-    mapping(
-      "flag"    -> optional(text).transform[SlugInfoFlag](
-                     opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
-                   , flag => Some(flag.asString)
-                   ),
-      "service" -> optional(text),
-      "team"    -> optional(text),
-    )(VulnerabilitiesCountFilter.apply)(VulnerabilitiesCountFilter.unapply)
-  )
+  lazy val form: Form[VulnerabilitiesCountFilter] =
+    Form(
+      mapping(
+        "flag"    -> optional(text).transform[SlugInfoFlag](
+                      opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
+                    , flag => Some(flag.asString)
+                    ),
+        "service" -> optional(text),
+        "team"    -> optional(text),
+      )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 }
 
 case class VulnerabilitiesTimelineFilter(
@@ -198,7 +199,7 @@ object VulnerabilitiesTimelineFilter {
         "from"           -> optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply), // Default to 6 months ago if loading initial page/value not set
         "to"             -> optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultToTime()  ), Some.apply), // Default to now if loading initial page/value not set
         "showDelta"      -> boolean
-      )(VulnerabilitiesTimelineFilter.apply)(VulnerabilitiesTimelineFilter.unapply)
+      )(VulnerabilitiesTimelineFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying("To Date must be greater than From Date", form => form.to.isAfter(form.from))
     )
   }

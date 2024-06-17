@@ -18,16 +18,15 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{__, Format, Reads}
-
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
-case class Username(value: String) extends AnyVal
+case class Username(value: String) extends AnyVal // TODO asString
 
 case class TeamName(asString: String) extends AnyVal
 
 object TeamName {
   lazy val format: Format[TeamName] =
-    Format.of[String].inmap(TeamName.apply, unlift(TeamName.unapply))
+    Format.of[String].inmap(TeamName.apply, _.asString)
 
   implicit val ordering: Ordering[TeamName] =
     new Ordering[TeamName] {
@@ -76,7 +75,7 @@ object RepositoryModules {
     ~ (__ \ "version"          ).readNullable[Version](Version.format)
     ~ (__ \ "dependenciesBuild").read[Seq[Dependency]]
     ~ (__ \ "modules"          ).read[Seq[RepositoryModule]]
-    )(RepositoryModules.apply _)
+    )(RepositoryModules.apply)
   }
 }
 
@@ -106,6 +105,6 @@ object RepositoryModule {
     ~ (__ \ "crossScalaVersions"  ).read[Seq[Version]]
     ~ (__ \ "activeBobbyRules"    ).read[Seq[BobbyRuleViolation]]
     ~ (__ \ "pendingBobbyRules"   ).read[Seq[BobbyRuleViolation]]
-    )(RepositoryModule.apply _)
+    )(RepositoryModule.apply)
   }
 }

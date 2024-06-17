@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.deployments
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -38,7 +40,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class DeploymentTimelineControllerSpec
   extends UnitSpec
      with MockitoSugar
-     with ArgumentMatchersSugar
      with FakeApplicationBuilder {
   import ExecutionContext.Implicits.global
 
@@ -46,11 +47,11 @@ class DeploymentTimelineControllerSpec
     implicit val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
     lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
-    lazy val mockedServiceDependenciesConnector = mock[ServiceDependenciesConnector]
-    lazy val authStubBehaviour = mock[StubBehaviour]
-    lazy val mockedDeploymentGraphService = mock[DeploymentGraphService]
-    lazy val authComponent = FrontendAuthComponentsStub(authStubBehaviour)
-    lazy val page = new DeploymentTimelinePage()
+    lazy val mockedServiceDependenciesConnector  = mock[ServiceDependenciesConnector]
+    lazy val authStubBehaviour                   = mock[StubBehaviour]
+    lazy val mockedDeploymentGraphService        = mock[DeploymentGraphService]
+    lazy val authComponent                       = FrontendAuthComponentsStub(authStubBehaviour)
+    lazy val page                                = new DeploymentTimelinePage()
 
     lazy val controller = new DeploymentTimelineController(
       mockedTeamsAndRepositoriesConnector,
@@ -63,20 +64,18 @@ class DeploymentTimelineControllerSpec
   }
 
   "DeploymentTimeline" should {
-
     "return 200" in new Fixture {
-
       val start = LocalDate.now().minusDays(1)
       val end = LocalDate.now()
 
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
       when(mockedTeamsAndRepositoriesConnector.allRepositories(
-        name        = eqTo(None)
-      , team        = eqTo(None)
-      , archived    = eqTo(None)
-      , repoType    = eqTo(Some(RepoType.Service))
-      , serviceType = eqTo(None)
+        name        = any,
+        team        = any,
+        archived    = any,
+        repoType    = eqTo(Some(RepoType.Service)),
+        serviceType = any
       )(any))
         .thenReturn(Future.successful(Seq.empty))
       when(mockedDeploymentGraphService.findEvents(service = any, start = any, end = any))

@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import cats.data.EitherT
 import cats.implicits._
-import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import play.api.http.HttpEntity
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -39,7 +38,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class ServiceConfigsController @Inject()(
   override val mcc        : MessagesControllerComponents
 , override val auth       : FrontendAuthComponents
-, configuration           : Configuration
 , teamsAndReposConnector  : TeamsAndRepositoriesConnector
 , serviceConfigsService   : ServiceConfigsService
 , whatsRunningWhereService: WhatsRunningWhereService
@@ -61,7 +59,7 @@ class ServiceConfigsController @Inject()(
       } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings, deploymentConfig))
     }
 
-  def searchLanding(): Action[AnyContent] =
+  val searchLanding: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         allTeams   <- teamsAndReposConnector.allTeams()
@@ -129,7 +127,7 @@ class ServiceConfigsController @Inject()(
         )
   }
 
-  def configWarningLanding(): Action[AnyContent] =
+  val configWarningLanding: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         allTeams    <- teamsAndReposConnector.allTeams()
@@ -137,7 +135,7 @@ class ServiceConfigsController @Inject()(
       } yield Ok(configWarningPage(ConfigWarning.form, allServices))
     }
 
-  def configWarningResults(): Action[AnyContent] =
+  val configWarningResults: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       ConfigWarning
         .form
@@ -188,7 +186,7 @@ object ConfigWarning {
   lazy val form: Form[ConfigWarningForm] = Form(
     Forms.mapping(
       "serviceName" -> Forms.text.transform[ServiceConfigsService.ServiceName](ServiceConfigsService.ServiceName.apply, _.asString)
-    )(ConfigWarningForm.apply)(ConfigWarningForm.unapply)
+    )(ConfigWarningForm.apply)(r => Some(r.serviceName))
   )
 }
 
@@ -207,25 +205,26 @@ object SearchConfig {
   , groupBy              : GroupBy             = GroupBy.Key
   )
 
-  lazy val form: Form[SearchConfigForm] = Form(
-    Forms.mapping(
-      "teamName"              -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
-    , "configKey"             -> Forms.optional(Forms.nonEmptyText(minLength = 3))
-    , "configKeyIgnoreCase"   -> Forms.default(Forms.boolean, false)
-    , "configValue"           -> Forms.optional(Forms.text)
-    , "configValueIgnoreCase" -> Forms.default(Forms.boolean, false)
-    , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType](FormValueFilterType.formFormat), FormValueFilterType.Contains)
-    , "showEnvironments"      -> Forms.list(Forms.text)
-                                      .transform[List[Environment]](
-                                        xs => { val ys = xs.map(Environment.parse).flatten
-                                                if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration) // populate environments for config explorer link
-                                              }
-                                      , x  => identity(x).map(_.asString)
-                                      )
-    , "serviceType"           -> Forms.optional(Forms.of[ServiceType](ServiceType.formFormat))
-    , "teamChange"            -> Forms.default(Forms.boolean, false)
-    , "asCsv"                 -> Forms.default(Forms.boolean, false)
-    , "groupBy"               -> Forms.default(Forms.of[GroupBy](GroupBy.formFormat), GroupBy.Key)
-    )(SearchConfigForm.apply)(SearchConfigForm.unapply)
-  )
+  lazy val form: Form[SearchConfigForm] =
+    Form(
+      Forms.mapping(
+        "teamName"              -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+      , "configKey"             -> Forms.optional(Forms.nonEmptyText(minLength = 3))
+      , "configKeyIgnoreCase"   -> Forms.default(Forms.boolean, false)
+      , "configValue"           -> Forms.optional(Forms.text)
+      , "configValueIgnoreCase" -> Forms.default(Forms.boolean, false)
+      , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType](FormValueFilterType.formFormat), FormValueFilterType.Contains)
+      , "showEnvironments"      -> Forms.list(Forms.text)
+                                        .transform[List[Environment]](
+                                          xs => { val ys = xs.map(Environment.parse).flatten
+                                                  if (ys.nonEmpty) ys else Environment.values.filterNot(_ == Environment.Integration) // populate environments for config explorer link
+                                                }
+                                        , x  => identity(x).map(_.asString)
+                                        )
+      , "serviceType"           -> Forms.optional(Forms.of[ServiceType](ServiceType.formFormat))
+      , "teamChange"            -> Forms.default(Forms.boolean, false)
+      , "asCsv"                 -> Forms.default(Forms.boolean, false)
+      , "groupBy"               -> Forms.default(Forms.of[GroupBy](GroupBy.formFormat), GroupBy.Key)
+      )(SearchConfigForm.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 }

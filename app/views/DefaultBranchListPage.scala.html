@@ -14,14 +14,12 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-@import helper._
+@import views.html.helper.{FieldConstructor, select}
 @import views.html.partials.TeamNamesPartial
 
 @this(
-  viewMessages    : ViewMessages,
   teamNamesPartial: TeamNamesPartial
 )
 
@@ -29,13 +27,13 @@
   teamNames      : Seq[TeamName],
   singleOwnership: Boolean,
   includeArchived: Boolean,
-  form           : Form[_]
+  form           : Form[?]
 )(implicit
   messages       : Messages,
   request        : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) } @* TODO move all views to cataloguefrontend folder and rename helper2 to helper *@
 
 @standard_layout(s"Default Branches", active = "explore") {
     <h1 class="page-heading mt-4">Default Branch Naming Progress</h1>
@@ -44,7 +42,7 @@
         <div class="alert alert-danger" role="alert">
             <ul class="list">
                 @form.errors.map { error =>
-                    <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+                    <li class="alert-danger"> @Messages(error.message, error.args*)</li>
                 }
             </ul>
         </div>

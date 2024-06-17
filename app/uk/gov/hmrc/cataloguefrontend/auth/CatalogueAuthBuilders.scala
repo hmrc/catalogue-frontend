@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.auth
 
-import scala.concurrent.{ExecutionContext, Future}
+import play.api.mvc.{ActionBuilder, AnyContent, BodyParser, Call, MessagesControllerComponents, MessagesRequest, Result, Request}
 import uk.gov.hmrc.internalauth.client.{IAAction, FrontendAuthComponents, Predicate, ResourceType, ResourceLocation, Resource}
 import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
-import play.api.mvc.{ActionBuilder, AnyContent, BodyParser, Call, MessagesControllerComponents, MessagesRequest, Result, Request}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait CatalogueAuthBuilders {
 
@@ -30,7 +31,7 @@ trait CatalogueAuthBuilders {
   private val readPerm = Predicate.Permission(Resource(ResourceType("catalogue-frontend"), ResourceLocation("*")), IAAction("READ"))
 
   def BasicAuthAction =
-    new ActionBuilder[MessagesRequest[*], AnyContent] {
+    new ActionBuilder[MessagesRequest, AnyContent] {
       override def executionContext: ExecutionContext = ec
       override def parser: BodyParser[AnyContent] = mcc.parsers.anyContent
       override def invokeBlock[A](request: Request[A], block: MessagesRequest[A] => Future[Result]): Future[Result] =

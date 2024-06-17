@@ -15,22 +15,21 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionReport
-@import views.html.helper.select
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionRule
+@import views.html.helper.{FieldConstructor, select}
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(rules     : Seq[LeakDetectionRule],
   summaries : Seq[LeakDetectionReport],
-  form      : Form[_]
+  form      : Form[?]
 )(implicit
   messages : Messages,
   request  : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout(s"Leak detection draft results", active = "health") {
     <h1 class="page-heading mt-4">Leak Detection - Draft Results</h1>

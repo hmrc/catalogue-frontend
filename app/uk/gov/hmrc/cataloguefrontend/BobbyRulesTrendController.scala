@@ -27,7 +27,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
-import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.BobbyRulesTrendPage
@@ -38,7 +37,6 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class BobbyRulesTrendController @Inject() (
   override val mcc : MessagesControllerComponents,
-  service          : DependenciesService,
   configConnector  : ServiceConfigsConnector,
   serviceDeps      : ServiceDependenciesConnector,
   page             : BobbyRulesTrendPage,
@@ -54,7 +52,7 @@ class BobbyRulesTrendController @Inject() (
         allRules <- configConnector.bobbyRules().map(_.libraries)
       } yield Ok(
         page(
-          form().fill(SearchForm(rules = Seq.empty, from = LocalDate.now().minusYears(2) , to = LocalDate.now())),
+          form.fill(SearchForm(rules = Seq.empty, from = LocalDate.now().minusYears(2) , to = LocalDate.now())),
           allRules,
           flags = SlugInfoFlag.values,
           data = None
@@ -74,12 +72,12 @@ class BobbyRulesTrendController @Inject() (
                       .map(_.sortBy(-_.from.toEpochDay))
         pageWithError = (msg: String) =>
                           page(
-                            form().bindFromRequest().withGlobalError(msg),
+                            form.bindFromRequest().withGlobalError(msg),
                             allRules,
                             flags = SlugInfoFlag.values,
                             data = None
                           )
-        res <- form()
+        res <- form
                  .bindFromRequest()
                  .fold(
                    hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, allRules, flags = SlugInfoFlag.values, data = None))),
@@ -89,7 +87,7 @@ class BobbyRulesTrendController @Inject() (
                        countData = violations.summary
                      } yield Ok(
                        page(
-                         form().bindFromRequest(),
+                         form.bindFromRequest(),
                          allRules,
                          flags = SlugInfoFlag.values,
                          Some(
@@ -119,11 +117,11 @@ class BobbyRulesTrendController @Inject() (
 
   case class SearchForm(
     rules: Seq[String],
-    from: LocalDate,
-    to: LocalDate
+    from : LocalDate,
+    to   : LocalDate
   )
 
-  def form() = {
+  val form = {
     import uk.gov.hmrc.cataloguefrontend.util.FormUtils._
     import play.api.data._
     import play.api.data.Forms._
@@ -132,7 +130,7 @@ class BobbyRulesTrendController @Inject() (
         "rules" -> Forms.seq(Forms.text).verifying(notEmptySeq),
         "from"  -> default(Forms.localDate, LocalDate.now().minusYears(2)),
         "to"    -> default(Forms.localDate, LocalDate.now())
-      )(SearchForm.apply)(SearchForm.unapply)
+      )(SearchForm.apply)(sf => Some(Tuple.fromProductTyped(sf)))
     )
   }
 }

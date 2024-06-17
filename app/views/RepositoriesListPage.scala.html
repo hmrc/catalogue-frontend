@@ -14,26 +14,24 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, GitHubTeam}
-@import views.html.helper.select
-@import views.html.partials.RepoSearchResultsPage
 @import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => repoRoutes}
+@import views.html.helper.{FieldConstructor, select}
+@import views.html.partials.RepoSearchResultsPage
 
 @this(
-  viewMessages         : ViewMessages,
   repoSearchResultsPage: RepoSearchResultsPage
 )
 
 @(repositories: Seq[GitRepository],
   teams       : Seq[GitHubTeam],
-  form        : Form[_]
+  form        : Form[?]
 )(implicit
   messages: Messages,
   request : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("Repositories", "repositories") {
     <h1 class="page-heading mt-4">
@@ -54,7 +52,7 @@
         <div class="alert alert-danger" role="alert">
             <ul class="list">
             @form.errors.map { error =>
-                <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+                <li class="alert-danger"> @Messages(error.message, error.args*)</li>
             }
             </ul>
         </div>

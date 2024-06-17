@@ -18,18 +18,15 @@
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{DisplayType, PlatformInitiative, routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
-@import play.api.mvc._
-@import helper._
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @( initiatives : Seq[PlatformInitiative]
 ,  display     : DisplayType
 ,  team        : Option[TeamName]
 ,  allTeams    : Seq[GitHubTeam]
-,  form        : Form[_]
+,  form        : Form[?]
 )(implicit
    messages    : Messages
 ,  request     : RequestHeader
@@ -49,7 +46,7 @@
         <div class="alert alert-danger" role="alert">
             <ul class="list">
             @form.errors.map { error =>
-                <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+                <li class="alert-danger"> @Messages(error.message, error.args*)</li>
             }
             </ul>
         </div>
@@ -74,7 +71,7 @@
                     <select id="teamName" name="team" class="form-select">
                         <option class="blank" value>All</option>
                         @for(team <- allTeams.map(_.name.asString).distinct.sorted) {
-                            <option value="@team" @if(form("team").value.contains(team)) {selected="selected"}>@team</option>
+                            <option value="@team" @{if(form("team").value.contains(team)) "selected" else ""}>@team</option>
                         }
                     </select>
                 </div>

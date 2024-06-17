@@ -174,7 +174,7 @@ object ServiceDependencies {
     ( (__ \ "version").read[String]
     ~ (__ \ "vendor" ).read[String]
     ~ (__ \ "kind"   ).read[String]
-    )(ServiceJDKVersion)
+    )(ServiceJDKVersion.apply)
 
   private val serviceDependencyReads: Reads[ServiceDependency] =
     Json.using[Json.WithDefaultValues].reads[ServiceDependency]
@@ -197,7 +197,7 @@ object ServiceDependencies {
     ~ (__ \ "dependencyDot" \ "test"    ).readNullable[String].map(_.filter(_.nonEmpty))
     ~ (__ \ "dependencyDot" \ "it"      ).readNullable[String].map(_.filter(_.nonEmpty))
     ~ (__ \ "dependencyDot" \ "build"   ).readNullable[String].map(_.filter(_.nonEmpty))
-    )(ServiceDependencies.apply _)
+    )(ServiceDependencies.apply)
   }
 }
 
@@ -216,5 +216,5 @@ object SlugVersionInfo {
     ( (__ \ "version").read[Version](Version.format)
     ~ (__ \ "latest" ).readWithDefault[Boolean](false)
     ~ (__ \ "created").read[Instant]
-    )(SlugVersionInfo.apply _)
+    )(SlugVersionInfo.apply)
 }

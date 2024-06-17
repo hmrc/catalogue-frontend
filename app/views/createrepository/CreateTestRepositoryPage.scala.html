@@ -14,14 +14,13 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.createrepository.CreateTestRepositoryType
 @import views.html.partials.form_global_errors
 
-@this(viewMessages: ViewMessages)
+@this()
 
-@(form     : Form[_],
+@(form     : Form[?],
   teamNames: Seq[TeamName],
   repoTypes: Seq[CreateTestRepositoryType]
 )(implicit
@@ -92,7 +91,7 @@
                     <select class="form-select" id="teamInput" name="teamName">
                         @teamNames.map { tn =>
                             <option value="@{tn.asString}"
-                                    @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" }
+                                    @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}
                             >@tn.asString</option>
                         }
                     </select>
@@ -106,7 +105,7 @@
                     <select class="form-select" id="typeInput" name="repoType">
                         @repoTypes.map { rt =>
                          <option value="@{rt.asString}"
-                                 @if(form.data.getOrElse("repoType", "").equals(rt.asString)) { selected="selected" }
+                                 @if(form.data.getOrElse("repoType", "").equals(rt.asString)) { selected="selected" else ""}
                          >@rt.asString</option>
                         }
                     </select>

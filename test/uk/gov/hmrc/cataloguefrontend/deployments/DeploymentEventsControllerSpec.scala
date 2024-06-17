@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.deployments
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
@@ -39,7 +41,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class DeploymentEventsControllerSpec
   extends UnitSpec
      with MockitoSugar
-     with ArgumentMatchersSugar
      with FakeApplicationBuilder {
   import ExecutionContext.Implicits.global
 

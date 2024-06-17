@@ -14,12 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.users.{routes => createUserRoutes}
-@import uk.gov.hmrc.cataloguefrontend.users.{routes => users}
 
-@this(viewMessages: ViewMessages)
-
+@this()
 
 @(
   isServiceAccount: Boolean,
@@ -50,7 +47,7 @@
       <a href="@createUserRoutes.CreateUserController.createUser(isServiceAccount)" class="btn btn-success" role="button">Create Another User</a>
     }
 
-    <a href="@users.UsersController.allUsers()" class="btn btn-secondary" role="button">Back to Users Page</a>
+    <a href="@createUserRoutes.UsersController.allUsers()" class="btn btn-secondary" role="button">Back to Users Page</a>
 
   </section>
 }

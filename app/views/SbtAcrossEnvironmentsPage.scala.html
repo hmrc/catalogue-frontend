@@ -14,12 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{SBTUsageByEnv, SBTVersion}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{SBTUsageByEnv, SBTVersion}
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 
-@this(viewMessages: ViewMessages)
+@this()
 
 @(envdata     : List[SBTUsageByEnv],
   sbts        : List[SBTVersion],
@@ -42,9 +41,9 @@
             <div class="col-md-3">
                 <label for="teamName" class="form-label fw-bold">Team:</label>
                 <select class="form-select" id="teamName" name="teamName">
-                    <option value="" @{if(selectedTeam.isEmpty) "selected"}>All</option>
+                    <option value="" @{if(selectedTeam.isEmpty) "selected" else ""}>All</option>
                     @teams.map { team =>
-                        <option value="@{team.name.asString}" @{if(selectedTeam.contains(team)) "selected"}>
+                        <option value="@{team.name.asString}" @{if(selectedTeam.contains(team)) "selected" else ""}>
                             @team.name.asString
                         </option>
                     }

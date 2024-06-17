@@ -14,12 +14,9 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, VersionState}
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.connector.model.ImportedBy
-@import uk.gov.hmrc.cataloguefrontend.util.UrlUtils
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, ImportedBy, VersionState}
 
-@import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRule
 @(dependencies: Seq[Dependency], rootId: String, showOutOfDateOnly: Boolean = false)
 
 @for(

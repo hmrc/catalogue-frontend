@@ -14,13 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName}
 @import views.html.partials.DependenciesTeamPartial
 @import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
 
-@this(dependenciesTeamPartial: DependenciesTeamPartial, viewMessages: ViewMessages)
-
+@this(dependenciesTeamPartial: DependenciesTeamPartial)
 
 @( teamName              : TeamName
  , masterTeamDependencies: Seq[RepoAndDependencies]

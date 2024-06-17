@@ -14,13 +14,12 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import views.html.helper
-@import views.html.partials.form_global_errors
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, ServiceType}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{SearchCommissioning, Warning, LifecycleStatus, routes, FormCheckType, Check, CachedServiceCheck }
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, ServiceType}
+@import views.html.helper.{FieldConstructor, select}
+@import views.html.partials.form_global_errors
 
 @this()
 
@@ -33,7 +32,7 @@
 , request  : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("Search Commissioning State", active = "explore") {
     <h1 class="page-heading mt-4">

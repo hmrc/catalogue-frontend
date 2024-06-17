@@ -14,7 +14,6 @@
  * limitations under the License.
  *@
 
-@import _root_.views.html.partials.DependenciesTeamPartial
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName}
@@ -25,7 +24,9 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
 
-@this(dependenciesTeamPartial: DependenciesTeamPartial, viewMessages: ViewMessages)
+@this(
+  viewMessages: ViewMessages
+)
 
 @(teamName              : TeamName,
   repos                 : Map[RepoType, Seq[GitRepository]],

@@ -14,12 +14,11 @@
  * limitations under the License.
  *@
 
- @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.users.{User, UsersListFilter}
 @import uk.gov.hmrc.cataloguefrontend.users.UsersController.maxRows
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
-@import views.html.helper.select
+@import views.html.helper.{FieldConstructor, select}
 @import uk.gov.hmrc.cataloguefrontend.users.{routes => createUserRoutes}
 
 @this()
@@ -33,7 +32,7 @@
   messages: Messages,
   request : RequestHeader
 )
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("Users", active = "explore") {
   @if(isTeamAdmin){

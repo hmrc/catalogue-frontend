@@ -14,22 +14,21 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesTimelineCount}
+@import views.html.helper.{FieldConstructor, select}
 
-@import views.html.helper._
+@this()
 
-@this(viewMessages: ViewMessages)
-
-@(teams: Seq[String],
-result : Seq[VulnerabilitiesTimelineCount],
-form   : Form[_]
+@(
+  teams  : Seq[String],
+  result : Seq[VulnerabilitiesTimelineCount],
+  form   : Form[?]
 )(implicit
- messages          : Messages,
- request           : RequestHeader
+  messages: Messages,
+  request : RequestHeader
 )
 
-@implicitField = @{ helper.FieldConstructor(helper.catalogueFieldConstructor.f) }
+@implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 
 @standard_layout("Vulnerabilities Timeline", active = "health") {
     <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -117,7 +116,7 @@ form   : Form[_]
     <div class="alert alert-danger" role="alert">
         <ul class="list">
             @form.errors.map { error =>
-            <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+            <li class="alert-danger"> @Messages(error.message, error.args*)</li>
             }
         </ul>
     </div>

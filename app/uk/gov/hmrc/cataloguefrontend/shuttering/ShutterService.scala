@@ -51,7 +51,7 @@ class ShutterService @Inject() (
     status     : ShutterStatus
   )(implicit
     hc : HeaderCarrier,
-    req: AuthenticatedRequest[_, _]
+    req: AuthenticatedRequest[?, ?]
   ): Future[Unit] =
     shutterConnector.updateShutterStatus(req.authorizationToken, serviceName, context, st, env, status)
 

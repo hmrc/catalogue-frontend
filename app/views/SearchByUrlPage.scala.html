@@ -15,12 +15,11 @@
  *@
 
 @import play.api.mvc.Call
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
 
-@this(viewMessages: ViewMessages)
+@this()
 
-@(form            : Form[_],
+@(form            : Form[?],
   searchResults   : Seq[FrontendRoutes],
   serviceNameToUrl: String => Call
 )(implicit

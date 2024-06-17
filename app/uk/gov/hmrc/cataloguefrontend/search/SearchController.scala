@@ -28,13 +28,13 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class SearchController @Inject() (
-  override val mcc: MessagesControllerComponents,
-  searchIndex: SearchIndex,
-  view: SearchResults,
-  config: SearchConfig,
+  override val mcc : MessagesControllerComponents,
+  searchIndex      : SearchIndex,
+  view             : SearchResults,
+  config           : SearchConfig,
   override val auth: FrontendAuthComponents
 )(implicit
-  override val ec: ExecutionContext
+  override val ec  : ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {
 

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.mockito.scalatest.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.cache.AsyncCacheApi
 import uk.gov.hmrc.cataloguefrontend.model.Environment

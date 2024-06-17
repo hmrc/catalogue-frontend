@@ -47,7 +47,7 @@ class LeakDetectionController @Inject() (
      with CatalogueAuthBuilders
      with play.api.i18n.I18nSupport {
 
-  def ruleSummaries(): Action[AnyContent] =
+  val ruleSummaries: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       leakDetectionService.ruleSummaries().map(s => Ok(rulesPage(s)))
     }
@@ -84,7 +84,7 @@ class LeakDetectionController @Inject() (
   def leaksPermission(repository: String, action: String): Predicate =
     Predicate.Permission(Resource.from("repository-leaks", repository), IAAction(action))
 
-  def draftReports(): Action[AnyContent] =
+  val draftReports: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       form
         .bindFromRequest()
@@ -145,6 +145,6 @@ object LeakDetectionExplorerFilter {
       mapping(
         "rule" -> optional(text),
         "team" -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
-      )(LeakDetectionExplorerFilter.apply)(LeakDetectionExplorerFilter.unapply)
+      )(LeakDetectionExplorerFilter.apply)(r => Some(Tuple.fromProductTyped(r)))
     )
 }

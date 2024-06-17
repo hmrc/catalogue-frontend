@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import org.mockito.MockitoSugar
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -28,7 +29,6 @@ import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.http.SessionKeys
 import views.html._
-import views.html.partials.RepoSearchResultsPage
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -56,7 +56,6 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
     teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
     mcc                           = mcc,
     repositoriesListPage          = mock[RepositoriesListPage],
-    repositoriesSearchResultsPage = mock[RepoSearchResultsPage],
     auth                          = FrontendAuthComponentsStub(authStubBehaviour)
   )
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@(form : Form[_]
+@(form : Form[?]
   ,fieldName: String)(implicit
   messagesProvider: MessagesProvider
 )
@@ -23,10 +23,8 @@
     <div class="alert alert-danger" role="alert">
         <ul class="list-unstyled mb-0">
             @form.errors(fieldName).map { error =>
-                <li class="alert-danger"> @Messages(error.message, error.args: _*)</li>
+                <li class="alert-danger"> @Messages(error.message, error.args*)</li>
             }
         </ul>
     </div>
 }
-
-

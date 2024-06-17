@@ -116,7 +116,7 @@ object DeploymentEventsController {
           "team"    -> Forms.optional(Forms.text),
           "service" -> Forms.optional(Forms.text),
           "page"    -> Forms.optional(Forms.number(min = 0))
-        )(SearchForm.apply)(SearchForm.unapply)
+        )(SearchForm.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying("To Date must be greater than or equal to From Date", f => !f.to.isBefore(f.from))
     )
   }

@@ -14,17 +14,16 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{ EnableBranchProtection, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.{EnableBranchProtection, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
 @import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
-@import uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
-@import views.html.helper.CSRF
 
 @(repo                          : GitRepository,
   hasBranchProtectionAuth       : EnableBranchProtection.HasAuthorisation,

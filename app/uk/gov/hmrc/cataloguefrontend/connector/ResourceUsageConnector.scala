@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, __}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
@@ -113,21 +112,12 @@ object ResourceUsageConnector {
       DeploymentSize(slots, instances)
     )
 
-    def unapply(rawResourceUsage: RawResourceUsage): Option[(Instant, String, Environment, Int, Int)] = 
-      Option((
-        rawResourceUsage.date,
-        rawResourceUsage.serviceName,
-        rawResourceUsage.environment,
-        rawResourceUsage.deploymentSize.slots,
-        rawResourceUsage.deploymentSize.instances,
-      ))
-
     val format: Format[RawResourceUsage] =
       ( (__ \ "date"        ).format[Instant]
       ~ (__ \ "serviceName" ).format[String]
       ~ (__ \ "environment" ).format[Environment](Environment.format)
       ~ (__ \ "slots"       ).format[Int]
       ~ (__ \ "instances"   ).format[Int]
-      )(RawResourceUsage.apply, unlift(RawResourceUsage.unapply))
+      )(RawResourceUsage.apply, u => (u.date, u.serviceName, u.environment, u.deploymentSize.slots, u.deploymentSize.instances))
   }
 }

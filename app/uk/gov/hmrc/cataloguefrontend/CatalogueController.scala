@@ -95,10 +95,10 @@ class CatalogueController @Inject() (
 
   private val logger = Logger(getClass)
 
-  private def notFound(implicit request: Request[_]) =
+  private def notFound(implicit request: Request[?]) =
     NotFound(error_404_template())
 
-  def index(): Action[AnyContent] =
+  val index: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       confluenceConnector
         .getBlogs()
@@ -132,7 +132,7 @@ class CatalogueController @Inject() (
       } yield result
     }
 
-  private def retrieveZone(serviceName: String)(implicit request: Request[_]): Future[Option[CostEstimationService.Zone]] =
+  private def retrieveZone(serviceName: String)(implicit request: Request[?]): Future[Option[CostEstimationService.Zone]] =
     serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
       .map{deploymentConfigs =>
         val zones = deploymentConfigs.map(_.zone).distinct
@@ -146,7 +146,7 @@ class CatalogueController @Inject() (
     repositoryDetails      : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(implicit
-    request : Request[_]
+    request : Request[?]
   ): Future[Result] = {
     for {
       deployments               <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
@@ -355,7 +355,7 @@ class CatalogueController @Inject() (
   def renderLibrary(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[_]): Future[Result] =
+  )(implicit request: Request[?]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesAllVersions(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
@@ -379,9 +379,9 @@ class CatalogueController @Inject() (
   private def renderPrototype(
     repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-    form                   : Form[_]        = ChangePrototypePassword.form(),
+    form                   : Form[?]        = ChangePrototypePassword.form(),
     successMessage         : Option[String] = None
-  )(implicit request: Request[_]): Future[Html] =
+  )(implicit request: Request[?]): Future[Html] =
     for {
       urlIfLeaksFound       <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
       commenterReport       <- prCommenterConnector.report(repoDetails.name)
@@ -403,7 +403,7 @@ class CatalogueController @Inject() (
   private def renderTest(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[_]): Future[Result] =
+  )(implicit request: Request[?]): Future[Result] =
     for {
       jenkinsJobs       <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name)
       repoModules       <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name)
@@ -422,7 +422,7 @@ class CatalogueController @Inject() (
   private def renderOther(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[_]): Future[Result] =
+  )(implicit request: Request[?]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
@@ -512,7 +512,7 @@ object TeamFilter {
   lazy val form = Form(
     mapping(
       "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(TeamFilter.apply)(TeamFilter.unapply)
+    )(TeamFilter.apply)(f => Some.apply(f.name))
   )
 }
 
@@ -524,7 +524,7 @@ object DigitalServiceNameFilter {
   lazy val form = Form(
     mapping(
       "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(DigitalServiceNameFilter.apply)(DigitalServiceNameFilter.unapply)
+    )(DigitalServiceNameFilter.apply)(f => Some(f.value))
   )
 }
 
@@ -565,7 +565,7 @@ object ChangePrototypePassword {
     )
 
   private val passwordConstraint =
-    Constraint("constraints.password") { input: String =>
+    Constraint[String]("constraints.password") { input =>
       if (input.matches("^[a-zA-Z0-9_]+$")) Valid
       else Invalid("Should only contain uppercase letters, lowercase letters, numbers, underscores")
     }
@@ -574,7 +574,7 @@ object ChangePrototypePassword {
     Form(
       Forms.mapping(
         "password" -> Forms.nonEmptyText.verifying(passwordConstraint)
-      )(PrototypePassword.apply)(PrototypePassword.unapply)
+      )(PrototypePassword.apply)(f => Some(f.value))
     )
 }
 
@@ -582,16 +582,18 @@ case class DefaultBranchesFilter(
    name           : Option[String]   = None,
    teamNames      : Option[TeamName] = None,
    defaultBranch  : Option[String]   = None
- ) {
-  def isEmpty: Boolean = name.isEmpty && teamNames.isEmpty && defaultBranch.isEmpty
+) {
+  def isEmpty: Boolean =
+    name.isEmpty && teamNames.isEmpty && defaultBranch.isEmpty
 }
 
 object DefaultBranchesFilter {
-  lazy val form: Form[DefaultBranchesFilter] = Form(
-    mapping(
-      "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-      "teamNames"     -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
-      "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(DefaultBranchesFilter.apply)(DefaultBranchesFilter.unapply)
-  )
+  lazy val form: Form[DefaultBranchesFilter] =
+    Form(
+      mapping(
+        "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "teamNames"     -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
+        "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+      )(DefaultBranchesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 }

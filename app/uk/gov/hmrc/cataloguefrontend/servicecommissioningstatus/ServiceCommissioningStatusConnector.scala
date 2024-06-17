@@ -20,6 +20,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import HttpReads.Implicits._
 import play.api.libs.json._
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName

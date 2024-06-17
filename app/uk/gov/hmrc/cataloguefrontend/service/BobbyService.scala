@@ -50,11 +50,11 @@ class BobbyService @Inject() (
     serviceConfigsConnector
       .bobbyRules()
       .map { ruleset =>
-        val (upcomingLibraries, activeLibraries) = ruleset.libraries.partition(_.from isAfter today)
-        val (upcomingPlugins, activePlugins)     = ruleset.plugins.partition(_.from isAfter today)
+        val (upcomingLibraries, activeLibraries) = ruleset.libraries.partition(_.from.isAfter(today))
+        val (upcomingPlugins, activePlugins)     = ruleset.plugins.partition(_.from.isAfter(today))
         BobbyRulesView(
-          upcoming = sort(BobbyRuleSet(upcomingLibraries, upcomingPlugins), _ isBefore _),
-          active = sort(BobbyRuleSet(activeLibraries, activePlugins), _ isAfter _)
+          upcoming = sort(BobbyRuleSet(upcomingLibraries, upcomingPlugins), _.isBefore(_)),
+          active   = sort(BobbyRuleSet(activeLibraries, activePlugins), _.isAfter(_))
         )
       }
   }

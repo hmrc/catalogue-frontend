@@ -16,15 +16,14 @@
 
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.shuttering.FrontendRouteWarning
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 
-@this(viewMessages: ViewMessages)
+@this()
 
-@( warningsMap    : Map[Environment, Seq[FrontendRouteWarning]]
- , selectedEnv    : Environment
- , selectedService: String
- )(implicit
-   request        : RequestHeader
+@(warningsMap    : Map[Environment, Seq[FrontendRouteWarning]]
+, selectedEnv    : Environment
+, selectedService: String
+)(implicit
+  request        : RequestHeader
 )
 
 @standard_layout(s"Frontend Route Warnings: ${selectedEnv.asString}") {

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -96,7 +96,7 @@ object Breakdown {
     ( (__ \ "points"     ).read[Int]
     ~ (__ \ "description").read[String]
     ~ (__ \ "href"       ).readNullable[String]
-    )(Breakdown.apply _)
+    )(Breakdown.apply)
 }
 
 case class WeightedMetric(
@@ -112,7 +112,7 @@ object WeightedMetric {
     ( (__ \ "metricType").read[MetricType]
     ~ (__ \ "score"     ).read[Int]
     ~ (__ \ "breakdown" ).read[Seq[Breakdown]]
-    )(WeightedMetric.apply _)
+    )(WeightedMetric.apply)
   }
 }
 
@@ -131,7 +131,7 @@ object Indicator {
     ~ (__ \ "repoType"       ).read[RepoType]
     ~ (__ \ "overallScore"   ).read[Int]
     ~ (__ \ "weightedMetrics").read[Seq[WeightedMetric]]
-    )(Indicator.apply _)
+    )(Indicator.apply)
   }
 }
 
@@ -146,7 +146,7 @@ object DataPoint {
     implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
     ( (__ \ "timestamp"   ).format[Instant]
     ~ (__ \ "overallScore").format[Int]
-    )(DataPoint.apply, unlift(DataPoint.unapply))
+    )(DataPoint.apply, r => Tuple.fromProductTyped(r))
   }
 }
 
@@ -157,7 +157,7 @@ object HistoricIndicatorAPI {
     implicit val dataFormat: Format[DataPoint] = DataPoint.format
     ( (__ \ "repoName"  ).format[String]
     ~ (__ \ "dataPoints").format[Seq[DataPoint]
-    ])(HistoricIndicatorAPI.apply, unlift(HistoricIndicatorAPI.unapply))
+    ])(HistoricIndicatorAPI.apply, r => Tuple.fromProductTyped(r))
   }
 }
 
@@ -171,6 +171,6 @@ object AveragePlatformScore {
     implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
     ( (__ \ "timestamp"   ).format[Instant]
     ~ (__ \ "averageScore").format[Int]
-    )(AveragePlatformScore.apply, unlift(AveragePlatformScore.unapply))
+    )(AveragePlatformScore.apply, r => Tuple.fromProductTyped(r))
   }
 }

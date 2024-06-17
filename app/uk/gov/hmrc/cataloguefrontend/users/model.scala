@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.users
 
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{JsObject, Json, OWrites, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
@@ -45,7 +45,7 @@ object Member {
     ( (__ \ "username"   ).read[String]
     ~ (__ \ "displayName").readNullable[String]
     ~ (__ \ "role"       ).read[Role]
-    )(Member.apply _)
+    )(Member.apply)
   }
 }
 
@@ -84,7 +84,7 @@ object UmpTeam {
     ~ (__ \ "documentation"    ).readNullable[String]
     ~ (__ \ "slack"            ).readNullable[SlackInfo]
     ~ (__ \ "slackNotification").readNullable[SlackInfo]
-    )(UmpTeam.apply _)
+    )(UmpTeam.apply)
   }
 }
 
@@ -113,7 +113,7 @@ object User {
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
     ~ ( __ \ "role"          ).read[Role](Role.reads)
     ~ ( __ \ "teamNames"     ).read[Seq[TeamName]](Reads.seq(TeamName.format))
-      )(User.apply _)
+      )(User.apply)
   }
 }
 
@@ -149,7 +149,7 @@ case class CreateUserRequest(
 object CreateUserRequest {
 
   implicit val writes: OWrites[CreateUserRequest] =
-    OWrites.transform(
+    OWrites.transform[CreateUserRequest](
       ( (__ \ "givenName"               ).write[String]
       ~ (__ \ "familyName"              ).write[String]
       ~ (__ \ "organisation"            ).write[String]
@@ -164,7 +164,7 @@ object CreateUserRequest {
       ~ (__ \ "access" \ "confluence"   ).write[Boolean]
       ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
       ~ (__ \ "access" \ "environments" ).write[Boolean]
-      )(unlift(CreateUserRequest.unapply))
+      )(r => Tuple.fromProductTyped(r))
     ) { (req, json) =>
       val givenName   = if (req.isServiceAccount) s"service_${req.givenName}" else req.givenName
       val displayName = if (req.isServiceAccount) s"$givenName ${req.familyName}" else s"${givenName.capitalize} ${req.familyName.capitalize}"
@@ -177,4 +177,3 @@ object CreateUserRequest {
       )
     }
 }
-

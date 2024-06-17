@@ -46,7 +46,7 @@ class ShutterEventsController @Inject() (
 
   private val logger = Logger(getClass)
 
-  def shutterEvents: Action[AnyContent] =
+  val shutterEvents: Action[AnyContent] =
     Action {
       Redirect(routes.ShutterEventsController.shutterEventsList(Environment.Production))
     }
@@ -75,12 +75,13 @@ class ShutterEventsController @Inject() (
 private case class ShutterEventsForm(env: String, serviceName: Option[ServiceName])
 
 private object ShutterEventsForm {
-  lazy val form = Form(
-    Forms.mapping(
-      "environment" -> Forms.nonEmptyText
-    , "serviceName" -> Forms.optional(Forms.text.transform[ServiceName](ServiceName.apply, _.asString))
-    )(ShutterEventsForm.apply)(ShutterEventsForm.unapply)
-  )
+  lazy val form =
+    Form(
+      Forms.mapping(
+        "environment" -> Forms.nonEmptyText
+      , "serviceName" -> Forms.optional(Forms.text.transform[ServiceName](ServiceName.apply, _.asString))
+      )(ShutterEventsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 
   def fromFilter(filter: ShutterEventsFilter): Form[ShutterEventsForm] =
     form.fill(ShutterEventsForm(filter.environment.asString, filter.serviceName))

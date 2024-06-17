@@ -60,7 +60,7 @@ class ServiceConfigsService @Inject()(
             key -> (envMap + (e -> (values :+ ConfigSourceValue(cse.source, cse.sourceUrl, value))))
           }
         }
-      }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString): _*)) // sort by keys
+      }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString)*)) // sort by keys
 
   def removedConfig(
     serviceName : String,
@@ -115,7 +115,7 @@ class ServiceConfigsService @Inject()(
                              }
     } yield (newConfig)
 
-def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsEnriched] =
+  def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsEnriched] =
     for {
       repos    <- teamsAndReposConnector.allRepositories()
       srs      <- serviceConfigsConnector.serviceRelationships(serviceName)
@@ -183,7 +183,7 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
           }
         }
 
-        val configEnvs: Seq[ConfigEnvironment] = allEnvs.map(ConfigEnvironment.ForEnvironment)
+        val configEnvs: Seq[ConfigEnvironment] = allEnvs.map(ConfigEnvironment.ForEnvironment.apply)
 
         KeyName(key) -> configEnvs.zip(keyValues).toMap
       }.toMap
@@ -256,25 +256,25 @@ def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Futur
                         )
     } yield (slots ++ instances ++ envVars ++ jvm).sortBy(_.k)
 
-    private def valChanges(key: String, appliedVal: Option[String], newVal: Option[String]): Seq[ConfigChange] =
-      (appliedVal, newVal) match {
-        case (Some(appliedVal), Some(newVal)) if appliedVal != newVal => Seq(ConfigChange.ChangedConfig(key, appliedVal, newVal))
-        case (None            , Some(newVal))                         => Seq(ConfigChange.NewConfig(key, newVal))
-        case (Some(appliedVal), None        )                         => Seq(ConfigChange.DeletedConfig(key, appliedVal))
-        case _                                                        => Seq.empty
-      }
+  private def valChanges(key: String, appliedVal: Option[String], newVal: Option[String]): Seq[ConfigChange] =
+    (appliedVal, newVal) match {
+      case (Some(appliedVal), Some(newVal)) if appliedVal != newVal => Seq(ConfigChange.ChangedConfig(key, appliedVal, newVal))
+      case (None            , Some(newVal))                         => Seq(ConfigChange.NewConfig(key, newVal))
+      case (Some(appliedVal), None        )                         => Seq(ConfigChange.DeletedConfig(key, appliedVal))
+      case _                                                        => Seq.empty
+    }
 
-    private def mapChanges(keyPrefix: String, appliedConf: Map[String, String], newConf: Map[String, String]): Seq[ConfigChange] =
-      appliedConf.toSeq.collect { case (k, v) if newConf.get(k).isEmpty =>
-        ConfigChange.DeletedConfig(s"$keyPrefix.${k}", v)
-      } ++
-        newConf.toSeq.flatMap { case (k, v) =>
-          appliedConf.get(k) match {
-            case Some(appliedV) if appliedV != v => Seq(ConfigChange.ChangedConfig(s"$keyPrefix.${k}", appliedV, v))
-            case None                            => Seq(ConfigChange.NewConfig(s"$keyPrefix.${k}", v))
-            case _                               => Seq.empty
-          }
+  private def mapChanges(keyPrefix: String, appliedConf: Map[String, String], newConf: Map[String, String]): Seq[ConfigChange] =
+    appliedConf.toSeq.collect { case (k, v) if newConf.get(k).isEmpty =>
+      ConfigChange.DeletedConfig(s"$keyPrefix.${k}", v)
+    } ++
+      newConf.toSeq.flatMap { case (k, v) =>
+        appliedConf.get(k) match {
+          case Some(appliedV) if appliedV != v => Seq(ConfigChange.ChangedConfig(s"$keyPrefix.${k}", appliedV, v))
+          case None                            => Seq(ConfigChange.NewConfig(s"$keyPrefix.${k}", v))
+          case _                               => Seq.empty
         }
+      }
   }
 
 object ServiceConfigsService {
@@ -348,7 +348,7 @@ object ServiceConfigsService {
       ( (__ \ "source"   ).read[String]
       ~ (__ \ "sourceUrl").readNullable[String]
       ~ (__ \ "entries"  ).read[Map[String, String]].map(_.map { case (k, v) => KeyName(k) -> v }.toMap)
-      )(ConfigSourceEntries.apply _)
+      )(ConfigSourceEntries.apply)
   }
 
   case class ConfigSourceValue(
@@ -373,7 +373,7 @@ object ServiceConfigsService {
       ( (__ \ "source"   ).read[String]
       ~ (__ \ "sourceUrl").readNullable[String]
       ~ (__ \ "value"    ).read[String]
-      )(ConfigSourceValue.apply _)
+      )(ConfigSourceValue.apply)
   }
 
   case class ServiceRelationships(
@@ -385,7 +385,7 @@ object ServiceConfigsService {
     val reads: Reads[ServiceRelationships] =
       ( (__ \ "inboundServices" ).read[Seq[String]]
       ~ (__ \ "outboundServices").read[Seq[String]]
-      )(ServiceRelationships.apply _)
+      )(ServiceRelationships.apply)
   }
 
   case class ServiceRelationship(
@@ -456,7 +456,7 @@ object ServiceConfigsService {
       ( (__ \ "serviceName"  ).read[String].map(ServiceName.apply)
       ~ (__ \ "key"          ).read[String].map(KeyName.apply)
       ~ (__ \ "environments" ).read[Map[Environment, ConfigSourceValue]]
-      )(AppliedConfig.apply _)
+      )(AppliedConfig.apply)
     }
   }
 
@@ -477,7 +477,7 @@ object ServiceConfigsService {
       ~ (__ \ "key"        ).read[String].map(KeyName.apply)
       ~ (__ \ "value"      ).read[ConfigSourceValue]
       ~ (__ \ "warning"    ).read[String]
-      )(ConfigWarning.apply _)
+      )(ConfigWarning.apply)
     }
   }
 }

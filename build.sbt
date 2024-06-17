@@ -8,7 +8,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     majorVersion := 4,
-    scalaVersion := "2.13.12",
+    scalaVersion := "3.3.3",
     scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
@@ -52,8 +52,6 @@ val test = Seq(
   "uk.gov.hmrc"            %% "bootstrap-test-play-30"   % bootstrapPlayVersion % Test,
   "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"  % hmrcMongoVersion     % Test,
   "org.scalatestplus"      %% "scalacheck-1-17"          % "3.2.17.0"           % Test,
-  "org.mockito"            %% "mockito-scala-scalatest"  % "1.17.14"            % Test,
+  "org.scalatestplus"      %% "mockito-3-4"              % "3.2.10.0"           % Test,
   ws
 )
-
-addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)

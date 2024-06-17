@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.auth
 
-import javax.inject.{Inject, Singleton}
-import play.api.mvc.{Call, MessagesControllerComponents}
-import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, Retrieval}
+import play.api.mvc.{AnyContent, Call, MessagesControllerComponents}
+import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+import uk.gov.hmrc.internalauth.client.{AuthenticatedRequest, FrontendAuthComponents, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
 import uk.gov.hmrc.play.bootstrap.binders.{OnlyRelative, RedirectUrl}
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class AuthController @Inject() (
@@ -42,7 +43,7 @@ class AuthController @Inject() (
     auth.authenticatedAction(
       continueUrl = routes.AuthController.signIn(sanitize(targetUrl)),
       retrieval   = Retrieval.username
-    ){ implicit request =>
+    ){ implicit (request: AuthenticatedRequest[AnyContent, Retrieval.Username]) =>
       Redirect(
         targetUrl.flatMap(_.getEither(OnlyRelative).toOption)
           .fold(appRoutes.CatalogueController.index.url)(_.url)

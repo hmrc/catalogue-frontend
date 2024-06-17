@@ -28,7 +28,7 @@ class WithDisplayNameSpec extends AnyWordSpec with Matchers with GuiceOneAppPerS
 
   "Working with logged in user's username" should {
     "be possible if user is logged in" in {
-      implicit val request = FakeRequest().withSession(AuthController.SESSION_USERNAME -> "John Smith")
+      implicit val request = FakeRequest().withSession((AuthController.SESSION_USERNAME, "John Smith"))
       val expectedOutput   = "<p> Something rendered when user logged-in </p>"
 
       val output =

@@ -30,14 +30,13 @@ import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, Vulnerabil
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.internalauth.client._
-import uk.gov.hmrc.play.bootstrap.binders.{AbsoluteWithHostnameFromAllowlist, RedirectUrl}
+import uk.gov.hmrc.play.bootstrap.binders.{AbsoluteWithHostnameFromAllowlist, RedirectUrl, RedirectUrlPolicy, SafeRedirectUrl}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.deployments.{DeployServicePage, DeployServiceStep4Page}
 import views.html.error_404_template
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
 
 @Singleton
 class DeployServiceController @Inject()(
@@ -265,7 +264,7 @@ class DeployServiceController @Inject()(
   def step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (for {
-        qUrl <- EitherT.fromEither[Future](queueUrl.getEither(redirectUrlPolicy))
+        qUrl <- EitherT.fromEither[Future](queueUrl.getEither[RedirectUrlPolicy.Id](redirectUrlPolicy))
                        .leftMap(_ => BadRequest("Invalid queueUrl"))
         bUrl <- EitherT.fromEither[Future](buildUrl.fold(Right(Option.empty[SafeRedirectUrl]): Either[String, Option[SafeRedirectUrl]])(_.getEither(redirectUrlPolicy).map(Option.apply)))
                        .leftMap(_ => BadRequest("Invalid buildUrl"))
@@ -296,7 +295,7 @@ class DeployServiceController @Inject()(
   def step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (for {
-        qUrl <- EitherT.fromEither[Future](queueUrl.getEither(redirectUrlPolicy))
+        qUrl <- EitherT.fromEither[Future](queueUrl.getEither[RedirectUrlPolicy.Id](redirectUrlPolicy))
                        .leftMap(_ => BadRequest("Invalid queueUrl"))
         bUrl <- EitherT.fromEither[Future](buildUrl.fold(Right(Option.empty[SafeRedirectUrl]): Either[String, Option[SafeRedirectUrl]])(_.getEither(redirectUrlPolicy).map(Option.apply)))
                        .leftMap(_ => BadRequest("Invalid buildUrl"))
@@ -328,11 +327,12 @@ case class DeployServiceForm(
 
 import play.api.data.{Form, Forms}
 object DeployServiceForm {
-  val form: Form[DeployServiceForm] = Form(
-    Forms.mapping(
-      "serviceName" -> Forms.text
-    , "version"     -> Forms.of[Version](Version.formFormat)
-    , "environment" -> Forms.of[Environment](Environment.formFormat)
-    )(DeployServiceForm.apply)(DeployServiceForm.unapply)
-  )
+  val form: Form[DeployServiceForm] =
+    Form(
+      Forms.mapping(
+        "serviceName" -> Forms.text
+      , "version"     -> Forms.of[Version](Version.formFormat)
+      , "environment" -> Forms.of[Environment](Environment.formFormat)
+      )(DeployServiceForm.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 }

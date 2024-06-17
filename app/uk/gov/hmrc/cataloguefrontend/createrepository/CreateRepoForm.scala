@@ -20,7 +20,7 @@ package uk.gov.hmrc.cataloguefrontend.createrepository
 import play.api.data.Form
 import play.api.data.Forms.{boolean, mapping, nonEmptyText, text}
 import play.api.data.validation.{Constraint, Invalid, Valid}
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Writes, __}
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkConstraint
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
@@ -38,7 +38,7 @@ object CreateServiceRepoForm {
     ~ (__ \ "makePrivate"   ).write[Boolean]
     ~ (__ \ "teamName"      ).write[String].contramap[TeamName](_.asString)
     ~ (__ \ "repoType"      ).write[String]
-    )(unlift(CreateServiceRepoForm.unapply))
+    )(r => Tuple.fromProductTyped(r))
 
   val repoTypeValidation: String => Boolean =
     str => CreateServiceRepositoryType.parse(str).nonEmpty
@@ -62,12 +62,12 @@ object CreateServiceRepoForm {
   val form: Form[CreateServiceRepoForm] =
     Form(
       mapping(
-        "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None) :_*),
+        "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> boolean,
         "teamName"       -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
         "repoType"       -> nonEmptyText.verifying(repoTypeConstraint),
-      )(CreateServiceRepoForm.apply)(CreateServiceRepoForm.unapply)
-        .verifying(repoTypeAndNameConstraints :_*)
+      )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
+        .verifying(repoTypeAndNameConstraints*)
     )
 }
 
@@ -78,21 +78,22 @@ object CreateTestRepoForm {
   private val repoTestTypeConstraint: Constraint[String] =
     mkConstraint("constraints.repoTypeCheck")(constraint = repoTestTypeValidation, error = CreateTestRepositoryType.parsingError)
 
-  val repoNameTestConstraint: CreateServiceRepoForm => Boolean = crf => crf.repositoryName.toLowerCase.endsWith("-tests") || crf.repositoryName.toLowerCase.endsWith("-test")
+  private[createrepository] val repoNameTestConstraint: CreateServiceRepoForm => Boolean = crf => crf.repositoryName.toLowerCase.endsWith("-tests") || crf.repositoryName.toLowerCase.endsWith("-test")
 
   private val repoTypeAndNameConstraints = Seq(
     mkConstraint("constraints.conflictingFields1")(constraint = repoNameTestConstraint, error = "Repository name can only end in '-test' or '-tests'"),
   )
 
-  val form: Form[CreateServiceRepoForm] = Form(
-    mapping(
-      "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None): _*),
-      "makePrivate"    -> boolean,
-      "teamName"       -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
-      "repoType"       -> nonEmptyText.verifying(repoTestTypeConstraint),
-    )(CreateServiceRepoForm.apply)(CreateServiceRepoForm.unapply)
-      .verifying(repoTypeAndNameConstraints: _*)
-  )
+  val form: Form[CreateServiceRepoForm] =
+    Form(
+      mapping(
+        "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
+        "makePrivate"    -> boolean,
+        "teamName"       -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
+        "repoType"       -> nonEmptyText.verifying(repoTestTypeConstraint),
+      )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
+        .verifying(repoTypeAndNameConstraints*)
+    )
 }
 
 case class CreatePrototypeRepoForm(
@@ -109,7 +110,7 @@ object CreatePrototypeRepoForm {
     ~ (__ \ "password"      ).write[String]
     ~ (__ \ "teamName"      ).write[String].contramap[TeamName](_.asString)
     ~ (__ \ "slackChannels" ).write[String]
-    )(unlift(CreatePrototypeRepoForm.unapply))
+    )(r => Tuple.fromProductTyped(r))
 
   private val passwordCharacterValidation: String => Boolean =
     str => str.matches("^[a-zA-Z0-9_]+$")
@@ -128,11 +129,11 @@ object CreatePrototypeRepoForm {
   val form: Form[CreatePrototypeRepoForm] =
     Form(
       mapping(
-        "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype")) :_*),
+        "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype"))*),
         "password"            -> nonEmptyText.verifying(passwordConstraint),
         "teamName"            -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
-        "slackChannels"       -> text.verifying(slackChannelConstraint :_*),
-      )(CreatePrototypeRepoForm.apply)(CreatePrototypeRepoForm.unapply)
+        "slackChannels"       -> text.verifying(slackChannelConstraint*),
+      )(CreatePrototypeRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
     )
 }
 

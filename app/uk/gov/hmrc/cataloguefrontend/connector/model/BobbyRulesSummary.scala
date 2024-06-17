@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
-import java.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsValue, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+
+import java.time.LocalDate
 
 case class BobbyRulesSummary(
   date   : LocalDate,
@@ -55,18 +56,18 @@ private object DataFormat {
 
 object BobbyRulesSummary {
   val reads: Reads[BobbyRulesSummary] = {
-    implicit val df = DataFormat.dataReads[Int]
+    implicit val df: Reads[Map[(BobbyRule, SlugInfoFlag), Int]] = DataFormat.dataReads[Int]
     ( (__ \ "date"   ).read[LocalDate]
     ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), Int]]
-    )(BobbyRulesSummary.apply _)
+    )(BobbyRulesSummary.apply)
   }
 }
 
 object HistoricBobbyRulesSummary {
   val reads: Reads[HistoricBobbyRulesSummary] = {
-    implicit val df = DataFormat.dataReads[List[Int]]
+    implicit val df: Reads[Map[(BobbyRule, SlugInfoFlag), List[Int]]] = DataFormat.dataReads[List[Int]]
     ( (__ \ "date"   ).read[LocalDate]
     ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), List[Int]]]
-    )(HistoricBobbyRulesSummary.apply _)
+    )(HistoricBobbyRulesSummary.apply)
   }
 }

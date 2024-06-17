@@ -102,24 +102,25 @@ class CreateUserController @Inject()(
 }
 
 object CreateUserForm {
-  val form: Form[CreateUserRequest] = Form(
-    mapping(
-      "givenName"        -> text.verifying(CreateUserConstraints.nameConstraints("givenName") :_*).verifying(CreateUserConstraints.containsServiceConstraint),
-      "familyName"       -> text.verifying(CreateUserConstraints.nameConstraints("familyName") :_*),
-      "organisation"     -> nonEmptyText,
-      "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.digitalEmailConstraint),
-      "contactComments"  -> default(text, "").verifying(maxLength(512)),
-      "team"             -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
-      "isReturningUser"  -> boolean,
-      "isTransitoryUser" -> boolean,
-      "isServiceAccount" -> boolean,
-      "vpn"             -> boolean,
-      "jira"            -> boolean,
-      "confluence"      -> boolean,
-      "googleApps"      -> boolean,
-      "environments"    -> boolean
-    )(CreateUserRequest.apply)(CreateUserRequest.unapply)
-  )
+  val form: Form[CreateUserRequest] =
+    Form(
+      mapping(
+        "givenName"        -> text.verifying(CreateUserConstraints.nameConstraints("givenName")*).verifying(CreateUserConstraints.containsServiceConstraint),
+        "familyName"       -> text.verifying(CreateUserConstraints.nameConstraints("familyName")*),
+        "organisation"     -> nonEmptyText,
+        "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.digitalEmailConstraint),
+        "contactComments"  -> default(text, "").verifying(maxLength(512)),
+        "team"             -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
+        "isReturningUser"  -> boolean,
+        "isTransitoryUser" -> boolean,
+        "isServiceAccount" -> boolean,
+        "vpn"             -> boolean,
+        "jira"            -> boolean,
+        "confluence"      -> boolean,
+        "googleApps"      -> boolean,
+        "environments"    -> boolean
+      )(CreateUserRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
 }
 
 object CreateUserConstraints {

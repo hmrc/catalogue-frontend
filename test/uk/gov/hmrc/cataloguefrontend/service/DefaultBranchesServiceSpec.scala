@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import org.mockito.MockitoSugar
-import org.mockito.MockitoSugar.mock
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
@@ -29,7 +29,11 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with ScalaFutures {
+class DefaultBranchesServiceSpec
+  extends AnyWordSpec
+     with Matchers
+     with MockitoSugar
+     with ScalaFutures {
 
   "filterRepositories" should {
     "return an integer representing how many repositories should be returned in a default search" in new Setup {
@@ -76,7 +80,6 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
       defaultBranchesService.allTeams(result).length shouldBe 3
     }
   }
-}
 
   private[this] trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -182,4 +185,5 @@ class DefaultBranchesServiceSpec extends AnyWordSpec with Matchers with MockitoS
         language       = None
       )
     )
+  }
 }

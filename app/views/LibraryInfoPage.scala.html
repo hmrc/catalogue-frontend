@@ -15,7 +15,6 @@
  *@
 
 @import partials.ModulesPartial
-@import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
@@ -41,7 +40,7 @@
         Library: @library.name
         @{
             if(library.isArchived) {
-                <span>Archived</span> 
+                <span>Archived</span>
             } else if(library.isDeprecated) {
                 <span>Deprecated</span>
             }

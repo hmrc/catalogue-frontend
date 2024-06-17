@@ -26,7 +26,6 @@ import uk.gov.hmrc.cataloguefrontend.repository
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.RepositoriesListPage
-import views.html.partials.RepoSearchResultsPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -36,7 +35,6 @@ class RepositoriesController @Inject() (
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   override val mcc             : MessagesControllerComponents,
   repositoriesListPage         : RepositoriesListPage,
-  repositoriesSearchResultsPage: RepoSearchResultsPage,
   override val auth            : FrontendAuthComponents
  )(implicit
    override val ec: ExecutionContext
@@ -109,10 +107,10 @@ object RepoListFilter {
   lazy val form =
     Form(
       mapping(
-        "name"            -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"            -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
-        "repoType"        -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "showArchived"    -> optional(boolean)
-      )(RepoListFilter.apply)(RepoListFilter.unapply)
+        "name"         -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "team"         -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
+        "repoType"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "showArchived" -> optional(boolean)
+      )(RepoListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

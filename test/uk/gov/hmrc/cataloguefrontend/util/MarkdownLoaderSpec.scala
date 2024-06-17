@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 class MarkdownLoaderSpec

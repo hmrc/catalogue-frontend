@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.auth
 
-import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -39,7 +40,6 @@ class AuthControllerSpec
      with Matchers
      with GuiceOneAppPerSuite
      with MockitoSugar
-     with ArgumentMatchersSugar
      with OptionValues
      with ScalaFutures {
 

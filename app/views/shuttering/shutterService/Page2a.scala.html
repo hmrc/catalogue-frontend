@@ -14,24 +14,23 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
 @import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterStatusValue, ShutterState, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step0Out, Step1Out, Step2aForm, ServiceAndRouteWarnings}
 @import helper._
 @import partials.form_global_errors
 
-@this(viewMessages: ViewMessages)
+@this()
 
-@( form                 : Form[Step2aForm]
- , step0Out             : Step0Out
- , step1Out             : Step1Out
- , frontendRouteWarnings: Seq[ServiceAndRouteWarnings]
- , back                 : Call
- )(implicit
-   request              : RequestHeader
- , messagesProvider     : MessagesProvider
- )
+@(form                 : Form[Step2aForm]
+, step0Out             : Step0Out
+, step1Out             : Step1Out
+, frontendRouteWarnings: Seq[ServiceAndRouteWarnings]
+, back                 : Call
+)(implicit
+  request              : RequestHeader
+, messagesProvider     : MessagesProvider
+)
 
 @standard_layout("Shutter Frontend", active = "shuttering") {
 

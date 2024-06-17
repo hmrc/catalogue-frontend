@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{Json, JsValue, JsNull, JsString, Reads}
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
