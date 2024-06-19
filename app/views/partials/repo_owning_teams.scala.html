@@ -34,7 +34,7 @@
                 <ul class="list-unstyled mb-0">
                     @for(teamName <- RepoOwningTeamsHelper.teamNamesSortedByOwningTeam(repo)) {
                         <li class="list-item">
-                            <a id="link-to-team-page-for-@{teamName.asString.toLowerCase.replaceAll(" ", "-")}" href="@teamRoutes.TeamsController.team(teamName)">
+                            <a id="link-to-team-page-for-@{teamName.asString.toLowerCase.replaceAll(" ", "-")}" href="@teamRoutes.TeamsController.team(teamName.asString)">
                                 @if(repo.isDeFactoOwner(teamName)) {
                                     <strong>@teamName.asString <span class="badge rounded-pill text-bg-secondary ms-1">Owner</span></strong>
                                 } else {

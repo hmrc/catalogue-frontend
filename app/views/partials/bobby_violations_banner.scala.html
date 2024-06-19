@@ -29,7 +29,7 @@
 
 @reviewLink(environment: Option[Environment], pending: Boolean) = {
   @teamName.map { name =>
-    <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(name)">See Dependencies</a>.
+    <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(name.asString)">See Dependencies</a>.
   }.getOrElse {
     Please review the lists below, and refer to <a id="link-to-bobby-rules-list-@{if (pending) "pending" else "broken"}@{environment.fold("")(e => s"-${e.asString}")}" href="@appRoutes.BobbyExplorerController.list()">Bobby Rules</a>.
   }

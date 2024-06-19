@@ -1,8 +1,8 @@
 # microservice specific routes
 
 GET        /teams                                       uk.gov.hmrc.cataloguefrontend.teams.TeamsController.allTeams(name: Option[String] ?= None)
-GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.teams.TeamsController.team(teamName: TeamName)
-GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.teams.TeamsController.outOfDateTeamDependencies(teamName: TeamName)
+GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.teams.TeamsController.team(teamName: String)
+GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.teams.TeamsController.outOfDateTeamDependencies(teamName: String)
 
 GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[TeamName] ?= None, showArchived: Option[Boolean] ?= None, repoType: Option[String] ?= None)
 
@@ -138,7 +138,7 @@ GET        /deployment-timeline                                            uk.go
 POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()
 
 GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesList(vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, service: Option[String] ?= None, team: Option[String] ?= None, flag: Option[String] ?= None)
-GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(team: Option[String] ?= None)
+GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(team: Option[TeamName] ?= None)
 GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[String] ?= None, team: Option[String] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
 GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.allUsers(username: Option[String] ?= None)

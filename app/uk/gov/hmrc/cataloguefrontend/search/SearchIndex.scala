@@ -90,7 +90,7 @@ class SearchIndex @Inject()(
     for {
       repos         <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
       teams         <- teamsAndRepositoriesConnector.allTeams()
-      teamPageLinks =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
+      teamPageLinks =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name.asString).url, 0.5f),
                                                SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases().url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))
       repoLinks     =  repos.flatMap(r => List(SearchTerm(r.repoType.asString,    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),

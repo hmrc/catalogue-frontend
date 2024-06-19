@@ -48,7 +48,10 @@ class TeamsController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def team(teamName: TeamName): Action[AnyContent] =
+  def team(teamName: String): Action[AnyContent] =
+    team2(TeamName(teamName))
+
+  def team2(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       ( userManagementConnector.getTeam(teamName)
       , teamsAndRepositoriesConnector.allTeams()
@@ -115,7 +118,10 @@ class TeamsController @Inject()(
       }
     }
 
-  def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
+  def outOfDateTeamDependencies(teamName: String): Action[AnyContent] =
+    outOfDateTeamDependencies2(TeamName(teamName))
+
+  def outOfDateTeamDependencies2(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       ( teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false))
       , serviceDependenciesConnector.dependenciesForTeam(teamName)

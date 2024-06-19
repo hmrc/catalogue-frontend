@@ -70,7 +70,7 @@
                 @teams.zipWithIndex.map { case ((team, github), i) =>
                 <tr class="@github.fold("no-github")(_ => "github")" id="row@i">
                     <td class="team-name" id="row@{i}_name">
-                        <a href="@teamsRoutes.TeamsController.team(team.teamName)">@team.teamName.asString</a>
+                        <a href="@teamsRoutes.TeamsController.team(team.teamName.asString)">@team.teamName.asString</a>
                     </td>
                     <td class="members" id="row@{i}_members">
                       @team.members.length

@@ -21,6 +21,7 @@ import play.api.data.Forms.{boolean, mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.vulnerabilities.{VulnerabilitiesForServicesPage, VulnerabilitiesListPage, VulnerabilitiesTimelinePage}
@@ -70,7 +71,7 @@ class VulnerabilitiesController @Inject() (
     }
 
   def vulnerabilitiesForServices(
-    teamName: Option[String] = None //TeamName is read from form, this param only exists for reverse routes
+    teamName: Option[TeamName] = None //TeamName is read from form, this param only exists for reverse routes
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form

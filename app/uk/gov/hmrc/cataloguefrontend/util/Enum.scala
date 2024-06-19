@@ -38,6 +38,8 @@ trait FromStringEnum[T <: scala.reflect.Enum with FromString] {
       .find(_.asString.equalsIgnoreCase(s))
       .toRight(s"Invalid value: \"$s\" - should be one of: ${values.map(_.asString).mkString(", ")}")
 
+  // TODO can we replace this with `deriving Format, Formater, PathBindable, QueryStringBindable` as required?
+
   val reads: Reads[T] =
     _.validate[String]
      .flatMap(parse(_).fold(JsError(_), JsSuccess(_)))

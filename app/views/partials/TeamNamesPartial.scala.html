@@ -26,7 +26,7 @@
 
 @if(teamNames.length < Constant.sharedRepoTeamsCutOff) {
     @teamNames.map { tn =>
-        <div class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(tn)">@tn.asString</a></div>
+        <div class="repo-team" ><a href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(tn.asString)">@tn.asString</a></div>
     }
 } else {
     @* Mapping the team name to string, otherwise the mkString gives a string with `TeamName(...)` since

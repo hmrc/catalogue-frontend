@@ -20,16 +20,24 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{__, Format, Reads}
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
-case class Username(value: String) extends AnyVal // TODO asString
+opaque type TeamName = String
 
-case class TeamName(asString: String) extends AnyVal
+object TeamName:
+  def apply(s: String): TeamName = s
 
-object TeamName {
+  extension (tn: TeamName)
+    def asString: String = tn // TODO is this worthwhile now that toString is the same?
+
+
   lazy val format: Format[TeamName] =
     Format.of[String].inmap(TeamName.apply, _.asString)
 
   implicit val ordering: Ordering[TeamName] =
-    Ordering.by(_.asString)
+    new Ordering[TeamName] {
+      def compare(x: TeamName, y: TeamName): Int =
+        x.asString.compare(y.asString)
+    }
+    //Ordering.by(_.asString)
 
   implicit val pathBindable: PathBindable[TeamName] =
     new PathBindable[TeamName] {
@@ -49,7 +57,6 @@ object TeamName {
       override def unbind(key: String, value: TeamName): String =
         strBinder.unbind(key, value.asString)
     }
-}
 
 
 case class RepositoryModules(

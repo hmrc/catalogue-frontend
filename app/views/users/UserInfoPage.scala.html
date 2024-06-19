@@ -86,7 +86,7 @@
                         <ul id="user-teams" class="list-unstyled" style="column-count: 2;">
                         @user.teamNames.map { team =>
                           <li>
-                            <a href="@teamRoutes.TeamsController.team(team)">
+                            <a href="@teamRoutes.TeamsController.team(team.asString)">
                               @team.asString
                             </a>
                           </li>
