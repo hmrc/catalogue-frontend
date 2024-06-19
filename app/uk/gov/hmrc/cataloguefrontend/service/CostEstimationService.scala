@@ -75,43 +75,43 @@ class CostEstimationService @Inject() (
         )
       )
 
-  private def formatForChart(totalSlots: TotalSlots): String = {
+  private def formatAsSeqForChart(totalSlots: TotalSlots):Seq[Any] = {
+    val yearlyCostGbp = totalSlots.costGbp(costEstimateConfig)
+    Seq(yearlyCostGbp, s"""{"${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = ${totalSlots.asInt})"}""")
+  }
+
+  private def formatAsStringForChart(totalSlots: TotalSlots): String = {
     val yearlyCostGbp = totalSlots.costGbp(costEstimateConfig)
     s"""{ v: $yearlyCostGbp, f: "${CurrencyFormatter.formatGbp(yearlyCostGbp)} (slots = ${totalSlots.asInt})" }"""
   }
 
-  private def toChartDataTableByEnv(resourceUsages: List[ResourceUsage]): ChartDataTable = {
+  private def toChartDataTableByEnv(resourceUsages: List[ResourceUsage]): JsArray = {
     val applicableEnvironments =
       resourceUsages
         .foldLeft(Set.empty[Environment])((acc, ru) => acc ++ ru.values.collect { case (env, deploymentSize) if deploymentSize != DeploymentSize.empty => env })
         .toList
         .sorted
 
-    val headerRow =
-      "'Date'" +: applicableEnvironments.map(e => s"'${e.displayString}'")
+    val headerRow = {
+      JsString("Date") +: JsArray(applicableEnvironments.map(e => JsString(e.displayString)))
+    }
 
     val dataRows =
-      resourceUsages
-        .map { ru =>
-          s"new Date(${ru.date.toEpochMilli})" +:
-            applicableEnvironments.map(e => s"${ru.values.get(e).map(dc => formatForChart(dc.totalSlots)).getOrElse("null")}")
-        }
-
-    ChartDataTable(headerRow +: dataRows)
+      JsArray(resourceUsages
+        .map { resourceUsage =>
+          Json.toJson(resourceUsage.date) +:
+            JsArray(applicableEnvironments.map(e =>  resourceUsage.values.get(e).map(dc => formatAsSeqForChart(dc.totalSlots)).getOrElse(JsNull)))
+        })
+    dataRows
   }
 
-  private def toChartDataTableTotal(resourceUsages: List[ResourceUsage]): ChartDataTable = {
-    val headerRow =
-      List("'Date'", "'Yearly Cost'")
-
-    val dataRows =
-      resourceUsages.map { resourceUsage =>
-        val totalSlots = TotalSlots(resourceUsage.values.values.map(_.totalSlots.asInt).sum)
-        List(s"new Date(${resourceUsage.date.toEpochMilli})", formatForChart(totalSlots))
-      }
-      .toList
-
-    ChartDataTable(headerRow +: dataRows)
+  private def toChartDataTableTotal(resourceUsages: List[ResourceUsage]): JsArray = {
+    val headerRow = JsArray(Seq(JsString("Date"), JsString("Yearly Cost")))
+    val dataRows = JsArray(resourceUsages.map { resourceUsage =>
+      val totalSlots = TotalSlots(resourceUsage.values.values.map(_.totalSlots.asInt).sum)
+      JsArray(Seq( Json.toJson(resourceUsage.date), formatAsSeqForChart(totalSlots)))
+    })
+    headerRow +: dataRows
   }
 
   private def toChartDataTableTotalByEnv(slotsByEnv: Seq[(Environment, TotalSlots)]): ChartDataTable = {
@@ -121,7 +121,7 @@ class CostEstimationService @Inject() (
     val dataRows =
       slotsByEnv
         .map { case (environment, totalSlots) =>
-          List(s"'${environment.displayString}'", formatForChart(totalSlots))
+          List(s"'${environment.displayString}'", formatAsStringForChart(totalSlots))
         }
         .toList
     ChartDataTable(headerRow +: dataRows)
@@ -202,8 +202,8 @@ object CostEstimationService {
   }
 
   final case class HistoricEstimatedCostCharts(
-    totalsChart: ChartDataTable,
-    byEnvChart : ChartDataTable
+    totalsChart: JsArray,
+    byEnvChart : JsArray
   )
 
   final case class ServiceCostEstimate(

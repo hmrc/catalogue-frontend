@@ -76,7 +76,9 @@ class CostsSummaryController @Inject() (
     BasicAuthAction.async { implicit request =>
       for {
         teams           <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
-        configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.trim.isEmpty))
+        configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.trim.isEmpty ))
+                                                  .map(configs => configs.filterNot(_.deploymentSize.instances == 0))
+        _               = println(s"-------->${configs.mkString("\n")}")
         groupedConfigs  = configs.groupBy(_.serviceName)
       } yield {
         if (asCSV) {
