@@ -131,25 +131,14 @@ object RepositoryWithLeaks {
     implicitly[Reads[String]].map(RepositoryWithLeaks.apply)
 }
 
-sealed trait Priority {
-  val name: String =
-    this match {
-      case Priority.High   => "high"
-      case Priority.Medium => "medium"
-      case Priority.Low    => "low"
-    }
-
-  protected val ordering: Int =
-    this match {
-      case Priority.High   => 1
-      case Priority.Medium => 2
-      case Priority.Low    => 3
-    }
-}
+enum Priority(val name: String):
+  case High   extends Priority("high")
+  case Medium extends Priority("medium")
+  case Low    extends Priority("low")
 
 object Priority {
-  implicit val order: Ordering[Priority] =
-    Ordering.by(_.ordering)
+  implicit val ordering: Ordering[Priority] =
+    Ordering.by(_.ordinal)
 
   val reads: Reads[Priority] =
     Reads.StringReads.map {
@@ -158,10 +147,6 @@ object Priority {
       case "low"    => Low
       case p        => throw new RuntimeException(s"Priority type '$p' unknown")
     }
-
-  case object High   extends Priority
-  case object Medium extends Priority
-  case object Low    extends Priority
 }
 
 final case class LeakDetectionSummary(

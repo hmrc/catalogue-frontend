@@ -71,12 +71,12 @@ class DependencyExplorerController @Inject() (
                            ),
           teams          = teams,
           flags          = SlugInfoFlag.values,
-          scopes         = DependencyScope.values,
+          scopes         = DependencyScope.valuesAsSeq,
           groupArtefacts = groupArtefacts,
           versionRange   = BobbyVersionRange(None, None, None, ""),
           searchResults  = None,
           pieData        = None,
-          repoTypes      = RepoType.values.filterNot(_ == RepoType.Prototype)
+          repoTypes      = RepoType.valuesAsSeq.filterNot(_ == RepoType.Prototype)
         )
       )
     }
@@ -87,16 +87,16 @@ class DependencyExplorerController @Inject() (
     versionRange: Option[String],
     team        : Option[String],
     flag        : Option[String],
-    `scope[]`   : Option[List[String]],
-    `repoType[]`: Option[List[String]],
+    `scope[]`   : Option[Seq[String]],
+    `repoType[]`: Option[Seq[String]],
     asCsv       : Boolean
   ): Action[AnyContent] =
     BasicAuthAction.async(implicit request =>
       for {
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
-        scopes         =  DependencyScope.values
-        repoTypes      =  RepoType.values.filterNot(_ == RepoType.Prototype)
+        scopes         =  DependencyScope.valuesAsSeq
+        repoTypes      =  RepoType.valuesAsSeq.filterNot(_ == RepoType.Prototype)
         groupArtefacts <- dependenciesService.getGroupArtefacts
         filledForm     =
           SearchForm(
@@ -105,8 +105,8 @@ class DependencyExplorerController @Inject() (
             versionRange = versionRange.getOrElse(BobbyVersionRange("[0.0.0,]").range),
             team         = team.getOrElse(""),
             flag         = flag.getOrElse(SlugInfoFlag.Latest.asString),
-            scope        = `scope[]`.getOrElse(List(DependencyScope.Compile.asString)),
-            repoType     = `repoType[]`.getOrElse(List(RepoType.Service.asString))
+            scope        = `scope[]`.getOrElse(Seq(DependencyScope.Compile.asString)),
+            repoType     = `repoType[]`.getOrElse(Seq(RepoType.Service.asString))
           )
         res <- {
           def pageWithError(msg: String) =
@@ -190,8 +190,8 @@ class DependencyExplorerController @Inject() (
   case class SearchForm(
     team        : String,
     flag        : String,
-    repoType    : List[String],
-    scope       : List[String],
+    repoType    : Seq[String],
+    scope       : Seq[String],
     group       : String,
     artefact    : String,
     versionRange: String,
@@ -203,8 +203,8 @@ class DependencyExplorerController @Inject() (
       Forms.mapping(
         "team"         -> Forms.default(Forms.text, ""),
         "flag"         -> Forms.text.verifying(FormUtils.notEmpty),
-        "repoType"     -> Forms.list(Forms.text),
-        "scope"        -> Forms.list(Forms.text),
+        "repoType"     -> Forms.seq(Forms.text),
+        "scope"        -> Forms.seq(Forms.text),
         "group"        -> Forms.text.verifying(FormUtils.notEmpty),
         "artefact"     -> Forms.text.verifying(FormUtils.notEmpty),
         "versionRange" -> Forms.default(Forms.text, ""),
@@ -265,8 +265,8 @@ object DependencyExplorerController {
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search(
       group        = group,
       artefact     = artefact,
-      `scope[]`    = Some(scopes.map(_.asString).toList),
-      `repoType[]` = repoTypes.map(_.map(_.asString).toList),
+      `scope[]`    = Some(scopes.map(_.asString)),
+      `repoType[]` = repoTypes.map(_.map(_.asString)),
       flag         = Some(flag.asString),
       team         = Some(team),
       versionRange = Some(versionRange.range),

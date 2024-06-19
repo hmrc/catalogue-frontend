@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-trait CsvUtils {
-
+object CsvUtils {
   /** generate csv */
   def toCsv(rows: Seq[Seq[(String, String)]]): String =
     rows.headOption
@@ -28,5 +27,3 @@ trait CsvUtils {
       }
       .getOrElse("No data")
 }
-
-object CsvUtils extends CsvUtils

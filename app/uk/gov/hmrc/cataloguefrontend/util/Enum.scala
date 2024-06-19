@@ -16,14 +16,22 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-import play.api.libs.json.{Reads, JsError, JsSuccess}
 import play.api.data.format.Formatter
 import play.api.data.FormError
+import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
+import play.api.mvc.{PathBindable, QueryStringBindable}
 
-trait WithAsString {def asString: String}
 
-trait Enum[T <: WithAsString] {
-  val values: List[T]
+trait FromString { def asString: String }
+
+trait FromStringEnum[T <: scala.reflect.Enum with FromString] {
+  def values: Array[T]
+
+  lazy val valuesAsSeq: Seq[T] =
+    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
+
+  implicit val ordering: Ordering[T] =
+    Ordering.by(_.ordinal)
 
   def parse(s: String): Either[String, T] =
     values
@@ -34,14 +42,40 @@ trait Enum[T <: WithAsString] {
     _.validate[String]
      .flatMap(parse(_).fold(JsError(_), JsSuccess(_)))
 
-  val formFormat: Formatter[T] = new Formatter[T] {
-    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], T] =
-      data
-        .get(key)
-        .flatMap(parse(_).toOption)
-        .fold[Either[Seq[FormError], T]](Left(Seq(FormError(key, "Invalid value"))))(Right.apply)
+  val writes: Writes[T] =
+    t => JsString(t.asString)
 
-    override def unbind(key: String, value: T): Map[String, String] =
-      Map(key -> value.asString)
-  }
+  val format: Format[T] =
+    Format[T](reads, writes)
+
+  val formFormat: Formatter[T] =
+    new Formatter[T] {
+      override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], T] =
+        data
+          .get(key)
+          .flatMap(parse(_).toOption)
+          .fold[Either[Seq[FormError], T]](Left(Seq(FormError(key, "Invalid value"))))(Right.apply)
+
+      override def unbind(key: String, value: T): Map[String, String] =
+        Map(key -> value.asString)
+    }
+
+  implicit val pathBindable: PathBindable[T] =
+    new PathBindable[T] {
+      override def bind(key: String, value: String): Either[String, T] =
+        parse(value)
+
+      override def unbind(key: String, value: T): String =
+        value.asString
+    }
+
+  implicit def queryStringBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[T] =
+    new QueryStringBindable[T] {
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, T]] =
+        strBinder.bind(key, params)
+          .map(_.flatMap { value => parse(value) })
+
+      override def unbind(key: String, value: T): String =
+        strBinder.unbind(key, value.asString)
+    }
 }

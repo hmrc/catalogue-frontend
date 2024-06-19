@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{OFormat, __}
-import play.api.mvc.QueryStringBindable
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 case class Progress(
   current : Int,
@@ -54,28 +54,8 @@ object PlatformInitiative {
     )(apply, pi => Tuple.fromProductTyped(pi))
 }
 
-sealed trait DisplayType {
-  def asString: String
-}
-object DisplayType {
-  case object Progress  extends DisplayType { override val asString = "Progress" }
-  case object Chart     extends DisplayType { override val asString = "Chart"    }
+enum DisplayType(val asString: String) extends FromString:
+  case Progress  extends DisplayType("Progress")
+  case Chart     extends DisplayType("Chart"   )
 
-  val values: List[DisplayType] = List(Chart, Progress)
-
-  def parse(s: String): Option[DisplayType] =
-    values.find(_.asString == s)
-
-  implicit def queryStringBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[DisplayType] =
-    new QueryStringBindable[DisplayType] {
-
-      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, DisplayType]] =
-        params.get(key).flatMap(_.headOption.map(DisplayType.parse)).map {
-          case None               => Left(s"Unsupported Display Type")
-          case Some(displayType)  => Right(displayType)
-        }
-
-      override def unbind(key: String, value: DisplayType): String =
-        strBinder.unbind(key, value.asString)
-    }
-}
+object DisplayType extends FromStringEnum[DisplayType]

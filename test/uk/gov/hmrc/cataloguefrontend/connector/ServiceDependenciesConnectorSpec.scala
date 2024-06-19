@@ -74,13 +74,13 @@ class ServiceDependenciesConnectorSpec
 
       response.head.name    shouldBe "something-api"
       response.head.version shouldBe Version("1.8.0_181")
-      response.head.vendor  shouldBe Oracle
-      response.head.kind    shouldBe JDK
+      response.head.vendor  shouldBe Vendor.Oracle
+      response.head.kind    shouldBe Kind.JDK
 
       response(1).name    shouldBe "service-backend"
       response(1).version shouldBe Version("1.8.0_191")
-      response(1).vendor  shouldBe OpenJDK
-      response(1).kind    shouldBe JRE
+      response(1).vendor  shouldBe Vendor.OpenJDK
+      response(1).kind    shouldBe Kind.JRE
     }
   }
 

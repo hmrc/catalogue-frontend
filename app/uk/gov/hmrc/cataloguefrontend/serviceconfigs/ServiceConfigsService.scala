@@ -295,7 +295,7 @@ object ServiceConfigsService {
   }
   case class ServiceName(asString: String) extends AnyVal
 
-  trait ConfigEnvironment { def asString: String; def displayString: String }
+  sealed trait ConfigEnvironment { def asString: String; def displayString: String }
   object ConfigEnvironment {
     case object Local                           extends ConfigEnvironment {
       override def asString      = "local"
@@ -306,8 +306,8 @@ object ServiceConfigsService {
       override def displayString = env.displayString
     }
 
-    val values: List[ConfigEnvironment] =
-      Local :: Environment.values.map(ForEnvironment.apply)
+    val values: Seq[ConfigEnvironment] =
+      Local +: Environment.valuesAsSeq.map(ForEnvironment.apply)
 
     val reads: Reads[ConfigEnvironment] =
       new Reads[ConfigEnvironment] {
@@ -316,10 +316,7 @@ object ServiceConfigsService {
             .validate[String]
             .flatMap {
               case "local" => JsSuccess(ConfigEnvironment.Local)
-              case s       => Environment.parse(s) match {
-                                case Some(env) => JsSuccess(ForEnvironment(env))
-                                case None      => JsError(__, s"Invalid Environment '$s'")
-                              }
+              case s       => Environment.parse(s).fold(_ => JsError(__, s"Invalid Environment '$s'"), env => JsSuccess(ForEnvironment(env)))
             }
       }
   }
@@ -482,9 +479,7 @@ object ServiceConfigsService {
   }
 }
 
-sealed trait ConfigChange { def k: String }
-object ConfigChange {
-  case class NewConfig(k: String, v: String)                           extends ConfigChange
-  case class DeletedConfig(k: String, previousV: String)               extends ConfigChange
-  case class ChangedConfig(k: String, previousV: String, newV: String) extends ConfigChange
-}
+enum ConfigChange(val k: String):
+  case NewConfig    (override val k: String, v: String)                       extends ConfigChange(k)
+  case DeletedConfig(override val k: String, previousV: String)               extends ConfigChange(k)
+  case ChangedConfig(override val k: String, previousV: String, newV: String) extends ConfigChange(k)

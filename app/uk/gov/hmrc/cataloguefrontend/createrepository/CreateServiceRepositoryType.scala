@@ -16,32 +16,19 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
-sealed trait CreateServiceRepositoryType { def asString: String}
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
-object CreateServiceRepositoryType {
-  case object Empty                            extends CreateServiceRepositoryType { override def asString: String = "Empty"                                 }
-  case object FrontendMicroservice             extends CreateServiceRepositoryType { override def asString: String = "Frontend microservice"                 }
-  case object FrontendMicroserviceWithScaffold extends CreateServiceRepositoryType { override def asString: String = "Frontend microservice - with scaffold" }
-  case object FrontendMicroserviceWithMongodb  extends CreateServiceRepositoryType { override def asString: String = "Frontend microservice - with mongodb"  }
-  case object BackendMicroservice              extends CreateServiceRepositoryType { override def asString: String = "Backend microservice"                  }
-  case object BackendMicroserviceWithMongodb   extends CreateServiceRepositoryType { override def asString: String = "Backend microservice - with mongodb"   }
-  case object ApiMicroservice                  extends CreateServiceRepositoryType { override def asString: String = "API microservice"                      }
-  case object ApiMicroserviceWithMongodb       extends CreateServiceRepositoryType { override def asString: String = "API microservice - with mongodb"       }
+enum CreateServiceRepositoryType(val asString: String) extends FromString:
+  case Empty                            extends CreateServiceRepositoryType("Empty"                                )
+  case FrontendMicroservice             extends CreateServiceRepositoryType("Frontend microservice"                )
+  case FrontendMicroserviceWithScaffold extends CreateServiceRepositoryType("Frontend microservice - with scaffold")
+  case FrontendMicroserviceWithMongodb  extends CreateServiceRepositoryType("Frontend microservice - with mongodb" )
+  case BackendMicroservice              extends CreateServiceRepositoryType("Backend microservice"                 )
+  case BackendMicroserviceWithMongodb   extends CreateServiceRepositoryType("Backend microservice - with mongodb"  )
+  case ApiMicroservice                  extends CreateServiceRepositoryType("API microservice"                     )
+  case ApiMicroserviceWithMongodb       extends CreateServiceRepositoryType("API microservice - with mongodb"      )
 
-  val values = List(
-    Empty,
-    FrontendMicroservice,
-    FrontendMicroserviceWithScaffold,
-    FrontendMicroserviceWithMongodb,
-    BackendMicroservice,
-    BackendMicroserviceWithMongodb,
-    ApiMicroservice,
-    ApiMicroserviceWithMongodb
-  )
-
+object CreateServiceRepositoryType extends FromStringEnum[CreateServiceRepositoryType]{
   val parsingError: String =
     s"Not a valid CreateServiceRepositoryType. Should be one of ${values.mkString(", ")}"
-
-  def parse(str: String): Option[CreateServiceRepositoryType] =
-    values.find(_.asString == str)
 }

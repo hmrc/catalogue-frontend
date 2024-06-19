@@ -108,9 +108,9 @@ class ServiceDependenciesConnector @Inject() (
     flag        : SlugInfoFlag,
     group       : String,
     artefact    : String,
-    repoType    : List[RepoType],
+    repoType    : Seq[RepoType],
     versionRange: BobbyVersionRange,
-    scopes      : List[DependencyScope]
+    scopes      : Seq[DependencyScope]
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[ServiceWithDependency]] = {
@@ -135,14 +135,14 @@ class ServiceDependenciesConnector @Inject() (
   }
 
   def getJDKVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
-    implicit val r = JDKVersionFormats.jdkFormat
+    implicit val r = JDKVersion.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/jdkVersions?team=${teamName.map(_.asString)}&flag=${flag.asString}")
       .execute[List[JDKVersion]]
   }
 
   def getSBTVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[SBTVersion]] = {
-    implicit val sbtvR = SBTVersionFormats.sbtVersionReads
+    implicit val sbtvR = SBTVersion.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/sbtVersions?team=${teamName.map(_.asString)}&flag=${flag.asString}")
       .execute[List[SBTVersion]]

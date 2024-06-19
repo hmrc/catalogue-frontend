@@ -15,13 +15,13 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, Oracle, OpenJDK, TeamName}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion, TeamName}
 
 @this()
 
-@(envdata         : List[JDKUsageByEnv],
-  jdks            : List[JDKVersion],
+@(envdata         : Seq[JDKUsageByEnv],
+  jdks            : Seq[JDKVersion],
   teams           : Seq[GitHubTeam],
   selectedTeamName: Option[TeamName]
 )(implicit
@@ -62,10 +62,7 @@
             <tr>
                 <th>Environment</th>
                 @for(jdk <- jdks) {
-                  @jdk.vendor match {
-                      case Oracle  => { <th> <img src="@routes.Assets.versioned("img/oracle2.gif")" width="68px" alt="Oracle"/> @jdk.version </th> }
-                      case OpenJDK => { <th> <img src="@routes.Assets.versioned("img/openjdk.png")" width="55px" alt="OpenJDK"/> @jdk.version </th> }
-                  }
+                    <th><img src="@routes.Assets.versioned(jdk.vendor.imgPath)" width="68px" alt="@jdk.vendor.asString"/>@jdk.version</th>
                 }
             </tr>
 

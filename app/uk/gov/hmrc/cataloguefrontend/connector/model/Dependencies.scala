@@ -21,15 +21,9 @@ import play.api.libs.json._
 import play.api.data.format.Formatter
 import play.api.data.FormError
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.LocalDate
-
-sealed trait VersionState
-object VersionState {
-  case object NewVersionAvailable                             extends VersionState
-  case class BobbyRuleViolated(violation: BobbyRuleViolation) extends VersionState
-  case class BobbyRulePending(violation: BobbyRuleViolation)  extends VersionState
-}
 
 // TODO avoid caching LocalDate, and provide to isActive function
 case class BobbyRuleViolation(
@@ -68,6 +62,11 @@ object BobbyRuleViolation {
       }
     }
 }
+
+enum VersionState:
+  case NewVersionAvailable                                  extends VersionState
+  case BobbyRuleViolated(val violation: BobbyRuleViolation) extends VersionState
+  case BobbyRulePending(val violation: BobbyRuleViolation)  extends VersionState
 
 
 case class ImportedBy(
@@ -389,42 +388,18 @@ object GroupArtefacts {
     )(GroupArtefacts.apply, ga => Tuple.fromProductTyped(ga))
 }
 
-sealed trait DependencyScope {
-  def asString: String
-  def displayString = asString match {
-    case "it"  => "Integration Test"
-    case other => other.capitalize
-  }
-}
-object DependencyScope {
-  case object Compile  extends DependencyScope { override val asString = "compile"  }
-  case object Provided extends DependencyScope { override val asString = "provided" }
-  case object Test     extends DependencyScope { override val asString = "test"     }
-  case object It       extends DependencyScope { override val asString = "it"       }
-  case object Build    extends DependencyScope { override val asString = "build"    }
+enum DependencyScope(val asString: String) extends FromString:
+  case Compile  extends DependencyScope("compile" )
+  case Provided extends DependencyScope("provided")
+  case Test     extends DependencyScope("test"    )
+  case It       extends DependencyScope("it"      )
+  case Build    extends DependencyScope("build"   )
 
-  val values: List[DependencyScope] =
-    List(Compile, Provided, Test, It, Build)
-
-  def parse(s: String): Either[String, DependencyScope] =
-    values
-      .find(_.asString == s)
-      .toRight(s"Invalid dependency scope - should be one of: ${values.map(_.asString).mkString(", ")}")
-
-  private def toResult[A](e: Either[String, A]): JsResult[A] =
-    e match {
-      case Right(r) => JsSuccess(r)
-      case Left(l)  => JsError(__, l)
+  def displayString: String =
+    asString match {
+      case "it"  => "Integration Test"
+      case other => other.capitalize
     }
 
-  lazy val format: Format[DependencyScope] =
-    Format(
-      _.validate[String].flatMap(s => toResult(DependencyScope.parse(s))),
-      f => JsString(f.asString)
-    )
 
-  implicit val dependencyScopeOrdering: Ordering[DependencyScope] = new Ordering[DependencyScope] {
-    def compare(x: DependencyScope, y: DependencyScope): Int =
-      values.indexOf(x) - values.indexOf(y)
-  }
-}
+object DependencyScope extends FromStringEnum[DependencyScope]

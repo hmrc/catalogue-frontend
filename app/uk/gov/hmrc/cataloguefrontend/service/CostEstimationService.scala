@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
-import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
+import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter, FromString, FromStringEnum}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs.environmentFormat
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -172,32 +172,18 @@ object CostEstimationService {
       asInt * costEstimateConfig.slotCostPerYear
   }
 
-  sealed trait Zone {
-    val name: String
-    def displayName: String = name.capitalize
-  }
+  enum Zone(val asString: String) extends FromString:
+    case Protected      extends Zone("protected"      )
+    case Public         extends Zone("public"         )
+    case ProtectedRate  extends Zone("protected-rate" )
+    case PublicMonolith extends Zone("public-monolith")
+    case PublicRate     extends Zone("public-rate"    )
+    case Private        extends Zone("private"        )
 
-  object Zone {
-    case object Protected      extends Zone { val name: String = "protected"       }
-    case object ProtectedRate  extends Zone { val name: String = "protected-rate"  }
-    case object Public         extends Zone { val name: String = "public"          }
-    case object PublicMonolith extends Zone { val name: String = "public-monolith" }
-    case object PublicRate     extends Zone { val name: String = "public-rate"     }
-    case object Private        extends Zone { val name: String = "private"         }
+    def displayName: String =
+      asString.capitalize
 
-    val values = Seq(Protected, Public, ProtectedRate, PublicMonolith, PublicRate, Private)
-
-    def parse(zone: String): Either[String, Zone] =
-      values.find(_.name == zone)
-        .toRight(s"Invalid deployment zone '$zone' - valid values are ${values.map(_.name).mkString(", ")}")
-
-    val format: Format[Zone] = new Format[Zone] {
-      override def reads(json: JsValue): JsResult[Zone] =
-        json.validate[String].flatMap(s => parse(s).fold(msg => JsError(msg.toString), t => JsSuccess(t)))
-
-      override def writes(z: Zone): JsValue = JsString(z.displayName)
-    }
-  }
+  object Zone extends FromStringEnum[Zone]
 
   object DeploymentConfig {
     implicit val ef: Reads[Environment]    = environmentFormat

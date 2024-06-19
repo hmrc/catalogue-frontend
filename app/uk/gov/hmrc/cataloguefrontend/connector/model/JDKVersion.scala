@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
+import play.api.libs.json.{JsPath, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 case class JDKVersion(
@@ -26,32 +27,26 @@ case class JDKVersion(
   kind   : Kind
 )
 
-trait JDKVersionFormats {
-
-  import play.api.libs.json.{Format, JsPath, Reads, __}
-
-  val versionFormat: Format[Version] =
-    Format.of[String].inmap(Version.apply, _.toString)
-
-  val vendorRead: Reads[Vendor] =
+object JDKVersion {
+  private val vendorRead: Reads[Vendor] =
     JsPath
       .read[String]
       .map(_.toUpperCase match {
-        case "OPENJDK" => OpenJDK
-        case "ORACLE"  => Oracle
-        case _         => Oracle // default to oracle
+        case "OPENJDK" => Vendor.OpenJDK
+        case "ORACLE"  => Vendor.Oracle
+        case _         => Vendor.Oracle // default to oracle
       })
 
-  val kindRead: Reads[Kind] =
+  private val kindRead: Reads[Kind] =
     JsPath
       .read[String]
       .map(_.toUpperCase match {
-        case "JRE" => JRE
-        case "JDK" => JDK
-        case _     => JDK // default to JDK
+        case "JRE" => Kind.JRE
+        case "JDK" => Kind.JDK
+        case _     => Kind.JDK // default to JDK
       })
 
-  val jdkFormat: Reads[JDKVersion] = {
+  val reads: Reads[JDKVersion] = {
     implicit val vf: Reads[Version]  = Version.format
     ( (__ \ "name"   ).read[String]
     ~ (__ \ "version").read[Version]
@@ -61,29 +56,21 @@ trait JDKVersionFormats {
   }
 }
 
-object JDKVersionFormats extends JDKVersionFormats
-
 case class JDKUsageByEnv(
   env  : SlugInfoFlag,
   usage: Map[JDKVersion, Int]
 )
 
-sealed trait Vendor
+enum Vendor(val asString: String, val imgPath: String):
+  case Oracle  extends Vendor("Oracle" , "img/oracle2.gif")
+  case OpenJDK extends Vendor("OpenJDK", "img/openjdk.png")
 
-case object Oracle extends Vendor {
-  override def toString: String = "Oracle"
-}
+  override def toString(): String = // TODO remove this - for backward compatibility only
+    asString
 
-case object OpenJDK extends Vendor {
-  override def toString: String = "OpenJDK"
-}
+enum Kind(val asString: String):
+  case JRE extends Kind("JRE")
+  case JDK extends Kind("JDK")
 
-sealed trait Kind
-
-case object JRE extends Kind {
-  override def toString: String = "JRE"
-}
-
-case object JDK extends Kind {
-  override def toString: String = "JDK"
-}
+  override def toString(): String = // TODO remove this - for backward compatibility only
+    asString

@@ -16,22 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
-sealed trait CreateTestRepositoryType { def asString: String}
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
-object CreateTestRepositoryType {
-  case object UITest  extends CreateTestRepositoryType { override def asString: String = "UI Journey Test"}
-  case object APITest extends CreateTestRepositoryType { override def asString: String = "API Test"       }
-  case object PerformanceTest      extends CreateTestRepositoryType { override def asString: String = "Performance Test"                }
+enum CreateTestRepositoryType(val asString: String) extends FromString:
+  case UITest          extends CreateTestRepositoryType("UI Journey Test" )
+  case APITest         extends CreateTestRepositoryType("API Test"        )
+  case PerformanceTest extends CreateTestRepositoryType("Performance Test")
 
-  val values = List(
-    UITest,
-    APITest,
-    PerformanceTest
-  )
-
+object CreateTestRepositoryType extends FromStringEnum[CreateTestRepositoryType]{
   val parsingError: String =
     s"Not a valid CreateTestRepositoryType. Should be one of ${values.mkString(", ")}"
-
-  def parse(str: String): Option[CreateTestRepositoryType] =
-    values.find(_.asString == str)
 }

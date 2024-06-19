@@ -54,7 +54,7 @@ class ServiceCommissioningStatusConnector @Inject() (
   def cachedCommissioningStatus(
     teamName     : Option[TeamName],
     serviceType  : Option[ServiceType],
-    lifecycleStatus: List[LifecycleStatus]
+    lifecycleStatus: Seq[LifecycleStatus]
   )(implicit
     hc: HeaderCarrier
   ): Future[List[CachedServiceCheck]] = {

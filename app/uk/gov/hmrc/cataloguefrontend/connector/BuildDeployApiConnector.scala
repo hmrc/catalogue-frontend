@@ -21,7 +21,6 @@ import play.api.Logging
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.ws.writeableOf_JsValue
-import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
@@ -29,6 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -225,37 +225,12 @@ object BuildDeployApiConnector {
 
   final case class AsyncRequestId(request: JsValue)
 
-  sealed trait PrototypeStatus { def asString: String; def displayString: String }
+  enum PrototypeStatus(val asString: String, val displayString: String) extends FromString:
+    case Running      extends PrototypeStatus(asString = "running"     , displayString = "Running"     )
+    case Stopped      extends PrototypeStatus(asString = "stopped"     , displayString = "Stopped"     )
+    case Undetermined extends PrototypeStatus(asString = "undetermined", displayString = "Undetermined")
 
-  object PrototypeStatus {
-    case object Running      extends PrototypeStatus { val asString = "running"     ; override def displayString = "Running"      }
-    case object Stopped      extends PrototypeStatus { val asString = "stopped"     ; override def displayString = "Stopped"      }
-    case object Undetermined extends PrototypeStatus { val asString = "undetermined"; override def displayString = "Undetermined" }
-
-    val values: List[PrototypeStatus] =
-      List(Running, Stopped, Undetermined)
-
-    def parse(s: String): Option[PrototypeStatus] =
-      values.find(_.asString == s)
-
-    val reads: Reads[PrototypeStatus] =
-      _.validate[String]
-          .flatMap(s =>
-            PrototypeStatus
-              .parse(s)
-              .map(JsSuccess(_))
-              .getOrElse(JsError("invalid prototype status"))
-          )
-
-    implicit val pathBindable: PathBindable[PrototypeStatus] =
-      new PathBindable[PrototypeStatus] {
-        override def bind(key: String, value: String): Either[String, PrototypeStatus] =
-          parse(value).toRight(s"Invalid prototype status '$value'")
-
-        override def unbind(key: String, value: PrototypeStatus): String =
-          value.asString
-      }
-  }
+  object PrototypeStatus extends FromStringEnum[PrototypeStatus]
 
   final case class PrototypeDetails(
     url   : Option[String],

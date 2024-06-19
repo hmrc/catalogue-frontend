@@ -119,7 +119,7 @@
                 <dl>
                     <dt><label>Environments</label></dt>
                     <dd>
-                        @for(env <-  Environment.values) {
+                        @for(env <-  Environment.valuesAsSeq) {
                             <div class="checkbox-group">
                                 <input name="showEnvironments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.showEnvironments.contains(env)) {checked} />
                                 <label class="form-check-label" for="@{env.asString}-checkbox">@env.displayString</label>
@@ -178,7 +178,7 @@
         <div class="dl-horizontal float-end">
             @helper.inputRadioGroup(
                 field                 =  form("groupBy"),
-                options               =  GroupBy.values.map(t => t.asString -> t.displayString),
+                options               =  GroupBy.valuesAsSeq.map(t => t.asString -> t.displayString),
                 Symbol("_class")       -> "form-check form-check-inline m-0",
                 Symbol("_label")      -> "Group By",
                 Symbol("_labelClass") -> "form-check-label",

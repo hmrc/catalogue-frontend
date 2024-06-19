@@ -100,7 +100,7 @@ class CreateAppConfigsController @Inject()(
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
           isApi         =  serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
-          envsToDisplay =  Environment.values.diff(envsToHide.toSeq)
+          envsToDisplay =  Environment.valuesAsSeq.diff(envsToHide.toSeq)
           hasPerm       =  request.retrieval
           form          =  { val f = CreateAppConfigsForm.form
                              if (!hasPerm) f.withGlobalError(s"You do not have permission to create App Configs for: $serviceName")
@@ -152,7 +152,7 @@ class CreateAppConfigsController @Inject()(
                                      hasPerm       = true,
                                      hasBaseConfig = baseConfig,
                                      envConfigs    = envConfigs,
-                                     envsToDisplay = Environment.values.diff(envsToHide.toSeq)
+                                     envsToDisplay = Environment.valuesAsSeq.diff(envsToHide.toSeq)
                                    )
                                  )
                                ),
@@ -178,7 +178,7 @@ class CreateAppConfigsController @Inject()(
                                  hasPerm       = true,
                                  hasBaseConfig = baseConfig,
                                  envConfigs    = envConfigs,
-                                 envsToDisplay = Environment.values.diff(envsToHide.toSeq)
+                                 envsToDisplay = Environment.valuesAsSeq.diff(envsToHide.toSeq)
                                )
                              )
                            }

@@ -22,7 +22,7 @@
   services    : Seq[String],
   events      : Seq[ShutterStateChangeEvent],
   form        : Form[?],
-  environments: List[Environment]
+  environments: Seq[Environment]
 )(implicit
   request : RequestHeader
 )
