@@ -24,6 +24,7 @@ import play.core.routing.GeneratedRouter
 import play.core.routing._
 import play.core.routing.HandlerInvokerFactory._
 import uk.gov.hmrc.cataloguefrontend.teams.TeamsController
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 
 class Routes @Inject()(
   val errorHandler: play.api.http.HttpErrorHandler,
@@ -42,27 +43,28 @@ class Routes @Inject()(
   }
 
   override def routes: Router.Routes = {
-    case uk_gov_hmrc_cataloguefrontend_teams_TeamsController_outOfDateTeamDependencies2_route(params@_) =>
-      call(params.fromPath[String]("teamName", None)) { (teamName) =>
+    case routeMatch(params@_) =>
+      call(params.fromPath[TeamName]("teamName", None)) { (teamName) =>
+        println(s"In route")
         createInvoker(
-          fakeCall   = teamsController.outOfDateTeamDependencies(fakeValue[String]),
+          fakeCall   = teamsController.outOfDateTeamDependencies2(fakeValue[TeamName]),
           handlerDef = HandlerDef(
             classLoader    = this.getClass.getClassLoader,
             routerPackage  = "app",
             controller     = "uk.gov.hmrc.cataloguefrontend.teams.TeamsController",
             method         = "outOfDateTeamDependencies",
-            parameterTypes = Seq(classOf[String]),
+            parameterTypes = Seq.empty,//Seq(classOf[TeamName]), // This is where opaque types don't work
             verb           = "GET",
             path           = this.prefix + """teams/""" + "$" + """teamName<[^/]+>/out-of-date-dependencies""",
             comments       = "",
             modifiers      = Seq.empty
           )
-        ).call(teamsController.outOfDateTeamDependencies(teamName))
+        ).call(teamsController.outOfDateTeamDependencies2(teamName))
       }
   }
 
-  private lazy val uk_gov_hmrc_cataloguefrontend_teams_TeamsController_outOfDateTeamDependencies2_route = Route("GET",
-    PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("teams/"), DynamicPart("teamName", """[^/]+""", encodeable=true), StaticPart("/out-of-date-dependencies")))
+  private lazy val routeMatch = Route("GET",
+    PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("teams/"), DynamicPart("teamName", """[^/]+""", encodeable=true), StaticPart("/out-of-date-dependencies2")))
   )
 }
 
