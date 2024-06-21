@@ -80,23 +80,23 @@ class DependenciesService @Inject() (
       .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
 
-  def getJDKVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[JDKVersion]] =
-    serviceDependenciesConnector.getJDKVersions(teamName, flag)
+  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[JdkVersion]] =
+    serviceDependenciesConnector.getJdkVersions(teamName, flag)
 
-  def getJDKCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[JDKUsageByEnv] =
+  def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[JdkUsageByEnv] =
     for {
-      versions <- serviceDependenciesConnector.getJDKVersions(teamName, env)
+      versions <- serviceDependenciesConnector.getJdkVersions(teamName, env)
       counts   =  versions.groupBy(_.copy(name = "", kind = Kind.JDK)).view.mapValues(_.length).toMap
-    } yield JDKUsageByEnv(env, counts)
+    } yield JdkUsageByEnv(env, counts)
 
-  def getSBTVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[SBTVersion]] =
-    serviceDependenciesConnector.getSBTVersions(teamName, flag)
+  def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[SbtVersion]] =
+    serviceDependenciesConnector.getSbtVersions(teamName, flag)
 
-  def getSBTCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[SBTUsageByEnv] =
+  def getSbtCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[SbtUsageByEnv] =
     for {
-      versions <- serviceDependenciesConnector.getSBTVersions(teamName, env)
+      versions <- serviceDependenciesConnector.getSbtVersions(teamName, env)
       counts   =  versions.groupBy(_.copy(serviceName = "")).view.mapValues(_.length).toMap
-    } yield SBTUsageByEnv(env, counts)
+    } yield SbtUsageByEnv(env, counts)
 }
 
 object DependenciesService {
@@ -120,7 +120,7 @@ object DependenciesService {
       )
 }
 
-case class ServiceJDKVersion(
+case class ServiceJdkVersion(
   version: String,
   vendor : String,
   kind   : String
@@ -142,7 +142,7 @@ case class ServiceDependencies(
   name                 : String,
   version              : Version,
   runnerVersion        : String,
-  java                 : ServiceJDKVersion,
+  java                 : ServiceJdkVersion,
   classpath            : String,
   dependencies         : Seq[ServiceDependency],
   environment          : Option[Environment] = None,
@@ -170,25 +170,25 @@ object ServiceDependencies {
   import play.api.libs.functional.syntax._
   import play.api.libs.json.__
 
-  private val serviceJDKVersionReads =
+  private val serviceJdkVersionReads =
     ( (__ \ "version").read[String]
     ~ (__ \ "vendor" ).read[String]
     ~ (__ \ "kind"   ).read[String]
-    )(ServiceJDKVersion.apply)
+    )(ServiceJdkVersion.apply)
 
   private val serviceDependencyReads: Reads[ServiceDependency] =
     Json.using[Json.WithDefaultValues].reads[ServiceDependency]
 
   val reads: Reads[ServiceDependencies] = {
     implicit val vf   = Version.format
-    implicit val jdkr = serviceJDKVersionReads
+    implicit val jdkr = serviceJdkVersionReads
     implicit val sdr  = serviceDependencyReads
     implicit val envf = JsonCodecs.environmentFormat
     ( (__ \ "uri"                       ).read[String]
     ~ (__ \ "name"                      ).read[String]
     ~ (__ \ "version"                   ).read[Version]
     ~ (__ \ "runnerVersion"             ).read[String]
-    ~ (__ \ "java"                      ).read[ServiceJDKVersion]
+    ~ (__ \ "java"                      ).read[ServiceJdkVersion]
     ~ (__ \ "classpath"                 ).read[String]
     ~ (__ \ "dependencies"              ).read[Seq[ServiceDependency]]
     ~ (__ \ "environment"               ).readNullable[Environment]

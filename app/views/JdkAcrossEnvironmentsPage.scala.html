@@ -16,12 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKUsageByEnv, JDKVersion}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JdkUsageByEnv, JdkVersion}
 
 @this()
 
-@(envdata         : Seq[JDKUsageByEnv],
-  jdks            : Seq[JDKVersion],
+@(envdata         : Seq[JdkUsageByEnv],
+  jdks            : Seq[JdkVersion],
   teams           : Seq[GitHubTeam],
   selectedTeamName: Option[TeamName]
 )(implicit
@@ -71,7 +71,7 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@appRoutes.JDKVersionController.findLatestVersions(d.env.asString, selectedTeamName)">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.JdkVersionController.findLatestVersions(d.env.asString, selectedTeamName)">@d.env.displayString</a></td>
               @for(jdk <- jdks) { <td>@{d.usage.getOrElse(jdk, 0)}</td>}
           </tr>
         }

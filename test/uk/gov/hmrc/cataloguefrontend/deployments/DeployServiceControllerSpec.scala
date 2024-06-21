@@ -30,7 +30,7 @@ import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
+import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
@@ -285,7 +285,7 @@ class DeployServiceControllerSpec
   , name          = "some-service"
   , version       = Version("0.3.0")
   , runnerVersion = "some-runner-version"
-  , java          = ServiceJDKVersion("", "", "")
+  , java          = ServiceJdkVersion("", "", "")
   , classpath     = "some-classpath"
   , dependencies  = Nil
   )

@@ -20,14 +20,14 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, Version}
 
-case class JDKVersion(
+case class JdkVersion(
   name   : String,
   version: Version,
   vendor : Vendor,
   kind   : Kind
 )
 
-object JDKVersion {
+object JdkVersion {
   private val vendorRead: Reads[Vendor] =
     JsPath
       .read[String]
@@ -46,19 +46,19 @@ object JDKVersion {
         case _     => Kind.JDK // default to JDK
       })
 
-  val reads: Reads[JDKVersion] = {
+  val reads: Reads[JdkVersion] = {
     implicit val vf: Reads[Version]  = Version.format
     ( (__ \ "name"   ).read[String]
     ~ (__ \ "version").read[Version]
     ~ (__ \ "vendor" ).read[Vendor](vendorRead)
     ~ (__ \ "kind"   ).read[Kind](kindRead)
-    )(JDKVersion.apply)
+    )(JdkVersion.apply)
   }
 }
 
-case class JDKUsageByEnv(
+case class JdkUsageByEnv(
   env  : SlugInfoFlag,
-  usage: Map[JDKVersion, Int]
+  usage: Map[JdkVersion, Int]
 )
 
 enum Vendor(val asString: String, val imgPath: String):

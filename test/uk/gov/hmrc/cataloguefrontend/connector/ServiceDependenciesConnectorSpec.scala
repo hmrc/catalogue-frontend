@@ -55,7 +55,7 @@ class ServiceDependenciesConnectorSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  "getJDKVersions" should {
+  "getJdkVersions" should {
     "returns JDK versions with vendor" in {
       stubFor(
         get(urlEqualTo(s"/api/jdkVersions?flag=${SlugInfoFlag.ForEnvironment(Environment.Production).asString}"))
@@ -70,7 +70,7 @@ class ServiceDependenciesConnectorSpec
           )
       )
 
-      val response = serviceDependenciesConnector.getJDKVersions(teamName = None, flag = SlugInfoFlag.ForEnvironment(Environment.Production)).futureValue
+      val response = serviceDependenciesConnector.getJdkVersions(teamName = None, flag = SlugInfoFlag.ForEnvironment(Environment.Production)).futureValue
 
       response.head.name    shouldBe "something-api"
       response.head.version shouldBe Version("1.8.0_181")

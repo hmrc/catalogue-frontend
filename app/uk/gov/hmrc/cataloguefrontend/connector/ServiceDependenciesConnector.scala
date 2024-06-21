@@ -134,18 +134,18 @@ class ServiceDependenciesConnector @Inject() (
       .execute[List[GroupArtefacts]]
   }
 
-  def getJDKVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JDKVersion]] = {
-    implicit val r = JDKVersion.reads
+  def getJdkVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[JdkVersion]] = {
+    implicit val r = JdkVersion.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/jdkVersions?team=${teamName.map(_.asString)}&flag=${flag.asString}")
-      .execute[List[JDKVersion]]
+      .execute[List[JdkVersion]]
   }
 
-  def getSBTVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[SBTVersion]] = {
-    implicit val sbtvR = SBTVersion.reads
+  def getSbtVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(implicit hc: HeaderCarrier): Future[List[SbtVersion]] = {
+    implicit val sbtvR = SbtVersion.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/sbtVersions?team=${teamName.map(_.asString)}&flag=${flag.asString}")
-      .execute[List[SBTVersion]]
+      .execute[List[SbtVersion]]
   }
 
   def getBobbyRuleViolations()(implicit hc: HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] = {

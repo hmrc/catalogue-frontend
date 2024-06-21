@@ -79,11 +79,11 @@ GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefro
 
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
-GET        /jdkexplorer/environment                     uk.gov.hmrc.cataloguefrontend.JDKVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None)
-GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JDKVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None)
+GET        /jdkexplorer/environment                     uk.gov.hmrc.cataloguefrontend.JdkVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None)
+GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JdkVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None)
 
-GET        /sbtexplorer/environment                     uk.gov.hmrc.cataloguefrontend.SBTVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None)
-GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SBTVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None)
+GET        /sbtexplorer/environment                     uk.gov.hmrc.cataloguefrontend.SbtVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None)
+GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SbtVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None)
 
 GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name: ServiceName, showWarnings: Boolean ?= false, selector: Option[uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName] ?= None)
 GET        /config/search                               uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchLanding()

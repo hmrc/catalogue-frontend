@@ -31,7 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.AsyncRequestId
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
-import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
+import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector, routes}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
@@ -396,7 +396,7 @@ class CreateAppConfigsControllerSpec
         name                 = serviceName.asString,
         version              = Version(1, 1, 1, ""),
         runnerVersion        = "",
-        java                 = ServiceJDKVersion("", "", ""),
+        java                 = ServiceJdkVersion("", "", ""),
         classpath            = "",
         dependencies         = Seq.empty,
         dependencyDotCompile = Some(""" "test" "hmrc-mongo" """)

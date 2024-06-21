@@ -16,11 +16,11 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.JDKVersion
+@import uk.gov.hmrc.cataloguefrontend.connector.model.JdkVersion
 
 @this()
 
-@(jdkVersions     : Seq[JDKVersion],
+@(jdkVersions     : Seq[JdkVersion],
   flags           : Seq[SlugInfoFlag],
   teams           : Seq[GitHubTeam],
   selectedFlag    : SlugInfoFlag,
@@ -155,7 +155,7 @@
     </script>
 }
 
-@jdkVersion(jdk: JDKVersion) = {
+@jdkVersion(jdk: JdkVersion) = {
     <tr id="jdk-slug-@jdk.name">
         <td><a id="link-to-@{jdk.name}" href="@appRoutes.CatalogueController.repository(jdk.name)">@jdk.name</a></td>
         <td>

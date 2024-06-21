@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, Version}
 import views.html.JdkVersionPage
 
 
-class JDKVersionPageSpec
+class JdkVersionPageSpec
   extends AnyWordSpec
      with MockitoSugar
      with Matchers {
@@ -37,8 +37,8 @@ class JDKVersionPageSpec
       implicit val request = FakeRequest()
 
       val versions = List(
-        JDKVersion(name = "test-slug",     version = Version("1.181.0"), vendor = Vendor.OpenJDK, kind = Kind.JDK)
-      , JDKVersion(name = "thing-service", version = Version("1.171.0"), vendor = Vendor.Oracle , kind = Kind.JRE)
+        JdkVersion(name = "test-slug",     version = Version("1.181.0"), vendor = Vendor.OpenJDK, kind = Kind.JDK)
+      , JdkVersion(name = "thing-service", version = Version("1.171.0"), vendor = Vendor.Oracle , kind = Kind.JRE)
       )
 
       val teams = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one", "repo-two")))
@@ -57,7 +57,7 @@ class JDKVersionPageSpec
     "include a link to the repository" in {
       implicit val request = FakeRequest()
 
-      val versions = List(JDKVersion(name= "thing-service", version = Version("1.171.0"), vendor = Vendor.Oracle, kind = Kind.JDK))
+      val versions = List(JdkVersion(name= "thing-service", version = Version("1.171.0"), vendor = Vendor.Oracle, kind = Kind.JDK))
       val teams    = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one")))
       val document = asDocument(new JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 

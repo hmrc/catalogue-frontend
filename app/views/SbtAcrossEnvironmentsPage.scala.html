@@ -16,12 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{SBTUsageByEnv, SBTVersion}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{SbtUsageByEnv, SbtVersion}
 
 @this()
 
-@(envdata     : Seq[SBTUsageByEnv],
-  sbts        : Seq[SBTVersion],
+@(envdata     : Seq[SbtUsageByEnv],
+  sbts        : Seq[SbtVersion],
   teams       : Seq[GitHubTeam],
   selectedTeam: Option[GitHubTeam]
 )(implicit
@@ -71,7 +71,7 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@appRoutes.SBTVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name))">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.SbtVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name))">@d.env.displayString</a></td>
               @for(sbt <- sbts) { <td>@{d.usage.getOrElse(sbt, 0)}</td>}
           </tr>
 
