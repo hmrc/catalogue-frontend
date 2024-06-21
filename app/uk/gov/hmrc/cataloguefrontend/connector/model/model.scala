@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{__, Format, Reads}
 import play.api.mvc.{PathBindable, QueryStringBindable}
 
-case class Username(value: String) extends AnyVal // TODO asString
+case class Username(asString: String) extends AnyVal
 
 case class TeamName(asString: String) extends AnyVal
 

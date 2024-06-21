@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.util.DependencyGraphParser
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -33,7 +33,7 @@ class DependenciesService @Inject() (
   serviceDependenciesConnector: ServiceDependenciesConnector
 )(implicit val ec: ExecutionContext) {
 
-  def search(serviceName: String, deployments: Seq[WhatsRunningWhereVersion])(implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] =
+  def search(serviceName: ServiceName, deployments: Seq[WhatsRunningWhereVersion])(implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] =
     Future
       .traverse(deployments)(wrwv =>
         serviceDependenciesConnector
@@ -43,7 +43,7 @@ class DependenciesService @Inject() (
       .map(_.flatten)
 
   def getServiceDependencies(
-    serviceName: String,
+    serviceName: ServiceName,
     version    : Version
   )(implicit
     hc: HeaderCarrier

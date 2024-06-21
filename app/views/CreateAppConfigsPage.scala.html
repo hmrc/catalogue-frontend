@@ -16,13 +16,13 @@
 
 @import views.html.partials.{form_global_errors, form_fields_warnings}
 @import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 @import uk.gov.hmrc.cataloguefrontend.connector.Tag
 
 @this()
 
 @(form: Form[?],
-  serviceName  : String,
+  serviceName  : ServiceName,
   serviceType  : ServiceType,
   isApi        : Boolean,
   hasPerm      : Boolean,

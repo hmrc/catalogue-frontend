@@ -22,6 +22,7 @@ import play.utils.UriEncoding
 
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, Version}
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -45,7 +46,7 @@ class DependenciesController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def services(name: String): Action[AnyContent] =
+  def services(name: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         deployments         <- whatsRunningWhereService.releasesForService(name).map(_.versions)
@@ -53,13 +54,13 @@ class DependenciesController @Inject() (
       } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.version)(Ordering[Version].reverse)))
     }
 
-  def service(name: String, version: String): Action[AnyContent] =
+  def service(name: ServiceName, version: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       dependenciesService.getServiceDependencies(name, Version(version))
         .map(maybeDeps => Ok(dependenciesPage(name, maybeDeps.toSeq)))
     }
 
-  def graphs(name: String, version: String, scope: String): Action[AnyContent] =
+  def graphs(name: ServiceName, version: String, scope: String): Action[AnyContent] =
     BasicAuthAction.async { implicit  request =>
       (for {
          scope        <- EitherT.fromEither[Future](DependencyScope.parse(scope))

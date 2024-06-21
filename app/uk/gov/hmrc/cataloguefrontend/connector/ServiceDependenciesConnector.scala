@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, SlugVersionInfo}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -48,25 +48,25 @@ class ServiceDependenciesConnector @Inject() (
   }
 
   def getSlugInfo(
-    serviceName: String,
+    serviceName: ServiceName,
     version    : Option[Version] = None
   )(implicit
     hc: HeaderCarrier
   ): Future[Option[ServiceDependencies]] = {
     implicit val sdr = ServiceDependencies.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/sluginfo?name=$serviceName&version=${version.map(_.toString)}")
+      .get(url"$servicesDependenciesBaseUrl/api/sluginfo?name=${serviceName.asString}&version=${version.map(_.toString)}")
       .execute[Option[ServiceDependencies]]
   }
 
   def getSlugVersionInfo(
-    serviceName: String
+    serviceName: ServiceName
   )(implicit
     hc: HeaderCarrier
   ): Future[Seq[SlugVersionInfo]] = {
     implicit val svir = SlugVersionInfo.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/sluginfo/$serviceName/versions")
+      .get(url"$servicesDependenciesBaseUrl/api/sluginfo/${serviceName.asString}/versions")
       .execute[Seq[SlugVersionInfo]]
   }
 

@@ -28,7 +28,7 @@
 @whatsRunning.zipWithIndex.map { case (wrw, i) =>
   <tr id="row@i">
     <td class="application-name" id="row@{i}_application">
-        <a id="link-to-info-page-for-@{wrw.serviceName.asString}" href="@appRoutes.CatalogueController.service(wrw.serviceName.asString)">@{wrw.serviceName.asString}</a>
+        <a id="link-to-info-page-for-@{wrw.serviceName.asString}" href="@appRoutes.CatalogueController.service(wrw.serviceName)">@{wrw.serviceName.asString}</a>
     </td>
     @defining(environments.map(env => env -> wrw.versions.find(_.environment == env))) { versionMap =>
       @defining(versionMap.map(_._2).collect { case Some(x) => x.version}.sorted) { sortedVersions =>
@@ -61,7 +61,7 @@
       }
     }
     <td>
-        <a aria-label="Link to deployment timeline for @{wrw.serviceName.asString}" id="link-to-deployment-timeline-for-@{wrw.serviceName.asString}" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController.graph(Some(wrw.serviceName.asString))"><span class="glyphicon glyphicon-stats"></span> </a>
+        <a aria-label="Link to deployment timeline for @{wrw.serviceName.asString}" id="link-to-deployment-timeline-for-@{wrw.serviceName.asString}" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController.graph(Some(wrw.serviceName))"><span class="glyphicon glyphicon-stats"></span> </a>
     </td>
   </tr>
 }
@@ -94,4 +94,3 @@
         <div>{version.toString}</div>
     }
 }
-

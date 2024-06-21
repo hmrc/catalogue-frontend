@@ -76,7 +76,7 @@ class PlatformInitiativesController @Inject()
 
 case class PlatformInitiativesFilter(
   initiativeName: Option[String] = None,
-  team          : Option[String]
+  team          : Option[TeamName]
 ) {
   def isEmpty: Boolean =
     initiativeName.isEmpty && team.isEmpty
@@ -88,6 +88,7 @@ object PlatformInitiativesFilter {
       mapping(
         "initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
         "team"           -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+                                          .transform(_.map(TeamName.apply), _.map(_.asString))
         )
       (PlatformInitiativesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

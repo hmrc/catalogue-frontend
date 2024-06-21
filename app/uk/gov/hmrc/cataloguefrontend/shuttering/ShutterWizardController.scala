@@ -28,14 +28,13 @@ import play.twirl.api.Html
 
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.auth.AuthController
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => appRoutes}
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import views.html.shuttering.shutterService._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -76,15 +75,15 @@ class ShutterWizardController @Inject() (
   implicit val s2af: Format[Step2aOut] = step2aOutFormats
   implicit val s2bf: Format[Step2bOut] = step2bOutFormats
 
-  def shutterPermission(shutterType: ShutterType)(serviceName: String): Predicate =
-    Predicate.Permission(Resource.from("shutter-api", s"${shutterType.asString}/$serviceName"), IAAction("SHUTTER"))
+  def shutterPermission(shutterType: ShutterType)(serviceName: ServiceName): Predicate =
+    Predicate.Permission(Resource.from("shutter-api", s"${shutterType.asString}/${serviceName.asString}"), IAAction("SHUTTER"))
 
   // --------------------------------------------------------------------------
   // Start
   //
   // --------------------------------------------------------------------------
 
-  def start(shutterType: ShutterType, env: Environment, serviceName: Option[String], context: Option[String]) =
+  def start(shutterType: ShutterType, env: Environment, serviceName: Option[ServiceName], context: Option[String]) =
     auth.authenticatedAction(
       continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.start(shutterType, env, serviceName, context))
     ).async { implicit request =>
@@ -117,8 +116,8 @@ class ShutterWizardController @Inject() (
     } yield page1(form, shutterType, env, shutterStates, shutterGroups, back)
 
   def step1Get(
-    serviceName: Option[String]
-  , context: Option[String]
+    serviceName: Option[ServiceName]
+  , context    : Option[String]
   ) =
     auth.authenticatedAction(
       continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step1Get(serviceName, context))
@@ -128,8 +127,8 @@ class ShutterWizardController @Inject() (
          shutterStates <- EitherT.liftF(shutterService.getShutterStates(step0Out.shutterType, step0Out.env))
          step1f        <- serviceName match {
                             case Some(sn) => EitherT.pure[Future, Result](Step1Form(
-                                               serviceNameAndContexts = ServiceNameAndContext(ServiceName(sn), context) :: Nil
-                                             , status                 = inverseShutterStatusValue(shutterStates)(ServiceName(sn), context).fold("")(_.asString)
+                                               serviceNameAndContexts = ServiceNameAndContext(sn, context) :: Nil
+                                             , status                 = inverseShutterStatusValue(shutterStates)(sn, context).fold("")(_.asString)
                                              ))
                             case None     => EitherT.liftF[Future, Result, Step1Form](
                                                getFromSession(step1Key)

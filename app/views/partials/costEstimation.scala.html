@@ -15,16 +15,17 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
 @import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 @import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatGbp
 
 @(serviceCostEstimate: ServiceCostEstimate,
   costEstimateConfig : CostEstimateConfig,
-  serviceName        : String,
+  serviceName        : ServiceName,
   linkToCostsPage    : Boolean
 )(implicit
-  request: RequestHeader
+  request            : RequestHeader
 )
 
     <div id="cost-estimation" class="card">

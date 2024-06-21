@@ -21,7 +21,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.util.Base64Util
@@ -43,7 +43,7 @@ class ServiceConfigsService @Inject()(
   import ServiceConfigsService._
 
   private def configByKey(
-    serviceName : String,
+    serviceName : ServiceName,
     environments: Seq[Environment],
     version     : Option[Version],
     latest      : Boolean
@@ -63,7 +63,7 @@ class ServiceConfigsService @Inject()(
       }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString)*)) // sort by keys
 
   def removedConfig(
-    serviceName : String,
+    serviceName : ServiceName,
     environments: Seq[Environment] = Nil,
     version     : Option[Version]  = None
   )(implicit
@@ -85,7 +85,7 @@ class ServiceConfigsService @Inject()(
     } yield (configByKey)
 
   def configByKeyWithNextDeployment(
-    serviceName : String,
+    serviceName : ServiceName,
     environments: Seq[Environment] = Nil,
     version     : Option[Version]  = None
   )(implicit
@@ -115,14 +115,14 @@ class ServiceConfigsService @Inject()(
                              }
     } yield (newConfig)
 
-  def serviceRelationships(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsEnriched] =
+  def serviceRelationships(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsEnriched] =
     for {
       repos    <- teamsAndReposConnector.allRepositories()
       srs      <- serviceConfigsConnector.serviceRelationships(serviceName)
       outbound <- srs.outboundServices
                     .filterNot(_ == serviceName)
                     .foldLeftM[Future, Seq[ServiceRelationship]](Seq.empty) { (acc, service) =>
-                      val hasRepo = repos.find(_.name == service)
+                      val hasRepo = repos.find(_.name == service.asString)
                       (hasRepo.map {
                         repo =>
                           serviceCommissioningConnector
@@ -135,11 +135,11 @@ class ServiceConfigsService @Inject()(
                     .filterNot(_ == serviceName)
                     .sorted
                     .map { service =>
-                      ServiceRelationship(service, hasRepo = repos.exists(_.name == service), lifecycleStatus = None, endOfLifeDate = None)
+                      ServiceRelationship(service, hasRepo = repos.exists(_.name == service.asString), lifecycleStatus = None, endOfLifeDate = None)
                     }
     } yield ServiceRelationshipsEnriched(
       inbound,
-      outbound.sortBy(a => (if (a.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) 0 else 1, a.service.toLowerCase))
+      outbound.sortBy(a => (if (a.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) 0 else 1, a.service.asString.toLowerCase))
     )
 
   def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
@@ -147,13 +147,13 @@ class ServiceConfigsService @Inject()(
 
   def deploymentConfig(
     environment: Option[Environment] = None,
-    serviceName: Option[String]      = None
+    serviceName: Option[ServiceName] = None
   )(implicit
     hc         : HeaderCarrier
   ): Future[Seq[DeploymentConfig]] =
     serviceConfigsConnector.deploymentConfig(serviceName, environment)
 
-  def deploymentConfigByKeyWithNextDeployment(serviceName: String)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
+  def deploymentConfigByKeyWithNextDeployment(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
     for {
       applied        <- serviceConfigsConnector.deploymentConfig(service = Some(serviceName), applied = true )
       nextDeployment <- serviceConfigsConnector.deploymentConfig(service = Some(serviceName), applied = false)
@@ -170,9 +170,9 @@ class ServiceConfigsService @Inject()(
           ((appliedValue, nextValue) match {
             case (Some(applied), Some(next)) if applied == next => Seq((applied, false))
             case (Some(applied), Some(next)) => Seq((applied, false), (next, true))
-            case (Some(applied), None) => Seq((applied, false))
-            case (None, Some(next)) => Seq((next, true))
-            case _ => Seq.empty
+            case (Some(applied), None      ) => Seq((applied, false))
+            case (None         , Some(next)) => Seq((next, true))
+            case _                           => Seq.empty
           }).map { case (value, nextDeployment) =>
             val displayValue =
               if(key.startsWith("environment.") && value.length > 100 && Base64Util.isBase64Decodable(value)) "<<BASE64 ENCODED STRING>>" else value
@@ -215,7 +215,7 @@ class ServiceConfigsService @Inject()(
       .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(Ordering.by(_.asString))).toMap
 
   def configWarnings(
-    serviceName : ServiceConfigsService.ServiceName
+    serviceName : ServiceName
   , environments: Seq[Environment]
   , version     : Option[Version]
   , latest      : Boolean
@@ -232,8 +232,8 @@ class ServiceConfigsService @Inject()(
 
   def deploymentConfigChanges(service: ServiceName, environment: Environment)(implicit hc: HeaderCarrier): Future[Seq[ConfigChange]] =
     for {
-      appliedConfig  <- serviceConfigsConnector.deploymentConfig(service = Some(service.asString), environment = Some(environment), applied = true ).map(_.headOption)
-      newConfig      <- serviceConfigsConnector.deploymentConfig(service = Some(service.asString), environment = Some(environment), applied = false).map(_.headOption)
+      appliedConfig  <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = true ).map(_.headOption)
+      newConfig      <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = false).map(_.headOption)
       slots          =  valChanges(
                           "slots",
                           appliedConfig.map(_.deploymentSize.slots.toString),
@@ -293,7 +293,6 @@ object ServiceConfigsService {
       }
     })
   }
-  case class ServiceName(asString: String) extends AnyVal
 
   sealed trait ConfigEnvironment { def asString: String; def displayString: String }
   object ConfigEnvironment {
@@ -374,19 +373,19 @@ object ServiceConfigsService {
   }
 
   case class ServiceRelationships(
-    inboundServices : Seq[String],
-    outboundServices: Seq[String]
+    inboundServices : Seq[ServiceName],
+    outboundServices: Seq[ServiceName]
   )
 
   object ServiceRelationships {
     val reads: Reads[ServiceRelationships] =
-      ( (__ \ "inboundServices" ).read[Seq[String]]
-      ~ (__ \ "outboundServices").read[Seq[String]]
+      ( (__ \ "inboundServices" ).read[Seq[String]].map(_.map(ServiceName.apply))
+      ~ (__ \ "outboundServices").read[Seq[String]].map(_.map(ServiceName.apply))
       )(ServiceRelationships.apply)
   }
 
   case class ServiceRelationship(
-    service        : String,
+    service        : ServiceName,
     hasRepo        : Boolean,
     lifecycleStatus: Option[LifecycleStatus],
     endOfLifeDate  : Option[Instant]

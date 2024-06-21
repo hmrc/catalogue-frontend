@@ -25,6 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Results
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 
@@ -83,7 +84,7 @@ class PlatformInitiativesConnectorSpec
         get(urlEqualTo(s"/platform-initiatives/teams/team/initiatives"))
           .willReturn(aResponse().withBodyFile("platform-initiatives.json"))
       )
-      val initiatives = connector.getInitiatives(Some("team")).futureValue
+      val initiatives = connector.getInitiatives(Some(TeamName("team"))).futureValue
       initiatives mustBe result
     }
   }

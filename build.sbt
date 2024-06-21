@@ -7,7 +7,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
-    majorVersion := 4,
+    majorVersion := 5,
     scalaVersion := "3.3.3",
     scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
@@ -15,7 +15,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     // ***************
     RoutesKeys.routesImport ++= Seq(
       "uk.gov.hmrc.cataloguefrontend.connector.model.TeamName",
-      "uk.gov.hmrc.cataloguefrontend.model.Environment",
+      "uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}",
       "uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType",
       "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType",
       "uk.gov.hmrc.cataloguefrontend.binders.Binders._",
@@ -31,6 +31,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     // suppress unused-imports in twirl and routes files
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
     scalacOptions += "-Wconf:src=routes/.*:s",
+    //scalacOptions += "-explain",
+    javaOptions += "-Xmx2G",
     pipelineStages := Seq(digest)
   )
 

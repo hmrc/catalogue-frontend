@@ -220,7 +220,7 @@
                                 }
                                 <td></td>
                             }
-                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName.asString).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
+                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
                             </tr>
                     }
                     </tbody>
@@ -263,7 +263,7 @@
                                     case (None                          , FormCheckType.Environment) => {<td></td>@availableEnvironments(title).map { e => <td>@displayResult(title, Some(e), result.lifecycleStatus, None)</td>}<td></td>}
                                 }
                             }
-                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName.asString).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
+                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
                         </tr>
                     }
                     </tbody>

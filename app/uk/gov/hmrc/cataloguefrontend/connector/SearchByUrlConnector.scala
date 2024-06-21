@@ -18,7 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Reads, __}
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.{FrontendRoute, FrontendRoutes}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -36,8 +38,17 @@ class SearchByUrlConnector @Inject() (
 
   private val logger = Logger(getClass)
 
-  private implicit val frontendRouteReads: Reads[FrontendRoute]   = Json.using[Json.WithDefaultValues].reads[FrontendRoute]
-  private implicit val frontendRoutesReads: Reads[FrontendRoutes] = Json.reads[FrontendRoutes]
+  private implicit val frontendRouteReads: Reads[FrontendRoute]   =
+    ( (__ \ "frontendPath"        ).read[String]
+    ~ (__ \ "ruleConfigurationUrl").readWithDefault[String]("")
+    ~ (__ \ "isRegex"             ).readWithDefault[Boolean](false)
+    )(FrontendRoute.apply)
+
+  private implicit val frontendRoutesReads: Reads[FrontendRoutes] =
+    ( (__ \ "service"    ).read[String].map(ServiceName.apply)
+    ~ (__ \ "environment").read[String]
+    ~ (__ \ "routes"     ).read[Seq[FrontendRoute]]
+    )(FrontendRoutes.apply)
 
   private val baseUrl = servicesConfig.baseUrl("service-configs")
 

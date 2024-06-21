@@ -162,7 +162,7 @@ class LeakDetectionService @Inject() (
   }
 }
 
-final case class LeakDetectionRulesWithCounts(
+case class LeakDetectionRulesWithCounts(
   rule           : LeakDetectionRule,
   firstScannedAt : Option[Instant],
   lastScannedAt  : Option[Instant],
@@ -171,7 +171,7 @@ final case class LeakDetectionRulesWithCounts(
   unresolvedCount: Int
 )
 
-final case class LeakDetectionLeaksByRule(
+case class LeakDetectionLeaksByRule(
   ruleId     : String,
   description: String,
   scope      : String,
@@ -184,7 +184,7 @@ object LeakDetectionLeaksByRule {
     Ordering.by(l => (l.priority, l.leaks.length * -1)) //length DESC
 }
 
-final case class LeakDetectionLeakDetails(
+case class LeakDetectionLeakDetails(
   filePath   : String,
   lineNumber : Int,
   urlToSource: String,

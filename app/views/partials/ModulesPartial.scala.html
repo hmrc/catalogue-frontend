@@ -92,8 +92,7 @@
           repositoryModules.dependenciesBuild
         , "build-dependencies"
         , "Sbt Plugins"
-        , "-"
-        , None // Version - if set, will add graph links (using service-name)
+        , service    = None // if set, will add graph links
         , showLegend = showLegend
         )
       </div>
@@ -108,9 +107,8 @@
         module.dependenciesCompile
       , s"platform-dependencies-${module.name}"
       , "Compile Dependencies"
-      , "-"
-      , None // Version - if set, will add graph links (using service-name)
-      , isSub = isSub
+      , service    = None // if set, will add graph links
+      , isSub      = isSub
       , showLegend = showLegend
       )
     </div>
@@ -123,9 +121,8 @@
           module.dependenciesProvided
         , s"provided-dependencies-${module.name}"
         , "Provided Dependencies"
-        , "-"
-        , None // Version - if set, will add graph links (using service-name)
-        , isSub = isSub
+        , service    = None // if set, will add graph links
+        , isSub      = isSub
         , showLegend = showLegend
         )
       </div>
@@ -139,9 +136,8 @@
           module.dependenciesTest
         , s"test-dependencies-${module.name}"
         , "Test Dependencies"
-        , "-"
-        , None // Version - if set, will add graph links (using service-name)
-        , isSub = isSub
+        , service    = None // if set, will add graph links
+        , isSub      = isSub
         , showLegend = showLegend
         )
       </div>
@@ -155,9 +151,8 @@
           module.dependenciesIt
         , s"it-dependencies-${module.name}"
         , "Integration Test Dependencies"
-        , "-"
-        , None // Version - if set, will add graph links (using service-name)
-        , isSub = isSub
+        , service    = None // if set, will add graph links
+        , isSub      = isSub
         , showLegend = showLegend
         )
       </div>

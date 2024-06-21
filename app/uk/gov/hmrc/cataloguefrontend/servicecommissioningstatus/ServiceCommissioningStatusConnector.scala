@@ -24,6 +24,7 @@ import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,10 +37,10 @@ class ServiceCommissioningStatusConnector @Inject() (
 
   private val serviceCommissioningBaseUrl = servicesConfig.baseUrl("service-commissioning-status")
 
-  def commissioningStatus(serviceName: String)(implicit hc: HeaderCarrier): Future[List[Check]] = {
+  def commissioningStatus(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[List[Check]] = {
     implicit val cReads = Check.reads
     httpClientV2
-      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/status/$serviceName")
+      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/status/${serviceName.asString}")
       .execute[List[Check]]
   }
 
@@ -64,17 +65,17 @@ class ServiceCommissioningStatusConnector @Inject() (
       .execute[List[CachedServiceCheck]]
   }
 
-  def setLifecycleStatus(serviceName: String, lifecycleStatus: LifecycleStatus, username: String)(implicit hc: HeaderCarrier): Future[Unit] = {
+  def setLifecycleStatus(serviceName: ServiceName, lifecycleStatus: LifecycleStatus, username: String)(implicit hc: HeaderCarrier): Future[Unit] = {
     httpClientV2
-      .post(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/$serviceName/lifecycleStatus")
+      .post(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/${serviceName.asString}/lifecycleStatus")
       .withBody(Json.obj("lifecycleStatus" -> lifecycleStatus.asString, "username" -> username))
       .execute[Unit]
   }
 
-  def getLifecycle(serviceName: String)(implicit hc: HeaderCarrier): Future[Option[Lifecycle]] = {
+  def getLifecycle(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Option[Lifecycle]] = {
     implicit val reads: Reads[Lifecycle] = Lifecycle.reads
     httpClientV2
-      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/$serviceName/lifecycleStatus")
+      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/${serviceName.asString}/lifecycleStatus")
       .execute[Option[Lifecycle]]
   }
 }

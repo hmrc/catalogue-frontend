@@ -21,6 +21,8 @@ import play.api.data.Forms.{boolean, mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.vulnerabilities.{VulnerabilitiesForServicesPage, VulnerabilitiesListPage, VulnerabilitiesTimelinePage}
@@ -48,7 +50,7 @@ class VulnerabilitiesController @Inject() (
     vulnerability : Option[String],
     curationStatus: Option[String],
     service       : Option[String],
-    team          : Option[String],
+    team          : Option[TeamName],
     flag          : Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
@@ -61,7 +63,7 @@ class VulnerabilitiesController @Inject() (
               teams     <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
               summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(
                              flag           = Some(validForm.flag)
-                           , serviceName    = validForm.service
+                           , serviceQuery   = validForm.service.map(_.asString)
                            , team           = validForm.team
                            , curationStatus = validForm.curationStatus
                            )
@@ -70,7 +72,7 @@ class VulnerabilitiesController @Inject() (
     }
 
   def vulnerabilitiesForServices(
-    teamName: Option[String] = None //TeamName is read from form, this param only exists for reverse routes
+    teamName: Option[TeamName] = None //TeamName is read from form, this param only exists for reverse routes
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
@@ -91,8 +93,8 @@ class VulnerabilitiesController @Inject() (
     }
 
   def vulnerabilitiesTimeline(
-    service       : Option[String],
-    team          : Option[String],
+    service       : Option[ServiceName],
+    team          : Option[TeamName],
     vulnerability : Option[String],
     curationStatus: Option[String],
     from          : LocalDate,
@@ -128,8 +130,8 @@ class VulnerabilitiesController @Inject() (
     flag          : SlugInfoFlag           = SlugInfoFlag.Latest,
     vulnerability : Option[String]         = None,
     curationStatus: Option[CurationStatus] = None,
-    service       : Option[String]         = None,
-    team          : Option[String]         = None,
+    service       : Option[ServiceName]    = None,
+    team          : Option[TeamName]       = None,
   )
 
 object VulnerabilitiesExplorerFilter {
@@ -145,16 +147,16 @@ object VulnerabilitiesExplorerFilter {
                             ),
         "vulnerability"  -> optional(text),
         "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
-        "service"        -> optional(text),
-        "team"           -> optional(text),
+        "service"        -> optional(text.transform(ServiceName.apply, _.asString)),
+        "team"           -> optional(text.transform(TeamName.apply   , _.asString)),
       )(VulnerabilitiesExplorerFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }
 
 case class VulnerabilitiesCountFilter(
-  flag   : SlugInfoFlag   = SlugInfoFlag.Latest,
-  service: Option[String] = None,
-  team   : Option[String] = None,
+  flag   : SlugInfoFlag        = SlugInfoFlag.Latest,
+  service: Option[ServiceName] = None,
+  team   : Option[TeamName]    = None,
 )
 
 object VulnerabilitiesCountFilter {
@@ -165,15 +167,15 @@ object VulnerabilitiesCountFilter {
                       opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
                     , flag => Some(flag.asString)
                     ),
-        "service" -> optional(text),
-        "team"    -> optional(text),
+        "service" -> optional(text.transform(ServiceName.apply, _.asString)),
+        "team"    -> optional(text.transform(TeamName.apply   , _.asString)),
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }
 
 case class VulnerabilitiesTimelineFilter(
-  service       : Option[String],
-  team          : Option[String],
+  service       : Option[ServiceName],
+  team          : Option[TeamName],
   vulnerability : Option[String],
   curationStatus: Option[CurationStatus],
   from          : LocalDate,
@@ -192,8 +194,8 @@ object VulnerabilitiesTimelineFilter {
     val dateFormat = "yyyy-MM-dd"
     Form(
       mapping(
-        "service"        -> optional(text),
-        "team"           -> optional(text),
+        "service"        -> optional(text.transform(ServiceName.apply, _.asString)),
+        "team"           -> optional(text.transform(TeamName.apply   , _.asString)),
         "vulnerability"  -> optional(text),
         "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
         "from"           -> optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply), // Default to 6 months ago if loading initial page/value not set

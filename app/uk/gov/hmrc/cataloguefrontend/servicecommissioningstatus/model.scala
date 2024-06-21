@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.Instant
@@ -101,8 +101,6 @@ object Check {
         .orElse(json.validate[EnvCheck])
   }
 }
-
-case class ServiceName(asString: String) extends AnyVal
 
 case class CachedServiceCheck(
   serviceName    : ServiceName

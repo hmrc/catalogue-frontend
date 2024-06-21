@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -39,46 +39,46 @@ class VulnerabilitiesConnector @Inject() (
 
   def vulnerabilitySummaries(
     flag          : Option[SlugInfoFlag]   = None
-  , serviceName   : Option[String]         = None
+  , serviceQuery  : Option[String]         = None
   , version       : Option[Version]        = None
-  , team          : Option[String]         = None
+  , team          : Option[TeamName]       = None
   , curationStatus: Option[CurationStatus] = None
   )(implicit
     hc            : HeaderCarrier
   ): Future[Option[Seq[VulnerabilitySummary]]] = {
     implicit val vsrs: Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
     httpClientV2
-      .get(url"$url/vulnerabilities/api/summaries?flag=${flag.map(_.asString)}&service=$serviceName&version=${version.map(_.original)}&team=$team&curationStatus=${curationStatus.map(_.asString)}")
+      .get(url"$url/vulnerabilities/api/summaries?flag=${flag.map(_.asString)}&service=$serviceQuery&version=${version.map(_.original)}&team=${team.map(_.asString)}&curationStatus=${curationStatus.map(_.asString)}")
       .execute[Option[Seq[VulnerabilitySummary]]]
   }
 
   def vulnerabilityCounts(
     flag       : SlugInfoFlag
-  , serviceName: Option[String] = None
-  , team       : Option[String] = None
+  , serviceName: Option[ServiceName] = None
+  , team       : Option[TeamName]    = None
   )(implicit
     hc         : HeaderCarrier
   ): Future[Seq[TotalVulnerabilityCount]] = {
     implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
     httpClientV2
-      .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=$serviceName&team=$team")
+      .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=${serviceName.map(_.asString)}&team=${team.map(_.asString)}")
       .execute[Seq[TotalVulnerabilityCount]]
   }
 
   def deployedVulnerabilityCount(
-    serviceName: String
+    serviceName: ServiceName
   )(implicit
     hc         : HeaderCarrier
   ): Future[Option[TotalVulnerabilityCount]] = {
     implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
     httpClientV2
-      .get(url"$url/vulnerabilities/api/services/$serviceName/deployed-report-count")
+      .get(url"$url/vulnerabilities/api/services/${serviceName.asString}/deployed-report-count")
       .execute[Option[TotalVulnerabilityCount]]
   }
 
   def timelineCounts(
-    serviceName   : Option[String]
-  , team          : Option[String]
+    serviceName   : Option[ServiceName]
+  , team          : Option[TeamName]
   , vulnerability : Option[String]
   , curationStatus: Option[CurationStatus]
   , from          : LocalDate
@@ -92,7 +92,7 @@ class VulnerabilitiesConnector @Inject() (
     val toInstant   = DateTimeFormatter.ISO_INSTANT.format(to.atTime(23,59,59).toInstant(ZoneOffset.UTC))
 
     httpClientV2
-      .get(url"$url/vulnerabilities/api/reports/timeline?service=$serviceName&team=$team&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
+      .get(url"$url/vulnerabilities/api/reports/timeline?service=${serviceName.map(_.asString)}&team=${team.map(_.asString)}&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
       .execute[Seq[VulnerabilitiesTimelineCount]]
   }
 }

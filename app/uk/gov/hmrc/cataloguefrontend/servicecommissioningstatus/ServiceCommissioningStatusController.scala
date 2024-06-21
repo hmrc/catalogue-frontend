@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 import play.api.http.HttpEntity
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -44,7 +44,7 @@ class ServiceCommissioningStatusController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def getCommissioningState(serviceName: String): Action[AnyContent] =
+  def getCommissioningState(serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         lifecycleStatus <- serviceCommissioningStatusConnector.getLifecycle(serviceName).map(_.map(_.lifecycleStatus).getOrElse(LifecycleStatus.Active))

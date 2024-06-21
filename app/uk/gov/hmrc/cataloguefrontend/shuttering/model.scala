@@ -19,9 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 
 import java.time.Instant
 

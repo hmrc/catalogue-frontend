@@ -23,7 +23,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{Active, DecommissionInProgress, Deprecated}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Lifecycle, ServiceCommissioningStatusConnector}
@@ -70,13 +70,13 @@ class ServiceConfigsServiceSpec
           , ConfigSourceEntries(source = "appConfigEnvironment", sourceUrl = None, entries = Map(KeyName("k1") -> s"${e.asString}-b1"))
           )).toMap
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(ServiceName(eqTo(serviceName)), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(config))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(ServiceName(eqTo(serviceName)), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(config))
 
-      serviceConfigsService.configByKeyWithNextDeployment(serviceName).futureValue shouldBe toNextDeploymentFalse(deployedConfigByKey)
+      serviceConfigsService.configByKeyWithNextDeployment(ServiceName(serviceName)).futureValue shouldBe toNextDeploymentFalse(deployedConfigByKey)
     }
 
     "show undeployed changes" in new Setup {
@@ -95,13 +95,13 @@ class ServiceConfigsServiceSpec
       , ConfigSourceEntries(source = "appConfigEnvironment", sourceUrl = None, entries = Map(KeyName("k1") -> "new-val"))
       ))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(ServiceName(eqTo(serviceName)), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(ServiceName(eqTo(serviceName)), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      serviceConfigsService.configByKeyWithNextDeployment(serviceName).futureValue shouldBe update(
+      serviceConfigsService.configByKeyWithNextDeployment(ServiceName(serviceName)).futureValue shouldBe update(
         toNextDeploymentFalse(deployedConfigByKey)
       , KeyName("k1")
       , ConfigEnvironment.ForEnvironment(Environment.QA)
@@ -124,13 +124,13 @@ class ServiceConfigsServiceSpec
         ConfigSourceEntries(source = "appConfigEnvironment", sourceUrl = None, entries = Map(KeyName("k2") -> "new-val"))
       ))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(ServiceName(eqTo(serviceName)), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(ServiceName(eqTo(serviceName)), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      serviceConfigsService.configByKeyWithNextDeployment(serviceName).futureValue shouldBe update(
+      serviceConfigsService.configByKeyWithNextDeployment(ServiceName(serviceName)).futureValue shouldBe update(
         toNextDeploymentFalse(deployedConfigByKey)
       , KeyName("k2")
       , ConfigEnvironment.ForEnvironment(Environment.QA)
@@ -153,13 +153,13 @@ class ServiceConfigsServiceSpec
         ConfigSourceEntries(source = "", sourceUrl = None, entries = Map(KeyName("k1") -> ""))
       ))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(ServiceName(eqTo(serviceName)), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(true))(any[HeaderCarrier]))
         .thenReturn(Future.successful(latest))
 
-      when(mockServiceConfigsConnector.configByEnv(eqTo(serviceName), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
+      when(mockServiceConfigsConnector.configByEnv(ServiceName(eqTo(serviceName)), environments = eqTo(Nil), version = eqTo(None), latest = eqTo(false))(any[HeaderCarrier]))
         .thenReturn(Future.successful(deployed))
 
-      serviceConfigsService.configByKeyWithNextDeployment(serviceName).futureValue shouldBe update(
+      serviceConfigsService.configByKeyWithNextDeployment(ServiceName(serviceName)).futureValue shouldBe update(
         toNextDeploymentFalse(deployedConfigByKey)
       , KeyName("k1")
       , ConfigEnvironment.ForEnvironment(Environment.QA)
@@ -218,7 +218,7 @@ class ServiceConfigsServiceSpec
       "show changed deployment sizes" in new Setup {
         val serviceName = ServiceName("test-service")
         val environment = Environment.Production
-        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName.asString), Some(environment), applied = true))
+        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName), Some(environment), applied = true))
           .thenReturn(Future.successful(Seq(
             DeploymentConfig(
               serviceName.asString,
@@ -229,7 +229,7 @@ class ServiceConfigsServiceSpec
               jvm         = Map("k2" -> "v2")
             )
           )))
-        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName.asString), Some(environment), applied = false))
+        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName), Some(environment), applied = false))
           .thenReturn(Future.successful(Seq(
             DeploymentConfig(
               serviceName.asString,
@@ -249,7 +249,7 @@ class ServiceConfigsServiceSpec
       "show changed envvars and jvm" in new Setup {
         val serviceName = ServiceName("test-service")
         val environment = Environment.Production
-        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName.asString), Some(environment), applied = true))
+        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName), Some(environment), applied = true))
           .thenReturn(Future.successful(Seq(
             DeploymentConfig(
               serviceName.asString,
@@ -268,7 +268,7 @@ class ServiceConfigsServiceSpec
                             )
             )
           )))
-        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName.asString), Some(environment), applied = false))
+        when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName), Some(environment), applied = false))
           .thenReturn(Future.successful(Seq(
             DeploymentConfig(
               serviceName.asString,
@@ -317,33 +317,33 @@ class ServiceConfigsServiceSpec
       when(mockTeamsAndRepositoriesConnector.allRepositories())
         .thenReturn(Future.successful(Seq(gitRepository("test-repo-1"), gitRepository("inbound-repo-1"), gitRepository("outbound-repo-1"))))
 
-      when(mockServiceConfigsConnector.serviceRelationships("test-repo-1"))
-        .thenReturn(Future.successful(ServiceRelationships(Seq("inbound-repo-1" ), Seq("outbound-repo-1"))))
+      when(mockServiceConfigsConnector.serviceRelationships(ServiceName("test-repo-1")))
+        .thenReturn(Future.successful(ServiceRelationships(Seq(ServiceName("inbound-repo-1")), Seq(ServiceName("outbound-repo-1")))))
 
-      when(mockServiceCommissioningConnector.getLifecycle("outbound-repo-1"))
+      when(mockServiceCommissioningConnector.getLifecycle(ServiceName("outbound-repo-1")))
         .thenReturn(Future.successful(Some(Lifecycle(DecommissionInProgress, None, None))))
 
       val expectedResult: ServiceRelationshipsEnriched = ServiceRelationshipsEnriched(
-        Seq(ServiceRelationship("inbound-repo-1",  hasRepo = true, lifecycleStatus = None, endOfLifeDate = None)),
-        Seq(ServiceRelationship("outbound-repo-1", hasRepo = true, Some(DecommissionInProgress), endOfLifeDate = None))
+        Seq(ServiceRelationship(ServiceName("inbound-repo-1" ), hasRepo = true, lifecycleStatus = None                        , endOfLifeDate = None)),
+        Seq(ServiceRelationship(ServiceName("outbound-repo-1"), hasRepo = true, lifecycleStatus = Some(DecommissionInProgress), endOfLifeDate = None))
       )
 
-      serviceConfigsService.serviceRelationships("test-repo-1").futureValue shouldBe expectedResult
+      serviceConfigsService.serviceRelationships(ServiceName("test-repo-1")).futureValue shouldBe expectedResult
     }
 
     "return list of service relationships without lifecycle status when not found in teams and repositories" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories())
         .thenReturn(Future.successful(Seq.empty))
 
-      when(mockServiceConfigsConnector.serviceRelationships("test-repo-1"))
-        .thenReturn(Future.successful(ServiceRelationships(Seq("inbound-repo-1"), Seq("outbound-repo-1"))))
+      when(mockServiceConfigsConnector.serviceRelationships(ServiceName("test-repo-1")))
+        .thenReturn(Future.successful(ServiceRelationships(Seq(ServiceName("inbound-repo-1")), Seq(ServiceName("outbound-repo-1")))))
 
       val expectedResult = ServiceRelationshipsEnriched(
-        Seq(ServiceRelationship("inbound-repo-1",  hasRepo = false, lifecycleStatus = None, endOfLifeDate = None)),
-        Seq(ServiceRelationship("outbound-repo-1", hasRepo = false, lifecycleStatus = None, endOfLifeDate = None))
+        Seq(ServiceRelationship(ServiceName("inbound-repo-1" ), hasRepo = false, lifecycleStatus = None, endOfLifeDate = None)),
+        Seq(ServiceRelationship(ServiceName("outbound-repo-1"), hasRepo = false, lifecycleStatus = None, endOfLifeDate = None))
       )
 
-      serviceConfigsService.serviceRelationships("test-repo-1").futureValue shouldBe expectedResult
+      serviceConfigsService.serviceRelationships(ServiceName("test-repo-1")).futureValue shouldBe expectedResult
 
       verifyNoInteractions(mockServiceCommissioningConnector)
     }
@@ -354,9 +354,10 @@ class ServiceConfigsServiceSpec
       val serviceRelationshipsEnriched = ServiceRelationshipsEnriched(
         inboundServices  = Seq.empty,
         outboundServices = Seq(
-          ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Deprecated), endOfLifeDate = None),
-          ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = Some(Active), endOfLifeDate = None),
-          ServiceRelationship("test-3", hasRepo = false, lifecycleStatus = None, endOfLifeDate = None))
+          ServiceRelationship(ServiceName("test-1"), hasRepo = false, lifecycleStatus = Some(Deprecated), endOfLifeDate = None),
+          ServiceRelationship(ServiceName("test-2"), hasRepo = false, lifecycleStatus = Some(Active)    , endOfLifeDate = None),
+          ServiceRelationship(ServiceName("test-3"), hasRepo = false, lifecycleStatus = None            , endOfLifeDate = None)
+        )
       )
 
       serviceRelationshipsEnriched.hasDeprecatedDownstream shouldBe true
@@ -367,8 +368,9 @@ class ServiceConfigsServiceSpec
       val serviceRelationshipsEnriched = ServiceRelationshipsEnriched(
         inboundServices  = Seq.empty,
         outboundServices = Seq(
-          ServiceRelationship("test-1", hasRepo = false, lifecycleStatus = Some(Active), endOfLifeDate = None),
-          ServiceRelationship("test-2", hasRepo = false, lifecycleStatus = None, endOfLifeDate = None))
+          ServiceRelationship(ServiceName("test-1"), hasRepo = false, lifecycleStatus = Some(Active), endOfLifeDate = None),
+          ServiceRelationship(ServiceName("test-2"), hasRepo = false, lifecycleStatus = None        , endOfLifeDate = None)
+        )
       )
 
       serviceRelationshipsEnriched.hasDeprecatedDownstream shouldBe false

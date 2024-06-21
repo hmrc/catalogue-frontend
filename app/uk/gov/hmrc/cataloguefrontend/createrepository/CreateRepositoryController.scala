@@ -24,6 +24,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -36,8 +37,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class CreateRepositoryController @Inject()(
    override val auth                        : FrontendAuthComponents,
    override val mcc                         : MessagesControllerComponents,
-   createRepositoryPage                     : CreateServiceRepositoryPage,
-   createRepositoryConfirmationPage         : CreateServiceRepositoryConfirmationPage,
+   createServiceRepositoryPage              : CreateServiceRepositoryPage,
+   createServiceRepositoryConfirmationPage  : CreateServiceRepositoryConfirmationPage,
    createPrototypePage                      : CreatePrototypeRepositoryPage,
    createPrototypeRepositoryConfirmationPage: CreatePrototypeRepositoryConfirmationPage,
    createTestRepositoryPage                 : CreateTestRepositoryPage,
@@ -61,7 +62,7 @@ class CreateRepositoryController @Inject()(
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
       val userTeams = cleanseUserTeams(request.retrieval)
-      Ok(createRepositoryPage(CreateServiceRepoForm.form, userTeams, CreateServiceRepositoryType.valuesAsSeq))
+      Ok(createServiceRepositoryPage(CreateServiceRepoForm.form, userTeams, CreateServiceRepositoryType.valuesAsSeq))
     }
 
   val createServiceRepository: Action[AnyContent] =
@@ -73,19 +74,19 @@ class CreateRepositoryController @Inject()(
          userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
          submittedForm =  CreateServiceRepoForm.form.bindFromRequest()
          validForm     <- submittedForm.fold[EitherT[Future, Result, CreateServiceRepoForm]](
-                            formWithErrors => EitherT.leftT(BadRequest(createRepositoryPage(formWithErrors, userTeams, CreateServiceRepositoryType.valuesAsSeq))),
+                            formWithErrors => EitherT.leftT(BadRequest(createServiceRepositoryPage(formWithErrors, userTeams, CreateServiceRepositoryType.valuesAsSeq))),
                             validForm      => EitherT.pure(validForm)
                           )
          _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
          _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
-                            .leftMap(error => BadRequest(createRepositoryPage(submittedForm.withError("teamName", error), userTeams, CreateServiceRepositoryType.valuesAsSeq)))
+                            .leftMap(error => BadRequest(createServiceRepositoryPage(submittedForm.withError("teamName", error), userTeams, CreateServiceRepositoryType.valuesAsSeq)))
          id            <- EitherT(buildDeployApiConnector.createServiceRepository(validForm))
                             .leftMap{ error =>
                               logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} failed with message: $error")
-                              BadRequest(createRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams, CreateServiceRepositoryType.valuesAsSeq))
+                              BadRequest(createServiceRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams, CreateServiceRepositoryType.valuesAsSeq))
                             }
          _             =  logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       } yield Redirect(routes.CreateRepositoryController.createServiceRepositoryConfirmation(validForm.repositoryName))
+       } yield Redirect(routes.CreateRepositoryController.createServiceRepositoryConfirmation(ServiceName(validForm.repositoryName)))
       ).merge
     }
 
@@ -167,9 +168,9 @@ class CreateRepositoryController @Inject()(
       Ok(createPrototypeRepositoryConfirmationPage(repoName))
     }
 
-  def createServiceRepositoryConfirmation(repoName: String): Action[AnyContent] =
+  def createServiceRepositoryConfirmation(repoName: ServiceName): Action[AnyContent] =
     BasicAuthAction { implicit request =>
-      Ok(createRepositoryConfirmationPage(repoName))
+      Ok(createServiceRepositoryConfirmationPage(repoName))
     }
 
   private def verifyGithubTeamExists(

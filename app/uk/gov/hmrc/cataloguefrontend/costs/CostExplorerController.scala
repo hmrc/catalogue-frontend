@@ -70,17 +70,17 @@ class CostsSummaryController @Inject() (
   }
 
   def costExplorer(
-    team : Option[String] = None,
-    asCSV: Boolean        = false
+    team : Option[TeamName] = None,
+    asCSV: Boolean          = false
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         teams           <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
-        configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.trim.isEmpty))
+        configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.asString.trim.isEmpty))
         groupedConfigs  = configs.groupBy(_.serviceName)
       } yield {
         if (asCSV) {
-          val csv = s"${team.getOrElse("")} ,Integration, ,Development, ,QA, ,Staging, ,ExternalTest, ,Production\n" + // CSV header
+          val csv = s"${team.fold("")(_.asString)} ,Integration, ,Development, ,QA, ,Staging, ,ExternalTest, ,Production\n" + // CSV header
             CsvUtils.toCsv(toRows(groupedConfigs)).replaceAll(""".\{.*?(})""", "")
           val source = Source.single(ByteString(csv, "UTF-8"))
 

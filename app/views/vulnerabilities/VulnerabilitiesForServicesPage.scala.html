@@ -14,12 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
-@import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter
-@import views.html.helper.{FieldConstructor, select}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
+@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, TotalVulnerabilityCount, VulnerabilitiesCountFilter}
+@import views.html.helper.{FieldConstructor, select}
 
 @this()
 
@@ -94,7 +93,7 @@
 
 @vulnerabilitiesCountForService(tvc: TotalVulnerabilityCount) = {
     <tr>
-        <td><a class="service" id="link-to-@tvc.service" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(tvc.service)">@tvc.service</a></td>
+        <td><a class="service" id="link-to-@tvc.service.asString" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(tvc.service)">@tvc.service.asString</a></td>
         <td class="text-center"><a class="action-required" id="@tvc.service-action-required-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.ActionRequired)">@tvc.actionRequired</a></td>
         <td class="text-center"><a class="investigation-ongoing" id="@tvc.service-investigation-ongoing-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.InvestigationOngoing)">@tvc.investigationOngoing</a></td>
         <td class="text-center"><a class="no-action-required" id="@tvc.service-no-action-required-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.NoActionRequired)">@tvc.noActionRequired</a></td>
@@ -102,12 +101,12 @@
     </tr>
 }
 
-@vulnerabilitiesListHref(service: String, curationStatus: CurationStatus) = {
+@vulnerabilitiesListHref(service: ServiceName, curationStatus: CurationStatus) = {
      @uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesList(
         vulnerability  = None,
         curationStatus = Some(curationStatus.asString),
-        service        = Some(s"\"${service}\""),
-        team           = form("team").value,
+        service        = Some(s"\"${service.asString}\""),
+        team           = form("team").value.map(TeamName.apply),
         flag           = form("flag").value
     )
 }

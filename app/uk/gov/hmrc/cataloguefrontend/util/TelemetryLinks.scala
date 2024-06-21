@@ -17,10 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.util
 
 import play.api.Configuration
-
-import uk.gov.hmrc.cataloguefrontend.connector.Link
-import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceMetricsConnector
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.connector.{Link, ServiceMetricsConnector}
 
 import java.security.MessageDigest
 import javax.inject.{Inject, Singleton}
@@ -44,33 +42,33 @@ class TelemetryLinks @Inject()(configuration: Configuration) {
     else
       name
 
-  def grafanaDashboard(env: Environment, serviceName: String) = Link(
+  def grafanaDashboard(env: Environment, serviceName: ServiceName) = Link(
     name        = "Grafana Dashboard"
   , displayName = "Grafana Dashboard"
   , url        =  grafanaDashboardTemplate
                     .replace(s"$${env}",     UrlUtils.encodePathParam(env.asString))
-                    .replace(s"$${service}", UrlUtils.encodePathParam(toDashBoardUid(serviceName)))
+                    .replace(s"$${service}", UrlUtils.encodePathParam(toDashBoardUid(serviceName.asString)))
   )
 
-  def kibanaDashboard(env: Environment, serviceName: String) = Link(
+  def kibanaDashboard(env: Environment, serviceName: ServiceName) = Link(
     name        = "Kibana Dashboard"
   , displayName = "Kibana Dashboard"
   , url        =  kibanaDashboardTemplate
                     .replace(s"$${env}",     UrlUtils.encodePathParam(env.asString))
-                    .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
+                    .replace(s"$${service}", UrlUtils.encodePathParam(serviceName.asString))
   )
 
-  def kibanaDeploymentLogs(env: Environment, serviceName: String) = Link(
+  def kibanaDeploymentLogs(env: Environment, serviceName: ServiceName) = Link(
     name        = "Deployment Logs"
   , displayName = "Deployment Logs"
   , url        =  kibanaDeploymentLogsTemplate
                     .replace(s"$${env}",     UrlUtils.encodePathParam(env.asString))
-                    .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
+                    .replace(s"$${service}", UrlUtils.encodePathParam(serviceName.asString))
   )
 
   def kibanaNonPerformantQueries(
     env                 : Environment,
-    serviceName         : String,
+    serviceName         : ServiceName,
     nonPerformantQueries: Seq[ServiceMetricsConnector.NonPerformantQueries] = Seq.empty
   ): Seq[Link] =
     telemetryLogsDiscoverLinkTemplates.toSeq.map { case (name, linkTemplate) =>
@@ -82,7 +80,7 @@ class TelemetryLinks @Inject()(configuration: Configuration) {
       val url =
         linkTemplate
           .replace(s"$${env}"    , UrlUtils.encodePathParam(env.asString))
-          .replace(s"$${service}", UrlUtils.encodePathParam(serviceName))
+          .replace(s"$${service}", UrlUtils.encodePathParam(serviceName.asString))
       Link(name, s"$name Queries", url, `class`)
     }
 }

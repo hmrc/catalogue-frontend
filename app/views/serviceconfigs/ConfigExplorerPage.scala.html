@@ -14,13 +14,14 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsService, routes => serviceConfigsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 
 @this()
 
-@(serviceName: String,
+@(serviceName     : ServiceName,
   configByKey     : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ConfigEnvironment, Seq[(ServiceConfigsService.ConfigSourceValue, Boolean)]]],
   deployments     : List[WhatsRunningWhereVersion],
   showWarnings    : Boolean,
@@ -40,7 +41,7 @@
 
 <html lang="en">
     <head>
-        <title>Config - @serviceName</title>
+        <title>Config - @serviceName.asString</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="@routes.Assets.versioned("bootstrap.5.3.0.min.css")" />
         <link rel="stylesheet" href="@routes.Assets.versioned("glyphicon-bootstrap.3.4.1.css")" />
@@ -52,7 +53,7 @@
     </head>
     <body class="hide-refconf-only word-wrap @if(showWarnings){show-warnings}">
         <header class="opaque">
-            <h1 class="capitalize" id="service-header">Config: @serviceName</h1>
+            <h1 class="capitalize" id="service-header">Config: @serviceName.asString</h1>
             <i class="glyphicon glyphicon-question-sign help-icon"></i>
             <i class="glyphicon glyphicon-menu-hamburger menu-icon"></i>
         </header>

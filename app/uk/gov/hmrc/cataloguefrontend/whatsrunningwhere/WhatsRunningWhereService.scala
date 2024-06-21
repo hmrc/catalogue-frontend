@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentSize
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.http.HeaderCarrier
@@ -36,7 +36,7 @@ class WhatsRunningWhereService @Inject()(
   def profiles()(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
     releasesConnector.profiles()
 
-  def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
+  def releasesForService(service: ServiceName)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
     releasesConnector.releasesForService(service)
 
   def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
@@ -49,7 +49,7 @@ class WhatsRunningWhereService @Inject()(
           )
           .groupBy(_.serviceName)
           .map { case (serviceName, deploymentConfigs) =>
-            ServiceDeploymentConfigSummary(serviceName, deploymentConfigs.groupBy(_.environment).view.mapValues(_.head.deploymentSize).toMap)
+            ServiceDeploymentConfigSummary(ServiceName(serviceName), deploymentConfigs.groupBy(_.environment).view.mapValues(_.head.deploymentSize).toMap)
           }
           .toSeq
       )
@@ -63,6 +63,6 @@ class WhatsRunningWhereServiceConfig @Inject()(configuration: Configuration) {
 }
 
 case class ServiceDeploymentConfigSummary(
-  serviceName    : String,
+  serviceName    : ServiceName,
   deploymentSizes: Map[Environment, DeploymentSize]
 )

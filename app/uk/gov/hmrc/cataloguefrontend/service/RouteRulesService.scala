@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.EnvironmentRoute
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,7 +29,7 @@ class RouteRulesService @Inject() (
 )(implicit val ec: ExecutionContext) {
   import RouteRulesService._
 
-  def serviceRoutes(serviceName: String)(implicit hc: HeaderCarrier): Future[ServiceRoutes] =
+  def serviceRoutes(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[ServiceRoutes] =
     for {
       frontendRoutes <- routeRulesConnector.frontendRoutes(serviceName)
       adminRoutes    <- routeRulesConnector.adminFrontendRoutes(serviceName)

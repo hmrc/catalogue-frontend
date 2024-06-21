@@ -23,9 +23,8 @@ import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType.Rate
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering._
@@ -37,7 +36,7 @@ import scala.util.control.NonFatal
 class ShutterOverviewController @Inject() (
   override val mcc         : MessagesControllerComponents,
   shutterOverviewPage      : ShutterOverviewPage,
-  frontendRoutesWarningPage: FrontendRouteWarningsPage,
+  frontendRouteWarningPage : FrontendRouteWarningsPage,
   shutterService           : ShutterService,
   catalogueConfig          : CatalogueConfig,
   override val auth        : FrontendAuthComponents
@@ -76,20 +75,20 @@ class ShutterOverviewController @Inject() (
       } yield Ok(page)
     }
 
-  def frontendRouteWarnings(env: Environment, serviceName: String): Action[AnyContent] =
+  def frontendRouteWarnings(env: Environment, serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         envsAndWarnings <- Environment.valuesAsSeq.traverse { env =>
                              shutterService
-                               .frontendRouteWarnings(env, ServiceName(serviceName))
+                               .frontendRouteWarnings(env, serviceName)
                                .recover {
                                  case NonFatal(ex) =>
-                                   logger.error(s"Could not retrieve frontend route warnings for service '$serviceName' in env: '${env.asString}': ${ex.getMessage}", ex)
+                                   logger.error(s"Could not retrieve frontend route warnings for service '${serviceName.asString}' in env: '${env.asString}': ${ex.getMessage}", ex)
                                    Seq.empty
                                }
                                .map(ws => (env, ws))
                            }
-        page = frontendRoutesWarningPage(envsAndWarnings.toMap, env, serviceName)
+        page = frontendRouteWarningPage(envsAndWarnings.toMap, env, serviceName)
       } yield Ok(page)
     }
 }

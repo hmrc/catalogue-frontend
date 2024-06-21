@@ -23,7 +23,7 @@ import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.internalauth.client.Retrieval
 
 import java.net.URL
@@ -48,7 +48,7 @@ class BuildJobsConnector @Inject()(
   private val baseUrl = config.get[String]("jenkins.buildjobs.url")
 
   def deployMicroservice(
-    serviceName: String
+    serviceName: ServiceName
   , version    : Version
   , environment: Environment
   , user       : Retrieval.Username
@@ -69,7 +69,7 @@ class BuildJobsConnector @Inject()(
       , HeaderNames.CONTENT_TYPE -> "application/x-www-form-urlencoded"
       )
       .withBody(Map(
-        "SERVICE"         -> Seq(serviceName)
+        "SERVICE"         -> Seq(serviceName.asString)
       , "SERVICE_VERSION" -> Seq(version.original)
       , "ENVIRONMENT"     -> Seq(environment.asString)
       , "DEPLOYER_ID"     -> Seq(user.value)

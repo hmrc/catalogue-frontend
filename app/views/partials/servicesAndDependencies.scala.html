@@ -21,7 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{routes => vulnerabilityRoutes}
 
 @(masterTeamDependencies: Seq[RepoAndDependencies],
-  team                  : TeamName
+  teamName              : TeamName
 )
 
 <div id="servicesAndDependencies" class="card">
@@ -30,9 +30,9 @@
   </div>
   <div class="card-body">
     <ul class="list-unstyled" style="column-count: 1;">
-      <li><a id="link-to-team-services" href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(Some(team))"> Service Commissioning State</a></li>
-      <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(team)"> Outdated Dependencies </a></li>
-      <li><a id="link-to-service-vulnerabilities" href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(Some(team.asString))"> Service Vulnerabilities </a></li>
+      <li><a id="link-to-team-services" href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(Some(teamName))"> Service Commissioning State</a></li>
+      <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(teamName)"> Outdated Dependencies </a></li>
+      <li><a id="link-to-service-vulnerabilities" href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(Some(teamName))"> Service Vulnerabilities </a></li>
     </ul>
   </div>
 </div>

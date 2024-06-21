@@ -26,7 +26,7 @@
 @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
   <tr id="row@i">
     <td class="application-name" id="row@{i}_application">
-        <a aria-label="Link to info page for @{sdcSummary.serviceName}" id="link-to-info-page-for-@{sdcSummary.serviceName}" href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName}</a>
+        <a aria-label="Link to info page for @{sdcSummary.serviceName.asString}" id="link-to-info-page-for-@{sdcSummary.serviceName.asString}" href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName.asString}</a>
     </td>
     @environments.map { env =>
       @sdcSummary.deploymentSizes.get(env).map { deploymentSize =>

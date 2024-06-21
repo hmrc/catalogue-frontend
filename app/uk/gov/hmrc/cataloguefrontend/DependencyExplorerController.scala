@@ -85,7 +85,7 @@ class DependencyExplorerController @Inject() (
     group       : String,
     artefact    : String,
     versionRange: Option[String],
-    team        : Option[String],
+    team        : Option[TeamName],
     flag        : Option[String],
     `scope[]`   : Option[Seq[String]],
     `repoType[]`: Option[Seq[String]],
@@ -103,7 +103,7 @@ class DependencyExplorerController @Inject() (
             group        = group,
             artefact     = artefact,
             versionRange = versionRange.getOrElse(BobbyVersionRange("[0.0.0,]").range),
-            team         = team.getOrElse(""),
+            team         = team.fold("")(_.asString),
             flag         = flag.getOrElse(SlugInfoFlag.Latest.asString),
             scope        = `scope[]`.getOrElse(Seq(DependencyScope.Compile.asString)),
             repoType     = `repoType[]`.getOrElse(Seq(RepoType.Service.asString))
@@ -254,7 +254,7 @@ object DependencyExplorerController {
     } yield s"$g:$a"
 
   def search(
-    team        : String = "",
+    team        : Option[TeamName]      = None,
     flag        : SlugInfoFlag,
     scopes      : Seq[DependencyScope],
     repoTypes   : Option[Seq[RepoType]] = None,
@@ -268,7 +268,7 @@ object DependencyExplorerController {
       `scope[]`    = Some(scopes.map(_.asString)),
       `repoType[]` = repoTypes.map(_.map(_.asString)),
       flag         = Some(flag.asString),
-      team         = Some(team),
+      team         = team,
       versionRange = Some(versionRange.range),
       asCsv        = false,
     ).toString

@@ -24,7 +24,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -81,11 +81,11 @@ class WhatsRunningWhereServiceSpec
       )
 
       testService.allDeploymentConfigs(releases).futureValue shouldBe Seq(
-        ServiceDeploymentConfigSummary("address-lookup", Map(
+        ServiceDeploymentConfigSummary(ServiceName("address-lookup"), Map(
           Environment.Development -> DeploymentSize(slots = 2, instances = 2),
           Environment.Production  -> DeploymentSize(slots = 4, instances = 4)
         )),
-        ServiceDeploymentConfigSummary("health-indicators", Map(
+        ServiceDeploymentConfigSummary(ServiceName("health-indicators"), Map(
           Environment.QA         -> DeploymentSize(slots = 3, instances = 2),
           Environment.Staging    -> DeploymentSize(slots = 5, instances = 5),
           Environment.Production -> DeploymentSize(slots = 8, instances = 4)

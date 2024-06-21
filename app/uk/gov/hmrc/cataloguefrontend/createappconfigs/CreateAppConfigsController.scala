@@ -24,8 +24,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector._
-
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.internalauth.client._
@@ -76,10 +75,10 @@ class CreateAppConfigsController @Inject()(
       case _                                                      => Seq.empty[Environment]
     }
 
-  def createAppConfigsPermission(serviceName: String): Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"services/$serviceName"), IAAction("CREATE_APP_CONFIGS"))
+  def createAppConfigsPermission(serviceName: ServiceName): Predicate =
+    Predicate.Permission(Resource.from("catalogue-frontend", s"services/${serviceName.asString}"), IAAction("CREATE_APP_CONFIGS"))
 
-  def createAppConfigsLanding(serviceName: String): Action[AnyContent] =
+  def createAppConfigsLanding(serviceName: ServiceName): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateAppConfigsController.createAppConfigsLanding(serviceName),
       retrieval   = Retrieval.hasPredicate(createAppConfigsPermission(serviceName))
@@ -87,11 +86,11 @@ class CreateAppConfigsController @Inject()(
       (
         for {
           repo          <- EitherT.fromOptionF[Future, Result, GitRepository](
-                             teamsAndRepositoriesConnector.repositoryDetails(serviceName),
+                             teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString),
                              NotFound(error_404_template())
                            )
           serviceType   <- EitherT.fromOption[Future](repo.serviceType, {
-                             logger.error(s"$serviceName is missing a Service Type")
+                             logger.error(s"${serviceName.asString} is missing a Service Type")
                              NotFound(error_404_template())
                            })
           configChecks  <- EitherT.liftF[Future, Result, List[Check]](
@@ -103,7 +102,7 @@ class CreateAppConfigsController @Inject()(
           envsToDisplay =  Environment.valuesAsSeq.diff(envsToHide.toSeq)
           hasPerm       =  request.retrieval
           form          =  { val f = CreateAppConfigsForm.form
-                             if (!hasPerm) f.withGlobalError(s"You do not have permission to create App Configs for: $serviceName")
+                             if (!hasPerm) f.withGlobalError(s"You do not have permission to create App Configs for: ${serviceName.asString}")
                              else f.fill(CreateAppConfigsForm(true, true, true, true, true))
                            }
         } yield
@@ -122,7 +121,7 @@ class CreateAppConfigsController @Inject()(
       ).merge
     }
 
-  def createAppConfigs(serviceName: String): Action[AnyContent] =
+  def createAppConfigs(serviceName: ServiceName): Action[AnyContent] =
     auth.authorizedAction(
       predicate   = createAppConfigsPermission(serviceName),
       continueUrl = routes.CreateAppConfigsController.createAppConfigsLanding(serviceName)
@@ -130,7 +129,7 @@ class CreateAppConfigsController @Inject()(
       (
         for {
           repo          <- EitherT.fromOptionF[Future, Result, GitRepository](
-                             teamsAndRepositoriesConnector.repositoryDetails(serviceName),
+                             teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString),
                              NotFound(error_404_template())
                            )
           serviceType   <- EitherT.fromOption[Future](repo.serviceType, InternalServerError("No Service Type"))

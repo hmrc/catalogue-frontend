@@ -15,13 +15,14 @@
  *@
 
 @import play.api.mvc.Call
+@import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
 
 @this()
 
 @(form            : Form[?],
   searchResults   : Seq[FrontendRoutes],
-  serviceNameToUrl: String => Call
+  serviceNameToUrl: ServiceName => Call
 )(implicit
   request: RequestHeader
 )

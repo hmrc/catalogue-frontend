@@ -21,7 +21,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus.ActionRequired
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -114,7 +114,7 @@ class VulnerabilitiesConnectorSpec
                                     ticket                     = Some("ticket1")
                                   ),
           occurrences           = Seq(VulnerabilityOccurrence(
-                                    service             = "service1",
+                                    service             = ServiceName("service1"),
                                     serviceVersion      = "2.0",
                                     componentPathInSlug = "some/test/path"
                                   )),
@@ -139,9 +139,9 @@ class VulnerabilitiesConnectorSpec
           ))
       )
 
-      vulnerabilitiesConnector.deployedVulnerabilityCount("service1").futureValue shouldBe Some(
+      vulnerabilitiesConnector.deployedVulnerabilityCount(ServiceName("service1")).futureValue shouldBe Some(
         TotalVulnerabilityCount(
-          service              = "service1",
+          service              = ServiceName("service1"),
           actionRequired       = 5,
           noActionRequired     = 4,
           investigationOngoing = 3,
@@ -168,7 +168,7 @@ class VulnerabilitiesConnectorSpec
 
       vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest, None, None).futureValue shouldBe Seq(
         TotalVulnerabilityCount(
-          service              = "service1",
+          service              = ServiceName("service1"),
           actionRequired       = 5,
           noActionRequired     = 4,
           investigationOngoing = 3,

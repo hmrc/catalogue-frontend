@@ -12,7 +12,7 @@ GET        /prototypes                                  uk.gov.hmrc.cataloguefro
 
 GET        /create-service                              uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepositoryLanding()
 POST       /create-service                              uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepository()
-GET        /create-service/:repoName/confirmation       uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepositoryConfirmation(repoName: String)
+GET        /create-service/:repoName/confirmation       uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepositoryConfirmation(repoName: ServiceName)
 
 GET        /create-prototype                            uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepositoryLanding()
 POST       /create-prototype                            uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepository()
@@ -24,13 +24,13 @@ POST       /create-test                                 uk.gov.hmrc.cataloguefro
 
 GET        /create-test/:repoName/confirmation          uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createTestRepositoryConfirmation(repoName: String)
 
-GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: String)
-POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: String)
+GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: ServiceName)
+POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: ServiceName)
 
-GET        /deploy-service                              uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step1(serviceName: Option[String])
+GET        /deploy-service                              uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step1(serviceName: Option[ServiceName])
 POST       /deploy-service/2                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step2()
 POST       /deploy-service/3                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step3()
-GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
+GET        /deploy-service/4                            uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4(serviceName: ServiceName, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 GET        /deploy-service/4/sse                        uk.gov.hmrc.cataloguefrontend.deployments.DeployServiceController.step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ?= None)
 
 GET        /create-user                                 uk.gov.hmrc.cataloguefrontend.users.CreateUserController.createUserLanding(isServiceAccount: Boolean = false)
@@ -41,12 +41,12 @@ POST       /create-service-user                         uk.gov.hmrc.cataloguefro
 
 GET        /repositories/:name                          uk.gov.hmrc.cataloguefrontend.CatalogueController.repository(name)
 POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefrontend.CatalogueController.enableBranchProtection(name)
-POST       /repositories/:name/mark-for-decommissioning uk.gov.hmrc.cataloguefrontend.CatalogueController.markForDecommissioning(name)
+POST       /repositories/:name/mark-for-decommissioning uk.gov.hmrc.cataloguefrontend.CatalogueController.markForDecommissioning(name: ServiceName)
 
-GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name)
-GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name)
+GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name: ServiceName)
+GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name: ServiceName)
 
-GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name)
+GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name: ServiceName)
 GET        /commissioning-state/search                  uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchLanding()
 GET        /commissioning-state/search/results          uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchResults(team: Option[TeamName] ?= None)
 
@@ -70,12 +70,12 @@ GET        /sign-out                                    uk.gov.hmrc.cataloguefro
 GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchLanding
 POST       /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchUrl
 
-GET        /dependencies/:name                          uk.gov.hmrc.cataloguefrontend.DependenciesController.services(name)
-GET        /dependencies/:name/:version                 uk.gov.hmrc.cataloguefrontend.DependenciesController.service(name, version)
-GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefrontend.DependenciesController.graphs(name, version, scope: String ?= "compile")
+GET        /dependencies/:name                          uk.gov.hmrc.cataloguefrontend.DependenciesController.services(name: ServiceName)
+GET        /dependencies/:name/:version                 uk.gov.hmrc.cataloguefrontend.DependenciesController.service(name: ServiceName, version)
+GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefrontend.DependenciesController.graphs(name: ServiceName, version, scope: String ?= "compile")
 
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.landing
-GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search(group: String ?= "", artefact: String ?= "", versionRange: Option[String] ?= None, team: Option[String] ?= None, flag: Option[String] ?= None, `scope[]`: Option[Seq[String]] ?= None, `repoType[]`: Option[Seq[String]] ?= None, asCsv: Boolean ?= false)
+GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search(group: String ?= "", artefact: String ?= "", versionRange: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None, `scope[]`: Option[Seq[String]] ?= None, `repoType[]`: Option[Seq[String]] ?= None, asCsv: Boolean ?= false)
 
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
@@ -85,13 +85,13 @@ GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefro
 GET        /sbtexplorer/environment                     uk.gov.hmrc.cataloguefrontend.SBTVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None)
 GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SBTVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None)
 
-GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name, showWarnings: Boolean ?= false, selector: Option[uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName] ?= None)
+GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name: ServiceName, showWarnings: Boolean ?= false, selector: Option[uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName] ?= None)
 GET        /config/search                               uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchLanding()
 GET        /config/search/results                       uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchResults(configKey: Option[String] ?= None)
 GET        /config/warnings/search                      uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningLanding()
 GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningResults()
 
-GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.costs.CostsSummaryController.costExplorer(team: Option[String] ?= None, asCSV: Boolean ?= false)
+GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.costs.CostsSummaryController.costExplorer(team: Option[TeamName] ?= None, asCSV: Boolean ?= false)
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list(selector: Option[String] ?= None)
 
@@ -99,9 +99,9 @@ GET        /pr-commenter/recommendations                uk.gov.hmrc.cataloguefro
 
 GET        /shuttering-overview/:shutterType            uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStates(shutterType: ShutterType)
 GET        /shuttering-overview/:shutterType/:env       uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStatesForEnv(shutterType: ShutterType, env: Environment)
-GET        /frontend-route-warnings/:env/:serviceName   uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.frontendRouteWarnings(env: Environment, serviceName: String)
+GET        /frontend-route-warnings/:env/:serviceName   uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.frontendRouteWarnings(env: Environment, serviceName: ServiceName)
 
-GET        /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step1Get(serviceName: Option[String], context: Option[String])
+GET        /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step1Get(serviceName: Option[ServiceName], context: Option[String])
 POST       /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step1Post
 GET        /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step2aGet
 POST       /shuttering/2a                               uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step2aPost
@@ -110,10 +110,10 @@ POST       /shuttering/2b                               uk.gov.hmrc.cataloguefro
 GET        /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step3Get
 POST       /shuttering/3                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step3Post
 GET        /shuttering/4                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step4Get
-GET        /shuttering/:shutterType/:env                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.start(shutterType: ShutterType, env: Environment, serviceName: Option[String], context: Option[String])
+GET        /shuttering/:shutterType/:env                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.start(shutterType: ShutterType, env: Environment, serviceName: Option[ServiceName], context: Option[String])
 
 GET        /shutter-events                              uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEvents
-GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(environment: Environment, serviceName: Option[String] ?= None, limit: Option[Int] ?= None, offset: Option[Int] ?= None)
+GET        /shutter-events/list                         uk.gov.hmrc.cataloguefrontend.shuttering.ShutterEventsController.shutterEventsList(environment: Environment, serviceName: Option[ServiceName] ?= None, limit: Option[Int] ?= None, offset: Option[Int] ?= None)
 
 GET        /whats-running-where        uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases()
 GET        /deployments/:env           uk.gov.hmrc.cataloguefrontend.deployments.DeploymentEventsController.deploymentEvents(env: Environment)
@@ -132,14 +132,14 @@ POST       /leak-detection/repositories/:repository/:branch                uk.go
 GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.reportExemptions(repository: String, branch: String)
 
 GET        /quicksearch                                                    uk.gov.hmrc.cataloguefrontend.search.SearchController.search(query: String, limit: Int ?= 20)
-GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.deployments.DeploymentTimelineController.graph(service: Option[String] ?= None, start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
+GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.deployments.DeploymentTimelineController.graph(service: Option[ServiceName] ?= None, start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
 
 +nocsrf
 POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()
 
-GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesList(vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, service: Option[String] ?= None, team: Option[String] ?= None, flag: Option[String] ?= None)
-GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(team: Option[String] ?= None)
-GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[String] ?= None, team: Option[String] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
+GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesList(vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, service: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None)
+GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(team: Option[TeamName] ?= None)
+GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[ServiceName] ?= None, team: Option[TeamName] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
 GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.allUsers(username: Option[String] ?= None)
 GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: String)

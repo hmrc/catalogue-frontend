@@ -184,7 +184,7 @@ object GitRepository {
   }
 }
 
-final case class BranchProtection(
+case class BranchProtection(
   requiresApprovingReviews: Boolean,
   dismissesStaleReviews   : Boolean,
   requiresCommitSignatures: Boolean

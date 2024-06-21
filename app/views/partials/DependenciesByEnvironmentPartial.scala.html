@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.EnvData
 @import uk.gov.hmrc.cataloguefrontend.connector.Link
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, Version}
-@import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 
 @this(
@@ -25,7 +25,7 @@
 )
 
 @(
-  serviceName: String,
+  serviceName: ServiceName,
   envDatas   : Map[SlugInfoFlag, EnvData]
 )(implicit messages: Messages)
 
@@ -100,8 +100,7 @@
                 dependencies.filter(_.scope == DependencyScope.Compile)
               , s"platform-dependencies-${slugInfoFlag.asString}"
               , "Compile Dependencies"
-              , serviceName
-              , optEnvData.map(_.version)
+              , optEnvData.map(envData => (serviceName, envData.version))
               )
             </div>
           </div>
@@ -114,8 +113,7 @@
                     testDependencies
                   , s"test-dependencies-${slugInfoFlag.asString}"
                   , "Test Dependencies"
-                  , serviceName
-                  , optEnvData.map(_.version)
+                  , optEnvData.map(envData => (serviceName, envData.version))
                   )
                 </div>
               </div>
@@ -130,8 +128,7 @@
                     itDependencies
                   , s"it-dependencies-${slugInfoFlag.asString}"
                   , "Integration Test Dependencies"
-                  , serviceName
-                  , optEnvData.map(_.version)
+                  , optEnvData.map(envData => (serviceName, envData.version))
                   )
                 </div>
               </div>
@@ -146,8 +143,7 @@
                     buildDependencies
                   , s"build-dependencies-${slugInfoFlag.asString}"
                   , "Sbt Plugins"
-                  , serviceName
-                  , optEnvData.map(_.version)
+                  , optEnvData.map(envData => (serviceName, envData.version))
                   )
                 </div>
               </div>

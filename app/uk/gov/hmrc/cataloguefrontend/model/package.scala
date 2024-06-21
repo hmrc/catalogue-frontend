@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.util
+package uk.gov.hmrc.cataloguefrontend
 
-case class ChartDataTable(table: List[List[String]]) extends AnyVal {
+package object model {
+  case class ServiceName(asString: String) extends AnyVal
+  object ServiceName {
+    implicit val serviceNameOrdering: Ordering[ServiceName] =
+      Ordering.by(_.asString)
+  }
 
-  def render: String =
-    table.map(_.mkString("[", ", ", "]")).mkString("[", ",", "]")
 }

@@ -15,10 +15,11 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
+@import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 
 @this()
 
-@(serviceName: String,
+@(serviceName: ServiceName,
   dotData    : Option[String],
   scope      : DependencyScope
 )(implicit
@@ -28,7 +29,7 @@
 @standard_layout(postContent = graph) {
 
     <h1 class="page-heading mt-4">
-        Dependency Graph: @serviceName - @scope.displayString
+        Dependency Graph: @serviceName.asString - @scope.displayString
     </h1>
 
     <div class="row">

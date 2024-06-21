@@ -15,8 +15,9 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
+@import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 
-@(repositoryName: String)(implicit request : RequestHeader)
+@(serviceName: ServiceName)(implicit request : RequestHeader)
 
 <div class="modal fade" id="confirm-mark-for-decommissioning" tabindex="-1" role="dialog" aria-labelledby="confirm-mark-for-decommissioning-label" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -30,12 +31,12 @@
                     Are you sure you want to mark this service for decommissioning?
                 </p>
                 <p class="body">
-                    This action will let MDTP users know that the  <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/prepare-for-decommissioning.html#alert-teams-that-own-dependent-services">decommission process</a> has started. Please ensure that you want to decommission @repositoryName before proceeding.
+                    This action will let MDTP users know that the  <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/prepare-for-decommissioning.html#alert-teams-that-own-dependent-services">decommission process</a> has started. Please ensure that you want to decommission @serviceName.asString before proceeding.
                 </p>
                 <p class="body">
                     If you have flagged this service by mistake, please contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<i class="glyphicon glyphicon-new-window"></i></a>.
                 </p>
-                <form id="mark-for-decommissioning" action="@{catalogueRoutes.CatalogueController.markForDecommissioning(repositoryName)}" method="post">
+                <form id="mark-for-decommissioning" action="@{catalogueRoutes.CatalogueController.markForDecommissioning(serviceName)}" method="post">
                 @csrfFormField
                 </form>
             </div>

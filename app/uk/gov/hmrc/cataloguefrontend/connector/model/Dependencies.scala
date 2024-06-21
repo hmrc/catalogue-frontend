@@ -344,6 +344,7 @@ object Version {
   }
 }
 
+// TODO rename this - it applies to different RepoTypes
 case class ServiceWithDependency(
   repoName    : String,
   repoVersion : Version,

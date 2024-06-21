@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -72,12 +72,12 @@ class ReleasesConnector @Inject() (
       }
   }
 
-  def releasesForService(service: String)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
-    val url = url"$serviceUrl/releases-api/whats-running-where/$service"
+  def releasesForService(service: ServiceName)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
+    val url = url"$serviceUrl/releases-api/whats-running-where/${service.asString}"
     httpClientV2
       .get(url)
       .execute[Option[WhatsRunningWhere]]
-      .map(_.getOrElse(WhatsRunningWhere(ServiceName(service), Nil)))
+      .map(_.getOrElse(WhatsRunningWhere(service, Nil)))
       .recover {
         case ex =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
@@ -119,7 +119,7 @@ class ReleasesConnector @Inject() (
   }
 
   def deploymentTimeline(
-    service: String,
+    service: ServiceName,
     from:    Instant,
     to:      Instant
   )(implicit
@@ -127,7 +127,7 @@ class ReleasesConnector @Inject() (
   ): Future[Map[String, Seq[DeploymentTimelineEvent]]] = {
     implicit val dtr  = JsonCodecs.deploymentTimelineEventReads
     httpClientV2
-      .get(url"$serviceUrl/releases-api/timeline/$service?from=$from&to=$to")
+      .get(url"$serviceUrl/releases-api/timeline/${service.asString}?from=$from&to=$to")
       .execute[Map[String, Seq[DeploymentTimelineEvent]]]
   }
 }

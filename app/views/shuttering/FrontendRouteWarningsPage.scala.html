@@ -14,21 +14,21 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.FrontendRouteWarning
 
 @this()
 
 @(warningsMap    : Map[Environment, Seq[FrontendRouteWarning]]
 , selectedEnv    : Environment
-, selectedService: String
+, selectedService: ServiceName
 )(implicit
   request        : RequestHeader
 )
 
 @standard_layout(s"Frontend Route Warnings: ${selectedEnv.asString}") {
 
-    <h1 class="page-heading mt-4">Frontend Route Warnings for: @selectedService</h1>
+    <h1 class="page-heading mt-4">Frontend Route Warnings for: @selectedService.asString</h1>
 
   <section>
 

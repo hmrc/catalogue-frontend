@@ -14,19 +14,20 @@
  * limitations under the License.
  *@
 
+ @import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 @import uk.gov.hmrc.cataloguefrontend.service.{DependenciesService, ServiceDependencies}
 
 @this()
 
-@(serviceName        : String,
+@(serviceName        : ServiceName,
   serviceDependencies: Seq[ServiceDependencies]
 )(implicit
   request: RequestHeader
 )
 
-@standard_layout(s"Dependencies: $serviceName", "dependencies") {
+@standard_layout(s"Dependencies: ${serviceName.asString}", "dependencies") {
     <header>
-        <h1 id="dependencies-header" class="page-heading mt-4">Dependencies: @serviceName</h1>
+        <h1 id="dependencies-header" class="page-heading mt-4">Dependencies: @serviceName.asString</h1>
     </header>
     <div class="accordion">
         @serviceDependencies.zipWithIndex.map { case (serviceDependency, index) =>
