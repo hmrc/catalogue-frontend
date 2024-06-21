@@ -39,7 +39,7 @@ class SlugInfoServiceSpec
   val versionRange = BobbyVersionRange("[1.0.1,)")
 
   val v100 =
-    ServiceWithDependency(
+    RepoWithDependency(
       repoName           = "service1",
       repoVersion        = Version("v1"),
       teams              = List(TeamName("T1")),
@@ -51,7 +51,7 @@ class SlugInfoServiceSpec
     )
 
   val v200 =
-    ServiceWithDependency(
+    RepoWithDependency(
       repoName           = "service1",
       repoVersion        = Version("v1"),
       teams              = List(TeamName("T1"), TeamName("T2")),
@@ -63,7 +63,7 @@ class SlugInfoServiceSpec
     )
 
   val v205 =
-    ServiceWithDependency(
+    RepoWithDependency(
       repoName           = "service1",
       repoVersion        = Version("v1"),
       teams              = List(TeamName("T2")),

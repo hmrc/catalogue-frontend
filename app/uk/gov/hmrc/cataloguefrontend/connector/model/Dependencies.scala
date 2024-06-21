@@ -269,8 +269,7 @@ object BobbyVersionRange {
   }
 }
 
-// TODO rename this - it applies to different RepoTypes
-case class ServiceWithDependency(
+case class RepoWithDependency(
   repoName    : String,
   repoVersion : Version,
   teams       : List[TeamName],
@@ -281,11 +280,11 @@ case class ServiceWithDependency(
   scopes      : Set[DependencyScope]
 )
 
-object ServiceWithDependency {
+object RepoWithDependency {
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
-  val reads: Reads[ServiceWithDependency] = {
+  val reads: Reads[RepoWithDependency] = {
     implicit val tnf = TeamName.format
     implicit val vf  = Version.format
     implicit val dsf = DependencyScope.format
@@ -298,7 +297,7 @@ object ServiceWithDependency {
     ~ (__ \ "depArtefact").read[String]
     ~ (__ \ "depVersion" ).read[Version]
     ~ (__ \ "scopes"     ).read[Set[DependencyScope]]
-    )(ServiceWithDependency.apply)
+    )(RepoWithDependency.apply)
   }
 }
 

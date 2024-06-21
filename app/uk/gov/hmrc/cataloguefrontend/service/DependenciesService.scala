@@ -61,7 +61,7 @@ class DependenciesService @Inject() (
     scope       : Seq[DependencyScope]
   )(implicit
     hc: HeaderCarrier
-  ): Future[Seq[ServiceWithDependency]] =
+  ): Future[Seq[RepoWithDependency]] =
     serviceDependenciesConnector
       .getDependenciesFromMetaData(flag, group, artefact, repoType, versionRange, scope)
       .map { l =>
@@ -72,7 +72,7 @@ class DependenciesService @Inject() (
       }
       .map(
         _.sortBy(_.repoName)
-          .sorted(Ordering.by((_: ServiceWithDependency).depVersion).reverse)
+          .sorted(Ordering.by((_: RepoWithDependency).depVersion).reverse)
       )
 
   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] =

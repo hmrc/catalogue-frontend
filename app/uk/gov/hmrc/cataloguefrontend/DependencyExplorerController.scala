@@ -25,7 +25,7 @@ import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, RepoWithDependency}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
@@ -228,23 +228,23 @@ object DependencyExplorerController {
     results: Map[String, Int]
   )
 
-  def toRow(serviceWithDependency: ServiceWithDependency, teamName: String): Seq[(String, String)] = {
+  def toRow(repoWithDependency: RepoWithDependency, teamName: String): Seq[(String, String)] = {
     Seq(
-      "repoName"    -> serviceWithDependency.repoName,
-      "repoVersion" -> serviceWithDependency.repoVersion.toString,
+      "repoName"    -> repoWithDependency.repoName,
+      "repoVersion" -> repoWithDependency.repoVersion.toString,
       "team"        -> teamName,
-      "depGroup"    -> serviceWithDependency.depGroup,
-      "depArtefact" -> serviceWithDependency.depArtefact,
-      "depVersion"  -> serviceWithDependency.depVersion.toString
+      "depGroup"    -> repoWithDependency.depGroup,
+      "depArtefact" -> repoWithDependency.depArtefact,
+      "depVersion"  -> repoWithDependency.depVersion.toString
     )
   }
 
-  def toRows(seq: Seq[ServiceWithDependency], teamFilter: Option[TeamName]): Seq[Seq[(String, String)]] =
-    seq.flatMap { serviceDependency =>
-      if (serviceDependency.teams.nonEmpty)
-        teamFilter.fold(serviceDependency.teams)(List(_))
-          .map(team => toRow(serviceDependency, team.asString))
-      else Seq(toRow(serviceDependency, ""))
+  def toRows(seq: Seq[RepoWithDependency], teamFilter: Option[TeamName]): Seq[Seq[(String, String)]] =
+    seq.flatMap { repoWithDependency =>
+      if (repoWithDependency.teams.nonEmpty)
+        teamFilter.fold(repoWithDependency.teams)(List(_))
+          .map(team => toRow(repoWithDependency, team.asString))
+      else Seq(toRow(repoWithDependency, ""))
     }
 
   def groupArtefactFromForm(form: Form[?]): Option[String] =

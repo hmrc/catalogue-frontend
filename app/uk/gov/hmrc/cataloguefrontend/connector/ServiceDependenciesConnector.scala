@@ -90,8 +90,8 @@ class ServiceDependenciesConnector @Inject() (
     scopes      : List[DependencyScope]
   )(implicit
     hc: HeaderCarrier
-  ): Future[Seq[ServiceWithDependency]] = {
-    implicit val r = ServiceWithDependency.reads
+  ): Future[Seq[RepoWithDependency]] = {
+    implicit val r = RepoWithDependency.reads
     val queryParams = Seq(
       "flag"         -> flag.asString,
       "group"        -> group,
@@ -101,7 +101,7 @@ class ServiceDependenciesConnector @Inject() (
 
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&scope=${scopes.map(_.asString)}")
-      .execute[Seq[ServiceWithDependency]]
+      .execute[Seq[RepoWithDependency]]
   }
 
   def getDependenciesFromMetaData(
@@ -113,8 +113,8 @@ class ServiceDependenciesConnector @Inject() (
     scopes      : Seq[DependencyScope]
   )(implicit
     hc: HeaderCarrier
-  ): Future[Seq[ServiceWithDependency]] = {
-    implicit val r = ServiceWithDependency.reads
+  ): Future[Seq[RepoWithDependency]] = {
+    implicit val r = RepoWithDependency.reads
     val queryParams = Seq(
       "flag"         -> flag.asString,
       "group"        -> group,
@@ -124,7 +124,7 @@ class ServiceDependenciesConnector @Inject() (
 
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repoDependencies?$queryParams&scope=${scopes.map(_.asString)}&repoType=${repoType.map(_.asString)}")
-      .execute[Seq[ServiceWithDependency]]
+      .execute[Seq[RepoWithDependency]]
   }
 
   def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] = {
