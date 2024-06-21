@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.leakdetection
 
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
@@ -144,7 +144,7 @@ object LeakDetectionExplorerFilter {
     Form(
       mapping(
         "rule" -> optional(text),
-        "team" -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
+        "team" -> optional(Forms.of[TeamName](TeamName.formFormat)),
       )(LeakDetectionExplorerFilter.apply)(r => Some(Tuple.fromProductTyped(r)))
     )
 }

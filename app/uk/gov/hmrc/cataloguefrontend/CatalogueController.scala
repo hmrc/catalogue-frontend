@@ -516,18 +516,6 @@ object TeamFilter {
   )
 }
 
-case class DigitalServiceNameFilter(value: Option[String] = None) {
-  def isEmpty: Boolean = value.isEmpty
-}
-
-object DigitalServiceNameFilter {
-  lazy val form = Form(
-    mapping(
-      "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(DigitalServiceNameFilter.apply)(f => Some(f.value))
-  )
-}
-
 object EnableBranchProtection {
 
   case class HasAuthorisation(value: Boolean) extends AnyVal
@@ -592,7 +580,7 @@ object DefaultBranchesFilter {
     Form(
       mapping(
         "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "teamNames"     -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
+        "teamNames"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
         "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
       )(DefaultBranchesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

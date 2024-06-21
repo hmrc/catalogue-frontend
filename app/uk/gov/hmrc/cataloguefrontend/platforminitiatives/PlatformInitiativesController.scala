@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
@@ -87,8 +87,7 @@ object PlatformInitiativesFilter {
     Form(
       mapping(
         "initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"           -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-                                          .transform(_.map(TeamName.apply), _.map(_.asString))
+        "team"           -> optional(Forms.of[TeamName](TeamName.formFormat))
         )
       (PlatformInitiativesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

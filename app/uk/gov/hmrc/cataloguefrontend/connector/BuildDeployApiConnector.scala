@@ -350,7 +350,7 @@ object BuildDeployApiConnector {
 
   object CreateAppConfigsRequest {
     val writes: Writes[CreateAppConfigsRequest] =
-      ( (__ \ "microserviceName").write[String].contramap[ServiceName](_.asString)
+      ( (__ \ "microserviceName").write[ServiceName](ServiceName.format)
       ~ (__ \ "microserviceType").write[String]
       ~ (__ \ "hasMongo"        ).write[Boolean]
       ~ (__ \ "environments"    ).write[Seq[String]]

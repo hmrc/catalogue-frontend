@@ -54,16 +54,19 @@ package object model {
           strBinder.unbind(key, value.asString)
       }
 
-    val formFormat: Formatter[TeamName] = new Formatter[TeamName] {
-      override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], TeamName] =
-        data
-          .get(key)
-          .toRight(Seq(FormError(key, s"$key is missing")))
-          .map(TeamName.apply)
+    val formFormat: Formatter[TeamName] =
+      new Formatter[TeamName] {
+        override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], TeamName] =
+          data
+            .get(key)
+            .map(_.trim) match {
+              case Some(s) if s.nonEmpty => Right(TeamName(s))
+              case _                     => Left(Seq(FormError(key, s"$key is missing")))
+            }
 
-      override def unbind(key: String, value: TeamName): Map[String, String] =
-        Map(key -> value.asString)
-    }
+        override def unbind(key: String, value: TeamName): Map[String, String] =
+          Map(key -> value.asString)
+      }
   }
 
   case class ServiceName(asString: String) extends AnyVal
@@ -75,16 +78,19 @@ package object model {
     implicit val serviceNameOrdering: Ordering[ServiceName] =
       Ordering.by(_.asString)
 
-    val formFormat: Formatter[ServiceName] = new Formatter[ServiceName] {
-      override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], ServiceName] =
-        data
-          .get(key)
-          .toRight(Seq(FormError(key, s"$key is missing")))
-          .map(ServiceName.apply)
+    val formFormat: Formatter[ServiceName] =
+      new Formatter[ServiceName] {
+        override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], ServiceName] =
+          data
+            .get(key)
+            .map(_.trim) match {
+              case Some(s) if s.nonEmpty => Right(ServiceName(s))
+              case _                     => Left(Seq(FormError(key, s"$key is missing")))
+            }
 
-      override def unbind(key: String, value: ServiceName): Map[String, String] =
-        Map(key -> value.asString)
-    }
+        override def unbind(key: String, value: ServiceName): Map[String, String] =
+          Map(key -> value.asString)
+      }
   }
 
   case class Version(

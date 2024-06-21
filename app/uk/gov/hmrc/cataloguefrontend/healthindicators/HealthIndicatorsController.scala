@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -93,7 +93,7 @@ object HealthIndicatorsFilter {
     Form(
       mapping(
         "repoName" -> optional(text),
-        "team"     -> optional(text.transform(TeamName.apply, _.asString)),
+        "team"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
         "repoType" -> optional(text)
                         .transform[Option[RepoType]](
                           _.flatMap(s => RepoType.parse(s).toOption),

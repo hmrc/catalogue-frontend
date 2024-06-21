@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
 
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms.{boolean, mapping, nonEmptyText, text}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
@@ -64,7 +64,7 @@ object CreateServiceRepoForm {
       mapping(
         "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> boolean,
-        "teamName"       -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
+        "teamName"       -> Forms.of[TeamName](TeamName.formFormat),
         "repoType"       -> nonEmptyText.verifying(repoTypeConstraint),
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
         .verifying(repoTypeAndNameConstraints*)
@@ -89,7 +89,7 @@ object CreateTestRepoForm {
       mapping(
         "repositoryName" -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> boolean,
-        "teamName"       -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
+        "teamName"       -> Forms.of[TeamName](TeamName.formFormat),
         "repoType"       -> nonEmptyText.verifying(repoTestTypeConstraint),
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
         .verifying(repoTypeAndNameConstraints*)
@@ -131,7 +131,7 @@ object CreatePrototypeRepoForm {
       mapping(
         "repositoryName"      -> nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype"))*),
         "password"            -> nonEmptyText.verifying(passwordConstraint),
-        "teamName"            -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
+        "teamName"            -> Forms.of[TeamName](TeamName.formFormat),
         "slackChannels"       -> text.verifying(slackChannelConstraint*),
       )(CreatePrototypeRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
     )

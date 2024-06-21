@@ -207,7 +207,7 @@ object SearchConfig {
   lazy val form: Form[SearchConfigForm] =
     Form(
       Forms.mapping(
-        "teamName"              -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+        "teamName"              -> Forms.optional(Forms.of[TeamName](TeamName.formFormat))
       , "configKey"             -> Forms.optional(Forms.nonEmptyText(minLength = 3))
       , "configKeyIgnoreCase"   -> Forms.default(Forms.boolean, false)
       , "configValue"           -> Forms.optional(Forms.text)
