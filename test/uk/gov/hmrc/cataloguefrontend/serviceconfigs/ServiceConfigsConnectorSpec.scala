@@ -72,7 +72,7 @@ final class ServiceConfigsConnectorSpec
 
       deploymentConfig shouldBe Seq(
         DeploymentConfig(
-          "test1",
+          ServiceName("test1"),
           DeploymentSize(slots = 11, instances = 3),
           environment = Environment.Production,
           zone        = Zone.Protected,

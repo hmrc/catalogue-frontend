@@ -221,7 +221,7 @@ class ServiceConfigsServiceSpec
         when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName), Some(environment), applied = true))
           .thenReturn(Future.successful(Seq(
             DeploymentConfig(
-              serviceName.asString,
+              serviceName,
               DeploymentSize(slots = 1, instances = 2),
               environment = environment,
               zone        = Zone.Protected,
@@ -232,7 +232,7 @@ class ServiceConfigsServiceSpec
         when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName), Some(environment), applied = false))
           .thenReturn(Future.successful(Seq(
             DeploymentConfig(
-              serviceName.asString,
+              serviceName,
               DeploymentSize(slots = 3, instances = 4),
               environment = environment,
               zone        = Zone.Protected,
@@ -252,7 +252,7 @@ class ServiceConfigsServiceSpec
         when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName), Some(environment), applied = true))
           .thenReturn(Future.successful(Seq(
             DeploymentConfig(
-              serviceName.asString,
+              serviceName,
               DeploymentSize(slots = 1, instances = 2),
               environment = environment,
               zone        = Zone.Protected,
@@ -271,7 +271,7 @@ class ServiceConfigsServiceSpec
         when(mockServiceConfigsConnector.deploymentConfig(Some(serviceName), Some(environment), applied = false))
           .thenReturn(Future.successful(Seq(
             DeploymentConfig(
-              serviceName.asString,
+              serviceName,
               DeploymentSize(slots = 1, instances = 2),
               environment = environment,
               zone        = Zone.Protected,

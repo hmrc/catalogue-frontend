@@ -118,7 +118,7 @@
 
 @sbtVersion(version: SbtVersion) = {
     <tr id="sbt-slug-@version.serviceName">
-        <td><a aria-label="link to @{version.serviceName}" id="link-to-@{version.serviceName}" href="@appRoutes.CatalogueController.repository(version.serviceName)">@version.serviceName</a></td>
+        <td><a aria-label="link to @{version.serviceName.asString}" id="link-to-@{version.serviceName.asString}" href="@appRoutes.CatalogueController.repository(version.serviceName.asString)">@version.serviceName.asString</a></td>
         <td>@version.version</td>
     </tr>
 }

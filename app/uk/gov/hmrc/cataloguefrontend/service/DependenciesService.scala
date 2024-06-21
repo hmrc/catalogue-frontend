@@ -86,7 +86,7 @@ class DependenciesService @Inject() (
   def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[JdkUsageByEnv] =
     for {
       versions <- serviceDependenciesConnector.getJdkVersions(teamName, env)
-      counts   =  versions.groupBy(_.copy(name = "", kind = Kind.JDK)).view.mapValues(_.length).toMap
+      counts   =  versions.groupBy(v => (v.version, v.vendor)).view.mapValues(_.length).toMap
     } yield JdkUsageByEnv(env, counts)
 
   def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[SbtVersion]] =
@@ -95,7 +95,7 @@ class DependenciesService @Inject() (
   def getSbtCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[SbtUsageByEnv] =
     for {
       versions <- serviceDependenciesConnector.getSbtVersions(teamName, env)
-      counts   =  versions.groupBy(_.copy(serviceName = "")).view.mapValues(_.length).toMap
+      counts   =  versions.groupBy(_.version).view.mapValues(_.length).toMap
     } yield SbtUsageByEnv(env, counts)
 }
 

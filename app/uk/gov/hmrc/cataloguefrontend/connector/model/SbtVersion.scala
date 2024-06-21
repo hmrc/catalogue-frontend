@@ -18,24 +18,22 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Reads, __}
-import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, Version}
 
 case class SbtVersion(
-  serviceName: String,
+  serviceName: ServiceName,
   version    : Version
 )
 
 object SbtVersion {
-  val reads: Reads[SbtVersion] = {
-    implicit val vf: Reads[Version]  = Version.format
-    ( (__ \ "serviceName").read[String]
-    ~ (__ \ "version"    ).read[Version]
+  val reads: Reads[SbtVersion] =
+    ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
+    ~ (__ \ "version"    ).read[Version](Version.format)
     )(SbtVersion.apply)
-  }
 }
 
 
 case class SbtUsageByEnv(
   env  : SlugInfoFlag,
-  usage: Map[SbtVersion, Int]
+  usage: Map[Version, Int]
 )

@@ -16,12 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{SbtUsageByEnv, SbtVersion}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.SbtUsageByEnv
 
 @this()
 
 @(envdata     : Seq[SbtUsageByEnv],
-  sbts        : Seq[SbtVersion],
+  sbts        : Seq[Version],
   teams       : Seq[GitHubTeam],
   selectedTeam: Option[GitHubTeam]
 )(implicit
@@ -62,8 +62,8 @@
         <thead>
             <tr>
                 <th>Environment</th>
-                @for(sbt <- sbts) {
-                    <th>@sbt.version</th>
+                @for(sbtVersion <- sbts) {
+                    <th>@sbtVersion</th>
                 }
             </tr>
         </thead>
@@ -105,8 +105,8 @@
 
             let data = new google.visualization.DataTable();
             data.addColumn('string', 'Environment');
-            @for(sbt <- sbts) {
-                data.addColumn('number','@{sbt.version}');
+            @for(sbtVersion <- sbts) {
+                data.addColumn('number','@sbtVersion');
             }
 
             data.addRows([

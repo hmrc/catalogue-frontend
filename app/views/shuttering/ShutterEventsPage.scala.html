@@ -83,7 +83,7 @@
                 <tbody class="list">
                     @events.zipWithIndex.map { case (event, i) =>
                         <tr id="row@i" class="d-flex">
-                            <td class="service col-2" id="row@{i}_service">@event.serviceName</td>
+                            <td class="service col-2" id="row@{i}_service">@event.serviceName.asString</td>
                             <td class="type col-1" id="row@{i}_type">@event.shutterType.asString</td>
                             <td class="status col-1" id="row@{i}_status">@event.status.value.asString</td>
                             <td class="reason col-4" id="row@{i}_reason">@ShutterEventsView.reasonFor(event.status)</td>

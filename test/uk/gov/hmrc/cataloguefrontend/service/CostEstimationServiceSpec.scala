@@ -51,12 +51,12 @@ final class CostEstimationServiceSpec
 
       val stubs =
         Seq(
-          DeploymentConfig("test1", DeploymentSize(3, 1),  environment = Environment.Development,  zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test2", DeploymentSize(3, 1),  environment = Environment.Integration,  zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test3", DeploymentSize(3, 1),  environment = Environment.QA,           zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test4", DeploymentSize(3, 1),  environment = Environment.Staging,      zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test5", DeploymentSize(3, 1),  environment = Environment.ExternalTest, zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test6", DeploymentSize(11, 3), environment = Environment.Production,   zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty)
+          DeploymentConfig(ServiceName("test1"), DeploymentSize(3, 1),  environment = Environment.Development,  zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test2"), DeploymentSize(3, 1),  environment = Environment.Integration,  zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test3"), DeploymentSize(3, 1),  environment = Environment.QA,           zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test4"), DeploymentSize(3, 1),  environment = Environment.Staging,      zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test5"), DeploymentSize(3, 1),  environment = Environment.ExternalTest, zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test6"), DeploymentSize(11, 3), environment = Environment.Production,   zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty)
         )
 
       val serviceConfigsConnector =

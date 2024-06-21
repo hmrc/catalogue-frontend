@@ -154,7 +154,7 @@ object CostEstimationService {
   }
 
   case class DeploymentConfig(
-    serviceName   : String,
+    serviceName   : ServiceName,
     deploymentSize: DeploymentSize,
     environment   : Environment,
     zone          : Zone,
@@ -186,16 +186,12 @@ object CostEstimationService {
   object Zone extends FromStringEnum[Zone]
 
   object DeploymentConfig {
-    implicit val ef: Reads[Environment]    = environmentFormat
-    implicit val ds: Reads[DeploymentSize] = DeploymentSize.reads
-    implicit val zf: Reads[Zone]           = Zone.format
-
     val reads: Reads[DeploymentConfig] =
-      ( (__ \ "name"       ).read[String]
+      ( (__ \ "name"       ).read[ServiceName        ](ServiceName.format)
       ~ (__ \ "slots"      ).read[Int]
       ~ (__ \ "instances"  ).read[Int]
-      ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "zone"       ).read[Zone]
+      ~ (__ \ "environment").read[Environment        ](environmentFormat)
+      ~ (__ \ "zone"       ).read[Zone               ](Zone.format)
       ~ (__ \ "envVars"    ).read[Map[String, String]]
       ~ (__ \ "jvm"        ).read[Map[String, String]]
       ){ (n, s, i, e, z, ev, j) => DeploymentConfig(n, DeploymentSize(s, i), e, z, ev, j) }

@@ -31,12 +31,12 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class JdkVersionController @Inject() (
-  override val mcc   : MessagesControllerComponents,
-  dependenciesService: DependenciesService,
-  teamsReposConnector: TeamsAndRepositoriesConnector,
-  jdkPage            : JdkVersionPage,
-  jdkCountsPage      : JdkAcrossEnvironmentsPage,
-  override val auth  : FrontendAuthComponents
+  override val mcc             : MessagesControllerComponents,
+  dependenciesService          : DependenciesService,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  jdkVersionPage               : JdkVersionPage,
+  jdkAcrossEnvironmentsPage    : JdkAcrossEnvironmentsPage,
+  override val auth            : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -45,20 +45,20 @@ class JdkVersionController @Inject() (
   def findLatestVersions(flag: String, teamName: Option[TeamName]) =
     BasicAuthAction.async { implicit request =>
       for {
-        teams            <- teamsReposConnector.allTeams()
+        teams            <- teamsAndRepositoriesConnector.allTeams()
         selectedFlag     =  SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeamName =  teamName.flatMap(n => teams.find(_.name == n)).map(_.name)
         jdkVersions      <- dependenciesService.getJdkVersions(selectedFlag, selectedTeamName)
-      } yield Ok(jdkPage(jdkVersions.sortBy(_.version), SlugInfoFlag.values, teams, selectedFlag, selectedTeamName))
+      } yield Ok(jdkVersionPage(jdkVersions.sortBy(_.version), SlugInfoFlag.values, teams, selectedFlag, selectedTeamName))
     }
 
   def compareAllEnvironments(teamName: Option[TeamName]) =
     BasicAuthAction.async { implicit request =>
       for {
-        teams            <- teamsReposConnector.allTeams()
+        teams            <- teamsAndRepositoriesConnector.allTeams()
         selectedTeamName =  teamName.flatMap(n => teams.find(_.name == n)).map(_.name)
         envs             <- SlugInfoFlag.values.traverse(env => dependenciesService.getJdkCountsForEnv(env, selectedTeamName))
-        jdks             =  envs.flatMap(_.usage.keys).distinct.sortBy(_.version)
-      } yield Ok(jdkCountsPage(envs, jdks, teams, selectedTeamName))
+        jdks             =  envs.flatMap(_.usage.keys).distinct.sortBy(_._1)
+      } yield Ok(jdkAcrossEnvironmentsPage(envs, jdks, teams, selectedTeamName))
     }
 }

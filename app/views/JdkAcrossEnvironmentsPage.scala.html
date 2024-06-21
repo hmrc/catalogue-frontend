@@ -16,12 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JdkUsageByEnv, JdkVersion}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JdkUsageByEnv, Vendor}
 
 @this()
 
 @(envdata         : Seq[JdkUsageByEnv],
-  jdks            : Seq[JdkVersion],
+  jdks            : Seq[(Version, Vendor)],
   teams           : Seq[GitHubTeam],
   selectedTeamName: Option[TeamName]
 )(implicit
@@ -61,8 +61,8 @@
         <thead>
             <tr>
                 <th>Environment</th>
-                @for(jdk <- jdks) {
-                    <th><img src="@routes.Assets.versioned(jdk.vendor.imgPath)" width="68px" alt="@jdk.vendor.asString"/>@jdk.version</th>
+                @for((version, vendor) <- jdks) {
+                    <th><img src="@routes.Assets.versioned(vendor.imgPath)" width="68px" alt="@vendor.asString"/>@version</th>
                 }
             </tr>
 
@@ -105,8 +105,8 @@
 
             let data = new google.visualization.DataTable();
             data.addColumn('string', 'Environment');
-            @for(jdk <- jdks) {
-                data.addColumn('number','@{jdk.version} @{jdk.vendor}');
+            @for((version, vendor) <- jdks) {
+                data.addColumn('number','@version @vendor');
             }
 
             data.addRows([

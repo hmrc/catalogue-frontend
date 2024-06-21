@@ -31,12 +31,12 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class SbtVersionController @Inject()(
-  override val mcc   : MessagesControllerComponents,
-  dependenciesService: DependenciesService,
-  teamsReposConnector: TeamsAndRepositoriesConnector,
-  sbtPage            : SbtVersionPage,
-  sbtCountsPage      : SbtAcrossEnvironmentsPage,
-  override val auth  : FrontendAuthComponents
+  override val mcc             : MessagesControllerComponents,
+  dependenciesService          : DependenciesService,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  sbtVersionPage               : SbtVersionPage,
+  sbtAcrossEnvironmentsPage    : SbtAcrossEnvironmentsPage,
+  override val auth            : FrontendAuthComponents
 )(implicit
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -45,20 +45,20 @@ class SbtVersionController @Inject()(
   def findLatestVersions(flag: String, teamName: Option[TeamName]) =
     BasicAuthAction.async { implicit request =>
       for {
-        teams        <- teamsReposConnector.allTeams()
+        teams        <- teamsAndRepositoriesConnector.allTeams()
         selectedFlag =  SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
         sbtVersions  <- dependenciesService.getSbtVersions(selectedFlag, selectedTeam.map(_.name))
-      } yield Ok(sbtPage(sbtVersions.sortBy(_.version), SlugInfoFlag.values, teams, selectedFlag, selectedTeam))
+      } yield Ok(sbtVersionPage(sbtVersions.sortBy(_.version), SlugInfoFlag.values, teams, selectedFlag, selectedTeam))
     }
 
   def compareAllEnvironments(teamName: Option[TeamName]) =
     BasicAuthAction.async { implicit request =>
       for {
-        teams        <- teamsReposConnector.allTeams()
+        teams        <- teamsAndRepositoriesConnector.allTeams()
         selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
         envs         <- SlugInfoFlag.values.traverse(env => dependenciesService.getSbtCountsForEnv(env, selectedTeam.map(_.name)))
-        sbts         =  envs.flatMap(_.usage.keys).distinct.sortBy(_.version)
-      } yield Ok(sbtCountsPage(envs, sbts, teams, selectedTeam))
+        sbts         =  envs.flatMap(_.usage.keys).distinct.sorted
+      } yield Ok(sbtAcrossEnvironmentsPage(envs, sbts, teams, selectedTeam))
     }
 }

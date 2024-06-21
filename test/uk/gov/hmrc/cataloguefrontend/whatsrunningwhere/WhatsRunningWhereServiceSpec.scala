@@ -67,15 +67,15 @@ class WhatsRunningWhereServiceSpec
 
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
-          DeploymentConfig(serviceName= "address-lookup"   , environment = Environment.Development, deploymentSize = DeploymentSize(slots = 2 , instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "address-lookup"   , environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "address-lookup"   , environment = Environment.Production , deploymentSize = DeploymentSize(slots = 4 , instances = 4), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "health-indicators", environment = Environment.Development, deploymentSize = DeploymentSize(slots = 3 , instances = 3), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "health-indicators", environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 3 , instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "health-indicators", environment = Environment.Staging    , deploymentSize = DeploymentSize(slots = 5 , instances = 5), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "health-indicators", environment = Environment.Production , deploymentSize = DeploymentSize(slots = 8 , instances = 4), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "PODS"             , environment = Environment.Production , deploymentSize = DeploymentSize(slots = 16, instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "file-upload"      , environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 1), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty)
+          DeploymentConfig(serviceName = ServiceName("address-lookup"   ), environment = Environment.Development, deploymentSize = DeploymentSize(slots = 2 , instances = 2), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("address-lookup"   ), environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 2), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("address-lookup"   ), environment = Environment.Production , deploymentSize = DeploymentSize(slots = 4 , instances = 4), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("health-indicators"), environment = Environment.Development, deploymentSize = DeploymentSize(slots = 3 , instances = 3), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("health-indicators"), environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 3 , instances = 2), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("health-indicators"), environment = Environment.Staging    , deploymentSize = DeploymentSize(slots = 5 , instances = 5), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("health-indicators"), environment = Environment.Production , deploymentSize = DeploymentSize(slots = 8 , instances = 4), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("PODS"             ), environment = Environment.Production , deploymentSize = DeploymentSize(slots = 16, instances = 2), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("file-upload"      ), environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 1), Zone.Protected, envVars = Map.empty, jvm = Map.empty)
         ))
       )
 

@@ -23,7 +23,7 @@ import play.api.test.FakeRequest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version}
 import views.html.JdkVersionPage
 
 
@@ -37,8 +37,8 @@ class JdkVersionPageSpec
       implicit val request = FakeRequest()
 
       val versions = List(
-        JdkVersion(name = "test-slug",     version = Version("1.181.0"), vendor = Vendor.OpenJDK, kind = Kind.JDK)
-      , JdkVersion(name = "thing-service", version = Version("1.171.0"), vendor = Vendor.Oracle , kind = Kind.JRE)
+        JdkVersion(ServiceName("test-slug"    ), Version("1.181.0"), Vendor.OpenJDK, Kind.JDK)
+      , JdkVersion(ServiceName("thing-service"), Version("1.171.0"), Vendor.Oracle , Kind.JRE)
       )
 
       val teams = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one", "repo-two")))
@@ -48,16 +48,16 @@ class JdkVersionPageSpec
       val slug1 = document.select("#jdk-slug-test-slug")
       val slug2 = document.select("#jdk-slug-thing-service")
 
-      slug1.select("#jdk-slug-test-slug").text() shouldBe "test-slug 1.181.0 JDK"
-      slug1.select("#jdk-slug-test-slug img").attr("src") shouldBe "/assets/img/openjdk.png"
-      slug2.select("#jdk-slug-thing-service").text() shouldBe "thing-service 1.171.0 JRE"
+      slug1.select("#jdk-slug-test-slug"        ).text()      shouldBe "test-slug 1.181.0 JDK"
+      slug1.select("#jdk-slug-test-slug img"    ).attr("src") shouldBe "/assets/img/openjdk.png"
+      slug2.select("#jdk-slug-thing-service"    ).text()      shouldBe "thing-service 1.171.0 JRE"
       slug2.select("#jdk-slug-thing-service img").attr("src") shouldBe "/assets/img/oracle2.gif"
     }
 
     "include a link to the repository" in {
       implicit val request = FakeRequest()
 
-      val versions = List(JdkVersion(name= "thing-service", version = Version("1.171.0"), vendor = Vendor.Oracle, kind = Kind.JDK))
+      val versions = List(JdkVersion(ServiceName("thing-service"), Version("1.171.0"), Vendor.Oracle, Kind.JDK))
       val teams    = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one")))
       val document = asDocument(new JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 

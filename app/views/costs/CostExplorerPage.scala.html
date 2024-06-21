@@ -22,7 +22,7 @@
 @this()
 
 @(
-  serviceNameAndConfigs: Map[String, Seq[DeploymentConfig]]
+  serviceNameAndConfigs: Map[ServiceName, Seq[DeploymentConfig]]
 , teams                : Seq[GitHubTeam]
 , form                 : Form[?]
 , costEstimateConfig   : CostEstimateConfig

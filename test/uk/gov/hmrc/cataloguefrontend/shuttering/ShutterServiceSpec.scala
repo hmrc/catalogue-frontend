@@ -66,7 +66,7 @@ class ShutterServiceSpec
       ShutterStateChangeEvent(
           username    = "test.user"
         , timestamp   = Instant.now().minus(2, ChronoUnit.DAYS)
-        , serviceName = "abc-frontend"
+        , serviceName = ServiceName("abc-frontend")
         , environment = Environment.Production
         , shutterType = ShutterType.Frontend
         , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
@@ -75,7 +75,7 @@ class ShutterServiceSpec
     , ShutterStateChangeEvent(
           username    = "fake.user"
         , timestamp   = Instant.now()
-        , serviceName = "zxy-frontend"
+        , serviceName = ServiceName("zxy-frontend")
         , environment = Environment.Production
         , shutterType = ShutterType.Frontend
         , status      = ShutterStatus.Unshuttered
@@ -84,7 +84,7 @@ class ShutterServiceSpec
     , ShutterStateChangeEvent(
           username    = "test.user"
         , timestamp   = Instant.now().minus(1, ChronoUnit.DAYS)
-        , serviceName = "ijk-frontend"
+        , serviceName = ServiceName("ijk-frontend")
         , environment = Environment.Production
         , shutterType = ShutterType.Frontend
         , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)

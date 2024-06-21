@@ -25,7 +25,7 @@ import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
@@ -50,7 +50,7 @@ class CostsSummaryController @Inject() (
 ) extends FrontendController(mcc)
     with CatalogueAuthBuilders {
 
-  private def toRows(serviceDeploymentMap: Map[String, Seq[DeploymentConfig]]): Seq[Seq[(String, String)]] = {
+  private def toRows(serviceDeploymentMap: Map[ServiceName, Seq[DeploymentConfig]]): Seq[Seq[(String, String)]] = {
     serviceDeploymentMap.map {
       case (serviceName, configList) =>
 
@@ -64,7 +64,7 @@ class CostsSummaryController @Inject() (
             )
         }
 
-        Seq("Application Name" -> serviceName) ++ slotsAndInstances ++ Seq("Estimated Cost (£ / year)" -> configEstimateCosts)
+        Seq("Application Name" -> serviceName.asString) ++ slotsAndInstances ++ Seq("Estimated Cost (£ / year)" -> configEstimateCosts)
     }.toSeq
   }
 
@@ -76,7 +76,7 @@ class CostsSummaryController @Inject() (
       for {
         teams           <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
         configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.asString.trim.isEmpty))
-        groupedConfigs  = configs.groupBy(_.serviceName)
+        groupedConfigs  =  configs.groupBy(_.serviceName)
       } yield {
         if (asCSV) {
           val csv = s"${team.fold("")(_.asString)} ,Integration, ,Development, ,QA, ,Staging, ,ExternalTest, ,Production\n" + // CSV header

@@ -80,7 +80,7 @@ class ShutterService @Inject() (
       states <- shutterConnector.shutterStates(st, env)
       events <- shutterConnector.latestShutterEvents(st, env)
       sorted =  states
-                  .map(state => (state, events.find(_.serviceName == state.serviceName.asString)))
+                  .map(state => (state, events.find(_.serviceName == state.serviceName)))
                   .sortWith { case ((l, _), (r, _)) =>
                     if (l.status.value == r.status.value)
                       l.serviceName.asString < r.serviceName.asString

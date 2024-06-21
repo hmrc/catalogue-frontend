@@ -145,15 +145,15 @@ object ShutterCause extends FromStringEnum[ShutterCause]
 
 enum EventData:
   case ShutterStateCreateData(
-    serviceName: String
+    serviceName: ServiceName
   ) extends EventData
 
   case ShutterStateDeleteData(
-    serviceName: String
+    serviceName: ServiceName
   ) extends EventData
 
   case ShutterStateChangeData(
-    serviceName: String,
+    serviceName: ServiceName,
     environment: Environment,
     shutterType: ShutterType,
     status     : ShutterStatus,
@@ -168,27 +168,21 @@ enum EventData:
 object EventData {
   val shutterStateCreateDataFormat: Format[ShutterStateCreateData] =
     (__ \ "serviceName")
-      .format[String]
+      .format[ServiceName](ServiceName.format)
       .inmap(ShutterStateCreateData.apply, _.serviceName)
 
   val shutterStateDeleteDataFormat: Format[ShutterStateDeleteData] =
     (__ \ "serviceName")
-      .format[String]
+      .format[ServiceName](ServiceName.format)
       .inmap(ShutterStateDeleteData.apply, _.serviceName)
 
-  val shutterStateChangeDataFormat: Format[ShutterStateChangeData] = {
-    implicit val ef   = ShutterEnvironment.format
-    implicit val st   = ShutterType.format
-    implicit val ssvf = ShutterStatus.format
-    implicit val scf  = ShutterCause.format
-
-    ( (__ \ "serviceName").format[String]
-    ~ (__ \ "environment").format[Environment]
-    ~ (__ \ "shutterType").format[ShutterType]
-    ~ (__ \ "status"     ).format[ShutterStatus]
-    ~ (__ \ "cause"      ).format[ShutterCause]
+  val shutterStateChangeDataFormat: Format[ShutterStateChangeData] =
+    ( (__ \ "serviceName").format[ServiceName  ](ServiceName.format       )
+    ~ (__ \ "environment").format[Environment  ](ShutterEnvironment.format)
+    ~ (__ \ "shutterType").format[ShutterType  ](ShutterType.format       )
+    ~ (__ \ "status"     ).format[ShutterStatus](ShutterStatus.format     )
+    ~ (__ \ "cause"      ).format[ShutterCause ](ShutterCause.format      )
     )(ShutterStateChangeData.apply, d => Tuple.fromProductTyped(d))
-  }
 
   val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] = {
     implicit val ef   = ShutterEnvironment.format
@@ -243,7 +237,7 @@ case class ShutterEvent(
 case class ShutterStateChangeEvent(
   username   : String,
   timestamp  : Instant,
-  serviceName: String,
+  serviceName: ServiceName,
   environment: Environment,
   shutterType: ShutterType,
   status     : ShutterStatus,

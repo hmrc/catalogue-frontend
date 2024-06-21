@@ -139,7 +139,7 @@ private object ShutterEventsControllerSpec {
   def sampleEvent = ShutterStateChangeEvent(
     "username",
     timestamp = Instant.now(),
-    "service name",
+    ServiceName("service name"),
     environment = Environment.Development,
     shutterType = Frontend,
     status      = Unshuttered,
