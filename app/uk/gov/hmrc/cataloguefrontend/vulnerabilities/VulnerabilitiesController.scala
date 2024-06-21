@@ -21,8 +21,7 @@ import play.api.data.Forms.{boolean, mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.vulnerabilities.{VulnerabilitiesForServicesPage, VulnerabilitiesListPage, VulnerabilitiesTimelinePage}
@@ -147,8 +146,8 @@ object VulnerabilitiesExplorerFilter {
                             ),
         "vulnerability"  -> optional(text),
         "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
-        "service"        -> optional(text.transform(ServiceName.apply, _.asString)),
-        "team"           -> optional(text.transform(TeamName.apply   , _.asString)),
+        "service"        -> optional(Forms.of[ServiceName](ServiceName.formFormat)),
+        "team"           -> optional(Forms.of[TeamName](TeamName.formFormat)),
       )(VulnerabilitiesExplorerFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }
@@ -167,8 +166,8 @@ object VulnerabilitiesCountFilter {
                       opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
                     , flag => Some(flag.asString)
                     ),
-        "service" -> optional(text.transform(ServiceName.apply, _.asString)),
-        "team"    -> optional(text.transform(TeamName.apply   , _.asString)),
+        "service" -> optional(Forms.of[ServiceName](ServiceName.formFormat)),
+        "team"    -> optional(Forms.of[TeamName](TeamName.formFormat)),
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }
@@ -194,8 +193,8 @@ object VulnerabilitiesTimelineFilter {
     val dateFormat = "yyyy-MM-dd"
     Form(
       mapping(
-        "service"        -> optional(text.transform(ServiceName.apply, _.asString)),
-        "team"           -> optional(text.transform(TeamName.apply   , _.asString)),
+        "service"        -> optional(Forms.of[ServiceName](ServiceName.formFormat)),
+        "team"           -> optional(Forms.of[TeamName](TeamName.formFormat)),
         "vulnerability"  -> optional(text),
         "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
         "from"           -> optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply), // Default to 6 months ago if loading initial page/value not set

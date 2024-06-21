@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{JsObject, Json, OWrites, Reads, __}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 case class Role(asString: String) {

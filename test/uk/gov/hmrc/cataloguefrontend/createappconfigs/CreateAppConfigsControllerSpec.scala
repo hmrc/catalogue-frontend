@@ -30,8 +30,7 @@ import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redire
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.AsyncRequestId
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector, routes}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}

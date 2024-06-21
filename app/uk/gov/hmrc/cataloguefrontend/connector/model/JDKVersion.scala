@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Reads, __}
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, Version}
 
 case class JDKVersion(
   name   : String,

@@ -24,10 +24,9 @@ import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2

@@ -22,8 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseH
 import play.api.http.HttpEntity
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
@@ -185,7 +184,7 @@ object ConfigWarning {
 
   lazy val form: Form[ConfigWarningForm] = Form(
     Forms.mapping(
-      "serviceName" -> Forms.text.transform[ServiceName](ServiceName.apply, _.asString)
+      "serviceName" -> Forms.of[ServiceName](ServiceName.formFormat)
     )(ConfigWarningForm.apply)(r => Some(r.serviceName))
   )
 }

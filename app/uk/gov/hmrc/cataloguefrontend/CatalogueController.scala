@@ -28,9 +28,9 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, ServiceConfigsService}

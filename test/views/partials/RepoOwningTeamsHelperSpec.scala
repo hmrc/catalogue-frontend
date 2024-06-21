@@ -19,7 +19,7 @@ package views.partials
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 
 import java.time.Instant
 

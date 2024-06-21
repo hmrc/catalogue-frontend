@@ -19,9 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 import play.api.http.HttpEntity
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils

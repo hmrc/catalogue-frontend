@@ -116,7 +116,7 @@ object ShutterState {
     implicit val stf = ShutterType.format
     implicit val ef  = ShutterEnvironment.format
     implicit val ssf = ShutterStatus.format
-    ( (__ \ "name"       ).read[String].map(ServiceName.apply)
+    ( (__ \ "name"       ).read[ServiceName](ServiceName.format)
     ~ (__ \ "context"    ).readNullable[String]
     ~ (__ \ "type"       ).read[ShutterType]
     ~ (__ \ "environment").read[Environment]
@@ -304,7 +304,7 @@ object OutagePage {
     implicit val ef  : Reads[Environment]       = ShutterEnvironment.format
     implicit val tcf : Reads[TemplatedContent]  = TemplatedContent.format
     implicit val opwr: Reads[OutagePageWarning] = OutagePageWarning.reads
-    ( (__ \ "serviceName"      ).read[String].map(ServiceName.apply)
+    ( (__ \ "serviceName"      ).read[ServiceName](ServiceName.format)
     ~ (__ \ "environment"      ).read[Environment]
     ~ (__ \ "outagePageURL"    ).read[String]
     ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]

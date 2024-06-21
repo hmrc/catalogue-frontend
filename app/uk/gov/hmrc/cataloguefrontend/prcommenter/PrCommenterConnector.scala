@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.prcommenter
 
 import play.api.Logging
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig

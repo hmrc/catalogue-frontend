@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 import play.api.Logger
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}

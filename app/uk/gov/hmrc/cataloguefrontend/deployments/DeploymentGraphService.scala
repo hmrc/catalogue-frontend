@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.deployments
 
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{DeploymentConfigEvent, ServiceConfigsConnector}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentTimelineEvent, ReleasesConnector}
 import uk.gov.hmrc.http.HeaderCarrier

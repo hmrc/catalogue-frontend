@@ -21,8 +21,8 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.utils.UriEncoding
 
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, Version}
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents

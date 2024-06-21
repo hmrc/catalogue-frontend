@@ -25,9 +25,9 @@ import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, FormUtils}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents

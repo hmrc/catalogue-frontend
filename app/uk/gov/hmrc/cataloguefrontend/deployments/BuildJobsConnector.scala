@@ -22,8 +22,7 @@ import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps, UpstreamErrorResponse}
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.internalauth.client.Retrieval
 
 import java.net.URL

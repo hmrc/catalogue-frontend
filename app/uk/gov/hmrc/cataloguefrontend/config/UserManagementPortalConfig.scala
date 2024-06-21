@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.config
 
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 
 import javax.inject.{Inject, Singleton}
 

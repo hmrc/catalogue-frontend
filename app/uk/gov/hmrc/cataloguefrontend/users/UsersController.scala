@@ -22,8 +22,8 @@ import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.error_404_template

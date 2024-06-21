@@ -27,7 +27,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.users.{CreateUserController, CreateUserRequest, Organisation, routes}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}

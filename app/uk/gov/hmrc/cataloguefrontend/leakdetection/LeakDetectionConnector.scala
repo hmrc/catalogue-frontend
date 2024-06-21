@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 import play.api.Logger
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig

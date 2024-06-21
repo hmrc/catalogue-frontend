@@ -113,7 +113,7 @@ object CachedServiceCheck {
   val reads: Reads[CachedServiceCheck] = {
     implicit val readsWarning = Warning.reads
     implicit val readsCheck   = Check.reads
-    ( (__ \ "serviceName"    ).read[String].map(ServiceName.apply)
+    ( (__ \ "serviceName"    ).read[ServiceName](ServiceName.format)
     ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "checks"         ).read[Seq[Check]]
     ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]

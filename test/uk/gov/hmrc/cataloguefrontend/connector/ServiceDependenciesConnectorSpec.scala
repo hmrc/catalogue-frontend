@@ -27,7 +27,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag, Version}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.HeaderCarrier
 

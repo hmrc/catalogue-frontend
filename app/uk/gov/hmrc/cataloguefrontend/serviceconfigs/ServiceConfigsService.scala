@@ -20,8 +20,7 @@ import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.util.Base64Util
@@ -379,8 +378,9 @@ object ServiceConfigsService {
 
   object ServiceRelationships {
     val reads: Reads[ServiceRelationships] =
-      ( (__ \ "inboundServices" ).read[Seq[String]].map(_.map(ServiceName.apply))
-      ~ (__ \ "outboundServices").read[Seq[String]].map(_.map(ServiceName.apply))
+      implicit val snr: Reads[ServiceName] = ServiceName.format
+      ( (__ \ "inboundServices" ).read[Seq[ServiceName]]
+      ~ (__ \ "outboundServices").read[Seq[ServiceName]]
       )(ServiceRelationships.apply)
   }
 
@@ -449,7 +449,7 @@ object ServiceConfigsService {
           .of[Map[String, ConfigSourceValue]]
           .map(_.map { case (k, v) => (Environment.parse(k).getOrElse(sys.error(s"Invalid Environment: $k")), v) })
 
-      ( (__ \ "serviceName"  ).read[String].map(ServiceName.apply)
+      ( (__ \ "serviceName"  ).read[ServiceName](ServiceName.format)
       ~ (__ \ "key"          ).read[String].map(KeyName.apply)
       ~ (__ \ "environments" ).read[Map[Environment, ConfigSourceValue]]
       )(AppliedConfig.apply)
@@ -468,7 +468,7 @@ object ServiceConfigsService {
     val reads: Reads[ConfigWarning] = {
       implicit val readVal = ConfigSourceValue.reads
       implicit val readEnv = Environment.format
-      ( (__ \ "serviceName").read[String].map(ServiceName.apply)
+      ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
       ~ (__ \ "environment").read[Environment]
       ~ (__ \ "key"        ).read[String].map(KeyName.apply)
       ~ (__ \ "value"      ).read[ConfigSourceValue]

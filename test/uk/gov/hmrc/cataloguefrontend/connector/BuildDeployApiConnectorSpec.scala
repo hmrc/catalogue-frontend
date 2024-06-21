@@ -22,10 +22,9 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus, PrototypeDetails}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepoForm
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}

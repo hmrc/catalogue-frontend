@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.prcommenter
 
-import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{TeamName, Version}
+
 import java.time.Instant
 
 case class PrCommenterReport(

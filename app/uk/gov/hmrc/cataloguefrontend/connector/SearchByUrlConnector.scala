@@ -45,7 +45,7 @@ class SearchByUrlConnector @Inject() (
     )(FrontendRoute.apply)
 
   private implicit val frontendRoutesReads: Reads[FrontendRoutes] =
-    ( (__ \ "service"    ).read[String].map(ServiceName.apply)
+    ( (__ \ "service"    ).read[ServiceName](ServiceName.format)
     ~ (__ \ "environment").read[String]
     ~ (__ \ "routes"     ).read[Seq[FrontendRoute]]
     )(FrontendRoutes.apply)

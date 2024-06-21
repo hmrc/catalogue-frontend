@@ -114,7 +114,7 @@ object ResourceUsageConnector {
 
     val format: Format[RawResourceUsage] =
       ( (__ \ "date"        ).format[Instant]
-      ~ (__ \ "serviceName" ).format[String].inmap(ServiceName.apply, _.asString)
+      ~ (__ \ "serviceName" ).format[ServiceName](ServiceName.format)
       ~ (__ \ "environment" ).format[Environment](Environment.format)
       ~ (__ \ "slots"       ).format[Int]
       ~ (__ \ "instances"   ).format[Int]

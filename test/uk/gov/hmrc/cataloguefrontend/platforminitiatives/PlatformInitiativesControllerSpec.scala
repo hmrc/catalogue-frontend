@@ -28,8 +28,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType.Chart
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
 import uk.gov.hmrc.internalauth.client.Retrieval

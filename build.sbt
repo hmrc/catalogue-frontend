@@ -14,8 +14,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     libraryDependencies ++= compile ++ test,
     // ***************
     RoutesKeys.routesImport ++= Seq(
-      "uk.gov.hmrc.cataloguefrontend.connector.model.TeamName",
-      "uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}",
+      "uk.gov.hmrc.cataloguefrontend.model._",
       "uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType",
       "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType",
       "uk.gov.hmrc.cataloguefrontend.binders.Binders._",
@@ -23,6 +22,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus"
     ),
     TwirlKeys.templateImports ++= Seq(
+      "uk.gov.hmrc.cataloguefrontend.model._",
       "uk.gov.hmrc.cataloguefrontend.util.ViewHelper.csrfFormField",
       "views.html.helper.CSPNonce",
       "uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches"

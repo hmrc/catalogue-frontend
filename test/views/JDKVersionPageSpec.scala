@@ -23,7 +23,7 @@ import play.api.test.FakeRequest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, Version}
 import views.html.JdkVersionPage
 
 
@@ -41,7 +41,7 @@ class JDKVersionPageSpec
       , JDKVersion(name = "thing-service", version = Version("1.171.0"), vendor = Vendor.Oracle , kind = Kind.JRE)
       )
 
-      val teams = List(GitHubTeam(name = TeamName.apply("Team 1"), lastActiveDate = None, repos = Seq("repo-one", "repo-two")))
+      val teams = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one", "repo-two")))
 
       val document = asDocument(new JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
@@ -58,7 +58,7 @@ class JDKVersionPageSpec
       implicit val request = FakeRequest()
 
       val versions = List(JDKVersion(name= "thing-service", version = Version("1.171.0"), vendor = Vendor.Oracle, kind = Kind.JDK))
-      val teams    = List(GitHubTeam(name = TeamName.apply("Team 1"), lastActiveDate = None, repos = Seq("repo-one")))
+      val teams    = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one")))
       val document = asDocument(new JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
       val slug = document.select("#jdk-slug-thing-service")

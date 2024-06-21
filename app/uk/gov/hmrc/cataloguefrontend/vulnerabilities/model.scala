@@ -18,8 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{OFormat, Reads, __}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, Version}
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
 
 import java.time.Instant
 import scala.collection.Seq
@@ -103,7 +103,7 @@ case class VulnerabilityOccurrence(
 
 object VulnerabilityOccurrence {
   val reads: OFormat[VulnerabilityOccurrence] =
-    ( (__ \ "service"            ).format[String].inmap(ServiceName.apply, _.asString)
+    ( (__ \ "service"            ).format[ServiceName](ServiceName.format)
     ~ (__ \ "serviceVersion"     ).format[String]
     ~ (__ \ "componentPathInSlug").format[String]
     )(apply, vo => Tuple.fromProductTyped(vo))
@@ -137,7 +137,7 @@ case class TotalVulnerabilityCount(
 
 object TotalVulnerabilityCount {
   val reads: Reads[TotalVulnerabilityCount] =
-    ( (__ \ "service"               ).read[String].map(ServiceName.apply)
+    ( (__ \ "service"               ).read[ServiceName](ServiceName.format)
     ~ (__ \ "actionRequired"        ).read[Int]
     ~ (__ \ "noActionRequired"      ).read[Int]
     ~ (__ \ "investigationOngoing"  ).read[Int]

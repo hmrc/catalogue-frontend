@@ -22,8 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
@@ -332,7 +331,7 @@ object DeployServiceForm {
   val form: Form[DeployServiceForm] =
     Form(
       Forms.mapping(
-        "serviceName" -> Forms.text.transform(ServiceName.apply, _.asString)
+        "serviceName" -> Forms.of[ServiceName](ServiceName.formFormat)
       , "version"     -> Forms.of[Version](Version.formFormat)
       , "environment" -> Forms.of[Environment](Environment.formFormat)
       )(DeployServiceForm.apply)(f => Some(Tuple.fromProductTyped(f)))

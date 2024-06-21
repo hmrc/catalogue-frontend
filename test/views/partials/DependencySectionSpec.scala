@@ -18,7 +18,8 @@ package views.partials
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope}
+import uk.gov.hmrc.cataloguefrontend.model.Version
 
 class DependencySectionSpec extends AnyWordSpec with Matchers {
 

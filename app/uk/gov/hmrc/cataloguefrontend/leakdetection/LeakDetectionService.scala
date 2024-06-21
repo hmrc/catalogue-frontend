@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant

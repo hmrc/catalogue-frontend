@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.DependencyGraphParser
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.HeaderCarrier

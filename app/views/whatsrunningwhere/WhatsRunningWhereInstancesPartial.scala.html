@@ -15,13 +15,13 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceDeploymentConfigSummary
 
 @(serviceDeployments: Seq[ServiceDeploymentConfigSummary]
 , environments      : Seq[Environment]
 , maxMemory         : Double
 )
+
 <tbody class="list list-darker-text">
 @serviceDeployments.zipWithIndex.map { case (sdcSummary, i) =>
   <tr id="row@i">

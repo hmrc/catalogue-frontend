@@ -15,11 +15,9 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model.Dependency
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 
-@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @( environment : Option[Environment]
  , dependencies: Seq[Dependency]
  , pending     : Boolean

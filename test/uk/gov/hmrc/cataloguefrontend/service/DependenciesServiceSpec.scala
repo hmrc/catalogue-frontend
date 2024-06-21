@@ -21,7 +21,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 

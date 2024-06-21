@@ -23,7 +23,7 @@ import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Writes, __}
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkConstraint
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 
 case class CreateServiceRepoForm(
   repositoryName: String,
@@ -36,7 +36,7 @@ object CreateServiceRepoForm {
   implicit val writes: Writes[CreateServiceRepoForm] =
     ( (__ \ "repositoryName").write[String]
     ~ (__ \ "makePrivate"   ).write[Boolean]
-    ~ (__ \ "teamName"      ).write[String].contramap[TeamName](_.asString)
+    ~ (__ \ "teamName"      ).write[TeamName](TeamName.format)
     ~ (__ \ "repoType"      ).write[String]
     )(r => Tuple.fromProductTyped(r))
 

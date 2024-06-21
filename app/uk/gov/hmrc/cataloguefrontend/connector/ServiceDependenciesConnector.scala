@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, SlugVersionInfo}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.http.client.HttpClientV2

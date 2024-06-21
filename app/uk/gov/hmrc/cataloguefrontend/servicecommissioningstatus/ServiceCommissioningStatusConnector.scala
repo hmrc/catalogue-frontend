@@ -23,8 +23,7 @@ import play.api.libs.json._
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
