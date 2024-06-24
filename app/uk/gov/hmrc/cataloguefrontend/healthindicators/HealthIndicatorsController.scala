@@ -36,7 +36,7 @@ class HealthIndicatorsController @Inject() (
   override val mcc             : MessagesControllerComponents,
   healthIndicatorsService      : HealthIndicatorsService,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {

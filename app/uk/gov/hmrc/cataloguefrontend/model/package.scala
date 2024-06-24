@@ -21,6 +21,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, JsError, JsObject, JsString, JsSuccess, JsValue}
 import play.api.data.FormError
 import play.api.data.format.Formatter
+import uk.gov.hmrc.cataloguefrontend.binders.Binders
 
 package object model {
 
@@ -32,27 +33,20 @@ package object model {
     val format: Format[TeamName] =
       Format.of[String].inmap(TeamName.apply, _.asString)
 
-    implicit val ordering: Ordering[TeamName] =
+    given Ordering[TeamName] =
       Ordering.by(_.asString)
 
-    implicit val pathBindable: PathBindable[TeamName] =
-      new PathBindable[TeamName] {
-        override def bind(key: String, value: String): Either[String, TeamName] =
-          Right(TeamName(value))
+    given pathBindable: PathBindable[TeamName] =
+      Binders.pathBindableFromString(
+        s => Right(TeamName(s)),
+        _.asString
+      )
 
-        override def unbind(key: String, value: TeamName): String =
-          value.asString
-      }
-
-    implicit def queryStringBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[TeamName] =
-      new QueryStringBindable[TeamName] {
-        override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, TeamName]] =
-          strBinder.bind(key, params)
-            .map(_.map(TeamName.apply))
-
-        override def unbind(key: String, value: TeamName): String =
-          strBinder.unbind(key, value.asString)
-      }
+    implicit val queryStringBindable: QueryStringBindable[TeamName] =
+      Binders.queryStringBindableFromString(
+        s => Some(Right(TeamName(s))),
+        _.asString
+      )
 
     val formFormat: Formatter[TeamName] =
       new Formatter[TeamName] {
@@ -75,7 +69,7 @@ package object model {
     val format: Format[ServiceName] =
       Format.of[String].inmap(ServiceName.apply, _.asString)
 
-    implicit val serviceNameOrdering: Ordering[ServiceName] =
+    given Ordering[ServiceName] =
       Ordering.by(_.asString)
 
     val formFormat: Formatter[ServiceName] =
@@ -113,10 +107,11 @@ package object model {
 
   object Version {
 
-    implicit val ordering: Ordering[Version] = new Ordering[Version] {
-      def compare(x: Version, y: Version): Int =
-        x.compare(y)
-    }
+    given Ordering[Version] =
+      new Ordering[Version] {
+        def compare(x: Version, y: Version): Int =
+          x.compare(y)
+      }
 
     def isNewVersionAvailable(currentVersion: Version, latestVersion: Version): Boolean =
       latestVersion.diff(currentVersion) match {

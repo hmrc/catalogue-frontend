@@ -14,8 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, ServiceDeploymentConfigSummary, WhatsRunningWhere, ViewMode}
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, ServiceDeploymentConfigSummary, WhatsRunningWhere, ViewMode, routes => wrwroutes }
 
 @this()
 
@@ -134,7 +133,7 @@
 @profileTypeTab(profileType: ProfileType) = {
     @defining(profileType == selectedProfileType){ active =>
         <li id="tab-@profileType.asString" class="nav-item">
-            <a id="@profileType.asString-tab" class="nav-link @if(active){active}" href="@routes.WhatsRunningWhereController.releases()">
+            <a id="@profileType.asString-tab" class="nav-link @if(active){active}" href="@wrwroutes.WhatsRunningWhereController.releases()">
                 @profileType Profile
             </a>
             <script @CSPNonce.attr>

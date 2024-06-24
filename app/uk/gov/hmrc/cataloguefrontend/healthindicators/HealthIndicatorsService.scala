@@ -28,15 +28,15 @@ import scala.concurrent.{ExecutionContext, Future}
 class HealthIndicatorsService @Inject() (
   teamsAndReposConnector   : TeamsAndRepositoriesConnector,
   healthIndicatorsConnector: HealthIndicatorsConnector
-)(implicit
-  ec: ExecutionContext
+)(using
+  ExecutionContext
 ) {
 
   def findIndicatorsWithTeams(
     repoType      : Option[RepoType],
     repoNameFilter: Option[String]
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[IndicatorsWithTeams]] =
     for {
       repoToTeams        <- teamsAndReposConnector.allTeamsByService()

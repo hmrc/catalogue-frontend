@@ -29,6 +29,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.StubBehaviour
 
@@ -57,10 +58,10 @@ class CostExplorerControllerSpec
     when(mockAuthStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
       .thenReturn(Future.unit)
 
-    when(mockTeamsAndRepositoriesConnector.allTeams()(any))
+    when(mockTeamsAndRepositoriesConnector.allTeams()(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Seq.empty))
 
-    when(mockServiceConfigConnector.deploymentConfig(any, any, any, any)(any))
+    when(mockServiceConfigConnector.deploymentConfig(any, any, any, any)(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Seq.empty))
 
     val request = FakeRequest(GET, routes.CostsSummaryController.costExplorer().url)

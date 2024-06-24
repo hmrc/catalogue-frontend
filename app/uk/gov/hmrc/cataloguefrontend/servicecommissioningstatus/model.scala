@@ -65,30 +65,28 @@ object Check {
 
   val reads: Reads[Check] = new Reads[Check] {
 
-    implicit val writesResult: Reads[Result] = new Reads[Result] {
-      def reads(json: JsValue) =
+    given Reads[Result] = (json: JsValue) =>
         ( (json \ "evidence").asOpt[String], (json \ "add").asOpt[String] ) match {
           case (Some(str), _) => JsSuccess(Right(Present(str)): Result)
           case (_, Some(str)) => JsSuccess(Left( Missing(str)): Result)
           case _              => JsError("Could not find either field 'evidence' or 'add'")
         }
-    }
 
-    implicit val readsSimpleCheck: Reads[SimpleCheck] =
+    given Reads[SimpleCheck] =
       ( (__ \ "title"      ).read[String]
       ~ (__ \ "simpleCheck").read[Result]
       ~ (__ \ "helpText"   ).read[String]
       ~ (__ \ "linkToDocs" ).readNullable[String]
       ) (SimpleCheck.apply)
 
-    implicit val mapFormat: Reads[Map[Environment, Result]] =
+    given Reads[Map[Environment, Result]] =
       Reads
         .of[Map[String, Check.Result]]
         .map(
           _.map { case (k, v) => (Environment.parse(k).getOrElse(sys.error("Invalid Environment")), v) }
         )
 
-    implicit val readsEnvCheck: Reads[EnvCheck] =
+    given Reads[EnvCheck] =
       ( (__ \ "title"           ).read[String]
       ~ (__ \ "environmentCheck").read[Map[Environment, Result]]
       ~ (__ \ "helpText"        ).read[String]
@@ -111,8 +109,8 @@ case class CachedServiceCheck(
 
 object CachedServiceCheck {
   val reads: Reads[CachedServiceCheck] = {
-    implicit val readsWarning = Warning.reads
-    implicit val readsCheck   = Check.reads
+    given Reads[Warning] = Warning.reads
+    given Reads[Check]   = Check.reads
     ( (__ \ "serviceName"    ).read[ServiceName](ServiceName.format)
     ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "checks"         ).read[Seq[Check]]

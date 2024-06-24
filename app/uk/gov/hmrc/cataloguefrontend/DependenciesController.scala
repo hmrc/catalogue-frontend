@@ -41,7 +41,7 @@ class DependenciesController @Inject() (
   dependenciesPage        : DependenciesPage,
   graphsPage              : DependencyGraphs,
   override val auth       : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {

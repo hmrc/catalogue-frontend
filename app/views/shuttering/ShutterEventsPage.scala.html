@@ -17,13 +17,12 @@
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterEventsView, ShutterStateChangeEvent}
 
-@(
-  services    : Seq[String],
+@(services    : Seq[String],
   events      : Seq[ShutterStateChangeEvent],
   form        : Form[?],
   environments: Seq[Environment]
 )(implicit
-  request : RequestHeader
+  request     : RequestHeader
 )
 
 @standard_layout("Shutter Events", active = "shuttering") {

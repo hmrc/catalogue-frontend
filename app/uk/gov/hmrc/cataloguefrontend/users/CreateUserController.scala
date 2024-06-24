@@ -40,7 +40,7 @@ class CreateUserController @Inject()(
   createUserPage           : CreateUserPage,
   createUserRequestSentPage: CreateUserRequestSentPage,
   userManagementConnector  : UserManagementConnector
-) (implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders

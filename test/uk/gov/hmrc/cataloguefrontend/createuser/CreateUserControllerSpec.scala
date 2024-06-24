@@ -139,7 +139,7 @@ class CreateUserControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockUMConnector.createUser(any[CreateUserRequest])(any[HeaderCarrier]))
+      when(mockUMConnector.createUser(any[CreateUserRequest])(using any[HeaderCarrier]))
         .thenReturn(Future.unit)
 
       val result = controller
@@ -168,7 +168,7 @@ class CreateUserControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockUMConnector.createUser(any[CreateUserRequest])(any[HeaderCarrier]))
+      when(mockUMConnector.createUser(any[CreateUserRequest])(using any[HeaderCarrier]))
         .thenReturn(Future.unit)
 
       val result = controller
@@ -191,8 +191,9 @@ class CreateUserControllerSpec
   }
 
   private trait Setup {
-    implicit val hc      : HeaderCarrier                 = HeaderCarrier()
-    implicit val mcc     : MessagesControllerComponents  = app.injector.instanceOf[MessagesControllerComponents]
+    given HeaderCarrier = HeaderCarrier()
+    given mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+
     val mockCUPView      : CreateUserPage                = app.injector.instanceOf[CreateUserPage]
     val mockCURSPView    : CreateUserRequestSentPage     = app.injector.instanceOf[CreateUserRequestSentPage]
     val mockUMConnector  : UserManagementConnector       = mock[UserManagementConnector]

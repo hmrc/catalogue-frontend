@@ -42,7 +42,7 @@ class TeamsController @Inject()(
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
@@ -59,7 +59,7 @@ class TeamsController @Inject()(
           optGithubTeam match {
             case Some(githubTeam) =>
               ( teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false))
-              , leakDetectionService.repositoriesWithLeaks
+              , leakDetectionService.repositoriesWithLeaks()
               , serviceDependenciesConnector.dependenciesForTeam(teamName)
               , serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
               ).mapN {

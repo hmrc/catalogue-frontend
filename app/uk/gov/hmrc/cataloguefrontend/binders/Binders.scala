@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.binders
 
-import play.api.mvc.QueryStringBindable
+import play.api.mvc.{PathBindable, QueryStringBindable}
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 
 import java.time.{Instant, LocalDate}
@@ -24,35 +24,51 @@ import scala.util.Try
 
 object Binders {
 
-  implicit def instantBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[Instant] =
-    new QueryStringBindable[Instant] {
-      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Instant]] =
-        strBinder.bind(key, params)
-          .map(_.flatMap(s => Try(Instant.parse(s)).toEither.left.map(_.getMessage)))
+  implicit val instantQueryStringBindable: QueryStringBindable[Instant] =
+    queryStringBindableFromString[Instant](
+      s => Some(Try(Instant.parse(s)).toEither.left.map(_.getMessage)),
+      _.toString
+    )
 
-      override def unbind(key: String, value: Instant): String =
-        strBinder.unbind(key, value.toString)
-    }
+  implicit val localDateQueryStringBindable: QueryStringBindable[LocalDate] =
+    queryStringBindableFromString[LocalDate](
+      s => Some(Try(LocalDate.parse(s)).toEither.left.map(_.getMessage)),
+      _.toString
+    )
 
-  implicit def localDateBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[LocalDate] =
-    new QueryStringBindable[LocalDate] {
-      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, LocalDate]] =
-        strBinder.bind(key, params)
-          .map(_.flatMap(s => Try(LocalDate.parse(s)).toEither.left.map(_.getMessage)))
+  implicit val serviceTypeQueryStringBindable: QueryStringBindable[ServiceType] =
+    queryStringBindableFromString[ServiceType](
+      {
+        case s if s.nonEmpty => Some(ServiceType.parse(s))
+        case _               => None
+      },
+      _.asString
+    )
 
-      override def unbind(key: String, value: LocalDate): String =
-        strBinder.unbind(key, value.toString)
-    }
-
-  implicit def serviceTypeBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[ServiceType] =
-    new QueryStringBindable[ServiceType] {
-      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, ServiceType]] =
+  /** `summon[QueryStringBindable[String]].transform` doesn't allow us to provide failures.
+    * This function provides `andThen` semantics
+    */
+  def queryStringBindableFromString[T](parse: String => Option[Either[String, T]], asString: T => String)(using strBinder: QueryStringBindable[String]): QueryStringBindable[T] =
+    new QueryStringBindable[T] {
+      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, T]] =
         strBinder.bind(key, params) match {
-          case Some(Right(s)) if (s.nonEmpty)  => Some(ServiceType.parse(s))
-          case _                               => None
+          case Some(Right(s)) => parse(s)
+          case _              => None
         }
 
-      override def unbind(key: String, value: ServiceType): String =
-        strBinder.unbind(key, value.asString)
+      override def unbind(key: String, value: T): String =
+        strBinder.unbind(key, asString(value))
+    }
+
+  /** `summon[PathBindable[String]].transform` doesn't allow us to provide failures.
+    * This function provides `andThen` semantics
+    */
+  def pathBindableFromString[T](parse: String => Either[String, T], asString: T => String)(using strBinder: PathBindable[String]): PathBindable[T] =
+    new PathBindable[T] {
+      override def bind(key: String, value: String): Either[String, T] =
+        parse(value)
+
+      override def unbind(key: String, value: T): String =
+        asString(value)
     }
 }

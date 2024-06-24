@@ -33,34 +33,34 @@ import scala.concurrent.{ExecutionContext, Future}
 class UserManagementConnector @Inject()(
   httpClientV2  : HttpClientV2
 , servicesConfig: ServicesConfig
-)(implicit
-  ec: ExecutionContext
+)(using
+  ExecutionContext
 ) extends Logging {
 
   import HttpReads.Implicits._
 
   private val baseUrl = servicesConfig.baseUrl("user-management")
 
-  def getTeam(team: TeamName)(implicit hc: HeaderCarrier): Future[UmpTeam] = {
-    implicit val ltr: Reads[UmpTeam] = UmpTeam.reads
+  def getTeam(team: TeamName)(using HeaderCarrier): Future[UmpTeam] = {
+    given Reads[UmpTeam] = UmpTeam.reads
 
     httpClientV2
       .get(url"$baseUrl/user-management/teams/${team.asString}")
       .execute[UmpTeam]
   }
 
-  def getAllTeams()(implicit hc: HeaderCarrier): Future[Seq[UmpTeam]] = {
-    implicit val ltr: Reads[UmpTeam] = UmpTeam.reads
+  def getAllTeams()(using HeaderCarrier): Future[Seq[UmpTeam]] = {
+    given Reads[UmpTeam] = UmpTeam.reads
 
     httpClientV2
       .get(url"$baseUrl/user-management/teams")
       .execute[Seq[UmpTeam]]
   }
 
-  def getAllUsers(team: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[User]] = {
+  def getAllUsers(team: Option[TeamName] = None)(using HeaderCarrier): Future[Seq[User]] = {
     val url: URL = url"$baseUrl/user-management/users?team=${team.map(_.asString)}"
 
-    implicit val ur: Reads[User] = User.reads
+    given Reads[User] = User.reads
 
     httpClientV2
       .get(url)
@@ -72,15 +72,15 @@ class UserManagementConnector @Inject()(
       }
   }
 
-  def getUser(username: String)(implicit hc: HeaderCarrier): Future[Option[User]] = {
-    implicit val ur: Reads[User] = User.reads
+  def getUser(username: String)(using HeaderCarrier): Future[Option[User]] = {
+    given Reads[User] = User.reads
 
     httpClientV2
       .get(url"$baseUrl/user-management/users/$username")
       .execute[Option[User]]
   }
 
-  def createUser(userRequest: CreateUserRequest)(implicit hc: HeaderCarrier): Future[Unit] = {
+  def createUser(userRequest: CreateUserRequest)(using HeaderCarrier): Future[Unit] = {
     val url: URL = url"$baseUrl/user-management/create-user"
 
     httpClientV2

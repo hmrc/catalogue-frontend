@@ -43,7 +43,7 @@ class ServiceConfigsController @Inject()(
 , configExplorerPage      : ConfigExplorerPage
 , configWarningPage       : ConfigWarningPage
 , searchConfigPage        : SearchConfigPage
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {

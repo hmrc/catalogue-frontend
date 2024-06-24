@@ -21,7 +21,7 @@
 @(serviceName        : ServiceName,
   serviceDependencies: Seq[ServiceDependencies]
 )(implicit
-  request: RequestHeader
+  request            : RequestHeader
 )
 
 @standard_layout(s"Dependencies: ${serviceName.asString}", "dependencies") {

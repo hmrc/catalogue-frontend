@@ -44,7 +44,7 @@ class DependencyExplorerController @Inject() (
   dependenciesService: DependenciesService,
   page               : DependencyExplorerPage,
   override val auth  : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
@@ -55,7 +55,7 @@ class DependencyExplorerController @Inject() (
     BasicAuthAction.async { implicit request =>
       for {
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
-        groupArtefacts <- dependenciesService.getGroupArtefacts
+        groupArtefacts <- dependenciesService.getGroupArtefacts()
       } yield Ok(
         page(
           form           = form.fill(
@@ -97,7 +97,7 @@ class DependencyExplorerController @Inject() (
         flags          =  SlugInfoFlag.values
         scopes         =  DependencyScope.valuesAsSeq
         repoTypes      =  RepoType.valuesAsSeq.filterNot(_ == RepoType.Prototype)
-        groupArtefacts <- dependenciesService.getGroupArtefacts
+        groupArtefacts <- dependenciesService.getGroupArtefacts()
         filledForm     =
           SearchForm(
             group        = group,

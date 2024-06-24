@@ -49,7 +49,7 @@ class ServicesSpec extends UnitSpec with MockitoSugar {
     }
   }
 
-  implicit private val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
+  private given mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
   private lazy val authStubBehaviour = mock[StubBehaviour]
   private val repositoriesController = new RepositoriesController(

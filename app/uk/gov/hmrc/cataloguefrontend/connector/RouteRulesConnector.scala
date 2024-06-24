@@ -56,7 +56,7 @@ object RouteRulesConnector {
 class RouteRulesConnector @Inject() (
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext) {
   import HttpReads.Implicits._
   import RouteRulesConnector._
 
@@ -64,7 +64,7 @@ class RouteRulesConnector @Inject() (
 
   private val baseUrl: String = servicesConfig.baseUrl("service-configs")
 
-  def frontendServices()(implicit hc: HeaderCarrier): Future[Seq[String]] = {
+  def frontendServices()(using HeaderCarrier): Future[Seq[String]] = {
     val url = url"$baseUrl/service-configs/frontend-services"
     httpClientV2.get(url)
       .execute[Seq[String]]
@@ -76,7 +76,7 @@ class RouteRulesConnector @Inject() (
       }
   }
 
-  def frontendRoutes(service: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
+  def frontendRoutes(service: ServiceName)(using HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
     val url = url"$baseUrl/service-configs/frontend-route/${service.asString}"
     httpClientV2
       .get(url)
@@ -88,7 +88,7 @@ class RouteRulesConnector @Inject() (
       }
     }
 
-  def adminFrontendRoutes(service: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
+  def adminFrontendRoutes(service: ServiceName)(using HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
     val url = url"$baseUrl/service-configs/admin-frontend-route/${service.asString}"
     httpClientV2
       .get(url)

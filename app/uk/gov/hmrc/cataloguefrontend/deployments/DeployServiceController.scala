@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.deployments
 
 import cats.data.EitherT
 import play.api.i18n.I18nSupport
+import play.api.libs.json.Writes
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -52,7 +53,7 @@ class DeployServiceController @Inject()(
 , telemetryLinks               : TelemetryLinks
 , deployServicePage            : DeployServicePage
 , deployServiceStep4Page       : DeployServiceStep4Page
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders
@@ -300,8 +301,8 @@ class DeployServiceController @Inject()(
         bUrl <- EitherT.fromEither[Future](buildUrl.fold(Right(Option.empty[SafeRedirectUrl]): Either[String, Option[SafeRedirectUrl]])(_.getEither(redirectUrlPolicy).map(Option.apply)))
                        .leftMap(_ => BadRequest("Invalid buildUrl"))
       } yield {
-        implicit val w1 = BuildJobsConnector.QueueStatus.format
-        implicit val w2 = BuildJobsConnector.BuildStatus.format
+        given Writes[BuildJobsConnector.QueueStatus] = BuildJobsConnector.QueueStatus.format
+        given Writes[BuildJobsConnector.BuildStatus] = BuildJobsConnector.BuildStatus.format
         val flow =
           Source
             .tick(1.millis, if (buildUrl.isEmpty) 1.second else 10.second, "TICK")

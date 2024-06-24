@@ -17,12 +17,12 @@
 @(urlIfLeaksFound: Option[String])
 
 @urlIfLeaksFound.map { link =>
-<div class="alert alert-danger">
+  <div class="alert alert-danger">
     <strong>
         This repository is leaking sensitive information. This requires immediate attention, click
         <a id="link-to-leak-detection" href="@link" target="_blank" rel="noreferrer noopener">here<span class="glyphicon glyphicon-new-window"></span></a>
         for more information.
             Contact <a href="https://hmrcdigital.slack.com/messages/community-security/" target="_blank" rel="noreferrer noopener">#community-security<span class="glyphicon glyphicon-new-window"></span></a> for more help.
     </strong>
-</div>
+  </div>
 }

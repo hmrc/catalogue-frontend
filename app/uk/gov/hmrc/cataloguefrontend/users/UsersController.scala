@@ -41,7 +41,7 @@ class UsersController @Inject()(
 , umpConfig                    : UserManagementPortalConfig
 , override val mcc             : MessagesControllerComponents
 , override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders

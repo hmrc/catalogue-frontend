@@ -31,9 +31,14 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class DependenciesService @Inject() (
   serviceDependenciesConnector: ServiceDependenciesConnector
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext) {
 
-  def search(serviceName: ServiceName, deployments: Seq[WhatsRunningWhereVersion])(implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] =
+  def search(
+    serviceName: ServiceName,
+    deployments: Seq[WhatsRunningWhereVersion]
+  )(using
+    HeaderCarrier
+  ): Future[Seq[ServiceDependencies]] =
     Future
       .traverse(deployments)(wrwv =>
         serviceDependenciesConnector
@@ -45,8 +50,8 @@ class DependenciesService @Inject() (
   def getServiceDependencies(
     serviceName: ServiceName,
     version    : Version
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Option[ServiceDependencies]] =
     serviceDependenciesConnector
       .getSlugInfo(serviceName, Some(version)).map(_.headOption)
@@ -59,8 +64,8 @@ class DependenciesService @Inject() (
     artefact    : String,
     versionRange: BobbyVersionRange,
     scope       : Seq[DependencyScope]
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[RepoWithDependency]] =
     serviceDependenciesConnector
       .getDependenciesFromMetaData(flag, group, artefact, repoType, versionRange, scope)
@@ -75,24 +80,24 @@ class DependenciesService @Inject() (
           .sorted(Ordering.by((_: RepoWithDependency).depVersion).reverse)
       )
 
-  def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] =
-    serviceDependenciesConnector.getGroupArtefacts
+  def getGroupArtefacts()(using HeaderCarrier): Future[List[GroupArtefacts]] =
+    serviceDependenciesConnector.getGroupArtefacts()
       .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
 
-  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[JdkVersion]] =
+  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[List[JdkVersion]] =
     serviceDependenciesConnector.getJdkVersions(teamName, flag)
 
-  def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[JdkUsageByEnv] =
+  def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[JdkUsageByEnv] =
     for {
       versions <- serviceDependenciesConnector.getJdkVersions(teamName, env)
       counts   =  versions.groupBy(v => (v.version, v.vendor)).view.mapValues(_.length).toMap
     } yield JdkUsageByEnv(env, counts)
 
-  def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[SbtVersion]] =
+  def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[List[SbtVersion]] =
     serviceDependenciesConnector.getSbtVersions(teamName, flag)
 
-  def getSbtCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[SbtUsageByEnv] =
+  def getSbtCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[SbtUsageByEnv] =
     for {
       versions <- serviceDependenciesConnector.getSbtVersions(teamName, env)
       counts   =  versions.groupBy(_.version).view.mapValues(_.length).toMap
@@ -180,10 +185,10 @@ object ServiceDependencies {
     Json.using[Json.WithDefaultValues].reads[ServiceDependency]
 
   val reads: Reads[ServiceDependencies] = {
-    implicit val vf   = Version.format
-    implicit val jdkr = serviceJdkVersionReads
-    implicit val sdr  = serviceDependencyReads
-    implicit val envf = JsonCodecs.environmentFormat
+    given Reads[Version          ] = Version.format
+    given Reads[ServiceJdkVersion] = serviceJdkVersionReads
+    given Reads[ServiceDependency] = serviceDependencyReads
+    given Reads[Environment      ] = JsonCodecs.environmentFormat
     ( (__ \ "uri"                       ).read[String]
     ~ (__ \ "name"                      ).read[String]
     ~ (__ \ "version"                   ).read[Version]

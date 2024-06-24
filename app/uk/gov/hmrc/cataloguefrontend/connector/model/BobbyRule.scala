@@ -35,22 +35,20 @@ case class BobbyRule(
 }
 
 object BobbyRule {
-  val reads: Reads[BobbyRule] = {
-    implicit val bvrf = BobbyVersionRange.format
+  val reads: Reads[BobbyRule] =
     ( (__ \ "organisation" ).read[String]
     ~ (__ \ "name"         ).read[String]
-    ~ (__ \ "range"        ).read[BobbyVersionRange]
+    ~ (__ \ "range"        ).read[BobbyVersionRange](BobbyVersionRange.format)
     ~ (__ \ "reason"       ).read[String]
     ~ (__ \ "from"         ).read[LocalDate]
     ~(__ \ "exemptProjects").read[Seq[String]]
     )(BobbyRule.apply)
-  }
 }
 
 case class BobbyRuleSet(libraries: Seq[BobbyRule], plugins: Seq[BobbyRule])
 object BobbyRuleSet {
   val reads: Reads[BobbyRuleSet] = {
-    implicit val brr = BobbyRule.reads
+    given Reads[BobbyRule] = BobbyRule.reads
     Json.reads[BobbyRuleSet]
   }
 }

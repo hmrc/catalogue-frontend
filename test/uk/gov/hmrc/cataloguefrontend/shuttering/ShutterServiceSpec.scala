@@ -95,7 +95,7 @@ class ShutterServiceSpec
   "findCurrentStates" should {
     "return a list of shutter events ordered by shutter status" in {
       val boot = Boot.init
-      implicit val hc = new HeaderCarrier()
+      given HeaderCarrier = new HeaderCarrier()
 
       when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production))
         .thenReturn(Future.successful(mockShutterStates))

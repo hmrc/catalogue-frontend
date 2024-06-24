@@ -48,7 +48,7 @@ final class ResourceUsageConnectorSpec
   val resourceUsageConnector =
     new ResourceUsageConnector(httpClientV2, servicesConfig, clock)
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "The connector" should {
     "fetch and deserialise historic `ResourceUsage` for a service" in {

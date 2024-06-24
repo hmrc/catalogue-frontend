@@ -54,7 +54,7 @@ class TeamsAndRepositoriesConnectorSpec
   private lazy val teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector =
     app.injector.instanceOf[TeamsAndRepositoriesConnector]
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "lookupLatestJenkinsJobs" should {
     "return a Link if exists" in {
@@ -81,7 +81,7 @@ class TeamsAndRepositoriesConnectorSpec
       )
 
       val response = teamsAndRepositoriesConnector
-        .lookupLatestJenkinsJobs("serviceA")(HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .lookupLatestJenkinsJobs("serviceA")(using HeaderCarrierConverter.fromRequest(FakeRequest()))
         .futureValue
 
       response shouldBe Seq(

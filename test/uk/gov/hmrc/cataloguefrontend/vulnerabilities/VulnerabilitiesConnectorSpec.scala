@@ -46,7 +46,7 @@ class VulnerabilitiesConnectorSpec
   )
 
   val vulnerabilitiesConnector = new VulnerabilitiesConnector(httpClientV2, servicesConfig)
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "timelineCounts" should {
     "return a sequence of VulnerabilitiesTimelineCounts" in {

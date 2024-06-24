@@ -26,7 +26,7 @@ import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepoForm
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
-import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -49,6 +49,8 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     )
 
   private val connector = new BuildDeployApiConnector(httpClientV2, config)
+
+  private given HeaderCarrier = HeaderCarrier()
 
   "changePrototypePassword" should {
     "return success=true when Build & Deploy respond with 200" in {

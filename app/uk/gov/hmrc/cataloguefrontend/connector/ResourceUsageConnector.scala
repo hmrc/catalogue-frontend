@@ -34,19 +34,19 @@ class ResourceUsageConnector @Inject() (
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig,
   clock         : Clock
-)(implicit ec: ExecutionContext) {
+)(using ExecutionContext) {
   import ResourceUsageConnector._
 
   private val baseUrl = servicesConfig.baseUrl("service-configs")
 
-  private def rawResourceUsageForService(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[List[RawResourceUsage]] = {
-    implicit val rruf: Format[RawResourceUsage] = RawResourceUsage.format
+  private def rawResourceUsageForService(serviceName: ServiceName)(using HeaderCarrier): Future[List[RawResourceUsage]] = {
+    given Format[RawResourceUsage] = RawResourceUsage.format
     httpClientV2
       .get(url"$baseUrl/service-configs/resource-usage/services/${serviceName.asString}/snapshots")
       .execute[List[RawResourceUsage]]
   }
 
-  def historicResourceUsageForService(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] =
+  def historicResourceUsageForService(serviceName: ServiceName)(using HeaderCarrier): Future[List[ResourceUsage]] =
     rawResourceUsageForService(serviceName)
       .map { res =>
         // for every date with a value, ensure we have a value for all environments

@@ -16,7 +16,10 @@
 
 @this()
 
-@(repoName: String)(implicit request: RequestHeader)
+@(repoName: String
+)(implicit
+  request : RequestHeader
+)
 
 @standard_layout(s"Creating test repository: $repoName") {
 

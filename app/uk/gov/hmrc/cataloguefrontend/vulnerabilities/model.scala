@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{OFormat, Reads, __}
+import play.api.libs.json.{Format, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
 
@@ -51,7 +51,7 @@ case class VulnerableComponent(
 }
 
 object VulnerableComponent {
-  val format: OFormat[VulnerableComponent] =
+  val format: Format[VulnerableComponent] =
     ( (__ \ "component").format[String]
     ~ (__ \ "version"  ).format[String]
     )(apply, vc => Tuple.fromProductTyped(vc))
@@ -75,9 +75,9 @@ case class DistinctVulnerability(
 
 object DistinctVulnerability {
 
-  val apiFormat: OFormat[DistinctVulnerability] = {
-    implicit val csf = CurationStatus.format
-    implicit val vcf = VulnerableComponent.format
+  val apiFormat: Format[DistinctVulnerability] = {
+    given Format[CurationStatus]      = CurationStatus.format
+    given Format[VulnerableComponent] = VulnerableComponent.format
     ( (__ \ "vulnerableComponentName"   ).format[String]
     ~ (__ \ "vulnerableComponentVersion").format[String]
     ~ (__ \ "vulnerableComponents"      ).format[Seq[VulnerableComponent]]
@@ -102,7 +102,7 @@ case class VulnerabilityOccurrence(
 )
 
 object VulnerabilityOccurrence {
-  val reads: OFormat[VulnerabilityOccurrence] =
+  val reads: Format[VulnerabilityOccurrence] =
     ( (__ \ "service"            ).format[ServiceName](ServiceName.format)
     ~ (__ \ "serviceVersion"     ).format[String]
     ~ (__ \ "componentPathInSlug").format[String]
@@ -116,9 +116,9 @@ case class VulnerabilitySummary(
  )
 
 object VulnerabilitySummary {
-  val apiFormat: OFormat[VulnerabilitySummary] = {
-    implicit val dvf = DistinctVulnerability.apiFormat
-    implicit val vof = VulnerabilityOccurrence.reads
+  val apiFormat: Format[VulnerabilitySummary] = {
+    given Format[DistinctVulnerability]   = DistinctVulnerability.apiFormat
+    given Format[VulnerabilityOccurrence] = VulnerabilityOccurrence.reads
 
     ( (__ \ "distinctVulnerability").format[DistinctVulnerability]
     ~ (__ \ "occurrences"          ).format[Seq[VulnerabilityOccurrence]]

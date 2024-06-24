@@ -37,7 +37,7 @@ class ShutterEventsController @Inject() (
   connector        : ShutterConnector,
   routeRulesConnector :RouteRulesConnector,
   override val auth: FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders

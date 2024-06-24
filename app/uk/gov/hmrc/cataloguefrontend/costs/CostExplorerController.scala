@@ -45,7 +45,7 @@ class CostsSummaryController @Inject() (
   costEstimateConfig           : CostEstimateConfig,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec              : ExecutionContext
 ) extends FrontendController(mcc)
     with CatalogueAuthBuilders {

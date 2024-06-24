@@ -26,12 +26,19 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector, serviceConfigsConnector: ServiceConfigsConnector)(implicit ec: ExecutionContext) {
+class DeploymentGraphService @Inject() (
+  releasesConnector      : ReleasesConnector,
+  serviceConfigsConnector: ServiceConfigsConnector
+)(using
+  ec: ExecutionContext
+) {
 
-  def findEvents(service: ServiceName, start: Instant, end: Instant): Future[Seq[DeploymentTimelineEvent]] = {
+  def findEvents(
+    service: ServiceName,
+    start  : Instant,
+    end    : Instant
+  )(using HeaderCarrier): Future[Seq[DeploymentTimelineEvent]] = {
     import DeploymentGraphService._
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-
     for {
       data                 <- releasesConnector.deploymentTimeline(service, start, end)
       dataWithPlaceholders =  data.toSeq.map {

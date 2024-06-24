@@ -35,7 +35,7 @@ class SearchByUrlController @Inject() (
   searchByUrlService: SearchByUrlService,
   searchByUrlPage   : SearchByUrlPage,
   override val auth : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {

@@ -36,7 +36,8 @@ class PlatformInitiativesConnectorSpec
     with MockitoSugar
     with GuiceOneAppPerSuite
     with WireMockSupport {
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
+
   override lazy val wireMockRootDirectory = "test/resources"
 
   override def fakeApplication(): Application =

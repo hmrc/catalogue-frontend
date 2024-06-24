@@ -87,7 +87,7 @@ class CatalogueController @Inject() (
   serviceMetricsConnector            : ServiceMetricsConnector,
   serviceConfigsConnector            : ServiceConfigsConnector,
   override val auth                  : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders
@@ -95,7 +95,7 @@ class CatalogueController @Inject() (
 
   private val logger = Logger(getClass)
 
-  private def notFound(implicit request: Request[?]) =
+  private def notFound(using request: Request[?]) =
     NotFound(error_404_template())
 
   val index: Action[AnyContent] =
@@ -132,7 +132,7 @@ class CatalogueController @Inject() (
       } yield result
     }
 
-  private def retrieveZone(serviceName: ServiceName)(implicit request: Request[?]): Future[Option[CostEstimationService.Zone]] =
+  private def retrieveZone(serviceName: ServiceName)(using request: Request[?]): Future[Option[CostEstimationService.Zone]] =
     serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
       .map{deploymentConfigs =>
         val zones = deploymentConfigs.map(_.zone).distinct
@@ -145,7 +145,7 @@ class CatalogueController @Inject() (
     serviceName            : ServiceName,
     repositoryDetails      : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
-  )(implicit
+  )(using
     request : Request[?]
   ): Future[Result] = {
     for {
@@ -273,7 +273,7 @@ class CatalogueController @Inject() (
       }
 
   private def hasEnableBranchProtectionAuthorisation(repoName: String)(
-    implicit hc: HeaderCarrier
+    using HeaderCarrier
   ): Future[EnableBranchProtection.HasAuthorisation] =
     auth
       .verify(Retrieval.hasPredicate(EnableBranchProtection.permission(repoName)))
@@ -292,7 +292,7 @@ class CatalogueController @Inject() (
     }
 
   private def hasMarkForDecommissioningAuthorisation(repoName: String)(
-    implicit hc: HeaderCarrier
+    using HeaderCarrier
   ): Future[MarkForDecommissioning.HasAuthorisation] =
     auth
       .verify(Retrieval.hasPredicate(MarkForDecommissioning.permission(repoName)))
@@ -346,7 +346,7 @@ class CatalogueController @Inject() (
     }
 
   private def hasChangePrototypePasswordAuthorisation(repoName: String)(
-    implicit hc: HeaderCarrier
+    using HeaderCarrier
   ): Future[ChangePrototypePassword.HasAuthorisation] =
     auth
       .verify(Retrieval.hasPredicate(ChangePrototypePassword.permission(repoName)))
@@ -355,7 +355,7 @@ class CatalogueController @Inject() (
   def renderLibrary(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[?]): Future[Result] =
+  )(using request: Request[?]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesAllVersions(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),
@@ -381,7 +381,7 @@ class CatalogueController @Inject() (
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
     form                   : Form[?]        = ChangePrototypePassword.form(),
     successMessage         : Option[String] = None
-  )(implicit request: Request[?]): Future[Html] =
+  )(using request: Request[?]): Future[Html] =
     for {
       urlIfLeaksFound       <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
       commenterReport       <- prCommenterConnector.report(repoDetails.name)
@@ -403,7 +403,7 @@ class CatalogueController @Inject() (
   private def renderTest(
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[?]): Future[Result] =
+  )(using request: Request[?]): Future[Result] =
     for {
       jenkinsJobs       <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name)
       repoModules       <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name)
@@ -422,7 +422,7 @@ class CatalogueController @Inject() (
   private def renderOther(
     repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(implicit request: Request[?]): Future[Result] =
+  )(using request: Request[?]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
       serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name),
       leakDetectionService.urlIfLeaksFound(repoDetails.name),

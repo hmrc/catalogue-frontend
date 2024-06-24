@@ -15,13 +15,12 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.Deprecated
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{ServiceRelationship, ServiceRelationshipsEnriched}
-@import java.time.Instant
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
+@import java.time.Instant
 
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.DecommissionInProgress
 @(serviceRelationships: ServiceRelationshipsEnriched)
+
 @hasTooManyRelationships = @{
     serviceRelationships.size > 3
 }
@@ -88,8 +87,8 @@
 
 @popoverContent(lifecycleStatus: Option[LifecycleStatus], endOfLifeDate: Option[Instant]) = {
     @lifecycleStatus match {
-      case Some(Deprecated)                 => { "Deprecated@{endOfLifeDate.map(date => s" with an end of life date of ${date.dateOnlyFormat}" )}" }
-      case Some(DecommissionInProgress)     => { "Marked for decommissioning" }
-      case _                                => { "" }
+      case Some(LifecycleStatus.Deprecated)             => { "Deprecated@{endOfLifeDate.map(date => s" with an end of life date of ${date.dateOnlyFormat}" )}" }
+      case Some(LifecycleStatus.DecommissionInProgress) => { "Marked for decommissioning" }
+      case _                                            => { "" }
     }
 }

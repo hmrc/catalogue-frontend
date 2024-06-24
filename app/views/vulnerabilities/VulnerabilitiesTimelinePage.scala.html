@@ -19,10 +19,9 @@
 
 @this()
 
-@(
-  teams  : Seq[String],
-  result : Seq[VulnerabilitiesTimelineCount],
-  form   : Form[?]
+@(teams   : Seq[String],
+  result  : Seq[VulnerabilitiesTimelineCount],
+  form    : Form[?]
 )(implicit
   messages: Messages,
   request : RequestHeader

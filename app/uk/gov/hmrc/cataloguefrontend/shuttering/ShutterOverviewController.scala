@@ -40,7 +40,7 @@ class ShutterOverviewController @Inject() (
   shutterService           : ShutterService,
   catalogueConfig          : CatalogueConfig,
   override val auth        : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {

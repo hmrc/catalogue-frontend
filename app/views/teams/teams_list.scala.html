@@ -19,8 +19,8 @@
 @import uk.gov.hmrc.cataloguefrontend.users.UmpTeam
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
 
-@(teams: Seq[(UmpTeam, Option[GitHubTeam])],
-  name : Option[String]
+@(teams  : Seq[(UmpTeam, Option[GitHubTeam])],
+  name   : Option[String]
 )(implicit
   request: RequestHeader
 )

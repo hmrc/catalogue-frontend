@@ -103,7 +103,7 @@ class HealthIndicatorsServiceSpec
   }
 
   private[this] trait Setup {
-    implicit val hc: HeaderCarrier                                = HeaderCarrier()
+    given HeaderCarrier                                = HeaderCarrier()
     val mockTeamsAndReposConnector: TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     val mockHealthIndicatorsConnector: HealthIndicatorsConnector  = mock[HealthIndicatorsConnector]
     val healthIndicatorsService                                   = new HealthIndicatorsService(mockTeamsAndReposConnector, mockHealthIndicatorsConnector)

@@ -28,15 +28,15 @@ object DateHelper {
   val `dd MMM uuuu HH:mm`    : DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")
   val `yyyy-MM-dd HH:mm:ss z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
 
-  implicit class LocalDateImplicits(d: LocalDate) {
+  extension (d: LocalDate)
     def atStartOfDayEpochMillis: Long =
       d.atStartOfDay(utc).toInstant.toEpochMilli
 
     def atEndOfDayEpochMillis: Long =
       d.atTime(LocalTime.MAX).atZone(utc).toInstant.toEpochMilli
-  }
+  end extension
 
-  implicit class InstantImplicits(d: Instant) {
+  extension (d: Instant)
     def asPattern(pattern: String): String =
       d.atZone(utc).format(DateTimeFormatter.ofPattern(pattern))
 
@@ -48,7 +48,7 @@ object DateHelper {
 
     def dateOnlyFormat: String =
       d.atZone(utc).toLocalDate.format(`dd MMM uuuu`)
-  }
+  end extension
 
   def longToLocalDate(l: Long): LocalDate =
     Instant.ofEpochMilli(l).atZone(utc).toLocalDate

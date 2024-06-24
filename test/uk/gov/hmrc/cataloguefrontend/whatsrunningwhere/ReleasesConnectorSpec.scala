@@ -32,7 +32,7 @@ class ReleasesConnectorSpec
 
   private lazy val releasesConnector = app.injector.instanceOf[ReleasesConnector]
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "WhatsRunningWhere" should {
     "return all releases if profile not supplied" in {

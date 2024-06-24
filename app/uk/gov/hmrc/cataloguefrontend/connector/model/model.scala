@@ -34,8 +34,8 @@ case class RepositoryModules(
 
 object RepositoryModules {
   val reads: Reads[RepositoryModules] = {
-    implicit val dr : Reads[Dependency]       = Dependency.reads
-    implicit val rmr: Reads[RepositoryModule] = RepositoryModule.reads
+    given Reads[Dependency]       = Dependency.reads
+    given Reads[RepositoryModule] = RepositoryModule.reads
     ( (__ \ "name"             ).read[String]
     ~ (__ \ "version"          ).readNullable[Version](Version.format)
     ~ (__ \ "dependenciesBuild").read[Seq[Dependency]]
@@ -58,9 +58,9 @@ case class RepositoryModule(
 
 object RepositoryModule {
   val reads: Reads[RepositoryModule] = {
-    implicit val bf: Reads[BobbyRuleViolation] = BobbyRuleViolation.format
-    implicit val dr: Reads[Dependency]         = Dependency.reads
-    implicit val vf: Reads[Version]            = Version.format
+    given Reads[BobbyRuleViolation] = BobbyRuleViolation.format
+    given Reads[Dependency]         = Dependency.reads
+    given Reads[Version]            = Version.format
     ( (__ \ "name"                ).read[String]
     ~ (__ \ "group"               ).read[String]
     ~ (__ \ "dependenciesCompile" ).read[Seq[Dependency]]

@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
 import uk.gov.hmrc.cataloguefrontend.{DateHelper, FakeApplicationBuilder}
-import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
@@ -44,7 +44,7 @@ class DeploymentEventsControllerSpec
   import ExecutionContext.Implicits.global
 
   private trait Fixture {
-    implicit val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
+    given mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
     lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     lazy val mockedReleasesConnector             = mock[ReleasesConnector]
@@ -73,9 +73,9 @@ class DeploymentEventsControllerSpec
     "return 200 when given no filters" in new Fixture {
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
-      when(mockedReleasesConnector.deploymentHistory(environment = any, from = any, to = any, team = any, service = any, skip = any, limit = any)(any))
+      when(mockedReleasesConnector.deploymentHistory(environment = any, from = any, to = any, team = any, service = any, skip = any, limit = any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(history = Seq.empty, 0)))
-      when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
+      when(mockedTeamsAndRepositoriesConnector.allTeams()(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq.empty))
       val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
@@ -99,9 +99,9 @@ class DeploymentEventsControllerSpec
 
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
-      when(mockedReleasesConnector.deploymentHistory(environment = any, from = any, to = any, team = any, service = any, skip = any, limit = any)(any))
+      when(mockedReleasesConnector.deploymentHistory(environment = any, from = any, to = any, team = any, service = any, skip = any, limit = any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(deps, deps.length)))
-      when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
+      when(mockedTeamsAndRepositoriesConnector.allTeams()(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq.empty))
 
       val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?from=2020-01-01&to=2020-02-01").withSession(SessionKeys.authToken -> "Token token"))
@@ -132,10 +132,10 @@ class DeploymentEventsControllerSpec
       when(
         mockedReleasesConnector
           .deploymentHistory(environment = eqTo(Environment.Production), from = any, to = any, team = eqTo(None), service = eqTo(Some("s1")), skip = eqTo(None), limit = any)(
-            any))
+            using any[HeaderCarrier]))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(deps, deps.length)))
 
-      when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
+      when(mockedTeamsAndRepositoriesConnector.allTeams()(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq.empty))
 
       val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?service=s1").withSession(SessionKeys.authToken -> "Token token"))
@@ -156,12 +156,12 @@ class DeploymentEventsControllerSpec
             service = eqTo(None),
             skip    = eqTo(Some(2 * DeploymentEventsController.pageSize)),
             limit   = eqTo(Some(DeploymentEventsController.pageSize))
-          )(any))
+          )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(PaginatedDeploymentHistory(Seq.empty, 0)))
 
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
-      when(mockedTeamsAndRepositoriesConnector.allTeams()(any))
+      when(mockedTeamsAndRepositoriesConnector.allTeams()(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq.empty))
 
       val response = controller.deploymentEvents()(FakeRequest(GET, "/deployments/production?page=2").withSession(SessionKeys.authToken -> "Token token"))

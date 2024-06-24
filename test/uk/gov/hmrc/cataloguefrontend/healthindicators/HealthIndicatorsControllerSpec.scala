@@ -206,7 +206,7 @@ class HealthIndicatorsControllerSpec
   }
 
   private[this] trait Setup {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+    given HeaderCarrier = HeaderCarrier()
     val testJson: String =
       """{
         "repoName": "team-indicator-dashboard-frontend",

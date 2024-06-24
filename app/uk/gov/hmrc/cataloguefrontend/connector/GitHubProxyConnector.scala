@@ -29,15 +29,15 @@ import scala.concurrent.{ExecutionContext, Future}
 class GitHubProxyConnector @Inject()(
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit
-  ec: ExecutionContext
+)(using
+  ExecutionContext
 ) extends Logging {
 
   import HttpReads.Implicits._
 
   private lazy val gitHubProxyBaseURL = servicesConfig.baseUrl("platops-github-proxy")
 
-  def getGitHubProxyRaw(path: String)(implicit hc: HeaderCarrier): Future[Option[String]] = {
+  def getGitHubProxyRaw(path: String)(using HeaderCarrier): Future[Option[String]] = {
     val url = new URL(s"$gitHubProxyBaseURL/platops-github-proxy/github-raw$path")
     httpClientV2
       .get(url)

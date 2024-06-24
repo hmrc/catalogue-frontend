@@ -48,7 +48,7 @@ final class ServiceConfigsConnectorSpec
   val serviceConfigsConnector =
     new ServiceConfigsConnector(httpClientV2, servicesConfig, mock[AsyncCacheApi])
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "deploymentConfig" should {
     "return the deployment configuration for a service in an environment" in {

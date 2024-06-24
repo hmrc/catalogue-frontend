@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 
 @(serviceRoutes: ServiceRoutes)
+
 @if(serviceRoutes.hasInconsistentRoutes) {
   <div id="routing-rule-violations" class="card">
       <div class="card-header">

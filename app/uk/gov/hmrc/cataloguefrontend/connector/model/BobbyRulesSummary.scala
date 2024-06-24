@@ -33,7 +33,7 @@ case class HistoricBobbyRulesSummary(
 )
 
 private object DataFormat {
-  private implicit val brvf: Reads[BobbyRule] = BobbyRule.reads
+  private given Reads[BobbyRule] = BobbyRule.reads
 
   private def f[A](map: List[(JsValue, Map[String, A])]): Map[(BobbyRule, SlugInfoFlag), A] =
     map.flatMap {
@@ -51,12 +51,12 @@ private object DataFormat {
     }.toMap
 
   def dataReads[A: Reads]: Reads[Map[(BobbyRule, SlugInfoFlag), A]] =
-    implicitly[Reads[List[(JsValue, Map[String, A])]]].map(f[A])
+    summon[Reads[List[(JsValue, Map[String, A])]]].map(f[A])
 }
 
 object BobbyRulesSummary {
   val reads: Reads[BobbyRulesSummary] = {
-    implicit val df: Reads[Map[(BobbyRule, SlugInfoFlag), Int]] = DataFormat.dataReads[Int]
+    given Reads[Map[(BobbyRule, SlugInfoFlag), Int]] = DataFormat.dataReads[Int]
     ( (__ \ "date"   ).read[LocalDate]
     ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), Int]]
     )(BobbyRulesSummary.apply)
@@ -65,7 +65,7 @@ object BobbyRulesSummary {
 
 object HistoricBobbyRulesSummary {
   val reads: Reads[HistoricBobbyRulesSummary] = {
-    implicit val df: Reads[Map[(BobbyRule, SlugInfoFlag), List[Int]]] = DataFormat.dataReads[List[Int]]
+    given Reads[Map[(BobbyRule, SlugInfoFlag), List[Int]]] = DataFormat.dataReads[List[Int]]
     ( (__ \ "date"   ).read[LocalDate]
     ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), List[Int]]]
     )(HistoricBobbyRulesSummary.apply)

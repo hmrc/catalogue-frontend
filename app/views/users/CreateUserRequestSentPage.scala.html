@@ -18,13 +18,11 @@
 
 @this()
 
-@(
-  isServiceAccount: Boolean,
+@(isServiceAccount: Boolean,
   givenName       : String,
   familyName      : String
-)(
-  implicit
-  request   : RequestHeader
+)(implicit
+  request          : RequestHeader
 )
 
 @standard_layout("Create a User", "create a user") {

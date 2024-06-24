@@ -17,7 +17,10 @@
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, ImportedBy, VersionState}
 
-@(dependencies: Seq[Dependency], rootId: String, showOutOfDateOnly: Boolean = false)
+@(dependencies     : Seq[Dependency],
+  rootId           : String,
+  showOutOfDateOnly: Boolean        = false
+)
 
 @for(
     dependency <- dependencies

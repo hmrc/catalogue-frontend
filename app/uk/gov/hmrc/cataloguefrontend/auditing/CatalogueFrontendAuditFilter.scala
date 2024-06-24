@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.auditing
 
 import play.api.Configuration
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{OFormat, __}
+import play.api.libs.json.{Format, __}
 import play.api.mvc.{EssentialAction, RequestHeader}
 import play.api.routing.Router.Attrs
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -31,7 +31,7 @@ import scala.concurrent.ExecutionContext
 class CatalogueFrontendAuditFilter @Inject()(
   auditConnector : AuditConnector,
   configuration  : Configuration
-)(implicit
+)(using
   ec: ExecutionContext
 ) extends AuditFilter
      with FrontendHeaderCarrierProvider {
@@ -76,7 +76,7 @@ case class Detail(
 )
 
 object Detail {
-  val format: OFormat[Detail] =
+  val format: Format[Detail] =
     ( ( __ \ "username"       ).format[String]
     ~ ( __ \ "uri"            ).format[String]
     ~ ( __ \ "statusCode"     ).format[Int]

@@ -43,7 +43,7 @@ class AuthControllerSpec
      with OptionValues
      with ScalaFutures {
 
-  implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
+  //implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
 
   import Helpers._
 
@@ -155,7 +155,7 @@ class AuthControllerSpec
     val messagesApi       = app.injector.instanceOf[MessagesApi]
     val mcc               = app.injector.instanceOf[MessagesControllerComponents]
     val authStubBehaviour = mock[StubBehaviour]
-    val authComponent     = { implicit val cc: ControllerComponents = Helpers.stubControllerComponents()
+    val authComponent     = { given ControllerComponents = Helpers.stubControllerComponents()
                               FrontendAuthComponentsStub(authStubBehaviour)
                             }
     val controller        = new AuthController(authComponent, mcc)

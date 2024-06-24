@@ -29,9 +29,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class BobbyService @Inject() (
   serviceConfigsConnector: ServiceConfigsConnector
 , clock                  : Clock
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext) {
 
-  def getRules()(implicit hc: HeaderCarrier): Future[BobbyRulesView] = {
+  def getRules()(using HeaderCarrier): Future[BobbyRulesView] = {
     val today = LocalDate.now(clock)
 
     def sort(ruleset: BobbyRuleSet, sortDateLt: (LocalDate, LocalDate) => Boolean) = {

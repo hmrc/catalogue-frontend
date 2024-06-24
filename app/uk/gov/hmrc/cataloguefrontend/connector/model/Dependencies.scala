@@ -29,43 +29,33 @@ case class BobbyRuleViolation(
   reason: String,
   range : BobbyVersionRange,
   from  : LocalDate
-)(implicit now: LocalDate = LocalDate.now()) {
+)(using now: LocalDate = LocalDate.now()) { // TODO move implicit to `def isActive`
   def isActive: Boolean =
     now.isAfter(from)
 }
 
 object BobbyRuleViolation {
-  val format = {
-    implicit val bvf = BobbyVersionRange.format
+  val format =
     ( (__ \ "reason").read[String]
-    ~ (__ \ "range" ).read[BobbyVersionRange]
+    ~ (__ \ "range" ).read[BobbyVersionRange](BobbyVersionRange.format)
     ~ (__ \ "from"  ).read[LocalDate]
     )(BobbyRuleViolation.apply)
-  }
 
-  implicit val ordering: Ordering[BobbyRuleViolation] =
-    new Ordering[BobbyRuleViolation] {
-      // ordering by rule which is most strict first
-      def compare(x: BobbyRuleViolation, y: BobbyRuleViolation): Int = {
-        implicit val vo: Ordering[Version] = Version.ordering.reverse
-        implicit val bo: Ordering[Boolean] = Ordering.Boolean.reverse
-        implicit val ldo: Ordering[LocalDate] =
-          new Ordering[LocalDate] {
-            def compare(x: LocalDate, y: LocalDate) = x.compareTo(y)
-          }.reverse
-
-        (x.range.upperBound.map(_.version), x.range.upperBound.map(_.inclusive), x.from)
-          .compare(
-            (y.range.upperBound.map(_.version), y.range.upperBound.map(_.inclusive), y.from)
-          )
-      }
-    }
+  given ordering: Ordering[BobbyRuleViolation] =
+    // ordering by rule which is most strict first
+    Ordering
+      .by: (v: BobbyRuleViolation) =>
+        (v.range.upperBound.map(_.version  ).getOrElse(Version("9999.99.99")),
+         v.range.upperBound.map(_.inclusive).getOrElse(false),
+         v.from
+        )
+      .reverse
 }
 
 enum VersionState:
   case NewVersionAvailable                                  extends VersionState
   case BobbyRuleViolated(val violation: BobbyRuleViolation) extends VersionState
-  case BobbyRulePending(val violation: BobbyRuleViolation)  extends VersionState
+  case BobbyRulePending (val violation: BobbyRuleViolation) extends VersionState
 
 
 case class ImportedBy(
@@ -76,7 +66,7 @@ case class ImportedBy(
 
 object ImportedBy {
   val format = {
-    implicit val vf = Version.format
+    given Format[Version] = Version.format
     ( (__ \ "name"          ).format[String]
     ~ (__ \ "group"         ).format[String]
     ~ (__ \ "currentVersion").format[Version]
@@ -132,10 +122,10 @@ case class Dependency(
 
 object Dependency {
   val reads: Reads[Dependency] = {
-    implicit val svf  = Version.format
-    implicit val brvr = BobbyRuleViolation.format
-    implicit val ibf  = ImportedBy.format
-    implicit val sf   = DependencyScope.format
+    given Reads[Version           ] = Version.format
+    given Reads[BobbyRuleViolation] = BobbyRuleViolation.format
+    given Reads[ImportedBy        ] = ImportedBy.format
+    given Reads[DependencyScope   ] = DependencyScope.format
     ( (__ \ "name"               ).read[String]
     ~ (__ \ "group"              ).read[String]
     ~ (__ \ "currentVersion"     ).read[Version]
@@ -165,7 +155,7 @@ case class Dependencies(
 
 object Dependencies {
   val reads: Reads[Dependencies] = {
-    implicit val dr = Dependency.reads
+    given Reads[Dependency] = Dependency.reads
     ( (__ \ "repositoryName"        ).read[String]
     ~ (__ \ "libraryDependencies"   ).read[Seq[Dependency]]
     ~ (__ \ "sbtPluginsDependencies").read[Seq[Dependency]]
@@ -285,10 +275,10 @@ object RepoWithDependency {
   import play.api.libs.json._
 
   val reads: Reads[RepoWithDependency] = {
-    implicit val tnf = TeamName.format
-    implicit val vf  = Version.format
-    implicit val dsf = DependencyScope.format
-    implicit val rTf = RepoType.format
+    given Reads[TeamName       ] = TeamName.format
+    given Reads[Version        ] = Version.format
+    given Reads[DependencyScope] = DependencyScope.format
+    given Reads[RepoType       ] = RepoType.format
     ( (__ \ "repoName"   ).read[String]
     ~ (__ \ "repoVersion").read[Version]
     ~ (__ \ "teams"      ).read[List[TeamName]]
@@ -307,7 +297,7 @@ case class GroupArtefacts(
 )
 
 object GroupArtefacts {
-  val apiFormat: OFormat[GroupArtefacts] =
+  val apiFormat: Format[GroupArtefacts] =
     ( (__ \ "group"    ).format[String]
     ~ (__ \ "artefacts").format[List[String]]
     )(GroupArtefacts.apply, ga => Tuple.fromProductTyped(ga))

@@ -21,14 +21,14 @@
 
 @this()
 
-@( initiatives : Seq[PlatformInitiative]
-,  display     : DisplayType
-,  team        : Option[TeamName]
-,  allTeams    : Seq[GitHubTeam]
-,  form        : Form[?]
+@(initiatives : Seq[PlatformInitiative]
+, display     : DisplayType
+, team        : Option[TeamName]
+, allTeams    : Seq[GitHubTeam]
+, form        : Form[?]
 )(implicit
-   messages    : Messages
-,  request     : RequestHeader
+  messages    : Messages
+, request     : RequestHeader
 )
 
 @standard_layout(s"Platform Initiatives", active = "health") {

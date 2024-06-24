@@ -46,7 +46,7 @@ class CreateAppConfigsController @Inject()(
   serviceDependenciesConnector       : ServiceDependenciesConnector,
   gitHubProxyConnector               : GitHubProxyConnector,
   configuration                      : Configuration
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders

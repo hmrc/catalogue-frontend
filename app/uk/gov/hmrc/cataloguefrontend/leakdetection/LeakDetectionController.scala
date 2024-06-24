@@ -41,7 +41,7 @@ class LeakDetectionController @Inject() (
   draftPage                    : LeakDetectionDraftPage,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{JsObject, Json, OWrites, Reads, __}
+import play.api.libs.json.{JsObject, Json, OWrites, Reads, Writes, __}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
@@ -41,13 +41,11 @@ case class Member(
 
 object Member {
 
-  val reads: Reads[Member] = {
-    implicit val rR : Reads[Role] = Role.reads
+  val reads: Reads[Member] =
     ( (__ \ "username"   ).read[String]
     ~ (__ \ "displayName").readNullable[String]
-    ~ (__ \ "role"       ).read[Role]
+    ~ (__ \ "role"       ).read[Role](Role.reads)
     )(Member.apply)
-  }
 }
 
 case class SlackInfo(url: String) {
@@ -76,9 +74,9 @@ case class UmpTeam(
 
 object UmpTeam {
   val reads: Reads[UmpTeam] = {
-    implicit val mr : Reads[Member]    = Member.reads
-    implicit val sir: Reads[SlackInfo] = SlackInfo.reads
-    implicit val tnr: Reads[TeamName]  = TeamName.format
+    given Reads[Member]    = Member.reads
+    given Reads[SlackInfo] = SlackInfo.reads
+    given Reads[TeamName]  = TeamName.format
     ( (__ \ "members"          ).read[Seq[Member]]
     ~ (__ \ "teamName"         ).read[TeamName]
     ~ (__ \ "description"      ).readNullable[String]
@@ -146,7 +144,7 @@ case class CreateUserRequest(
 
 object CreateUserRequest {
 
-  implicit val writes: OWrites[CreateUserRequest] =
+  val writes: Writes[CreateUserRequest] =
     OWrites.transform[CreateUserRequest](
       ( (__ \ "givenName"               ).write[String]
       ~ (__ \ "familyName"              ).write[String]

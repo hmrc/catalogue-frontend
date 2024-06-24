@@ -28,18 +28,18 @@ import scala.concurrent.{ExecutionContext, Future}
 class WhatsRunningWhereService @Inject()(
   releasesConnector      : ReleasesConnector,
   serviceConfigsConnector: ServiceConfigsConnector
-) {
+)(using ExecutionContext) {
 
-  def releasesForProfile(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
+  def releasesForProfile(profile: Option[Profile])(using HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     releasesConnector.releases(profile)
 
-  def profiles()(implicit hc: HeaderCarrier): Future[Seq[Profile]] =
+  def profiles()(using HeaderCarrier): Future[Seq[Profile]] =
     releasesConnector.profiles()
 
-  def releasesForService(service: ServiceName)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] =
+  def releasesForService(service: ServiceName)(using HeaderCarrier): Future[WhatsRunningWhere] =
     releasesConnector.releasesForService(service)
 
-  def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Seq[ServiceDeploymentConfigSummary]] = {
+  def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(using HeaderCarrier): Future[Seq[ServiceDeploymentConfigSummary]] = {
     val releasesPerEnv = releases.map(r => (r.serviceName, r.versions.map(_.environment))).toMap
     serviceConfigsConnector.deploymentConfig()
       .map(

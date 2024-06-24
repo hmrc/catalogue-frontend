@@ -37,7 +37,7 @@ class ShutterGroupsConnector @Inject() (
   httpClientV2     : HttpClientV2,
   servicesConfig   : ServicesConfig,
   override val auth: FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
@@ -48,10 +48,9 @@ class ShutterGroupsConnector @Inject() (
 
   val logger = Logger(this.getClass)
 
-  def shutterGroups: Future[Seq[ShutterGroup]] = {
+  def shutterGroups()(using HeaderCarrier): Future[Seq[ShutterGroup]] = {
     val url = url"$gitHubProxyBaseURL/platops-github-proxy/github-raw/outage-pages/HEAD/conf/shutter-groups.json"
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    implicit val gr = ShutterGroup.reads
+    given Reads[Seq[ShutterGroup]] = ShutterGroup.reads
     httpClientV2
       .get(url)
       .execute[Option[Seq[ShutterGroup]]]
@@ -74,7 +73,7 @@ case class ShutterGroup(
 
 object ShutterGroup {
 
-  private implicit val applicative: cats.Applicative[JsResult] =
+  private given cats.Applicative[JsResult] =
     new cats.Applicative[JsResult] {
       def pure[A](a: A): JsResult[A] = JsSuccess(a)
       def ap[A, B](ff: JsResult[A => B])(fa: JsResult[A]): JsResult[B] =

@@ -35,14 +35,15 @@ class CostEstimationService @Inject() (
   serviceConfigsConnector: ServiceConfigsConnector,
   resourceUsageConnector : ResourceUsageConnector,
   costEstimateConfig     : CostEstimateConfig
+)(using
+  ExecutionContext
 ) {
   import CostEstimationService._
 
   def estimateServiceCost(
     serviceName: ServiceName
-  )(implicit
-    ec: ExecutionContext,
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[ServiceCostEstimate] =
     serviceConfigsConnector
       .deploymentConfig(Some(serviceName))
@@ -62,9 +63,8 @@ class CostEstimationService @Inject() (
 
   def historicEstimatedCostChartsForService(
     serviceName: ServiceName
-  )(implicit
-    ec: ExecutionContext,
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[HistoricEstimatedCostCharts] =
     resourceUsageConnector
       .historicResourceUsageForService(serviceName)

@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
   import ExecutionContext.Implicits.global
 
-  private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
+  private given HeaderCarrier = mock[HeaderCarrier]
 
   "Service" should {
     "return rule summaries with counts" in new Setup {

@@ -26,7 +26,6 @@ import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -38,12 +37,10 @@ class PlatformInitiativesController @Inject()
 , platformInitiativesListPage   : PlatformInitiativesListPage
 , teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
 , override val auth             : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
-
-  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>

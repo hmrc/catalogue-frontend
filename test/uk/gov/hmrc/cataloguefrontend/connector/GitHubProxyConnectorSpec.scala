@@ -45,7 +45,7 @@ class GitHubProxyConnectorSpec
       ))
     )
 
-  implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "getGitHubProxyRaw" should {
 
@@ -100,5 +100,3 @@ class GitHubProxyConnectorSpec
     }
   }
 }
-
-

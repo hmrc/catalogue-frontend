@@ -29,16 +29,16 @@ class ShutterService @Inject() (
   shutterConnector      : ShutterConnector,
   shutterGroupsConnector: ShutterGroupsConnector,
   routeRulesConnector   : RouteRulesConnector
-)(implicit
-  ec: ExecutionContext
+)(using
+  ExecutionContext
 ) {
 
   def getShutterStates(
     st         : ShutterType,
     env        : Environment,
     serviceName: Option[ServiceName] = None
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[ShutterState]] =
     shutterConnector.shutterStates(st, env, serviceName)
 
@@ -48,7 +48,7 @@ class ShutterService @Inject() (
     st         : ShutterType,
     env        : Environment,
     status     : ShutterStatus
-  )(implicit
+  )(using
     hc : HeaderCarrier,
     req: AuthenticatedRequest[?, ?]
   ): Future[Unit] =
@@ -57,24 +57,24 @@ class ShutterService @Inject() (
   def outagePage(
     env        : Environment,
     serviceName: ServiceName
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Option[OutagePage]] =
     shutterConnector.outagePage(env, serviceName)
 
   def frontendRouteWarnings(
     env        : Environment,
     serviceName: ServiceName
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[FrontendRouteWarning]] =
     shutterConnector.frontendRouteWarnings(env, serviceName)
 
   def findCurrentStates(
     st : ShutterType,
     env: Environment
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[(ShutterState, Option[ShutterStateChangeEvent])]] =
     for {
       states <- shutterConnector.shutterStates(st, env)
@@ -128,10 +128,15 @@ class ShutterService @Inject() (
       }
     }
 
-  def shutterGroups: Future[Seq[ShutterGroup]] =
-    shutterGroupsConnector.shutterGroups.map(_.sortBy(_.name))
+  def shutterGroups()(using HeaderCarrier): Future[Seq[ShutterGroup]] =
+    shutterGroupsConnector.shutterGroups().map(_.sortBy(_.name))
 
-  def lookupShutterRoute(serviceName: ServiceName, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] =
+  def lookupShutterRoute(
+    serviceName: ServiceName,
+    env        : Environment
+  )(using
+    HeaderCarrier
+  ): Future[Option[String]] =
     for {
       baseRoutes      <- routeRulesConnector.frontendRoutes(serviceName)
       optFrontendPath =  for {

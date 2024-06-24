@@ -37,7 +37,7 @@ class SbtVersionController @Inject()(
   sbtVersionPage               : SbtVersionPage,
   sbtAcrossEnvironmentsPage    : SbtAcrossEnvironmentsPage,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {

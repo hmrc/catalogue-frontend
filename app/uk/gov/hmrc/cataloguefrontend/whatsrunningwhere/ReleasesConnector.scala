@@ -33,18 +33,18 @@ import scala.util.control.NonFatal
 class ReleasesConnector @Inject() (
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit ec: ExecutionContext) {
+)(using ExecutionContext) {
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
 
   private val serviceUrl: String = servicesConfig.baseUrl("releases-api")
 
-  private implicit val wrwf: Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
-  private implicit val pf  : Reads[Profile]           = JsonCodecs.profileFormat
+  private given Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
+  private given Reads[Profile]           = JsonCodecs.profileFormat
 
 
-  def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
+  def releases(profile: Option[Profile])(using HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
     val url = s"$serviceUrl/releases-api/whats-running-where"
     val params = Seq(
       "profileName" -> profile.map(_.profileName.asString),
@@ -60,7 +60,7 @@ class ReleasesConnector @Inject() (
       }
   }
 
-  def profiles()(implicit hc: HeaderCarrier): Future[Seq[Profile]] = {
+  def profiles()(using HeaderCarrier): Future[Seq[Profile]] = {
     val url = url"$serviceUrl/releases-api/profiles"
     httpClientV2
       .get(url)
@@ -72,7 +72,7 @@ class ReleasesConnector @Inject() (
       }
   }
 
-  def releasesForService(service: ServiceName)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
+  def releasesForService(service: ServiceName)(using HeaderCarrier): Future[WhatsRunningWhere] = {
     val url = url"$serviceUrl/releases-api/whats-running-where/${service.asString}"
     httpClientV2
       .get(url)
@@ -88,7 +88,7 @@ class ReleasesConnector @Inject() (
   private val paginatedHistoryReads: HttpReads[PaginatedDeploymentHistory] = {
     implicit val rf = JsonCodecs.deploymentHistoryReads
     for {
-      history <- implicitly[HttpReads[Seq[DeploymentHistory]]]
+      history <- summon[HttpReads[Seq[DeploymentHistory]]]
       resp    <- HttpReads.ask.map(_._3)
       totals  =  resp.header("X-Total-Count").map(_.toLong).getOrElse(0L)
     } yield PaginatedDeploymentHistory(history, totals)
@@ -102,7 +102,9 @@ class ReleasesConnector @Inject() (
     service: Option[String]    = None,
     skip   : Option[Int]       = None,
     limit  : Option[Int]       = None
-  )(implicit hc: HeaderCarrier): Future[PaginatedDeploymentHistory] = {
+  )(using
+    HeaderCarrier
+  ): Future[PaginatedDeploymentHistory] = {
     implicit val mr: HttpReads[PaginatedDeploymentHistory] = paginatedHistoryReads
     val params = Seq(
       "from"    -> from.map(from => DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))),
@@ -122,8 +124,8 @@ class ReleasesConnector @Inject() (
     service: ServiceName,
     from:    Instant,
     to:      Instant
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Map[String, Seq[DeploymentTimelineEvent]]] = {
     implicit val dtr  = JsonCodecs.deploymentTimelineEventReads
     httpClientV2

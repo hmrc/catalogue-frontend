@@ -21,12 +21,12 @@
 
 @this()
 
-@(form         : Form[Step1Form]
-, shutterType  : ShutterType
-, env          : Environment
-, shutterStates: Seq[ShutterState]
-, shutterGroups: Seq[ShutterGroup]
-, back         : Call
+@(form            : Form[Step1Form]
+, shutterType     : ShutterType
+, env             : Environment
+, shutterStates   : Seq[ShutterState]
+, shutterGroups   : Seq[ShutterGroup]
+, back            : Call
 )(implicit
   request         : RequestHeader
 , messagesProvider: MessagesProvider

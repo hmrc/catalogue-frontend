@@ -22,7 +22,7 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 class RepoTypeSpec extends AnyWordSpec with Matchers {
-  implicit val rtf: Format[RepoType] = RepoType.format
+  given Format[RepoType] = RepoType.format
 
   "RepoType" should {
     "be able to be read from a json string" in {

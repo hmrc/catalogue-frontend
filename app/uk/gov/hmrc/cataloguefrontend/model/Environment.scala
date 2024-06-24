@@ -36,7 +36,7 @@ object SlugInfoFlag {
   val values: Seq[SlugInfoFlag] =
     Latest +: Environment.valuesAsSeq.map(ForEnvironment.apply)
 
-  implicit val ordering: Ordering[SlugInfoFlag] =
+  given Ordering[SlugInfoFlag] =
     Ordering.by(values.indexOf(_))
 
   def parse(s: String): Option[SlugInfoFlag] =

@@ -29,9 +29,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class VulnerabilitiesConnector @Inject() (
-   httpClientV2  : HttpClientV2,
-   servicesConfig: ServicesConfig
- )(implicit val ec: ExecutionContext) {
+  httpClientV2  : HttpClientV2,
+  servicesConfig: ServicesConfig
+)(using
+  ExecutionContext
+) {
   import uk.gov.hmrc.http.HttpReads.Implicits._
 
   private val url: String = servicesConfig.baseUrl("vulnerabilities")
@@ -42,10 +44,10 @@ class VulnerabilitiesConnector @Inject() (
   , version       : Option[Version]        = None
   , team          : Option[TeamName]       = None
   , curationStatus: Option[CurationStatus] = None
-  )(implicit
-    hc            : HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Option[Seq[VulnerabilitySummary]]] = {
-    implicit val vsrs: Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
+    given Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
     httpClientV2
       .get(url"$url/vulnerabilities/api/summaries?flag=${flag.map(_.asString)}&service=$serviceQuery&version=${version.map(_.original)}&team=${team.map(_.asString)}&curationStatus=${curationStatus.map(_.asString)}")
       .execute[Option[Seq[VulnerabilitySummary]]]
@@ -55,10 +57,10 @@ class VulnerabilitiesConnector @Inject() (
     flag       : SlugInfoFlag
   , serviceName: Option[ServiceName] = None
   , team       : Option[TeamName]    = None
-  )(implicit
-    hc         : HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[TotalVulnerabilityCount]] = {
-    implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
+    given Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
     httpClientV2
       .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=${serviceName.map(_.asString)}&team=${team.map(_.asString)}")
       .execute[Seq[TotalVulnerabilityCount]]
@@ -66,10 +68,10 @@ class VulnerabilitiesConnector @Inject() (
 
   def deployedVulnerabilityCount(
     serviceName: ServiceName
-  )(implicit
-    hc         : HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Option[TotalVulnerabilityCount]] = {
-    implicit val vcrs: Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
+    given Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
     httpClientV2
       .get(url"$url/vulnerabilities/api/services/${serviceName.asString}/deployed-report-count")
       .execute[Option[TotalVulnerabilityCount]]
@@ -82,10 +84,10 @@ class VulnerabilitiesConnector @Inject() (
   , curationStatus: Option[CurationStatus]
   , from          : LocalDate
   , to            : LocalDate
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[VulnerabilitiesTimelineCount]] = {
-    implicit val stcr: Reads[VulnerabilitiesTimelineCount] = VulnerabilitiesTimelineCount.reads
+    given Reads[VulnerabilitiesTimelineCount] = VulnerabilitiesTimelineCount.reads
 
     val fromInstant = DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))
     val toInstant   = DateTimeFormatter.ISO_INSTANT.format(to.atTime(23,59,59).toInstant(ZoneOffset.UTC))

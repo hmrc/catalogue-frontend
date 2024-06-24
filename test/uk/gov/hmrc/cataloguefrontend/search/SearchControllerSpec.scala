@@ -75,7 +75,7 @@ class SearchControllerSpec
   }
 
   private trait Setup {
-    implicit val ec: ExecutionContext = ExecutionContext.global
+    given ExecutionContext = ExecutionContext.global
 
     val mcc                = app.injector.instanceOf[MessagesControllerComponents]
     val view               = app.injector.instanceOf[SearchResults]

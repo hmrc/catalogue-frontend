@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class IndexScheduler @Inject()(
   searchIndex : SearchIndex,
   searchConfig: SearchConfig
-)(implicit
+)(using
   actorSystem         : ActorSystem,
   applicationLifecycle: ApplicationLifecycle,
   ec                  : ExecutionContext

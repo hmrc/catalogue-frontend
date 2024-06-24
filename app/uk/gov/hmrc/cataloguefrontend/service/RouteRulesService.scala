@@ -26,10 +26,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RouteRulesService @Inject() (
   routeRulesConnector: RouteRulesConnector
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext) {
   import RouteRulesService._
 
-  def serviceRoutes(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[ServiceRoutes] =
+  def serviceRoutes(serviceName: ServiceName)(using HeaderCarrier): Future[ServiceRoutes] =
     for {
       frontendRoutes <- routeRulesConnector.frontendRoutes(serviceName)
       adminRoutes    <- routeRulesConnector.adminFrontendRoutes(serviceName)

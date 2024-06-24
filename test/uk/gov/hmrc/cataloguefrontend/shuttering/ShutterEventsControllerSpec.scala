@@ -54,7 +54,7 @@ class ShutterEventsControllerSpec
   import ShutterEventsControllerSpec._
 
   private trait Fixture {
-    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+    given mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
 
     val connector           = mock[ShutterConnector]
     val authStubBehaviour   = mock[StubBehaviour]
@@ -65,20 +65,19 @@ class ShutterEventsControllerSpec
     when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
       .thenReturn(Future.unit)
 
-    when(routeRulesConnector.frontendServices()(any[HeaderCarrier]))
+    when(routeRulesConnector.frontendServices()(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Seq.empty[String]))
 
     def stubConnectorSuccess(forFilter: ShutterEventsFilter, returnEvents: Seq[ShutterStateChangeEvent] = Seq.empty): Unit =
-      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(any[HeaderCarrier]))
+      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(returnEvents))
 
     def stubConnectorFailure(forFilter: ShutterEventsFilter): Unit =
-      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(any[HeaderCarrier]))
+      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(using any[HeaderCarrier]))
         .thenReturn(Future.failed(new RuntimeException("connector failure")))
 
-    implicit class ResultOps(eventualResult: Future[Result]) {
-      lazy val toDocument: Document = Jsoup.parse(contentAsString(eventualResult))
-    }
+    extension (eventualResult: Future[Result])
+      def toDocument: Document = Jsoup.parse(contentAsString(eventualResult))
   }
 
   private val fakeRequest =

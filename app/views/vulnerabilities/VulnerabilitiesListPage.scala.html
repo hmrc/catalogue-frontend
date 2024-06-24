@@ -22,11 +22,11 @@
 @this()
 
 @(maybeSummaries: Option[Seq[VulnerabilitySummary]],
-  teams    : Seq[GitHubTeam],
-  form     : Form[?]
+  teams         : Seq[GitHubTeam],
+  form          : Form[?]
 )(implicit
-  messages : Messages,
-  request  : RequestHeader
+  messages      : Messages,
+  request       : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }

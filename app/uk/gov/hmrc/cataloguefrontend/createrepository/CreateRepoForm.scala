@@ -33,7 +33,7 @@ case class CreateServiceRepoForm(
 )
 
 object CreateServiceRepoForm {
-  implicit val writes: Writes[CreateServiceRepoForm] =
+  val writes: Writes[CreateServiceRepoForm] =
     ( (__ \ "repositoryName").write[String]
     ~ (__ \ "makePrivate"   ).write[Boolean]
     ~ (__ \ "teamName"      ).write[TeamName](TeamName.format)
@@ -104,8 +104,7 @@ case class CreatePrototypeRepoForm(
 )
 
 object CreatePrototypeRepoForm {
-
-  implicit val writes: Writes[CreatePrototypeRepoForm] =
+  val writes: Writes[CreatePrototypeRepoForm] =
     ( (__ \ "repositoryName").write[String]
     ~ (__ \ "password"      ).write[String]
     ~ (__ \ "teamName"      ).write[String].contramap[TeamName](_.asString)

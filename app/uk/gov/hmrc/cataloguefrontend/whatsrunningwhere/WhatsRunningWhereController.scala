@@ -37,7 +37,7 @@ class WhatsRunningWhereController @Inject() (
   config            : WhatsRunningWhereServiceConfig,
   override val mcc  : MessagesControllerComponents,
   override val auth : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
@@ -74,8 +74,8 @@ class WhatsRunningWhereController @Inject() (
     profile            : Option[Profile],
     selectedProfileType: ProfileType,
     selectedViewMode   : ViewMode,
-  )(implicit
-    request: MessagesRequest[AnyContent
+  )(using
+    request            : MessagesRequest[AnyContent
   ]) =
     for {
       profiles     <- service.profiles()
@@ -90,8 +90,8 @@ class WhatsRunningWhereController @Inject() (
     profile            : Option[Profile],
     selectedProfileType: ProfileType,
     selectedViewMode   : ViewMode
-  )(implicit
-    request: MessagesRequest[AnyContent]
+  )(using
+    request            : MessagesRequest[AnyContent]
   ) =
     for {
       profiles           <- service.profiles()

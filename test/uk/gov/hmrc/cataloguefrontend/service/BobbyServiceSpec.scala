@@ -30,7 +30,8 @@ import scala.concurrent.Future
 
 class BobbyServiceSpec extends UnitSpec with MockitoSugar {
 
-  private implicit val hc: HeaderCarrier = mock[HeaderCarrier]
+  private given HeaderCarrier = mock[HeaderCarrier]
+
   private val connector = mock[ServiceConfigsConnector]
 
   private val now        = Instant.parse("2000-01-01T01:01:01Z")

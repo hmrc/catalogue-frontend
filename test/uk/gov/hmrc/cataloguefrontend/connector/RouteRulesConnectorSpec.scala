@@ -43,8 +43,8 @@ class RouteRulesConnectorSpec
     when(servicesConfig.baseUrl("service-configs"))
       .thenReturn(wireMockUrl)
 
-    implicit val hc: HeaderCarrier    = HeaderCarrier()
-    implicit val ec: ExecutionContext = ExecutionContext.global
+    given HeaderCarrier    = HeaderCarrier()
+    given ExecutionContext = ExecutionContext.global
     val connector = new RouteRulesConnector(httpClientV2, servicesConfig)
   }
 

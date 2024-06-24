@@ -34,7 +34,7 @@ class PrCommenterController @Inject() (
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   recommendationsPage          : PrCommenterRecommendationsPage,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {

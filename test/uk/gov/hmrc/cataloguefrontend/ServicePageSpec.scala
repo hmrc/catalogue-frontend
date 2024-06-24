@@ -54,7 +54,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     }
   }
 
-  implicit val wrwf: Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
+  given Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
 
   "A service page" should {
     "return a 404 when a Library is viewed as a service" in {

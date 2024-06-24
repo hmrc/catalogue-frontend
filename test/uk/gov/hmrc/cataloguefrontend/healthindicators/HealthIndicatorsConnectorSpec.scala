@@ -38,7 +38,7 @@ class HealthIndicatorsConnectorSpec
      with ScalaFutures
      with IntegrationPatience {
 
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private given HeaderCarrier = HeaderCarrier()
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()

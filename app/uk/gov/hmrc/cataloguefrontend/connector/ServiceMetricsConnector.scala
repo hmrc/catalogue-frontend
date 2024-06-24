@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ServiceMetricsConnector @Inject() (
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit
+)(using
   ec: ExecutionContext
 ) {
   import ServiceMetricsConnector._
@@ -41,15 +41,15 @@ class ServiceMetricsConnector @Inject() (
   private val serviceMetricsBaseUrl: String =
     servicesConfig.baseUrl("service-metrics")
 
-  def nonPerformantQueriesForService(service: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[NonPerformantQueries]] = {
-    implicit val npqr = NonPerformantQueries.reads
+  def nonPerformantQueriesForService(service: ServiceName)(using HeaderCarrier): Future[Seq[NonPerformantQueries]] = {
+    given Reads[NonPerformantQueries] = NonPerformantQueries.reads
     httpClientV2
       .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/non-performant-queries")
       .execute[Seq[NonPerformantQueries]]
   }
 
-  def getCollections(service: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[MongoCollectionSize]] = {
-    implicit val mcsR = MongoCollectionSize.reads
+  def getCollections(service: ServiceName)(using HeaderCarrier): Future[Seq[MongoCollectionSize]] = {
+    given Reads[MongoCollectionSize] = MongoCollectionSize.reads
     httpClientV2
       .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/collections")
       .execute[Seq[MongoCollectionSize]]
@@ -81,15 +81,13 @@ object ServiceMetricsConnector {
   )
 
   object MongoCollectionSize {
-    val reads: Reads[MongoCollectionSize] = {
-      implicit val envR = Environment.format
+    val reads: Reads[MongoCollectionSize] =
       ( (__ \ "database"   ).read[String]
       ~ (__ \ "collection" ).read[String]
       ~ (__ \ "sizeBytes"  ).read[BigDecimal]
       ~ (__ \ "date"       ).read[LocalDate]
-      ~ (__ \ "environment").read[Environment]
+      ~ (__ \ "environment").read[Environment](Environment.format)
       ~ (__ \ "service"    ).readNullable[String]
       )(apply)
-    }
   }
 }

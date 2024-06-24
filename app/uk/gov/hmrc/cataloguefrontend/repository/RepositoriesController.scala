@@ -36,7 +36,7 @@ class RepositoriesController @Inject() (
   override val mcc             : MessagesControllerComponents,
   repositoriesListPage         : RepositoriesListPage,
   override val auth            : FrontendAuthComponents
- )(implicit
+ )(using
    override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {

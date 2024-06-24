@@ -23,9 +23,9 @@
 @this()
 
 @(rules: BobbyRulesView,
-    counts: Map[(BobbyRule, SlugInfoFlag), Int]
+  counts: Map[(BobbyRule, SlugInfoFlag), Int]
 )(implicit
-    request: RequestHeader
+  request: RequestHeader
 )
 
 @standard_layout(s"Bobby rules", active = "health") {

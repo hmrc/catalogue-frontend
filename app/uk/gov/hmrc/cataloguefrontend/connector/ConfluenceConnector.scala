@@ -41,8 +41,8 @@ class ConfluenceConnector @Inject()(
   config      : Configuration
 , httpClientV2: HttpClientV2
 , cache       : AsyncCacheApi
-)(implicit
-  ec : ExecutionContext
+)(using
+  ExecutionContext
 ) extends Logging {
   import uk.gov.hmrc.http.HttpReads.Implicits._
 
@@ -56,7 +56,7 @@ class ConfluenceConnector @Inject()(
   private val searchLimit = config.get[String]("confluence.search.limit")
   private val searchLabel = config.get[String]("confluence.search.label")
 
-  implicit private val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   private val blogCacheExpiration = config.get[Duration]("confluence.blogCacheExpiration")
   def getBlogs(): Future[List[ConfluenceConnector.Blog]] =
@@ -83,9 +83,9 @@ class ConfluenceConnector @Inject()(
   case class Result(title: String, tinyUi: String, history: String)
 
   private val readsResults: Reads[List[Result]] = {
-    implicit val readsResult: Reads[Result] =
+    given Reads[Result] =
     ( (__ \ "title"                  ).read[String]
-    ~ (__ \ "_links" \ "tinyui"      ).read[String]
+    ~ (__ \ "_links"      \ "tinyui" ).read[String]
     ~ (__ \ "_expandable" \ "history").read[String]
     )(Result.apply)
 
@@ -93,7 +93,7 @@ class ConfluenceConnector @Inject()(
   }
 
   private def search(cql: String): Future[List[Result]] = {
-    implicit val rd = readsResults
+    given Reads[List[Result]] = readsResults
     httpClientV2
       .get(url"$confluenceUrl/rest/api/content/search?limit=$searchLimit&cql=$cql")
       .setHeader("Authorization" -> authHeaderValue)
@@ -106,7 +106,7 @@ class ConfluenceConnector @Inject()(
     (__ \ "createdDate").read[Instant].map(History.apply)
 
   private def history(path: String): Future[History] = {
-    implicit val rd = readsHistory
+    given Reads[History] = readsHistory
     httpClientV2
       .get(url"${confluenceUrl + path}")
       .setHeader("Authorization" -> authHeaderValue)

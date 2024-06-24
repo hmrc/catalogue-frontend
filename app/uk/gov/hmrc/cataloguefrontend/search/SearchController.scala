@@ -33,7 +33,7 @@ class SearchController @Inject() (
   view             : SearchResults,
   config           : SearchConfig,
   override val auth: FrontendAuthComponents
-)(implicit
+)(using
   override val ec  : ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders {

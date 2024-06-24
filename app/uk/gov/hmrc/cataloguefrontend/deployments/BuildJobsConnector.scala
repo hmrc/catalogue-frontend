@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.deployments
 
 import play.api.{Configuration, Logging}
+import play.api.libs.json.Reads
 import play.api.libs.ws.writeableOf_urlEncodedForm
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
@@ -34,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class BuildJobsConnector @Inject()(
   httpClientV2: HttpClientV2,
   config      : Configuration
-)(implicit ec: ExecutionContext) extends Logging {
+)(using ExecutionContext) extends Logging {
 
   import HttpReads.Implicits._
 
@@ -51,10 +52,10 @@ class BuildJobsConnector @Inject()(
   , version    : Version
   , environment: Environment
   , user       : Retrieval.Username
-  )(implicit hc: HeaderCarrier): Future[String] = {
+  )(using HeaderCarrier): Future[String] = {
     val url = new URL(s"$baseUrl/job/build-and-deploy/job/deploy-microservice/buildWithParameters")
 
-    implicit val locationRead: HttpReads[String] =
+    given locationRead: HttpReads[String] =
       HttpReads[HttpResponse].map(_.header("Location") match {
         case Some(url) if baseUrl.startsWith("https:") => url.replace("http:", "https:") // Jenkins requires this switch
         case Some(url)                                 => url                            // It should not happen for acceptance tests
@@ -80,9 +81,9 @@ class BuildJobsConnector @Inject()(
       }
   }
 
-  def queueStatus(queueUrl: SafeRedirectUrl)(implicit hc: HeaderCarrier): Future[BuildJobsConnector.QueueStatus] = {
+  def queueStatus(queueUrl: SafeRedirectUrl)(using HeaderCarrier): Future[BuildJobsConnector.QueueStatus] = {
     val url = url"${queueUrl.url}api/json?tree=cancelled,executable[number,url]"
-    implicit val r = BuildJobsConnector.QueueStatus.format
+    given Reads[BuildJobsConnector.QueueStatus] = BuildJobsConnector.QueueStatus.format
 
     httpClientV2
       .get(url)
@@ -94,9 +95,9 @@ class BuildJobsConnector @Inject()(
       }
   }
 
-  def buildStatus(buildUrl: SafeRedirectUrl)(implicit hc: HeaderCarrier): Future[BuildJobsConnector.BuildStatus] = {
+  def buildStatus(buildUrl: SafeRedirectUrl)(using HeaderCarrier): Future[BuildJobsConnector.BuildStatus] = {
     val url = url"${buildUrl.url}api/json?tree=number,url,timestamp,result"
-    implicit val r = BuildJobsConnector.BuildStatus.format
+    given Reads[BuildJobsConnector.BuildStatus] = BuildJobsConnector.BuildStatus.format
     httpClientV2
       .post(url)
       .setHeader("Authorization" -> authorizationHeader)
@@ -117,7 +118,7 @@ object BuildJobsConnector {
 
   object QueueStatus {
     val format: Format[QueueStatus] = {
-      implicit val f: Format[QueueExecutable] =
+      given Format[QueueExecutable] =
         ( (__ \ "number").format[Int]
         ~ (__ \ "url"   ).format[String]
         )(QueueExecutable.apply, qe => Tuple.fromProductTyped(qe))
@@ -136,7 +137,7 @@ object BuildJobsConnector {
     description: Option[String]
   )
   object BuildStatus {
-    val format: OFormat[BuildStatus] =
+    val format: Format[BuildStatus] =
       ( (__ \ "number"     ).format[Int]
       ~ (__ \ "url"        ).format[String]
       ~ (__ \ "timestamp"  ).format[Instant]

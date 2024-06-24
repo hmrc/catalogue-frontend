@@ -78,10 +78,10 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(true))
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
       val result = controller
@@ -97,10 +97,10 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(false))
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
       val result = controller
@@ -117,7 +117,7 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(true))
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
 
       val result = controller
@@ -133,7 +133,7 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(true))
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository.copy(serviceType = None))))
 
       val result = controller
@@ -151,18 +151,23 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(any[HeaderCarrier]))
+      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
-      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
+      when(mockBDConnector.createAppConfigs(
+        eqTo(form.copy(appConfigBase = true)),
+        ServiceName(eqTo(serviceName.asString)),
+        eqTo(ServiceType.Backend),
+        requiresMongo = eqTo(true),
+        isApi         = eqTo(false)
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
-
 
       val result = controller
         .createAppConfigs(serviceName)(
@@ -181,19 +186,25 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(any[HeaderCarrier]))
+      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
 
-      when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
+      when(mockGHConnector.getGitHubProxyRaw(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(appDependenciesIncludesMongo))
 
-      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
+      when(mockBDConnector.createAppConfigs(
+        eqTo(form.copy(appConfigBase = true)),
+        ServiceName(eqTo(serviceName.asString)),
+        eqTo(ServiceType.Backend),
+        requiresMongo = eqTo(true),
+        isApi         = eqTo(false)
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
       val result = controller
@@ -213,19 +224,25 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(any[HeaderCarrier]))
+      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
 
-      when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
+      when(mockGHConnector.getGitHubProxyRaw(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(noMongoDependencies)))
 
-      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = false, isApi = false))
+      when(mockBDConnector.createAppConfigs(
+        eqTo(form.copy(appConfigBase = true)),
+        ServiceName(eqTo(serviceName.asString)),
+        eqTo(ServiceType.Backend),
+        requiresMongo = eqTo(false),
+        isApi         = eqTo(false)
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
       val result = controller
@@ -243,13 +260,13 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[ServiceName], any[ServiceType], any[Boolean], any[Boolean]))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[ServiceName], any[ServiceType], any[Boolean], any[Boolean])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
       val result = controller
@@ -267,13 +284,13 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[ServiceName], any[ServiceType], any[Boolean], any[Boolean]))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[ServiceName], any[ServiceType], any[Boolean], any[Boolean])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
       val result = controller
@@ -291,7 +308,7 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[String]]))
         .thenReturn(Future.successful("test-service"))
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
 
       val result = controller
@@ -307,7 +324,7 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[String]]))
         .thenReturn(Future.successful("test-service"))
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository.copy(serviceType = None))))
 
       val result = controller
@@ -323,16 +340,22 @@ class CreateAppConfigsControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
 
-      when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
+      when(mockTRConnector.repositoryDetails(any[String])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(any[HeaderCarrier]))
+      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
-      when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
+      when(mockBDConnector.createAppConfigs(
+        eqTo(form.copy(appConfigBase = true)),
+        ServiceName(eqTo(serviceName.asString)),
+        eqTo(ServiceType.Backend),
+        requiresMongo = eqTo(true),
+        isApi         = eqTo(false)
+       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Left("Failed to connect with request id: 123")))
 
       val result = controller
@@ -352,8 +375,9 @@ class CreateAppConfigsControllerSpec
       "environmentsToHideByDefault" -> List("integration", "development")
     )
 
-    implicit val hc : HeaderCarrier                = HeaderCarrier()
-    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+    given HeaderCarrier = HeaderCarrier()
+
+    given mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
 
     val mockCACView       = app.injector.instanceOf[CreateAppConfigsPage]
     val mockTRConnector   = mock[TeamsAndRepositoriesConnector]

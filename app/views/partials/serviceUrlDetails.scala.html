@@ -16,7 +16,10 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.EnvironmentRoute
 
-@(environmentRoute: EnvironmentRoute, isAdmin: Boolean)
+@(environmentRoute: EnvironmentRoute,
+  isAdmin         : Boolean
+)
+
 @defining(environmentRoute.routes.size > 4) { collapsable =>
     <div id="service-urls-section" class="card">
         <div class="card-header">

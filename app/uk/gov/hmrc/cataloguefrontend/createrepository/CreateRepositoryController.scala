@@ -44,7 +44,7 @@ class CreateRepositoryController @Inject()(
    createTestRepositoryConfirmationPage     : CreateTestRepositoryConfirmationPage,
    buildDeployApiConnector                  : BuildDeployApiConnector,
    teamsAndReposConnector                   : TeamsAndRepositoriesConnector
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
     with CatalogueAuthBuilders
@@ -174,7 +174,7 @@ class CreateRepositoryController @Inject()(
 
   private def verifyGithubTeamExists(
     selectedTeam: TeamName
-  )(implicit hc: HeaderCarrier): Future[Either[String, Unit]] =
+  )(using  HeaderCarrier): Future[Either[String, Unit]] =
     teamsAndReposConnector.allTeams().map { gitTeams =>
       if(gitTeams.map(_.name).contains(selectedTeam))
         Right(())

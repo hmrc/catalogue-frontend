@@ -40,8 +40,8 @@ class VulnerabilitiesController @Inject() (
   vulnerabilitiesForServicesPage: VulnerabilitiesForServicesPage,
   vulnerabilitiesTimelinePage   : VulnerabilitiesTimelinePage,
   teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
-) (implicit
-   override val ec: ExecutionContext
+)(using
+  override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 

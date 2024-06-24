@@ -63,7 +63,7 @@ class WhatsRunningWhereServiceSpec
 
   "whatsRunningWhereService.allReleases" should {
     "return the expected data structure and be filtered by releases" in {
-      implicit val hc: HeaderCarrier = HeaderCarrier()
+      given HeaderCarrier = HeaderCarrier()
 
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(

@@ -18,12 +18,12 @@
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 
-@( environment : Option[Environment]
- , dependencies: Seq[Dependency]
- , pending     : Boolean
- , team        : Boolean              = false
- , teamName    : Option[TeamName]     = None
- )
+@(environment : Option[Environment]
+, dependencies: Seq[Dependency]
+, pending     : Boolean
+, team        : Boolean              = false
+, teamName    : Option[TeamName]     = None
+)
 
 @reviewLink(environment: Option[Environment], pending: Boolean) = {
   @teamName.map { name =>

@@ -56,7 +56,7 @@ class SearchIndex @Inject()(
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   prCommenterConnector         : PrCommenterConnector,
   userManagementConnector      : UserManagementConnector
-)(implicit ec: ExecutionContext) {
+)(using ExecutionContext) {
 
   private[search] val cachedIndex = new AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
 
@@ -86,7 +86,7 @@ class SearchIndex @Inject()(
   )
 
   def updateIndexes(): Future[Unit] = {
-    implicit val hc = HeaderCarrier()
+    given HeaderCarrier = HeaderCarrier()
     for {
       repos         <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
       teams         <- teamsAndRepositoriesConnector.allTeams()

@@ -41,7 +41,7 @@ class LeakDetectionConnectorSpec
 
   val leakDetectionConnector = new LeakDetectionConnector(httpClientV2, servicesConfig)
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "repositoriesWithLeaks" should {
     "return repositories with leaks" in {

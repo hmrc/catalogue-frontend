@@ -28,11 +28,11 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class SearchByUrlService @Inject() (
   searchByUrlConnector: SearchByUrlConnector
-)(implicit val ec: ExecutionContext) {
+)(using ec: ExecutionContext) {
 
   import SearchByUrlService._
 
-  def search(term: Option[String], environment: String = "production")(implicit hc: HeaderCarrier): Future[Seq[FrontendRoutes]] =
+  def search(term: Option[String], environment: String = "production")(using HeaderCarrier): Future[Seq[FrontendRoutes]] =
     if (isValidSearchTerm(term))
       searchByUrlConnector
         .search(takeUrlPath(term.get))

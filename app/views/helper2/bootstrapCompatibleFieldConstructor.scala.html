@@ -23,6 +23,7 @@
 @import views.html.helper.FieldElements
 
 @(elements: FieldElements)
+
 <dl class="@elements.args.get(Symbol("_class")) @if(elements.hasErrors) {error}" id="@elements.args.get(Symbol("_id")).getOrElse(elements.id + "_field")">
     @if(elements.hasName) {
         <dt>@elements.name</dt>

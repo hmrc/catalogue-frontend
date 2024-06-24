@@ -33,18 +33,18 @@ import scala.util.control.NonFatal
 class SearchByUrlConnector @Inject() (
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext) {
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
 
-  private implicit val frontendRouteReads: Reads[FrontendRoute]   =
+  private given Reads[FrontendRoute] =
     ( (__ \ "frontendPath"        ).read[String]
     ~ (__ \ "ruleConfigurationUrl").readWithDefault[String]("")
     ~ (__ \ "isRegex"             ).readWithDefault[Boolean](false)
     )(FrontendRoute.apply)
 
-  private implicit val frontendRoutesReads: Reads[FrontendRoutes] =
+  private given Reads[FrontendRoutes] =
     ( (__ \ "service"    ).read[ServiceName](ServiceName.format)
     ~ (__ \ "environment").read[String]
     ~ (__ \ "routes"     ).read[Seq[FrontendRoute]]
@@ -52,7 +52,7 @@ class SearchByUrlConnector @Inject() (
 
   private val baseUrl = servicesConfig.baseUrl("service-configs")
 
-  def search(term: String)(implicit hc: HeaderCarrier): Future[Seq[FrontendRoutes]] = {
+  def search(term: String)(using HeaderCarrier): Future[Seq[FrontendRoutes]] = {
     val url = url"$baseUrl/service-configs/frontend-route/search?frontendPath=$term"
     httpClientV2
       .get(url)

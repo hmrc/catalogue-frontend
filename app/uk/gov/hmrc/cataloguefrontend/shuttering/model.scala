@@ -67,7 +67,7 @@ object ShutterStatus {
   val format: Format[ShutterStatus] =
     new Format[ShutterStatus] {
       override def reads(json: JsValue) = {
-        implicit val ssvf = ShutterStatusValue.format
+        given Reads[ShutterStatusValue] = ShutterStatusValue.format
         (json \ "value")
           .validate[ShutterStatusValue]
           .flatMap {
@@ -84,7 +84,7 @@ object ShutterStatus {
       }
 
       override def writes(ss: ShutterStatus): JsValue = {
-        implicit val ssvf = ShutterStatusValue.format
+        given Writes[ShutterStatusValue] = ShutterStatusValue.format
         ss match {
           case Shuttered(reason, outageMessage, useDefaultOutagePage) =>
             Json.obj(
@@ -112,17 +112,13 @@ case class ShutterState(
 
 object ShutterState {
 
-  val reads: Reads[ShutterState] = {
-    implicit val stf = ShutterType.format
-    implicit val ef  = ShutterEnvironment.format
-    implicit val ssf = ShutterStatus.format
+  val reads: Reads[ShutterState] =
     ( (__ \ "name"       ).read[ServiceName](ServiceName.format)
     ~ (__ \ "context"    ).readNullable[String]
-    ~ (__ \ "type"       ).read[ShutterType]
-    ~ (__ \ "environment").read[Environment]
-    ~ (__ \ "status"     ).read[ShutterStatus]
+    ~ (__ \ "type"       ).read[ShutterType](ShutterType.format)
+    ~ (__ \ "environment").read[Environment](ShutterEnvironment.format)
+    ~ (__ \ "status"     ).read[ShutterStatus](ShutterStatus.format)
     )(ShutterState.apply)
-  }
 }
 
 // -------------- Events ---------------------
@@ -184,29 +180,19 @@ object EventData {
     ~ (__ \ "cause"      ).format[ShutterCause ](ShutterCause.format      )
     )(ShutterStateChangeData.apply, d => Tuple.fromProductTyped(d))
 
-  val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] = {
-    implicit val ef   = ShutterEnvironment.format
-    implicit val ssvf = ShutterStatusValue.format
-
-    ( (__ \ "environment").format[Environment]
-    ~ (__ \ "status"     ).format[ShutterStatusValue]
+  val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] =
+    ( (__ \ "environment").format[Environment](ShutterEnvironment.format)
+    ~ (__ \ "status"     ).format[ShutterStatusValue](ShutterStatusValue.format)
     )(KillSwitchStateChangeData.apply, d => Tuple.fromProductTyped(d))
-  }
 
-  def reads(et: EventType) =
-    new Reads[EventData] {
-      implicit val sscrdf: Reads[EventData.ShutterStateCreateData]    = shutterStateCreateDataFormat
-      implicit val ssddf : Reads[EventData.ShutterStateDeleteData]    = shutterStateDeleteDataFormat
-      implicit val sscdf : Reads[EventData.ShutterStateChangeData]    = shutterStateChangeDataFormat
-      implicit val kscdf : Reads[EventData.KillSwitchStateChangeData] = killSwitchStateChangeDataFormat
-      def reads(js: JsValue): JsResult[EventData] =
-        et match {
-          case EventType.ShutterStateCreate    => js.validate[EventData.ShutterStateCreateData]
-          case EventType.ShutterStateDelete    => js.validate[EventData.ShutterStateDeleteData]
-          case EventType.ShutterStateChange    => js.validate[EventData.ShutterStateChangeData]
-          case EventType.KillSwitchStateChange => js.validate[EventData.KillSwitchStateChangeData]
-        }
-    }
+  def reads(et: EventType): Reads[EventData] =
+    (js: JsValue) =>
+      et match {
+        case EventType.ShutterStateCreate    => js.validate[EventData.ShutterStateCreateData](shutterStateCreateDataFormat)
+        case EventType.ShutterStateDelete    => js.validate[EventData.ShutterStateDeleteData](shutterStateDeleteDataFormat)
+        case EventType.ShutterStateChange    => js.validate[EventData.ShutterStateChangeData](shutterStateChangeDataFormat)
+        case EventType.KillSwitchStateChange => js.validate[EventData.KillSwitchStateChangeData](killSwitchStateChangeDataFormat)
+      }
 }
 
 case class ShutterEvent(
@@ -247,7 +233,7 @@ case class ShutterStateChangeEvent(
 object ShutterEvent {
 
   val reads: Reads[ShutterEvent] = {
-    implicit val etf = EventType.format
+    given Reads[EventType] = EventType.format
     ( (__ \ "username" ).read[String]
     ~ (__ \ "timestamp").read[Instant]
     ~ (__ \ "type"     ).read[EventType]
@@ -295,11 +281,10 @@ case class OutagePage(
 
 object OutagePage {
   val reads: Reads[OutagePage] = {
-    implicit val ef  : Reads[Environment]       = ShutterEnvironment.format
-    implicit val tcf : Reads[TemplatedContent]  = TemplatedContent.format
-    implicit val opwr: Reads[OutagePageWarning] = OutagePageWarning.reads
+    given Reads[TemplatedContent]  = TemplatedContent.format
+    given Reads[OutagePageWarning] = OutagePageWarning.reads
     ( (__ \ "serviceName"      ).read[ServiceName](ServiceName.format)
-    ~ (__ \ "environment"      ).read[Environment]
+    ~ (__ \ "environment"      ).read[Environment](ShutterEnvironment.format)
     ~ (__ \ "outagePageURL"    ).read[String]
     ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
     ~ (__ \ "templatedElements").read[List[TemplatedContent]]

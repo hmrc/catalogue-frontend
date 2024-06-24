@@ -32,7 +32,7 @@ class SlugInfoServiceSpec
   extends UnitSpec
      with MockitoSugar {
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   val group        = "group"
   val artefact     = "artefact"

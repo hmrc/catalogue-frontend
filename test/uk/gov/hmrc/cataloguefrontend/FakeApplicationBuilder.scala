@@ -94,8 +94,7 @@ trait FakeApplicationBuilder
     )
   }
 
-  implicit class WSRequestOps(request: WSRequest) {
+  extension (request: WSRequest)
     def withAuthToken(token: String): WSRequest =
       request.withCookies(cookieForAuth(token))
-  }
 }

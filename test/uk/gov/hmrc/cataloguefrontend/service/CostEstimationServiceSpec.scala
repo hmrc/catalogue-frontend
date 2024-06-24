@@ -40,7 +40,7 @@ final class CostEstimationServiceSpec
      with MockitoSugar {
   import CostEstimationService._
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   private val mockResourceUsageConnector =
     mock[ResourceUsageConnector]

@@ -41,7 +41,7 @@ class BobbyRulesTrendController @Inject() (
   serviceDeps      : ServiceDependenciesConnector,
   page             : BobbyRulesTrendPage,
   override val auth: FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {

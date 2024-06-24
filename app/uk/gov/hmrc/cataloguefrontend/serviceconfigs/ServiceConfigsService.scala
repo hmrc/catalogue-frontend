@@ -36,8 +36,8 @@ class ServiceConfigsService @Inject()(
   serviceConfigsConnector      : ServiceConfigsConnector,
   teamsAndReposConnector       : TeamsAndRepositoriesConnector,
   serviceCommissioningConnector: ServiceCommissioningStatusConnector
-)(implicit
-  ec: ExecutionContext
+)(using
+  ExecutionContext
 ) {
   import ServiceConfigsService._
 
@@ -46,8 +46,8 @@ class ServiceConfigsService @Inject()(
     environments: Seq[Environment],
     version     : Option[Version],
     latest      : Boolean
-  )(implicit
-    hc          : HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]] =
     serviceConfigsConnector
       .configByEnv(serviceName, environments, version, latest)
@@ -65,8 +65,8 @@ class ServiceConfigsService @Inject()(
     serviceName : ServiceName,
     environments: Seq[Environment] = Nil,
     version     : Option[Version]  = None
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
     for {
       latestConfigByKey   <- configByKey(serviceName, environments, version, latest = true )
@@ -87,8 +87,8 @@ class ServiceConfigsService @Inject()(
     serviceName : ServiceName,
     environments: Seq[Environment] = Nil,
     version     : Option[Version]  = None
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
     for {
       latestConfigByKey   <- configByKey(serviceName, environments, version, latest = true )
@@ -114,7 +114,7 @@ class ServiceConfigsService @Inject()(
                              }
     } yield (newConfig)
 
-  def serviceRelationships(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[ServiceRelationshipsEnriched] =
+  def serviceRelationships(serviceName: ServiceName)(using HeaderCarrier): Future[ServiceRelationshipsEnriched] =
     for {
       repos    <- teamsAndReposConnector.allRepositories()
       srs      <- serviceConfigsConnector.serviceRelationships(serviceName)
@@ -141,18 +141,18 @@ class ServiceConfigsService @Inject()(
       outbound.sortBy(a => (if (a.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) 0 else 1, a.service.asString.toLowerCase))
     )
 
-  def configKeys(teamName: Option[TeamName] = None)(implicit hc: HeaderCarrier): Future[Seq[String]] =
+  def configKeys(teamName: Option[TeamName] = None)(using HeaderCarrier): Future[Seq[String]] =
     serviceConfigsConnector.getConfigKeys(teamName)
 
   def deploymentConfig(
     environment: Option[Environment] = None,
     serviceName: Option[ServiceName] = None
-  )(implicit
-    hc         : HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[DeploymentConfig]] =
     serviceConfigsConnector.deploymentConfig(serviceName, environment)
 
-  def deploymentConfigByKeyWithNextDeployment(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
+  def deploymentConfigByKeyWithNextDeployment(serviceName: ServiceName)(using HeaderCarrier): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
     for {
       applied        <- serviceConfigsConnector.deploymentConfig(service = Some(serviceName), applied = true )
       nextDeployment <- serviceConfigsConnector.deploymentConfig(service = Some(serviceName), applied = false)
@@ -196,29 +196,46 @@ class ServiceConfigsService @Inject()(
   , keyFilterType  : KeyFilterType
   , value          : Option[String]
   , valueFilterType: ValueFilterType
-  )(implicit hc: HeaderCarrier): Future[Either[String, Seq[AppliedConfig]]] =
-    serviceConfigsConnector.configSearch(teamName, environments, serviceType, key = key, keyFilterType = keyFilterType, value = value, valueFilterType)
+  )(using
+    HeaderCarrier
+  ): Future[Either[String, Seq[AppliedConfig]]] =
+    serviceConfigsConnector.configSearch(
+      teamName,
+      environments,
+      serviceType,
+      key             = key,
+      keyFilterType   = keyFilterType,
+      value           = value,
+      valueFilterType
+    )
 
-  private def sorted[K, V](unsorted: Map[K, V])(implicit ordering: Ordering[K]): Map[K, V] = TreeMap[K, V]() ++ unsorted
+  private def sorted[K, V](unsorted: Map[K, V])(using ordering: Ordering[K]): Map[K, V] =
+    TreeMap[K, V]() ++ unsorted
 
-  def toKeyServiceEnvironmentMap(appliedConfig: Seq[AppliedConfig]): Map[KeyName, Map[ServiceName, Map[Environment, ConfigSourceValue]]] =
+  def toKeyServiceEnvironmentMap(
+    appliedConfig: Seq[AppliedConfig]
+  ): Map[KeyName, Map[ServiceName, Map[Environment, ConfigSourceValue]]] =
     appliedConfig
       .groupBy(_.key)
       .view
-      .mapValues(xs => sorted(xs.groupBy(_.serviceName).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(Ordering.by(_.asString))).toMap
+      .mapValues: xs =>
+        sorted(xs.groupBy(_.serviceName).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(using Ordering.by(_.asString))
+      .toMap
 
   def toServiceKeyEnvironmentMap(appliedConfig: Seq[AppliedConfig]): Map[ServiceName, Map[KeyName, Map[Environment, ConfigSourceValue]]] =
     appliedConfig
       .groupBy(_.serviceName)
       .view
-      .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(Ordering.by(_.asString))).toMap
+      .mapValues: xs =>
+        sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(using Ordering.by(_.asString))
+      .toMap
 
   def configWarnings(
     serviceName : ServiceName
   , environments: Seq[Environment]
   , version     : Option[Version]
   , latest      : Boolean
-  )(implicit hc: HeaderCarrier): Future[Seq[ConfigWarning]] =
+  )(using HeaderCarrier): Future[Seq[ConfigWarning]] =
     serviceConfigsConnector
       .configWarnings(serviceName, environments,  version, latest)
 
@@ -226,10 +243,15 @@ class ServiceConfigsService @Inject()(
     configWarnings
       .groupBy(_.serviceName)
       .view
-      .mapValues(xs => sorted(xs.groupBy(_.key).view.mapValues(_.groupBy(_.environment)).toMap)(Ordering.by(_.asString))).toMap
+      .mapValues: xs =>
+        sorted(xs.groupBy(_.key).view.mapValues(_.groupBy(_.environment)).toMap)(using Ordering.by(_.asString))
+      .toMap
 
 
-  def deploymentConfigChanges(service: ServiceName, environment: Environment)(implicit hc: HeaderCarrier): Future[Seq[ConfigChange]] =
+  def deploymentConfigChanges(
+    service    : ServiceName,
+    environment: Environment
+  )(using HeaderCarrier): Future[Seq[ConfigChange]] =
     for {
       appliedConfig  <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = true ).map(_.headOption)
       newConfig      <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = false).map(_.headOption)
@@ -280,7 +302,7 @@ object ServiceConfigsService {
 
   case class KeyName(asString: String) extends AnyVal
   object KeyName {
-    implicit val keyNameOrdering: Ordering[KeyName] = Ordering.by(_.asString)
+    given Ordering[KeyName] = Ordering.by(_.asString)
 
     val deploymentConfigOrder: Ordering[KeyName] = Ordering.by((key: KeyName) => {
       key.asString match {
@@ -323,8 +345,8 @@ object ServiceConfigsService {
 
   object ConfigByEnvironment {
     val reads: Reads[ConfigByEnvironment] = {
-      implicit val cer  = ConfigEnvironment.reads
-      implicit val cser = ConfigSourceEntries.reads
+      given Reads[ConfigEnvironment]   = ConfigEnvironment.reads
+      given Reads[ConfigSourceEntries] = ConfigSourceEntries.reads
       Reads
         .of[Map[String, Seq[ConfigSourceEntries]]]
         .map(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) })
@@ -378,7 +400,7 @@ object ServiceConfigsService {
 
   object ServiceRelationships {
     val reads: Reads[ServiceRelationships] =
-      implicit val snr: Reads[ServiceName] = ServiceName.format
+      given Reads[ServiceName] = ServiceName.format
       ( (__ \ "inboundServices" ).read[Seq[ServiceName]]
       ~ (__ \ "outboundServices").read[Seq[ServiceName]]
       )(ServiceRelationships.apply)
@@ -443,8 +465,8 @@ object ServiceConfigsService {
 
   object AppliedConfig {
     val reads: Reads[AppliedConfig] = {
-     implicit val readsV = ConfigSourceValue.reads
-     implicit val readsEnvMap: Reads[Map[Environment, ConfigSourceValue]] =
+     given Reads[ConfigSourceValue] = ConfigSourceValue.reads
+     given Reads[Map[Environment, ConfigSourceValue]] =
         Reads
           .of[Map[String, ConfigSourceValue]]
           .map(_.map { case (k, v) => (Environment.parse(k).getOrElse(sys.error(s"Invalid Environment: $k")), v) })
@@ -465,16 +487,13 @@ object ServiceConfigsService {
   )
 
   object ConfigWarning {
-    val reads: Reads[ConfigWarning] = {
-      implicit val readVal = ConfigSourceValue.reads
-      implicit val readEnv = Environment.format
+    val reads: Reads[ConfigWarning] =
       ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
-      ~ (__ \ "environment").read[Environment]
+      ~ (__ \ "environment").read[Environment](Environment.format)
       ~ (__ \ "key"        ).read[String].map(KeyName.apply)
-      ~ (__ \ "value"      ).read[ConfigSourceValue]
+      ~ (__ \ "value"      ).read[ConfigSourceValue](ConfigSourceValue.reads)
       ~ (__ \ "warning"    ).read[String]
       )(ConfigWarning.apply)
-    }
   }
 }
 
