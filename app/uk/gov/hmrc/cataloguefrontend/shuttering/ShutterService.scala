@@ -18,8 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
-import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -81,7 +80,7 @@ class ShutterService @Inject() (
       states <- shutterConnector.shutterStates(st, env)
       events <- shutterConnector.latestShutterEvents(st, env)
       sorted =  states
-                  .map(state => (state, events.find(_.serviceName == state.serviceName.asString)))
+                  .map(state => (state, events.find(_.serviceName == state.serviceName)))
                   .sortWith { case ((l, _), (r, _)) =>
                     if (l.status.value == r.status.value)
                       l.serviceName.asString < r.serviceName.asString
@@ -134,7 +133,7 @@ class ShutterService @Inject() (
 
   def lookupShutterRoute(serviceName: ServiceName, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] =
     for {
-      baseRoutes      <- routeRulesConnector.frontendRoutes(serviceName.asString)
+      baseRoutes      <- routeRulesConnector.frontendRoutes(serviceName)
       optFrontendPath =  for {
                            envRoute      <- baseRoutes.find(_.environment == env.asString).map(_.routes)
                            frontendRoute <- envRoute.find(_.isRegex == false)

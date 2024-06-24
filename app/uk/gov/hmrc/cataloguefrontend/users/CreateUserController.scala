@@ -25,7 +25,7 @@ import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.users.{CreateUserPage, CreateUserRequestSentPage}
@@ -105,20 +105,21 @@ object CreateUserForm {
   val form: Form[CreateUserRequest] =
     Form(
       mapping(
-        "givenName"        -> text.verifying(CreateUserConstraints.nameConstraints("givenName")*).verifying(CreateUserConstraints.containsServiceConstraint),
+        "givenName"        -> text.verifying(CreateUserConstraints.nameConstraints("givenName")*)
+                                  .verifying(CreateUserConstraints.containsServiceConstraint),
         "familyName"       -> text.verifying(CreateUserConstraints.nameConstraints("familyName")*),
         "organisation"     -> nonEmptyText,
         "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.digitalEmailConstraint),
         "contactComments"  -> default(text, "").verifying(maxLength(512)),
-        "team"             -> nonEmptyText.transform[TeamName](TeamName.apply, _.asString),
+        "team"             -> Forms.of[TeamName](TeamName.formFormat),
         "isReturningUser"  -> boolean,
         "isTransitoryUser" -> boolean,
         "isServiceAccount" -> boolean,
-        "vpn"             -> boolean,
-        "jira"            -> boolean,
-        "confluence"      -> boolean,
-        "googleApps"      -> boolean,
-        "environments"    -> boolean
+        "vpn"              -> boolean,
+        "jira"             -> boolean,
+        "confluence"       -> boolean,
+        "googleApps"       -> boolean,
+        "environments"     -> boolean
       )(CreateUserRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Format, __}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
@@ -76,7 +76,7 @@ enum ServiceType(val asString: String, val displayString: String) extends FromSt
 object ServiceType extends FromStringEnum[ServiceType]
 
 case class DeploymentConfigEvent(
-  serviceName  : String,
+  serviceName  : ServiceName,
   environment  : Environment,
   deploymentId : String,
   configChanged: Option[Boolean],
@@ -87,9 +87,8 @@ case class DeploymentConfigEvent(
 object DeploymentConfigEvent {
   implicit val mongoFormats: Format[DeploymentConfigEvent] = {
     implicit val instantFormat = MongoJavatimeFormats.instantFormat
-    implicit val ef = Environment.format
-    ( (__ \ "serviceName"  ).format[String]
-    ~ (__ \ "environment"  ).format[Environment]
+    ( (__ \ "serviceName"  ).format[ServiceName](ServiceName.format)
+    ~ (__ \ "environment"  ).format[Environment](Environment.format)
     ~ (__ \ "deploymentId" ).format[String]
     ~ (__ \ "configChanged").formatNullable[Boolean]
     ~ (__ \ "configId"     ).formatNullable[String]

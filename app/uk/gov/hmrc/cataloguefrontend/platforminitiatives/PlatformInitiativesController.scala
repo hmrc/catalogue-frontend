@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -76,7 +76,7 @@ class PlatformInitiativesController @Inject()
 
 case class PlatformInitiativesFilter(
   initiativeName: Option[String] = None,
-  team          : Option[String]
+  team          : Option[TeamName]
 ) {
   def isEmpty: Boolean =
     initiativeName.isEmpty && team.isEmpty
@@ -87,7 +87,7 @@ object PlatformInitiativesFilter {
     Form(
       mapping(
         "initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"           -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+        "team"           -> optional(Forms.of[TeamName](TeamName.formFormat))
         )
       (PlatformInitiativesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

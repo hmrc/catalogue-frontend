@@ -18,16 +18,16 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Reads, __}
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, Version}
 
-case class JDKVersion(
-  name   : String,
+case class JdkVersion(
+  name   : ServiceName,
   version: Version,
   vendor : Vendor,
   kind   : Kind
 )
 
-object JDKVersion {
+object JdkVersion {
   private val vendorRead: Reads[Vendor] =
     JsPath
       .read[String]
@@ -46,19 +46,17 @@ object JDKVersion {
         case _     => Kind.JDK // default to JDK
       })
 
-  val reads: Reads[JDKVersion] = {
-    implicit val vf: Reads[Version]  = Version.format
-    ( (__ \ "name"   ).read[String]
-    ~ (__ \ "version").read[Version]
+  val reads: Reads[JdkVersion] =
+    ( (__ \ "name"   ).read[ServiceName](ServiceName.format)
+    ~ (__ \ "version").read[Version](Version.format)
     ~ (__ \ "vendor" ).read[Vendor](vendorRead)
     ~ (__ \ "kind"   ).read[Kind](kindRead)
-    )(JDKVersion.apply)
-  }
+    )(JdkVersion.apply)
 }
 
-case class JDKUsageByEnv(
+case class JdkUsageByEnv(
   env  : SlugInfoFlag,
-  usage: Map[JDKVersion, Int]
+  usage: Map[(Version, Vendor), Int]
 )
 
 enum Vendor(val asString: String, val imgPath: String):

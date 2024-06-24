@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.deployments
 
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{DeploymentConfigEvent, ServiceConfigsConnector}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentTimelineEvent, ReleasesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -29,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class DeploymentGraphService @Inject() (releasesConnector: ReleasesConnector, serviceConfigsConnector: ServiceConfigsConnector)(implicit ec: ExecutionContext) {
 
-  def findEvents(service: String, start: Instant, end: Instant): Future[Seq[DeploymentTimelineEvent]] = {
+  def findEvents(service: ServiceName, start: Instant, end: Instant): Future[Seq[DeploymentTimelineEvent]] = {
     import DeploymentGraphService._
     implicit val hc: HeaderCarrier = HeaderCarrier()
 

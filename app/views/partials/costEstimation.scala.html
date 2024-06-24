@@ -21,10 +21,10 @@
 
 @(serviceCostEstimate: ServiceCostEstimate,
   costEstimateConfig : CostEstimateConfig,
-  serviceName        : String,
+  serviceName        : ServiceName,
   linkToCostsPage    : Boolean
 )(implicit
-  request: RequestHeader
+  request            : RequestHeader
 )
 
     <div id="cost-estimation" class="card">

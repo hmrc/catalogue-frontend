@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.Instant
@@ -102,8 +102,6 @@ object Check {
   }
 }
 
-case class ServiceName(asString: String) extends AnyVal
-
 case class CachedServiceCheck(
   serviceName    : ServiceName
 , lifecycleStatus: LifecycleStatus
@@ -115,7 +113,7 @@ object CachedServiceCheck {
   val reads: Reads[CachedServiceCheck] = {
     implicit val readsWarning = Warning.reads
     implicit val readsCheck   = Check.reads
-    ( (__ \ "serviceName"    ).read[String].map(ServiceName.apply)
+    ( (__ \ "serviceName"    ).read[ServiceName](ServiceName.format)
     ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "checks"         ).read[Seq[Check]]
     ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]

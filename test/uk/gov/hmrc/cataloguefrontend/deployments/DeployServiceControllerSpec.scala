@@ -28,10 +28,9 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
@@ -94,14 +93,14 @@ class DeployServiceControllerSpec
           Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))),
           Future.successful(true)
         )
-      when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), any)(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockReleasesConnector.releasesForService(eqTo("some-service"))(any[HeaderCarrier]))
+      when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someReleasesForService))
-      when(mockServiceCommissioningConnector.commissioningStatus(eqTo("some-service"))(any[HeaderCarrier]))
+      when(mockServiceCommissioningConnector.commissioningStatus(ServiceName(eqTo("some-service")))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someCommissioningStatus))
 
-      val futResult = underTest.step1(Some("some-service"))(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
+      val futResult = underTest.step1(Some(ServiceName("some-service")))(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
 
       Helpers.status(futResult) shouldBe Helpers.OK
       val jsoupDocument = futResult.toDocument
@@ -134,19 +133,19 @@ class DeployServiceControllerSpec
           Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))),
           Future.successful(true)
         )
-      when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), any)(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockReleasesConnector.releasesForService(eqTo("some-service"))(any[HeaderCarrier]))
+      when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someReleasesForService))
-      when(mockServiceCommissioningConnector.commissioningStatus(eqTo("some-service"))(any[HeaderCarrier]))
+      when(mockServiceCommissioningConnector.commissioningStatus(ServiceName(eqTo("some-service")))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someCommissioningStatus))
-      when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.2.0"))))(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.2.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo.copy(version = Version("0.2.0")))))
-      when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockServiceConfigsService.configByKeyWithNextDeployment(eqTo("some-service"), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceConfigsService.configByKeyWithNextDeployment(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someConfigByKeyWithNextDeployment))
-      when(mockServiceConfigsService.removedConfig(eqTo("some-service"), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceConfigsService.removedConfig(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(someRemoveConfig))
       when(mockServiceConfigsService.configWarnings(
         ServiceName(eqTo("some-service")),
@@ -156,10 +155,10 @@ class DeployServiceControllerSpec
       )(any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(someConfigWarning)))
       when(mockVulnerabilitiesConnector.vulnerabilitySummaries(
-        flag           = any,
-        serviceName    = eqTo(Some("some-service")),
+        flag           = any[Option[SlugInfoFlag]],
+        serviceQuery   = eqTo(Some("some-service")),
         version        = eqTo(Some(Version("0.3.0"))),
-        team           = any,
+        team           = any[Option[TeamName]],
         curationStatus = eqTo(Some(CurationStatus.ActionRequired))
       )(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
@@ -214,10 +213,10 @@ class DeployServiceControllerSpec
           ),
           Future.successful(true)
         )
-      when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockBuildJobsConnector.deployMicroservice(
-        serviceName = eqTo("some-service"),
+        serviceName = ServiceName(eqTo("some-service")),
         version     = eqTo(Version("0.3.0")),
         environment = eqTo(Environment.QA),
         user        = Retrieval.Username(eqTo("some-user"))
@@ -233,7 +232,7 @@ class DeployServiceControllerSpec
 
       Helpers.status(futResult) shouldBe 303
       Helpers.redirectLocation(futResult) shouldBe Some(routes.DeployServiceController.step4(
-        serviceName = "some-service"
+        serviceName = ServiceName("some-service")
       , version     = "0.3.0"
       , environment = "qa"
       , queueUrl    = RedirectUrl("http://localhost:8461/some/queue/url")
@@ -246,11 +245,11 @@ class DeployServiceControllerSpec
     "watch deployment progress" in new Setup {
       when(mockAuthStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(true))
-      when(mockServiceDependenciesConnector.getSlugInfo(eqTo("some-service"), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
 
       val futResult = underTest.step4(
-        serviceName = "" // taken from query params via form
+        serviceName = ServiceName("") // taken from query params via form
       , version     = "" // same as above
       , environment = "" // same as above
       , queueUrl    = RedirectUrl("http://localhost:8461/some/queue/url")
@@ -282,11 +281,11 @@ class DeployServiceControllerSpec
   )
 
   private val someSlugInfo = ServiceDependencies(
-     uri           = "some-uri"
+    uri           = "some-uri"
   , name          = "some-service"
   , version       = Version("0.3.0")
   , runnerVersion = "some-runner-version"
-  , java          = ServiceJDKVersion("", "", "")
+  , java          = ServiceJdkVersion("", "", "")
   , classpath     = "some-classpath"
   , dependencies  = Nil
   )
@@ -301,7 +300,7 @@ class DeployServiceControllerSpec
   )
 
   private val someReleasesForService = WhatsRunningWhere(
-    serviceName = uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName("some-service")
+    serviceName = ServiceName("some-service")
   , versions    = WhatsRunningWhereVersion(Environment.QA        , Version("0.2.0"), Nil) ::
                   WhatsRunningWhereVersion(Environment.Production, Version("0.1.0"), Nil) ::
                   Nil

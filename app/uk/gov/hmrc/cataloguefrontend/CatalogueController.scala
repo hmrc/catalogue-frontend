@@ -28,9 +28,9 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{RepositoryModules, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, ServiceConfigsService}
@@ -38,7 +38,7 @@ import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, S
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ServiceName, WhatsRunningWhereService}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhereService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
@@ -109,9 +109,9 @@ class CatalogueController @Inject() (
     * This is where it differs from accessing through the generic `/repositories/name` endpoint, which only
     * considers the name of the repository.
     */
-  def service(serviceName: String): Action[AnyContent] =
+  def service(serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      def buildServicePageFromItsArtifactName(serviceName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): Future[Result] =
+      def buildServicePageFromItsArtifactName(serviceName: ServiceName, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): Future[Result] =
         serviceConfigsConnector.repoNameForService(serviceName).flatMap {
           case Some(repoName) => buildServicePageFromRepoName(repoName, hasBranchProtectionAuth).getOrElse(notFound)
           case _              => logger.info(s"Not found repo name for the service: $serviceName")
@@ -126,13 +126,13 @@ class CatalogueController @Inject() (
           }
 
       for {
-        hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(serviceName)
-        result                  <- buildServicePageFromRepoName(serviceName, hasBranchProtectionAuth)
+        hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(serviceName.asString)
+        result                  <- buildServicePageFromRepoName(serviceName.asString, hasBranchProtectionAuth)
                                     .getOrElseF(buildServicePageFromItsArtifactName(serviceName, hasBranchProtectionAuth))
       } yield result
     }
 
-  private def retrieveZone(serviceName: String)(implicit request: Request[?]): Future[Option[CostEstimationService.Zone]] =
+  private def retrieveZone(serviceName: ServiceName)(implicit request: Request[?]): Future[Option[CostEstimationService.Zone]] =
     serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
       .map{deploymentConfigs =>
         val zones = deploymentConfigs.map(_.zone).distinct
@@ -142,7 +142,7 @@ class CatalogueController @Inject() (
       }
 
   private def renderServicePage(
-    serviceName            : String,
+    serviceName            : ServiceName,
     repositoryDetails      : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(implicit
@@ -175,7 +175,7 @@ class CatalogueController @Inject() (
                                            repoModules   <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
                                            shutterStates <- ShutterType.valuesAsSeq.foldLeftM[Future, Seq[ShutterState]] (Seq.empty)( (acc, shutterType) =>
                                                               shutterService
-                                                                .getShutterStates(shutterType, env, Some(ServiceName(serviceName)))
+                                                                .getShutterStates(shutterType, env, Some(serviceName))
                                                                 .map(xs => acc ++ xs)
                                                             )
                                            data          =  EnvData(
@@ -187,7 +187,7 @@ class CatalogueController @Inject() (
                                                                   telemetryLinks.kibanaDashboard(env, serviceName)
                                                               ),
                                                               nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]())(d =>
-                                                                telemetryLinks.kibanaNonPerformantQueries(env, d, nonPerformantQueries)
+                                                                telemetryLinks.kibanaNonPerformantQueries(env, ServiceName(d), nonPerformantQueries) // TODO should this really be Database rather than ServiceName?
                                                               )
                                                             )
                                          } yield Some(slugInfoFlag -> data)
@@ -197,8 +197,8 @@ class CatalogueController @Inject() (
       latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes             <- routeRulesService.serviceRoutes(serviceName)
-      optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(repositoryName)
-      costEstimate              <- costEstimationService.estimateServiceCost(repositoryName)
+      optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(ServiceName(repositoryName))
+      costEstimate              <- costEstimationService.estimateServiceCost(ServiceName(repositoryName))
       commenterReport           <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount      <- vulnerabilitiesConnector.deployedVulnerabilityCount(serviceName)
       serviceRelationships      <- serviceConfigsService.serviceRelationships(serviceName)
@@ -213,7 +213,7 @@ class CatalogueController @Inject() (
                                       nonPerformantQueryLinks = Seq.empty,
                                     )
                                 }
-      canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(serviceName).map(_.value)
+      canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(repositoryName)
       lifecycle                 <- serviceCommissioningStatusConnector.getLifecycle(serviceName)
       isGuest                   = request.session.get(AuthController.SESSION_USERNAME).exists(_.startsWith("guest-"))
     } yield {
@@ -251,7 +251,7 @@ class CatalogueController @Inject() (
         result <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
                     .foldF(Future.successful(notFound))(repoDetails =>
                       repoDetails.repoType match {
-                        case RepoType.Service   => renderServicePage(repoDetails.name, repoDetails, hasBranchProtectionAuth)
+                        case RepoType.Service   => renderServicePage(ServiceName(repoDetails.name), repoDetails, hasBranchProtectionAuth)
                         case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
                         case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth).map(Ok(_))
                         case RepoType.Test      => renderTest(repoDetails, hasBranchProtectionAuth)
@@ -279,16 +279,16 @@ class CatalogueController @Inject() (
       .verify(Retrieval.hasPredicate(EnableBranchProtection.permission(repoName)))
       .map(r => EnableBranchProtection.HasAuthorisation(r.getOrElse(false)))
 
-  def markForDecommissioning(repoName: String) =
+  def markForDecommissioning(serviceName: ServiceName) =
     auth
       .authorizedAction(
-        continueUrl = routes.CatalogueController.repository(repoName),
-        predicate   = MarkForDecommissioning.permission(repoName),
+        continueUrl = routes.CatalogueController.repository(serviceName.asString),
+        predicate   = MarkForDecommissioning.permission(serviceName.asString),
         retrieval   = Retrieval.username
     ).async { implicit request =>
       serviceCommissioningStatusConnector
-        .setLifecycleStatus(repoName, LifecycleStatus.DecommissionInProgress, username = request.retrieval.value)
-        .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
+        .setLifecycleStatus(serviceName, LifecycleStatus.DecommissionInProgress, username = request.retrieval.value)
+        .map(_ => Redirect(routes.CatalogueController.repository(serviceName.asString)))
     }
 
   private def hasMarkForDecommissioningAuthorisation(repoName: String)(
@@ -420,7 +420,7 @@ class CatalogueController @Inject() (
     ))
 
   private def renderOther(
-    repoDetails: GitRepository,
+    repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(implicit request: Request[?]): Future[Result] =
     ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
@@ -483,10 +483,10 @@ class CatalogueController @Inject() (
     }
   }
 
-  def costEstimation(serviceName: String): Action[AnyContent] =
+  def costEstimation(serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (for {
-        repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName))
+        repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString))
         if repositoryDetails.repoType == RepoType.Service
         costEstimation              <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
         historicEstimatedCostCharts <- OptionT.liftF(costEstimationService.historicEstimatedCostChartsForService(serviceName))
@@ -516,21 +516,9 @@ object TeamFilter {
   )
 }
 
-case class DigitalServiceNameFilter(value: Option[String] = None) {
-  def isEmpty: Boolean = value.isEmpty
-}
-
-object DigitalServiceNameFilter {
-  lazy val form = Form(
-    mapping(
-      "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-    )(DigitalServiceNameFilter.apply)(f => Some(f.value))
-  )
-}
-
 object EnableBranchProtection {
 
-  final case class HasAuthorisation(value: Boolean) extends AnyVal
+  case class HasAuthorisation(value: Boolean) extends AnyVal
 
   def permission(repoName: String): Permission =
     Predicate.Permission(
@@ -541,7 +529,7 @@ object EnableBranchProtection {
 
 object MarkForDecommissioning {
 
-  final case class HasAuthorisation(value: Boolean) extends AnyVal
+  case class HasAuthorisation(value: Boolean) extends AnyVal
 
   def permission(repoName: String): Permission =
     Predicate.Permission(
@@ -552,9 +540,9 @@ object MarkForDecommissioning {
 
 object ChangePrototypePassword {
 
-  final case class HasAuthorisation(value: Boolean) extends AnyVal
+  case class HasAuthorisation(value: Boolean) extends AnyVal
 
-  final case class PrototypePassword(value: String) extends AnyVal {
+  case class PrototypePassword(value: String) extends AnyVal {
     override def toString: String = "PrototypePassword(...)"
   }
 
@@ -592,7 +580,7 @@ object DefaultBranchesFilter {
     Form(
       mapping(
         "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "teamNames"     -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
+        "teamNames"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
         "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
       )(DefaultBranchesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

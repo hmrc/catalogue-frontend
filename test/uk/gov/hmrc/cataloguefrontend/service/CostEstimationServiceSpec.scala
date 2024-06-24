@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -47,26 +47,28 @@ final class CostEstimationServiceSpec
 
   "Service" should {
     "produce a cost estimate for a service in all environments in which it's deployed" in {
+      val serviceName = ServiceName("some-service")
+
       val stubs =
         Seq(
-          DeploymentConfig("test1", DeploymentSize(3, 1),  environment = Environment.Development,  zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test2", DeploymentSize(3, 1),  environment = Environment.Integration,  zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test3", DeploymentSize(3, 1),  environment = Environment.QA,           zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test4", DeploymentSize(3, 1),  environment = Environment.Staging,      zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test5", DeploymentSize(3, 1),  environment = Environment.ExternalTest, zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig("test6", DeploymentSize(11, 3), environment = Environment.Production,   zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty)
+          DeploymentConfig(ServiceName("test1"), DeploymentSize(3, 1),  environment = Environment.Development,  zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test2"), DeploymentSize(3, 1),  environment = Environment.Integration,  zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test3"), DeploymentSize(3, 1),  environment = Environment.QA,           zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test4"), DeploymentSize(3, 1),  environment = Environment.Staging,      zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test5"), DeploymentSize(3, 1),  environment = Environment.ExternalTest, zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(ServiceName("test6"), DeploymentSize(11, 3), environment = Environment.Production,   zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty)
         )
 
       val serviceConfigsConnector =
         stubConfigConnector(
-          service = "some-service",
+          service = serviceName,
           stubs   = stubs
         )
 
       val costEstimationService =
         new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
 
-      val costEstimate = costEstimationService.estimateServiceCost("some-service").futureValue
+      val costEstimate = costEstimationService.estimateServiceCost(serviceName).futureValue
 
       costEstimate.slotsByEnv shouldBe List(
         Environment.Integration  -> TotalSlots(3),
@@ -88,16 +90,18 @@ final class CostEstimationServiceSpec
     }
 
     "produce a cost estimate of zero for a service which is not deployed in a requested environment" in {
+      val serviceName = ServiceName("some-service")
+
       val serviceConfigsConnector =
         stubConfigConnector(
-          service = "some-service",
+          service = serviceName,
           stubs   = Seq.empty
         )
 
       val costEstimationService =
         new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
 
-      val costEstimate = costEstimationService.estimateServiceCost("some-service").futureValue
+      val costEstimate = costEstimationService.estimateServiceCost(serviceName).futureValue
 
       costEstimate.slotsByEnv                             shouldBe List.empty
       costEstimate.totalSlots                             shouldBe TotalSlots(0)
@@ -127,7 +131,7 @@ final class CostEstimationServiceSpec
   }
 
   private def stubConfigConnector(
-    service            : String,
+    service            : ServiceName,
     stubs              : Seq[DeploymentConfig]
   ): ServiceConfigsConnector = {
     val serviceConfigsConnector = mock[ServiceConfigsConnector]

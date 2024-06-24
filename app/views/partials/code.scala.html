@@ -18,7 +18,6 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
 @import uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
@@ -43,10 +42,10 @@
         <ul class="list-unstyled" style="column-count: 2;">
             <li><a id="link-to-github" href="@{repo.githubUrl}" target="_blank" rel="noreferrer noopener"><img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github" /> GitHub<span class="glyphicon glyphicon-new-window"/></a></li>
             @if(repo.repoType == RepoType.Service) {
-                <li><a id="link-to-timeline" href="@DeploymentTimelineController.graph(Some(repo.name))">Deployment Timeline</a></li>
-                <li><a id="link-to-@{repo.name}-config" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(repo.name)" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
-                <li><a id="link-to-dependency-list" href="@appRoutes.DependenciesController.services(repo.name)">Service Dependencies</a></li>
-                <li><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, repo.name)}">Frontend Route Warnings</a></li>
+                <li><a id="link-to-timeline" href="@DeploymentTimelineController.graph(Some(ServiceName(repo.name)))">Deployment Timeline</a></li>
+                <li><a id="link-to-@{repo.name}-config" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(repo.name))" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
+                <li><a id="link-to-dependency-list" href="@appRoutes.DependenciesController.services(ServiceName(repo.name))">Service Dependencies</a></li>
+                <li><a id="link-to-frontend-route-warnings" href="@{ShutterOverviewController.frontendRouteWarnings(Environment.Production, ServiceName(repo.name))}">Frontend Route Warnings</a></li>
             }
             @if(repo.repoType == RepoType.Service || repo.repoType == RepoType.Library) {
                 <li><a id="link-to-@{repo.name}-health" href="@{HealthIndicatorsController.breakdownForRepo(repo.name)}">Health-Indicator</a></li>
@@ -70,7 +69,7 @@
                         ></span>
                     }
                 </li>
-                <li><a id="link-to-@{repo.name}-commissioning" href="@{ServiceCommissioningStatusController.getCommissioningState(repo.name)}">Commissioning State</a></li>
+                <li><a id="link-to-@{repo.name}-commissioning" href="@{ServiceCommissioningStatusController.getCommissioningState(ServiceName(repo.name))}">Commissioning State</a></li>
             }
         </ul>
     </div>

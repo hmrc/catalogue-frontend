@@ -18,9 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import play.api.data.format.Formatter
-import play.api.data.FormError
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+import uk.gov.hmrc.cataloguefrontend.model.{TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.LocalDate
@@ -270,81 +269,7 @@ object BobbyVersionRange {
   }
 }
 
-case class Version(
-  major   : Int,
-  minor   : Int,
-  patch   : Int,
-  original: String
-) extends Ordered[Version] {
-
-  //!@TODO test
-  def diff(other: Version): (Int, Int, Int) =
-    (this.major - other.major, this.minor - other.minor, this.patch - other.patch)
-
-  override def compare(other: Version): Int = {
-    import Ordered._
-    (major, minor, patch, original).compare((other.major, other.minor, other.patch, other.original))
-  }
-
-  override def toString: String = original
-}
-
-object Version {
-
-  implicit val ordering: Ordering[Version] = new Ordering[Version] {
-    def compare(x: Version, y: Version): Int =
-      x.compare(y)
-  }
-
-  def isNewVersionAvailable(currentVersion: Version, latestVersion: Version): Boolean =
-    latestVersion.diff(currentVersion) match {
-      case (major, minor, patch) =>
-        (major > 0)
-          || (major == 0 && minor > 0)
-          || (major == 0 && minor == 0 && patch > 0)
-    }
-
-  def apply(s: String): Version = {
-    val regex3 = """(\d+)\.(\d+)\.(\d+)(.*)""".r
-    val regex2 = """(\d+)\.(\d+)(.*)""".r
-    val regex1 = """(\d+)(.*)""".r
-    s match {
-      case regex3(maj, min, patch, _) => Version(Integer.parseInt(maj), Integer.parseInt(min), Integer.parseInt(patch), s)
-      case regex2(maj, min, _)        => Version(Integer.parseInt(maj), Integer.parseInt(min), 0                      , s)
-      case regex1(patch, _)           => Version(0                    , 0                    , Integer.parseInt(patch), s)
-      case _                          => Version(0                    , 0                    , 0                      , s)
-    }
-  }
-
-  val format: Format[Version] = new Format[Version] {
-    override def reads(json: JsValue) =
-      json match {
-        case JsString(s) => JsSuccess(Version(s))
-        case JsObject(m) =>
-          m.get("original") match {
-            case Some(JsString(s)) => JsSuccess(Version(s))
-            case _                 => JsError("Not a string")
-          }
-        case _ => JsError("Not a string")
-      }
-
-    override def writes(v: Version) =
-      JsString(v.original)
-  }
-
-  val formFormat: Formatter[Version] = new Formatter[Version] {
-    override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Version] =
-      data
-        .get(key)
-        .flatMap(str => scala.util.Try(apply(str)).toOption )
-        .fold[Either[Seq[FormError], Version]](Left(Seq(FormError(key, "Invalid value"))))(Right.apply)
-
-    override def unbind(key: String, value: Version): Map[String, String] =
-      Map(key -> value.original)
-  }
-}
-
-case class ServiceWithDependency(
+case class RepoWithDependency(
   repoName    : String,
   repoVersion : Version,
   teams       : List[TeamName],
@@ -355,11 +280,11 @@ case class ServiceWithDependency(
   scopes      : Set[DependencyScope]
 )
 
-object ServiceWithDependency {
+object RepoWithDependency {
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
-  val reads: Reads[ServiceWithDependency] = {
+  val reads: Reads[RepoWithDependency] = {
     implicit val tnf = TeamName.format
     implicit val vf  = Version.format
     implicit val dsf = DependencyScope.format
@@ -372,7 +297,7 @@ object ServiceWithDependency {
     ~ (__ \ "depArtefact").read[String]
     ~ (__ \ "depVersion" ).read[Version]
     ~ (__ \ "scopes"     ).read[Set[DependencyScope]]
-    )(ServiceWithDependency.apply)
+    )(RepoWithDependency.apply)
   }
 }
 

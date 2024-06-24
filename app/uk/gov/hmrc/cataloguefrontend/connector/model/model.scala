@@ -17,40 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{__, Format, Reads}
-import play.api.mvc.{PathBindable, QueryStringBindable}
-
-case class Username(value: String) extends AnyVal // TODO asString
-
-case class TeamName(asString: String) extends AnyVal
-
-object TeamName {
-  lazy val format: Format[TeamName] =
-    Format.of[String].inmap(TeamName.apply, _.asString)
-
-  implicit val ordering: Ordering[TeamName] =
-    Ordering.by(_.asString)
-
-  implicit val pathBindable: PathBindable[TeamName] =
-    new PathBindable[TeamName] {
-      override def bind(key: String, value: String): Either[String, TeamName] =
-        Right(TeamName(value))
-
-      override def unbind(key: String, value: TeamName): String =
-        value.asString
-    }
-
-  implicit def queryStringBindable(implicit strBinder: QueryStringBindable[String]): QueryStringBindable[TeamName] =
-    new QueryStringBindable[TeamName] {
-      override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, TeamName]] =
-        strBinder.bind(key, params)
-          .map(_.map(TeamName.apply))
-
-      override def unbind(key: String, value: TeamName): String =
-        strBinder.unbind(key, value.asString)
-    }
-}
-
+import play.api.libs.json.{__, Reads}
+import uk.gov.hmrc.cataloguefrontend.model.Version
 
 case class RepositoryModules(
   name             : String,

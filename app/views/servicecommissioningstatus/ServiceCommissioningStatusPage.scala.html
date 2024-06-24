@@ -19,7 +19,7 @@
 
 @this()
 
-@(serviceName    : String,
+@(serviceName    : ServiceName,
   lifecycleStatus: LifecycleStatus,
   checks         : List[Check]
 )(implicit
@@ -56,7 +56,7 @@
     </div>
 
     <h2>
-        <a class="fw-bold" href="@routes.CatalogueController.service(serviceName)">@serviceName</a>
+        <a class="fw-bold" href="@routes.CatalogueController.service(serviceName)">@serviceName.asString</a>
         @if(lifecycleStatus != LifecycleStatus.Active) {
             <span class="badge rounded-pill text-bg-secondary fs-6 align-text-top mt-2">@lifecycleStatus.displayName</span>
         }

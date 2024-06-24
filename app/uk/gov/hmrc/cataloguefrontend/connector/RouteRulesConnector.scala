@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{Json, Reads}
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -75,8 +76,8 @@ class RouteRulesConnector @Inject() (
       }
   }
 
-  def frontendRoutes(service: String)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
-    val url = url"$baseUrl/service-configs/frontend-route/$service"
+  def frontendRoutes(service: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
+    val url = url"$baseUrl/service-configs/frontend-route/${service.asString}"
     httpClientV2
       .get(url)
       .execute[Seq[EnvironmentRoute]]
@@ -87,8 +88,8 @@ class RouteRulesConnector @Inject() (
       }
     }
 
-  def adminFrontendRoutes(service: String)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
-    val url = url"$baseUrl/service-configs/admin-frontend-route/$service"
+  def adminFrontendRoutes(service: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[EnvironmentRoute]] = {
+    val url = url"$baseUrl/service-configs/admin-frontend-route/${service.asString}"
     httpClientV2
       .get(url)
       .execute[Seq[AdminFrontendRoute]]

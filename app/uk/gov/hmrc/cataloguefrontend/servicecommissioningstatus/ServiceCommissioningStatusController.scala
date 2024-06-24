@@ -19,9 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 import play.api.http.HttpEntity
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
@@ -44,7 +43,7 @@ class ServiceCommissioningStatusController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def getCommissioningState(serviceName: String): Action[AnyContent] =
+  def getCommissioningState(serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         lifecycleStatus <- serviceCommissioningStatusConnector.getLifecycle(serviceName).map(_.map(_.lifecycleStatus).getOrElse(LifecycleStatus.Active))
@@ -155,7 +154,7 @@ object SearchCommissioning {
   lazy val searchForm: Form[SearchCommissioningForm] =
     Form(
       Forms.mapping(
-        "team"               -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+        "team"               -> Forms.optional(Forms.of[TeamName](TeamName.formFormat))
       , "serviceType"        -> Forms.optional(Forms.text.transform[ServiceType](
                                   ServiceType.parse(_).getOrElse(ServiceType.Backend)
                                 , _.asString

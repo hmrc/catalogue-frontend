@@ -23,8 +23,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -68,24 +67,24 @@ class WhatsRunningWhereServiceSpec
 
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
-          DeploymentConfig(serviceName= "address-lookup"   , environment = Environment.Development, deploymentSize = DeploymentSize(slots = 2 , instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "address-lookup"   , environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "address-lookup"   , environment = Environment.Production , deploymentSize = DeploymentSize(slots = 4 , instances = 4), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "health-indicators", environment = Environment.Development, deploymentSize = DeploymentSize(slots = 3 , instances = 3), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "health-indicators", environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 3 , instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "health-indicators", environment = Environment.Staging    , deploymentSize = DeploymentSize(slots = 5 , instances = 5), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "health-indicators", environment = Environment.Production , deploymentSize = DeploymentSize(slots = 8 , instances = 4), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "PODS"             , environment = Environment.Production , deploymentSize = DeploymentSize(slots = 16, instances = 2), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty),
-          DeploymentConfig(serviceName= "file-upload"      , environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 1), zone = Zone.Protected, envVars = Map.empty, jvm = Map.empty)
+          DeploymentConfig(serviceName = ServiceName("address-lookup"   ), environment = Environment.Development, deploymentSize = DeploymentSize(slots = 2 , instances = 2), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("address-lookup"   ), environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 2), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("address-lookup"   ), environment = Environment.Production , deploymentSize = DeploymentSize(slots = 4 , instances = 4), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("health-indicators"), environment = Environment.Development, deploymentSize = DeploymentSize(slots = 3 , instances = 3), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("health-indicators"), environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 3 , instances = 2), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("health-indicators"), environment = Environment.Staging    , deploymentSize = DeploymentSize(slots = 5 , instances = 5), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("health-indicators"), environment = Environment.Production , deploymentSize = DeploymentSize(slots = 8 , instances = 4), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("PODS"             ), environment = Environment.Production , deploymentSize = DeploymentSize(slots = 16, instances = 2), Zone.Protected, envVars = Map.empty, jvm = Map.empty),
+          DeploymentConfig(serviceName = ServiceName("file-upload"      ), environment = Environment.QA         , deploymentSize = DeploymentSize(slots = 2 , instances = 1), Zone.Protected, envVars = Map.empty, jvm = Map.empty)
         ))
       )
 
       testService.allDeploymentConfigs(releases).futureValue shouldBe Seq(
-        ServiceDeploymentConfigSummary("address-lookup", Map(
+        ServiceDeploymentConfigSummary(ServiceName("address-lookup"), Map(
           Environment.Development -> DeploymentSize(slots = 2, instances = 2),
           Environment.Production  -> DeploymentSize(slots = 4, instances = 4)
         )),
-        ServiceDeploymentConfigSummary("health-indicators", Map(
+        ServiceDeploymentConfigSummary(ServiceName("health-indicators"), Map(
           Environment.QA         -> DeploymentSize(slots = 3, instances = 2),
           Environment.Staging    -> DeploymentSize(slots = 5, instances = 5),
           Environment.Production -> DeploymentSize(slots = 8, instances = 4)

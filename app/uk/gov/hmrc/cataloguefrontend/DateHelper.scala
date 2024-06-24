@@ -23,14 +23,10 @@ object DateHelper {
   val utc = ZoneId.of("UTC")
 
   // TODO consolidate presentation of dates
-  val `yyyy-MM-dd`: DateTimeFormatter            = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-  val `dd-MM-yyyy HH:mm`: DateTimeFormatter      = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
-  val `dd MMM uuuu HH:mm`: DateTimeFormatter     = DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")
-  val `yyyy-MM-dd HH:mm z`: DateTimeFormatter    = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z")
+  val `yyyy-MM-dd`           : DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+  val `dd MMM uuuu`          : DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM uuuu")
+  val `dd MMM uuuu HH:mm`    : DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")
   val `yyyy-MM-dd HH:mm:ss z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
-
-  val `dd MMM uuuu`: DateTimeFormatter     = DateTimeFormatter.ofPattern("dd MMM uuuu")
-
 
   implicit class LocalDateImplicits(d: LocalDate) {
     def atStartOfDayEpochMillis: Long =

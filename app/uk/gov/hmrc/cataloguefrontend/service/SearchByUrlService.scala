@@ -20,6 +20,7 @@ import java.net.{URI, URISyntaxException}
 
 import javax.inject._
 import uk.gov.hmrc.cataloguefrontend.connector.SearchByUrlConnector
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -79,8 +80,8 @@ object SearchByUrlService {
   )
 
   case class FrontendRoutes(
-    service    : String,
-    environment: String,
+    service    : ServiceName,
+    environment: String, // TODO should be Environment
     routes     : Seq[FrontendRoute]
   )
 }

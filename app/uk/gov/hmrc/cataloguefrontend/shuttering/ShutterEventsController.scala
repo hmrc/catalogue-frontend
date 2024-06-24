@@ -22,10 +22,9 @@ import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.shuttering.ShutterEventsPage
 
@@ -51,9 +50,9 @@ class ShutterEventsController @Inject() (
       Redirect(routes.ShutterEventsController.shutterEventsList(Environment.Production))
     }
 
-  def shutterEventsList(env: Environment, serviceName: Option[String], limit: Option[Int], offset: Option[Int]): Action[AnyContent] =
+  def shutterEventsList(env: Environment, serviceName: Option[ServiceName], limit: Option[Int], offset: Option[Int]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      val filter = filterFor(env, serviceName.map(ServiceName.apply))
+      val filter = filterFor(env, serviceName)
       val form   = ShutterEventsForm.fromFilter(filter)
 
       for {
@@ -79,7 +78,7 @@ private object ShutterEventsForm {
     Form(
       Forms.mapping(
         "environment" -> Forms.nonEmptyText
-      , "serviceName" -> Forms.optional(Forms.text.transform[ServiceName](ServiceName.apply, _.asString))
+      , "serviceName" -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat))
       )(ShutterEventsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 

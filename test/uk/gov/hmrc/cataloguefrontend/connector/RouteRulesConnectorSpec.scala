@@ -22,6 +22,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -61,7 +62,7 @@ class RouteRulesConnectorSpec
       )
 
       import RouteRulesConnector.{EnvironmentRoute, Route}
-      connector.frontendRoutes("service1").futureValue shouldBe Seq(
+      connector.frontendRoutes(ServiceName("service1")).futureValue shouldBe Seq(
         EnvironmentRoute(
           environment = "prod"
         , routes      = Route(

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-final case class ChartDataTable(table: List[List[String]]) extends AnyVal {
+case class ChartDataTable(table: List[List[String]]) extends AnyVal {
 
   def render: String =
     table.map(_.mkString("[", ", ", "]")).mkString("[", ",", "]")

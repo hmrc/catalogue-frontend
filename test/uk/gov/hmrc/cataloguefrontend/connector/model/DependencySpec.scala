@@ -20,6 +20,7 @@ import java.time.LocalDate
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.cataloguefrontend.model.Version
 
 class DependencySpec extends AnyWordSpec with Matchers {
 

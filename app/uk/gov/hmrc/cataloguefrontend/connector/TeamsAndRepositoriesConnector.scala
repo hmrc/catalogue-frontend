@@ -21,8 +21,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.config.Constant
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.Zone
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -184,7 +184,7 @@ object GitRepository {
   }
 }
 
-final case class BranchProtection(
+case class BranchProtection(
   requiresApprovingReviews: Boolean,
   dismissesStaleReviews   : Boolean,
   requiresCommitSignatures: Boolean
@@ -228,7 +228,6 @@ class TeamsAndRepositoriesConnector @Inject()(
   servicesConfig: ServicesConfig
 )(implicit val ec: ExecutionContext) {
   import HttpReads.Implicits._
-  import TeamsAndRepositoriesConnector._
 
   private val logger = Logger(getClass)
 
@@ -318,7 +317,7 @@ class TeamsAndRepositoriesConnector @Inject()(
       withJobs =  repo.map(_.copy(jenkinsJobs = jobs))
     } yield withJobs
 
-  def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[ServiceName, Seq[TeamName]]] =
+  def allTeamsByService()(implicit hc: HeaderCarrier): Future[Map[String, Seq[TeamName]]] =
     for {
       repos          <- httpClientV2
                           .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
@@ -331,9 +330,4 @@ class TeamsAndRepositoriesConnector @Inject()(
       .post(url"$teamsAndServicesBaseUrl/api/v2/repositories/$repoName/branch-protection/enabled")
       .withBody(JsBoolean(true))
       .execute[Unit](HttpReads.Implicits.throwOnFailure(implicitly[HttpReads[Either[UpstreamErrorResponse, Unit]]]), implicitly[ExecutionContext])
-}
-
-object TeamsAndRepositoriesConnector {
-
-  type ServiceName = String
 }

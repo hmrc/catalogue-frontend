@@ -14,17 +14,17 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigWarning, ServiceConfigsService, routes => serviceConfigsRoutes}
 @import views.html.helper
 @import views.html.partials.form_global_errors
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigWarning, ServiceConfigsService, routes => serviceConfigsRoutes }
+
 @this()
 
 @(form            : Form[ConfigWarning.ConfigWarningForm],
   allServices     : Seq[GitRepository],
-  groupedByService: Option[Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, Seq[ServiceConfigsService.ConfigWarning]]]]] = None
+  groupedByService: Option[Map[ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, Seq[ServiceConfigsService.ConfigWarning]]]]] = None
 )(implicit
   messages: Messages,
   request : RequestHeader
@@ -134,7 +134,7 @@
     </script>
 }
 
-@displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[Seq[ServiceConfigsService.ConfigWarning]]) = {
+@displayConfigSourceValue(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[Seq[ServiceConfigsService.ConfigWarning]]) = {
     @result match {
         case None => {
         }
@@ -142,7 +142,7 @@
             @configWarnings.map { envData =>
                 <ul class="list-unstyled mb-0">
                     <li>
-                        <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, true, Some(configKey)).url"
+                        <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(configKey)).url"
                            data-bs-toggle="popover"
                            data-bs-trigger="hover"
                            data-bs-placement="bottom"

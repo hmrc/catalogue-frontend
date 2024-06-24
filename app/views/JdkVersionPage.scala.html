@@ -16,12 +16,11 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JDKVersion, TeamName}
-@import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.connector.model.JdkVersion
 
 @this()
 
-@(jdkVersions     : Seq[JDKVersion],
+@(jdkVersions     : Seq[JdkVersion],
   flags           : Seq[SlugInfoFlag],
   teams           : Seq[GitHubTeam],
   selectedFlag    : SlugInfoFlag,
@@ -156,9 +155,9 @@
     </script>
 }
 
-@jdkVersion(jdk: JDKVersion) = {
-    <tr id="jdk-slug-@jdk.name">
-        <td><a id="link-to-@{jdk.name}" href="@appRoutes.CatalogueController.repository(jdk.name)">@jdk.name</a></td>
+@jdkVersion(jdk: JdkVersion) = {
+    <tr id="jdk-slug-@jdk.name.asString">
+        <td><a id="link-to-@{jdk.name.asString}" href="@appRoutes.CatalogueController.repository(jdk.name.asString)">@jdk.name.asString</a></td>
         <td>
           <img src="@routes.Assets.versioned(jdk.vendor.imgPath)" width="70px" alt="@jdk.vendor.asString" />
         </td>

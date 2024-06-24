@@ -22,8 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseH
 import play.api.http.HttpEntity
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
@@ -49,12 +48,12 @@ class ServiceConfigsController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def configExplorer(serviceName: String, showWarnings: Boolean, selector: Option[KeyName]): Action[AnyContent] =
+  def configExplorer(serviceName: ServiceName, showWarnings: Boolean, selector: Option[KeyName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         deployments      <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey      <- serviceConfigsService.configByKeyWithNextDeployment(serviceName)
-        warnings         <- serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(serviceName), deployments.map(_.environment), version = None, latest = true)
+        warnings         <- serviceConfigsService.configWarnings(serviceName, deployments.map(_.environment), version = None, latest = true)
         deploymentConfig <- serviceConfigsService.deploymentConfigByKeyWithNextDeployment(serviceName)
       } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings, deploymentConfig))
     }
@@ -146,7 +145,7 @@ class ServiceConfigsController @Inject()(
                         } yield Ok(configWarningPage(ConfigWarning.form, allServices, None))
         , formObject => for {
                           allServices      <- teamsAndReposConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false))
-                          deployments      <- whatsRunningWhereService.releasesForService(formObject.serviceName.asString).map(_.versions)
+                          deployments      <- whatsRunningWhereService.releasesForService(formObject.serviceName).map(_.versions)
                           results          <- serviceConfigsService.configWarnings(formObject.serviceName, deployments.map(_.environment), version = None, latest = true)
                           groupedByService =  serviceConfigsService.toServiceKeyEnvironmentWarningMap(results)
                         } yield Ok(configWarningPage(ConfigWarning.form.fill(formObject), allServices, Some(groupedByService)))
@@ -154,7 +153,7 @@ class ServiceConfigsController @Inject()(
     }
 
   private def toRows(
-    results         : Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
+    results         : Map[ServiceConfigsService.KeyName, Map[ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
   , showEnvironments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
     for {
@@ -165,7 +164,7 @@ class ServiceConfigsController @Inject()(
       showEnvironments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
 
   private def toRows2(
-    results         : Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
+    results         : Map[ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
   , showEnvironments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
     for {
@@ -180,12 +179,12 @@ class ServiceConfigsController @Inject()(
 import play.api.data.{Form, Forms}
 object ConfigWarning {
   case class ConfigWarningForm(
-    serviceName: ServiceConfigsService.ServiceName
+    serviceName: ServiceName
   )
 
   lazy val form: Form[ConfigWarningForm] = Form(
     Forms.mapping(
-      "serviceName" -> Forms.text.transform[ServiceConfigsService.ServiceName](ServiceConfigsService.ServiceName.apply, _.asString)
+      "serviceName" -> Forms.of[ServiceName](ServiceName.formFormat)
     )(ConfigWarningForm.apply)(r => Some(r.serviceName))
   )
 }
@@ -208,7 +207,7 @@ object SearchConfig {
   lazy val form: Form[SearchConfigForm] =
     Form(
       Forms.mapping(
-        "teamName"              -> Forms.optional(Forms.text.transform[TeamName](TeamName.apply, _.asString))
+        "teamName"              -> Forms.optional(Forms.of[TeamName](TeamName.formFormat))
       , "configKey"             -> Forms.optional(Forms.nonEmptyText(minLength = 3))
       , "configKeyIgnoreCase"   -> Forms.default(Forms.boolean, false)
       , "configValue"           -> Forms.optional(Forms.text)

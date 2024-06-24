@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes => prcommenterRoutes}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.{normalizeTerm, optimizeIndex}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
 import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
@@ -63,7 +63,7 @@ class SearchIndex @Inject()(
   private val hardcodedLinks = List(
     SearchTerm("explorer", "dependency",                   catalogueRoutes.DependencyExplorerController.landing.url,                              1.0f, Set("depex")),
     SearchTerm("explorer", "bobby",                        catalogueRoutes.BobbyExplorerController.list().url,                                    1.0f),
-    SearchTerm("explorer", "jvm",                          catalogueRoutes.JDKVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
+    SearchTerm("explorer", "jdk",                          catalogueRoutes.JdkVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
     SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f, Set("lds")),
     SearchTerm("page",     "whatsrunningwhere",            wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
     SearchTerm("page",     "deployment",                   depRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,     1.0f),
@@ -96,10 +96,10 @@ class SearchIndex @Inject()(
                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
-                            .flatMap(r => List(SearchTerm("deploy",              r.name, depRoutes.DeployServiceController.step1(Some(r.name)).url),
-                                               SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(r.name).url ),
-                                               SearchTerm("timeline",            r.name, depRoutes.DeploymentTimelineController.graph(Some(r.name)).url),
-                                               SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(r.name).url)
+                            .flatMap(r => List(SearchTerm("deploy",              r.name, depRoutes.DeployServiceController.step1(Some(ServiceName(r.name))).url),
+                                               SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(r.name)).url ),
+                                               SearchTerm("timeline",            r.name, depRoutes.DeploymentTimelineController.graph(Some(ServiceName(r.name))).url),
+                                               SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(ServiceName(r.name)).url)
                                           )
                                     )
       comments      <- prCommenterConnector.search(None, None, None)

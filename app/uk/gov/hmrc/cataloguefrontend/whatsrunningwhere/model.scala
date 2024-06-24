@@ -19,8 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import org.apache.http.client.utils.URIBuilder
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.connector.model.{TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.net.URI
@@ -52,9 +51,9 @@ object JsonCodecs {
       case Left(l)  => JsError(__, l)
     }
 
-  val serviceNameFormat     : Format[ServiceName]      = format(ServiceName.apply     , _.asString)
+  val serviceNameFormat     : Format[ServiceName]      = ServiceName.format
   val timeSeenFormat        : Format[TimeSeen]         = format(TimeSeen.apply        , _.time    )
-  val teamNameFormat        : Format[TeamName]         = format(TeamName.apply        , _.asString)
+  val teamNameFormat        : Format[TeamName]         = TeamName.format
   val usernameReads         : Format[Username]         = format(Username.apply        , _.asString)
   val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, _.asString)
 
@@ -177,12 +176,6 @@ case class TimeSeen(time: Instant)
 object TimeSeen {
   implicit val timeSeenOrdering: Ordering[TimeSeen] =
     Ordering.by(_.time.toEpochMilli)
-}
-
-case class ServiceName(asString: String) extends AnyVal
-object ServiceName {
-  implicit val serviceNameOrdering: Ordering[ServiceName] =
-    Ordering.by(_.asString)
 }
 
 case class ProfileName(asString: String) extends AnyVal

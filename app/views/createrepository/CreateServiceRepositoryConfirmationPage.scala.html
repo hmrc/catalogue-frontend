@@ -18,23 +18,23 @@
 
 @this()
 
-@(repoName: String)(implicit request: RequestHeader)
+@(serviceName: ServiceName)(implicit request: RequestHeader)
 
-@standard_layout(s"Creating service repository: $repoName") {
+@standard_layout(s"Creating service repository: ${serviceName.asString}") {
 
     <section class="section-wrapper">
-        <h1 class="page-heading">Creating service repository: @repoName</h1>
+        <h1 class="page-heading">Creating service repository: @serviceName.asString</h1>
 
-        <p>The service repository @repoName is being added to the MDTP catalogue. This can take around 30 minutes to appear and for all catalogue features to be available.</p>
+        <p>The service repository @serviceName.asString is being added to the MDTP catalogue. This can take around 30 minutes to appear and for all catalogue features to be available.</p>
     </section>
 
     <section class="section-wrapper">
         <h2 id="what-to-do-next">What to do next?</h2>
 
         <ul>
-            <li>Check the service repository has been created in <a id="link-to-github-repo" href="https://github.com/hmrc/@repoName">GitHub</a> (this can take around 5 minutes)</li>
+            <li>Check the service repository has been created in <a id="link-to-github-repo" href="https://github.com/hmrc/@serviceName.asString">GitHub</a> (this can take around 5 minutes)</li>
             <li>Follow the next steps in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/create-app-config.html">MDTP handbook</a> to finish creating your microservice</li>
-            <li>Track your progress on the <a id="link-to-mdtp-handbook" href=@commRoutes.ServiceCommissioningStatusController.getCommissioningState(repoName).url>commissioning state</a> page</li>
+            <li>Track your progress on the <a id="link-to-mdtp-handbook" href=@commRoutes.ServiceCommissioningStatusController.getCommissioningState(serviceName).url>commissioning state</a> page</li>
         </ul>
     </section>
 

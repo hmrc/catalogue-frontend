@@ -22,9 +22,9 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus, PrototypeDetails}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepoForm
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -330,6 +330,8 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
   "CreateAppConfigs" should {
+    val serviceName = ServiceName("test-service")
+
     "return the Async request id when the request is accepted by the B&D async api" in {
       val payload = CreateAppConfigsForm(
         appConfigBase        = false,
@@ -365,7 +367,13 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       )
 
       val result =
-        connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
+        connector.createAppConfigs(
+          payload       = payload,
+          serviceName   = serviceName,
+          serviceType   = ServiceType.Backend,
+          requiresMongo = true,
+          isApi         = false
+        )
           .futureValue
 
       result shouldBe Right(AsyncRequestId(JsObject(Seq(
@@ -401,7 +409,13 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
       )
 
       val result =
-        connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
+        connector.createAppConfigs(
+          payload       = payload,
+          serviceName   = serviceName,
+          serviceType   = ServiceType.Backend,
+          requiresMongo = true,
+          isApi         = false
+        )
           .failed
           .futureValue
 
@@ -438,7 +452,13 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
        )
 
        val result =
-         connector.createAppConfigs(payload = payload, serviceName = "test-service", serviceType = ServiceType.Backend, requiresMongo = true, isApi = false)
+         connector.createAppConfigs(
+           payload       = payload,
+           serviceName   = serviceName,
+           serviceType   = ServiceType.Backend,
+           requiresMongo = true,
+           isApi         = false
+         )
            .futureValue
 
        result shouldBe Left("Some client error")

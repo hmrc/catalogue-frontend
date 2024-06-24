@@ -20,9 +20,9 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.cache.AsyncCacheApi
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.{DeploymentConfig, DeploymentSize, Zone}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, ConfigSourceValue, KeyName, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.{AppliedConfig, ConfigSourceValue, KeyName}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -67,12 +67,12 @@ final class ServiceConfigsConnectorSpec
 
       val deploymentConfig =
         serviceConfigsConnector
-          .deploymentConfig(Some("some-service"), Some(Environment.Production))
+          .deploymentConfig(Some(ServiceName("some-service")), Some(Environment.Production))
           .futureValue
 
       deploymentConfig shouldBe Seq(
         DeploymentConfig(
-          "test1",
+          ServiceName("test1"),
           DeploymentSize(slots = 11, instances = 3),
           environment = Environment.Production,
           zone        = Zone.Protected,
@@ -90,7 +90,7 @@ final class ServiceConfigsConnectorSpec
 
       val deploymentConfig =
         serviceConfigsConnector
-          .deploymentConfig(Some("some-service"), Some(Environment.Production))
+          .deploymentConfig(Some(ServiceName("some-service")), Some(Environment.Production))
           .futureValue
 
       deploymentConfig.headOption shouldBe None

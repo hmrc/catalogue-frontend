@@ -29,12 +29,11 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterCause.UserCreated
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus.Unshuttered
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType.Frontend
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceName
 
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
@@ -96,7 +95,7 @@ class ShutterEventsControllerSpec
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
-      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName.map(_.asString), None, None)(fakeRequest)
+      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName, None, None)(fakeRequest)
 
       status(futResult) shouldBe OK
       futResult.toDocument.select(ShutterEventCssSelector) should have length 1
@@ -106,7 +105,7 @@ class ShutterEventsControllerSpec
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = Some(ServiceName("abc-frontend")))
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
-      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName.map(_.asString), None, None)(fakeRequest)
+      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName, None, None)(fakeRequest)
 
       status(futResult) shouldBe OK
       futResult.toDocument.select(ShutterEventCssSelector) should have length 1
@@ -116,7 +115,7 @@ class ShutterEventsControllerSpec
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
-      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = Some("    "), None, None)(fakeRequest)
+      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = Some(ServiceName("    ")), None, None)(fakeRequest)
 
       status(futResult) shouldBe OK
       futResult.toDocument.select(ShutterEventCssSelector) should have length 1
@@ -126,7 +125,7 @@ class ShutterEventsControllerSpec
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorFailure(filter)
 
-      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName.map(_.asString), None, None)(fakeRequest)
+      val futResult = underTest.shutterEventsList(env = filter.environment, serviceName = filter.serviceName, None, None)(fakeRequest)
 
       status(futResult) shouldBe OK
       futResult.toDocument.select(ShutterEventCssSelector) shouldBe empty
@@ -140,7 +139,7 @@ private object ShutterEventsControllerSpec {
   def sampleEvent = ShutterStateChangeEvent(
     "username",
     timestamp = Instant.now(),
-    "service name",
+    ServiceName("service name"),
     environment = Environment.Development,
     shutterType = Frontend,
     status      = Unshuttered,

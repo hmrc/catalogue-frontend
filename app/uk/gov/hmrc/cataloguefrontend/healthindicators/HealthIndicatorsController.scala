@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsFilter.form
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
@@ -66,17 +67,10 @@ class HealthIndicatorsController @Inject() (
                                      , repoNameFilter = None // Use listjs filtering
                                      )
               teams               <- teamsAndRepositoriesConnector.allTeams()
-              indicators          =  indicatorsFilteredByTeam(indicatorsWithTeams, validForm.team)
+              indicators          =  indicatorsWithTeams.filter(t => validForm.team.fold(true)(t.owningTeams.contains))
             } yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.valuesAsSeq, teams.sortBy(_.name), form.fill(validForm)))
         )
     }
-
-  private def indicatorsFilteredByTeam(indicatorsWithTeams: Seq[IndicatorsWithTeams], team: Option[String]): Seq[IndicatorsWithTeams] =
-    team match {
-      case Some(t) => indicatorsWithTeams.filter(i => i.owningTeams.map(v => v.asString).contains(t))
-      case None    => indicatorsWithTeams
-    }
-
 }
 
 object HealthIndicatorsController {
@@ -90,7 +84,7 @@ object HealthIndicatorsController {
 
 case class HealthIndicatorsFilter(
   repoName: Option[String],
-  team    : Option[String]   = None,
+  team    : Option[TeamName] = None,
   repoType: Option[RepoType] = None
 )
 
@@ -99,7 +93,7 @@ object HealthIndicatorsFilter {
     Form(
       mapping(
         "repoName" -> optional(text),
-        "team"     -> optional(text),
+        "team"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
         "repoType" -> optional(text)
                         .transform[Option[RepoType]](
                           _.flatMap(s => RepoType.parse(s).toOption),

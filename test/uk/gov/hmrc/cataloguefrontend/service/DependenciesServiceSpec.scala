@@ -21,7 +21,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -39,7 +39,7 @@ class SlugInfoServiceSpec
   val versionRange = BobbyVersionRange("[1.0.1,)")
 
   val v100 =
-    ServiceWithDependency(
+    RepoWithDependency(
       repoName           = "service1",
       repoVersion        = Version("v1"),
       teams              = List(TeamName("T1")),
@@ -51,7 +51,7 @@ class SlugInfoServiceSpec
     )
 
   val v200 =
-    ServiceWithDependency(
+    RepoWithDependency(
       repoName           = "service1",
       repoVersion        = Version("v1"),
       teams              = List(TeamName("T1"), TeamName("T2")),
@@ -63,7 +63,7 @@ class SlugInfoServiceSpec
     )
 
   val v205 =
-    ServiceWithDependency(
+    RepoWithDependency(
       repoName           = "service1",
       repoVersion        = Version("v1"),
       teams              = List(TeamName("T2")),
@@ -89,32 +89,32 @@ class SlugInfoServiceSpec
     }
   }
 
-  "DependenciesService.getJDKCountsForEnv" should {
+  "DependenciesService.getJdkCountsForEnv" should {
     "return totals of each jdk in an environment" in {
       val boot = Boot.init
 
-      val jdk1 = JDKVersion(name = "test1", version = Version("1.181.1"), vendor = Vendor.Oracle , kind = Kind.JDK)
-      val jdk2 = JDKVersion(name = "test2", version = Version("1.181.1"), vendor = Vendor.Oracle , kind = Kind.JDK)
-      val jdk3 = JDKVersion(name = "test3", version = Version("1.191.1"), vendor = Vendor.OpenJDK, kind = Kind.JRE)
-      val jdk4 = JDKVersion(name = "test4", version = Version("1.121.1"), vendor = Vendor.OpenJDK, kind = Kind.JRE)
+      val jdk1 = JdkVersion(ServiceName("test1"), Version("1.181.1"), Vendor.Oracle , Kind.JDK)
+      val jdk2 = JdkVersion(ServiceName("test2"), Version("1.181.1"), Vendor.Oracle , Kind.JDK)
+      val jdk3 = JdkVersion(ServiceName("test3"), Version("1.191.1"), Vendor.OpenJDK, Kind.JRE)
+      val jdk4 = JdkVersion(ServiceName("test4"), Version("1.121.1"), Vendor.OpenJDK, Kind.JRE)
 
-      when(boot.mockedServiceDependenciesConnector.getJDKVersions(teamName = None, flag = SlugInfoFlag.Latest))
+      when(boot.mockedServiceDependenciesConnector.getJdkVersions(teamName = None, flag = SlugInfoFlag.Latest))
         .thenReturn(Future.successful(List(jdk1, jdk2, jdk3, jdk4)))
 
-      val res = boot.service.getJDKCountsForEnv(env = SlugInfoFlag.Latest, teamName = None).futureValue
+      val res = boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None).futureValue
 
-      res.usage(JDKVersion("", Version("1.181.1"), Vendor.Oracle , Kind.JDK)) shouldBe 2
-      res.usage(JDKVersion("", Version("1.191.1"), Vendor.OpenJDK, Kind.JDK)) shouldBe 1
-      res.usage(JDKVersion("", Version("1.121.1"), Vendor.OpenJDK, Kind.JDK)) shouldBe 1
+      res.usage((Version("1.181.1"), Vendor.Oracle )) shouldBe 2
+      res.usage((Version("1.191.1"), Vendor.OpenJDK)) shouldBe 1
+      res.usage((Version("1.121.1"), Vendor.OpenJDK)) shouldBe 1
     }
 
     "still returns a value when no matches are found for env" in {
       val boot = Boot.init
 
-      when(boot.mockedServiceDependenciesConnector.getJDKVersions(teamName = None, flag = SlugInfoFlag.Latest))
-        .thenReturn(Future.successful(List.empty[JDKVersion]))
+      when(boot.mockedServiceDependenciesConnector.getJdkVersions(teamName = None, flag = SlugInfoFlag.Latest))
+        .thenReturn(Future.successful(List.empty[JdkVersion]))
 
-      boot.service.getJDKCountsForEnv(env = SlugInfoFlag.Latest, teamName = None).futureValue shouldBe JDKUsageByEnv(SlugInfoFlag.Latest, Map.empty[JDKVersion, Int])
+      boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None).futureValue shouldBe JdkUsageByEnv(SlugInfoFlag.Latest, Map.empty[(Version, Vendor), Int])
     }
   }
 
@@ -126,7 +126,7 @@ class SlugInfoServiceSpec
         name          = "test",
         version       = Version("1.0.0"),
         runnerVersion = "0.5.4",
-        java          = ServiceJDKVersion("1.8.222", "openjdk", "jre"),
+        java          = ServiceJdkVersion("1.8.222", "openjdk", "jre"),
         classpath     = "",
         dependencies  = Seq(depFoo),
         environment   = None
@@ -142,7 +142,7 @@ class SlugInfoServiceSpec
         name                 = "test",
         version              = Version("1.0.0"),
         runnerVersion        = "0.5.4",
-        java                 = ServiceJDKVersion("1.8.222", "openjdk", "jre"),
+        java                 = ServiceJdkVersion("1.8.222", "openjdk", "jre"),
         classpath            = "",
         dependencies         = Seq(depFoo, depBar),
         environment          = None,

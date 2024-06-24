@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 import play.api.Logger
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleSet, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -48,24 +48,24 @@ class ServiceConfigsConnector @Inject() (
   implicit val cser: Reads[ConfigSourceEntries]  = ConfigSourceEntries.reads
   implicit val srr : Reads[ServiceRelationships] = ServiceRelationships.reads
 
-  def repoNameForService(service: String)(implicit hc: HeaderCarrier): Future[Option[String]] =
+  def repoNameForService(service: ServiceName)(implicit hc: HeaderCarrier): Future[Option[String]] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/services/repo-name?serviceName=$service")
+      .get(url"$serviceConfigsBaseUrl/service-configs/services/repo-name?serviceName=${service.asString}")
       .execute[Option[String]]
 
   def deploymentEvents(
-    service: String,
+    service: ServiceName,
     from:    Instant,
     to:      Instant
   )(implicit
     hc           : HeaderCarrier
    ): Future[Seq[DeploymentConfigEvent]] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events/$service?from=$from&to=$to")
+      .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events/${service.asString}?from=$from&to=$to")
       .execute[Seq[DeploymentConfigEvent]]
 
   def configByEnv(
-    service     : String
+    service     : ServiceName
   , environments: Seq[Environment]
   , version     : Option[Version]
   , latest      : Boolean
@@ -73,12 +73,12 @@ class ServiceConfigsConnector @Inject() (
     hc          : HeaderCarrier
   ): Future[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]  =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/$service?environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
+      .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/${service.asString}?environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
       .execute[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]
 
-  def serviceRelationships(service: String)(implicit hc: HeaderCarrier): Future[ServiceRelationships] =
+  def serviceRelationships(service: ServiceName)(implicit hc: HeaderCarrier): Future[ServiceRelationships] =
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/service-relationships/$service")
+      .get(url"$serviceConfigsBaseUrl/service-configs/service-relationships/${service.asString}")
       .execute[ServiceRelationships]
 
   def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = {
@@ -89,9 +89,9 @@ class ServiceConfigsConnector @Inject() (
   }
 
   def deploymentConfig(
-    service    : Option[String]      = None
+    service    : Option[ServiceName] = None
   , environment: Option[Environment] = None
-  , team       : Option[String]      = None
+  , team       : Option[TeamName]    = None
   , applied    : Boolean             = true
   )(implicit
     hc         : HeaderCarrier
@@ -99,8 +99,8 @@ class ServiceConfigsConnector @Inject() (
     implicit val dcr = DeploymentConfig.reads
     val queryParams = Seq(
       environment.map("environment" -> _.asString),
-      service.map("serviceName" -> _),
-      team.map("teamName" -> _)
+      service.map("serviceName" -> _.asString),
+      team.map("teamName" -> _.asString)
     ).flatten.toMap
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$queryParams&applied=$applied")
@@ -145,7 +145,7 @@ class ServiceConfigsConnector @Inject() (
   }
 
   def configWarnings(
-    serviceName : ServiceConfigsService.ServiceName
+    serviceName : ServiceName
   , environments: Seq[Environment]
   , version     : Option[Version]
   , latest      : Boolean

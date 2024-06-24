@@ -21,7 +21,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter, FromString, FromStringEnum}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.JsonCodecs.environmentFormat
@@ -39,7 +39,7 @@ class CostEstimationService @Inject() (
   import CostEstimationService._
 
   def estimateServiceCost(
-    serviceName: String
+    serviceName: ServiceName
   )(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier
@@ -61,7 +61,7 @@ class CostEstimationService @Inject() (
       }
 
   def historicEstimatedCostChartsForService(
-    serviceName: String
+    serviceName: ServiceName
   )(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier
@@ -130,7 +130,7 @@ class CostEstimationService @Inject() (
 
 object CostEstimationService {
 
-  final case class DeploymentSize(
+  case class DeploymentSize(
     slots       : Int,
     instances   : Int,
   ) {
@@ -153,8 +153,8 @@ object CostEstimationService {
       )(DeploymentSize.apply)
   }
 
-  final case class DeploymentConfig(
-    serviceName   : String,
+  case class DeploymentConfig(
+    serviceName   : ServiceName,
     deploymentSize: DeploymentSize,
     environment   : Environment,
     zone          : Zone,
@@ -186,27 +186,23 @@ object CostEstimationService {
   object Zone extends FromStringEnum[Zone]
 
   object DeploymentConfig {
-    implicit val ef: Reads[Environment]    = environmentFormat
-    implicit val ds: Reads[DeploymentSize] = DeploymentSize.reads
-    implicit val zf: Reads[Zone]           = Zone.format
-
     val reads: Reads[DeploymentConfig] =
-      ( (__ \ "name"       ).read[String]
+      ( (__ \ "name"       ).read[ServiceName        ](ServiceName.format)
       ~ (__ \ "slots"      ).read[Int]
       ~ (__ \ "instances"  ).read[Int]
-      ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "zone"       ).read[Zone]
+      ~ (__ \ "environment").read[Environment        ](environmentFormat)
+      ~ (__ \ "zone"       ).read[Zone               ](Zone.format)
       ~ (__ \ "envVars"    ).read[Map[String, String]]
       ~ (__ \ "jvm"        ).read[Map[String, String]]
       ){ (n, s, i, e, z, ev, j) => DeploymentConfig(n, DeploymentSize(s, i), e, z, ev, j) }
   }
 
-  final case class HistoricEstimatedCostCharts(
+  case class HistoricEstimatedCostCharts(
     totalsChart: ChartDataTable,
     byEnvChart : ChartDataTable
   )
 
-  final case class ServiceCostEstimate(
+  case class ServiceCostEstimate(
     slotsByEnv: Seq[(Environment, TotalSlots)],
     chart     : ChartDataTable
   ) {

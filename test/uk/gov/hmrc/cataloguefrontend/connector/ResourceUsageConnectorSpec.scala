@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentSize
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
@@ -52,6 +52,8 @@ final class ResourceUsageConnectorSpec
 
   "The connector" should {
     "fetch and deserialise historic `ResourceUsage` for a service" in {
+      val serviceName = ServiceName("some-service")
+
       stubFor(
         get(urlEqualTo("/service-configs/resource-usage/services/some-service/snapshots"))
           .willReturn(
@@ -82,10 +84,10 @@ final class ResourceUsageConnectorSpec
           )
       )
 
-      resourceUsageConnector.historicResourceUsageForService("some-service").futureValue shouldBe List(
+      resourceUsageConnector.historicResourceUsageForService(serviceName).futureValue shouldBe List(
           ResourceUsage(
             date        = Instant.parse("2022-01-01T00:00:00.0Z"),
-            serviceName = "some-service",
+            serviceName = serviceName,
             values      = Map(
                             Environment.Integration  -> DeploymentSize.empty,
                             Environment.Development  -> DeploymentSize.empty,
@@ -97,7 +99,7 @@ final class ResourceUsageConnectorSpec
           ),
           ResourceUsage(
             date        = Instant.parse("2022-01-02T00:00:00.0Z"),
-            serviceName = "some-service",
+            serviceName = serviceName,
             values      = Map(
                             Environment.Integration  -> DeploymentSize.empty,
                             Environment.Development  -> DeploymentSize.empty,
@@ -109,7 +111,7 @@ final class ResourceUsageConnectorSpec
           ),
           ResourceUsage(
             date        = Instant.parse("2022-01-02T00:00:00.0Z"),
-            serviceName = "some-service",
+            serviceName = serviceName,
             values      = Map(
                             Environment.Integration  -> DeploymentSize.empty,
                             Environment.Development  -> DeploymentSize.empty,
@@ -122,7 +124,7 @@ final class ResourceUsageConnectorSpec
           ,
           ResourceUsage(
             date        = today,
-            serviceName = "some-service",
+            serviceName = serviceName,
             values      = Map(
                             Environment.Integration  -> DeploymentSize.empty,
                             Environment.Development  -> DeploymentSize.empty,

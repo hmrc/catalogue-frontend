@@ -14,21 +14,19 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, ServiceType}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{GroupBy, SearchConfig, ServiceConfigsService, routes => serviceConfigsRoutes, FormValueFilterType }
 @import views.html.helper.{FieldConstructor, select}
 @import views.html.partials.form_global_errors
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{GroupBy, SearchConfig, ServiceConfigsService, routes => serviceConfigsRoutes, FormValueFilterType }
-@import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 
 @this()
 
 @(form            : Form[SearchConfig.SearchConfigForm],
   allTeams        : Seq[GitHubTeam],
   allKeys         : Seq[String],
-  groupedByKey    : Option[Map[ServiceConfigsService.KeyName, Map[ServiceConfigsService.ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]] = None,
-  groupedByService: Option[Map[ServiceConfigsService.ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]] = None
+  groupedByKey    : Option[Map[ServiceConfigsService.KeyName, Map[ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]] = None,
+  groupedByService: Option[Map[ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]] = None
 )(implicit
   messages: Messages,
   request : RequestHeader
@@ -283,10 +281,10 @@
     </script>
 }
 
-@displayConfigSourceValue(serviceName: ServiceConfigsService.ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
+@displayConfigSourceValue(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
     @result match {
         case None => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, false, Some(configKey) ).url"
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, false, Some(configKey) ).url"
                aria-label="Not deployed in environment"
                data-bs-toggle="popover"
                data-bs-trigger="hover"
@@ -297,7 +295,7 @@
             </a>
         }
         case Some(envData) => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.asString, false, Some(configKey)).url"
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, false, Some(configKey)).url"
                aria-label="Environment data"
                data-bs-toggle="popover"
                data-bs-trigger="hover"

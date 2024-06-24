@@ -14,15 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, TeamName}
-@import uk.gov.hmrc.cataloguefrontend.users.{UmpTeam, SlackInfo}
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
-@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes, ViewMessages}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependency
 @import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
+@import uk.gov.hmrc.cataloguefrontend.users.{UmpTeam, SlackInfo, routes => userRoutes}
 
 @this(
   viewMessages: ViewMessages

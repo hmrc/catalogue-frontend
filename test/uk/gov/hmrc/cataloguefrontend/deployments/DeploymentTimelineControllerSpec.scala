@@ -24,8 +24,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.model.Environment.Integration
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
 import uk.gov.hmrc.http.SessionKeys
@@ -79,11 +78,11 @@ class DeploymentTimelineControllerSpec
       )(any))
         .thenReturn(Future.successful(Seq.empty))
       when(mockedDeploymentGraphService.findEvents(service = any, start = any, end = any))
-        .thenReturn(Future.successful(Seq(DeploymentTimelineEvent(Integration, Version(1, 0, 0, ""), "deploymentId", "ua", Instant.now(), Instant.now()))))
+        .thenReturn(Future.successful(Seq(DeploymentTimelineEvent(Environment.Integration, Version(1, 0, 0, ""), "deploymentId", "ua", Instant.now(), Instant.now()))))
       when(mockedServiceDependenciesConnector.getSlugInfo(any, any)(any))
         .thenReturn(Future.successful(None))
 
-      val response = controller.graph(Some("foo"), start, end)(FakeRequest(GET, "/deployment-timeline").withSession(SessionKeys.authToken -> "Token token"))
+      val response = controller.graph(Some(ServiceName("foo")), start, end)(FakeRequest(GET, "/deployment-timeline").withSession(SessionKeys.authToken -> "Token token"))
       status(response) shouldBe 200
     }
   }

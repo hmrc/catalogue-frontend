@@ -15,9 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.connector.model.Version
 @import uk.gov.hmrc.cataloguefrontend.deployments.{DeploymentGraphService, TimelinePalette}
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.routes.CatalogueController
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
@@ -25,7 +23,7 @@
 
 @this()
 
-@(service: String,
+@(service : Option[ServiceName],
   start   : Instant,
   end     : Instant,
   events  : Seq[DeploymentTimelineEvent],
@@ -128,7 +126,7 @@
         }
     </script>
 
-    <h1 class="page-heading mt-4">Deployment Timeline @if(service != ""){<a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service</a>}</h1>
+    <h1 class="page-heading mt-4">Deployment Timeline @service.map { s => <a id="link-to-service-info-page" href="@CatalogueController.service(s)">- @s.asString</a>}</h1>
 
     <form id="form" action="" method="get">
         <div class="form-group row">
@@ -186,13 +184,13 @@
 
 <script @CSPNonce.attr>
         autoCompleteInit({
-          formId: "form",
+          formId       : "form",
           inputSearchId: "service-search",
-          matchesDivId: "service-matches",
-          allowPartial: false,
-          ignoreCase: true,
-          values: [@for(service <- services) {'@service',}],
-          minSearch: 1
+          matchesDivId : "service-matches",
+          allowPartial : false,
+          ignoreCase   : true,
+          values       : [@for(service <- services) {'@service',}],
+          minSearch    : 1
         });
 </script>
 

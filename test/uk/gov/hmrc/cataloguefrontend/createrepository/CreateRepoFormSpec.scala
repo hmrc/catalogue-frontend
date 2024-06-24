@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
 import play.api.data.validation.Invalid
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class CreateRepoFormSpec extends UnitSpec {

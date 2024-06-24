@@ -19,14 +19,13 @@ package uk.gov.hmrc.cataloguefrontend.costs
 import cats.implicits._
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
-import play.api.data.Form
-import play.api.data.Forms.{mapping, optional, text}
+import play.api.data.{Form, Forms}
+import play.api.data.Forms.{mapping, optional}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
@@ -51,7 +50,7 @@ class CostsSummaryController @Inject() (
 ) extends FrontendController(mcc)
     with CatalogueAuthBuilders {
 
-  private def toRows(serviceDeploymentMap: Map[String, Seq[DeploymentConfig]]): Seq[Seq[(String, String)]] = {
+  private def toRows(serviceDeploymentMap: Map[ServiceName, Seq[DeploymentConfig]]): Seq[Seq[(String, String)]] = {
     serviceDeploymentMap.map {
       case (serviceName, configList) =>
 
@@ -65,22 +64,22 @@ class CostsSummaryController @Inject() (
             )
         }
 
-        Seq("Application Name" -> serviceName) ++ slotsAndInstances ++ Seq("Estimated Cost (£ / year)" -> configEstimateCosts)
+        Seq("Application Name" -> serviceName.asString) ++ slotsAndInstances ++ Seq("Estimated Cost (£ / year)" -> configEstimateCosts)
     }.toSeq
   }
 
   def costExplorer(
-    team : Option[String] = None,
-    asCSV: Boolean        = false
+    team : Option[TeamName] = None,
+    asCSV: Boolean          = false
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for {
         teams           <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
-        configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.trim.isEmpty))
-        groupedConfigs  = configs.groupBy(_.serviceName)
+        configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.asString.trim.isEmpty))
+        groupedConfigs  =  configs.groupBy(_.serviceName)
       } yield {
         if (asCSV) {
-          val csv = s"${team.getOrElse("")} ,Integration, ,Development, ,QA, ,Staging, ,ExternalTest, ,Production\n" + // CSV header
+          val csv = s"${team.fold("")(_.asString)} ,Integration, ,Development, ,QA, ,Staging, ,ExternalTest, ,Production\n" + // CSV header
             CsvUtils.toCsv(toRows(groupedConfigs)).replaceAll(""".\{.*?(})""", "")
           val source = Source.single(ByteString(csv, "UTF-8"))
 
@@ -99,7 +98,7 @@ object RepoListFilter {
   lazy val form: Form[RepoListFilter] =
     Form(
       mapping(
-        "team" -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString))
+        "team" -> optional(Forms.of[TeamName](TeamName.formFormat))
       )(RepoListFilter.apply)(r => Some(r.team))
     )
 }

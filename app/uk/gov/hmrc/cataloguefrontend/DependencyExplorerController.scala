@@ -25,9 +25,9 @@ import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, ServiceWithDependency, TeamName}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, RepoWithDependency}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, FormUtils}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -85,7 +85,7 @@ class DependencyExplorerController @Inject() (
     group       : String,
     artefact    : String,
     versionRange: Option[String],
-    team        : Option[String],
+    team        : Option[TeamName],
     flag        : Option[String],
     `scope[]`   : Option[Seq[String]],
     `repoType[]`: Option[Seq[String]],
@@ -103,7 +103,7 @@ class DependencyExplorerController @Inject() (
             group        = group,
             artefact     = artefact,
             versionRange = versionRange.getOrElse(BobbyVersionRange("[0.0.0,]").range),
-            team         = team.getOrElse(""),
+            team         = team.fold("")(_.asString),
             flag         = flag.getOrElse(SlugInfoFlag.Latest.asString),
             scope        = `scope[]`.getOrElse(Seq(DependencyScope.Compile.asString)),
             repoType     = `repoType[]`.getOrElse(Seq(RepoType.Service.asString))
@@ -228,23 +228,23 @@ object DependencyExplorerController {
     results: Map[String, Int]
   )
 
-  def toRow(serviceWithDependency: ServiceWithDependency, teamName: String): Seq[(String, String)] = {
+  def toRow(repoWithDependency: RepoWithDependency, teamName: String): Seq[(String, String)] = {
     Seq(
-      "repoName"    -> serviceWithDependency.repoName,
-      "repoVersion" -> serviceWithDependency.repoVersion.toString,
+      "repoName"    -> repoWithDependency.repoName,
+      "repoVersion" -> repoWithDependency.repoVersion.toString,
       "team"        -> teamName,
-      "depGroup"    -> serviceWithDependency.depGroup,
-      "depArtefact" -> serviceWithDependency.depArtefact,
-      "depVersion"  -> serviceWithDependency.depVersion.toString
+      "depGroup"    -> repoWithDependency.depGroup,
+      "depArtefact" -> repoWithDependency.depArtefact,
+      "depVersion"  -> repoWithDependency.depVersion.toString
     )
   }
 
-  def toRows(seq: Seq[ServiceWithDependency], teamFilter: Option[TeamName]): Seq[Seq[(String, String)]] =
-    seq.flatMap { serviceDependency =>
-      if (serviceDependency.teams.nonEmpty)
-        teamFilter.fold(serviceDependency.teams)(List(_))
-          .map(team => toRow(serviceDependency, team.asString))
-      else Seq(toRow(serviceDependency, ""))
+  def toRows(seq: Seq[RepoWithDependency], teamFilter: Option[TeamName]): Seq[Seq[(String, String)]] =
+    seq.flatMap { repoWithDependency =>
+      if (repoWithDependency.teams.nonEmpty)
+        teamFilter.fold(repoWithDependency.teams)(List(_))
+          .map(team => toRow(repoWithDependency, team.asString))
+      else Seq(toRow(repoWithDependency, ""))
     }
 
   def groupArtefactFromForm(form: Form[?]): Option[String] =
@@ -254,7 +254,7 @@ object DependencyExplorerController {
     } yield s"$g:$a"
 
   def search(
-    team        : String = "",
+    team        : Option[TeamName]      = None,
     flag        : SlugInfoFlag,
     scopes      : Seq[DependencyScope],
     repoTypes   : Option[Seq[RepoType]] = None,
@@ -268,7 +268,7 @@ object DependencyExplorerController {
       `scope[]`    = Some(scopes.map(_.asString)),
       `repoType[]` = repoTypes.map(_.map(_.asString)),
       flag         = Some(flag.asString),
-      team         = Some(team),
+      team         = team,
       versionRange = Some(versionRange.range),
       asCsv        = false,
     ).toString

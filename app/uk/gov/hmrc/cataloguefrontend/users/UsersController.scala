@@ -17,13 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend.users
 
 import cats.data.EitherT
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.error_404_template
@@ -99,7 +99,7 @@ object UsersListFilter {
   lazy val form: Form[UsersListFilter] =
     Form(
       mapping(
-        "team"     -> optional(text).transform[Option[TeamName]](_.map(TeamName.apply), _.map(_.asString)),
+        "team"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
         "username" -> optional(text)
       )(UsersListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

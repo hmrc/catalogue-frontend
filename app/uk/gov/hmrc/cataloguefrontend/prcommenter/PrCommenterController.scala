@@ -20,7 +20,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.data.{Form, Forms}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.prcommenter.PrCommenterRecommendationsPage
@@ -49,7 +49,7 @@ class PrCommenterController @Inject() (
     Form(
       Forms.mapping(
         "name"        -> Forms.optional(Forms.text),
-        "teamName"    -> Forms.optional(Forms.text).transform[Option[TeamName]](_.map(TeamName.apply), _.map(_.asString)),
+        "teamName"    -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
         "commentType" -> Forms.optional(Forms.text)
       )(Filter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

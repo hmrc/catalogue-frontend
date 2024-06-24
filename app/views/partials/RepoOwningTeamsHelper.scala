@@ -17,7 +17,7 @@
 package views.partials
 
 import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 
 object RepoOwningTeamsHelper {
   def teamNamesSortedByOwningTeam(repo: GitRepository): Seq[TeamName] =

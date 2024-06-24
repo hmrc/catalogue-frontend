@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.model._
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope}
 
 @this()
 
@@ -22,8 +22,7 @@
   dependencies: Seq[Dependency],
   rootId      : String,
   title       : String,
-  serviceName : String,
-  version     : Option[Version],
+  service     : Option[(ServiceName, Version)],
   isSub       : Boolean         = false,
   showLegend  : Boolean         = true
 )
@@ -64,21 +63,21 @@
         <div class="row">
             <div class="col-3 offset-9">
                 @if(dependencies.nonEmpty) {
-                    @version.map(ver => graphLink(ver, dependencies.head.scope))
+                    @service.map((name, version) => graphLink(name, version, dependencies.head.scope))
                 }
                 @* Only show the dependencies link for compile scope for now (we'd need to extend the page to support other scopes *@
                 @if(dependencies.headOption.exists(_.scope == DependencyScope.Compile)){
-                    <br/>@version.map(ver => dependenciesLink(ver))
+                    <br/>@service.map((name, version) => dependenciesLink(name, version))
                 }
             </div>
         </div>
     </div>
 </div>
 
-@graphLink(v: Version, scope: DependencyScope) = {
-  <a id="@rootId-view-dependency-graph" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, v.toString, scope.asString)">View Dependency Graph</a>
+@graphLink(serviceName: ServiceName, version: Version, scope: DependencyScope) = {
+  <a id="@rootId-view-dependency-graph" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, version.toString, scope.asString)">View Dependency Graph</a>
 }
 
-@dependenciesLink(v: Version) = {
-  <a id="@rootId-view-dependency-list" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.service(serviceName, v.toString)">View Dependency List</a>
+@dependenciesLink(serviceName: ServiceName, version: Version) = {
+  <a id="@rootId-view-dependency-list" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.service(serviceName, version.toString)">View Dependency List</a>
 }

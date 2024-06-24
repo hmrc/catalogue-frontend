@@ -30,8 +30,8 @@ import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redire
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.AsyncRequestId
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
-import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJDKVersion}
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
+import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector, routes}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
@@ -56,9 +56,9 @@ class CreateAppConfigsControllerSpec
   }
 
   "CreateAppConfigsController" should {
-    "have the correct url setup" in {
-      uk.gov.hmrc.cataloguefrontend.createappconfigs.routes.CreateAppConfigsController.createAppConfigsLanding("test-service")
-        .url shouldBe "/create-app-configs?serviceName=test-service"
+    "have the correct url setup" in new Setup {
+      uk.gov.hmrc.cataloguefrontend.createappconfigs.routes.CreateAppConfigsController
+        .createAppConfigsLanding(serviceName).url shouldBe "/create-app-configs?serviceName=test-service"
     }
 
     "return permission with correct resource type and action" in new Setup {
@@ -81,7 +81,7 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
       val result = controller
@@ -100,7 +100,7 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
       val result = controller
@@ -154,10 +154,10 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
+      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
@@ -184,10 +184,10 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
+      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
 
       when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
@@ -216,10 +216,10 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
+      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
 
       when(mockGHConnector.getGitHubProxyRaw(any[String])(any[HeaderCarrier]))
@@ -246,10 +246,10 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[String], any[ServiceType], any[Boolean], any[Boolean]))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[ServiceName], any[ServiceType], any[Boolean], any[Boolean]))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
       val result = controller
@@ -270,10 +270,10 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[String], any[ServiceType], any[Boolean], any[Boolean]))
+      when(mockBDConnector.createAppConfigs(any[CreateAppConfigsForm], any[ServiceName], any[ServiceType], any[Boolean], any[Boolean]))
         .thenReturn(Future.successful(Right(asyncRequestIdResponse)))
 
       val result = controller
@@ -326,10 +326,10 @@ class CreateAppConfigsControllerSpec
       when(mockTRConnector.repositoryDetails(any[String])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(gitRepository)))
 
-      when(mockSCSConnector.commissioningStatus(any[String])(any[HeaderCarrier]))
+      when(mockSCSConnector.commissioningStatus(any[ServiceName])(any[HeaderCarrier]))
         .thenReturn(Future.successful(List.empty[Check]))
 
-      when(mockSDConnector.getSlugInfo(any[String], any[Option[Version]])(any[HeaderCarrier]))
+      when(mockSDConnector.getSlugInfo(any[ServiceName], any[Option[Version]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(serviceDependenciesContainsMongo)))
 
       when(mockBDConnector.createAppConfigs(form.copy(appConfigBase = true), serviceName, ServiceType.Backend, requiresMongo = true, isApi = false))
@@ -375,11 +375,11 @@ class CreateAppConfigsControllerSpec
                               configuration                       = config
                             )
 
-    val serviceName = "test-service"
+    val serviceName = ServiceName("test-service")
 
     val gitRepository =
       GitRepository(
-        name           = serviceName,
+        name           = serviceName.asString,
         description    = "test",
         githubUrl      = "test",
         createdDate    = Instant.now(),
@@ -393,10 +393,10 @@ class CreateAppConfigsControllerSpec
     val serviceDependenciesContainsMongo =
       ServiceDependencies(
         uri                  = "test",
-        name                 = serviceName,
+        name                 = serviceName.asString,
         version              = Version(1, 1, 1, ""),
         runnerVersion        = "",
-        java                 = ServiceJDKVersion("", "", ""),
+        java                 = ServiceJdkVersion("", "", ""),
         classpath            = "",
         dependencies         = Seq.empty,
         dependencyDotCompile = Some(""" "test" "hmrc-mongo" """)

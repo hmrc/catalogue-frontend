@@ -15,7 +15,6 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{routes, ShutterCause, ShutterStateChangeEvent, ShutterState, ShutterStatusValue, ShutterType}
 
 @this()
@@ -130,7 +129,7 @@
       @defining(state.status.value == ShutterStatusValue.Shuttered) { isShuttered =>
           <tr id="row@i" class="shutter-row @if(isShuttered) {shuttered-row} else {unshuttered}">
               <td id="row@{i}_name" class="shutter-service">
-                <a class="shutter-link " href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName.asString)">
+                <a class="shutter-link " href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(state.serviceName)">
                   @state.serviceName.asString
                 </a>
               </td>
@@ -156,13 +155,13 @@
                   data-bs-toggle="tooltip"
                   data-bs-placement="right"
                   data-bs-title="@messages("shutter-event.history")"
-                  href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName.asString))"></a>
+                  href="@routes.ShutterEventsController.shutterEventsList(state.environment, Some(state.serviceName))"></a>
               } else {
                   @Html("No events")
               }
               </td>
               <td id="row@{i}_update" class="shutter-update">
-                  <a id="shutter-link-@{state.serviceName.asString}-@{state.environment.asString}" class="shutter-link " href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName.asString), state.context)">
+                  <a id="shutter-link-@{state.serviceName.asString}-@{state.environment.asString}" class="shutter-link " href="@routes.ShutterWizardController.start(state.shutterType, state.environment, Some(state.serviceName), state.context)">
                       @if(isShuttered) {Unshutter} else {Shutter}
                   </a>
               </td>

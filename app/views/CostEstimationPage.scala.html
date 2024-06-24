@@ -21,7 +21,7 @@
 @this()
 
 @(
-  serviceName                 : String,
+  serviceName                 : ServiceName,
   repositoryDetails           : GitRepository,
   costEstimate                : ServiceCostEstimate,
   costEstimateConfig          : CostEstimateConfig,
@@ -30,10 +30,10 @@
   request: RequestHeader
 )
 
-@standard_layout(serviceName, "services") {
+@standard_layout(serviceName.asString, "services") {
     <header class="header-with-github-badge">
         <div>
-            <h1 id="service-header" class="page-heading mt-4">Cost Estimation: @serviceName</h1>
+            <h1 id="service-header" class="page-heading mt-4">Cost Estimation: @serviceName.asString</h1>
         </div>
         <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>

@@ -17,7 +17,6 @@
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Username, DeploymentHistory, Pagination}
 @import uk.gov.hmrc.cataloguefrontend.deployments.routes
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
 @import uk.gov.hmrc.cataloguefrontend.DateHelper._
 @import helper._
 
@@ -120,7 +119,7 @@
               @deployments.zipWithIndex.map{case (d, i) =>
                 <tr id="row@i">
                   <td id="row@{i}_name">
-                      <a id="link-to-@{d.name.asString}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name.asString)">@{d.name.asString}</a>
+                      <a id="link-to-@{d.name.asString}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name)">@{d.name.asString}</a>
                   </td>
                   <td id="row@{i}_team">
                     <ul class="list-unstyled">

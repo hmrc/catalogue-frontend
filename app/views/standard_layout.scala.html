@@ -15,7 +15,6 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthIndRoutes}
@@ -137,7 +136,7 @@
                                     @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
                                 </a>
                             </li>
-                            <li><a id="link-to-events" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentEventsController.deploymentEvents(Production)">Events</a></li>
+                            <li><a id="link-to-events" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentEventsController.deploymentEvents(Environment.Production)">Events</a></li>
                             <li><a id="link-to-deployment-timeline" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController.graph(None)">Timeline</a></li>
                         </ul>
                     </li>
@@ -179,8 +178,8 @@
                         </a>
                         <ul id="explore-menu" class="dropdown-menu">
                             <li><a id="link-to-dependency-explorer" class="dropdown-item" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
-                            <li><a id="link-to-jdk-explorer" class="dropdown-item" href="@appRoutes.JDKVersionController.compareAllEnvironments()">JDK Explorer</a></li>
-                            <li><a id="link-to-sbt-explorer" class="dropdown-item" href="@appRoutes.SBTVersionController.compareAllEnvironments()">SBT Explorer</a></li>
+                            <li><a id="link-to-jdk-explorer" class="dropdown-item" href="@appRoutes.JdkVersionController.compareAllEnvironments()">JDK Explorer</a></li>
+                            <li><a id="link-to-sbt-explorer" class="dropdown-item" href="@appRoutes.SbtVersionController.compareAllEnvironments()">SBT Explorer</a></li>
                             <li><a id="link-to-default-branch-names" class="dropdown-item" href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>
                             <li><a id="link-to-search-by-url" class="dropdown-item" href="@appRoutes.SearchByUrlController.searchLanding#">Search by URL</a></li>
                             <li>

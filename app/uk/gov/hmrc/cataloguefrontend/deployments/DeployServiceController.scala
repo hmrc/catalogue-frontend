@@ -22,13 +22,12 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.Version
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesConnector}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesConnector}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion}
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.binders.{AbsoluteWithHostnameFromAllowlist, RedirectUrl, RedirectUrlPolicy, SafeRedirectUrl}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -59,8 +58,8 @@ class DeployServiceController @Inject()(
   with CatalogueAuthBuilders
   with I18nSupport {
 
-  private def predicate(serviceName: String): Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"services/$serviceName"), IAAction("DEPLOY_SERVICE"))
+  private def predicate(serviceName: ServiceName): Predicate =
+    Predicate.Permission(Resource.from("catalogue-frontend", s"services/${serviceName.asString}"), IAAction("DEPLOY_SERVICE"))
 
   private val failedPredicateMsg = "You do not have permission to deploy this service"
 
@@ -75,20 +74,20 @@ class DeployServiceController @Inject()(
       .sorted
 
   // Display form options
-  def step1(serviceName: Option[String]): Action[AnyContent] =
+  def step1(serviceName: Option[ServiceName]): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.DeployServiceController.step1(serviceName),
-      retrieval   =  servicesRetrieval
+      retrieval   = servicesRetrieval
     ).async { implicit request =>
       (for {
         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
-        accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos)
+        accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
         hasPerm              <- serviceName match {
                                   case Some(sn) => EitherT.right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(sn)), predicate = None))
                                   case None     => EitherT.pure[Future, Result](true)
                                 }
-        form                 =  serviceName.fold(DeployServiceForm.form)(x => DeployServiceForm.form.bind(Map("serviceName" -> x)).discardingErrors)
+        form                 =  serviceName.fold(DeployServiceForm.form)(s => DeployServiceForm.form.bind(Map("serviceName" -> s.asString)).discardingErrors)
         _                    <- EitherT
                                   .fromOption[Future](
                                     Option.when(hasPerm)(())
@@ -116,8 +115,8 @@ class DeployServiceController @Inject()(
                                   case Some(_) => EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
                                   case None    => EitherT.right[Result](Future.unit)
                                 }
-      } yield
-        Ok(deployServicePage(form, hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
+       } yield
+         Ok(deployServicePage(form, hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
       ).merge
     }
 
@@ -130,7 +129,7 @@ class DeployServiceController @Inject()(
       (for {
         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
-        accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos)
+        accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
         form                 =  DeployServiceForm.form.bindFromRequest()
         formObject           <- EitherT
                                   .fromEither[Future](form.fold(
@@ -183,11 +182,11 @@ class DeployServiceController @Inject()(
                                   })
         confUpdates          =  (confNew.view.mapValues(x => (x, true)) ++ confRemoves.view.mapValues(x => (x, false))).toMap
         confWarnings         <- EitherT
-                                  .right[Result](serviceConfigsService.configWarnings(ServiceConfigsService.ServiceName(formObject.serviceName), Seq(formObject.environment), Some(formObject.version), latest = true))
+                                  .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
         vulnerabilites       <- EitherT
                                   .right[Result](
                                     vulnerabilitiesConnector
-                                      .vulnerabilitySummaries(serviceName = Some(formObject.serviceName), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired))
+                                      .vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired))
                                       .map(_.flatMap {
                                         case xs if xs.isEmpty && !releases.exists(_.version == formObject.version) => None
                                         case xs                                                                    => Some(xs)
@@ -195,8 +194,8 @@ class DeployServiceController @Inject()(
                                   )
         jvmChanges            =  (currentSlug.map(_.java), slugToDeploy.java)
         deploymentConfigUpdates <- EitherT
-                                     .right[Result](serviceConfigsService.deploymentConfigChanges(ServiceConfigsService.ServiceName(formObject.serviceName), formObject.environment))
-      } yield
+                                     .right[Result](serviceConfigsService.deploymentConfigChanges(formObject.serviceName, formObject.environment))
+       } yield
         Ok(deployServicePage(
           form,
           hasPerm,
@@ -219,7 +218,7 @@ class DeployServiceController @Inject()(
       (for {
         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(locations))
-        accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos)
+        accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
         form                 =  DeployServiceForm.form.bindFromRequest()
         formObject           <- EitherT
                                   .fromEither[Future](form.fold(
@@ -245,7 +244,7 @@ class DeployServiceController @Inject()(
                                   , environment = formObject.environment
                                   , user        = username
                                   ))
-      } yield
+       } yield
         Redirect(routes.DeployServiceController.step4(
           serviceName = formObject.serviceName
         , version     = formObject.version.original
@@ -261,7 +260,7 @@ class DeployServiceController @Inject()(
 
   import RedirectUrl._
   // Display progress and useful links
-  def step4(serviceName: String, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl]): Action[AnyContent] =
+  def step4(serviceName: ServiceName, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (for {
         qUrl <- EitherT.fromEither[Future](queueUrl.getEither[RedirectUrlPolicy.Id](redirectUrlPolicy))
@@ -284,7 +283,8 @@ class DeployServiceController @Inject()(
                                           })
                   )
                 )
-      } yield res).merge
+       } yield res
+      ).merge
     }
 
   import scala.concurrent.duration._
@@ -294,7 +294,7 @@ class DeployServiceController @Inject()(
   import play.api.libs.json.Json
   def step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      (for {
+     (for {
         qUrl <- EitherT.fromEither[Future](queueUrl.getEither[RedirectUrlPolicy.Id](redirectUrlPolicy))
                        .leftMap(_ => BadRequest("Invalid queueUrl"))
         bUrl <- EitherT.fromEither[Future](buildUrl.fold(Right(Option.empty[SafeRedirectUrl]): Either[String, Option[SafeRedirectUrl]])(_.getEither(redirectUrlPolicy).map(Option.apply)))
@@ -315,12 +315,13 @@ class DeployServiceController @Inject()(
 
         Ok.chunked(flow)
           .as(ContentTypes.EVENT_STREAM)
-      }).merge
+      }
+     ).merge
     }
 }
 
 case class DeployServiceForm(
-  serviceName: String
+  serviceName: ServiceName
 , version    : Version
 , environment: Environment
 )
@@ -330,7 +331,7 @@ object DeployServiceForm {
   val form: Form[DeployServiceForm] =
     Form(
       Forms.mapping(
-        "serviceName" -> Forms.text
+        "serviceName" -> Forms.of[ServiceName](ServiceName.formFormat)
       , "version"     -> Forms.of[Version](Version.formFormat)
       , "environment" -> Forms.of[Environment](Environment.formFormat)
       )(DeployServiceForm.apply)(f => Some(Tuple.fromProductTyped(f)))

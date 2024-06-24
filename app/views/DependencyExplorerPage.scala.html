@@ -17,8 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, ServiceWithDependency, TeamName}
-@import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, RepoWithDependency}
 @import views.html.helper.FieldConstructor
 @import views.html.partials.{TeamNamesPartial, form_global_errors}
 
@@ -33,7 +32,7 @@
   scopes          : Seq[DependencyScope],
   groupArtefacts  : List[GroupArtefacts],
   versionRange    : BobbyVersionRange,
-  searchResults   : Option[Seq[ServiceWithDependency]],
+  searchResults   : Option[Seq[RepoWithDependency]],
   pieData         : Option[PieData]
 )(implicit
   request         : RequestHeader,
@@ -192,11 +191,11 @@
                         @for(result <- searchResults) {
                             <tr>
                                 <td class="service"><a aria-label="Link to page info for @{result.repoName}" id="link-to-info-page-for-@{result.repoName}"
-                                href=@{if(result.repoType == RepoType.Service) appRoutes.CatalogueController.service(result.repoName) else appRoutes.CatalogueController.repository(result.repoName) }>@result.repoName</a>
+                                href=@{if(result.repoType == RepoType.Service) appRoutes.CatalogueController.service(ServiceName(result.repoName)) else appRoutes.CatalogueController.repository(result.repoName) }>@result.repoName</a>
                                 </td>
                                 <td>@result.repoVersion</td>
                                 <td class="teams">
-                                    @teamNamesPartial(result.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(result.repoName)}#owning-team")
+                                    @teamNamesPartial(result.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(ServiceName(result.repoName))}#owning-team")
                                 </td>
                                 <td>@result.repoType</td>
                                 <td class="dep-version">@result.depVersion</td>

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend.repository
 
-import play.api.data.Form
-import play.api.data.Forms._
+import play.api.data.{Form, Forms}
+import play.api.data.Forms.{boolean, mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.repository
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -108,7 +108,7 @@ object RepoListFilter {
     Form(
       mapping(
         "name"         -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"         -> optional(text).transform[Option[TeamName]](_.filter(_.trim.nonEmpty).map(TeamName.apply), _.map(_.asString)),
+        "team"         -> optional(Forms.of[TeamName](TeamName.formFormat)),
         "repoType"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
         "showArchived" -> optional(boolean)
       )(RepoListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))

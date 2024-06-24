@@ -18,10 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{JsObject, Json, OWrites, Reads, __}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
-final case class Role(asString: String) {
+case class Role(asString: String) {
   def displayName: String =
     asString.split("_").map(_.capitalize).mkString(" ")
 
@@ -33,7 +33,7 @@ object Role {
   val reads: Reads[Role] = Reads.StringReads.map(Role.apply)
 }
 
-final case class Member(
+case class Member(
   username   : String
 , displayName: Option[String]
 , role       : Role
@@ -50,7 +50,7 @@ object Member {
   }
 }
 
-final case class SlackInfo(url: String) {
+case class SlackInfo(url: String) {
   val name: String =
     url.split("/").lastOption.getOrElse(url)
 
@@ -65,7 +65,7 @@ object SlackInfo {
   val reads: Reads[SlackInfo] = Reads.StringReads.map(SlackInfo.apply)
 }
 
-final case class UmpTeam(
+case class UmpTeam(
   members          : Seq[Member]
 , teamName         : TeamName
 , description      : Option[String]
@@ -89,7 +89,7 @@ object UmpTeam {
   }
 }
 
-final case class User(
+case class User(
   displayName   : Option[String],
   familyName    : String,
   givenName     : Option[String],

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, __}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentSize
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -39,14 +39,14 @@ class ResourceUsageConnector @Inject() (
 
   private val baseUrl = servicesConfig.baseUrl("service-configs")
 
-  private def rawResourceUsageForService(serviceName: String)(implicit hc: HeaderCarrier): Future[List[RawResourceUsage]] = {
+  private def rawResourceUsageForService(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[List[RawResourceUsage]] = {
     implicit val rruf: Format[RawResourceUsage] = RawResourceUsage.format
     httpClientV2
-      .get(url"$baseUrl/service-configs/resource-usage/services/$serviceName/snapshots")
+      .get(url"$baseUrl/service-configs/resource-usage/services/${serviceName.asString}/snapshots")
       .execute[List[RawResourceUsage]]
   }
 
-  def historicResourceUsageForService(serviceName: String)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] =
+  def historicResourceUsageForService(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[List[ResourceUsage]] =
     rawResourceUsageForService(serviceName)
       .map { res =>
         // for every date with a value, ensure we have a value for all environments
@@ -85,15 +85,15 @@ class ResourceUsageConnector @Inject() (
 
 object ResourceUsageConnector {
 
-  final case class ResourceUsage(
+  case class ResourceUsage(
     date       : Instant,
-    serviceName: String,
+    serviceName: ServiceName,
     values     : Map[Environment, DeploymentSize]
   )
 
-  final case class RawResourceUsage(
+  case class RawResourceUsage(
     date       : Instant,
-    serviceName: String,
+    serviceName: ServiceName,
     environment: Environment,
     deploymentSize: DeploymentSize,
   )
@@ -101,7 +101,7 @@ object ResourceUsageConnector {
   object RawResourceUsage {
     def apply(
       date       : Instant,
-      serviceName: String,
+      serviceName: ServiceName,
       environment: Environment,
       slots      : Int,
       instances  : Int,
@@ -114,7 +114,7 @@ object ResourceUsageConnector {
 
     val format: Format[RawResourceUsage] =
       ( (__ \ "date"        ).format[Instant]
-      ~ (__ \ "serviceName" ).format[String]
+      ~ (__ \ "serviceName" ).format[ServiceName](ServiceName.format)
       ~ (__ \ "environment" ).format[Environment](Environment.format)
       ~ (__ \ "slots"       ).format[Int]
       ~ (__ \ "instances"   ).format[Int]

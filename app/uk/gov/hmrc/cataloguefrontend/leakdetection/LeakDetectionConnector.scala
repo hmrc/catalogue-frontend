@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 import play.api.Logger
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -124,7 +124,7 @@ class LeakDetectionConnector @Inject() (
   }
 }
 
-final case class RepositoryWithLeaks(name: String) extends AnyVal
+case class RepositoryWithLeaks(name: String) extends AnyVal
 
 object RepositoryWithLeaks {
   val reads: Reads[RepositoryWithLeaks] =
@@ -149,7 +149,7 @@ object Priority {
     }
 }
 
-final case class LeakDetectionSummary(
+case class LeakDetectionSummary(
   rule : LeakDetectionRule,
   leaks: Seq[LeakDetectionRepositorySummary]
 )
@@ -164,7 +164,7 @@ object LeakDetectionSummary {
   }
 }
 
-final case class LeakDetectionRule(
+case class LeakDetectionRule(
   id               : String,
   scope            : String,
   regex            : String,
@@ -192,7 +192,7 @@ object LeakDetectionRule {
   }
 }
 
-final case class LeakDetectionRepositorySummary(
+case class LeakDetectionRepositorySummary(
   repository     : String,
   isArchived     : Boolean,
   firstScannedAt : Instant,
@@ -221,7 +221,7 @@ object LeakDetectionRepositorySummary {
   }
 }
 
-final case class LeakDetectionBranchSummary(
+case class LeakDetectionBranchSummary(
   branch         : String,
   reportId       : String,
   scannedAt      : Instant,
@@ -238,7 +238,7 @@ object LeakDetectionBranchSummary {
     Json.reads[LeakDetectionBranchSummary]
 }
 
-final case class UnusedExemption(
+case class UnusedExemption(
   ruleId  : String,
   filePath: String,
   text    : Option[String]
@@ -249,7 +249,7 @@ object UnusedExemption {
     Json.reads[UnusedExemption]
 }
 
-final case class LeakDetectionReport(
+case class LeakDetectionReport(
   repoName        : String,
   branch          : String,
   id              : String,
@@ -277,7 +277,7 @@ object LeakDetectionReport {
   }
 }
 
-final case class LeakDetectionLeak(
+case class LeakDetectionLeak(
   ruleId     : String,
   description: String,
   filePath   : String,
@@ -308,7 +308,7 @@ object LeakDetectionLeak {
   }
 }
 
-final case class Match(
+case class Match(
   start: Int,
   end  : Int
 )
@@ -320,7 +320,7 @@ object Match {
     )(Match.apply)
 }
 
-final case class LeakDetectionWarning(message: String)
+case class LeakDetectionWarning(message: String)
 
 object LeakDetectionWarning {
   val reads: Reads[LeakDetectionWarning] =

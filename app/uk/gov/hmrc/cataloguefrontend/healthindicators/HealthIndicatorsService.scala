@@ -17,9 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector.ServiceName
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -38,24 +37,21 @@ class HealthIndicatorsService @Inject() (
     repoNameFilter: Option[String]
   )(implicit
     hc: HeaderCarrier
-  ): Future[Seq[IndicatorsWithTeams]] = {
-    val eventualTeamLookUp: Future[Map[ServiceName, Seq[TeamName]]] = teamsAndReposConnector.allTeamsByService()
-    val eventualIndicators: Future[Seq[Indicator]]                  = healthIndicatorsConnector.getIndicators(repoType)
-
+  ): Future[Seq[IndicatorsWithTeams]] =
     for {
-      repoToTeams        <- eventualTeamLookUp
-      indicators         <- eventualIndicators
+      repoToTeams        <- teamsAndReposConnector.allTeamsByService()
+      indicators         <- healthIndicatorsConnector.getIndicators(repoType)
       filteredIndicators =  indicators.filter(ind => repoNameFilter.fold(true)(name => ind.repoName.toLowerCase.contains(name.toLowerCase)))
-    } yield filteredIndicators.map { i =>
-      IndicatorsWithTeams(
-        i.repoName,
-        owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty).sorted,
-        i.repoType,
-        i.overallScore,
-        i.weightedMetrics
+    } yield
+      filteredIndicators.map(i =>
+        IndicatorsWithTeams(
+          i.repoName,
+          owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty).sorted,
+          i.repoType,
+          i.overallScore,
+          i.weightedMetrics
+        )
       )
-    }
-  }
 }
 
 case class IndicatorsWithTeams(

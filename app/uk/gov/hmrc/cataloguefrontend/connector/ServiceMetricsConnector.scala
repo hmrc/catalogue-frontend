@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.StringContextOps
@@ -41,31 +41,31 @@ class ServiceMetricsConnector @Inject() (
   private val serviceMetricsBaseUrl: String =
     servicesConfig.baseUrl("service-metrics")
 
-  def nonPerformantQueriesForService(service: String)(implicit hc: HeaderCarrier): Future[Seq[NonPerformantQueries]] = {
+  def nonPerformantQueriesForService(service: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[NonPerformantQueries]] = {
     implicit val npqr = NonPerformantQueries.reads
     httpClientV2
-      .get(url"$serviceMetricsBaseUrl/service-metrics/$service/non-performant-queries")
+      .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/non-performant-queries")
       .execute[Seq[NonPerformantQueries]]
   }
 
-  def getCollections(service: String)(implicit hc: HeaderCarrier): Future[Seq[MongoCollectionSize]] = {
+  def getCollections(service: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[MongoCollectionSize]] = {
     implicit val mcsR = MongoCollectionSize.reads
     httpClientV2
-      .get(url"$serviceMetricsBaseUrl/service-metrics/$service/collections")
+      .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/collections")
       .execute[Seq[MongoCollectionSize]]
   }
 }
 
 object ServiceMetricsConnector {
-  final case class NonPerformantQueries(
-    service    : String,
+  case class NonPerformantQueries(
+    service    : ServiceName,
     environment: Environment,
     queryTypes : Seq[String],
   )
 
   object NonPerformantQueries{
     val reads: Reads[NonPerformantQueries] =
-      ( (__ \ "service"    ).read[String]
+      ( (__ \ "service"    ).read[ServiceName](ServiceName.format)
       ~ (__ \ "environment").read[Environment](Environment.format)
       ~ (__ \ "queryTypes" ).read[Seq[String]]
       )(NonPerformantQueries.apply)

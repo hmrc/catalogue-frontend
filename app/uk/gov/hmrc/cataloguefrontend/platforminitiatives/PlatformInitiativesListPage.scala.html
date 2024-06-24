@@ -17,7 +17,6 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{DisplayType, PlatformInitiative, routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 
 @this()
@@ -62,7 +61,7 @@
                 <div class="col-3 pt-2">
                     @Seq(DisplayType.Chart, DisplayType.Progress).zipWithIndex.map { case (dt, i) =>
                         @if(i != 0){ | }
-                        <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt,team)">
+                        <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt, team)">
                         @if(display == dt){ <strong>@dt.asString </strong> } else { @dt.asString }
                     </a>
                     }
@@ -70,8 +69,8 @@
                 <div class="col-2 offset-3">
                     <select id="teamName" name="team" class="form-select">
                         <option class="blank" value>All</option>
-                        @for(team <- allTeams.map(_.name.asString).distinct.sorted) {
-                            <option value="@team" @{if(form("team").value.contains(team)) "selected" else ""}>@team</option>
+                        @for(team <- allTeams.map(_.name).distinct.sorted) {
+                            <option value="@team" @{if(form("team").value.contains(team.asString)) "selected" else ""}>@team.asString</option>
                         }
                     </select>
                 </div>

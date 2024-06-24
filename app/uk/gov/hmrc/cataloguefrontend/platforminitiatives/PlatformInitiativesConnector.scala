@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import play.api.libs.json.OFormat
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -35,12 +36,12 @@ class PlatformInitiativesConnector @Inject()(
 
   private implicit val pif: OFormat[PlatformInitiative] = PlatformInitiative.format
 
-  def getInitiatives(team: Option[String])(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
+  def getInitiatives(team: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
     val url = team match {
       case None =>
         url"$platformInitiativesBaseUrl/platform-initiatives/initiatives"
       case Some(team) =>
-        url"$platformInitiativesBaseUrl/platform-initiatives/teams/$team/initiatives"
+        url"$platformInitiativesBaseUrl/platform-initiatives/teams/${team.asString}/initiatives"
     }
     httpClientV2
       .get(url)

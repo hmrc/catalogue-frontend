@@ -24,10 +24,9 @@ import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
-import uk.gov.hmrc.cataloguefrontend.connector.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -175,7 +174,13 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(resp => AsyncRequestId(resp.details)))
   }
 
-  def createAppConfigs(payload: CreateAppConfigsForm, serviceName: String, serviceType: ServiceType, requiresMongo: Boolean, isApi: Boolean): Future[Either[String, AsyncRequestId]] = {
+  def createAppConfigs(
+    payload      : CreateAppConfigsForm,
+    serviceName  : ServiceName,
+    serviceType  : ServiceType,
+    requiresMongo: Boolean,
+    isApi        : Boolean
+  ): Future[Either[String, AsyncRequestId]] = {
     val (st, zone) =
       serviceType match {
         case ServiceType.Frontend         => ( "Frontend microservice", "public"    )
@@ -211,7 +216,7 @@ class BuildDeployApiConnector @Inject() (
 }
 
 object BuildDeployApiConnector {
-  final case class BuildDeployResponse(
+  case class BuildDeployResponse(
     message: String,
     details: JsValue
   )
@@ -223,7 +228,7 @@ object BuildDeployApiConnector {
       )(BuildDeployResponse.apply)
   }
 
-  final case class AsyncRequestId(request: JsValue)
+  case class AsyncRequestId(request: JsValue)
 
   enum PrototypeStatus(val asString: String, val displayString: String) extends FromString:
     case Running      extends PrototypeStatus(asString = "running"     , displayString = "Running"     )
@@ -232,7 +237,7 @@ object BuildDeployApiConnector {
 
   object PrototypeStatus extends FromStringEnum[PrototypeStatus]
 
-  final case class PrototypeDetails(
+  case class PrototypeDetails(
     url   : Option[String],
     status: PrototypeStatus
   )
@@ -246,7 +251,7 @@ object BuildDeployApiConnector {
     }
   }
 
-  final case class ChangePrototypePasswordRequest(
+  case class ChangePrototypePasswordRequest(
     prototype: String,
     password : String
   )
@@ -336,7 +341,7 @@ object BuildDeployApiConnector {
   }
 
   case class CreateAppConfigsRequest(
-    microserviceName: String,
+    microserviceName: ServiceName,
     microserviceType: String,
     hasMongo        : Boolean,
     environments    : Seq[String],
@@ -345,7 +350,7 @@ object BuildDeployApiConnector {
 
   object CreateAppConfigsRequest {
     val writes: Writes[CreateAppConfigsRequest] =
-      ( (__ \ "microserviceName").write[String]
+      ( (__ \ "microserviceName").write[ServiceName](ServiceName.format)
       ~ (__ \ "microserviceType").write[String]
       ~ (__ \ "hasMongo"        ).write[Boolean]
       ~ (__ \ "environments"    ).write[Seq[String]]
