@@ -35,53 +35,49 @@ class ServiceDependenciesConnector @Inject() (
   servicesConfig: ServicesConfig
 )(using
   ec: ExecutionContext
-) {
+):
   import HttpReads.Implicits._
 
   private val servicesDependenciesBaseUrl: String =
     servicesConfig.baseUrl("service-dependencies")
 
-  def dependenciesForTeam(team: TeamName)(using HeaderCarrier): Future[Seq[Dependencies]] = {
+  def dependenciesForTeam(team: TeamName)(using HeaderCarrier): Future[Seq[Dependencies]] =
     given Reads[Dependencies] = Dependencies.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/teams/${team.asString}/dependencies")
       .execute[Seq[Dependencies]]
-  }
 
   def getSlugInfo(
     serviceName: ServiceName,
     version    : Option[Version] = None
   )(using
     HeaderCarrier
-  ): Future[Option[ServiceDependencies]] = {
+  ): Future[Option[ServiceDependencies]] =
     given Reads[ServiceDependencies] = ServiceDependencies.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/sluginfo?name=${serviceName.asString}&version=${version.map(_.toString)}")
       .execute[Option[ServiceDependencies]]
-  }
 
   def getSlugVersionInfo(
     serviceName: ServiceName
   )(using
     HeaderCarrier
-  ): Future[Seq[SlugVersionInfo]] = {
+  ): Future[Seq[SlugVersionInfo]] =
     given Reads[SlugVersionInfo] = SlugVersionInfo.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/sluginfo/${serviceName.asString}/versions")
       .execute[Seq[SlugVersionInfo]]
-  }
 
   def getCuratedSlugDependenciesForTeam(
     teamName: TeamName,
     flag    : SlugInfoFlag
   )(using
     HeaderCarrier
-  ): Future[Map[String, Seq[Dependency]]] = {
+  ): Future[Map[String, Seq[Dependency]]] =
     given Reads[Dependency] = Dependency.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/teams/${teamName.asString}/slug-dependencies?flag=${flag.asString}")
       .execute[Map[String, Seq[Dependency]]]
-  }
 
   def getServicesWithDependency(
     flag        : SlugInfoFlag,
@@ -91,7 +87,7 @@ class ServiceDependenciesConnector @Inject() (
     scopes      : List[DependencyScope]
   )(using
     HeaderCarrier
-  ): Future[Seq[RepoWithDependency]] = {
+  ): Future[Seq[RepoWithDependency]] =
     given Reads[RepoWithDependency] = RepoWithDependency.reads
     val queryParams = Seq(
       "flag"         -> flag.asString,
@@ -103,7 +99,6 @@ class ServiceDependenciesConnector @Inject() (
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&scope=${scopes.map(_.asString)}")
       .execute[Seq[RepoWithDependency]]
-  }
 
   def getDependenciesFromMetaData(
     flag        : SlugInfoFlag,
@@ -114,7 +109,7 @@ class ServiceDependenciesConnector @Inject() (
     scopes      : Seq[DependencyScope]
   )(using
     HeaderCarrier
-  ): Future[Seq[RepoWithDependency]] = {
+  ): Future[Seq[RepoWithDependency]] =
     given Reads[RepoWithDependency] = RepoWithDependency.reads
     val queryParams = Seq(
       "flag"         -> flag.asString,
@@ -126,69 +121,59 @@ class ServiceDependenciesConnector @Inject() (
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repoDependencies?$queryParams&scope=${scopes.map(_.asString)}&repoType=${repoType.map(_.asString)}")
       .execute[Seq[RepoWithDependency]]
-  }
 
-  def getGroupArtefacts()(using HeaderCarrier): Future[List[GroupArtefacts]] = {
+  def getGroupArtefacts()(using HeaderCarrier): Future[List[GroupArtefacts]] =
     given Reads[GroupArtefacts] = GroupArtefacts.apiFormat
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/groupArtefacts")
       .execute[List[GroupArtefacts]]
-  }
 
-  def getJdkVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(using HeaderCarrier): Future[List[JdkVersion]] = {
+  def getJdkVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(using HeaderCarrier): Future[List[JdkVersion]] =
     given Reads[JdkVersion] = JdkVersion.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/jdkVersions?team=${teamName.map(_.asString)}&flag=${flag.asString}")
       .execute[List[JdkVersion]]
-  }
 
-  def getSbtVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(using HeaderCarrier): Future[List[SbtVersion]] = {
+  def getSbtVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(using HeaderCarrier): Future[List[SbtVersion]] =
     given Reads[SbtVersion] = SbtVersion.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/sbtVersions?team=${teamName.map(_.asString)}&flag=${flag.asString}")
       .execute[List[SbtVersion]]
-  }
 
-  def getBobbyRuleViolations()(using HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] = {
+  def getBobbyRuleViolations()(using HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] =
     given Reads[BobbyRulesSummary] = BobbyRulesSummary.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/bobbyViolations")
       .execute[BobbyRulesSummary]
       .map(_.summary)
-  }
 
-  def getHistoricBobbyRuleViolations(query: List[String], from: LocalDate, to: LocalDate)(using HeaderCarrier): Future[HistoricBobbyRulesSummary] = {
+  def getHistoricBobbyRuleViolations(query: List[String], from: LocalDate, to: LocalDate)(using HeaderCarrier): Future[HistoricBobbyRulesSummary] =
     given Reads[HistoricBobbyRulesSummary] = HistoricBobbyRulesSummary.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/historicBobbyViolations?query=$query&from=$from&to=$to")
       .execute[HistoricBobbyRulesSummary]
-  }
 
   def getRepositoryName(group: String, artefact: String, version: Version)(using HeaderCarrier): Future[Option[String]] =
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repository-name?group=$group&artefact=$artefact&version=${version.toString}")
       .execute[Option[String]]
 
-  def getRepositoryModulesLatestVersion(repositoryName: String)(using HeaderCarrier): Future[Option[RepositoryModules]] = {
+  def getRepositoryModulesLatestVersion(repositoryName: String)(using HeaderCarrier): Future[Option[RepositoryModules]] =
     given Reads[RepositoryModules] = RepositoryModules.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=latest")
       .execute[Seq[RepositoryModules]]
       .map(_.headOption)
-  }
 
-  def getRepositoryModules(repositoryName: String, version: Version)(using HeaderCarrier): Future[Option[RepositoryModules]] = {
+  def getRepositoryModules(repositoryName: String, version: Version)(using HeaderCarrier): Future[Option[RepositoryModules]] =
     given Reads[RepositoryModules] = RepositoryModules.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=${version.toString}")
       .execute[Seq[RepositoryModules]]
       .map(_.headOption)
-  }
 
-  def getRepositoryModulesAllVersions(repositoryName: String)(using HeaderCarrier): Future[Seq[RepositoryModules]] = {
+  def getRepositoryModulesAllVersions(repositoryName: String)(using HeaderCarrier): Future[Seq[RepositoryModules]] =
     given Reads[RepositoryModules] = RepositoryModules.reads
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies")
       .execute[Seq[RepositoryModules]]
-  }
-}

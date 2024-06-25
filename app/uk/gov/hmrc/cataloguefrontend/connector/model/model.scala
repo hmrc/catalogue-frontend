@@ -25,15 +25,17 @@ case class RepositoryModules(
   version          : Option[Version],
   dependenciesBuild: Seq[Dependency],
   modules          : Seq[RepositoryModule]
-) {
+):
   def allDependencies: Seq[Dependency] =
-    modules.foldLeft(dependenciesBuild)((acc, module) =>
-      acc ++ module.dependenciesCompile ++ module.dependenciesProvided ++ module.dependenciesTest ++ module.dependenciesIt
-    )
-}
+    modules.foldLeft(dependenciesBuild): (acc, module) =>
+      acc
+        ++ module.dependenciesCompile
+        ++ module.dependenciesProvided
+        ++ module.dependenciesTest
+        ++ module.dependenciesIt
 
-object RepositoryModules {
-  val reads: Reads[RepositoryModules] = {
+object RepositoryModules:
+  val reads: Reads[RepositoryModules] =
     given Reads[Dependency]       = Dependency.reads
     given Reads[RepositoryModule] = RepositoryModule.reads
     ( (__ \ "name"             ).read[String]
@@ -41,8 +43,6 @@ object RepositoryModules {
     ~ (__ \ "dependenciesBuild").read[Seq[Dependency]]
     ~ (__ \ "modules"          ).read[Seq[RepositoryModule]]
     )(RepositoryModules.apply)
-  }
-}
 
 case class RepositoryModule(
   name                : String,
@@ -56,8 +56,8 @@ case class RepositoryModule(
   pendingBobbyRules   : Seq[BobbyRuleViolation]
 )
 
-object RepositoryModule {
-  val reads: Reads[RepositoryModule] = {
+object RepositoryModule:
+  val reads: Reads[RepositoryModule] =
     given Reads[BobbyRuleViolation] = BobbyRuleViolation.format
     given Reads[Dependency]         = Dependency.reads
     given Reads[Version]            = Version.format
@@ -71,5 +71,3 @@ object RepositoryModule {
     ~ (__ \ "activeBobbyRules"    ).read[Seq[BobbyRuleViolation]]
     ~ (__ \ "pendingBobbyRules"   ).read[Seq[BobbyRuleViolation]]
     )(RepositoryModule.apply)
-  }
-}

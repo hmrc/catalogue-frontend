@@ -19,21 +19,18 @@ package views.leakdetection
 import play.twirl.api.{Html, HtmlFormat}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeakDetails
 
-object LeakDetectionHighlighter extends (LeakDetectionLeakDetails => Html) {
+object LeakDetectionHighlighter extends (LeakDetectionLeakDetails => Html):
 
-  def apply(l: LeakDetectionLeakDetails): Html = {
+  def apply(l: LeakDetectionLeakDetails): Html =
     val spanOpening = "<span class='highlighted'>"
     val spanEnd     = "</span>"
 
-    val (highlightedErrors, _, lastCursor) = l.matches.foldLeft(("", l.lineText, 0)) {
-      case ((acc, line, cursor), m) =>
-        val beforeMatch      = HtmlFormat.escape(line.substring(cursor, m.start))
-        val highlightedMatch = spanOpening + HtmlFormat.escape(line.substring(m.start, m.end)) + spanEnd
+    val (highlightedErrors, _, lastCursor) =
+      l.matches.foldLeft(("", l.lineText, 0)):
+        case ((acc, line, cursor), m) =>
+          val beforeMatch      = HtmlFormat.escape(line.substring(cursor, m.start))
+          val highlightedMatch = spanOpening + HtmlFormat.escape(line.substring(m.start, m.end)) + spanEnd
 
-        (acc + beforeMatch + highlightedMatch, line, m.end)
-    }
+          (acc + beforeMatch + highlightedMatch, line, m.end)
 
     HtmlFormat.raw(highlightedErrors + HtmlFormat.escape(l.lineText.substring(lastCursor)))
-  }
-
-}

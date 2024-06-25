@@ -54,13 +54,12 @@ enum ValueFilterType(val asString: String) extends FromString:
 object ValueFilterType extends FromStringEnum[ValueFilterType]:
   // TODO move toValueFilterType(ignoreCase: Boolean) to FormValueFilterType
   def toValueFilterType(formValueFilterType: FormValueFilterType, isIgnoreCase: Boolean): ValueFilterType  =
-    formValueFilterType match {
-      case FormValueFilterType.Contains       => if (isIgnoreCase) ContainsIgnoreCase       else Contains
-      case FormValueFilterType.DoesNotContain => if (isIgnoreCase) DoesNotContainIgnoreCase else DoesNotContain
-      case FormValueFilterType.EqualTo        => if (isIgnoreCase) EqualToIgnoreCase        else EqualTo
-      case FormValueFilterType.NotEqualTo     => if (isIgnoreCase) NotEqualToIgnoreCase     else NotEqualTo
+    formValueFilterType match
+      case FormValueFilterType.Contains       => if isIgnoreCase then ContainsIgnoreCase       else Contains
+      case FormValueFilterType.DoesNotContain => if isIgnoreCase then DoesNotContainIgnoreCase else DoesNotContain
+      case FormValueFilterType.EqualTo        => if isIgnoreCase then EqualToIgnoreCase        else EqualTo
+      case FormValueFilterType.NotEqualTo     => if isIgnoreCase then NotEqualToIgnoreCase     else NotEqualTo
       case FormValueFilterType.IsEmpty        => IsEmpty
-    }
 
 enum GroupBy(val asString: String, val displayString: String) extends FromString:
   case Key     extends GroupBy(asString = "key"    , displayString = "Key"    )

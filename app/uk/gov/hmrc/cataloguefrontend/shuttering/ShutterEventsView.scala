@@ -18,13 +18,11 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus.{Shuttered, Unshuttered}
 
-object ShutterEventsView {
+object ShutterEventsView:
   def reasonFor(status: ShutterStatus): String =
     statusReason(status).getOrElse("")
 
   private def statusReason(status: ShutterStatus): Option[String] =
-    status match {
+    status match
       case Shuttered(reason, _, _) => reason
       case Unshuttered             => None
-    }
-}

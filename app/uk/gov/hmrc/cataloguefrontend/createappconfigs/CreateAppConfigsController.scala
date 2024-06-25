@@ -50,30 +50,29 @@ class CreateAppConfigsController @Inject()(
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders
-  with I18nSupport {
+  with I18nSupport:
 
   private val logger = Logger(getClass)
 
   import scala.jdk.CollectionConverters._
 
   private val envsToHide: Set[Environment] =
-    configuration.underlying.getStringList("environmentsToHideByDefault").asScala.toSet.map { str =>
-      Environment.parse(str).getOrElse(sys.error(s"config 'environmentsToHideByDefault' contains an invalid environment: $str"))
-    }
+    configuration.underlying.getStringList("environmentsToHideByDefault").asScala.toSet
+      .map: str =>
+        Environment.parse(str).getOrElse(sys.error(s"config 'environmentsToHideByDefault' contains an invalid environment: $str"))
 
   private def checkAppConfigBaseExists(checks: List[Check]): Boolean =
-    checks.exists {
+    checks.exists:
       case SimpleCheck("App Config Base", Right(Present(_)), _, _) => true
       case _                                                       => false
-    }
 
   private def checkAppConfigEnvExists(checks: List[Check]): Seq[Environment] =
-    checks.flatMap {
-      case EnvCheck("App Config Environment", checkResults, _, _) => checkResults.collect {
-        case (env, Right(Present(_))) => env
-      }
-      case _                                                      => Seq.empty[Environment]
-    }
+    checks.flatMap:
+      case EnvCheck("App Config Environment", checkResults, _, _) =>
+        checkResults.collect:
+          case (env, Right(Present(_))) => env
+      case _                                                      =>
+        Seq.empty[Environment]
 
   def createAppConfigsPermission(serviceName: ServiceName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"services/${serviceName.asString}"), IAAction("CREATE_APP_CONFIGS"))
@@ -84,7 +83,7 @@ class CreateAppConfigsController @Inject()(
       retrieval   = Retrieval.hasPredicate(createAppConfigsPermission(serviceName))
     ) .async { implicit request =>
       (
-        for {
+        for
           repo          <- EitherT.fromOptionF[Future, Result, GitRepository](
                              teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString),
                              NotFound(error_404_template())
@@ -102,22 +101,24 @@ class CreateAppConfigsController @Inject()(
           envsToDisplay =  Environment.valuesAsSeq.diff(envsToHide.toSeq)
           hasPerm       =  request.retrieval
           form          =  { val f = CreateAppConfigsForm.form
-                             if (!hasPerm) f.withGlobalError(s"You do not have permission to create App Configs for: ${serviceName.asString}")
-                             else f.fill(CreateAppConfigsForm(true, true, true, true, true))
+                             if !hasPerm
+                               then f.withGlobalError(s"You do not have permission to create App Configs for: ${serviceName.asString}")
+                             else
+                               f.fill(CreateAppConfigsForm(true, true, true, true, true))
                            }
-        } yield
-            Ok(
-              createAppConfigsPage(
-                form          = form,
-                serviceName   = serviceName,
-                serviceType   = serviceType,
-                isApi         = isApi,
-                hasPerm       = hasPerm,
-                hasBaseConfig = baseConfig,
-                envConfigs    = envConfigs,
-                envsToDisplay = envsToDisplay
-              )
+        yield
+          Ok(
+            createAppConfigsPage(
+              form          = form,
+              serviceName   = serviceName,
+              serviceType   = serviceType,
+              isApi         = isApi,
+              hasPerm       = hasPerm,
+              hasBaseConfig = baseConfig,
+              envConfigs    = envConfigs,
+              envsToDisplay = envsToDisplay
             )
+          )
       ).merge
     }
 
@@ -125,9 +126,9 @@ class CreateAppConfigsController @Inject()(
     auth.authorizedAction(
       predicate   = createAppConfigsPermission(serviceName),
       continueUrl = routes.CreateAppConfigsController.createAppConfigsLanding(serviceName)
-    ) .async { implicit request =>
+    ).async { implicit request =>
       (
-        for {
+        for
           repo          <- EitherT.fromOptionF[Future, Result, GitRepository](
                              teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString),
                              NotFound(error_404_template())
@@ -159,34 +160,34 @@ class CreateAppConfigsController @Inject()(
                            ))
           _             <- EitherT.liftF(auth.authorised(Some(createAppConfigsPermission(serviceName))))
           optSlugInfo   <- EitherT.liftF(serviceDependenciesConnector.getSlugInfo(serviceName))
-          requiresMongo <- optSlugInfo match {
+          requiresMongo <- optSlugInfo match
                              case Some(slugInfo) => EitherT.rightT[Future, Result](slugInfo.dependencyDotCompile.exists(_.contains("\"hmrc-mongo\"")))
                              case None           => EitherT.liftF[Future, Result, Boolean](
                                                       gitHubProxyConnector.getGitHubProxyRaw(s"/$serviceName/main/project/AppDependencies.scala")
                                                         .map(_.exists(_.contains("mongo")))
                                                     )
-                           }
-          id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo, isApi)).leftMap { errMsg =>
-                             logger.info(s"createAppConfigs failed with: $errMsg")
-                             InternalServerError(
-                               createAppConfigsPage(
-                                 form          = CreateAppConfigsForm.form.bindFromRequest().withGlobalError(errMsg),
-                                 serviceName   = serviceName,
-                                 serviceType   = serviceType,
-                                 isApi         = isApi,
-                                 hasPerm       = true,
-                                 hasBaseConfig = baseConfig,
-                                 envConfigs    = envConfigs,
-                                 envsToDisplay = Environment.valuesAsSeq.diff(envsToHide.toSeq)
+          id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo, isApi))
+                             .leftMap: errMsg =>
+                               logger.info(s"createAppConfigs failed with: $errMsg")
+                               InternalServerError(
+                                 createAppConfigsPage(
+                                   form          = CreateAppConfigsForm.form.bindFromRequest().withGlobalError(errMsg),
+                                   serviceName   = serviceName,
+                                   serviceType   = serviceType,
+                                   isApi         = isApi,
+                                   hasPerm       = true,
+                                   hasBaseConfig = baseConfig,
+                                   envConfigs    = envConfigs,
+                                   envsToDisplay = Environment.valuesAsSeq.diff(envsToHide.toSeq)
+                                 )
                                )
-                             )
-                           }
           _              = logger.info(s"Bnd api request id: $id:")
-        } yield
+        yield
           Redirect(uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController.getCommissioningState(serviceName))
      ).merge
     }
-}
+
+end CreateAppConfigsController
 
 case class CreateAppConfigsForm(
   appConfigBase        : Boolean,
@@ -196,7 +197,7 @@ case class CreateAppConfigsForm(
   appConfigProduction  : Boolean
 )
 
-object CreateAppConfigsForm {
+object CreateAppConfigsForm:
   val form: Form[CreateAppConfigsForm] =
     Form(
       mapping(
@@ -216,4 +217,3 @@ object CreateAppConfigsForm {
           ).contains(true)
         )
     )
-}

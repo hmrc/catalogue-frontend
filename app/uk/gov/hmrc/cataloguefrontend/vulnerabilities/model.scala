@@ -27,7 +27,7 @@ import scala.collection.Seq
 case class VulnerableComponent(
   component: String,
   version: String
-) {
+):
 //  Note two edge cases which would otherwise break the dependency explorer links are handled below:
 //  1. A vulnerable version may have another `.` after the patch version.
 //  2. An artefact may have a trailing `_someVersionNumber`.
@@ -40,15 +40,15 @@ case class VulnerableComponent(
   def artefact: String =
     component.stripPrefix("gav://").split(":")(1).split("_")(0)
 
-  def bobbyRange: BobbyVersionRange = {
-    val v = Version(cleansedVersion)
+  def bobbyRange: BobbyVersionRange =
+    val v       = Version(cleansedVersion)
     val vString = s"${v.major}.${v.minor}.${v.patch}"
     BobbyVersionRange(s"[$vString]")
-  }
 
   def componentWithoutPrefix: Option[String] =
     component.split("://").lift(1)
-}
+
+end VulnerableComponent
 
 object VulnerableComponent {
   val format: Format[VulnerableComponent] =
@@ -75,7 +75,7 @@ case class DistinctVulnerability(
 
 object DistinctVulnerability {
 
-  val apiFormat: Format[DistinctVulnerability] = {
+  val apiFormat: Format[DistinctVulnerability] =
     given Format[CurationStatus]      = CurationStatus.format
     given Format[VulnerableComponent] = VulnerableComponent.format
     ( (__ \ "vulnerableComponentName"   ).format[String]
@@ -92,7 +92,6 @@ object DistinctVulnerability {
     ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
     ~ (__ \ "ticket"                    ).formatNullable[String]
     )(apply, dv => Tuple.fromProductTyped(dv))
-  }
 }
 
 case class VulnerabilityOccurrence(
@@ -115,8 +114,8 @@ case class VulnerabilitySummary(
    teams                : Seq[String]
  )
 
-object VulnerabilitySummary {
-  val apiFormat: Format[VulnerabilitySummary] = {
+object VulnerabilitySummary:
+  val apiFormat: Format[VulnerabilitySummary] =
     given Format[DistinctVulnerability]   = DistinctVulnerability.apiFormat
     given Format[VulnerabilityOccurrence] = VulnerabilityOccurrence.reads
 
@@ -124,8 +123,6 @@ object VulnerabilitySummary {
     ~ (__ \ "occurrences"          ).format[Seq[VulnerabilityOccurrence]]
     ~ (__ \ "teams"                ).format[Seq[String]]
     ) (apply, vs => Tuple.fromProductTyped(vs))
-  }
-}
 
 case class TotalVulnerabilityCount(
   service             : ServiceName
@@ -135,7 +132,7 @@ case class TotalVulnerabilityCount(
 , uncurated           : Int
 )
 
-object TotalVulnerabilityCount {
+object TotalVulnerabilityCount:
   val reads: Reads[TotalVulnerabilityCount] =
     ( (__ \ "service"               ).read[ServiceName](ServiceName.format)
     ~ (__ \ "actionRequired"        ).read[Int]
@@ -143,16 +140,14 @@ object TotalVulnerabilityCount {
     ~ (__ \ "investigationOngoing"  ).read[Int]
     ~ (__ \ "uncurated"             ).read[Int]
     )(apply)
-}
 
 case class VulnerabilitiesTimelineCount(
- weekBeginning : Instant,
- count         : Int
+  weekBeginning: Instant,
+  count        : Int
 )
 
-object VulnerabilitiesTimelineCount {
+object VulnerabilitiesTimelineCount:
   val reads: Reads[VulnerabilitiesTimelineCount] =
     ( (__ \ "weekBeginning").read[Instant]
     ~ (__ \ "count"        ).read[Int]
     )(VulnerabilitiesTimelineCount.apply)
-}

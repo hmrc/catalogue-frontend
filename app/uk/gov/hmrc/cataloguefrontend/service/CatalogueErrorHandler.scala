@@ -30,7 +30,7 @@ class CatalogueErrorHandler @Inject()(
   override val messagesApi: MessagesApi
 )(using
   override val ec: ExecutionContext
-) extends FrontendErrorHandler {
+) extends FrontendErrorHandler:
 
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(using request: RequestHeader): Future[Html] =
     Future.successful(error_template(pageTitle, heading, message))
@@ -40,4 +40,3 @@ class CatalogueErrorHandler @Inject()(
 
   def forbiddenTemplate(using request: RequestHeader): Html =
     error_403_template()
-}

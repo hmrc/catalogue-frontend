@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 import java.time.{Instant, LocalDate}
 import scala.util.Try
 
-object Binders {
+object Binders:
 
   implicit val instantQueryStringBindable: QueryStringBindable[Instant] =
     queryStringBindableFromString[Instant](
@@ -49,16 +49,14 @@ object Binders {
     * This function provides `andThen` semantics
     */
   def queryStringBindableFromString[T](parse: String => Option[Either[String, T]], asString: T => String)(using strBinder: QueryStringBindable[String]): QueryStringBindable[T] =
-    new QueryStringBindable[T] {
+    new QueryStringBindable[T]:
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, T]] =
-        strBinder.bind(key, params) match {
+        strBinder.bind(key, params) match
           case Some(Right(s)) => parse(s)
           case _              => None
-        }
 
       override def unbind(key: String, value: T): String =
         strBinder.unbind(key, asString(value))
-    }
 
   /** `summon[PathBindable[String]].transform` doesn't allow us to provide failures.
     * This function provides `andThen` semantics
@@ -71,4 +69,3 @@ object Binders {
       override def unbind(key: String, value: T): String =
         asString(value)
     }
-}

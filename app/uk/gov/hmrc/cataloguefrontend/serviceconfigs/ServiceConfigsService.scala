@@ -38,7 +38,7 @@ class ServiceConfigsService @Inject()(
   serviceCommissioningConnector: ServiceCommissioningStatusConnector
 )(using
   ExecutionContext
-) {
+):
   import ServiceConfigsService._
 
   private def configByKey(
@@ -51,15 +51,16 @@ class ServiceConfigsService @Inject()(
   ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]] =
     serviceConfigsConnector
       .configByEnv(serviceName, environments, version, latest)
-      .map(_.foldLeft(Map.empty[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]) { case (acc, (e -> cses)) =>
-        cses.foldLeft(acc) { case (acc2, cse) =>
-          acc2 ++ cse.entries.map { case (key, value) =>
-            val envMap = acc2.getOrElse(key, Map.empty)
-            val values = envMap.getOrElse(e, Seq.empty)
-            key -> (envMap + (e -> (values :+ ConfigSourceValue(cse.source, cse.sourceUrl, value))))
-          }
-        }
-      }).map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString)*)) // sort by keys
+      .map:
+        _
+          .foldLeft(Map.empty[KeyName, Map[ConfigEnvironment, Seq[ConfigSourceValue]]]):
+            case (acc, (e -> cses)) =>
+              cses.foldLeft(acc): (acc2, cse) =>
+                acc2 ++ cse.entries.map: (key, value) =>
+                  val envMap = acc2.getOrElse(key, Map.empty)
+                  val values = envMap.getOrElse(e, Seq.empty)
+                  key -> (envMap + (e -> (values :+ ConfigSourceValue(cse.source, cse.sourceUrl, value))))
+      .map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString)*)) // sort by keys
 
   def removedConfig(
     serviceName : ServiceName,
@@ -68,20 +69,16 @@ class ServiceConfigsService @Inject()(
   )(using
     HeaderCarrier
   ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
-    for {
+    for
       latestConfigByKey   <- configByKey(serviceName, environments, version, latest = true )
       deployedConfigByKey <- configByKey(serviceName, environments, None   , latest = false)
-      configByKey         =  deployedConfigByKey.map {
-                               case (k, m) => k -> m.map {
-                                 case (e, vs) =>
-                                   latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match {
-                                     case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs.map(x => (x -> false)))
-                                     case None    if vs.lastOption.isDefined                  => e -> (vs.map(x => (x -> true)))
-                                     case _                                                   => e -> (vs.map(x => (x -> false)))
-                                   }
-                               }
-                             }
-    } yield (configByKey)
+      configByKey         =  deployedConfigByKey.map: (k, m) =>
+                               k -> m.map: (e, vs) =>
+                                      latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match
+                                        case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs.map(x => (x -> false)))
+                                        case None    if vs.lastOption.isDefined                  => e -> (vs.map(x => (x -> true)))
+                                        case _                                                   => e -> (vs.map(x => (x -> false)))
+    yield configByKey
 
   def configByKeyWithNextDeployment(
     serviceName : ServiceName,
@@ -90,56 +87,49 @@ class ServiceConfigsService @Inject()(
   )(using
     HeaderCarrier
   ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
-    for {
+    for
       latestConfigByKey   <- configByKey(serviceName, environments, version, latest = true )
       deployedConfigByKey <- configByKey(serviceName, environments, None   , latest = false)
-      configByKey         =  deployedConfigByKey.map {
-                               case (k, m) => k -> m.map {
-                                 case (e, vs) =>
-                                   latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match {
-                                     case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs.map(x => (x -> false)) :+ (n -> true))
-                                     case None    if vs.lastOption.isDefined                  => e -> (vs.map(x => (x -> false)) :+ (ConfigSourceValue(source = "", sourceUrl = None, value = "") -> true))
-                                     case _                                                   => e -> (vs.map(x => (x -> false)))
-                                   }
-                               }
-                             }
-       newConfig         =   latestConfigByKey.map {
-                               case (k, m) => k -> m.flatMap {
-                                 case (e, vs) =>
-                                   configByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty) match {
-                                     case Nil => vs.lastOption.map(n => e -> Seq(n -> true))
-                                     case xs  => Some(e -> xs)
-                                   }
-                               }
-                             }
-    } yield (newConfig)
+      configByKey         =  deployedConfigByKey.map: (k, m) =>
+                               k -> m.map: (e, vs) =>
+                                      latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match
+                                        case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs.map(x => (x -> false)) :+ (n -> true))
+                                        case None    if vs.lastOption.isDefined                  => e -> (vs.map(x => (x -> false)) :+ (ConfigSourceValue(source = "", sourceUrl = None, value = "") -> true))
+                                        case _                                                   => e -> (vs.map(x => (x -> false)))
+      newConfig           =  latestConfigByKey.map: (k, m) =>
+                               k -> m.flatMap: (e, vs) =>
+                                      configByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty) match
+                                        case Nil => vs.lastOption.map(n => e -> Seq(n -> true))
+                                        case xs  => Some(e -> xs)
+    yield newConfig
 
   def serviceRelationships(serviceName: ServiceName)(using HeaderCarrier): Future[ServiceRelationshipsEnriched] =
-    for {
+    for
       repos    <- teamsAndReposConnector.allRepositories()
       srs      <- serviceConfigsConnector.serviceRelationships(serviceName)
       outbound <- srs.outboundServices
                     .filterNot(_ == serviceName)
-                    .foldLeftM[Future, Seq[ServiceRelationship]](Seq.empty) { (acc, service) =>
-                      val hasRepo = repos.find(_.name == service.asString)
-                      (hasRepo.map {
-                        repo =>
+                    .foldLeftM[Future, Seq[ServiceRelationship]](Seq.empty): (acc, service) =>
+                      repos.find(_.name == service.asString)
+                        .map: repo =>
                           serviceCommissioningConnector
                             .getLifecycle(service)
                             .map(status => ServiceRelationship(service, hasRepo = true, status.map(_.lifecycleStatus), repo.endOfLifeDate))
-                        }.getOrElse(Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None, endOfLifeDate = None)))
-                      ).map(_ +: acc)
-                    }
+                        .getOrElse(Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None, endOfLifeDate = None)))
+                        .map(_ +: acc)
       inbound  =  srs.inboundServices
                     .filterNot(_ == serviceName)
                     .sorted
-                    .map { service =>
+                    .map: service =>
                       ServiceRelationship(service, hasRepo = repos.exists(_.name == service.asString), lifecycleStatus = None, endOfLifeDate = None)
-                    }
-    } yield ServiceRelationshipsEnriched(
-      inbound,
-      outbound.sortBy(a => (if (a.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) 0 else 1, a.service.asString.toLowerCase))
-    )
+    yield
+      ServiceRelationshipsEnriched(
+        inbound
+      , outbound.sortBy: a =>
+        ( if a.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress) then 0 else 1
+        , a.service.asString.toLowerCase
+        )
+      )
 
   def configKeys(teamName: Option[TeamName] = None)(using HeaderCarrier): Future[Seq[String]] =
     serviceConfigsConnector.getConfigKeys(teamName)
@@ -153,40 +143,40 @@ class ServiceConfigsService @Inject()(
     serviceConfigsConnector.deploymentConfig(serviceName, environment)
 
   def deploymentConfigByKeyWithNextDeployment(serviceName: ServiceName)(using HeaderCarrier): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
-    for {
+    for
       applied        <- serviceConfigsConnector.deploymentConfig(service = Some(serviceName), applied = true )
       nextDeployment <- serviceConfigsConnector.deploymentConfig(service = Some(serviceName), applied = false)
       allEnvs        =  (applied ++ nextDeployment).map(_.environment).distinct
       allKeys        =  (applied ++ nextDeployment).flatMap(_.asMap.keys).distinct
-    } yield {
-      allKeys.map { key =>
-        val keyValues = for {
-          env <- allEnvs
-        } yield {
-          val appliedValue = applied.find(_.environment == env).flatMap(_.asMap.get(key))
-          val nextValue    = nextDeployment.find(_.environment == env).flatMap(_.asMap.get(key))
+    yield
+      allKeys
+        .map: key =>
+          val keyValues =
+            for
+              env <- allEnvs
+            yield
+              val appliedValue = applied.find(_.environment == env).flatMap(_.asMap.get(key))
+              val nextValue    = nextDeployment.find(_.environment == env).flatMap(_.asMap.get(key))
 
-          ((appliedValue, nextValue) match {
-            case (Some(applied), Some(next)) if applied == next => Seq((applied, false))
-            case (Some(applied), Some(next)) => Seq((applied, false), (next, true))
-            case (Some(applied), None      ) => Seq((applied, false))
-            case (None         , Some(next)) => Seq((next, true))
-            case _                           => Seq.empty
-          }).map { case (value, nextDeployment) =>
-            val displayValue =
-              if(key.startsWith("environment.") && value.length > 100 && Base64Util.isBase64Decodable(value)) "<<BASE64 ENCODED STRING>>" else value
+              ((appliedValue, nextValue) match
+                case (Some(applied), Some(next)) if applied == next => Seq((applied, false))
+                case (Some(applied), Some(next)) => Seq((applied, false), (next, true))
+                case (Some(applied), None      ) => Seq((applied, false))
+                case (None         , Some(next)) => Seq((next, true))
+                case _                           => Seq.empty
+              ).map: (value, nextDeployment) =>
+                val displayValue =
+                  if(key.startsWith("environment.") && value.length > 100 && Base64Util.isBase64Decodable(value)) "<<BASE64 ENCODED STRING>>" else value
 
-            val sourceUrl = Some(s"https://github.com/hmrc/app-config-${env.asString}/blob/main/$serviceName.yaml")
+                val sourceUrl = Some(s"https://github.com/hmrc/app-config-${env.asString}/blob/main/$serviceName.yaml")
 
-            ConfigSourceValue("appConfigEnvironment", sourceUrl, displayValue) -> nextDeployment
-          }
-        }
+                ConfigSourceValue("appConfigEnvironment", sourceUrl, displayValue) -> nextDeployment
 
-        val configEnvs: Seq[ConfigEnvironment] = allEnvs.map(ConfigEnvironment.ForEnvironment.apply)
+          val configEnvs: Seq[ConfigEnvironment] =
+            allEnvs.map(ConfigEnvironment.ForEnvironment.apply)
 
-        KeyName(key) -> configEnvs.zip(keyValues).toMap
-      }.toMap
-    }
+          KeyName(key) -> configEnvs.zip(keyValues).toMap
+        .toMap
 
   def configSearch(
     teamName       : Option[TeamName]
@@ -219,7 +209,7 @@ class ServiceConfigsService @Inject()(
       .groupBy(_.key)
       .view
       .mapValues: xs =>
-        sorted(xs.groupBy(_.serviceName).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(using Ordering.by(_.asString))
+        sorted(xs.groupBy(_.serviceName).view.mapValues(_.map(_.environments).flatten.toMap).toMap)//(using Ordering.by(_.asString))
       .toMap
 
   def toServiceKeyEnvironmentMap(appliedConfig: Seq[AppliedConfig]): Map[ServiceName, Map[KeyName, Map[Environment, ConfigSourceValue]]] =
@@ -227,7 +217,7 @@ class ServiceConfigsService @Inject()(
       .groupBy(_.serviceName)
       .view
       .mapValues: xs =>
-        sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)(using Ordering.by(_.asString))
+        sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)//(using Ordering.by(_.asString))
       .toMap
 
   def configWarnings(
@@ -252,7 +242,7 @@ class ServiceConfigsService @Inject()(
     service    : ServiceName,
     environment: Environment
   )(using HeaderCarrier): Future[Seq[ConfigChange]] =
-    for {
+    for
       appliedConfig  <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = true ).map(_.headOption)
       newConfig      <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = false).map(_.headOption)
       slots          =  valChanges(
@@ -275,104 +265,95 @@ class ServiceConfigsService @Inject()(
                           appliedConfig.fold(Map.empty[String, String])(_.jvm),
                           newConfig.fold(Map.empty[String, String])(_.jvm)
                         )
-    } yield (slots ++ instances ++ envVars ++ jvm).sortBy(_.k)
+    yield (slots ++ instances ++ envVars ++ jvm).sortBy(_.k)
 
   private def valChanges(key: String, appliedVal: Option[String], newVal: Option[String]): Seq[ConfigChange] =
-    (appliedVal, newVal) match {
+    (appliedVal, newVal) match
       case (Some(appliedVal), Some(newVal)) if appliedVal != newVal => Seq(ConfigChange.ChangedConfig(key, appliedVal, newVal))
       case (None            , Some(newVal))                         => Seq(ConfigChange.NewConfig(key, newVal))
       case (Some(appliedVal), None        )                         => Seq(ConfigChange.DeletedConfig(key, appliedVal))
       case _                                                        => Seq.empty
-    }
 
   private def mapChanges(keyPrefix: String, appliedConf: Map[String, String], newConf: Map[String, String]): Seq[ConfigChange] =
-    appliedConf.toSeq.collect { case (k, v) if newConf.get(k).isEmpty =>
-      ConfigChange.DeletedConfig(s"$keyPrefix.${k}", v)
-    } ++
-      newConf.toSeq.flatMap { case (k, v) =>
-        appliedConf.get(k) match {
-          case Some(appliedV) if appliedV != v => Seq(ConfigChange.ChangedConfig(s"$keyPrefix.${k}", appliedV, v))
-          case None                            => Seq(ConfigChange.NewConfig(s"$keyPrefix.${k}", v))
-          case _                               => Seq.empty
-        }
-      }
-  }
+    appliedConf.toSeq
+      .collect:
+        case (k, v) if newConf.get(k).isEmpty =>
+          ConfigChange.DeletedConfig(s"$keyPrefix.${k}", v)
+      ++
+        newConf.toSeq.flatMap: (k, v) =>
+          appliedConf.get(k) match
+            case Some(appliedV) if appliedV != v => Seq(ConfigChange.ChangedConfig(s"$keyPrefix.${k}", appliedV, v))
+            case None                            => Seq(ConfigChange.NewConfig(s"$keyPrefix.${k}", v))
+            case _                               => Seq.empty
+end ServiceConfigsService
 
-object ServiceConfigsService {
+object ServiceConfigsService:
 
   case class KeyName(asString: String) extends AnyVal
-  object KeyName {
+  object KeyName:
     given Ordering[KeyName] = Ordering.by(_.asString)
 
-    val deploymentConfigOrder: Ordering[KeyName] = Ordering.by((key: KeyName) => {
-      key.asString match {
-        case "instances"                       => (0, key)
-        case "slots"                           => (1, key)
-        case s if s.startsWith("jvm.")         => (2, key)
-        case s if s.startsWith("environment.") => (3, key)
-        case _                                 => (4, key)
-      }
-    })
-  }
+    val deploymentConfigOrder: Ordering[KeyName] =
+      Ordering.by: (key: KeyName) =>
+        key.asString match
+          case "instances"                       => (0, key)
+          case "slots"                           => (1, key)
+          case s if s.startsWith("jvm.")         => (2, key)
+          case s if s.startsWith("environment.") => (3, key)
+          case _                                 => (4, key)
 
   sealed trait ConfigEnvironment { def asString: String; def displayString: String }
-  object ConfigEnvironment {
-    case object Local                           extends ConfigEnvironment {
+
+  object ConfigEnvironment:
+    case object Local                           extends ConfigEnvironment:
       override def asString      = "local"
       override def displayString = "Local"
-    }
-    case class ForEnvironment(env: Environment) extends ConfigEnvironment {
+
+    case class ForEnvironment(env: Environment) extends ConfigEnvironment:
       override def asString      = env.asString
       override def displayString = env.displayString
-    }
 
     val values: Seq[ConfigEnvironment] =
       Local +: Environment.valuesAsSeq.map(ForEnvironment.apply)
 
     val reads: Reads[ConfigEnvironment] =
-      new Reads[ConfigEnvironment] {
-        override def reads(json: JsValue) =
-          json
-            .validate[String]
-            .flatMap {
-              case "local" => JsSuccess(ConfigEnvironment.Local)
-              case s       => Environment.parse(s).fold(_ => JsError(__, s"Invalid Environment '$s'"), env => JsSuccess(ForEnvironment(env)))
-            }
-      }
-  }
+      (json: JsValue) =>
+        json
+          .validate[String]
+          .flatMap:
+            case "local" => JsSuccess(ConfigEnvironment.Local)
+            case s       => Environment.parse(s).fold(_ => JsError(__, s"Invalid Environment '$s'"), env => JsSuccess(ForEnvironment(env)))
 
   type ConfigByEnvironment = Map[ConfigEnvironment, Seq[ConfigSourceEntries]]
 
-  object ConfigByEnvironment {
-    val reads: Reads[ConfigByEnvironment] = {
+  object ConfigByEnvironment:
+    val reads: Reads[ConfigByEnvironment] =
       given Reads[ConfigEnvironment]   = ConfigEnvironment.reads
       given Reads[ConfigSourceEntries] = ConfigSourceEntries.reads
       Reads
         .of[Map[String, Seq[ConfigSourceEntries]]]
-        .map(_.map { case (k, v) => (JsString(k).as[ConfigEnvironment], v) })
-    }
-  }
+        .map:
+          _.map: (k, v) =>
+            (JsString(k).as[ConfigEnvironment], v)
 
   case class ConfigSourceEntries(
     source   : String,
     sourceUrl: Option[String],
-    entries  : Map[KeyName, String],
-
+    entries  : Map[KeyName, String]
   )
 
-  object ConfigSourceEntries {
+  object ConfigSourceEntries:
     val reads: Reads[ConfigSourceEntries] =
       ( (__ \ "source"   ).read[String]
       ~ (__ \ "sourceUrl").readNullable[String]
-      ~ (__ \ "entries"  ).read[Map[String, String]].map(_.map { case (k, v) => KeyName(k) -> v }.toMap)
+      ~ (__ \ "entries"  ).read[Map[String, String]].map(_.map((k, v) => KeyName(k) -> v).toMap)
       )(ConfigSourceEntries.apply)
-  }
 
   case class ConfigSourceValue(
     source   : String,
     sourceUrl: Option[String],
     value    : String
-  ){
+  ):
     val isReferenceConf: Boolean =
       source == "referenceConf"
 
@@ -380,10 +361,9 @@ object ServiceConfigsService {
       value == "<<SUPPRESSED>>"
 
     val displayString: String =
-      if      (source.trim.isEmpty) "<<DELETED>>"
-      else if (value.trim.isEmpty ) "<<BLANK>>"
-      else                          value
-  }
+      if      source.trim.isEmpty then "<<DELETED>>"
+      else if value.trim.isEmpty  then "<<BLANK>>"
+      else                             value
 
   object ConfigSourceValue {
     val reads: Reads[ConfigSourceValue] =
@@ -416,20 +396,20 @@ object ServiceConfigsService {
   case class ServiceRelationshipsEnriched(
     inboundServices : Seq[ServiceRelationship],
     outboundServices: Seq[ServiceRelationship]
-  ) {
-    def size: Int = Seq(inboundServices.size, outboundServices.size).max
+  ):
+    def size: Int =
+      Seq(inboundServices.size, outboundServices.size).max
 
     def hasDeprecatedDownstream: Boolean =
       outboundServices
         .exists(_.lifecycleStatus.contains(LifecycleStatus.Deprecated))
-  }
 
   def friendlySourceName(
     source     : String,
     environment: ConfigEnvironment,
     key        : Option[KeyName]
   ): String =
-    source match {
+    source match
       case "loggerConf"                 => "Microservice application-json-logger.xml file"
       case "referenceConf"              => "Microservice reference.conf files"
       case "bootstrapFrontendConf"      => "Bootstrap frontend.conf file"
@@ -441,12 +421,11 @@ object ServiceConfigsService {
       case "appConfigCommonOverridable" => "App-config-common overridable settings"
       case "base64"                     => s"Base64 (decoded from config ${key.fold("'key'")(_.asString)}.base64)"
       case _                            => source
-    }
 
   def warningDescription(
     warningType: String
   ): String =
-    warningType match {
+    warningType match
       case "NotOverriding"       => "Config doesn't appear to override any existing key"
       case "TypeChange"          => "Config value overrides a value with different type"
       case "Localhost"           => "Use of localhost in value"
@@ -455,7 +434,6 @@ object ServiceConfigsService {
       case "ReactiveMongoConfig" => "Use of obsolete reactivemongo config"
       case "Unencrypted"         => "Value looks like it should be encrypted"
       case _                     => ""
-    }
 
   case class AppliedConfig(
     serviceName  : ServiceName
@@ -463,10 +441,10 @@ object ServiceConfigsService {
   , environments : Map[Environment, ConfigSourceValue]
   )
 
-  object AppliedConfig {
-    val reads: Reads[AppliedConfig] = {
-     given Reads[ConfigSourceValue] = ConfigSourceValue.reads
-     given Reads[Map[Environment, ConfigSourceValue]] =
+  object AppliedConfig:
+    val reads: Reads[AppliedConfig] =
+      given Reads[ConfigSourceValue] = ConfigSourceValue.reads
+      given Reads[Map[Environment, ConfigSourceValue]] =
         Reads
           .of[Map[String, ConfigSourceValue]]
           .map(_.map { case (k, v) => (Environment.parse(k).getOrElse(sys.error(s"Invalid Environment: $k")), v) })
@@ -475,8 +453,6 @@ object ServiceConfigsService {
       ~ (__ \ "key"          ).read[String].map(KeyName.apply)
       ~ (__ \ "environments" ).read[Map[Environment, ConfigSourceValue]]
       )(AppliedConfig.apply)
-    }
-  }
 
   case class ConfigWarning(
     serviceName: ServiceName
@@ -486,7 +462,7 @@ object ServiceConfigsService {
   , warning    : String
   )
 
-  object ConfigWarning {
+  object ConfigWarning:
     val reads: Reads[ConfigWarning] =
       ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
       ~ (__ \ "environment").read[Environment](Environment.format)
@@ -494,8 +470,8 @@ object ServiceConfigsService {
       ~ (__ \ "value"      ).read[ConfigSourceValue](ConfigSourceValue.reads)
       ~ (__ \ "warning"    ).read[String]
       )(ConfigWarning.apply)
-  }
-}
+
+end ServiceConfigsService
 
 enum ConfigChange(val k: String):
   case NewConfig    (override val k: String, v: String)                       extends ConfigChange(k)

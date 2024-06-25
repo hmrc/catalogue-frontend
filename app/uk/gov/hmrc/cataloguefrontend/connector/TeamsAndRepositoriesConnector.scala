@@ -63,15 +63,17 @@ case class Link(
   displayName: String,
   url        : String,
   cls        : Option[String] = None
-) {
+):
   val id: String =
     displayName.toLowerCase.replaceAll(" ", "-")
-}
 
-object Link {
+object Link:
   val format: Format[Link] =
-    Json.format[Link]
-}
+    ( (__ \ "name"       ).format[String]
+    ~ (__ \ "displayName").format[String]
+    ~ (__ \ "url"        ).format[String]
+    ~ (__ \ "cls"        ).formatNullable[String]
+    )(apply, l => Tuple.fromProductTyped(l))
 
 case class BuildData(
   number     : Int,
@@ -81,7 +83,7 @@ case class BuildData(
   description: Option[String]
 )
 
-object BuildData {
+object BuildData:
   val apiFormat: Format[BuildData] =
     ( (__ \ "number"     ).format[Int]
     ~ (__ \ "url"        ).format[String]
@@ -89,7 +91,6 @@ object BuildData {
     ~ (__ \ "result"     ).formatNullable[String]
     ~ (__ \ "description").formatNullable[String]
   )(apply, bd => Tuple.fromProductTyped(bd))
-}
 
 enum BuildJobType(val asString: String) extends FromString:
   case Job         extends BuildJobType("job"         )
@@ -105,14 +106,13 @@ case class JenkinsJob(
   latestBuild: Option[BuildData]
 )
 
-object JenkinsJob {
+object JenkinsJob:
   val apiFormat: Format[JenkinsJob] =
     ( (__ \ "jobName"    ).format        [String]
     ~ (__ \ "jenkinsURL" ).format        [String]
     ~ (__ \ "jobType"    ).format        [BuildJobType](BuildJobType.format)
     ~ (__ \ "latestBuild").formatNullable[BuildData   ](BuildData.apiFormat)
   )(apply, j => Tuple.fromProductTyped(j))
-}
 
 case class GitRepository(
   name                : String,
@@ -137,18 +137,20 @@ case class GitRepository(
   prototypeName       : Option[String]           = None,
   prototypeAutoPublish: Option[Boolean]          = None,
   zone                : Option[Zone]             = None,
-) {
+):
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
 
   def isDeFactoOwner(teamName: TeamName): Boolean =
     owningTeams.contains(teamName) && owningTeams.toSet != teamNames.toSet
 
-  val descriptionAboveLimit: Boolean = description.length > 512
-}
+  val descriptionAboveLimit: Boolean =
+    description.length > 512
 
-object GitRepository {
-  val apiFormat: Format[GitRepository] = {
+end GitRepository
+
+object GitRepository:
+  val apiFormat: Format[GitRepository] =
     given Format[RepoType]    = RepoType.format
     given Format[ServiceType] = ServiceType.format
     given Format[JenkinsJob]  = JenkinsJob.apiFormat
@@ -179,50 +181,43 @@ object GitRepository {
     ~ (__ \ "prototypeAutoPublish").formatNullable[Boolean]
     ~ (__ \ "zone"                ).formatNullable[Zone]
     ) (apply, r => Tuple.fromProductTyped(r))
-  }
-}
 
 case class BranchProtection(
   requiresApprovingReviews: Boolean,
   dismissesStaleReviews   : Boolean,
   requiresCommitSignatures: Boolean
-) {
-
+):
   def isProtected: Boolean =
     requiresApprovingReviews && dismissesStaleReviews && requiresCommitSignatures
-}
 
-object BranchProtection {
+object BranchProtection:
 
   val format: Format[BranchProtection] =
     ( (__ \ "requiresApprovingReviews").format[Boolean]
     ~ (__ \ "dismissesStaleReviews"   ).format[Boolean]
     ~ (__ \ "requiresCommitSignatures").format[Boolean]
     )(apply, bp => Tuple.fromProductTyped(bp))
-}
 
 case class GitHubTeam(
   name           : TeamName,
   lastActiveDate : Option[Instant],
   repos          : Seq[String]
-) {
+):
   val githubUrl =
     s"https://github.com/orgs/hmrc/teams/${name.asString.toLowerCase.replace(" ", "-")}"
-}
 
-object GitHubTeam {
+object GitHubTeam:
   val format: Format[GitHubTeam] =
     ( (__ \ "name"          ).format[TeamName](TeamName.format)
     ~ (__ \ "lastActiveDate").formatNullable[Instant]
     ~ (__ \ "repos"         ).format[Seq[String]]
     )(apply, t => Tuple.fromProductTyped(t))
-}
 
 @Singleton
 class TeamsAndRepositoriesConnector @Inject()(
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(using ExecutionContext) {
+)(using ExecutionContext):
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
@@ -233,7 +228,7 @@ class TeamsAndRepositoriesConnector @Inject()(
   private given Format[GitHubTeam]    = GitHubTeam.format
   private given Format[GitRepository] = GitRepository.apiFormat // v2 model
 
-  def lookupLatestJenkinsJobs(service: String)(using HeaderCarrier): Future[Seq[JenkinsJob]] = {
+  def lookupLatestJenkinsJobs(service: String)(using HeaderCarrier): Future[Seq[JenkinsJob]] =
     given Reads[Seq[JenkinsJob]] =
       Reads.at(__ \ "jobs")(Reads.seq(JenkinsJob.apiFormat))
 
@@ -246,51 +241,47 @@ class TeamsAndRepositoriesConnector @Inject()(
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty[JenkinsJob]
       }
-  }
 
-  def findRelatedTestRepos(service: String)(using HeaderCarrier): Future[Seq[String]] = {
+  def findRelatedTestRepos(service: String)(using HeaderCarrier): Future[Seq[String]] =
     val url = url"$teamsAndServicesBaseUrl/api/v2/repositories/$service/test-repositories"
 
     httpClientV2
       .get(url)
       .execute[Seq[String]]
-      .recover {
+      .recover:
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty[String]
-      }
-  }
 
-  def findServicesUnderTest(testRepo: String)(using HeaderCarrier): Future[Seq[String]] = {
+  def findServicesUnderTest(testRepo: String)(using HeaderCarrier): Future[Seq[String]] =
     val url = url"$teamsAndServicesBaseUrl/api/v2/repositories/$testRepo/services-under-test"
 
     httpClientV2
       .get(url)
       .execute[Seq[String]]
-      .recover {
+      .recover:
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty[String]
-      }
-  }
 
   def allTeams()(using HeaderCarrier): Future[Seq[GitHubTeam]] =
     httpClientV2
       .get(url"$teamsAndServicesBaseUrl/api/v2/teams")
       .execute[Seq[GitHubTeam]]
 
-  def repositoriesForTeam(teamName: TeamName, includeArchived: Option[Boolean] = None)(using HeaderCarrier): Future[Seq[GitRepository]] = {
+  def repositoriesForTeam(
+    teamName       : TeamName,
+    includeArchived: Option[Boolean] = None
+  )(using HeaderCarrier): Future[Seq[GitRepository]] =
     val url = url"$teamsAndServicesBaseUrl/api/v2/repositories?owningTeam=${teamName.asString}&archived=$includeArchived"
 
     httpClientV2
       .get(url)
       .execute[Seq[GitRepository]]
-      .recover {
+      .recover:
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Nil
-      }
-  }
 
   def allRepositories(
      name       : Option[String]      = None,
@@ -304,25 +295,24 @@ class TeamsAndRepositoriesConnector @Inject()(
       .execute[Seq[GitRepository]]
 
   def repositoryDetails(name: String)(using HeaderCarrier): Future[Option[GitRepository]] =
-    for {
+    for
       repo     <- httpClientV2
                     .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
                     .execute[Option[GitRepository]]
       jobs     <- lookupLatestJenkinsJobs(name)
       withJobs =  repo.map(_.copy(jenkinsJobs = jobs))
-    } yield withJobs
+    yield withJobs
 
   def allTeamsByService()(using HeaderCarrier): Future[Map[String, Seq[TeamName]]] =
-    for {
+    for
       repos          <- httpClientV2
                           .get(url"$teamsAndServicesBaseUrl/api/v2/repositories")
                           .execute[Seq[GitRepository]]
       teamsByService =  repos.map(r => r.name -> r.teamNames).toMap
-    } yield teamsByService
+    yield teamsByService
 
   def enableBranchProtection(repoName: String)(using HeaderCarrier): Future[Unit] =
     httpClientV2
       .post(url"$teamsAndServicesBaseUrl/api/v2/repositories/$repoName/branch-protection/enabled")
       .withBody(JsBoolean(true))
       .execute[Unit](HttpReads.Implicits.throwOnFailure(summon[HttpReads[Either[UpstreamErrorResponse, Unit]]]), summon[ExecutionContext])
-}

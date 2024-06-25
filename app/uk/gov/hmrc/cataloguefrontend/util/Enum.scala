@@ -25,7 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.binders.Binders
 
 trait FromString { def asString: String }
 
-trait FromStringEnum[T <: scala.reflect.Enum with FromString] {
+trait FromStringEnum[T <: scala.reflect.Enum with FromString]:
   def values: Array[T]
 
   lazy val valuesAsSeq: Seq[T] =
@@ -52,7 +52,7 @@ trait FromStringEnum[T <: scala.reflect.Enum with FromString] {
     Format[T](reads, writes)
 
   val formFormat: Formatter[T] =
-    new Formatter[T] {
+    new Formatter[T]:
       override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], T] =
         data
           .get(key)
@@ -61,7 +61,6 @@ trait FromStringEnum[T <: scala.reflect.Enum with FromString] {
 
       override def unbind(key: String, value: T): Map[String, String] =
         Map(key -> value.asString)
-    }
 
   given pathBindable: PathBindable[T] =
     Binders.pathBindableFromString(parse, _.asString)
@@ -71,4 +70,5 @@ trait FromStringEnum[T <: scala.reflect.Enum with FromString] {
       s => Some(parse(s)),
       _.asString
     )
-}
+
+end FromStringEnum

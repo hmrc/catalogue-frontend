@@ -25,10 +25,9 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class PrCommenterSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
-  }
 
   "PrCommenter Page" should {
     "show page with some results" in {

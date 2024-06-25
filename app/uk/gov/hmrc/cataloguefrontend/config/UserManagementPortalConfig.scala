@@ -22,13 +22,11 @@ import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class UserManagementPortalConfig @Inject() (config: Configuration) {
+class UserManagementPortalConfig @Inject() (config: Configuration):
 
-  def umpMyTeamsPageUrl(teamName: TeamName): String = {
+  def umpMyTeamsPageUrl(teamName: TeamName): String =
     val baseUrl: String = config.get[String]("ump.teamBaseUrl")
     s"$baseUrl/${teamName.asString}?edit"
-  }
 
   lazy val userManagementProfileBaseUrl: String =
     config.get[String]("ump.profileBaseUrl")
-}

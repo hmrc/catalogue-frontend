@@ -48,37 +48,35 @@ class CostsSummaryController @Inject() (
 )(using
   override val ec              : ExecutionContext
 ) extends FrontendController(mcc)
-    with CatalogueAuthBuilders {
+    with CatalogueAuthBuilders:
 
-  private def toRows(serviceDeploymentMap: Map[ServiceName, Seq[DeploymentConfig]]): Seq[Seq[(String, String)]] = {
-    serviceDeploymentMap.map {
-      case (serviceName, configList) =>
-
+  private def toRows(serviceDeploymentMap: Map[ServiceName, Seq[DeploymentConfig]]): Seq[Seq[(String, String)]] =
+    serviceDeploymentMap
+      .map: (serviceName, configList) =>
         val configEstimateCosts = String.format("%.0f", configList.map(_.deploymentSize.totalSlots.costGbp(costEstimateConfig)).sum)
 
-        val slotsAndInstances = Environment.valuesAsSeq.flatMap {
-          env =>
+        val slotsAndInstances =
+          Environment.valuesAsSeq.flatMap: env =>
             Seq(
               s"slots.{${env.asString}}" -> configList.find(_.environment == env).map(_.deploymentSize.slots.toString).getOrElse(""),
               s"instances.{${env.asString}}" -> configList.find(_.environment == env).map(_.deploymentSize.instances.toString).getOrElse("")
             )
-        }
 
         Seq("Application Name" -> serviceName.asString) ++ slotsAndInstances ++ Seq("Estimated Cost (£ / year)" -> configEstimateCosts)
-    }.toSeq
-  }
+      .toSeq
 
   def costExplorer(
     team : Option[TeamName] = None,
     asCSV: Boolean          = false
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         teams           <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
         configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.asString.trim.isEmpty))
         groupedConfigs  =  configs.groupBy(_.serviceName)
-      } yield {
-        if (asCSV) {
+      yield
+        if asCSV
+        then
           val csv = s"${team.fold("")(_.asString)} ,Integration, ,Development, ,QA, ,Staging, ,ExternalTest, ,Production\n" + // CSV header
             CsvUtils.toCsv(toRows(groupedConfigs)).replaceAll(""".\{.*?(})""", "")
           val source = Source.single(ByteString(csv, "UTF-8"))
@@ -87,20 +85,18 @@ class CostsSummaryController @Inject() (
             header = ResponseHeader(200, Map("Content-Disposition" -> s"inline; filename=\"cost-explorer-${Instant.now()}.csv\"")),
             body = HttpEntity.Streamed(source, None, Some("text/csv"))
           )
-        } else {
+        else
           Ok(costExplorerPage(groupedConfigs, teams, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
-        }
       }
-    }
-}
 
-object RepoListFilter {
-  lazy val form: Form[RepoListFilter] =
+case class RepoListFilter(
+  team: Option[TeamName] = None
+)
+
+object RepoListFilter:
+  val form: Form[RepoListFilter] =
     Form(
       mapping(
         "team" -> optional(Forms.of[TeamName](TeamName.formFormat))
       )(RepoListFilter.apply)(r => Some(r.team))
     )
-}
-
-case class RepoListFilter(team: Option[TeamName] = None)

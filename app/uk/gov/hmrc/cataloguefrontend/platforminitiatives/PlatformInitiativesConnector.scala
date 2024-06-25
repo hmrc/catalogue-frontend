@@ -28,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class PlatformInitiativesConnector @Inject()(
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(using ExecutionContext) {
+)(using ExecutionContext):
   import HttpReads.Implicits._
 
   private val platformInitiativesBaseUrl: String =
@@ -36,13 +36,13 @@ class PlatformInitiativesConnector @Inject()(
 
   private given Format[PlatformInitiative] = PlatformInitiative.format
 
-  def getInitiatives(team: Option[TeamName])(using HeaderCarrier): Future[Seq[PlatformInitiative]] = {
+  def getInitiatives(team: Option[TeamName])(using HeaderCarrier): Future[Seq[PlatformInitiative]] =
     httpClientV2
-      .get(team.fold(
-        url"$platformInitiativesBaseUrl/platform-initiatives/initiatives"
-      )(t =>
-        url"$platformInitiativesBaseUrl/platform-initiatives/teams/${t.asString}/initiatives"
-      ))
+      .get(
+        team.fold(
+          url"$platformInitiativesBaseUrl/platform-initiatives/initiatives"
+        )(t =>
+          url"$platformInitiativesBaseUrl/platform-initiatives/teams/${t.asString}/initiatives"
+        )
+      )
       .execute[Seq[PlatformInitiative]]
-  }
-}

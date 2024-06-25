@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.deployments
 
-object TimelinePalette {
+object TimelinePalette:
   val rgb: Seq[String] = Seq(
     "#4e73ad",
     "#da6198",
@@ -85,5 +85,3 @@ object TimelinePalette {
     "#419ce6",
     "#f06292"
   )
-
-}

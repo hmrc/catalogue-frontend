@@ -385,7 +385,7 @@ class ServiceConfigsServiceSpec
     val mockServiceCommissioningConnector = mock[ServiceCommissioningStatusConnector]
 
     val serviceConfigsService =
-      new ServiceConfigsService(
+      ServiceConfigsService(
         mockServiceConfigsConnector,
         mockTeamsAndRepositoriesConnector,
         mockServiceCommissioningConnector

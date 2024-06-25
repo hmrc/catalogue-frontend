@@ -359,7 +359,7 @@ class DeployServiceControllerSpec
     val mockReleasesConnector             = mock[ReleasesConnector]
     val mockVulnerabilitiesConnector      = mock[VulnerabilitiesConnector]
     val mockServiceConfigsService         = mock[ServiceConfigsService]
-    val underTest                         = new DeployServiceController(
+    val underTest                         = DeployServiceController(
                                               auth                          = FrontendAuthComponentsStub(mockAuthStubBehaviour)
                                             , mcc                           = mcc
                                             , configuration                 = app.injector.instanceOf[Configuration]
@@ -370,11 +370,12 @@ class DeployServiceControllerSpec
                                             , releasesConnector             = mockReleasesConnector
                                             , vulnerabilitiesConnector      = mockVulnerabilitiesConnector
                                             , serviceConfigsService         = mockServiceConfigsService
-                                            , telemetryLinks                = new TelemetryLinks(app.injector.instanceOf[Configuration])
+                                            , telemetryLinks                = TelemetryLinks(app.injector.instanceOf[Configuration])
                                             , deployServicePage             = app.injector.instanceOf[DeployServicePage]
                                             , deployServiceStep4Page        = app.injector.instanceOf[DeployServiceStep4Page]
                                             )
     extension (eventualResult: Future[Result])
-      def toDocument: Document = Jsoup.parse(Helpers.contentAsString(eventualResult))
+      def toDocument: Document =
+        Jsoup.parse(Helpers.contentAsString(eventualResult))
   }
 }

@@ -22,24 +22,28 @@ import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait CatalogueAuthBuilders {
+trait CatalogueAuthBuilders:
 
   def auth: FrontendAuthComponents
   def ec: ExecutionContext
   def mcc: MessagesControllerComponents
 
-  private val readPerm = Predicate.Permission(Resource(ResourceType("catalogue-frontend"), ResourceLocation("*")), IAAction("READ"))
+  private val readPerm =
+    Predicate.Permission(Resource(ResourceType("catalogue-frontend"), ResourceLocation("*")), IAAction("READ"))
 
   def BasicAuthAction =
-    new ActionBuilder[MessagesRequest, AnyContent] {
-      override def executionContext: ExecutionContext = ec
-      override def parser: BodyParser[AnyContent] = mcc.parsers.anyContent
+    new ActionBuilder[MessagesRequest, AnyContent]:
+      override def executionContext: ExecutionContext =
+        ec
+
+      override def parser: BodyParser[AnyContent] =
+        mcc.parsers.anyContent
+
       override def invokeBlock[A](request: Request[A], block: MessagesRequest[A] => Future[Result]): Future[Result] =
-        if (CatalogueFrontendSwitches.requiresLogin.isEnabled)
+        if CatalogueFrontendSwitches.requiresLogin.isEnabled
+        then
           auth
             .authorizedAction(AuthController.continueUrl(Call("GET", request.uri)), readPerm) // Other HTTP methods are not suported in targetUrl
-            .invokeBlock[A](request, ar => block(new MessagesRequest[A](ar.request, mcc.messagesApi)))
+            .invokeBlock[A](request, ar => block(MessagesRequest[A](ar.request, mcc.messagesApi)))
         else
-          block(new MessagesRequest[A](request, mcc.messagesApi))
-    }
-}
+          block(MessagesRequest[A](request, mcc.messagesApi))

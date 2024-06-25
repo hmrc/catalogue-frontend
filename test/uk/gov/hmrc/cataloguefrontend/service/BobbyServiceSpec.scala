@@ -38,7 +38,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
   private val today      = now.atZone(ZoneId.of("UTC")).toLocalDate
   private val fixedClock = Clock.fixed(now, ZoneId.of("UTC"))
 
-  private val service = new BobbyService(connector, fixedClock)
+  private val service = BobbyService(connector, fixedClock)
 
   "getRules" should {
     "split rules into upcoming dependencies if from date is later than today" in {
@@ -47,10 +47,11 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
 
       when(connector.bobbyRules())
         .thenReturn(Future.successful(
-          new BobbyRuleSet(
+          BobbyRuleSet(
             libraries = Seq(futureLibraryRule, aBobbyRule(from = today), aBobbyRule(from = today.minusDays(1))),
             plugins   = Seq(futurePluginRule, aBobbyRule(from = today), aBobbyRule(name = "past.plugin", from = today.minusDays(1)))
-          )))
+          )
+        ))
 
       val result = service.getRules().futureValue
 
@@ -68,10 +69,11 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
 
       when(connector.bobbyRules())
         .thenReturn(Future.successful(
-          new BobbyRuleSet(
+          BobbyRuleSet(
             libraries = Seq(aBobbyRule(from = today.plusDays(1)), currentLibraryRule, pastLibraryRule),
             plugins   = Seq(aBobbyRule(from = today.plusDays(1)), currentPluginRule, pastPluginRule)
-          )))
+          )
+        ))
 
       val result = service.getRules().futureValue
 
@@ -93,7 +95,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
       )
 
       when(connector.bobbyRules())
-        .thenReturn(Future.successful(new BobbyRuleSet(rules, rules)))
+        .thenReturn(Future.successful(BobbyRuleSet(rules, rules)))
 
       val result = service.getRules().futureValue
 
@@ -111,7 +113,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
         )
 
       when(connector.bobbyRules())
-        .thenReturn(Future.successful(new BobbyRuleSet(rules, rules)))
+        .thenReturn(Future.successful(BobbyRuleSet(rules, rules)))
 
       val result = service.getRules().futureValue
 
@@ -119,7 +121,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
       result.active.plugins.head   shouldBe expectedRule
     }
 
-    "sort by artifact group/name in ascending order" in {
+    "sort by artefact group/name in ascending order" in {
       val upcomingDate         = today.plusDays(1)
       val activeDate           = today.minusDays(1)
       val expectedUpcomingRule = aBobbyRule(organisation = "*", name = "b", from = upcomingDate)
@@ -128,7 +130,7 @@ class BobbyServiceSpec extends UnitSpec with MockitoSugar {
       val rules = Seq(aBobbyRule(organisation = "b", name = "a", from = upcomingDate), expectedUpcomingRule, aBobbyRule(organisation = "b", name = "a", from = activeDate), expectedActiveRule)
 
       when(connector.bobbyRules())
-        .thenReturn(Future.successful(new BobbyRuleSet(rules, rules)))
+        .thenReturn(Future.successful(BobbyRuleSet(rules, rules)))
 
       val result = service.getRules().futureValue
 

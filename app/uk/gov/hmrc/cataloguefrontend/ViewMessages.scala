@@ -19,7 +19,8 @@ package uk.gov.hmrc.cataloguefrontend
 import javax.inject.Inject
 import play.api.Configuration
 
-class ViewMessages @Inject() (configuration: Configuration) {
+class ViewMessages @Inject()(configuration: Configuration):
+
   def noRepoOfTypeForTeam(item: String): String =
     s"""This team doesn't have any $item repositories, or our <a href="/#maintenance">$item repository detection strategy</a> needs
       improving. In case of the latter, let us know in
@@ -33,4 +34,3 @@ class ViewMessages @Inject() (configuration: Configuration) {
 
   val notSpecifiedText: String =
     "Not specified"
-}

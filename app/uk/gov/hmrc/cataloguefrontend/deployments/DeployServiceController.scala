@@ -57,7 +57,7 @@ class DeployServiceController @Inject()(
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders
-  with I18nSupport {
+  with I18nSupport:
 
   private def predicate(serviceName: ServiceName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"services/${serviceName.asString}"), IAAction("DEPLOY_SERVICE"))
@@ -80,43 +80,42 @@ class DeployServiceController @Inject()(
       continueUrl = routes.DeployServiceController.step1(serviceName),
       retrieval   = servicesRetrieval
     ).async { implicit request =>
-      (for {
+      (for
         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
         accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
-        hasPerm              <- serviceName match {
+        hasPerm              <- serviceName match
                                   case Some(sn) => EitherT.right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(sn)), predicate = None))
                                   case None     => EitherT.pure[Future, Result](true)
-                                }
-        form                 =  serviceName.fold(DeployServiceForm.form)(s => DeployServiceForm.form.bind(Map("serviceName" -> s.asString)).discardingErrors)
+        form                 =  serviceName.fold(DeployServiceForm.form): s =>
+                                  DeployServiceForm.form.bind(Map("serviceName" -> s.asString)).discardingErrors
         _                    <- EitherT
                                   .fromOption[Future](
                                     Option.when(hasPerm)(())
                                   , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
                                   )
-        latest               <- serviceName.fold(EitherT.rightT[Future, Result](Option.empty[Version]))(sn =>
+        latest               <- serviceName.fold(EitherT.rightT[Future, Result](Option.empty[Version])): sn =>
                                   EitherT
                                     .fromOptionF(
                                       serviceDependenciesConnector.getSlugInfo(sn)
                                     , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
                                     ).map(x => Some(x.version))
-                                )
-        releases             <- serviceName.fold(EitherT.rightT[Future, Result](Seq.empty[WhatsRunningWhereVersion]))(sn =>
+        releases             <- serviceName.fold(EitherT.rightT[Future, Result](Seq.empty[WhatsRunningWhereVersion])): sn =>
                                   EitherT
                                     .right[Result](releasesConnector.releasesForService(sn))
                                     .map(_.versions.toSeq)
-                                )
-        environments         <- serviceName.fold(EitherT.rightT[Future, Result](Seq.empty[Environment]))(sn =>
+        environments         <- serviceName.fold(EitherT.rightT[Future, Result](Seq.empty[Environment])): sn =>
                                   EitherT
                                     .right[Result](serviceCommissioningConnector.commissioningStatus(sn))
-                                    .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
+                                    .map:
+                                      _
+                                        .collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }
+                                        .flatten
                                     .map(_.sorted)
-                                )
-        _                    <- serviceName match {
+        _                    <- serviceName match
                                   case Some(_) => EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
                                   case None    => EitherT.right[Result](Future.unit)
-                                }
-       } yield
+       yield
          Ok(deployServicePage(form, hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
       ).merge
     }
@@ -127,85 +126,86 @@ class DeployServiceController @Inject()(
       continueUrl = routes.DeployServiceController.step1(None)
     , retrieval   = servicesRetrieval
     ).async { implicit request =>
-      (for {
-        allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
-        accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
-        accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
-        form                 =  DeployServiceForm.form.bindFromRequest()
-        formObject           <- EitherT
-                                  .fromEither[Future](form.fold(
-                                    formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, accessibleServices, None, Nil, Nil, evaluations = None)))
-                                  , validForm      => Right(validForm)
-                                  ))
-        hasPerm              <- EitherT
-                                  .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName)), predicate = None))
-        _                    <- EitherT
-                                  .fromOption[Future](
-                                    Option.when(hasPerm)(())
-                                  , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
-                                  )
-        _                    <- EitherT
-                                  .right[Result](auth.verify(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName))))
-        latest               <- EitherT
-                                  .fromOptionF(
-                                    serviceDependenciesConnector.getSlugInfo(formObject.serviceName)
-                                  , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
-                                  ).map(x => Some(x.version))
-        releases             <- EitherT
-                                  .right[Result](releasesConnector.releasesForService(formObject.serviceName))
-                                  .map(_.versions.toSeq)
-        environments         <- EitherT
-                                  .right[Result](serviceCommissioningConnector.commissioningStatus(formObject.serviceName))
-                                  .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
-                                  .map(_.sorted)
-        _                    <- EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
-        currentSlug          <- EitherT.right[Result](serviceDependenciesConnector.getSlugInfo(formObject.serviceName, releases.find(_.environment == formObject.environment).map(_.version)))
-        slugToDeploy         <- EitherT
-                                  .fromOptionF(
-                                    serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
-                                  , BadRequest(deployServicePage(form.withGlobalError("Version not found. If this is a recent build, it may take a few minutes to be picked up"), hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
-                                  )
-        confNew              <- EitherT
-                                  .right[Result](serviceConfigsService.configByKeyWithNextDeployment(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
-                                  .map(_.flatMap { case (k, envData) =>
-                                    envData
-                                      .getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil)
-                                      .collect { case (x, true) if !x.isReferenceConf => x }
-                                      .map(v => (k -> v))
-                                  })
-        confRemoves          <- EitherT
-                                  .right[Result](serviceConfigsService.removedConfig(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
-                                  .map(_.flatMap { case (k, envData) =>
-                                    envData
-                                      .getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil)
-                                      .collect { case (x, true) if !x.isReferenceConf  => x }
-                                      .map(v => (k -> v))
-                                  })
-        confUpdates          =  (confNew.view.mapValues(x => (x, true)) ++ confRemoves.view.mapValues(x => (x, false))).toMap
-        confWarnings         <- EitherT
-                                  .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
-        vulnerabilites       <- EitherT
-                                  .right[Result](
-                                    vulnerabilitiesConnector
-                                      .vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired))
-                                      .map(_.flatMap {
-                                        case xs if xs.isEmpty && !releases.exists(_.version == formObject.version) => None
-                                        case xs                                                                    => Some(xs)
-                                      })
-                                  )
-        jvmChanges            =  (currentSlug.map(_.java), slugToDeploy.java)
-        deploymentConfigUpdates <- EitherT
-                                     .right[Result](serviceConfigsService.deploymentConfigChanges(formObject.serviceName, formObject.environment))
-       } yield
-        Ok(deployServicePage(
-          form,
-          hasPerm,
-          accessibleServices,
-          latest,
-          releases,
-          environments,
-          Some((confUpdates, confWarnings, vulnerabilites, jvmChanges, deploymentConfigUpdates))
-        ))
+      (for
+         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
+         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
+         accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
+         form                 =  DeployServiceForm.form.bindFromRequest()
+         formObject           <- EitherT
+                                   .fromEither[Future](form.fold(
+                                     formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, accessibleServices, None, Nil, Nil, evaluations = None)))
+                                   , validForm      => Right(validForm)
+                                   ))
+         hasPerm              <- EitherT
+                                   .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName)), predicate = None))
+         _                    <- EitherT
+                                   .fromOption[Future](
+                                     Option.when(hasPerm)(())
+                                   , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
+                                   )
+         _                    <- EitherT
+                                   .right[Result](auth.verify(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName))))
+         latest               <- EitherT
+                                   .fromOptionF(
+                                     serviceDependenciesConnector.getSlugInfo(formObject.serviceName)
+                                   , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
+                                   ).map(x => Some(x.version))
+         releases             <- EitherT
+                                   .right[Result](releasesConnector.releasesForService(formObject.serviceName))
+                                   .map(_.versions.toSeq)
+         environments         <- EitherT
+                                   .right[Result](serviceCommissioningConnector.commissioningStatus(formObject.serviceName))
+                                   .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
+                                   .map(_.sorted)
+         _                    <- EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
+         currentSlug          <- EitherT.right[Result](serviceDependenciesConnector.getSlugInfo(formObject.serviceName, releases.find(_.environment == formObject.environment).map(_.version)))
+         slugToDeploy         <- EitherT
+                                   .fromOptionF(
+                                     serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
+                                   , BadRequest(deployServicePage(form.withGlobalError("Version not found. If this is a recent build, it may take a few minutes to be picked up"), hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
+                                   )
+         confNew              <- EitherT
+                                   .right[Result](serviceConfigsService.configByKeyWithNextDeployment(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
+                                   .map:
+                                     _
+                                       .flatMap: (k, envData) =>
+                                         envData
+                                           .getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil)
+                                           .collect { case (x, true) if !x.isReferenceConf => x }
+                                           .map(v => (k -> v))
+         confRemoves          <- EitherT
+                                   .right[Result](serviceConfigsService.removedConfig(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
+                                   .map:
+                                     _.flatMap: (k, envData) =>
+                                        envData
+                                          .getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil)
+                                          .collect { case (x, true) if !x.isReferenceConf  => x }
+                                          .map(v => (k -> v))
+         confUpdates          =  (confNew.view.mapValues(x => (x, true)) ++ confRemoves.view.mapValues(x => (x, false))).toMap
+         confWarnings         <- EitherT
+                                   .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
+         vulnerabilites       <- EitherT
+                                   .right[Result](
+                                     vulnerabilitiesConnector
+                                       .vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired))
+                                       .map:
+                                         _.flatMap:
+                                           case xs if xs.isEmpty && !releases.exists(_.version == formObject.version) => None
+                                           case xs                                                                    => Some(xs)
+                                   )
+         jvmChanges            =  (currentSlug.map(_.java), slugToDeploy.java)
+         deploymentConfigUpdates <- EitherT
+                                      .right[Result](serviceConfigsService.deploymentConfigChanges(formObject.serviceName, formObject.environment))
+       yield
+         Ok(deployServicePage(
+           form,
+           hasPerm,
+           accessibleServices,
+           latest,
+           releases,
+           environments,
+           Some((confUpdates, confWarnings, vulnerabilites, jvmChanges, deploymentConfigUpdates))
+         ))
       ).merge
     }
 
@@ -216,36 +216,36 @@ class DeployServiceController @Inject()(
     , retrieval   = Retrieval.username ~ servicesRetrieval
     ).async { implicit request =>
       val username ~ locations = request.retrieval
-      (for {
-        allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
-        accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(locations))
-        accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
-        form                 =  DeployServiceForm.form.bindFromRequest()
-        formObject           <- EitherT
-                                  .fromEither[Future](form.fold(
-                                    formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, accessibleServices, None, Nil, Nil, evaluations = None)))
-                                  , validForm      => Right(validForm)
-                                  ))
-        hasPerm              <- EitherT
-                                  .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName)), predicate = None))
-        _                    <- EitherT
-                                  .fromOption[Future](
-                                    Option.when(hasPerm)(())
-                                  , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
-                                  )
-        _                    <- EitherT
-                                  .fromOptionF(
-                                    serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
-                                  , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
-                                  )
-        queueUrl             <- EitherT
-                                  .right[Result](buildJobsConnector.deployMicroservice(
-                                    serviceName = formObject.serviceName
-                                  , version     = formObject.version
-                                  , environment = formObject.environment
-                                  , user        = username
-                                  ))
-       } yield
+      (for
+         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
+         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(locations))
+         accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
+         form                 =  DeployServiceForm.form.bindFromRequest()
+         formObject           <- EitherT
+                                   .fromEither[Future](form.fold(
+                                     formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, accessibleServices, None, Nil, Nil, evaluations = None)))
+                                   , validForm      => Right(validForm)
+                                   ))
+         hasPerm              <- EitherT
+                                   .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName)), predicate = None))
+         _                    <- EitherT
+                                   .fromOption[Future](
+                                     Option.when(hasPerm)(())
+                                   , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
+                                   )
+         _                    <- EitherT
+                                   .fromOptionF(
+                                     serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
+                                   , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
+                                   )
+         queueUrl             <- EitherT
+                                   .right[Result](buildJobsConnector.deployMicroservice(
+                                     serviceName = formObject.serviceName
+                                   , version     = formObject.version
+                                   , environment = formObject.environment
+                                   , user        = username
+                                   ))
+       yield
         Redirect(routes.DeployServiceController.step4(
           serviceName = formObject.serviceName
         , version     = formObject.version.original
@@ -255,71 +255,79 @@ class DeployServiceController @Inject()(
       ).merge
     }
 
-  private val redirectUrlPolicy = AbsoluteWithHostnameFromAllowlist(
-    new java.net.URL(configuration.get[String]("jenkins.buildjobs.url")).getHost
-  )
+  private val redirectUrlPolicy =
+    AbsoluteWithHostnameFromAllowlist:
+      java.net.URL(configuration.get[String]("jenkins.buildjobs.url")).getHost
 
   import RedirectUrl._
   // Display progress and useful links
-  def step4(serviceName: ServiceName, version: String, environment: String, queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl]): Action[AnyContent] =
+  def step4(
+    serviceName: ServiceName,
+    version    : String,
+    environment: String,
+    queueUrl   : RedirectUrl,
+    buildUrl   : Option[RedirectUrl]
+  ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      (for {
-        qUrl <- EitherT.fromEither[Future](queueUrl.getEither[RedirectUrlPolicy.Id](redirectUrlPolicy))
-                       .leftMap(_ => BadRequest("Invalid queueUrl"))
-        bUrl <- EitherT.fromEither[Future](buildUrl.fold(Right(Option.empty[SafeRedirectUrl]): Either[String, Option[SafeRedirectUrl]])(_.getEither(redirectUrlPolicy).map(Option.apply)))
-                       .leftMap(_ => BadRequest("Invalid buildUrl"))
-        res  <- EitherT.right[Result](
-                  DeployServiceForm
-                    .form
-                    .bindFromRequest()
-                    .fold(
-                      formWithErrors => Future.successful(NotFound(error_404_template()))
-                    , formObject     => serviceDependenciesConnector
-                                          .getSlugInfo(formObject.serviceName, Some(formObject.version))
-                                          .map(_.fold(NotFound(error_404_template())){_ =>
-                                            val deploymentLogsLink = telemetryLinks.kibanaDeploymentLogs(formObject.environment, formObject.serviceName)
-                                            val grafanaLink        = telemetryLinks.grafanaDashboard(formObject.environment, formObject.serviceName)
-                                            val kibanaLink         = telemetryLinks.kibanaDashboard(formObject.environment, formObject.serviceName)
-                                            Ok(deployServiceStep4Page(formObject, qUrl, bUrl, deploymentLogsLink, grafanaLink, kibanaLink))
-                                          })
-                  )
-                )
-       } yield res
+      (for
+         qUrl <- EitherT.fromEither[Future](queueUrl.getEither[RedirectUrlPolicy.Id](redirectUrlPolicy))
+                        .leftMap(_ => BadRequest("Invalid queueUrl"))
+         bUrl <- EitherT.fromEither[Future](buildUrl.fold(Right(Option.empty[SafeRedirectUrl]): Either[String, Option[SafeRedirectUrl]])(_.getEither(redirectUrlPolicy).map(Option.apply)))
+                        .leftMap(_ => BadRequest("Invalid buildUrl"))
+         res  <- EitherT.right[Result](
+                   DeployServiceForm
+                     .form
+                     .bindFromRequest()
+                     .fold(
+                       formWithErrors => Future.successful(NotFound(error_404_template()))
+                     , formObject     => serviceDependenciesConnector
+                                           .getSlugInfo(formObject.serviceName, Some(formObject.version))
+                                           .map(_.fold(NotFound(error_404_template())){_ =>
+                                             val deploymentLogsLink = telemetryLinks.kibanaDeploymentLogs(formObject.environment, formObject.serviceName)
+                                             val grafanaLink        = telemetryLinks.grafanaDashboard(formObject.environment, formObject.serviceName)
+                                             val kibanaLink         = telemetryLinks.kibanaDashboard(formObject.environment, formObject.serviceName)
+                                             Ok(deployServiceStep4Page(formObject, qUrl, bUrl, deploymentLogsLink, grafanaLink, kibanaLink))
+                                           })
+                   )
+                 )
+       yield res
       ).merge
     }
 
-  import scala.concurrent.duration._
-  import org.apache.pekko.stream.scaladsl.Source
-  import play.api.http.ContentTypes
-  import play.api.libs.EventSource
-  import play.api.libs.json.Json
-  def step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl] ): Action[AnyContent] =
+  def step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl]): Action[AnyContent] =
+    import scala.concurrent.duration._
+    import org.apache.pekko.stream.scaladsl.Source
+    import play.api.http.ContentTypes
+    import play.api.libs.EventSource
+    import play.api.libs.json.Json
     BasicAuthAction.async { implicit request =>
-     (for {
+     (for
         qUrl <- EitherT.fromEither[Future](queueUrl.getEither[RedirectUrlPolicy.Id](redirectUrlPolicy))
                        .leftMap(_ => BadRequest("Invalid queueUrl"))
         bUrl <- EitherT.fromEither[Future](buildUrl.fold(Right(Option.empty[SafeRedirectUrl]): Either[String, Option[SafeRedirectUrl]])(_.getEither(redirectUrlPolicy).map(Option.apply)))
                        .leftMap(_ => BadRequest("Invalid buildUrl"))
-      } yield {
+      yield
         given Writes[BuildJobsConnector.QueueStatus] = BuildJobsConnector.QueueStatus.format
         given Writes[BuildJobsConnector.BuildStatus] = BuildJobsConnector.BuildStatus.format
         val flow =
           Source
-            .tick(1.millis, if (buildUrl.isEmpty) 1.second else 10.second, "TICK")
-            .mapAsync(parallelism = 1) { _ =>
-              (qUrl, bUrl) match {
+            .tick(
+              1.millis
+            , if buildUrl.isEmpty then 1.second else 10.second
+            , "TICK"
+            )
+            .mapAsync(parallelism = 1): _ =>
+              (qUrl, bUrl) match
                 case (u, None)    => buildJobsConnector.queueStatus(u).map(x => Json.obj("queueStatus" -> Json.toJson(x)).toString)
                 case (_, Some(u)) => buildJobsConnector.buildStatus(u).map(x => Json.obj("buildStatus" -> Json.toJson(x)).toString)
-              }
-            }
             .via(EventSource.flow)
 
         Ok.chunked(flow)
           .as(ContentTypes.EVENT_STREAM)
-      }
      ).merge
     }
-}
+
+end DeployServiceController
 
 case class DeployServiceForm(
   serviceName: ServiceName

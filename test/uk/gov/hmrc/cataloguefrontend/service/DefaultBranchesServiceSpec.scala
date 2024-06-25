@@ -85,7 +85,7 @@ class DefaultBranchesServiceSpec
 
     val mockTeamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
 
-    val defaultBranchesService: DefaultBranchesService = new DefaultBranchesService()
+    val defaultBranchesService: DefaultBranchesService = DefaultBranchesService()
 
     val mockRepositories: Seq[GitRepository] = Seq(
       GitRepository(

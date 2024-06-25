@@ -37,7 +37,7 @@ final class ServiceConfigsConnectorSpec
      with MockitoSugar {
 
   val servicesConfig =
-    new ServicesConfig(
+    ServicesConfig(
       Configuration(
         "microservice.services.service-configs.host"                    -> wireMockHost,
         "microservice.services.service-configs.port"                    -> wireMockPort,
@@ -46,7 +46,7 @@ final class ServiceConfigsConnectorSpec
     )
 
   val serviceConfigsConnector =
-    new ServiceConfigsConnector(httpClientV2, servicesConfig, mock[AsyncCacheApi])
+    ServiceConfigsConnector(httpClientV2, servicesConfig, mock[AsyncCacheApi])
 
   given HeaderCarrier = HeaderCarrier()
 

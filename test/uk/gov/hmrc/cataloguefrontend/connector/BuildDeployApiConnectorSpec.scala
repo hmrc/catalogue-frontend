@@ -43,12 +43,12 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
   )
 
   private val config =
-    new BuildDeployApiConfig(
+    BuildDeployApiConfig(
       underlyingConfig,
-      new ServicesConfig(underlyingConfig)
+      ServicesConfig(underlyingConfig)
     )
 
-  private val connector = new BuildDeployApiConnector(httpClientV2, config)
+  private val connector = BuildDeployApiConnector(httpClientV2, config)
 
   private given HeaderCarrier = HeaderCarrier()
 

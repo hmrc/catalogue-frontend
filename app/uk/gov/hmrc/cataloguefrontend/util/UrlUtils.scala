@@ -23,7 +23,7 @@ import play.utils.UriEncoding
 /** This should be only used for building relative URLs.
   * When building absolute URLs (e.g. for http-verbs), use uk.gov.hmrc.http.StringContextOps
   */
-object UrlUtils {
+object UrlUtils:
   def encodeQueryParam(param: String): String =
     URLEncoder.encode(param, "UTF-8")
 
@@ -32,4 +32,3 @@ object UrlUtils {
 
   def buildQueryParams(queryParams: (String, Option[String])*): Seq[(String, String)] =
     queryParams.collect { case (k, Some(v)) => (k, v) }
-}

@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import cats.data.EitherT
 import cats.implicits._
+import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import play.api.http.HttpEntity
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -46,24 +47,24 @@ class ServiceConfigsController @Inject()(
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   def configExplorer(serviceName: ServiceName, showWarnings: Boolean, selector: Option[KeyName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         deployments      <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey      <- serviceConfigsService.configByKeyWithNextDeployment(serviceName)
         warnings         <- serviceConfigsService.configWarnings(serviceName, deployments.map(_.environment), version = None, latest = true)
         deploymentConfig <- serviceConfigsService.deploymentConfigByKeyWithNextDeployment(serviceName)
-      } yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings, deploymentConfig))
+      yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings, deploymentConfig))
     }
 
   val searchLanding: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         allTeams   <- teamsAndReposConnector.allTeams()
         configKeys <- serviceConfigsService.configKeys()
-      } yield Ok(searchConfigPage(SearchConfig.form.fill(SearchConfig.SearchConfigForm()), allTeams, configKeys))
+      yield Ok(searchConfigPage(SearchConfig.form.fill(SearchConfig.SearchConfigForm()), allTeams, configKeys))
     }
 
   def searchResults(
@@ -74,23 +75,22 @@ class ServiceConfigsController @Inject()(
         .form
         .bindFromRequest()
         .fold(
-          formWithErrors => for {
+          formWithErrors => for
                               allTeams   <- teamsAndReposConnector.allTeams()
                               configKeys <- serviceConfigsService.configKeys()
-                            } yield BadRequest(searchConfigPage(formWithErrors.fill(SearchConfig.SearchConfigForm()), allTeams, configKeys))
-        , formObject     => (for {
+                            yield BadRequest(searchConfigPage(formWithErrors.fill(SearchConfig.SearchConfigForm()), allTeams, configKeys))
+        , formObject     => (for
                               allTeams   <- EitherT.right[Result](teamsAndReposConnector.allTeams())
                               configKeys <- EitherT.right[Result](serviceConfigsService.configKeys(formObject.teamName))
-                              optResults <- (formObject.teamChange, formObject.configKey, formObject.configValue) match {
+                              optResults <- (formObject.teamChange, formObject.configKey, formObject.configValue) match
                                               // Do not search when only the team name has been changed
                                               case (true,  None, None) if formObject.valueFilterType != ValueFilterType.IsEmpty
                                                      => EitherT.rightT[Future, Result](Option.empty[Seq[ServiceConfigsService.AppliedConfig]])
                                               // Error when, config key or value or ValueFilterType.IsEmpty has not been specifed
                                               case (false,  None, None) if formObject.valueFilterType != ValueFilterType.IsEmpty
-                                                     => EitherT.leftT[Future, Option[Seq[ServiceConfigsService.AppliedConfig]]] {
+                                                     => EitherT.leftT[Future, Option[Seq[ServiceConfigsService.AppliedConfig]]]:
                                                           val msg = "Please search by either a config key or value."
                                                           Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys))
-                                                        }
                                               case _ => EitherT(serviceConfigsService.configSearch(
                                                           teamName        = formObject.teamName
                                                         , environments    = formObject.showEnvironments
@@ -101,37 +101,35 @@ class ServiceConfigsController @Inject()(
                                                         , valueFilterType = ValueFilterType.toValueFilterType(formObject.valueFilterType, formObject.configValueIgnoreCase)
                                                         )).leftMap(msg => Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys)))
                                                           .map(Option.apply)
-                                            }
                               (groupedByKey, groupedByService)
-                                         =  (optResults, formObject.groupBy) match {
+                                         =  (optResults, formObject.groupBy) match
                                               case (None,          _              ) => (None, None)
                                               case (Some(results), GroupBy.Key    ) => (Some(serviceConfigsService.toKeyServiceEnvironmentMap(results)), None)
                                               case (Some(results), GroupBy.Service) => (None, Some(serviceConfigsService.toServiceKeyEnvironmentMap(results)))
-                                            }
-                            } yield
-                              if (formObject.asCsv) {
-                                val rows   = formObject.groupBy match {
-                                               case GroupBy.Key     => toRows(groupedByKey.getOrElse(Map.empty), formObject.showEnvironments)
-                                               case GroupBy.Service => toRows2(groupedByService.getOrElse(Map.empty), formObject.showEnvironments)
-                                             }
-                                val csv    = CsvUtils.toCsv(rows)
-                                val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
-                                Result(
-                                  header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"config-search.csv\"")),
-                                  body   = HttpEntity.Streamed(source, None, Some("text/csv"))
-                                )
-                            } else {
-                              Ok(searchConfigPage(SearchConfig.form.fill(formObject), allTeams, configKeys, groupedByKey, groupedByService))
-                            }).merge
+                             yield
+                               if formObject.asCsv
+                               then
+                                 val rows   = formObject.groupBy match
+                                                case GroupBy.Key     => toRows(groupedByKey.getOrElse(Map.empty), formObject.showEnvironments)
+                                                case GroupBy.Service => toRows2(groupedByService.getOrElse(Map.empty), formObject.showEnvironments)
+                                 val csv    = CsvUtils.toCsv(rows)
+                                 val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
+                                 Result(
+                                   header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"config-search.csv\"")),
+                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+                                 )
+                               else
+                                 Ok(searchConfigPage(SearchConfig.form.fill(formObject), allTeams, configKeys, groupedByKey, groupedByService))
+                            ).merge
         )
   }
 
   val configWarningLanding: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         allTeams    <- teamsAndReposConnector.allTeams()
         allServices <- teamsAndReposConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false))
-      } yield Ok(configWarningPage(ConfigWarning.form, allServices))
+      yield Ok(configWarningPage(ConfigWarning.form, allServices))
     }
 
   val configWarningResults: Action[AnyContent] =
@@ -140,15 +138,15 @@ class ServiceConfigsController @Inject()(
         .form
         .bindFromRequest()
         .fold(
-          _          => for {
+          _          => for
                           allServices <- teamsAndReposConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false))
-                        } yield Ok(configWarningPage(ConfigWarning.form, allServices, None))
-        , formObject => for {
+                        yield Ok(configWarningPage(ConfigWarning.form, allServices, None))
+        , formObject => for
                           allServices      <- teamsAndReposConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false))
                           deployments      <- whatsRunningWhereService.releasesForService(formObject.serviceName).map(_.versions)
                           results          <- serviceConfigsService.configWarnings(formObject.serviceName, deployments.map(_.environment), version = None, latest = true)
                           groupedByService =  serviceConfigsService.toServiceKeyEnvironmentWarningMap(results)
-                        } yield Ok(configWarningPage(ConfigWarning.form.fill(formObject), allServices, Some(groupedByService)))
+                        yield Ok(configWarningPage(ConfigWarning.form.fill(formObject), allServices, Some(groupedByService)))
         )
     }
 
@@ -156,10 +154,10 @@ class ServiceConfigsController @Inject()(
     results         : Map[ServiceConfigsService.KeyName, Map[ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
   , showEnvironments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
-    for {
+    for
       (key, services) <- results.toSeq
       (service, envs) <- services
-    } yield
+    yield
       Seq("key" -> key.asString, "service" -> service.asString) ++
       showEnvironments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
 
@@ -167,16 +165,15 @@ class ServiceConfigsController @Inject()(
     results         : Map[ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]
   , showEnvironments: Seq[Environment]
   ): Seq[Seq[(String, String)]] =
-    for {
+    for
       (service, keys) <- results.toSeq
       (key, envs)     <- keys
-    } yield
+    yield
       Seq("service" -> service.asString, "key" -> key.asString) ++
       showEnvironments.map(e => e.asString -> envs.get(e).map(_.value).getOrElse(""))
 
-}
+end ServiceConfigsController
 
-import play.api.data.{Form, Forms}
 object ConfigWarning {
   case class ConfigWarningForm(
     serviceName: ServiceName
@@ -216,7 +213,7 @@ object SearchConfig {
       , "showEnvironments"      -> Forms.seq(Forms.text)
                                         .transform[Seq[Environment]](
                                           xs => { val ys = xs.map(Environment.parse(_).toOption).flatten
-                                                  if (ys.nonEmpty) ys else Environment.valuesAsSeq.filterNot(_ == Environment.Integration) // populate environments for config explorer link
+                                                  if ys.nonEmpty then ys else Environment.valuesAsSeq.filterNot(_ == Environment.Integration) // populate environments for config explorer link
                                                 }
                                         , x  => identity(x).map(_.asString)
                                         )

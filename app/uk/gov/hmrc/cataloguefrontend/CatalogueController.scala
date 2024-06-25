@@ -91,7 +91,7 @@ class CatalogueController @Inject() (
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders
-     with I18nSupport {
+     with I18nSupport:
 
   private val logger = Logger(getClass)
 
@@ -111,35 +111,32 @@ class CatalogueController @Inject() (
     */
   def service(serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      def buildServicePageFromItsArtifactName(serviceName: ServiceName, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): Future[Result] =
-        serviceConfigsConnector.repoNameForService(serviceName).flatMap {
+      def buildServicePageFromItsArtefactName(serviceName: ServiceName, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): Future[Result] =
+        serviceConfigsConnector.repoNameForService(serviceName).flatMap:
           case Some(repoName) => buildServicePageFromRepoName(repoName, hasBranchProtectionAuth).getOrElse(notFound)
           case _              => logger.info(s"Not found repo name for the service: $serviceName")
                                  Future.successful(notFound)
-        }
 
       def buildServicePageFromRepoName(repoName: String, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): OptionT[Future, Result] =
         OptionT(teamsAndRepositoriesConnector.repositoryDetails(repoName))
-          .semiflatMap {
+          .semiflatMap:
             case repositoryDetails if repositoryDetails.repoType == RepoType.Service => renderServicePage(serviceName, repositoryDetails, hasBranchProtectionAuth)
             case _                                                                   => Future.successful(notFound)
-          }
 
-      for {
+      for
         hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(serviceName.asString)
         result                  <- buildServicePageFromRepoName(serviceName.asString, hasBranchProtectionAuth)
-                                    .getOrElseF(buildServicePageFromItsArtifactName(serviceName, hasBranchProtectionAuth))
-      } yield result
+                                    .getOrElseF(buildServicePageFromItsArtefactName(serviceName, hasBranchProtectionAuth))
+      yield result
     }
 
   private def retrieveZone(serviceName: ServiceName)(using request: Request[?]): Future[Option[CostEstimationService.Zone]] =
     serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
-      .map{deploymentConfigs =>
+      .map: deploymentConfigs =>
         val zones = deploymentConfigs.map(_.zone).distinct
-        if (zones.size > 1)
-          logger.warn(s"Service $serviceName is hosted on different zones: \n${deploymentConfigs.map(dc => s"${dc.environment}: ${dc.zone}").mkString("\n")}")
+        if zones.size > 1
+        then logger.warn(s"Service $serviceName is hosted on different zones: \n${deploymentConfigs.map(dc => s"${dc.environment}: ${dc.zone}").mkString("\n")}")
         zones.headOption
-      }
 
   private def renderServicePage(
     serviceName            : ServiceName,
@@ -147,53 +144,51 @@ class CatalogueController @Inject() (
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(using
     request : Request[?]
-  ): Future[Result] = {
-    for {
+  ): Future[Result] =
+    for
       deployments               <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
       repositoryName            =  repositoryDetails.name
       jenkinsJobs               <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repositoryName)
       testRepos                 <- teamsAndRepositoriesConnector.findRelatedTestRepos(repositoryName)
-      testJobMap                <- testRepos.foldLeftM[Future, Map[String, Seq[JenkinsJob]]](Map.empty) {
-                                     case (xs, r) =>
-                                       teamsAndRepositoriesConnector
-                                         .lookupLatestJenkinsJobs(r)
-                                         .map(x => xs ++ Map(r -> x.filter(_.jobType == BuildJobType.Job)))
-                                   }
+      testJobMap                <- testRepos.foldLeftM[Future, Map[String, Seq[JenkinsJob]]](Map.empty): (xs, r) =>
+                                     teamsAndRepositoriesConnector
+                                       .lookupLatestJenkinsJobs(r)
+                                       .map(x => xs ++ Map(r -> x.filter(_.jobType == BuildJobType.Job)))
       database                  <- serviceMetricsConnector.getCollections(serviceName).map(_.headOption.map(_.database))
-      nonPerformantQueries      <- if (database.isDefined)
-                                      serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
-                                    else
-                                      Future.successful(Seq.empty)
-      envDatas                  <- Environment.valuesAsSeq.traverse { env =>
-                                     val slugInfoFlag: SlugInfoFlag = SlugInfoFlag.ForEnvironment(env)
-                                     val deployedVersions = deployments.filter(_.environment == env).map(_.version)
-                                     // a single environment may have multiple versions during a deployment
-                                     // return the lowest
-                                     deployedVersions.sorted.headOption match {
-                                       case Some(version) =>
-                                         for {
-                                           repoModules   <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
-                                           shutterStates <- ShutterType.valuesAsSeq.foldLeftM[Future, Seq[ShutterState]] (Seq.empty)( (acc, shutterType) =>
-                                                              shutterService
-                                                                .getShutterStates(shutterType, env, Some(serviceName))
-                                                                .map(xs => acc ++ xs)
-                                                            )
-                                           data          =  EnvData(
-                                                              version                 = version,
-                                                              repoModules             = repoModules.headOption,
-                                                              shutterStates           = shutterStates,
-                                                              telemetryLinks          = Seq(
-                                                                  telemetryLinks.grafanaDashboard(env, serviceName),
-                                                                  telemetryLinks.kibanaDashboard(env, serviceName)
-                                                              ),
-                                                              nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]())(d =>
-                                                                telemetryLinks.kibanaNonPerformantQueries(env, ServiceName(d), nonPerformantQueries) // TODO should this really be Database rather than ServiceName?
+      nonPerformantQueries      <-
+                                   if database.isDefined
+                                   then
+                                     serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
+                                   else
+                                     Future.successful(Seq.empty)
+      envDatas                  <- Environment.valuesAsSeq
+                                     .traverse: env =>
+                                       val deployedVersions = deployments.filter(_.environment == env).map(_.version)
+                                       // a single environment may have multiple versions during a deployment
+                                       // return the lowest
+                                       deployedVersions.sorted.headOption match
+                                         case Some(version) =>
+                                           for
+                                             repoModules   <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
+                                             shutterStates <- ShutterType.valuesAsSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
+                                                                shutterService
+                                                                  .getShutterStates(shutterType, env, Some(serviceName))
+                                                                  .map(acc ++ _)
+                                             data          =  EnvData(
+                                                                version                 = version,
+                                                                repoModules             = repoModules.headOption,
+                                                                shutterStates           = shutterStates,
+                                                                telemetryLinks          = Seq(
+                                                                                            telemetryLinks.grafanaDashboard(env, serviceName),
+                                                                                            telemetryLinks.kibanaDashboard(env, serviceName)
+                                                                                          ),
+                                                                nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]()): d =>
+                                                                                            telemetryLinks.kibanaNonPerformantQueries(env, ServiceName(d), nonPerformantQueries) // TODO should this really be Database rather than ServiceName?
                                                               )
-                                                            )
-                                         } yield Some(slugInfoFlag -> data)
-                                       case None => Future.successful(None)
-                                     }
-                                   }.map(_.collect { case Some(v) => v }.toMap)
+                                           yield Some((SlugInfoFlag.ForEnvironment(env): SlugInfoFlag) -> data)
+                                         case None =>
+                                           Future.successful(None)
+                                     .map(_.collect { case Some(v) => v }.toMap)
       latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes             <- routeRulesService.serviceRoutes(serviceName)
@@ -203,20 +198,19 @@ class CatalogueController @Inject() (
       vulnerabilitiesCount      <- vulnerabilitiesConnector.deployedVulnerabilityCount(serviceName)
       serviceRelationships      <- serviceConfigsService.serviceRelationships(serviceName)
       zone                      <- retrieveZone(serviceName)
-      optLatestData             =  optLatestServiceInfo.map { latestServiceInfo =>
-                                  SlugInfoFlag.Latest ->
-                                    EnvData(
-                                      version                 = latestServiceInfo.version,
-                                      repoModules             = latestRepoModules,
-                                      shutterStates           = Seq.empty,
-                                      telemetryLinks          = Seq.empty,
-                                      nonPerformantQueryLinks = Seq.empty,
-                                    )
-                                }
+      optLatestData             =  optLatestServiceInfo.map: latestServiceInfo =>
+                                     SlugInfoFlag.Latest ->
+                                       EnvData(
+                                         version                 = latestServiceInfo.version,
+                                         repoModules             = latestRepoModules,
+                                         shutterStates           = Seq.empty,
+                                         telemetryLinks          = Seq.empty,
+                                         nonPerformantQueryLinks = Seq.empty,
+                                       )
       canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(repositoryName)
       lifecycle                 <- serviceCommissioningStatusConnector.getLifecycle(serviceName)
       isGuest                   = request.session.get(AuthController.SESSION_USERNAME).exists(_.startsWith("guest-"))
-    } yield {
+    yield
       Ok(serviceInfoPage(
         serviceName                  = serviceName,
         repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = zone),
@@ -235,8 +229,6 @@ class CatalogueController @Inject() (
         testJobMap                   = testJobMap,
         isGuest                      = isGuest
       ))
-    }
-  }
 
   def library(name: String): Action[AnyContent] =
     Action(Redirect(routes.CatalogueController.repository(name)))
@@ -246,19 +238,17 @@ class CatalogueController @Inject() (
 
   def repository(name: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(name)
-        result <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
-                    .foldF(Future.successful(notFound))(repoDetails =>
-                      repoDetails.repoType match {
-                        case RepoType.Service   => renderServicePage(ServiceName(repoDetails.name), repoDetails, hasBranchProtectionAuth)
-                        case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
-                        case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth).map(Ok(_))
-                        case RepoType.Test      => renderTest(repoDetails, hasBranchProtectionAuth)
-                        case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
-                      }
-                    )
-      } yield result
+        result                  <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
+                                     .foldF(Future.successful(notFound)): repoDetails =>
+                                       repoDetails.repoType match
+                                         case RepoType.Service   => renderServicePage(ServiceName(repoDetails.name), repoDetails, hasBranchProtectionAuth)
+                                         case RepoType.Library   => renderLibrary(repoDetails, hasBranchProtectionAuth)
+                                         case RepoType.Prototype => renderPrototype(repoDetails, hasBranchProtectionAuth).map(Ok(_))
+                                         case RepoType.Test      => renderTest(repoDetails, hasBranchProtectionAuth)
+                                         case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
+      yield result
     }
 
   def enableBranchProtection(repoName: String) =
@@ -302,47 +292,46 @@ class CatalogueController @Inject() (
     auth
       .authorizedAction(
         continueUrl = routes.CatalogueController.repository(repoName),
-        predicate = ChangePrototypePassword.permission(repoName),
+        predicate   = ChangePrototypePassword.permission(repoName),
       ).async { implicit request =>
-
-      (for {
-        hasBranchProtectionAuth <- EitherT.liftF[Future, Result, EnableBranchProtection.HasAuthorisation](hasEnableBranchProtectionAuthorisation(repoName))
-        repoDetails     <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
-        newPassword     <- ChangePrototypePassword
-                             .form()
-                             .bindFromRequest()
-                             .fold[EitherT[Future, Result, ChangePrototypePassword.PrototypePassword]](
-                               formWithErrors => EitherT.left(renderPrototype(repoDetails, hasBranchProtectionAuth, formWithErrors).map(BadRequest(_))),
-                               password => EitherT.rightT(password)
-                             )
-        user            =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
-        _               =  logger.info(s"User $user has triggered a password reset for prototype: $repoName")
-        response        <- EitherT(buildDeployApiConnector.changePrototypePassword(repoName, newPassword))
-                             .leftSemiflatMap(errorMsg => renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form().withGlobalError(errorMsg) , None).map(BadRequest(_)))
-        result          <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form() , Some(response)))
-       } yield Ok(result)
-      ).merge
-    }
+        (for
+          hasBranchProtectionAuth <- EitherT.liftF[Future, Result, EnableBranchProtection.HasAuthorisation](hasEnableBranchProtectionAuthorisation(repoName))
+          repoDetails             <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
+          newPassword             <- ChangePrototypePassword
+                                        .form()
+                                        .bindFromRequest()
+                                        .fold[EitherT[Future, Result, ChangePrototypePassword.PrototypePassword]](
+                                          formWithErrors => EitherT.left(renderPrototype(repoDetails, hasBranchProtectionAuth, formWithErrors).map(BadRequest(_))),
+                                          password => EitherT.rightT(password)
+                                        )
+          user                    =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
+          _                       =  logger.info(s"User $user has triggered a password reset for prototype: $repoName")
+          response                <- EitherT(buildDeployApiConnector.changePrototypePassword(repoName, newPassword))
+                                        .leftSemiflatMap(errorMsg => renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form().withGlobalError(errorMsg) , None).map(BadRequest(_)))
+          result                  <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form() , Some(response)))
+        yield Ok(result)
+        ).merge
+      }
 
   def setPrototypeStatus(repoName: String, status: PrototypeStatus): Action[AnyContent] =
     auth
       .authorizedAction(
         continueUrl = routes.CatalogueController.repository(repoName),
-        predicate = ChangePrototypePassword.permission(repoName)
+        predicate   = ChangePrototypePassword.permission(repoName)
       ).async { implicit request =>
-
-      (for {
-        repoDetails   <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
-        user          =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
-        _             =  logger.info(s"Setting prototype $repoName to status ${status.displayString}, triggered by User: $user")
-        prototypeName = repoDetails.prototypeName.getOrElse(repoName)
-        _             <- EitherT.liftF[Future, Result, Unit](
-                           buildDeployApiConnector.setPrototypeStatus(prototypeName, status)
-                             .map(_.leftMap(err =>
-                               logger.warn(s"Failed to set $prototypeName to ${status.displayString}: $err")
-                             ).merge)
-                         )
-      } yield Redirect(routes.CatalogueController.repository(repoName))).merge
+      (for
+         repoDetails   <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
+         user          =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
+         _             =  logger.info(s"Setting prototype $repoName to status ${status.displayString}, triggered by User: $user")
+         prototypeName = repoDetails.prototypeName.getOrElse(repoName)
+         _             <- EitherT.liftF[Future, Result, Unit]:
+                            buildDeployApiConnector.setPrototypeStatus(prototypeName, status)
+                              .map:
+                                 _
+                                   .leftMap(err => logger.warn(s"Failed to set $prototypeName to ${status.displayString}: $err"))
+                                   .merge
+       yield Redirect(routes.CatalogueController.repository(repoName))
+      ).merge
     }
 
   private def hasChangePrototypePasswordAuthorisation(repoName: String)(
@@ -365,15 +354,13 @@ class CatalogueController @Inject() (
                urlIfLeaksFound,
                commenterReport
              ) =>
-      Ok(
-        libraryInfoPage(
-          repoDetails.copy(jenkinsJobs = jenkinsJobs),
-          repoModulesAllVersions.sorted(Ordering.by((_: RepositoryModules).version).reverse),
-          urlIfLeaksFound,
-          hasBranchProtectionAuth,
-          commenterReport
-        )
-      )
+      Ok(libraryInfoPage(
+        repoDetails.copy(jenkinsJobs = jenkinsJobs),
+        repoModulesAllVersions.sorted(Ordering.by((_: RepositoryModules).version).reverse),
+        urlIfLeaksFound,
+        hasBranchProtectionAuth,
+        commenterReport
+      ))
     }
 
   private def renderPrototype(
@@ -382,13 +369,13 @@ class CatalogueController @Inject() (
     form                   : Form[?]        = ChangePrototypePassword.form(),
     successMessage         : Option[String] = None
   )(using request: Request[?]): Future[Html] =
-    for {
+    for
       urlIfLeaksFound       <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
       commenterReport       <- prCommenterConnector.report(repoDetails.name)
       hasPasswordChangeAuth <- hasChangePrototypePasswordAuthorisation(repoDetails.name)
       prototypeName         =  repoDetails.prototypeName.getOrElse(repoDetails.name)
       prototypeDetails      <- buildDeployApiConnector.getPrototypeDetails(prototypeName)
-    } yield
+    yield
       prototypeInfoPage(
         repoDetails,
         urlIfLeaksFound,
@@ -404,13 +391,13 @@ class CatalogueController @Inject() (
     repoDetails: GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
   )(using request: Request[?]): Future[Result] =
-    for {
+    for
       jenkinsJobs       <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name)
       repoModules       <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name)
       urlIfLeaksFound   <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
       commenterReport   <- prCommenterConnector.report(repoDetails.name)
       servicesUnderTest <- teamsAndRepositoriesConnector.findServicesUnderTest(repoDetails.name)
-    } yield Ok(testRepoInfoPage(
+    yield Ok(testRepoInfoPage(
       repoDetails.copy(jenkinsJobs = jenkinsJobs),
       repoModules,
       urlIfLeaksFound,
@@ -451,14 +438,13 @@ class CatalogueController @Inject() (
   def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       serviceDependenciesConnector.getRepositoryName(group, artefact, Version(version))
-        .map { repoName =>
+        .map: repoName =>
           Redirect(routes.CatalogueController.repository(repoName.getOrElse(artefact)).copy(fragment = artefact))
-        }
     }
 
-  def allDefaultBranches(singleOwnership: Boolean, includeArchived: Boolean): Action[AnyContent] = {
+  def allDefaultBranches(singleOwnership: Boolean, includeArchived: Boolean): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      teamsAndRepositoriesConnector.allRepositories().map { repositories =>
+      teamsAndRepositoriesConnector.allRepositories().map: repositories =>
         DefaultBranchesFilter.form
           .bindFromRequest()
           .fold(
@@ -479,44 +465,42 @@ class CatalogueController @Inject() (
                 DefaultBranchesFilter.form.bindFromRequest()
               ))
           )
-      }
     }
-  }
 
   def costEstimation(serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      (for {
-        repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString))
-        if repositoryDetails.repoType == RepoType.Service
-        costEstimation              <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
-        historicEstimatedCostCharts <- OptionT.liftF(costEstimationService.historicEstimatedCostChartsForService(serviceName))
-      } yield
-        Ok(costEstimationPage(
-          serviceName,
-          repositoryDetails,
-          costEstimation,
-          serviceCostEstimateConfig,
-          historicEstimatedCostCharts
-        ))
+      (for
+         repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString))
+         if repositoryDetails.repoType == RepoType.Service
+         costEstimation              <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
+         historicEstimatedCostCharts <- OptionT.liftF(costEstimationService.historicEstimatedCostChartsForService(serviceName))
+       yield
+         Ok(costEstimationPage(
+           serviceName,
+           repositoryDetails,
+           costEstimation,
+           serviceCostEstimateConfig,
+           historicEstimatedCostCharts
+         ))
       ).getOrElse(notFound)
     }
-}
+
+end CatalogueController
 
 case class TeamFilter(
   name: Option[String] = None
-) {
-  def isEmpty: Boolean = name.isEmpty
-}
+):
+  def isEmpty: Boolean =
+    name.isEmpty
 
-object TeamFilter {
+object TeamFilter:
   lazy val form = Form(
     mapping(
       "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(TeamFilter.apply)(f => Some.apply(f.name))
   )
-}
 
-object EnableBranchProtection {
+object EnableBranchProtection:
 
   case class HasAuthorisation(value: Boolean) extends AnyVal
 
@@ -525,9 +509,8 @@ object EnableBranchProtection {
       Resource.from("catalogue-repository", repoName),
       IAAction("WRITE_BRANCH_PROTECTION")
     )
-}
 
-object MarkForDecommissioning {
+object MarkForDecommissioning:
 
   case class HasAuthorisation(value: Boolean) extends AnyVal
 
@@ -536,15 +519,13 @@ object MarkForDecommissioning {
       Resource.from("catalogue-frontend", s"services/$repoName"),
       IAAction("DECOMMISSION")
     )
-}
 
-object ChangePrototypePassword {
+object ChangePrototypePassword:
 
   case class HasAuthorisation(value: Boolean) extends AnyVal
 
-  case class PrototypePassword(value: String) extends AnyVal {
+  case class PrototypePassword(value: String) extends AnyVal:
     override def toString: String = "PrototypePassword(...)"
-  }
 
   def permission(repoName: String): Permission =
     Predicate.Permission(
@@ -553,10 +534,10 @@ object ChangePrototypePassword {
     )
 
   private val passwordConstraint =
-    Constraint[String]("constraints.password") { input =>
-      if (input.matches("^[a-zA-Z0-9_]+$")) Valid
+    Constraint[String]("constraints.password"): input =>
+      if input.matches("^[a-zA-Z0-9_]+$")
+      then Valid
       else Invalid("Should only contain uppercase letters, lowercase letters, numbers, underscores")
-    }
 
   def form(): Form[PrototypePassword] =
     Form(
@@ -564,7 +545,6 @@ object ChangePrototypePassword {
         "password" -> Forms.nonEmptyText.verifying(passwordConstraint)
       )(PrototypePassword.apply)(f => Some(f.value))
     )
-}
 
 case class DefaultBranchesFilter(
    name           : Option[String]   = None,

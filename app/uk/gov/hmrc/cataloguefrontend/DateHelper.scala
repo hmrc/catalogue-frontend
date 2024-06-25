@@ -23,17 +23,18 @@ object DateHelper {
   val utc = ZoneId.of("UTC")
 
   // TODO consolidate presentation of dates
+  // Search for "yyy-MM-dd" across service too
   val `yyyy-MM-dd`           : DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
   val `dd MMM uuuu`          : DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM uuuu")
   val `dd MMM uuuu HH:mm`    : DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")
   val `yyyy-MM-dd HH:mm:ss z`: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
 
   extension (d: LocalDate)
-    def atStartOfDayEpochMillis: Long =
-      d.atStartOfDay(utc).toInstant.toEpochMilli
+    def atStartOfDayInstant: Instant =
+      d.atStartOfDay(utc).toInstant
 
-    def atEndOfDayEpochMillis: Long =
-      d.atTime(LocalTime.MAX).atZone(utc).toInstant.toEpochMilli
+    def atEndOfDayInstant: Instant =
+      d.atTime(23, 59, 59).atZone(utc).toInstant // friendlier than `.atTime(LocalTime.MAX)` e.g. 2023-01-30T23:59:59.999999999Z
   end extension
 
   extension (d: Instant)
@@ -49,7 +50,4 @@ object DateHelper {
     def dateOnlyFormat: String =
       d.atZone(utc).toLocalDate.format(`dd MMM uuuu`)
   end extension
-
-  def longToLocalDate(l: Long): LocalDate =
-    Instant.ofEpochMilli(l).atZone(utc).toLocalDate
 }

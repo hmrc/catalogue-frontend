@@ -39,7 +39,7 @@ class RepositoriesController @Inject() (
  )(using
    override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-  with CatalogueAuthBuilders {
+  with CatalogueAuthBuilders:
 
   def allRepositories(
     name          : Option[String],
@@ -53,27 +53,26 @@ class RepositoriesController @Inject() (
           .allTeams()
           .map(_.sortBy(_.name.asString))
 
-      val (repoType, serviceType) = repoTypeString match {
-        case Some("FrontendService")  => (Some(RepoType.Service), Some(ServiceType.Frontend))
-        case Some("BackendService")   => (Some(RepoType.Service), Some(ServiceType.Backend))
+      val (repoType, serviceType) = repoTypeString match
+        case Some("FrontendService")  => (Some(RepoType.Service)        , Some(ServiceType.Frontend))
+        case Some("BackendService")   => (Some(RepoType.Service)        , Some(ServiceType.Backend))
         case Some(other)              => (RepoType.parse(other).toOption, None)
-        case None                     => (None, None)
-      }
+        case None                     => (None                          , None)
 
       val allRepositories =
         teamsAndRepositoriesConnector
           .allRepositories(
             name        = None, // Use listjs filtering
             team        = team.filterNot(_.asString.isEmpty),
-            archived    = if (showArchived.contains(true)) None else Some(false),
+            archived    = if showArchived.contains(true) then None else Some(false),
             repoType    = repoType,
             serviceType = serviceType
           ).map(_.sortBy(_.name.toLowerCase))
 
-      for {
+      for
         teams        <- allTeams
         repositories <- allRepositories
-      } yield Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest()))
+      yield Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest()))
     }
 
   def allServices: Action[AnyContent] =
@@ -91,17 +90,15 @@ class RepositoriesController @Inject() (
     Action {
       Redirect(repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
     }
-}
 
 case class RepoListFilter(
   name         : Option[String]   = None,
   team         : Option[TeamName] = None,
   repoType     : Option[String]   = None,
   showArchived : Option[Boolean]  = None
-) {
+):
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && repoType.isEmpty
-}
 
 object RepoListFilter {
   lazy val form =

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Logger
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Json, Reads, __}
+import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -33,24 +33,22 @@ import scala.util.control.NonFatal
 class LeakDetectionConnector @Inject() (
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(using ec: ExecutionContext) {
+)(using ec: ExecutionContext):
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
 
   private val url: String = servicesConfig.baseUrl("leak-detection")
 
-  def repositoriesWithLeaks(using HeaderCarrier): Future[Seq[RepositoryWithLeaks]] = {
+  def repositoriesWithLeaks()(using HeaderCarrier): Future[Seq[RepositoryWithLeaks]] =
     given Reads[RepositoryWithLeaks] = RepositoryWithLeaks.reads
     httpClientV2
       .get(url"$url/api/repository")
       .execute[Seq[RepositoryWithLeaks]]
-      .recover {
+      .recover:
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
-      }
-  }
 
   def leakDetectionSummaries(
     ruleId: Option[String],
@@ -58,12 +56,11 @@ class LeakDetectionConnector @Inject() (
     team  : Option[TeamName]
   )(using
     HeaderCarrier
-  ): Future[Seq[LeakDetectionSummary]] = {
+  ): Future[Seq[LeakDetectionSummary]] =
     given Reads[LeakDetectionSummary] = LeakDetectionSummary.reads
     httpClientV2
       .get(url"$url/api/rules/summary?ruleId=$ruleId&repository=$repo&team=${team.map(_.asString)}")
       .execute[Seq[LeakDetectionSummary]]
-  }
 
   def leakDetectionRepoSummaries(
     ruleId          : Option[String],
@@ -73,56 +70,50 @@ class LeakDetectionConnector @Inject() (
     includeBranches : Boolean
   )(using
      HeaderCarrier
-  ): Future[Seq[LeakDetectionRepositorySummary]] = {
+  ): Future[Seq[LeakDetectionRepositorySummary]] =
     given Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
     val excludeNonIssues = !includeNonIssues
     httpClientV2
       .get(url"$url/api/repositories/summary?ruleId=$ruleId&repository=$repo&team=${team.map(_.asString)}&excludeNonIssues=$excludeNonIssues&includeBranches=$includeBranches")
       .execute[Seq[LeakDetectionRepositorySummary]]
-  }
 
-  def leakDetectionDraftReports(ruleId: Option[String])(using HeaderCarrier): Future[Seq[LeakDetectionReport]] = {
+  def leakDetectionDraftReports(ruleId: Option[String])(using HeaderCarrier): Future[Seq[LeakDetectionReport]] =
     given Reads[LeakDetectionReport] = LeakDetectionReport.reads
     httpClientV2
       .get(url"$url/admin/draft?rule=$ruleId")
       .execute[Seq[LeakDetectionReport]]
-  }
 
-  def leakDetectionReport(repository: String, branch: String)(using HeaderCarrier): Future[LeakDetectionReport] = {
+  def leakDetectionReport(repository: String, branch: String)(using HeaderCarrier): Future[LeakDetectionReport] =
     given Reads[LeakDetectionReport] = LeakDetectionReport.reads
     httpClientV2
       .get(url"$url/api/$repository/$branch/report")
       .execute[LeakDetectionReport]
-  }
 
-  def leakDetectionLeaks(reportId: String)(using HeaderCarrier): Future[Seq[LeakDetectionLeak]] = {
+  def leakDetectionLeaks(reportId: String)(using HeaderCarrier): Future[Seq[LeakDetectionLeak]] =
     given Reads[LeakDetectionLeak] = LeakDetectionLeak.reads
     httpClientV2
       .get(url"$url/api/report/$reportId/leaks")
       .execute[Seq[LeakDetectionLeak]]
-  }
 
-  def leakDetectionWarnings(reportId: String)(using HeaderCarrier): Future[Seq[LeakDetectionWarning]] = {
+  def leakDetectionWarnings(reportId: String)(using HeaderCarrier): Future[Seq[LeakDetectionWarning]] =
     given Reads[LeakDetectionWarning] = LeakDetectionWarning.reads
     httpClientV2
       .get(url"$url/api/report/$reportId/warnings")
       .execute[Seq[LeakDetectionWarning]]
-  }
 
-  def leakDetectionRules()(using HeaderCarrier): Future[Seq[LeakDetectionRule]] = {
+  def leakDetectionRules()(using HeaderCarrier): Future[Seq[LeakDetectionRule]] =
     given Reads[LeakDetectionRule] = LeakDetectionRule.reads
     httpClientV2
       .get(url"$url/api/rules")
       .execute[Seq[LeakDetectionRule]]
-  }
 
-  def rescan(repository: String, branch: String)(using HeaderCarrier): Future[LeakDetectionReport] = {
+  def rescan(repository: String, branch: String)(using HeaderCarrier): Future[LeakDetectionReport] =
     given Reads[LeakDetectionReport] = LeakDetectionReport.reads
     httpClientV2
       .post(url"$url/admin/rescan/$repository/$branch?mode=normal")
       .execute[LeakDetectionReport]
-  }
-}
+
+end LeakDetectionConnector
 
 case class RepositoryWithLeaks(name: String) extends AnyVal
 
@@ -136,33 +127,29 @@ enum Priority(val name: String):
   case Medium extends Priority("medium")
   case Low    extends Priority("low")
 
-object Priority {
+object Priority:
   given Ordering[Priority] =
     Ordering.by(_.ordinal)
 
   val reads: Reads[Priority] =
-    Reads.StringReads.map {
+    Reads.StringReads.map:
       case "high"   => High
       case "medium" => Medium
       case "low"    => Low
-      case p        => throw new RuntimeException(s"Priority type '$p' unknown")
-    }
-}
+      case p        => throw RuntimeException(s"Priority type '$p' unknown")
 
 case class LeakDetectionSummary(
   rule : LeakDetectionRule,
   leaks: Seq[LeakDetectionRepositorySummary]
 )
 
-object LeakDetectionSummary {
-  val reads: Reads[LeakDetectionSummary] = {
+object LeakDetectionSummary:
+  val reads: Reads[LeakDetectionSummary] =
     given Reads[LeakDetectionRule]              = LeakDetectionRule.reads
     given Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
     ( (__ \ "rule" ).read[LeakDetectionRule]
     ~ (__ \ "leaks").read[Seq[LeakDetectionRepositorySummary]]
     )(LeakDetectionSummary.apply)
-  }
-}
 
 case class LeakDetectionRule(
   id               : String,
@@ -176,7 +163,7 @@ case class LeakDetectionRule(
   draft            : Boolean
 )
 
-object LeakDetectionRule {
+object LeakDetectionRule:
   val reads: Reads[LeakDetectionRule] =
     ( (__ \ "id"               ).read[String]
     ~ (__ \ "scope"            ).read[String]
@@ -188,7 +175,6 @@ object LeakDetectionRule {
     ~ (__ \ "priority"         ).read[Priority](Priority.reads)
     ~ (__ \ "draft"            ).read[Boolean]
     )(LeakDetectionRule.apply)
-}
 
 case class LeakDetectionRepositorySummary(
   repository     : String,
@@ -199,13 +185,12 @@ case class LeakDetectionRepositorySummary(
   excludedCount  : Int,
   unresolvedCount: Int,
   branchSummary  : Option[Seq[LeakDetectionBranchSummary]]
-) {
+):
   def totalCount: Int =
     warningCount + excludedCount + unresolvedCount
-}
 
-object LeakDetectionRepositorySummary {
-  val reads: Reads[LeakDetectionRepositorySummary] = {
+object LeakDetectionRepositorySummary:
+  val reads: Reads[LeakDetectionRepositorySummary] =
     given Reads[LeakDetectionBranchSummary]= LeakDetectionBranchSummary.reads
     ( (__ \ "repository"     ).read[String]
     ~ (__ \ "isArchived"     ).read[Boolean]
@@ -216,8 +201,6 @@ object LeakDetectionRepositorySummary {
     ~ (__ \ "unresolvedCount").read[Int]
     ~ (__ \ "branchSummary"  ).readNullable[Seq[LeakDetectionBranchSummary]]
     )(LeakDetectionRepositorySummary.apply)
-  }
-}
 
 case class LeakDetectionBranchSummary(
   branch         : String,
@@ -226,15 +209,19 @@ case class LeakDetectionBranchSummary(
   warningCount   : Int,
   excludedCount  : Int,
   unresolvedCount: Int
-) {
+):
   def totalCount: Int =
     warningCount + excludedCount + unresolvedCount
-}
 
-object LeakDetectionBranchSummary {
+object LeakDetectionBranchSummary:
   val reads: Reads[LeakDetectionBranchSummary] =
-    Json.reads[LeakDetectionBranchSummary]
-}
+    ( (__ \ "branch"         ).read[String]
+    ~ (__ \ "reportId"       ).read[String]
+    ~ (__ \ "scannedAt"      ).read[Instant]
+    ~ (__ \ "warningCount"   ).read[Int]
+    ~ (__ \ "excludedCount"  ).read[Int]
+    ~ (__ \ "unresolvedCount").read[Int]
+    )(LeakDetectionBranchSummary.apply)
 
 case class UnusedExemption(
   ruleId  : String,
@@ -244,7 +231,10 @@ case class UnusedExemption(
 
 object UnusedExemption {
   val reads: Reads[UnusedExemption] =
-    Json.reads[UnusedExemption]
+    ( (__ \ "ruleId"  ).read[String]
+    ~ (__ \ "filePath").read[String]
+    ~ (__ \ "text"    ).readNullable[String]
+    )(UnusedExemption.apply)
 }
 
 case class LeakDetectionReport(
@@ -259,8 +249,8 @@ case class LeakDetectionReport(
   unusedExemptions: Seq[UnusedExemption]
 )
 
-object LeakDetectionReport {
-  val reads: Reads[LeakDetectionReport] = {
+object LeakDetectionReport:
+  val reads: Reads[LeakDetectionReport] =
     given Reads[UnusedExemption] = UnusedExemption.reads
     ( (__ \ "repoName"        ).read[String]
     ~ (__ \ "branch"          ).read[String]
@@ -272,8 +262,6 @@ object LeakDetectionReport {
     ~ (__ \ "exclusions"      ).read[Map[String, Int]]
     ~ (__ \ "unusedExemptions").read[Seq[UnusedExemption]]
     )(LeakDetectionReport.apply)
-  }
-}
 
 case class LeakDetectionLeak(
   ruleId     : String,
@@ -288,8 +276,8 @@ case class LeakDetectionLeak(
   isExcluded : Boolean
 )
 
-object LeakDetectionLeak {
-  val reads: Reads[LeakDetectionLeak] = {
+object LeakDetectionLeak:
+  val reads: Reads[LeakDetectionLeak] =
     given Reads[Match]    = Match.reads
     given Reads[Priority] = Priority.reads
     ( (__ \ "ruleId"     ).read[String]
@@ -303,24 +291,20 @@ object LeakDetectionLeak {
     ~ (__ \ "priority"   ).read[Priority]
     ~ (__ \ "isExcluded" ).read[Boolean]
     )(LeakDetectionLeak.apply)
-  }
-}
 
 case class Match(
   start: Int,
   end  : Int
 )
 
-object Match {
+object Match:
   val reads: Reads[Match] =
     ( (__ \ "start").read[Int]
     ~ (__ \ "end"  ).read[Int]
     )(Match.apply)
-}
 
 case class LeakDetectionWarning(message: String)
 
-object LeakDetectionWarning {
+object LeakDetectionWarning:
   val reads: Reads[LeakDetectionWarning] =
     (__ \ "message").read[String].map(LeakDetectionWarning.apply)
-}

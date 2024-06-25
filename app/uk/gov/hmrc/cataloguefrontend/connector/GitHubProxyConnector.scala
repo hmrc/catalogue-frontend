@@ -31,21 +31,17 @@ class GitHubProxyConnector @Inject()(
   servicesConfig: ServicesConfig
 )(using
   ExecutionContext
-) extends Logging {
-
+) extends Logging:
   import HttpReads.Implicits._
 
   private lazy val gitHubProxyBaseURL = servicesConfig.baseUrl("platops-github-proxy")
 
-  def getGitHubProxyRaw(path: String)(using HeaderCarrier): Future[Option[String]] = {
-    val url = new URL(s"$gitHubProxyBaseURL/platops-github-proxy/github-raw$path")
+  def getGitHubProxyRaw(path: String)(using HeaderCarrier): Future[Option[String]] =
+    val url = URL(s"$gitHubProxyBaseURL/platops-github-proxy/github-raw$path")
     httpClientV2
       .get(url)
       .execute[Either[UpstreamErrorResponse, HttpResponse]]
-      .flatMap {
+      .flatMap:
         case Right(res)                                      => Future.successful(Some(res.body))
         case Left(UpstreamErrorResponse.WithStatusCode(404)) => Future.successful(None)
-        case Left(err)                                       => Future.failed(new RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
-      }
-  }
-}
+        case Left(err)                                       => Future.failed(RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))

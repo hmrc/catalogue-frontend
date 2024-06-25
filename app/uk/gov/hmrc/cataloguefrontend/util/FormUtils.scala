@@ -18,20 +18,15 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 import play.api.data.validation.Constraint
 
-object FormUtils {
+object FormUtils:
 
   /** Like Forms.nonEmpty, but has no constraint info label */
-  def notEmpty: Constraint[String] = {
+  def notEmpty: Constraint[String] =
     import play.api.data.validation._
-    Constraint[String]("") { o =>
-      if (o == null || o.trim.isEmpty) Invalid(ValidationError("error.required")) else Valid
-    }
-  }
+    Constraint[String](""): o =>
+      if o == null || o.trim.isEmpty then Invalid(ValidationError("error.required")) else Valid
 
-  def notEmptySeq: Constraint[Seq[?]] = {
+  def notEmptySeq: Constraint[Seq[?]] =
     import play.api.data.validation._
-    Constraint[Seq[?]]("") { o =>
-      if (o == null || o.isEmpty) Invalid(ValidationError("error.required")) else Valid
-    }
-  }
-}
+    Constraint[Seq[?]](""): o =>
+      if o == null || o.isEmpty then Invalid(ValidationError("error.required")) else Valid

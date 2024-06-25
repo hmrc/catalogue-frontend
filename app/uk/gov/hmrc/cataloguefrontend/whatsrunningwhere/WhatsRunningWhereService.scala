@@ -28,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class WhatsRunningWhereService @Inject()(
   releasesConnector      : ReleasesConnector,
   serviceConfigsConnector: ServiceConfigsConnector
-)(using ExecutionContext) {
+)(using ExecutionContext):
 
   def releasesForProfile(profile: Option[Profile])(using HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     releasesConnector.releases(profile)
@@ -39,28 +39,26 @@ class WhatsRunningWhereService @Inject()(
   def releasesForService(service: ServiceName)(using HeaderCarrier): Future[WhatsRunningWhere] =
     releasesConnector.releasesForService(service)
 
-  def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(using HeaderCarrier): Future[Seq[ServiceDeploymentConfigSummary]] = {
+  def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(using HeaderCarrier): Future[Seq[ServiceDeploymentConfigSummary]] =
     val releasesPerEnv = releases.map(r => (r.serviceName, r.versions.map(_.environment))).toMap
     serviceConfigsConnector.deploymentConfig()
-      .map(
+      .map:
         _
-          .filter(config =>
+          .filter: config =>
             releasesPerEnv.getOrElse(config.serviceName, List.empty).contains(config.environment)
-          )
           .groupBy(_.serviceName)
-          .map { case (serviceName, deploymentConfigs) =>
+          .map: (serviceName, deploymentConfigs) =>
             ServiceDeploymentConfigSummary(serviceName, deploymentConfigs.groupBy(_.environment).view.mapValues(_.head.deploymentSize).toMap)
-          }
           .toSeq
-      )
-  }
-}
 
-class WhatsRunningWhereServiceConfig @Inject()(configuration: Configuration) {
+end WhatsRunningWhereService
+
+class WhatsRunningWhereServiceConfig @Inject()(
+  configuration: Configuration
+):
   def maxMemoryAmount: Double =
     configuration
       .get[Double]("whats-running-where.max-memory")
-}
 
 case class ServiceDeploymentConfigSummary(
   serviceName    : ServiceName,

@@ -57,7 +57,7 @@
                                     @for(dependency <- dependencies._1) {
                                         <tr>
                                             <td><span>@dependency.group</span></td>
-                                            <td><span>@dependency.artifact</span></td>
+                                            <td><span>@dependency.artefact</span></td>
                                             <td><span>@dependency.version</span></td>
                                         </tr>
                                     }
@@ -84,9 +84,9 @@
                                     @for(transient <- dependencies._2) {
                                         <tr>
                                             <td><em>@transient.dependency.group</em></td>
-                                            <td><em>@transient.dependency.artifact</em></td>
+                                            <td><em>@transient.dependency.artefact</em></td>
                                             <td><em>@transient.dependency.version</em></td>
-                                            <td><em>@transient.importedBy.group:@transient.importedBy.artifact</em></td>
+                                            <td><em>@transient.importedBy.group:@transient.importedBy.artefact</em></td>
                                         </tr>
                                     }
                                     </tbody>

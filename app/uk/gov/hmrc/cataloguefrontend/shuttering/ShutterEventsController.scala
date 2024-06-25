@@ -41,7 +41,7 @@ class ShutterEventsController @Inject() (
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders
-     with play.api.i18n.I18nSupport {
+     with play.api.i18n.I18nSupport:
 
   private val logger = Logger(getClass)
 
@@ -50,30 +50,39 @@ class ShutterEventsController @Inject() (
       Redirect(routes.ShutterEventsController.shutterEventsList(Environment.Production))
     }
 
-  def shutterEventsList(env: Environment, serviceName: Option[ServiceName], limit: Option[Int], offset: Option[Int]): Action[AnyContent] =
+  def shutterEventsList(
+    env        : Environment,
+    serviceName: Option[ServiceName],
+    limit      : Option[Int],
+    offset     : Option[Int]
+  ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val filter = filterFor(env, serviceName)
       val form   = ShutterEventsForm.fromFilter(filter)
 
-      for {
+      for
         services <- routeRulesConnector.frontendServices()
-        events   <- connector.shutterEventsByTimestampDesc(filterFor(env, None /* Use listjs filtering */), limit, offset)
-                              .recover {
-                                case NonFatal(ex) =>
-                                  logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
-                                  Seq.empty
-                              }
+        events   <- connector
+                      .shutterEventsByTimestampDesc(filterFor(env, None /* Use listjs filtering */), limit, offset)
+                      .recover:
+                        case NonFatal(ex) =>
+                          logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
+                          Seq.empty
         page     =  ShutterEventsPage(services, events, form, Environment.valuesAsSeq)
-      } yield Ok(page)
+      yield Ok(page)
     }
 
   private def filterFor(env: Environment, serviceNameOpt: Option[ServiceName]): ShutterEventsFilter =
     ShutterEventsFilter(env, serviceNameOpt.filter(_.asString.trim.nonEmpty))
-}
 
-private case class ShutterEventsForm(env: String, serviceName: Option[ServiceName])
+end ShutterEventsController
 
-private object ShutterEventsForm {
+private case class ShutterEventsForm(
+  env        : String, // TODO Environment
+  serviceName: Option[ServiceName]
+)
+
+private object ShutterEventsForm:
   lazy val form =
     Form(
       Forms.mapping(
@@ -84,4 +93,3 @@ private object ShutterEventsForm {
 
   def fromFilter(filter: ShutterEventsFilter): Form[ShutterEventsForm] =
     form.fill(ShutterEventsForm(filter.environment.asString, filter.serviceName))
-}

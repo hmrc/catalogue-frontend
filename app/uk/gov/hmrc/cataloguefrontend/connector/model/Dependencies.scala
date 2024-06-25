@@ -29,19 +29,19 @@ case class BobbyRuleViolation(
   reason: String,
   range : BobbyVersionRange,
   from  : LocalDate
-)(using now: LocalDate = LocalDate.now()) { // TODO move implicit to `def isActive`
-  def isActive: Boolean =
+)(using now: LocalDate = LocalDate.now()) {
+  val isActive: Boolean =
     now.isAfter(from)
 }
 
-object BobbyRuleViolation {
+object BobbyRuleViolation:
   val format =
     ( (__ \ "reason").read[String]
     ~ (__ \ "range" ).read[BobbyVersionRange](BobbyVersionRange.format)
     ~ (__ \ "from"  ).read[LocalDate]
     )(BobbyRuleViolation.apply)
 
-  given ordering: Ordering[BobbyRuleViolation] =
+  given Ordering[BobbyRuleViolation] =
     // ordering by rule which is most strict first
     Ordering
       .by: (v: BobbyRuleViolation) =>
@@ -50,7 +50,6 @@ object BobbyRuleViolation {
          v.from
         )
       .reverse
-}
 
 enum VersionState:
   case NewVersionAvailable                                  extends VersionState
@@ -64,15 +63,13 @@ case class ImportedBy(
   currentVersion: Version
 )
 
-object ImportedBy {
-  val format = {
+object ImportedBy:
+  val format =
     given Format[Version] = Version.format
     ( (__ \ "name"          ).format[String]
     ~ (__ \ "group"         ).format[String]
     ~ (__ \ "currentVersion").format[Version]
     )(ImportedBy.apply, ib => Tuple.fromProductTyped(ib))
-  }
-}
 
 case class Dependency(
   name               : String,
@@ -82,7 +79,7 @@ case class Dependency(
   bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty,
   importBy           : Option[ImportedBy]      = None,
   scope              : DependencyScope
-) {
+):
 
   val isExternal =
     !group.startsWith("uk.gov.hmrc")
@@ -91,37 +88,32 @@ case class Dependency(
     bobbyRuleViolations.partition(_.isActive)
 
   def versionState: Option[VersionState] =
-    if (activeBobbyRuleViolations.nonEmpty)
-      Some(VersionState.BobbyRuleViolated(activeBobbyRuleViolations.sorted.head))
-    else if (pendingBobbyRuleViolations.nonEmpty)
-      Some(VersionState.BobbyRulePending(pendingBobbyRuleViolations.sorted.head))
+    if activeBobbyRuleViolations.nonEmpty
+    then Some(VersionState.BobbyRuleViolated(activeBobbyRuleViolations.sorted.head))
+    else if pendingBobbyRuleViolations.nonEmpty
+    then Some(VersionState.BobbyRulePending(pendingBobbyRuleViolations.sorted.head))
     else
-      latestVersion.fold[Option[VersionState]](None){ latestVersion =>
+      latestVersion.fold[Option[VersionState]](None): latestVersion =>
         if Version.isNewVersionAvailable(currentVersion, latestVersion)
-          then Some(VersionState.NewVersionAvailable)
+        then Some(VersionState.NewVersionAvailable)
         else None
-      }
 
   def hasBobbyViolations: Boolean =
-    versionState match {
+    versionState match
       case Some(_: VersionState.BobbyRuleViolated) => true
       case Some(_: VersionState.BobbyRulePending)  => true
       case _                                       => false
-    }
 
 
-  // rename reportable or something
   def isOutOfDate: Boolean =
-    versionState match {
+    versionState match
       case Some(VersionState.NewVersionAvailable)  => true
       case Some(_: VersionState.BobbyRuleViolated) => true
       case Some(_: VersionState.BobbyRulePending)  => true
       case _                                       => false
-    }
-}
 
-object Dependency {
-  val reads: Reads[Dependency] = {
+object Dependency:
+  val reads: Reads[Dependency] =
     given Reads[Version           ] = Version.format
     given Reads[BobbyRuleViolation] = BobbyRuleViolation.format
     given Reads[ImportedBy        ] = ImportedBy.format
@@ -134,15 +126,13 @@ object Dependency {
     ~ (__ \ "importBy"           ).readNullable[ImportedBy]
     ~ (__ \ "scope"              ).read[DependencyScope]
     )(Dependency.apply)
-  }
-}
 
 case class Dependencies(
   repositoryName        : String,
   libraryDependencies   : Seq[Dependency],
   sbtPluginsDependencies: Seq[Dependency],
   otherDependencies     : Seq[Dependency]
-) {
+):
   def toDependencySeq: Seq[Dependency] =
     libraryDependencies ++ sbtPluginsDependencies ++ otherDependencies
 
@@ -151,20 +141,20 @@ case class Dependencies(
 
   def hasOutOfDateDependencies: Boolean =
     toDependencySeq.exists(_.isOutOfDate)
-}
 
-object Dependencies {
-  val reads: Reads[Dependencies] = {
+object Dependencies:
+  val reads: Reads[Dependencies] =
     given Reads[Dependency] = Dependency.reads
     ( (__ \ "repositoryName"        ).read[String]
     ~ (__ \ "libraryDependencies"   ).read[Seq[Dependency]]
     ~ (__ \ "sbtPluginsDependencies").read[Seq[Dependency]]
     ~ (__ \ "otherDependencies"     ).read[Seq[Dependency]]
     )(Dependencies.apply)
-  }
-}
 
-case class BobbyVersion(version: Version, inclusive: Boolean)
+case class BobbyVersion(
+  version  : Version,
+  inclusive: Boolean
+)
 
 // TODO rename as VersionRange?
 /** Iso to Either[Qualifier, (Option[LowerBound], Option[UpperBound])]*/
@@ -173,22 +163,24 @@ case class BobbyVersionRange(
   upperBound: Option[BobbyVersion],
   qualifier : Option[String],
   range     : String
-) {
+):
 
-  def rangeDescr: Option[(String, String)] = {
-    def comp(v: BobbyVersion) = if (v.inclusive) " <= " else " < "
-    if (lowerBound.isDefined || upperBound.isDefined)
-      Some((
-        lowerBound.map(v => s"${v.version} ${comp(v)}").getOrElse("0.0.0 <="),
-        upperBound.map(v => s"${comp(v)} ${v.version}").getOrElse("<= ∞")
-      ))
+  def rangeDescr: Option[(String, String)] =
+    def comp(v: BobbyVersion) =
+      if v.inclusive then " <= " else " < "
+    if lowerBound.isDefined || upperBound.isDefined
+    then
+      Some(
+        ( lowerBound.map(v => s"${v.version} ${comp(v)}").getOrElse("0.0.0 <=")
+        , upperBound.map(v => s"${comp(v)} ${v.version}").getOrElse("<= ∞")
+        )
+      )
     else None
-  }
 
-  override def toString: String = range
-}
+  override def toString: String =
+    range
 
-object BobbyVersionRange {
+object BobbyVersionRange:
 
   private val fixed      = """^\[(\d+\.\d+.\d+)\]""".r
   private val fixedUpper = """^[\[\(],?(\d+\.\d+.\d+)[\]\)]""".r
@@ -196,11 +188,11 @@ object BobbyVersionRange {
   private val rangeRegex = """^[\[\(](\d+\.\d+.\d+),(\d+\.\d+.\d+)[\]\)]""".r
   private val qualifier  = """^\[[-\*]+(.*)\]""".r
 
-  def parse(range: String): Option[BobbyVersionRange] = {
+  def parse(range: String): Option[BobbyVersionRange] =
     val trimmedRange = range.replaceAll(" ", "")
 
     PartialFunction
-      .condOpt(trimmedRange) {
+      .condOpt(trimmedRange):
         case fixed(v) =>
           val fixed = BobbyVersion(Version(v), inclusive = true)
             BobbyVersionRange(
@@ -241,23 +233,23 @@ object BobbyVersionRange {
             qualifier  = Some(q),
             range      = trimmedRange
           )
-      }
-  }
+
+  end parse
 
   def apply(range: String): BobbyVersionRange =
     parse(range).getOrElse(sys.error(s"Could not parse range $range"))
 
-  val format: Format[BobbyVersionRange] = new Format[BobbyVersionRange] {
-    override def reads(json: JsValue) =
-      json match {
-        case JsString(s) => parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse range"))
-        case _           => JsError("Not a string")
-      }
+  val format: Format[BobbyVersionRange] =
+    new Format[BobbyVersionRange]:
+      override def reads(json: JsValue) =
+        json match
+          case JsString(s) => parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse range"))
+          case _           => JsError("Not a string")
 
-    override def writes(v: BobbyVersionRange) =
-      JsString(v.range)
-  }
-}
+      override def writes(v: BobbyVersionRange) =
+        JsString(v.range)
+
+end BobbyVersionRange
 
 case class RepoWithDependency(
   repoName    : String,
@@ -270,11 +262,8 @@ case class RepoWithDependency(
   scopes      : Set[DependencyScope]
 )
 
-object RepoWithDependency {
-  import play.api.libs.functional.syntax._
-  import play.api.libs.json._
-
-  val reads: Reads[RepoWithDependency] = {
+object RepoWithDependency:
+  val reads: Reads[RepoWithDependency] =
     given Reads[TeamName       ] = TeamName.format
     given Reads[Version        ] = Version.format
     given Reads[DependencyScope] = DependencyScope.format
@@ -288,8 +277,6 @@ object RepoWithDependency {
     ~ (__ \ "depVersion" ).read[Version]
     ~ (__ \ "scopes"     ).read[Set[DependencyScope]]
     )(RepoWithDependency.apply)
-  }
-}
 
 case class GroupArtefacts(
   group    : String,
@@ -311,10 +298,9 @@ enum DependencyScope(val asString: String) extends FromString:
   case Build    extends DependencyScope("build"   )
 
   def displayString: String =
-    asString match {
+    asString match
       case "it"  => "Integration Test"
       case other => other.capitalize
-    }
 
 
 object DependencyScope extends FromStringEnum[DependencyScope]

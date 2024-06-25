@@ -34,42 +34,38 @@ class ServiceMetricsConnector @Inject() (
   servicesConfig: ServicesConfig
 )(using
   ec: ExecutionContext
-) {
+):
   import ServiceMetricsConnector._
   import HttpReads.Implicits._
 
   private val serviceMetricsBaseUrl: String =
     servicesConfig.baseUrl("service-metrics")
 
-  def nonPerformantQueriesForService(service: ServiceName)(using HeaderCarrier): Future[Seq[NonPerformantQueries]] = {
+  def nonPerformantQueriesForService(service: ServiceName)(using HeaderCarrier): Future[Seq[NonPerformantQueries]] =
     given Reads[NonPerformantQueries] = NonPerformantQueries.reads
     httpClientV2
       .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/non-performant-queries")
       .execute[Seq[NonPerformantQueries]]
-  }
 
-  def getCollections(service: ServiceName)(using HeaderCarrier): Future[Seq[MongoCollectionSize]] = {
+  def getCollections(service: ServiceName)(using HeaderCarrier): Future[Seq[MongoCollectionSize]] =
     given Reads[MongoCollectionSize] = MongoCollectionSize.reads
     httpClientV2
       .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/collections")
       .execute[Seq[MongoCollectionSize]]
-  }
-}
 
-object ServiceMetricsConnector {
+object ServiceMetricsConnector:
   case class NonPerformantQueries(
     service    : ServiceName,
     environment: Environment,
     queryTypes : Seq[String],
   )
 
-  object NonPerformantQueries{
+  object NonPerformantQueries:
     val reads: Reads[NonPerformantQueries] =
       ( (__ \ "service"    ).read[ServiceName](ServiceName.format)
       ~ (__ \ "environment").read[Environment](Environment.format)
       ~ (__ \ "queryTypes" ).read[Seq[String]]
       )(NonPerformantQueries.apply)
-  }
 
   case class MongoCollectionSize(
     database   : String,
@@ -80,7 +76,7 @@ object ServiceMetricsConnector {
     service    : Option[String],
   )
 
-  object MongoCollectionSize {
+  object MongoCollectionSize:
     val reads: Reads[MongoCollectionSize] =
       ( (__ \ "database"   ).read[String]
       ~ (__ \ "collection" ).read[String]
@@ -89,5 +85,3 @@ object ServiceMetricsConnector {
       ~ (__ \ "environment").read[Environment](Environment.format)
       ~ (__ \ "service"    ).readNullable[String]
       )(apply)
-  }
-}

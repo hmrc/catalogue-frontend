@@ -113,6 +113,6 @@ class PlatformInitiativesControllerSpec
     val mockPIConnector   = mock[PlatformInitiativesConnector]
     val authStubBehaviour = mock[StubBehaviour]
     val authComponent     = FrontendAuthComponentsStub(authStubBehaviour)
-    val controller        = new PlatformInitiativesController(mcc, mockPIConnector, mockPIView, mockTRConnector, authComponent)
+    val controller        = PlatformInitiativesController(mcc, mockPIConnector, mockPIView, mockTRConnector, authComponent)
   }
 }

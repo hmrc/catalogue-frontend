@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Reads, __}
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.{FrontendRoute, FrontendRoutes}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -33,7 +33,7 @@ import scala.util.control.NonFatal
 class SearchByUrlConnector @Inject() (
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(using ExecutionContext) {
+)(using ExecutionContext):
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
@@ -46,21 +46,18 @@ class SearchByUrlConnector @Inject() (
 
   private given Reads[FrontendRoutes] =
     ( (__ \ "service"    ).read[ServiceName](ServiceName.format)
-    ~ (__ \ "environment").read[String]
+    ~ (__ \ "environment").read[Environment](Environment.format)
     ~ (__ \ "routes"     ).read[Seq[FrontendRoute]]
     )(FrontendRoutes.apply)
 
   private val baseUrl = servicesConfig.baseUrl("service-configs")
 
-  def search(term: String)(using HeaderCarrier): Future[Seq[FrontendRoutes]] = {
+  def search(term: String)(using HeaderCarrier): Future[Seq[FrontendRoutes]] =
     val url = url"$baseUrl/service-configs/frontend-route/search?frontendPath=$term"
     httpClientV2
       .get(url)
       .execute[Seq[FrontendRoutes]]
-      .recover {
+      .recover:
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
-      }
-  }
-}

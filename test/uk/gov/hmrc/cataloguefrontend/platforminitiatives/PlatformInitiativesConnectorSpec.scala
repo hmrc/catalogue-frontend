@@ -41,12 +41,11 @@ class PlatformInitiativesConnectorSpec
   override lazy val wireMockRootDirectory = "test/resources"
 
   override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        Map(
-          "microservice.services.platform-initiatives.host" -> wireMockHost,
-          "microservice.services.platform-initiatives.port" -> wireMockPort,
-        )).build()
+    GuiceApplicationBuilder()
+      .configure(Map(
+        "microservice.services.platform-initiatives.host" -> wireMockHost,
+        "microservice.services.platform-initiatives.port" -> wireMockPort
+      )).build()
 
   private val connector = app.injector.instanceOf[PlatformInitiativesConnector]
 

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -32,6 +31,7 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -41,7 +41,7 @@ class BuildDeployApiConnector @Inject() (
   config      : BuildDeployApiConfig
 )(using
   ExecutionContext
-) extends Logging {
+) extends Logging:
 
   private def executeRequest(
     endpoint   : String,
@@ -49,81 +49,79 @@ class BuildDeployApiConnector @Inject() (
     queryParams: Map[String, String] = Map.empty[String, String]
   )(using
     HeaderCarrier
-  ): Future[Either[String, BuildDeployResponse]] = {
+  ): Future[Either[String, BuildDeployResponse]] =
     val url = url"${config.platopsBndApiBaseUrl}/$endpoint?$queryParams"
 
     given Reads[BuildDeployResponse] = BuildDeployResponse.reads
 
     given HttpReads[Either[String, BuildDeployResponse]] =
       summon[HttpReads[Either[UpstreamErrorResponse, BuildDeployResponse]]]
-        .flatMap {
+        .flatMap:
           case Right(r) =>
             HttpReads.pure(Right(r))
           case Left(UpstreamErrorResponse.Upstream4xxResponse(e)) =>
             HttpReads.ask
-              .flatMap { case (method, url, response) =>
+              .flatMap: (_, _, response) =>
                 logger.error(s"Failed to call Build and Deploy API endpoint $endpoint. response: $response: ${e.getMessage}", e)
-                Try(HttpReads.pure(Left((response.json \ "message").as[String]): Either[String, BuildDeployResponse])).getOrElse(throw e)
-              }
-          case Left(other) => throw other
-        }
+                Try(HttpReads.pure[Either[String, BuildDeployResponse]](
+                  Left((response.json \ "message").as[String])
+                )).getOrElse(throw e)
+          case Left(other) =>
+            throw other
 
     httpClientV2
       .post(url)
       .withBody(body)
       .execute[Either[String, BuildDeployResponse]]
-  }
+
+  end executeRequest
 
   def changePrototypePassword(
     repositoryName: String,
     password      : PrototypePassword
   )(using
     HeaderCarrier
-  ): Future[Either[String, String]] = {
+  ): Future[Either[String, String]] =
     given Writes[ChangePrototypePasswordRequest] = ChangePrototypePasswordRequest.writes
     executeRequest(
       endpoint = "change-prototype-password",
       body     = Json.toJson(ChangePrototypePasswordRequest(repositoryName, password.value))
-    ).map {
+    ).map:
       case Right(response) => Right(response.message)
       case Left(errorMsg)  => Left(errorMsg)
-    }
-  }
 
   def getPrototypeDetails(
     prototypeName: String
   )(using
     HeaderCarrier
-  ): Future[PrototypeDetails] = {
+  ): Future[PrototypeDetails] =
     given Reads[PrototypeDetails]           = PrototypeDetails.reads
     given Writes[GetPrototypeStatusRequest] = GetPrototypeStatusRequest.writes
 
     executeRequest(
       endpoint = "get-prototype-details",
       body     = Json.toJson(GetPrototypeStatusRequest(prototypeName))
-    ).map {
-      case Left(errMsg) => logger.error(s"Call to GetPrototypeStatus failed with: $errMsg")
-                           PrototypeDetails(
-                             url    = None,
-                             status = PrototypeStatus.Undetermined
-                           )
-      case Right(res)   => res.details.as[PrototypeDetails]
-    }.recover {
-      case e =>
+    )
+      .map:
+        case Left(errMsg) => logger.error(s"Call to GetPrototypeStatus failed with: $errMsg")
+                             PrototypeDetails(
+                               url    = None,
+                               status = PrototypeStatus.Undetermined
+                             )
+        case Right(res)   => res.details.as[PrototypeDetails]
+      .recover: e =>
         logger.error(s"Call GetPrototypeStatus failed with: ${e.getMessage}", e)
         PrototypeDetails(
           url    = None,
           status = PrototypeStatus.Undetermined
         )
-    }
-  }
 
   def setPrototypeStatus(
     prototype: String,
     status   : PrototypeStatus
   )(using
     HeaderCarrier
-  ): Future[Either[String, Unit]] = {
+  ): Future[Either[String, Unit]] =
     given Writes[SetPrototypeStatusRequest] = SetPrototypeStatusRequest.writes
     executeRequest(
       endpoint = "set-prototype-status",
@@ -132,13 +130,12 @@ class BuildDeployApiConnector @Inject() (
                    status.asString
                  ))
     ).map(_.map(_ => ()))
-  }
 
   def createServiceRepository(
     payload: CreateServiceRepoForm
   )(using
     HeaderCarrier
-  ): Future[Either[String, AsyncRequestId]] = {
+  ): Future[Either[String, AsyncRequestId]] =
     given Writes[CreateServiceRepoRequest] = CreateServiceRepoRequest.writes
 
     val body = Json.toJson(CreateServiceRepoRequest(
@@ -152,15 +149,14 @@ class BuildDeployApiConnector @Inject() (
 
     executeRequest(
       endpoint = "create-service-repository",
-      body = body
+      body     = body
     ).map(_.map(resp => AsyncRequestId(resp.details)))
-  }
 
   def createPrototypeRepository(
     payload: CreatePrototypeRepoForm
   )(using
     HeaderCarrier
-  ): Future[Either[String, AsyncRequestId]] = {
+  ): Future[Either[String, AsyncRequestId]] =
     given Writes[CreatePrototypeRepoRequest] = CreatePrototypeRepoRequest.writes
     val body = Json.toJson(CreatePrototypeRepoRequest(
         repositoryName            = payload.repositoryName,
@@ -169,20 +165,20 @@ class BuildDeployApiConnector @Inject() (
         slackNotificationChannels = payload.slackChannels,
       ))
 
-    val obfuscatedBody = body.as[JsObject] + ("password" -> JsString("**********************"))
-    logger.info(s"Calling the B&D Create Prototype Repository API with the following payload: $obfuscatedBody")
+    logger.info:
+      val obfuscatedBody = body.as[JsObject] + ("password" -> JsString("**********************"))
+      s"Calling the B&D Create Prototype Repository API with the following payload: $obfuscatedBody"
 
     executeRequest(
       endpoint = "create-prototype-repository",
-      body = body
+      body     = body
     ).map(_.map(resp => AsyncRequestId(resp.details)))
-  }
 
   def createTestRepository(
     payload: CreateServiceRepoForm
   )(using
     HeaderCarrier
-  ): Future[Either[String, AsyncRequestId]] = {
+  ): Future[Either[String, AsyncRequestId]] =
     given Writes[CreateTestRepoRequest] = CreateTestRepoRequest.writes
     val body =
       Json.toJson(CreateTestRepoRequest(
@@ -196,9 +192,8 @@ class BuildDeployApiConnector @Inject() (
 
     executeRequest(
       endpoint = "create-test-repository",
-      body = body
+      body     = body
     ).map(_.map(resp => AsyncRequestId(resp.details)))
-  }
 
   def createAppConfigs(
     payload      : CreateAppConfigsForm,
@@ -208,13 +203,12 @@ class BuildDeployApiConnector @Inject() (
     isApi        : Boolean
   )(using
     HeaderCarrier
-  ): Future[Either[String, AsyncRequestId]] = {
+  ): Future[Either[String, AsyncRequestId]] =
     val (st, zone) =
-      serviceType match {
-        case ServiceType.Frontend         => ( "Frontend microservice", "public"    )
-        case ServiceType.Backend if isApi => ( "API microservice"     , "protected" )
-        case ServiceType.Backend          => ( "Backend microservice" , "protected" )
-      }
+      serviceType match
+        case ServiceType.Frontend         => ("Frontend microservice", "public"   )
+        case ServiceType.Backend if isApi => ("API microservice"     , "protected")
+        case ServiceType.Backend          => ("Backend microservice" , "protected")
 
     val appConfigEnvironments = Seq(
         ("base"                          , payload.appConfigBase),
@@ -240,21 +234,20 @@ class BuildDeployApiConnector @Inject() (
       endpoint = "create-app-configs",
       body     = body
     ).map(_.map(resp => AsyncRequestId(resp.details)))
-  }
-}
 
-object BuildDeployApiConnector {
+end BuildDeployApiConnector
+
+object BuildDeployApiConnector:
   case class BuildDeployResponse(
     message: String,
     details: JsValue
   )
 
-  private object BuildDeployResponse {
+  private object BuildDeployResponse:
     val reads: Reads[BuildDeployResponse] =
       ( (__ \ "message").read[String]
       ~ (__ \ "details").readWithDefault[JsValue](JsNull)
       )(BuildDeployResponse.apply)
-  }
 
   case class AsyncRequestId(request: JsValue)
 
@@ -270,45 +263,41 @@ object BuildDeployApiConnector {
     status: PrototypeStatus
   )
 
-  object PrototypeDetails {
+  object PrototypeDetails:
     val reads: Reads[PrototypeDetails] =
       ( (__ \ "prototypeUrl").readNullable[String]
       ~ (__ \ "status").read[PrototypeStatus](PrototypeStatus.reads)
       )(PrototypeDetails.apply)
-  }
 
   case class ChangePrototypePasswordRequest(
     prototype: String,
     password : String
   )
 
-  object ChangePrototypePasswordRequest {
+  object ChangePrototypePasswordRequest:
     val writes: Writes[ChangePrototypePasswordRequest] =
       ( (__ \ "repositoryName").write[String]
       ~ (__ \ "password"      ).write[String]
       )(r => Tuple.fromProductTyped(r))
-  }
 
   case class GetPrototypeStatusRequest(
     prototype: String
   )
 
-  object GetPrototypeStatusRequest {
+  object GetPrototypeStatusRequest:
     val writes: Writes[GetPrototypeStatusRequest] =
       (__ \ "prototype").write[String].contramap[GetPrototypeStatusRequest](_.prototype)
-  }
 
   case class SetPrototypeStatusRequest(
     prototype: String,
     status   : String
   )
 
-  object SetPrototypeStatusRequest {
+  object SetPrototypeStatusRequest:
     val writes: Writes[SetPrototypeStatusRequest] =
       ( (__ \ "prototype").write[String]
       ~ (__ \ "status"   ).write[String]
       )(r => Tuple.fromProductTyped(r))
-  }
 
   case class CreateServiceRepoRequest(
     repositoryName            : String,
@@ -318,7 +307,7 @@ object BuildDeployApiConnector {
     slackNotificationChannels : String   = ""
   )
 
-  object CreateServiceRepoRequest {
+  object CreateServiceRepoRequest:
     val writes: Writes[CreateServiceRepoRequest] =
       ( (__ \ "repositoryName"           ).write[String]
       ~ (__ \ "teamName"                 ).write[TeamName](TeamName.format)
@@ -326,7 +315,6 @@ object BuildDeployApiConnector {
       ~ (__ \ "repositoryType"           ).write[String]
       ~ (__ \ "slackNotificationChannels").write[String]
       )(r => Tuple.fromProductTyped(r))
-  }
 
   case class CreatePrototypeRepoRequest(
     repositoryName           : String,
@@ -335,14 +323,13 @@ object BuildDeployApiConnector {
     slackNotificationChannels: String
   )
 
-  object CreatePrototypeRepoRequest {
+  object CreatePrototypeRepoRequest:
     val writes: Writes[CreatePrototypeRepoRequest] =
       ( (__ \ "repositoryName"           ).write[String]
       ~ (__ \ "teamName"                 ).write[TeamName](TeamName.format)
       ~ (__ \ "password"                 ).write[String]
       ~ (__ \ "slackNotificationChannels").write[String]
       )(r => Tuple.fromProductTyped(r))
-  }
 
   case class CreateTestRepoRequest(
     repositoryName       : String,
@@ -351,14 +338,13 @@ object BuildDeployApiConnector {
     repositoryType       : String
   )
 
-  object CreateTestRepoRequest {
+  object CreateTestRepoRequest:
     val writes: Writes[CreateTestRepoRequest] =
       ( (__ \ "repositoryName"       ).write[String]
       ~ (__ \ "teamName"             ).write[TeamName](TeamName.format)
       ~ (__ \ "makePrivate"          ).write[Boolean]
       ~ (__ \ "repositoryType"       ).write[String]
       )(r => Tuple.fromProductTyped(r))
-  }
 
   case class CreateAppConfigsRequest(
     microserviceName: ServiceName,
@@ -368,7 +354,7 @@ object BuildDeployApiConnector {
     zone            : String
   )
 
-  object CreateAppConfigsRequest {
+  object CreateAppConfigsRequest:
     val writes: Writes[CreateAppConfigsRequest] =
       ( (__ \ "microserviceName").write[ServiceName](ServiceName.format)
       ~ (__ \ "microserviceType").write[String]
@@ -376,5 +362,5 @@ object BuildDeployApiConnector {
       ~ (__ \ "environments"    ).write[Seq[String]]
       ~ (__ \ "zone"            ).write[String]
     )(r => Tuple.fromProductTyped(r))
-  }
-}
+
+end BuildDeployApiConnector

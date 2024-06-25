@@ -82,6 +82,6 @@ class SearchControllerSpec
     val config             = app.injector.instanceOf[SearchConfig]
     val mockAuthComponents = mock[FrontendAuthComponents]
     val mockSearchIndex    = mock[SearchIndex]
-    val controller         = new SearchController(mcc, mockSearchIndex, view, config, mockAuthComponents)
+    val controller         = SearchController(mcc, mockSearchIndex, view, config, mockAuthComponents)
   }
 }

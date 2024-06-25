@@ -33,11 +33,11 @@ case class PrCommenterComment(
   commentType: String
 )
 
-object PrCommenterReport {
+object PrCommenterReport:
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
-  val reads: Reads[PrCommenterReport] = {
+  val reads: Reads[PrCommenterReport] =
     given Reads[PrCommenterComment] =
       ( (__ \ "message"      ).read[String]
       ~ (__ \ "params" \ "id").read[String]
@@ -51,5 +51,3 @@ object PrCommenterReport {
     ~ (__ \ "comments" ).read[Seq[PrCommenterComment]]
     ~ (__ \ "created"  ).read[Instant]
     )(PrCommenterReport.apply)
-  }
-}

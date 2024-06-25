@@ -34,13 +34,10 @@ class ShutterConnector @Inject() (
   serviceConfig: ServicesConfig
 )(using
   ExecutionContext
-) {
+):
   import HttpReads.Implicits._
 
   private val baseUrl = serviceConfig.baseUrl("shutter-api")
-
-  private given Reads[ShutterState] = ShutterState.reads
-  private given Reads[ShutterEvent] = ShutterEvent.reads
 
   /**
     * GET
@@ -54,6 +51,7 @@ class ShutterConnector @Inject() (
   )(using
     HeaderCarrier
   ): Future[Seq[ShutterState]] =
+    given Reads[ShutterState] = ShutterState.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states?serviceName=${serviceName.map(_.asString)}")
       .execute[Seq[ShutterState]]
@@ -72,7 +70,7 @@ class ShutterConnector @Inject() (
     status     : ShutterStatus
   )(using
     HeaderCarrier
-  ): Future[Unit] = {
+  ): Future[Unit] =
     given Writes[ShutterStatus] = ShutterStatus.format
     httpClientV2
       .put(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states/${serviceName.asString}")
@@ -84,25 +82,24 @@ class ShutterConnector @Inject() (
         )
       )
       .execute[Unit](HttpReads.Implicits.throwOnFailure(summon[HttpReads[Either[UpstreamErrorResponse, Unit]]]), summon[ExecutionContext])
-  }
 
   /**
     * GET
     * /shutter-api/{environment}/events
     * Retrieves the current shutter events for all services for given environment
     */
-  def latestShutterEvents(st: ShutterType, env: Environment)(using HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] = {
+  def latestShutterEvents(st: ShutterType, env: Environment)(using HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     val queryParams = Seq(
       "type"             -> EventType.ShutterStateChange.asString,
       "namedFilter"      -> "latestByServiceName",
       "data.environment" -> env.asString,
       "data.shutterType" -> st.asString
     )
+    given Reads[ShutterEvent] = ShutterEvent.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/events?$queryParams")
       .execute[Seq[ShutterEvent]]
       .map(_.flatMap(_.toShutterStateChangeEvent))
-  }
 
   def shutterEventsByTimestampDesc(
     filter: ShutterEventsFilter,
@@ -111,6 +108,7 @@ class ShutterConnector @Inject() (
   )(using
     HeaderCarrier
   ): Future[Seq[ShutterStateChangeEvent]] =
+    given Reads[ShutterEvent] = ShutterEvent.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/events?type=${EventType.ShutterStateChange.asString}&${filter.asQueryParams}&limit=${limit.getOrElse(2500)}&offset=${offset.getOrElse(0)}")
       .execute[Seq[ShutterEvent]]
@@ -121,33 +119,30 @@ class ShutterConnector @Inject() (
     * /shutter-api/{environment}/outage-pages/{serviceName}
     * Retrieves the current shutter state for the given service in the given environment
     */
-  def outagePage(env: Environment, serviceName: ServiceName)(using HeaderCarrier): Future[Option[OutagePage]] = {
+  def outagePage(env: Environment, serviceName: ServiceName)(using HeaderCarrier): Future[Option[OutagePage]] =
     given Reads[OutagePage] = OutagePage.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/${env.asString}/outage-pages/${serviceName.asString}")
       .execute[Option[OutagePage]]
-  }
 
   /**
     * GET
     * /shutter-api/{environment}/frontend-route-warnings/{serviceName}
     * Retrieves the warnings (if any) for the given service in the given environment, based on parsing the mdtp-frontend-routes
     */
-  def frontendRouteWarnings(env: Environment, serviceName: ServiceName)(using HeaderCarrier): Future[Seq[FrontendRouteWarning]] = {
+  def frontendRouteWarnings(env: Environment, serviceName: ServiceName)(using HeaderCarrier): Future[Seq[FrontendRouteWarning]] =
     given Reads[FrontendRouteWarning] = FrontendRouteWarning.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/${env.asString}/frontend-route-warnings/${serviceName.asString}")
       .execute[Seq[FrontendRouteWarning]]
-  }
-}
 
-object ShutterConnector {
+end ShutterConnector
+
+object ShutterConnector:
   case class ShutterEventsFilter(
     environment: Environment,
     serviceName: Option[ServiceName]
-  ) {
+  ):
     def asQueryParams: Seq[(String, String)] =
-      ("data.environment" -> environment.asString) +:
-        serviceName.map("data.serviceName" -> _.asString).toSeq
-  }
-}
+      ("data.environment" -> environment.asString)
+        +: serviceName.map("data.serviceName" -> _.asString).toSeq

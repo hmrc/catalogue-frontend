@@ -23,29 +23,29 @@ import play.twirl.api.HtmlFormat.escape
 
 import java.util.regex.Pattern
 
-trait Highlighter {
+trait Highlighter:
   def apply(text: String): Html
-}
 
-object NoHighlighter extends Highlighter {
-  override def apply(text: String): Html = escape(text)
-}
+object NoHighlighter extends Highlighter:
+  override def apply(text: String): Html =
+    escape(text)
 
-class BoldHighlighter(terms: Seq[String]) extends Highlighter {
-  private val rx = Pattern.compile(terms.map(t => s"(${Pattern.quote(t)})").mkString("|") , Pattern.CASE_INSENSITIVE)
+class BoldHighlighter(terms: Seq[String]) extends Highlighter:
+  private val rx =
+    Pattern.compile(terms.map(t => s"(${Pattern.quote(t)})").mkString("|") , Pattern.CASE_INSENSITIVE)
 
-  def apply(text: String):Html = {
-    val matcher = rx.matcher(text)
+  def apply(text: String): Html =
+    val res =
+      Iterator.continually(rx.matcher(text)).takeWhile(_.find())
+        .foldLeft( (scala.collection.immutable.Seq.empty[Html], 0)):
+          case ((l, last), cur) =>
+            ( l ++ Seq(
+                escape(text.substring(last, cur.start())),
+                Html("<b>"),
+                escape(text.substring(cur.start(), cur.end())),
+                Html("</b>")
+              )
+            , cur.end()
+            )
 
-    val res = Iterator.continually(matcher).takeWhile(_.find()).foldLeft( (scala.collection.immutable.Seq.empty[Html], 0)) {
-      case ( (l, last)  , cur) => (
-        l ++ Seq(
-          escape(text.substring(last, cur.start())),
-          Html("<b>"),
-          escape(text.substring(cur.start(), cur.end())),
-          Html("</b>"),
-      ), cur.end())
-    }
     fill(res._1 :+ escape(text.substring(res._2, text.length)))
-  }
-}

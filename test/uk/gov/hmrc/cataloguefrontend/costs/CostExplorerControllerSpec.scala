@@ -46,13 +46,12 @@ class CostExplorerControllerSpec
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
   private val mockServiceConfigConnector        = mock[ServiceConfigsConnector]
 
-  override def guiceApplicationBuilder: GuiceApplicationBuilder = {
+  override def guiceApplicationBuilder: GuiceApplicationBuilder =
     super.guiceApplicationBuilder
       .overrides(
         bind[ServiceConfigsConnector].to(mockServiceConfigConnector),
         bind[TeamsAndRepositoriesConnector].to(mockTeamsAndRepositoriesConnector)
       )
-  }
 
   "must return OK and the correct view for a GET" in {
     when(mockAuthStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))

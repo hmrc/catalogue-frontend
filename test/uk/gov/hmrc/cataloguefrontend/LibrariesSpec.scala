@@ -52,10 +52,11 @@ class LibrariesSpec extends UnitSpec with MockitoSugar {
   private given mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
   private lazy val authStubBehaviour = mock[StubBehaviour]
-  private lazy val repositoriesController = new RepositoriesController(
-    teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
-    mcc                           = mcc,
-    repositoriesListPage          = mock[RepositoriesListPage],
-    auth                          = FrontendAuthComponentsStub(authStubBehaviour)
-  )
+  private lazy val repositoriesController =
+    RepositoriesController(
+      teamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector],
+      mcc                           = mcc,
+      repositoriesListPage          = mock[RepositoriesListPage],
+      auth                          = FrontendAuthComponentsStub(authStubBehaviour)
+    )
 }

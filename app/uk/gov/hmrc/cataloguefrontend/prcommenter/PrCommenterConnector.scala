@@ -32,7 +32,7 @@ class PrCommenterConnector @Inject()(
   servicesConfig: ServicesConfig
 )(using
   ExecutionContext
-) extends Logging {
+) extends Logging:
   import HttpReads.Implicits._
 
   private val baseUrl = servicesConfig.baseUrl("pr-commenter")
@@ -54,4 +54,3 @@ class PrCommenterConnector @Inject()(
     httpClientV2
       .get(url"$baseUrl/pr-commenter/reports?name=$name&teamName=${teamName.map(_.asString)}&commentType=$commentType")
       .execute[Seq[PrCommenterReport]]
-}

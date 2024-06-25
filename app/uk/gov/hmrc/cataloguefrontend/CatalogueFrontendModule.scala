@@ -29,13 +29,13 @@ class CatalogueFrontendModule extends FrontendModule {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[?]] =
     super.bindings(environment, configuration)
-      .map(b =>
-        if (b.key.clazz.getName == classOf[AuditFilter].getName)
-          bind[AuditFilter].to[CatalogueFrontendAuditFilter]
+      .map: b =>
+        if b.key.clazz.getName == classOf[AuditFilter].getName
+        then bind[AuditFilter].to[CatalogueFrontendAuditFilter]
         else b
-      ) ++
+      ++
         Seq(
           bind[Clock].toInstance(Clock.systemDefaultZone),
           bind[IndexScheduler].toSelf.eagerly()
-       )
+        )
 }

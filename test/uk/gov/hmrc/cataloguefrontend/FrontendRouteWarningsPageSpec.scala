@@ -21,7 +21,7 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class FrontendRouteWarningsPageSpec extends UnitSpec with FakeApplicationBuilder {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
     serviceEndpoint(GET, "/shutter-api/development/frontend-route-warnings/abc-frontend" , willRespondWith = (200, Some(emptyJson)))
@@ -30,7 +30,6 @@ class FrontendRouteWarningsPageSpec extends UnitSpec with FakeApplicationBuilder
     serviceEndpoint(GET, "/shutter-api/staging/frontend-route-warnings/abc-frontend"     , willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/externaltest/frontend-route-warnings/abc-frontend", willRespondWith = (200, Some(emptyJson)))
     serviceEndpoint(GET, "/shutter-api/production/frontend-route-warnings/abc-frontend"  , willRespondWith = (200, Some(emptyJson)))
-  }
 
   "The frontend route warnings page" should {
     "shows the table with route warnings" in {

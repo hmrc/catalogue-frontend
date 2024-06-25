@@ -66,7 +66,7 @@ final class CostEstimationServiceSpec
         )
 
       val costEstimationService =
-        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
+        CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
 
       val costEstimate = costEstimationService.estimateServiceCost(serviceName).futureValue
 
@@ -99,7 +99,7 @@ final class CostEstimationServiceSpec
         )
 
       val costEstimationService =
-        new CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
+        CostEstimationService(serviceConfigsConnector, mockResourceUsageConnector, costEstimateConfig)
 
       val costEstimate = costEstimationService.estimateServiceCost(serviceName).futureValue
 
@@ -133,7 +133,7 @@ final class CostEstimationServiceSpec
   private def stubConfigConnector(
     service            : ServiceName,
     stubs              : Seq[DeploymentConfig]
-  ): ServiceConfigsConnector = {
+  ): ServiceConfigsConnector =
     val serviceConfigsConnector = mock[ServiceConfigsConnector]
 
     when(serviceConfigsConnector.deploymentConfig(Option(service)))
@@ -145,8 +145,7 @@ final class CostEstimationServiceSpec
     )
 
     serviceConfigsConnector
-  }
 
   private lazy val costEstimateConfig =
-    new CostEstimateConfig(Configuration(ConfigFactory.load()))
+    CostEstimateConfig(Configuration(ConfigFactory.load()))
 }

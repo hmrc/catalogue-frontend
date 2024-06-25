@@ -41,7 +41,7 @@ class HealthIndicatorsConnectorSpec
   private given HeaderCarrier = HeaderCarrier()
 
   override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
+    GuiceApplicationBuilder()
       .configure(
         Map(
           "microservice.services.health-indicators.port" -> wireMockPort,

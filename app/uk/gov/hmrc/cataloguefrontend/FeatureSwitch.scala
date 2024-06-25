@@ -18,18 +18,17 @@ package uk.gov.hmrc.cataloguefrontend
 
 case class FeatureSwitch(name: String, isEnabled: Boolean)
 
-object FeatureSwitch {
+object FeatureSwitch:
   def forName(name: String): FeatureSwitch =
     FeatureSwitch(name, java.lang.Boolean.getBoolean(systemPropertyName(name)))
 
   private def systemPropertyName(name: String) =
     s"feature.$name"
-}
 
-object CatalogueFrontendSwitches {
+
+object CatalogueFrontendSwitches:
   def requiresLogin: FeatureSwitch =
     FeatureSwitch.forName("requires-login")
 
   def showTestRepoRelationships: FeatureSwitch =
     FeatureSwitch.forName("show-test-repo-relationships")
-}

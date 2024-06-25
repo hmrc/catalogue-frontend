@@ -35,7 +35,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
 
   private[this] lazy val viewMessages = app.injector.instanceOf[ViewMessages]
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/teamA/dependencies", willRespondWith = (200, Some("[]")))
@@ -43,7 +43,6 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     serviceEndpoint(GET, "/api/repositories?archived=true", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/teamA/slug-dependencies?flag=production", willRespondWith = (200, Some("{}")))
     serviceEndpoint(GET, "/api/teams/CATO/slug-dependencies?flag=production", willRespondWith = (200, Some("{}")))
-  }
 
   "Team services page" should {
     "show a list of libraries, services, prototypes and repositories" in {
@@ -139,7 +138,7 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     }
   }
 
-  def verifyTeamMemberHrefLinks(document: Document): Unit = {
+  def verifyTeamMemberHrefLinks(document: Document): Unit =
     val hrefs = document.select("#team_members [href]").iterator().asScala.toList
     hrefs.size shouldBe 5
     hrefs.map(_.attributes().get("href")) should contain theSameElementsAs
@@ -150,22 +149,19 @@ class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
         "/users/mx.p",
         "/users/ma.b"
       )
-  }
 
-  def verifyTeamMemberElementsText(document: Document): Unit = {
+  def verifyTeamMemberElementsText(document: Document): Unit =
     val teamMembersLiElements = document.select("#team_members li").iterator().asScala.toList
     teamMembersLiElements.length shouldBe 5
     teamMembersLiElements.map(_.text()) should contain theSameElementsAs List("K S", "M Q", "Ma B", "Mx P", "S M")
-  }
 
-  def readFile(jsonFilePath: String): String = {
+  def readFile(jsonFilePath: String): String =
     val path = "__files/" + jsonFilePath
     try {
       Source.fromResource(path).getLines().mkString("\n")
     } catch {
       case _: NullPointerException => sys.error(s"Could not find file $path")
     }
-  }
 
   def findAnchor(anchorTags: Seq[Element], href: String, text: String): Option[Element] =
     anchorTags.find(e => e.text == text && e.attr("href") == href)

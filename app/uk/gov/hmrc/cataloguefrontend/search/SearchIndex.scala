@@ -46,19 +46,19 @@ case class SearchTerm(
   link    : String,
   weight  : Float       = 0.5f,
   hints   : Set[String] = Set.empty
-) {
+):
   lazy val terms: Set[String] =
     Set(name, linkType).union(hints).map(normalizeTerm)
-}
 
 @Singleton
 class SearchIndex @Inject()(
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   prCommenterConnector         : PrCommenterConnector,
   userManagementConnector      : UserManagementConnector
-)(using ExecutionContext) {
+)(using ExecutionContext):
 
-  private[search] val cachedIndex = new AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
+  private[search] val cachedIndex =
+    AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
 
   private val hardcodedLinks = List(
     SearchTerm("explorer", "dependency",                   catalogueRoutes.DependencyExplorerController.landing.url,                              1.0f, Set("depex")),
@@ -85,9 +85,9 @@ class SearchIndex @Inject()(
     SearchTerm("page",     "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f)
   )
 
-  def updateIndexes(): Future[Unit] = {
+  def updateIndexes(): Future[Unit] =
     given HeaderCarrier = HeaderCarrier()
-    for {
+    for
       repos         <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
       teams         <- teamsAndRepositoriesConnector.allTeams()
       teamPageLinks =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
@@ -107,35 +107,44 @@ class SearchIndex @Inject()(
       users         <- userManagementConnector.getAllUsers(None)
       userLinks     =  users.map(u => SearchTerm("users", u.username, userRoutes.UsersController.user(u.username).url, 0.5f))
       allLinks      =  hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
-    } yield cachedIndex.set(optimizeIndex(allLinks))
-  }
+    yield cachedIndex.set(optimizeIndex(allLinks))
 
   def search(query: Seq[String]): Seq[SearchTerm] =
     SearchIndex.search(query, cachedIndex.get())
-}
 
-object SearchIndex {
+end SearchIndex
+
+object SearchIndex:
 
   def normalizeTerm(term: String): String =
     term.toLowerCase.replaceAll(" -_", "")
 
   // TODO: we could cache the results short term, generally the next query will be the previous query + 1 letter
   //       so we can reuse the partial result set
-  private[search] def search(query: Seq[String], index: Map[String, Seq[SearchTerm]]): Seq[SearchTerm] = {
+  private[search] def search(
+    query: Seq[String],
+    index: Map[String, Seq[SearchTerm]]
+  ): Seq[SearchTerm] =
     val normalised = query.map(normalizeTerm)
+
     normalised
-      .foldLeft(index.getOrElse(normalised.head.slice(0,3), Seq.empty)) {
-        (acc, cur) => acc.filter(_.terms.exists(_.contains(cur)))
-      }.map(st => if(normalised.exists(_.equalsIgnoreCase(st.name))) st.copy(weight = 1f) else st) //Increase weighting of an exact match
+      .foldLeft(index.getOrElse(normalised.head.slice(0,3), Seq.empty)): (acc, cur) =>
+        acc.filter(_.terms.exists(_.contains(cur)))
+      .map: st =>
+        if normalised.exists(_.equalsIgnoreCase(st.name))
+        then st.copy(weight = 1f)  //Increase weighting of an exact match
+        else st
       .sortBy(st => -st.weight ->  st.name.toLowerCase)
       .distinct
-  }
 
   def optimizeIndex(index: Seq[SearchTerm]): Map[String, Seq[SearchTerm]] =
-    index.flatMap(st => (st.linkType.sliding(3,1) ++ st.name.sliding(3,1) ++ st.hints.mkString.sliding(3,1))
-      .map(_.toLowerCase() -> st))
+    index
+      .flatMap: st =>
+        (st.linkType.sliding(3,1) ++ st.name.sliding(3,1) ++ st.hints.mkString.sliding(3,1))
+          .map(_.toLowerCase() -> st)
       .groupBy(_._1)
       .view
       .mapValues(_.map(_._2))
       .toMap
-}
+
+end SearchIndex

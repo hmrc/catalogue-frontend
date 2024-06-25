@@ -32,14 +32,14 @@ class LeakDetectionConnectorSpec
   import ExecutionContext.Implicits.global
 
   val servicesConfig =
-    new ServicesConfig(
+    ServicesConfig(
       Configuration(
         "microservice.services.leak-detection.host" -> wireMockHost,
         "microservice.services.leak-detection.port" -> wireMockPort
       )
     )
 
-  val leakDetectionConnector = new LeakDetectionConnector(httpClientV2, servicesConfig)
+  val leakDetectionConnector = LeakDetectionConnector(httpClientV2, servicesConfig)
 
   given HeaderCarrier = HeaderCarrier()
 
@@ -50,7 +50,7 @@ class LeakDetectionConnectorSpec
           .willReturn(aResponse().withBody("""["repo1","repo2"]"""))
       )
 
-      leakDetectionConnector.repositoriesWithLeaks.futureValue shouldBe Seq(
+      leakDetectionConnector.repositoriesWithLeaks().futureValue shouldBe Seq(
         RepositoryWithLeaks("repo1"),
         RepositoryWithLeaks("repo2")
       )
@@ -66,7 +66,7 @@ class LeakDetectionConnectorSpec
           .willReturn(aResponse().withStatus(502))
       )
 
-      leakDetectionConnector.repositoriesWithLeaks.futureValue shouldBe Seq.empty
+      leakDetectionConnector.repositoriesWithLeaks().futureValue shouldBe Seq.empty
 
       verify(getRequestedFor(urlEqualTo("/api/repository")))
     }

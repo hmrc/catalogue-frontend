@@ -23,7 +23,7 @@ import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.i18n.{Lang, MessagesApi}
+import play.api.i18n.MessagesApi
 import play.api.mvc._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.SessionKeys
@@ -42,8 +42,6 @@ class AuthControllerSpec
      with MockitoSugar
      with OptionValues
      with ScalaFutures {
-
-  //implicit lazy val defaultLang: Lang = Lang(java.util.Locale.getDefault)
 
   import Helpers._
 
@@ -158,6 +156,6 @@ class AuthControllerSpec
     val authComponent     = { given ControllerComponents = Helpers.stubControllerComponents()
                               FrontendAuthComponentsStub(authStubBehaviour)
                             }
-    val controller        = new AuthController(authComponent, mcc)
+    val controller        = AuthController(authComponent, mcc)
   }
 }

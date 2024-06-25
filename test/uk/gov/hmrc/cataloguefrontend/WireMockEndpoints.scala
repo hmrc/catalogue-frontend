@@ -32,32 +32,29 @@ trait WireMockEndpoints extends WireMockSupport {
   def setupEnableBranchProtectionAuthEndpoint(): Unit =
     serviceEndpoint(RequestMethod.POST, "/internal-auth/auth", willRespondWith = (403, None))
 
-  def setupChangePrototypePasswordAuthEndpoint(hasAuth: Boolean): Unit = {
+  def setupChangePrototypePasswordAuthEndpoint(hasAuth: Boolean): Unit =
     val (status, body) = if (hasAuth) (200, Some("""{ "retrievals": [ true ] }""")) else (403, None)
     serviceEndpoint(RequestMethod.POST, "/internal-auth/auth", willRespondWith = (status, body))
-  }
 
   def serviceEndpoint(
     method         : RequestMethod,
     url            : String,
     requestHeaders : Map[String, String]   = Map.empty,
-    queryParameters: Seq[(String, String)] = Nil,
+    queryParameters: Seq[(String, String)] = Seq.empty,
     willRespondWith: (Int, Option[String]),
     givenJsonBody  : Option[String]        = None
-  ): Unit = {
-    val queryParamsAsString = queryParameters match {
-      case Nil    => ""
-      case params => params.map { case (k, v) => s"$k=$v" }.mkString("?", "&", "")
-    }
+  ): Unit =
+    val queryParamsAsString = queryParameters match
+      case params if params.isEmpty => ""
+      case params                   => params.map((k, v) => s"$k=$v").mkString("?", "&", "")
 
     val builder = WireMock.request(method.getName, urlEqualTo(s"$url$queryParamsAsString"))
 
-    requestHeaders.foreach { case (k, v) => builder.withHeader(k, equalTo(v)) }
+    requestHeaders.foreach((k, v) => builder.withHeader(k, equalTo(v)))
     givenJsonBody.foreach(b => builder.withRequestBody(equalToJson(b)))
 
-    val response = new ResponseDefinitionBuilder().withStatus(willRespondWith._1)
+    val response = ResponseDefinitionBuilder().withStatus(willRespondWith._1)
     builder.willReturn(willRespondWith._2.fold(response)(response.withBody))
 
     wireMockServer.addStubMapping(builder.build)
-  }
 }

@@ -44,10 +44,9 @@ class CreateUserControllerSpec
     with FakeApplicationBuilder
     with ScalaFutures {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
-  }
 
   "CreateUserController.createUserLanding" should {
     "have the correct url setup for creating a human user" in {
@@ -200,8 +199,8 @@ class CreateUserControllerSpec
     val authStubBehaviour: StubBehaviour                 = mock[StubBehaviour]
     val authComponent    : FrontendAuthComponents        = FrontendAuthComponentsStub(authStubBehaviour)
 
-    val controller        =
-      new CreateUserController(
+    val controller =
+      CreateUserController(
         auth                      = authComponent,
         mcc                       = mcc,
         createUserPage            = mockCUPView,

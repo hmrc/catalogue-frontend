@@ -59,7 +59,7 @@ class WhatsRunningWhereServiceSpec
   private val serviceConfigsConnector: ServiceConfigsConnector = mock[ServiceConfigsConnector]
   private val releasesConnector      : ReleasesConnector       = mock[ReleasesConnector]
 
-  val testService = new WhatsRunningWhereService(releasesConnector, serviceConfigsConnector)
+  val testService = WhatsRunningWhereService(releasesConnector, serviceConfigsConnector)
 
   "whatsRunningWhereService.allReleases" should {
     "return the expected data structure and be filtered by releases" in {

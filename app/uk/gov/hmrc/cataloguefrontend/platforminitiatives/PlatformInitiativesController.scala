@@ -40,16 +40,16 @@ class PlatformInitiativesController @Inject()
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val boundForm = PlatformInitiativesFilter.form.bindFromRequest()
       boundForm.fold(
         formWithErrors =>
-          for {
+          for
             allTeams <- teamsAndRepositoriesConnector.allTeams()
-          } yield BadRequest(platformInitiativesListPage(
+          yield BadRequest(platformInitiativesListPage(
             initiatives = Seq.empty,
             display     = display,
             team        = None,
@@ -57,10 +57,10 @@ class PlatformInitiativesController @Inject()
             formWithErrors
           )),
         query =>
-          for {
+          for
             allTeams <- teamsAndRepositoriesConnector.allTeams()
             initiatives <- platformInitiativesConnector.getInitiatives(query.team)
-          } yield Ok(platformInitiativesListPage(
+          yield Ok(platformInitiativesListPage(
             initiatives = initiatives,
             display     = display,
             team        = team,
@@ -69,15 +69,15 @@ class PlatformInitiativesController @Inject()
           ))
       )
   }
-}
+
+end PlatformInitiativesController
 
 case class PlatformInitiativesFilter(
   initiativeName: Option[String] = None,
   team          : Option[TeamName]
-) {
+):
   def isEmpty: Boolean =
     initiativeName.isEmpty && team.isEmpty
-}
 
 object PlatformInitiativesFilter {
   lazy val form: Form[PlatformInitiativesFilter] =

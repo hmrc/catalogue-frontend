@@ -50,10 +50,9 @@ class CreateAppConfigsControllerSpec
      with FakeApplicationBuilder
      with ScalaFutures {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
-  }
 
   "CreateAppConfigsController" should {
     "have the correct url setup" in new Setup {
@@ -387,7 +386,7 @@ class CreateAppConfigsControllerSpec
     val mockSDConnector   = mock[ServiceDependenciesConnector]
     val authStubBehaviour = mock[StubBehaviour]
     val authComponent     = FrontendAuthComponentsStub(authStubBehaviour)
-    val controller        = new CreateAppConfigsController(
+    val controller        = CreateAppConfigsController(
                               auth                                = authComponent,
                               mcc                                 = mcc,
                               createAppConfigsPage                = mockCACView,

@@ -25,10 +25,9 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
-  }
 
   "Dependency Explorer Page" should {
     "show search fields on landing on this page with no query" in {

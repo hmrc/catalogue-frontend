@@ -29,7 +29,8 @@ import javax.inject.{Inject, Singleton}
 class AuthController @Inject() (
   auth: FrontendAuthComponents,
   mcc : MessagesControllerComponents
-) extends FrontendController(mcc) {
+) extends FrontendController(mcc):
+
   import AuthController._
 
   def signIn(targetUrl: Option[RedirectUrl]) =
@@ -57,19 +58,19 @@ class AuthController @Inject() (
     Action(
       Redirect(appRoutes.CatalogueController.index).withNewSession
     )
-}
 
-object AuthController {
+end AuthController
+
+object AuthController:
   val SESSION_USERNAME = "username"
 
     // to avoid cyclical urls
-  private[cataloguefrontend] def sanitize(targetUrl: Option[RedirectUrl]): Option[RedirectUrl] = {
+  private[cataloguefrontend] def sanitize(targetUrl: Option[RedirectUrl]): Option[RedirectUrl] =
     val avoid = List(
       routes.AuthController.signIn(None),
       routes.AuthController.postSignIn(None)
     )
     targetUrl.filter(ru => !avoid.exists(a => ru.unsafeValue.startsWith(a.url)))
-  }
 
   def continueUrl(targetUrl: Call): Call =
     routes.AuthController.postSignIn(sanitize(
@@ -77,4 +78,3 @@ object AuthController {
         .filterNot(_ == "/") // RedirectUrl does not support "/". Without a RedirectUrl target Url will come here anyway.
         .map(RedirectUrl.apply)
     ))
-}

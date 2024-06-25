@@ -32,24 +32,23 @@ import scala.concurrent.{ExecutionContext, Future}
 class ServiceCommissioningStatusConnector @Inject() (
   httpClientV2  : HttpClientV2
 , servicesConfig: ServicesConfig
-)(using ExecutionContext) {
+)(using ExecutionContext):
 
-  private val serviceCommissioningBaseUrl = servicesConfig.baseUrl("service-commissioning-status")
+  private val serviceCommissioningBaseUrl =
+    servicesConfig.baseUrl("service-commissioning-status")
 
-  def commissioningStatus(serviceName: ServiceName)(using HeaderCarrier): Future[List[Check]] = {
+  def commissioningStatus(serviceName: ServiceName)(using HeaderCarrier): Future[List[Check]] =
     given Reads[Check] = Check.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/status/${serviceName.asString}")
       .execute[List[Check]]
-  }
 
-  def allChecks()(using HeaderCarrier): Future[Seq[(String, FormCheckType)]] = {
+  def allChecks()(using HeaderCarrier): Future[Seq[(String, FormCheckType)]] =
     given Reads[FormCheckType] = FormCheckType.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/checks")
       .execute[Seq[Map[String, FormCheckType]]]
-      .map(_.flatMap(_.map { case (k, v ) => (k, v) }))
-  }
+      .map(_.flatMap(identity))
 
   def cachedCommissioningStatus(
     teamName       : Option[TeamName],
@@ -57,12 +56,11 @@ class ServiceCommissioningStatusConnector @Inject() (
     lifecycleStatus: Seq[LifecycleStatus]
   )(using
     HeaderCarrier
-  ): Future[List[CachedServiceCheck]] = {
+  ): Future[List[CachedServiceCheck]] =
     given Reads[CachedServiceCheck] = CachedServiceCheck.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&lifecycleStatus=${lifecycleStatus.map(_.asString)}")
       .execute[List[CachedServiceCheck]]
-  }
 
   def setLifecycleStatus(
     serviceName    : ServiceName,
@@ -76,10 +74,10 @@ class ServiceCommissioningStatusConnector @Inject() (
       .withBody(Json.obj("lifecycleStatus" -> lifecycleStatus.asString, "username" -> username))
       .execute[Unit]
 
-  def getLifecycle(serviceName: ServiceName)(using HeaderCarrier): Future[Option[Lifecycle]] = {
+  def getLifecycle(serviceName: ServiceName)(using HeaderCarrier): Future[Option[Lifecycle]] =
     given Reads[Lifecycle] = Lifecycle.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/${serviceName.asString}/lifecycleStatus")
       .execute[Option[Lifecycle]]
-  }
-}
+
+end ServiceCommissioningStatusConnector

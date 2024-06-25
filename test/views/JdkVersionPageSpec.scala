@@ -44,7 +44,7 @@ class JdkVersionPageSpec
 
       val teams = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one", "repo-two")))
 
-      val document = asDocument(new JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
+      val document = asDocument(JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
       val slug1 = document.select("#jdk-slug-test-slug")
       val slug2 = document.select("#jdk-slug-thing-service")
@@ -60,7 +60,7 @@ class JdkVersionPageSpec
 
       val versions = List(JdkVersion(ServiceName("thing-service"), Version("1.171.0"), Vendor.Oracle, Kind.JDK))
       val teams    = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one")))
-      val document = asDocument(new JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
+      val document = asDocument(JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
       val slug = document.select("#jdk-slug-thing-service")
       val link = slug.select("a[href*='/repositories/thing-service']")

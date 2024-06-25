@@ -43,12 +43,11 @@ class TeamsAndRepositoriesConnectorSpec
      with EitherValues {
 
   override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        Map(
-          "microservice.services.teams-and-repositories.host" -> wireMockHost,
-          "microservice.services.teams-and-repositories.port" -> wireMockPort,
-        ))
+    GuiceApplicationBuilder()
+      .configure(Map(
+        "microservice.services.teams-and-repositories.host" -> wireMockHost,
+        "microservice.services.teams-and-repositories.port" -> wireMockPort,
+      ))
       .build()
 
   private lazy val teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector =

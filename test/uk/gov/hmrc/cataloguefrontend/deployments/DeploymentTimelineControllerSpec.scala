@@ -42,7 +42,7 @@ class DeploymentTimelineControllerSpec
      with FakeApplicationBuilder {
   import ExecutionContext.Implicits.global
 
-  private trait Fixture {
+  private trait Setup {
     given HeaderCarrier = HeaderCarrier()
 
     given mcc: MessagesControllerComponents = stubMessagesControllerComponents()
@@ -52,22 +52,23 @@ class DeploymentTimelineControllerSpec
     lazy val authStubBehaviour                   = mock[StubBehaviour]
     lazy val mockedDeploymentGraphService        = mock[DeploymentGraphService]
     lazy val authComponent                       = FrontendAuthComponentsStub(authStubBehaviour)
-    lazy val page                                = new DeploymentTimelinePage()
+    lazy val page                                = DeploymentTimelinePage()
 
-    lazy val controller = new DeploymentTimelineController(
-      mockedTeamsAndRepositoriesConnector,
-      mockedServiceDependenciesConnector,
-      mockedDeploymentGraphService,
-      page,
-      mcc,
-      authComponent
-    )
+    lazy val controller =
+      DeploymentTimelineController(
+        mockedTeamsAndRepositoriesConnector,
+        mockedServiceDependenciesConnector,
+        mockedDeploymentGraphService,
+        page,
+        mcc,
+        authComponent
+      )
   }
 
   "DeploymentTimeline" should {
-    "return 200" in new Fixture {
+    "return 200" in new Setup {
       val start = LocalDate.now().minusDays(1)
-      val end = LocalDate.now()
+      val end   = LocalDate.now()
 
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
@@ -79,7 +80,7 @@ class DeploymentTimelineControllerSpec
         serviceType = any
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq.empty))
-      when(mockedDeploymentGraphService.findEvents(service = any, start = any, end = any))
+      when(mockedDeploymentGraphService.findEvents(service = any, start = any, end = any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(DeploymentTimelineEvent(Environment.Integration, Version(1, 0, 0, ""), "deploymentId", "ua", Instant.now(), Instant.now()))))
       when(mockedServiceDependenciesConnector.getSlugInfo(any, any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(None))

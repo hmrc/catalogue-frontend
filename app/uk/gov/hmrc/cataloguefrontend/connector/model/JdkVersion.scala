@@ -27,24 +27,24 @@ case class JdkVersion(
   kind   : Kind
 )
 
-object JdkVersion {
+object JdkVersion:
   private val vendorRead: Reads[Vendor] =
     JsPath
       .read[String]
-      .map(_.toUpperCase match {
-        case "OPENJDK" => Vendor.OpenJDK
-        case "ORACLE"  => Vendor.Oracle
-        case _         => Vendor.Oracle // default to oracle
-      })
+      .map:
+        _.toUpperCase match
+          case "OPENJDK" => Vendor.OpenJDK
+          case "ORACLE"  => Vendor.Oracle
+          case _         => Vendor.Oracle // default to oracle
 
   private val kindRead: Reads[Kind] =
     JsPath
       .read[String]
-      .map(_.toUpperCase match {
-        case "JRE" => Kind.JRE
-        case "JDK" => Kind.JDK
-        case _     => Kind.JDK // default to JDK
-      })
+      .map:
+        _.toUpperCase match
+          case "JRE" => Kind.JRE
+          case "JDK" => Kind.JDK
+          case _     => Kind.JDK // default to JDK
 
   val reads: Reads[JdkVersion] =
     ( (__ \ "name"   ).read[ServiceName](ServiceName.format)
@@ -52,7 +52,6 @@ object JdkVersion {
     ~ (__ \ "vendor" ).read[Vendor](vendorRead)
     ~ (__ \ "kind"   ).read[Kind](kindRead)
     )(JdkVersion.apply)
-}
 
 case class JdkUsageByEnv(
   env  : SlugInfoFlag,

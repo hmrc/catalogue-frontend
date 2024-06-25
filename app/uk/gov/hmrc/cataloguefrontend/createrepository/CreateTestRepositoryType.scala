@@ -23,7 +23,6 @@ enum CreateTestRepositoryType(val asString: String) extends FromString:
   case APITest         extends CreateTestRepositoryType("API Test"        )
   case PerformanceTest extends CreateTestRepositoryType("Performance Test")
 
-object CreateTestRepositoryType extends FromStringEnum[CreateTestRepositoryType]{
+object CreateTestRepositoryType extends FromStringEnum[CreateTestRepositoryType]:
   val parsingError: String =
     s"Not a valid CreateTestRepositoryType. Should be one of ${values.mkString(", ")}"
-}

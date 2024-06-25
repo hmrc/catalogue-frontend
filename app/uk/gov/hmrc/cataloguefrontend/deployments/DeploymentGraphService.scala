@@ -30,44 +30,41 @@ class DeploymentGraphService @Inject() (
   releasesConnector      : ReleasesConnector,
   serviceConfigsConnector: ServiceConfigsConnector
 )(using
-  ec: ExecutionContext
-) {
+  ExecutionContext
+):
 
   def findEvents(
     service: ServiceName,
     start  : Instant,
     end    : Instant
-  )(using HeaderCarrier): Future[Seq[DeploymentTimelineEvent]] = {
+  )(using HeaderCarrier): Future[Seq[DeploymentTimelineEvent]] =
     import DeploymentGraphService._
-    for {
+    for
       data                 <- releasesConnector.deploymentTimeline(service, start, end)
-      dataWithPlaceholders =  data.toSeq.map {
-                                case (env, Nil)  => env -> noEventsPlaceholder(env, start,end)
-                                case (env, data) => env -> data
-                              }.toMap
+      dataWithPlaceholders =  data.toMap
+                                .map: (env, data) =>
+                                   env -> (if data.isEmpty then noEventsPlaceholder(env, start, end) else data)
       dataSeq              =  dataWithPlaceholders.values.flatten.toSeq.sortBy(_.env)
       deploymentConfigSeq  <- serviceConfigsConnector.deploymentEvents(service, start, end)
-    } yield updateTimelineEventsWithConfig(dataSeq, deploymentConfigSeq)
-  }
+    yield updateTimelineEventsWithConfig(dataSeq, deploymentConfigSeq)
 
   private def updateTimelineEventsWithConfig(
     timelineEvents: Seq[DeploymentTimelineEvent],
     configEvents: Seq[DeploymentConfigEvent]
-  ): Seq[DeploymentTimelineEvent] = {
-    val configEventMap: Map[String, DeploymentConfigEvent] = configEvents.map(event => event.deploymentId -> event).toMap
+  ): Seq[DeploymentTimelineEvent] =
+    val configEventMap: Map[String, DeploymentConfigEvent] =
+      configEvents.map(event => event.deploymentId -> event).toMap
 
-    timelineEvents.map { timelineEvent =>
-      configEventMap.get(timelineEvent.deploymentId).fold(timelineEvent) { configEvent =>
-        timelineEvent.copy(
-          configChanged = configEvent.configChanged,
-          configId = configEvent.configId
-        )
-      }
-    }
-  }
-}
+    timelineEvents.map: timelineEvent =>
+      configEventMap
+        .get(timelineEvent.deploymentId)
+        .fold(timelineEvent): configEvent =>
+          timelineEvent.copy(
+            configChanged = configEvent.configChanged,
+            configId = configEvent.configId
+          )
 
-object DeploymentGraphService {
+object DeploymentGraphService:
 
   val notDeployedMessage = "Not Deployed"
 
@@ -79,5 +76,3 @@ object DeploymentGraphService {
         _ => Seq.empty[DeploymentTimelineEvent]
       , e => Seq(DeploymentTimelineEvent(e, Version(notDeployedMessage), "", "", start.plusSeconds(1), end.minusSeconds(1)))
       )
-
-}

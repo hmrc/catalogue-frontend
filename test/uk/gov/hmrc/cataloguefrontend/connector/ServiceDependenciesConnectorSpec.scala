@@ -42,7 +42,7 @@ class ServiceDependenciesConnectorSpec
      with IntegrationPatience {
 
   override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
+    GuiceApplicationBuilder()
       .configure(
         Map(
           "microservice.services.service-dependencies.port" -> wireMockPort,

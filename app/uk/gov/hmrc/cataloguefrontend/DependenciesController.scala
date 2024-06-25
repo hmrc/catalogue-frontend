@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.utils.UriEncoding
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
@@ -44,14 +43,14 @@ class DependenciesController @Inject() (
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   def services(name: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         deployments         <- whatsRunningWhereService.releasesForService(name).map(_.versions)
         serviceDependencies <- dependenciesService.search(name, deployments)
-      } yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.version)(Ordering[Version].reverse)))
+      yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.version)(Ordering[Version].reverse)))
     }
 
   def service(name: ServiceName, version: String): Action[AnyContent] =
@@ -62,19 +61,20 @@ class DependenciesController @Inject() (
 
   def graphs(name: ServiceName, version: String, scope: String): Action[AnyContent] =
     BasicAuthAction.async { implicit  request =>
-      (for {
+      (for
          scope        <- EitherT.fromEither[Future](DependencyScope.parse(scope))
                            .leftMap(_ => BadRequest(s"Invalid scope $scope"))
          dependencies <- EitherT.fromOptionF(
                            dependenciesService.getServiceDependencies(name, Version(version)),
                            NotFound(s"No dependency data available for $name:$version:$scope")
                          )
-      } yield
-        Ok(graphsPage(
-          name,
-          dependencies.dotFileForScope(scope).map(d => UriEncoding.encodePathSegment(d, "UTF-8")),
-          scope
-        ))
+       yield
+         Ok(graphsPage(
+           name,
+           dependencies.dotFileForScope(scope).map(d => UriEncoding.encodePathSegment(d, "UTF-8")),
+           scope
+         ))
       ).merge
     }
-}
+
+end DependenciesController

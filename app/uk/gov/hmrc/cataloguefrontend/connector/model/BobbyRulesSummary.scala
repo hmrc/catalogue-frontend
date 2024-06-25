@@ -32,42 +32,32 @@ case class HistoricBobbyRulesSummary(
   summary: Map[(BobbyRule, SlugInfoFlag), List[Int]]
 )
 
-private object DataFormat {
-  private given Reads[BobbyRule] = BobbyRule.reads
-
-  private def f[A](map: List[(JsValue, Map[String, A])]): Map[(BobbyRule, SlugInfoFlag), A] =
-    map.flatMap {
-      case (k1, v1) =>
-        v1.map {
-          case (k2, v2) =>
-            (
-              (
-                k1.as[BobbyRule],
-                SlugInfoFlag.parse(k2).getOrElse(sys.error(s"Invalid SlugInfoFlag $k2")) // TODO propagate failure into client Format
-              ),
-              v2
-            )
-        }
-    }.toMap
+private object DataFormat:
 
   def dataReads[A: Reads]: Reads[Map[(BobbyRule, SlugInfoFlag), A]] =
-    summon[Reads[List[(JsValue, Map[String, A])]]].map(f[A])
-}
+    given Reads[BobbyRule] = BobbyRule.reads
+    summon[Reads[List[(JsValue, Map[String, A])]]]
+      .map:
+        _
+         .flatMap: (k1, v1) =>
+            v1.map: (k2, v2) =>
+              ( ( k1.as[BobbyRule]
+                , SlugInfoFlag.parse(k2).getOrElse(sys.error(s"Invalid SlugInfoFlag $k2")) // TODO propagate failure into client Format
+                )
+              , v2
+              )
+         .toMap
 
-object BobbyRulesSummary {
-  val reads: Reads[BobbyRulesSummary] = {
+object BobbyRulesSummary:
+  val reads: Reads[BobbyRulesSummary] =
     given Reads[Map[(BobbyRule, SlugInfoFlag), Int]] = DataFormat.dataReads[Int]
     ( (__ \ "date"   ).read[LocalDate]
     ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), Int]]
     )(BobbyRulesSummary.apply)
-  }
-}
 
-object HistoricBobbyRulesSummary {
-  val reads: Reads[HistoricBobbyRulesSummary] = {
+object HistoricBobbyRulesSummary:
+  val reads: Reads[HistoricBobbyRulesSummary] =
     given Reads[Map[(BobbyRule, SlugInfoFlag), List[Int]]] = DataFormat.dataReads[List[Int]]
     ( (__ \ "date"   ).read[LocalDate]
     ~ (__ \ "summary").read[Map[(BobbyRule, SlugInfoFlag), List[Int]]]
     )(HistoricBobbyRulesSummary.apply)
-  }
-}

@@ -37,10 +37,9 @@ class HealthIndicatorsControllerSpec
      with ScalaFutures
      with IntegrationPatience {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
-  }
 
   "HealthIndicatorsController.breakdownForRepo()" should {
     "respond with status 200 and contain specified elements" in new Setup {

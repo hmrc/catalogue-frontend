@@ -29,12 +29,11 @@ case class BobbyRule(
   reason        : String,
   from          : LocalDate,
   exemptProjects: Seq[String]
-) {
+):
   def id: String =
     s"$group:$artefact:${range.range}:$from"
-}
 
-object BobbyRule {
+object BobbyRule:
   val reads: Reads[BobbyRule] =
     ( (__ \ "organisation" ).read[String]
     ~ (__ \ "name"         ).read[String]
@@ -43,12 +42,13 @@ object BobbyRule {
     ~ (__ \ "from"         ).read[LocalDate]
     ~(__ \ "exemptProjects").read[Seq[String]]
     )(BobbyRule.apply)
-}
 
-case class BobbyRuleSet(libraries: Seq[BobbyRule], plugins: Seq[BobbyRule])
-object BobbyRuleSet {
-  val reads: Reads[BobbyRuleSet] = {
+case class BobbyRuleSet(
+  libraries: Seq[BobbyRule],
+  plugins  : Seq[BobbyRule]
+)
+
+object BobbyRuleSet:
+  val reads: Reads[BobbyRuleSet] =
     given Reads[BobbyRule] = BobbyRule.reads
     Json.reads[BobbyRuleSet]
-  }
-}

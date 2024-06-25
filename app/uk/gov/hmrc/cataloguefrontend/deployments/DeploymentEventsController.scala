@@ -44,7 +44,7 @@ class DeploymentEventsController @Inject()(
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   import DeploymentEventsController._
 
@@ -58,7 +58,7 @@ class DeploymentEventsController @Inject()(
         .fold(
           formWithErrors => Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, None, Pagination(0, pageSize, 0), formWithErrors))),
           validForm =>
-            for {
+            for
               deployments <- releasesConnector.deploymentHistory(
                                env,
                                from    = Some(validForm.from),
@@ -70,7 +70,7 @@ class DeploymentEventsController @Inject()(
                              )
               teams       <- teamsAndRepositoriesConnector.allTeams()
               pagination  =  Pagination(page = validForm.page.getOrElse(0), pageSize = pageSize, total = deployments.total)
-            } yield Ok(
+            yield Ok(
               page(
                 env,
                 deployments.history,
@@ -82,9 +82,10 @@ class DeploymentEventsController @Inject()(
             )
         )
     }
-}
 
-object DeploymentEventsController {
+end DeploymentEventsController
+
+object DeploymentEventsController:
 
   case class SearchForm(
     from   : LocalDate,
@@ -102,7 +103,7 @@ object DeploymentEventsController {
   def defaultToTime(referenceDate: LocalDate = LocalDate.now()): LocalDate =
     referenceDate
 
-  lazy val form: Form[SearchForm] = {
+  lazy val form: Form[SearchForm] =
     val dateFormat = "yyyy-MM-dd"
     Form(
       Forms
@@ -119,5 +120,5 @@ object DeploymentEventsController {
         )(SearchForm.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying("To Date must be greater than or equal to From Date", f => !f.to.isBefore(f.from))
     )
-  }
-}
+
+end DeploymentEventsController

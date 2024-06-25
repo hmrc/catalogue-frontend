@@ -32,7 +32,7 @@ case class CreateServiceRepoForm(
   repoType      : String
 )
 
-object CreateServiceRepoForm {
+object CreateServiceRepoForm:
   val writes: Writes[CreateServiceRepoForm] =
     ( (__ \ "repositoryName").write[String]
     ~ (__ \ "makePrivate"   ).write[Boolean]
@@ -69,9 +69,10 @@ object CreateServiceRepoForm {
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
         .verifying(repoTypeAndNameConstraints*)
     )
-}
 
-object CreateTestRepoForm {
+end CreateServiceRepoForm
+
+object CreateTestRepoForm:
   private val repoTestTypeValidation: String => Boolean =
     str => CreateTestRepositoryType.parse(str).isRight
 
@@ -94,7 +95,7 @@ object CreateTestRepoForm {
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
         .verifying(repoTypeAndNameConstraints*)
     )
-}
+end CreateTestRepoForm
 
 case class CreatePrototypeRepoForm(
   repositoryName: String,
@@ -103,7 +104,7 @@ case class CreatePrototypeRepoForm(
   slackChannels : String
 )
 
-object CreatePrototypeRepoForm {
+object CreatePrototypeRepoForm:
   val writes: Writes[CreatePrototypeRepoForm] =
     ( (__ \ "repositoryName").write[String]
     ~ (__ \ "password"      ).write[String]
@@ -117,8 +118,11 @@ object CreatePrototypeRepoForm {
   private val passwordConstraint =
     mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
 
-  private val slackChannelCharacterValidation: String => Boolean = str => str.matches("^#?[a-z0-9-_]*$")
-  private val slackChannelLengthValidation   : String => Boolean = str => str.isEmpty || !str.split(',').exists(elem => elem.length > 80)
+  private val slackChannelCharacterValidation: String => Boolean =
+    str => str.matches("^#?[a-z0-9-_]*$")
+
+  private val slackChannelLengthValidation   : String => Boolean =
+    str => str.isEmpty || !str.split(',').exists(elem => elem.length > 80)
 
   private val slackChannelConstraint = Seq(
     mkConstraint("constraints.channelLengthCheck")(constraint = slackChannelLengthValidation, error = "Each slack channel name must be under 80 characters long"),
@@ -134,14 +138,16 @@ object CreatePrototypeRepoForm {
         "slackChannels"       -> text.verifying(slackChannelConstraint*),
       )(CreatePrototypeRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
     )
-}
 
-object CreateRepoConstraints {
+end CreatePrototypeRepoForm
+
+object CreateRepoConstraints:
 
   def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] =
-    Constraint(constraintName)(toBeValidated => if (constraint(toBeValidated)) Valid else Invalid(error))
+    Constraint(constraintName): toBeValidated =>
+      if constraint(toBeValidated) then Valid else Invalid(error)
 
-  def createRepoNameConstraints(length: Int, suffix: Option[String]): Seq[Constraint[String]] = {
+  def createRepoNameConstraints(length: Int, suffix: Option[String]): Seq[Constraint[String]] =
     val whiteSpaceValidation: String => Boolean = str => !str.matches(".*\\s.*")
     val underscoreValidation: String => Boolean = str => !str.contains("_")
     val slashValidation     : String => Boolean = str => !str.contains("/")
@@ -157,5 +163,3 @@ object CreateRepoConstraints {
       mkConstraint("constraints.repoNameCaseCheck"      )(constraint = lowercaseValidation , error = "Repository name should only contain lowercase characters"),
       mkConstraint("constraints.repoNameSuffixCheck"    )(constraint = suffixValidation    , error = s"Repository name must end with ${if (suffix.nonEmpty) suffix.get else ""}")
     )
-  }
-}

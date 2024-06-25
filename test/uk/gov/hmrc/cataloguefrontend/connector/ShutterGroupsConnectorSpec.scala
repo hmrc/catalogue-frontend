@@ -38,12 +38,11 @@ class ShutterGroupsConnectorSpec
      with IntegrationPatience {
 
   override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        Map(
-          "microservice.services.platops-github-proxy.port" -> wireMockPort,
-          "microservice.services.platops-github-proxy.host" -> wireMockHost,
-        ))
+    GuiceApplicationBuilder()
+      .configure(Map(
+        "microservice.services.platops-github-proxy.port" -> wireMockPort,
+        "microservice.services.platops-github-proxy.host" -> wireMockHost,
+      ))
       .build()
 
   private lazy val shutterGroupsConnnector = app.injector.instanceOf[ShutterGroupsConnector]

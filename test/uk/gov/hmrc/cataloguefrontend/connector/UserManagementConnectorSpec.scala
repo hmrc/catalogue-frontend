@@ -39,9 +39,9 @@ class UserManagementConnectorSpec
   given HeaderCarrier = HeaderCarrier()
 
   private val connector: UserManagementConnector =
-    new UserManagementConnector(
+    UserManagementConnector(
       httpClientV2,
-      new ServicesConfig(Configuration(
+      ServicesConfig(Configuration(
         "microservice.services.user-management.port" -> wireMockPort,
         "microservice.services.user-management.host" -> wireMockHost
       ))
@@ -103,7 +103,7 @@ class UserManagementConnectorSpec
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam"))
           )
         )
     }
@@ -158,7 +158,7 @@ class UserManagementConnectorSpec
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam"))
           ),
           User(
             displayName    = Some("Jane Doe"),
@@ -170,7 +170,7 @@ class UserManagementConnectorSpec
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam"))
           )
         )
     }
@@ -225,7 +225,7 @@ class UserManagementConnectorSpec
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam"))
           )
         )
     }
