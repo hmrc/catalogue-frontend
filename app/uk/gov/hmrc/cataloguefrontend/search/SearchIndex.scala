@@ -119,8 +119,6 @@ object SearchIndex:
   def normalizeTerm(term: String): String =
     term.toLowerCase.replaceAll(" -_", "")
 
-  // TODO: we could cache the results short term, generally the next query will be the previous query + 1 letter
-  //       so we can reuse the partial result set
   private[search] def search(
     query: Seq[String],
     index: Map[String, Seq[SearchTerm]]
@@ -134,14 +132,14 @@ object SearchIndex:
         if normalised.exists(_.equalsIgnoreCase(st.name))
         then st.copy(weight = 1f)  //Increase weighting of an exact match
         else st
-      .sortBy(st => -st.weight ->  st.name.toLowerCase)
+      .sortBy(st => -st.weight -> st.name.toLowerCase)
       .distinct
 
   def optimizeIndex(index: Seq[SearchTerm]): Map[String, Seq[SearchTerm]] =
     index
       .flatMap: st =>
-        (st.linkType.sliding(3,1) ++ st.name.sliding(3,1) ++ st.hints.mkString.sliding(3,1))
-          .map(_.toLowerCase() -> st)
+        (st.linkType.sliding(3, 1) ++ st.name.sliding(3, 1) ++ st.hints.mkString.sliding(3, 1))
+          .map(_.toLowerCase -> st)
       .groupBy(_._1)
       .view
       .mapValues(_.map(_._2))

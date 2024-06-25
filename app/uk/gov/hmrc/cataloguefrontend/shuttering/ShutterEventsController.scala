@@ -78,7 +78,7 @@ class ShutterEventsController @Inject() (
 end ShutterEventsController
 
 private case class ShutterEventsForm(
-  env        : String, // TODO Environment
+  env        : Environment,
   serviceName: Option[ServiceName]
 )
 
@@ -86,10 +86,10 @@ private object ShutterEventsForm:
   lazy val form =
     Form(
       Forms.mapping(
-        "environment" -> Forms.nonEmptyText
+        "environment" -> Forms.of[Environment](Environment.formFormat)
       , "serviceName" -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat))
       )(ShutterEventsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
   def fromFilter(filter: ShutterEventsFilter): Form[ShutterEventsForm] =
-    form.fill(ShutterEventsForm(filter.environment.asString, filter.serviceName))
+    form.fill(ShutterEventsForm(filter.environment, filter.serviceName))

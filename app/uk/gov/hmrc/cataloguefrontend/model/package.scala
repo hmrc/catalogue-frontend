@@ -90,30 +90,21 @@ package object model:
     minor   : Int,
     patch   : Int,
     original: String
-  ) extends Ordered[Version]: // TODO do we need Ordered as well as Ordering?
-
-    def diff(other: Version): (Int, Int, Int) =
-      (this.major - other.major, this.minor - other.minor, this.patch - other.patch)
+  ) extends Ordered[Version]:
 
     override def compare(other: Version): Int =
-      import Ordered._
-      (major, minor, patch, original).compare((other.major, other.minor, other.patch, other.original))
+      summon[Ordering[Version]].compare(this, other)
 
     override def toString: String =
       original
 
   object Version:
     given Ordering[Version] =
-      new Ordering[Version]:
-        def compare(x: Version, y: Version): Int =
-          x.compare(y)
+      Ordering.by: v =>
+        (v.major, v.minor, v.patch)
 
     def isNewVersionAvailable(currentVersion: Version, latestVersion: Version): Boolean =
-      latestVersion.diff(currentVersion) match
-        case (major, minor, patch) =>
-          (major > 0)
-            || (major == 0 && minor > 0)
-            || (major == 0 && minor == 0 && patch > 0)
+      latestVersion > currentVersion
 
     def apply(s: String): Version =
       val regex3 = """(\d+)\.(\d+)\.(\d+)(.*)""".r
