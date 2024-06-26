@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
-import uk.gov.hmrc.cataloguefrontend.views.html.serviceconfigs.{ConfigExplorerPage, ConfigWarningPage, SearchConfigPage}
+import uk.gov.hmrc.cataloguefrontend.view.serviceconfigs.html.{ConfigExplorerPage, ConfigWarningPage, SearchConfigPage}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

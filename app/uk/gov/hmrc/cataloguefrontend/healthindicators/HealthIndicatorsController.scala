@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsFilter.form
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
+import uk.gov.hmrc.cataloguefrontend.view.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

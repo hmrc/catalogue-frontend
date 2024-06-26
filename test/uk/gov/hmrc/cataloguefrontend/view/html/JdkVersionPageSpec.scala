@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package views
+package uk.gov.hmrc.cataloguefrontend.view.html
+
 import org.jsoup.Jsoup
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -25,7 +26,6 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.views.html.JdkVersionPage
 
 
 class JdkVersionPageSpec

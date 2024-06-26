@@ -23,8 +23,8 @@ import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag, TeamName}
-import uk.gov.hmrc.cataloguefrontend.views.html.teams.{TeamInfoPage, TeamsListPage}
-import uk.gov.hmrc.cataloguefrontend.views.html.OutOfDateTeamDependenciesPage
+import uk.gov.hmrc.cataloguefrontend.view.teams.html.{TeamInfoPage, TeamsListPage}
+import uk.gov.hmrc.cataloguefrontend.view.html.OutOfDateTeamDependenciesPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

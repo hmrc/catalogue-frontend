@@ -23,8 +23,8 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.views.html.DependenciesPage
-import uk.gov.hmrc.cataloguefrontend.views.html.dependencies.DependencyGraphs
+import uk.gov.hmrc.cataloguefrontend.view.html.DependenciesPage
+import uk.gov.hmrc.cataloguefrontend.view.dependencies.html.DependencyGraphs
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController

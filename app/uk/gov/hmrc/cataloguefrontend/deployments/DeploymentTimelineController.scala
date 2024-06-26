@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesCon
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
-import uk.gov.hmrc.cataloguefrontend.views.html.deployments.DeploymentTimelinePage
+import uk.gov.hmrc.cataloguefrontend.view.deployments.html.DeploymentTimelinePage
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController

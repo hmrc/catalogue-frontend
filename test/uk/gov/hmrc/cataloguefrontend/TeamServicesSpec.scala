@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfter
 import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositoriesJsonData
 import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
-import uk.gov.hmrc.cataloguefrontend.views.ViewMessages
+import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
 
 import scala.io.Source
 import scala.jdk.CollectionConverters._

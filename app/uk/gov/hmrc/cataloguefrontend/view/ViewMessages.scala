@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.views
+package uk.gov.hmrc.cataloguefrontend.view
 
 import javax.inject.Inject
 import play.api.Configuration

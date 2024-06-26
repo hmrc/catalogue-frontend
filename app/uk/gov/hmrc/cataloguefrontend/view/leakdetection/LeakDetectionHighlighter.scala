@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.views.leakdetection
+package uk.gov.hmrc.cataloguefrontend.view.leakdetection
 
 import play.twirl.api.{Html, HtmlFormat}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionLeakDetails

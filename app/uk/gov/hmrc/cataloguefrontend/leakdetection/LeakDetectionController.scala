@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.form
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.views.html.leakdetection._
+import uk.gov.hmrc.cataloguefrontend.view.leakdetection.html._
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

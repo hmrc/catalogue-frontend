@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package views
+package uk.gov.hmrc.cataloguefrontend.view.html
 
 import org.jsoup.Jsoup
 import org.scalatest.matchers.should.Matchers
@@ -24,7 +24,6 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.AuthController
-import uk.gov.hmrc.cataloguefrontend.views.html.standard_layout
 
 class StandardLayoutSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 

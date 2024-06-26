@@ -30,7 +30,7 @@ import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
-import uk.gov.hmrc.cataloguefrontend.views.html.costs.CostExplorerPage
+import uk.gov.hmrc.cataloguefrontend.view.costs.html.CostExplorerPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

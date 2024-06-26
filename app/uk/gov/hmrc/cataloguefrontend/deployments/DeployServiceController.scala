@@ -28,8 +28,8 @@ import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesConnector}
-import uk.gov.hmrc.cataloguefrontend.views.html.deployments.{DeployServicePage, DeployServiceStep4Page}
-import uk.gov.hmrc.cataloguefrontend.views.html.error_404_template
+import uk.gov.hmrc.cataloguefrontend.view.deployments.html.{DeployServicePage, DeployServiceStep4Page}
+import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion}
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.binders.{AbsoluteWithHostnameFromAllowlist, RedirectUrl, RedirectUrlPolicy, SafeRedirectUrl}

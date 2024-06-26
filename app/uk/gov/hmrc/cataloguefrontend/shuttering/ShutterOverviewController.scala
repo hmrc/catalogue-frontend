@@ -25,7 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType.Rate
-import uk.gov.hmrc.cataloguefrontend.views.html.shuttering.{FrontendRouteWarningsPage, ShutterOverviewPage}
+import uk.gov.hmrc.cataloguefrontend.view.shuttering.html.{FrontendRouteWarningsPage, ShutterOverviewPage}
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

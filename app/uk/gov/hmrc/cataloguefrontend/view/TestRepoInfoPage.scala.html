@@ -14,12 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.{EnableBranchProtection, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
-@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
-@import uk.gov.hmrc.cataloguefrontend.views.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
 
 @this(
   viewMessages  : ViewMessages,

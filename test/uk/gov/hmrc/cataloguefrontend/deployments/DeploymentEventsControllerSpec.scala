@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper
-import uk.gov.hmrc.cataloguefrontend.views.html.deployments.DeploymentEventsPage
+import uk.gov.hmrc.cataloguefrontend.view.deployments.html.DeploymentEventsPage
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Retrieval
