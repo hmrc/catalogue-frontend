@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant

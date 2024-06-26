@@ -1,0 +1,118 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.{BuildData, JenkinsJob}
+@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+
+
+@(testJobMap: Map[String, Seq[JenkinsJob]])
+
+<div class="card">
+    <div class="card-header">
+        <div class="h4 mb-0">Tests</div>
+    </div>
+    <div class="card-body">
+        @if(testJobMap.nonEmpty) {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Test Repository</th>
+                        <th>Test Job</th>
+                        <th>Latest Result</th>
+                        <th>Last Run</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for((testRepo, jobs) <- testJobMap) {
+                    @if(jobs.nonEmpty) {
+                        @defining(jobs.head) { firstJob =>
+                            <tr>
+                                <td rowspan="@{jobs.size}">
+                                    <a id="link-to-@{testRepo}" href="@catalogueRoutes.CatalogueController.repository(testRepo)">@testRepo</a>
+                                </td>
+                                <td>
+                                    <a id="link-to-job-@{firstJob.name}" href="@{firstJob.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{firstJob.name}<span class="glyphicon glyphicon-new-window"/></a>
+                                </td>
+                                @defining(firstJob.latestBuild) {
+                                    case Some(BuildData(_, _, timestamp, result, _)) => {
+                                        @defining({
+                                            result match {
+                                                case Some("SUCCESS")  => "text-bg-success"
+                                                case Some("FAILURE")  => "text-bg-danger"
+                                                case Some("UNSTABLE") => "text-bg-warning"
+                                                case _                => "text-bg-secondary"
+                                            }
+                                        }) { badgeColour =>
+                                            <td>
+                                                <span class="badge fs-6 @badgeColour">@{result}</span>
+                                            </td>
+                                        }
+                                        <td>
+                                            @{timestamp.displayFormat}
+                                        </td>
+                                    }
+                                    case _ => {
+                                        <td>
+                                            <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
+                                        </td>
+                                        <td></td>
+                                    }
+                                }
+                            </tr>
+                        }
+
+                        @for(job <- jobs.tail) {
+                            <tr>
+                                <td>
+                                    <a id="link-to-job-@{job.name}" href="@{job.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{job.name}<span class="glyphicon glyphicon-new-window"/></a>
+                                </td>
+                                @defining(job.latestBuild) {
+                                    case Some(BuildData(_, _, timestamp, result, _)) => {
+                                        @defining({
+                                            result match {
+                                                case Some("SUCCESS")  => "text-bg-success"
+                                                case Some("FAILURE")  => "text-bg-danger"
+                                                case Some("UNSTABLE") => "text-bg-warning"
+                                                case _                => "text-bg-secondary"
+                                            }
+                                        }) { badgeColour =>
+                                            <td>
+                                                <span class="badge fs-6 @badgeColour">@{result}</span>
+                                            </td>
+                                        }
+                                        <td>
+                                            @{timestamp.displayFormat}
+                                        </td>
+                                    }
+                                    case _ => {
+                                        <td>
+                                            <span class="badge fs-6 text-bg-secondary">NOT BUILT</span>
+                                        </td>
+                                        <td></td>
+                                    }
+                                }
+                            </tr>
+                        }
+                    }
+                }
+                </tbody>
+            </table>
+        } else {
+            <p class="mb-0">No test repositories <abbr title="Defined in repository.yaml">found</abbr>.</p>
+        }
+    </div>
+</div>

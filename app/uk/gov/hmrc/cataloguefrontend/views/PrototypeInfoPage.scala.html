@@ -1,0 +1,88 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{ChangePrototypePassword, EnableBranchProtection}
+@import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
+@import uk.gov.hmrc.cataloguefrontend.views.ViewMessages
+
+@this(
+  prototypeDetailsPartial: partials.PrototypeDetailsPartial,
+  managePrototypePartial : partials.ManagePrototypePartial,
+  viewMessages           : ViewMessages
+)
+
+@(prototype              : GitRepository,
+  linkToLeakDetection    : Option[String],
+  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
+  hasPasswordChangeAuth  : ChangePrototypePassword.HasAuthorisation,
+  form                   : Form[?],
+  successMessage         : Option[String],
+  commenterReport        : Option[PrCommenterReport],
+  prototypeDetails       : PrototypeDetails
+)(implicit
+  request                : RequestHeader,
+  messages               : Messages
+)
+
+@standard_layout(prototype.name, active = "repositories") {
+    <h1 class="page-heading mt-4">
+        Prototype: @prototype.name
+    </h1>
+
+    @partials.leak_detection_banner(linkToLeakDetection)
+    @successMessage.map { msg =>
+        <div id="password-change-success-msg" class="alert alert-success" role="alert">
+            @msg
+        </div>
+    }
+
+    <section class="section-wrapper">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                @prototypeDetailsPartial(prototype)
+            </div>
+            <div class="col-md-6">
+                @managePrototypePartial(prototype, prototypeDetails, hasPasswordChangeAuth.value, form)
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                @partials.repo_owning_teams(prototype)
+            </div>
+
+            <div class="col-md-6">
+                @partials.code(prototype, hasBranchProtectionAuth, commenterReport, None)
+            </div>
+        </div>
+    </section>
+
+    <div class="alert alert-success" role="alert" id="@prototype.name">
+      <p>
+        @Html(viewMessages.informationalText)
+      </p>
+    </div>
+
+  @* automatically displays the modal when errors are present. *@
+  @if(hasPasswordChangeAuth.value && form.hasErrors) {
+      <script @CSPNonce.attr type="text/javascript">
+          let modal = new bootstrap.Modal(document.getElementById('password-reset-modal'));
+          modal.show()
+      </script>
+  }
+}

@@ -30,9 +30,9 @@ import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesCo
 import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, FormUtils}
+import uk.gov.hmrc.cataloguefrontend,views.html.DependencyExplorerPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.DependencyExplorerPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}

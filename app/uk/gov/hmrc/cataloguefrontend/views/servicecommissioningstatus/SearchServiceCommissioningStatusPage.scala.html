@@ -1,0 +1,360 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, ServiceType}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{SearchCommissioning, Warning, LifecycleStatus, routes, FormCheckType, Check, CachedServiceCheck }
+@import views.html.helper.{FieldConstructor, select}
+
+@this()
+
+@(form     : Form[SearchCommissioning.SearchCommissioningForm],
+  allTeams : Seq[GitHubTeam]
+, allChecks: Seq[(String, FormCheckType)]
+, results  : Option[List[CachedServiceCheck]] = None
+)(implicit
+  messages : Messages
+, request  : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Search Commissioning State", active = "explore") {
+    <h1 class="page-heading mt-4">
+        Search Commissioning State
+        <a class="float-end" role="button" data-bs-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+            <i class="glyphicon glyphicon-question-sign text-black"></i>
+        </a>
+    </h1>
+
+    <div class="collapse mb-3" id="helpText">
+        <div class="card">
+            <div class="card-body">
+                <div class="h4 fw-bold">How to use this page?</div>
+                <ul>
+                    <li>In the search results:
+                        <ul>
+                            <li><span class="glyphicon glyphicon-ok text-success"></span> means found.</li>
+                            <li><span class="glyphicon glyphicon-remove text-danger"></span> means please remove.</li>
+                            <li><span class="glyphicon glyphicon-minus text-secondary"></span> means not found.</li>
+                            <li>Empty means not applicable for service type or deployment zone.</li>
+                            <li>Hovering over a check also provides these details.</li>
+                        </ul>
+                    </li>
+                    <li>Link <span class="glyphicon glyphicon-circle-arrow-right text-success"></span> goes to a single service commissioning page which has:</li>
+                    <ul>
+                        <li>More recent data - this search page queries from a short term cache for performance.</li>
+                        <li>Context relevant links on how to add or view each step plus MDTP Handbook guidance.</li>
+                    </ul>
+                    <li>The results can be <code>Exported as CSV</code> using the button below.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    @partials.form_global_errors(form)
+
+    @helper.form(
+        action           =  routes.ServiceCommissioningStatusController.searchResults(),
+        Symbol("method") -> "GET",
+        Symbol("id")     -> "form",
+        Symbol("class")  -> "form-group"
+    ) {
+        <div class="row">
+            <div class="col-md-3">
+                @helper.select(
+                    field                 =  form("team"),
+                    options               =  allTeams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Team",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "team-filter",
+                    Symbol("class")       -> "form-select",
+                    Symbol("title")       -> "On change updates 'Config Key' autocomplete"
+                )
+            </div>
+            <div class="col-md-2">
+                @helper.select(
+                    field                 = form("serviceType"),
+                    options               = ServiceType.values.toSeq.map(st => st.asString -> st.displayString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Service Type",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("class")       -> "form-select"
+                )
+            </div>
+            <div class="col-md-2">
+                <dl>
+                    <dt><label>Service Status</label></dt>
+                    <dd>
+                        @for(x <-  LifecycleStatus.values) {
+                            <div class="checkbox-group">
+                                <input name="lifecycleStatus[]" id="@{x.asString}-checkbox" type="checkbox" value="@x.asString" @if(form.get.lifecycleStatus.contains(x)) {checked} />
+                                <label class="form-check-label" for="@{x.asString}-checkbox">@x.displayName</label>
+                            </div>
+                        }
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-3">
+                @helper.select(
+                    field                 = form("checks"),
+                    options               = allChecks.map { case (title, _) => title -> title },
+                    Symbol("_label")      -> "Commissioning Checks",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("class")       -> "form-select",
+                    Symbol("multiple")    -> None,
+                    Symbol("size")        -> Environment.valuesAsSeq.size
+                )
+            </div>
+            <div class="col-md-2">
+                <dl>
+                    <dt><label>Environments</label></dt>
+                    <dd>
+                        @for(env <-  Environment.valuesAsSeq) {
+                            <div class="checkbox-group">
+                                <input name="environments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.environments.contains(env)) {checked} />
+                                <label class="form-check-label" for="@{env.asString}-checkbox">@env.displayString</label>
+                            </div>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-auto">
+                <button id="config-search" class="btn btn-success" type="submit">Search</button>
+                <input type="hidden" id="teamChange" name="teamChange" value="false" />
+                <input type="hidden" id="asCsv" name="asCsv" value="false" />
+                <input type="button" id="export-as-csv-btn" class="btn btn-outline-secondary" value="Export as CSV"/>
+            </div>
+            <div class="col-md-auto align-content-around">
+                @if(results.exists(_.isEmpty)){
+                    <span class="ms-2">No results found.</span>
+                }else if(results.nonEmpty) {
+                <span class="ms-2">Found @{results.getOrElse(Nil).size} results.</span>
+                }
+            </div>
+            <div class="col-md-auto ms-auto d-flex">
+                <div class="form-check form-switch me-3">
+                    <input aria-label="Group By Environment" class="form-check-input" name="groupByEnvironment" type="checkbox" role="switch" id="group-by-environment" value=true @if(form("groupByEnvironment").value.contains("true")) {checked}>
+                    <label class="form-check-label" for="group-by-environment">Group By Environment</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input aria-label="Has Warning" class="form-check-input" name="warningFilter" type="checkbox" role="switch" id="warning-filter" value="true" @if(form("warningFilter").value.contains("true")) {checked} />
+                    <label class="form-check-label" for="warning-filter">Has Warning</label>
+                </div>
+            </div>
+        </div>
+
+        @if(results.nonEmpty) {
+            <p class="mt-2">Please note this page queries a 10 minute cache, for performance, whereas viewing per service uses live data.</p>
+            <table id="search-results" class="table table-sm table-sm-no-side-padding table-striped table-striped-columns-custom always-wrap sticky-header text-break">
+                @if(form.get.groupByEnvironment.isDefined) {
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            @for((title, formCheckType) <- allChecks.filter(check => form.get.checks.contains(check._1) && check._2 == FormCheckType.Simple)) {
+                                <th class="rotate "><div><span>@title</span></div></th>
+                                <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                            }
+                            @for(env <- form.get.environments) {
+                                <th class="rotate"><div><span>@env.displayString</span></div></th>
+                                @for((title, _) <- allChecks.filter(check =>
+                                    form.get.checks.contains(check._1)
+                                    && check._2 == FormCheckType.Environment
+                                    && (check._1 == "Internal Auth Configs" && (env == Environment.QA || env == Environment.Production) || check._1 != "Internal Auth Configs")
+                                )) {
+                                    <th class="rotate sub-heading text-success"><div><span>@title</span></div></th>
+                                }
+                                <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                            }
+                            <th class="visually-hidden">-</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @results.getOrElse(Nil).map { result =>
+                        <tr>
+                            <td>
+                                @if(result.lifecycleStatus == LifecycleStatus.Deleted) {
+                                    <del>@result.serviceName.asString</del>
+                                } else {
+                                    <a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a>
+                                    @displayWarnings(result.warnings.getOrElse(Seq.empty[Warning]))
+                                }
+                            </td>
+                            @for((title, _) <- allChecks.filter(check => form.get.checks.contains(check._1) && check._2 == FormCheckType.Simple)) {
+                                <td>@displayResult(title, None, result.lifecycleStatus, result.checks.flatMap {
+                                    case check: Check.SimpleCheck if check.title == title => Some(check.checkResult)
+                                    case _ => None
+                                }.headOption)</td>
+                                <td></td>
+                            }
+                            @for(env <- form.get.environments) {
+                                <td></td>
+                                @for((title, _) <- allChecks.filter(check =>
+                                    form.get.checks.contains(check._1)
+                                    && check._2 == FormCheckType.Environment
+                                    && (check._1 == "Internal Auth Configs" && (env == Environment.QA || env == Environment.Production) || check._1 != "Internal Auth Configs")
+                                )) {
+                                    <td>@displayResult(title, Some(env), result.lifecycleStatus, result.checks.flatMap {
+                                        case check: Check.EnvCheck if check.title == title => check.checkResults.get(env)
+                                        case _ => None
+                                    }.headOption)</td>
+                                }
+                                <td></td>
+                            }
+                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
+                            </tr>
+                    }
+                    </tbody>
+                }else {
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
+                                @formCheckType match {
+                                    case FormCheckType.Simple      => {
+                                        <th class="rotate"><div><span>@title</span></div></th>
+                                        <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                    }
+                                    case FormCheckType.Environment => {
+                                        <th class="rotate"><div><span>@title</span></div></th>
+                                        @availableEnvironments(title).map { case env => <th class="rotate sub-heading text-success"><div><span>@env.displayString</span></div></th> }
+                                        <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                    }
+                                }
+                            }
+                            <th class="visually-hidden">-</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @results.getOrElse(Nil).map { result =>
+                        <tr>
+                            <td>
+                                @if(result.lifecycleStatus == LifecycleStatus.Deleted) {
+                                    <del>@result.serviceName.asString</del>
+                                } else {
+                                    <a href="@appRoutes.CatalogueController.repository(result.serviceName.asString).url" title="Link to Service Page">@result.serviceName.asString</a>
+                                    @displayWarnings(result.warnings.getOrElse(Seq.empty[Warning]))
+                                }
+                            </td>
+                            @for((title, formCheckType) <- allChecks.filter { case (title, _) => form.get.checks.contains(title) })  {
+                                @(result.checks.find(_.title == title), formCheckType) match {
+                                    case (Some(check: Check.SimpleCheck), _                        ) => {<td>@displayResult(title, None, result.lifecycleStatus, Some(check.checkResult))</td><td></td>}
+                                    case (None                          , FormCheckType.Simple     ) => {<td>@displayResult(title, None, result.lifecycleStatus, None)</td><td></td>}
+                                    case (Some(check: Check.EnvCheck)   , _                        ) => {<td></td>@availableEnvironments(title).map { e => <td>@displayResult(title, Some(e), result.lifecycleStatus, check.checkResults.get(e))</td>}<td></td>}
+                                    case (None                          , FormCheckType.Environment) => {<td></td>@availableEnvironments(title).map { e => <td>@displayResult(title, Some(e), result.lifecycleStatus, None)</td>}<td></td>}
+                                }
+                            }
+                            <td><a href="@routes.ServiceCommissioningStatusController.getCommissioningState(result.serviceName).url" title="Link to Service Commissioning State Page"><span class="glyphicon glyphicon-circle-arrow-right"></span></a></td>
+                        </tr>
+                    }
+                    </tbody>
+                }
+            </table>
+        }
+    }
+
+    <script @CSPNonce.attr>
+        document
+            .getElementById("export-as-csv-btn")
+            .addEventListener("click", () => {
+                document.getElementById('asCsv').value = true;
+                document.getElementById('form').submit();
+                document.getElementById('asCsv').value = false;   // fixes browser back button issue
+            });
+    </script>
+}
+
+@* TODO review how internal auth config works *@
+@availableEnvironments(title: String) = @{
+    if (title == "Internal Auth Configs") {
+        form.get.environments.filter(e => e == Environment.QA || e == Environment.Production)
+    } else {
+        form.get.environments
+    }
+}
+
+@displayWarnings(warnings: Seq[Warning]) = {
+    @if(!warnings.isEmpty) {
+        <span
+            class="glyphicon large-glyphicon text-warning glyphicon-alert float-end pe-2"
+            data-bs-toggle="popover"
+            data-bs-trigger="hover"
+            data-bs-placement="bottom"
+            data-bs-html="true"
+            data-bs-content='@warningContent(warnings)'
+        ></span>
+    }
+}
+
+@warningContent(warnings: Seq[Warning]) = {
+    <div>
+        <div class="fs-5 fw-bold">Warning</div>
+        @warnings.map { w =>
+            <div>
+                <div class="d-flex align-items-start">
+                    <strong class="me-2">@w.title:</strong>
+                    <span class="flex-grow-1">@w.message</span>
+                </div>
+                @if(!w.equals(warnings.last)) {
+                    <hr class="my-2">
+                }
+            </div>
+        }
+    </div>
+}
+
+@displayResult(title: String, env: Option[Environment], lifecycleStatus: LifecycleStatus, result: Option[Check.Result]) = {
+    <span
+        @result match {
+            case None                                                                     => { class="glyphicon glyphicon-minus text-secondary" style="opacity: 0%"}
+            case Some(Left(missing))                                                      => { class="glyphicon glyphicon-minus text-secondary" }
+            case Some(Right(present)) if LifecycleStatus.canDecommission(lifecycleStatus) => { class="glyphicon glyphicon-remove text-danger"}
+            case Some(Right(present))                                                     => { class="glyphicon glyphicon-ok text-success"   }
+        }
+        data-bs-toggle="popover"
+        data-bs-trigger="hover"
+        data-bs-placement="bottom"
+        data-bs-html="true"
+        data-bs-content='@popoverContent(title, env, lifecycleStatus, result)'
+    ></span>
+}
+
+@popoverContent(title: String, env: Option[Environment], lifecycleStatus: LifecycleStatus, result: Option[Check.Result]) = {
+    <div class="fs-5 fw-bold">@title</div>
+    @env.map { e => <div><strong>Environment:</strong> @e.displayString</div> }
+    <div>
+        <strong>State:</strong>
+        @result match {
+            case None                                                                     => { Not applicable }
+            case Some(Left(missing))                                                      => { Not found      }
+            case Some(Right(present)) if LifecycleStatus.canDecommission(lifecycleStatus) => { Needs removing }
+            case Some(Right(present))                                                     => { Found          }
+        }
+    </div>
+}
+
+<script @CSPNonce.attr>
+    ["group-by-environment", "warning-filter"]
+        .forEach(function(id) {
+            document.getElementById(id).addEventListener("change", function() {
+                document.getElementById("form").submit();
+            });
+        });
+</script>

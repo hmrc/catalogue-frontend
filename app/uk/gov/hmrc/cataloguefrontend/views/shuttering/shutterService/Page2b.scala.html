@@ -1,0 +1,235 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, OutagePageStatus, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step0Out, Step1Out, Step2bForm}
+@import views.html.helper.{FieldConstructor, textarea}
+@import partials.form_global_errors
+
+@this()
+
+@(form                  : Form[Step2bForm]
+, step0Out              : Step0Out
+, step1Out              : Step1Out
+, requiresOutageMessage : Boolean
+, outageMessageSrc      : Option[OutagePage]
+, defaultOutageMessage  : String
+, outagePages           : Seq[OutagePageStatus]
+, back                  : Call
+)(implicit
+  request               : RequestHeader
+, messagesProvider      : MessagesProvider
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Shutter Frontend", active = "shuttering") {
+
+    <h1 class="page-heading mt-4">Shutter Frontend: Check outage-pages</h1>
+
+    @form_global_errors(form)
+
+    <div class="card">
+        <div class="card-body">
+            @helper.form(
+                action          =  uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterWizardController.step2bPost
+              , Symbol("class") -> "px-2"
+              , Symbol("id")    -> "shutter-service-form"
+            ) {
+                @csrfFormField
+
+                <div class="card mb-3">
+                    <div class="card-header @if(step0Out.env == Environment.Production) {bg-danger-subtle} else {bg-warning-subtle}">
+                        <span class="glyphicon glyphicon-warning-sign"></span>
+                        You are about to <b>Shutter</b> the following frontends in <b>@step0Out.env</b>:
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            @step1Out.serviceNameAndContexts.map { service =>
+                                <li>@service.serviceName.asString @if(step0Out.shutterType == ShutterType.Rate) { @service.context.fold("")(cntx => s"($cntx)") }</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-4">
+                        @textarea(
+                            field                 =  form("reason")
+                          , Symbol("_label")      -> "Reason (internal use only)"
+                          , Symbol("_labelClass") -> "form-label"
+                          , Symbol("placeholder") -> "You may optionally provide a reason for auditing purposes."
+                          , Symbol("rows")        -> 2
+                          , Symbol("cols")        -> 60
+                          , Symbol("class")       -> "form-control"
+                        )
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-4">
+                        <p class="fw-bold">Select outage page</p>
+                        @defining(form("useDefaultOutagePage").value.map(_.toBoolean).getOrElse(false)) { useDefaultOutagePage =>
+                            <div class="form-check">
+                                <input type="radio" id="useDefaultOutagePageFalse" class="form-check-input" name="useDefaultOutagePage" value="false" @if(!useDefaultOutagePage){checked}>
+                                <label class="form-check-label" for="useDefaultOutagePageFalse">
+                                    Service outage page
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" id="useDefaultOutagePageTrue" class="form-check-input" name="useDefaultOutagePage" value="true" @if(useDefaultOutagePage){checked}>
+                                <label class="form-check-label" for="useDefaultOutagePageTrue">
+                                    None
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mb-3" id="defaultOutagePagePanel">
+                    <div class="card-header bg-warning-subtle">
+                        <span class="glyphicon glyphicon-warning-sign"></span>
+                        No outage page selected
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            The service will be shuttered with the platform default page, rather than any outage page defined in github.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-3" id="outagePagePanel">
+                    <div class="card-header">
+                        Outage Pages:
+                    </div>
+                    <div class="card-body">
+                        <input type="hidden" name="requiresOutageMessage" value="@requiresOutageMessage">
+
+                        @if(requiresOutageMessage) {
+                            @if(outagePages.find(_.warning.isDefined)) {
+                                <div class="card mb-3">
+                                    <div class="card-header bg-warning-subtle">
+                                        <span class="glyphicon glyphicon-warning-sign"></span>
+                                        There were some warnings with the Outage pages.
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">Please review, you can still continue to shutter.</p>
+
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <td>Service</td>
+                                                    <td>Warning</td>
+                                                    <td>Consequence</td>
+                                                </tr>
+                                            </thead>
+                                            @outagePages.map { outagePageStatus =>
+                                                <tr class="@if(outagePageStatus.warning.isDefined) { alert-warning } else {}">
+                                                    <td>@outagePageStatus.serviceName.asString</td>
+                                                    @outagePageStatus.warning match {
+                                                        case Some((warning, consequence)) => {
+                                                            <td>@Html(warning)</td>
+                                                            <td>@consequence</td>
+                                                        }
+                                                        case None => {
+                                                            <td>None</td>
+                                                            <td></td>
+                                                        }
+                                                    }
+                                                </tr>
+                                            }
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-8">
+                                    @textarea(
+                                        field                 =  form("outageMessage")
+                                      , Symbol("_label")      -> "Outage Message"
+                                      , Symbol("_labelClass") -> "form-label"
+                                      , Symbol("_help")       -> "The outage message will replace any 'templatedMessage' placeholder found in the outage-page(s)."
+                                      , Symbol("rows")        -> 2
+                                      , Symbol("cols")        -> 60
+                                      , Symbol("class")       -> "form-control"
+                                    )
+                                </div>
+                                <div class="col-4 my-auto">
+                                    <a id="revertToTemplate" class="btn btn-outline-secondary">
+                                        Revert to template
+                                    </a>
+                                    <script @CSPNonce.attr>
+                                        document.getElementById('revertToTemplate').addEventListener('click', function () {
+                                          revertTemplate();
+                                        });
+                                    </script>
+                                </div>
+                            </div>
+                            <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the ${src.serviceName.asString} outage page for ${step0Out.env.asString}.").getOrElse(""))</p>
+                        } else {
+                            <input type="hidden" name="outageMessage" value=""/>
+                            <p class="card-text">Outage page(s) will be sent as is.</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-1">
+                        <a id="back-btn" href="@back" class="btn btn-outline-secondary">
+                            <span class="glyphicon glyphicon-chevron-left"></span>
+                            Back
+                        </a>
+                    </div>
+                    <div class="col-1 offset-10">
+                        <button id="next-btn" class="btn btn-success" type="submit">
+                            Next
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+  <script @CSPNonce.attr type="text/javascript">
+    function revertTemplate() {
+      $('#outageMessage').val('@defaultOutageMessage')
+    }
+
+    function syncUseDefaultOutagePage() {
+      let useDefaultOutagePage = $('input[name=useDefaultOutagePage]:checked').val();
+      if (useDefaultOutagePage === "true") {
+        $("#outagePagePanel").hide();
+        $("#defaultOutagePagePanel").show();
+      } else {
+        $("#outagePagePanel").show();
+        $("#defaultOutagePagePanel").hide();
+      }
+    }
+
+    ["useDefaultOutagePageFalse", "useDefaultOutagePageTrue"]
+      .forEach(function(id) {
+        document.getElementById(id).addEventListener("change", function() {
+          syncUseDefaultOutagePage();
+        });
+      });
+
+    $(document).ready(function() {
+      syncUseDefaultOutagePage();
+    });
+  </script>
+}

@@ -1,0 +1,128 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionLeaksByRule, LeakDetectionLeakDetails}
+@import uk.gov.hmrc.cataloguefrontend.views.leakdetection.LeakDetectionHighlighter
+
+@(leaks      : Seq[LeakDetectionLeaksByRule],
+  countHeader: String
+)(implicit
+  request: RequestHeader
+)
+
+<div id="leaks-list">
+    <div class="text-end">
+        <a id="expandLink" class="cursor-pointer">expand all</a>
+        <a id="collapseLink" class="cursor-pointer d-none">collapse all</a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th/>
+                <th class="col-xs-7"><button class="sort no-border fw-bold" data-sort="rule">Rule</button></th>
+                <th class="col-xs-2"><button class="sort no-border fw-bold" data-sort="scope">Scope</button></th>
+                <th class="col-xs-2"><button class="sort no-border fw-bold" data-sort="priority">Priority</button></th>
+                <th class="col-xs-1 text-center"><button class="sort no-border fw-bold" data-sort="total">@countHeader</button></th>
+            </tr>
+        </thead>
+        <tbody class="list">
+            @leaks.map(leakDetectionRuleViolations)
+        </tbody>
+    </table>
+</div>
+<script @CSPNonce.attr>
+    let options = {valueNames: ['rule', 'scope', 'priority', 'total']};
+    leaksList = new List('leaks-list', options);
+
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach( function(el) {
+        let chevron = el.querySelector('.glyphicon');
+        let collapseId = el.getAttribute('data-bs-target');
+        let collapse = document.querySelector(collapseId);
+
+        collapse.addEventListener('hidden.bs.collapse', () => {
+            chevron.classList.remove('glyphicon-chevron-down');
+            chevron.classList.add('glyphicon-chevron-right');
+        });
+
+        collapse.addEventListener('show.bs.collapse', () => {
+            chevron.classList.remove('glyphicon-chevron-right');
+            chevron.classList.add('glyphicon-chevron-down');
+        });
+    });
+
+    function expandAll() {
+        $("#expandLink").addClass('d-none')
+        $("#collapseLink").removeClass('d-none')
+        $(".multi-collapse").collapse('show')
+    }
+
+    function collapseAll() {
+        $("#expandLink").removeClass('d-none')
+        $("#collapseLink").addClass('d-none')
+        $(".multi-collapse").collapse('hide')
+    }
+
+    document.getElementById("expandLink").addEventListener("click", function() {
+        expandAll()
+    });
+    document.getElementById("collapseLink").addEventListener("click", function() {
+        collapseAll()
+    });
+</script>
+
+@priorityStyle(priority: String) = {
+  @priority match {
+    case "low" => {text-success}
+    case "medium" => {text-warning}
+    case "high"   => {text-danger}
+    case _ => { }
+  }
+}
+
+@leakDetectionRuleViolations(leaksByRule: LeakDetectionLeaksByRule) = {
+    <tr id="collapse-toggle-@leaksByRule.ruleId" class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@leaksByRule.ruleId" aria-expanded="false" aria-controls="collapsible-area-@leaksByRule.ruleId">
+        <td><span class="glyphicon glyphicon-chevron-right"></span></td>
+        <td class="rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
+        <td class="scope">@leaksByRule.scope</td>
+        <td class="priority @priorityStyle(leaksByRule.priority.name)">@leaksByRule.priority</td>
+        <td class="total text-center">@leaksByRule.leaks.length</td>
+    </tr>
+    <tr id="collapsible-area-@leaksByRule.ruleId" class="collapse multi-collapse">
+        <td class="d-none rule">@leaksByRule.description <span class="small">(ruleId: @leaksByRule.ruleId)</span></td>
+        <td class="d-none scope">@leaksByRule.scope</td>
+        <td class="d-none priority">@leaksByRule.priority</td>
+        <td class="d-none total">@leaksByRule.leaks.length</td>
+        <td colspan="6">
+            @leaksByRule.leaks.map(l => leakDetectionLeaks(leaksByRule.scope, l))
+        </td>
+    </tr>
+}
+
+@leakDetectionLeaks(scope: String, leak: LeakDetectionLeakDetails) = {
+    <ul class="list-unstyled m-3">
+        <li>
+            <a href="@leak.urlToSource" target="_blank" rel="noreferrer noopener">
+                @leak.filePath
+                @if(scope == "fileContent") {#@leak.lineNumber}
+                <span class="glyphicon glyphicon-new-window"></span>
+            </a>
+        </li>
+        <li class="font-monospace">
+            @LeakDetectionHighlighter(leak)
+        </li>
+    </ul>
+}

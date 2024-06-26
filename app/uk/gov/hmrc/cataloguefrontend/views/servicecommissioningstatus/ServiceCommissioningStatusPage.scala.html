@@ -1,0 +1,169 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.routes
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, LifecycleStatus}
+
+
+@this()
+
+@(serviceName    : ServiceName,
+  lifecycleStatus: LifecycleStatus,
+  checks         : List[Check]
+)(implicit
+  request        : RequestHeader
+)
+
+@standard_layout("Commissioning-State") {
+    <h1 class="page-heading mt-4">
+        Commissioning State
+        <a class="float-end" role="button" data-bs-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+            <i class="glyphicon glyphicon-question-sign text-black"></i>
+        </a>
+    </h1>
+
+    <div class="collapse mb-3" id="helpText">
+        <div class="card">
+            <div class="card-body">
+                <div class="h4 fw-bold">How to use this page?</div>
+                <ul>
+                    <li>This page shows some of the possible steps in a service lifecycle.</li>
+                    <li>Click on <span class="glyphicon glyphicon-question-sign text-success"></span> to see a helpful summary and relevant MDTP Handbook links for the step</li>
+                    <li>The following icons mean:
+                        <ul>
+                            <li><span class="glyphicon glyphicon-ok text-success"></span> found</li>
+                            <li><span class="glyphicon glyphicon-remove text-danger"></span> needs removing</li>
+                            <li><span class="glyphicon glyphicon-minus text-secondary"></span> not found</li>
+                        </ul>
+                    </li>
+                    <li>Each icon is accompanied by a link to <q>view</q> or <q>add</q> the step were relevant.</li>
+                    <li>This page does not update automatically. Refresh this page, once a step has been completed and any builds have finished.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <h2>
+        <a class="fw-bold" href="@routes.CatalogueController.service(serviceName)">@serviceName.asString</a>
+        @if(lifecycleStatus != LifecycleStatus.Active) {
+            <span class="badge rounded-pill text-bg-secondary fs-6 align-text-top mt-2">@lifecycleStatus.displayName</span>
+        }
+    </h2>
+
+    <p>
+        @if(LifecycleStatus.canDecommission(lifecycleStatus)) {
+            Guidance for decommissioning a microservice can be found in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a>
+        } else {
+            Guidance for creating a microservice can be found in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/index.html" target="_blank" rel="noreferrer noopener">MDTP Handbook<span class="glyphicon glyphicon-new-window"/></a>
+        }
+    </p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th style="width: 40px"></th>
+                <th class="col-lg-3">Step</th>
+                <th colspan="6">State</th>
+            </tr>
+        </thead>
+        <tbody>
+            @checks.map({
+                case check: Check.SimpleCheck => simpleCheck(check)
+                case check: Check.EnvCheck    => envCheck(check)
+            })
+        </tbody>
+    </table>
+}
+
+@createID(check: Check) = @{
+    check.title.toLowerCase.replaceAll("\\s+", "-").replaceAll("-+", "-")
+}
+
+@popoverContent(check: Check) = {
+    @check.helpText
+
+    @check.linkToDocs.map { link =>
+      <br><br>
+      <a id="link-to-@createID(check)-docs" href="@link" target="_blank" rel="noreferrer noopener">Find out more<span class="glyphicon glyphicon-new-window"/></a>
+    }
+}
+
+@popover(check: Check) = {
+    <a href="#"
+       tabindex="0"
+       data-bs-toggle="popover"
+       data-bs-trigger="focus"
+       data-bs-placement="bottom"
+       data-bs-html="true"
+       data-bs-content='@popoverContent(check)'>
+        <span class="glyphicon glyphicon-question-sign"/>
+    </a>
+}
+
+@simpleCheck(check: Check.SimpleCheck) = {
+    <tr>
+        <td class="text-center">@popover(check)</td>
+        <td>@check.title</td>
+        <td colspan="6">@displayResult(createID(check), check.checkResult)</td>
+    </tr>
+}
+
+
+@envCheck(check: Check.EnvCheck) = {
+    <tr>
+        <td class="text-center">@popover(check)</td>
+        <td>@check.title</td>
+        @defining(checks.collect { case check: Check.EnvCheck => check.checkResults.keySet }.flatten.distinct) { envs =>
+            @envs.map(e => e -> check.checkResults.get(e)).sortBy(_._1).map {
+                case (env, Some(result)) => {
+                    <td>
+                        <ul class="list-unstyled">
+                            <li> @env.displayString </li>
+                            <li> @displayResult(s"${createID(check)}-${env.displayString}", result)</li>
+                        </ul>
+                    </td>
+                }
+                case (env,None) => {<td></td>}
+            }
+        }
+    </tr>
+}
+
+@displayResult(id: String, result: Check.Result) = {
+    @result match {
+        case Right(present) if LifecycleStatus.canDecommission(lifecycleStatus) => {
+            <a id="@id-evidence-link" href="@present.evidenceLink" target="_blank" rel="noopener noreferrer">
+                <span style="width: 32px" class="glyphicon glyphicon-remove text-danger"></span>
+                view
+            </a>
+        }
+        case Right(present) => {
+            <a id="@id-evidence-link" href="@present.evidenceLink" target="_blank" rel="noopener noreferrer">
+                <span style="width: 32px" class="glyphicon glyphicon-ok text-success"></span>
+                view
+            </a>
+        }
+        case Left(missing) if missing.addLink.isEmpty || lifecycleStatus != LifecycleStatus.Active => {
+            <span style="width: 32px" class="glyphicon glyphicon-minus text-secondary"></span>
+        }
+        case Left(missing) => {
+            <a id="@id-add-link" class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" href="@missing.addLink" target="_blank" rel="noopener noreferrer">
+                <span style="width: 32px" class="glyphicon glyphicon-minus text-secondary"></span>
+                <span class="text-secondary">add</span>
+            </a>
+        }
+    }
+}

@@ -1,0 +1,112 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.ConfluenceConnector
+@import uk.gov.hmrc.cataloguefrontend.deployments.{routes => depRoutes}
+@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.repository.{routes => repositoryRoutes}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
+@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
+
+@this()
+
+@(blogs      : List[ConfluenceConnector.Blog]
+, allBlogsUrl: String
+)(implicit
+ request     : RequestHeader
+)
+
+@standard_layout() {
+
+    <section class="section-wrapper">
+        <h1 class="page-heading">Welcome to the MDTP Catalogue</h1>
+        <p>Here you can explore information about all the
+            <a aria-label="link to services list" id="link-to-services-list" href="@repositoryRoutes.RepositoriesController.allServices">different services</a>
+            and <a aria-label="link to libraries list" id="link-to-libraries-list" href="@repositoryRoutes.RepositoriesController.allLibraries">libraries</a> in use on the platform,
+            <a aria-label="link to wrw page" id="link-to-wrw-page" href="@wrwRoutes.WhatsRunningWhereController.releases()">where they are running</a> and
+            their <a aria-label="link to deployment page" id="link-to-deployments-page" href="@depRoutes.DeploymentEventsController.deploymentEvents(Environment.Production)">recent deployments</a>,
+            what <a aria-label="link to dependency explorer page" id="link-to-dependency-explorer-page" href="@appRoutes.DependencyExplorerController.landing">dependencies</a>
+            and config they use, and <a aria-label="link to teams page" id="link-to-teams-page" href="@teamsRoutes.TeamsController.allTeams()">who</a> maintains them.
+            You can also <a aria-label="link to shuttering page" id="link-to-shuttering-overview-page" href="@shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend)">shutter your service</a> to the outside world,
+            <a aria-label="link to bobby rules" id="link-to-bobby-rules" href="@appRoutes.BobbyExplorerController.list()">view bobby rules</a>, see what
+            <a aria-label="link to jdk explorer page" id="link-to-jdk-explorer-page" href="@appRoutes.JdkVersionController.compareAllEnvironments()">JDK versions are in use</a>, discover
+            <a aria-label="link to search by url page" id="link-to-search-by-url-page" href="@appRoutes.SearchByUrlController.searchLanding">which service corresponds to a given URL</a>, and more to come!
+
+        @if(blogs.nonEmpty) {
+            <h2>Blog Posts</h2>
+            These are all the recent blog posts published by PlatOps, right here for your convenience!
+
+            <div id="blog-posts" class="recent-box">
+                <div class="content-grow content-grow-gradient">
+                    <div class='content-grow-wrapper'>
+                        <table>
+                            @blogs.map { blog =>
+                                <tr>
+                                    <td>@{
+                                        blog.createdDate.dateOnlyFormat
+                                    }</td>
+                                    <td>
+                                        <a aria-label="link to blog" id="link-to-@{blog.title.toLowerCase.replace(" ", "-")}-blog-post" href="@{blog.url}">@{blog.title}
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                        <a aria-label="link to more blogs" id="link-to-more-blogs" href="@allBlogsUrl"> See more blogs</a>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <a id="see-all-expand-box" href="#" title="See all" class="content-grow-expand-link glyphicon glyphicon-chevron-down">
+                    </a>
+                </div>
+            </div>
+        }
+    </section>
+
+    <section class="section-wrapper">
+        <h2 id="maintenance">How is the MDTP catalogue updated?</h2>
+
+        <p>All the data you see here is pulled and rendered automatically from various sources including Github and UMP.
+            If you <span id="egg">notice something</span> is not quite right you can usually fix it by updating those directly, and when we next refresh
+            the data you will see it change here.
+
+            If you have any queries, feel free to reach out to <a id="link-to-platops-slack" href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"/></a>
+        </p>
+
+        <div class="platops" id="platops">
+            <div class="neon-center"><span class="fast-flicker">Brough</span>t__to__y<span class="flicker">o</span>u__by__Team__Platops</div>
+            <div class="neon-random"><span class="fast-flicker">l</span>u<span class="flicker">k</span>e</div>
+            <div class="neon-random"><span class="fast-flicker">al</span>e<span class="flicker">x</span></div>
+            <div class="neon-random"><span class="fast-flicker">g</span>er<span class="flicker">al</span>d</div>
+            <div class="neon-random"><span class="fast-flicker">n</span>ic<span class="flicker">k</span></div>
+            <div class="neon-random"><span class="flicker">c</span>ol<span class="fast-flicker">i</span>n</div>
+            <div class="neon-random"><span class="fast-flicker">jo</span>rd<span class="flicker">an</span></div>
+            <div class="neon-random"><span class="fast-flicker">j</span>on<span class="flicker">n</span>y</div>
+            <div class="neon-random"><span class="fast-flicker">p</span>e<span class="flicker">t</span>e</div>
+            <div class="neon-random"><span class="fast-flicker">s</span>un<span class="flicker">n</span>y</div>
+            <div class="neon-random"><span class="flicker">vi</span>ct<span class="fast-flicker">or</span></div>
+            <div class="neon-random"><span class="fast-flicker">s</span>a<span class="flicker">m</span></div>
+            <div class="neon-random"><span class="fast-flicker">r</span>i<span class="flicker">k</span></div>
+        </div>
+    </section>
+}
+
+<!-- :) -->
+<script @CSPNonce.attr src="@routes.Assets.versioned("egg.js")"></script>
+<link rel="stylesheet" href="@routes.Assets.versioned("egg.css")" />

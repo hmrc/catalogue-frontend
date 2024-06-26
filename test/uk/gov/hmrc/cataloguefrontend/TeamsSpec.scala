@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest.BeforeAndAfter
 import play.api.libs.ws.readableAsString
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 
 
 class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {

@@ -23,9 +23,9 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.repository
+import uk.gov.hmrc.cataloguefrontend.views.html.RepositoriesListPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.RepositoriesListPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

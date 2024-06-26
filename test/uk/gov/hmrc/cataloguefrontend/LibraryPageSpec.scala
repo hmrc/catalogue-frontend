@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, TeamsAndRepositoriesJsonData}
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 
 class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
 

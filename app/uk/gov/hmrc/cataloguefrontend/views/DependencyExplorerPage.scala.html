@@ -1,0 +1,318 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
+@import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, GroupArtefacts, RepoWithDependency}
+@import views.html.helper.FieldConstructor
+
+@this(
+  teamNamesPartial: partials.TeamNamesPartial
+)
+
+@(form            : Form[?],
+  teams           : Seq[TeamName],
+  flags           : Seq[SlugInfoFlag],
+  repoTypes       : Seq[RepoType],
+  scopes          : Seq[DependencyScope],
+  groupArtefacts  : List[GroupArtefacts],
+  versionRange    : VersionRange,
+  searchResults   : Option[Seq[RepoWithDependency]],
+  pieData         : Option[PieData]
+)(implicit
+  request         : RequestHeader,
+  messagesProvider: MessagesProvider
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(bootstrapCompatibleFieldConstructor.f) }
+
+@standard_layout("Dependency Explorer", active = "explore") {
+    <h1 class="page-heading mt-4" id="search-service-header">Dependency Explorer</h1>
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+
+    <div id="service-list">
+
+        @partials.form_global_errors(form)
+
+        @helper.form(
+            action            =  appRoutes.DependencyExplorerController.search()
+            , Symbol("class") -> "px-2 needs-validation"
+            , Symbol("id")    -> "search-by-dependency-form"
+            , Symbol("novalidate")    -> ""
+        ) {
+            <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-md-7 mb-3">
+                        <dl>
+                          <dt><label class="form-label" for="group-artefact-search">Group:Artefact</label></dt>
+                          <dd class="position-relative">
+                            <input id="group-artefact-search" class="form-control" type="text" value="@DependencyExplorerController.groupArtefactFromForm(form)" autocomplete="off" />
+                            <div id="group-artefact-matches" class="search-matches-dropdown d-none"></div>
+                          </dd>
+                        </dl>
+                        <input id="group" name="group" value='@form("group").value' type="hidden" />
+                        <input id="artefact" name="artefact" value='@form("artefact").value' type="hidden" />
+                    </div>
+                    <div class="col-md-5">
+                        <dl>
+                          <dt>
+                            <label class="form-label" for="lbValue">Version Range</label>
+                          </dt>
+                          <dd>
+                            <div class="row">
+                              <div class="col-3 col-md-3 pe-0">
+                                  <input class="form-control border-end-0 rounded-end-0" id="lbValue" type="text" placeholder="0.0.0" value="@versionRange.lowerBound.map(_.version)" />
+                              </div>
+                              <div class="col-2 col-md-2 ps-0">
+                                  <select aria-label="Lower Bound Inclusive"  id="lbInclusive" class="form-select rounded-start-0">
+                                      <option value="false" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
+                                      <option value="true" @if(versionRange.lowerBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
+                                  </select>
+                              </div>
+                              <div class="col-2 col-md-2 p-0">
+                                <input aria-label="Version" class="form-control form-control-plaintext text-center" type="text" value="version" tabindex="-1" readonly>
+                              </div>
+                              <div class="col-2 col-md-2 pe-0">
+                                  <select aria-label="Upper Bound Inclusive"  id="ubInclusive" class="form-select border-end-0 rounded-end-0">
+                                      <option value="false" @if(versionRange.upperBound.map(_.inclusive).getOrElse(false)) { selected }>&lt;</option>
+                                      <option value="true" @if(versionRange.upperBound.map(_.inclusive).getOrElse(true)) { selected }>&lt;=</option>
+                                  </select>
+                              </div>
+                              <div class="col-3 col-md-3 ps-0">
+                                  <input aria-label="Upper Bound Value" class="form-control rounded-start-0" id="ubValue" type="text" value="@versionRange.upperBound.map(_.version)">
+                              </div>
+                            </div>
+                          </dd>
+                        </dl>
+                    </div>
+                    <input type="hidden" id="versionRange" name="versionRange" value="@form("versionRange").value" />
+                    <input type="hidden" id="asCsv" name="asCsv" value="false" />
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        @helper.select(
+                            field                 = form("team"),
+                            options               = teams.map(t => (t.asString, t.asString)),
+                            Symbol("_default")    -> "All teams",
+                            Symbol("_label")      -> "Team",
+                            Symbol("_labelClass") -> "form-label",
+                            Symbol("class")       -> "form-select"
+                        )
+                    </div>
+                    <div class="col-md-2">
+                        @helper.select(
+                            field                 =  form("flag"),
+                            options               =  flags.map(f => (f.asString, f.displayString)),
+                            Symbol("_label")      -> "Flag",
+                            Symbol("_labelClass") -> "form-label",
+                            Symbol("class")       -> "form-select"
+                        )
+                    </div>
+                    <div class="col-md-2">
+                        @helper.select(
+                            field                 =  form("repoType"),
+                            options               =  repoTypes.map(r => (r.asString, r.asString)),
+                            Symbol("_label")      -> "Repository Type",
+                            Symbol("_labelClass") -> "form-label",
+                            Symbol("class")       -> "form-select",
+                            Symbol("size")        -> repoTypes.size,
+                            Symbol("multiple")    -> None
+                        )
+                    </div>
+                    <div class="col-md-2">
+                        @helper.select(
+                            field                 =  form("scope"),
+                            options               =  scopes.map(s => (s.asString, s.displayString)),
+                            Symbol("_label")      -> "Scope",
+                            Symbol("_labelClass") -> "form-label",
+                            Symbol("class")       -> "form-select",
+                            Symbol("size")        -> scopes.size,
+                            Symbol("multiple")    -> None
+                        )
+                    </div>
+                </div>
+                <div>
+                    <button id="search-button" class="btn btn-success" type="submit">Search</button>
+                    <input type="button" id="export-button-1" class="btn btn-outline-secondary" value="Export as CSV"/>
+                </div>
+            </div>
+        }
+
+        @searchResults match {
+            case None                => {
+                <ul class="list"/>
+            }
+            case Some(Nil)           => {
+                <p id="search-results-empty" class="pt-2">This search did not return any results.</p>
+                <ul class="list"/>
+            }
+            case Some(searchResults) => {
+                <p class="mt-3">Found @searchResults.size results</p>
+
+                <div id="chart_div" align="center"></div>
+
+                <table id="search-results" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" ><button class="sort no-border fw-bold" data-sort="service">Service</button></th>
+                            <th rowspan="2" >Version</th>
+                            <th rowspan="2" ><button class="sort no-border fw-bold" data-sort="teams">Team</button></th>
+                            <th rowspan="2" >Repository Type</th>
+                            <th colspan="2" >
+                                <div class="text-center border-bottom">@{searchResults.head.depGroup}:@{searchResults.head.depArtefact}</div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <button class="sort no-border fw-bold" data-sort="dep-version">Version</button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        Scope
+                                    </div>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="list">
+                        @for(result <- searchResults) {
+                            <tr>
+                                <td class="service"><a aria-label="Link to page info for @{result.repoName}" id="link-to-info-page-for-@{result.repoName}"
+                                href=@{if(result.repoType == RepoType.Service) appRoutes.CatalogueController.service(ServiceName(result.repoName)) else appRoutes.CatalogueController.repository(result.repoName) }>@result.repoName</a>
+                                </td>
+                                <td>@result.repoVersion</td>
+                                <td class="teams">
+                                    @teamNamesPartial(result.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(ServiceName(result.repoName))}#owning-team")
+                                </td>
+                                <td>@result.repoType</td>
+                                <td class="dep-version">@result.depVersion</td>
+                                <td>@result.scopes.map(_.displayString).mkString(", ")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        }
+    </div>
+
+    <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+    <script @CSPNonce.attr>
+        @if(searchResults.exists(_.nonEmpty)) {
+          let options = { valueNames: [ 'service', 'teams', 'dep-version' ] };
+          new List('service-list', options);
+        }
+
+        const allGroupArtefacts = [
+            @for(ga <- groupArtefacts) {
+                @for(artefact <- ga.artefacts) {
+                    '@ga.group:@artefact',
+                }
+            }
+        ]
+
+        function setRepoTypeVisibilty() {
+            repoType.disabled = (flag.value !== "latest");
+            if (flag.value !== "latest") {
+                var repoTypes = document.getElementById("repoType").options;
+                for (var i = 0; i < repoTypes.length; i++) {
+                    if (repoTypes[i].value !== "Service")
+                        repoTypes[i].selected = false;
+                }
+            }
+        }
+
+        document.getElementById("flag").addEventListener("click", function () {
+            setRepoTypeVisibilty();
+        });
+
+
+        function exportAsCsv() {
+            document.getElementById('asCsv').value = true;
+            document.getElementById('search-by-dependency-form').dispatchEvent(new Event("submit")); // Call form listener
+            document.getElementById('search-by-dependency-form').submit();
+            document.getElementById('asCsv').value = false;  // fixes browser back button issue
+        }
+
+        document.getElementById("export-button-1").addEventListener("click", function() {
+            exportAsCsv()
+        });
+
+        function updateGroupArtefact() {
+            let parts = document.getElementById('group-artefact-search').value.split(':');
+            document.getElementById('group').value = parts[0];
+            document.getElementById('artefact').value = parts[1];
+        }
+
+        function updateVersionRange() {
+            const lbValue      = document.getElementById('lbValue').value;
+            const lbInclusive  = document.getElementById('lbInclusive').value;
+            const ubInclusive  = document.getElementById('ubInclusive').value;
+            const ubValue      = document.getElementById('ubValue').value;
+
+            let rangeStart = lbInclusive == 'true' ? '[' : '(';
+            let rangeFrom  = lbValue ? lbValue : '0.0.0';
+            let rangeEnd   = ubInclusive == 'true' ? ']' : ')';
+
+            document.getElementById('versionRange').value = rangeStart + rangeFrom + ',' + ubValue + rangeEnd;
+        }
+
+        document.getElementById("search-by-dependency-form").addEventListener("submit", function() {
+            updateGroupArtefact();
+            updateVersionRange();
+        });
+
+        autoCompleteInit({
+            formId:        "search-by-dependency-form",
+            inputSearchId: "group-artefact-search",
+            matchesDivId:  "group-artefact-matches",
+            allowPartial:  false,
+            ignoreCase:    true,
+            values:        allGroupArtefacts
+        });
+
+        window.onload = setRepoTypeVisibilty();
+    </script>
+
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load('current', {'packages': ['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+        function drawChart() {
+
+            @pieData match {
+                case None => {}
+                case Some(pd) => {
+
+                    var data = new google.visualization.DataTable();
+                    var x =   Math.floor((Math.random() * 10) + 1);
+                    data.addColumn('string', 'Version');
+                    data.addColumn('number', 'Count');
+                    data.addRows([
+                        @for(r <- pd.results) {
+                        ['@r._1', @r._2],
+                        }
+                    ]);
+
+                    var options = { 'title'    : '@pd.title',
+                                    'width'    : "80%",
+                                    'height'   : 200,
+                                    'chartArea': { 'width': '100%',
+                                                'height': '100%'}};
+                    var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+                    chart.draw(data, options);
+                }
+            }
+        }
+    </script>
+}

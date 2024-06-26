@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 
 class CreateTestRepoFormSpec extends UnitSpec {
 

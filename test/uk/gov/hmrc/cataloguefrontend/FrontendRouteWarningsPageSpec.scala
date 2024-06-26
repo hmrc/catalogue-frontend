@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import com.github.tomakehurst.wiremock.http.RequestMethod._
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 
 class FrontendRouteWarningsPageSpec extends UnitSpec with FakeApplicationBuilder {
 

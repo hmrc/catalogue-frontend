@@ -24,9 +24,9 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
+import uk.gov.hmrc.cataloguefrontend.views.html.shuttering.ShutterEventsPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.shuttering.ShutterEventsPage
 
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal

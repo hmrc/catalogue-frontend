@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import uk.gov.hmrc.cataloguefrontend.DateHelper.atStartOfDayInstant
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
+import uk.gov.hmrc.cataloguefrontend.util.DateHelper.atStartOfDayInstant
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{Clock, LocalDate}

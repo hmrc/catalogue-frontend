@@ -1,0 +1,163 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigWarning, ServiceConfigsService, routes => serviceConfigsRoutes}
+@import views.html.helper
+
+@this()
+
+@(form            : Form[ConfigWarning.ConfigWarningForm],
+  allServices     : Seq[GitRepository],
+  groupedByService: Option[Map[ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, Seq[ServiceConfigsService.ConfigWarning]]]]] = None
+)(implicit
+  messages: Messages,
+  request : RequestHeader
+)
+
+@standard_layout("Config Warnings", active = "explore") {
+    <h1 class="page-heading mt-4">
+        Config Warnings
+        <a class="float-end" role="button" data-bs-toggle="collapse" href="#helpText" aria-expanded="false" aria-controls="helpText" title="Shows information on how to use this page">
+            <i class="glyphicon glyphicon-question-sign text-black"></i>
+        </a>
+    </h1>
+
+    <div class="collapse mb-3" id="helpText">
+        <div class="card">
+            <div class="card-body">
+                <div class="h4 fw-bold">How to use this page?</div>
+
+                <ul>
+                    <li>Select a service to see any configuration warnings.</li>
+                    <li>Click on the warning to see the value in context in the Config Explorer.</li>
+                    <li>The warnings are not necessarily errors, but warrant a review.</li>
+                    <li>The warning types currently detected are:
+                        <ul>
+                            <li><code>NotOverriding</code> Config doesn't appear to override any existing key. This may be legitimate, e.g. dynamic keys. But if often an indicator of an unused key which can be cleaned up or a misspelling. Note, always try to provide a default value in <code>application.conf</code>.</li>
+                            <li><code>TypeChange</code> Config value overrides a value with different a type. This will probably break deployment.</li>
+                            <li><code>Localhost</code> Use of localhost in value.</li>
+                            <li><code>Debug</code> Use of Debug log level. This should only be enabled briefly in Production.</li>
+                            <li><code>TestOnlyRoutes</code> Use of test only routes. This should not be enabled in Production</li>
+                            <li><code>ReactiveMongoConfig</code> Use of obsolete reactivemongo config. These will have no effect with the official mongo driver.</li>
+                            <li><code>Unencrypted</code> Value looks like it should be encrypted</li>
+                        </ul>
+                    </li>
+                </ul>
+          </div>
+
+        </div>
+    </div>
+
+    @partials.form_global_errors(form)
+
+    @helper.form(
+        action          =  serviceConfigsRoutes.ServiceConfigsController.configWarningResults(),
+        Symbol("id")    -> "form",
+    ) {
+        <div class="row mb-3">
+            <label for="service-name" class="col-1 col-form-label fw-bold">Service</label>
+            <div class="col-4 position-relative">
+                <input class="form-control" id="service-name" type="text" name="serviceName" value='@form("serviceName").value' autocomplete="off" required="required"/>
+                <div id="service-name-matches" class="search-matches-dropdown d-none" style="padding-right: 24px"></div>
+            </div>
+            <div class="col-1">
+                <button id="config-search" class="btn btn-success" type="submit">Search</button>
+            </div>
+        </div>
+    }
+
+    @if(groupedByService.isEmpty) {
+
+    } else if(groupedByService.exists(_.isEmpty)) {
+        <p>No results found.</p>
+    } else {
+        @defining(groupedByService.map(_.values.flatMap(_.values).flatMap(_.keys).toList).toList.flatten.distinct.sorted) { environments =>
+            <table id="search-results" class="table table-striped always-wrap sticky-header" style="table-layout:fixed">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        @for(env <- environments) {
+                            <th id="@{env.asString}-tr">@env.displayString</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @groupedByService.map { res =>
+                        @for((serviceName, configByKey) <- res) {
+                            <tr class="@if(configByKey.size > 1) {sticky-row-caption} else {row-caption} ">
+                                <td colspan="@(environments.size + 1)">
+                                    Results for <a href="@appRoutes.CatalogueController.repository(serviceName.asString).url" title="Link to Service Page">@serviceName.asString</a>
+                                </td>
+                            </tr>
+                            @for((configKey, configByEnv) <- configByKey) {
+                                <tr>
+                                    <td><code>@configKey.asString</code></td>
+                                    @for(env <- environments) {
+                                        <td id="@{env.asString}-td">@displayConfigSourceValue(serviceName, configKey, env, configByEnv.get(env))</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+    <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+    <script @CSPNonce.attr>
+        autoCompleteInit({
+            formId:        "form",
+            inputSearchId: "service-name",
+            matchesDivId:  "service-name-matches",
+            allowPartial:  false,
+            ignoreCase:    true,
+            submitOnSelection : true,
+            values:        [@for(service <- allServices) {'@service.name',}]
+        });
+    </script>
+}
+
+@displayConfigSourceValue(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[Seq[ServiceConfigsService.ConfigWarning]]) = {
+    @result match {
+        case None => {
+        }
+        case Some(configWarnings) => {
+            @configWarnings.map { envData =>
+                <ul class="list-unstyled mb-0">
+                    <li>
+                        <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(configKey)).url"
+                           data-bs-toggle="popover"
+                           data-bs-trigger="hover"
+                           data-bs-placement="bottom"
+                           data-bs-html="true"
+                           data-bs-content='@popoverContent(envData, env)'>
+                            @envData.warning
+                        </a>
+                    </li>
+                </ul>
+            }
+        }
+    }
+}
+
+@popoverContent(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
+    <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
+    <div><strong>Value:</strong> @play.twirl.api.XmlFormat.escape(warning.value.displayString)</div>
+    <div><strong>@warning.warning:</strong> @ServiceConfigsService.warningDescription(warning.warning)</div>
+}

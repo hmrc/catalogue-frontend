@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.deployments
 
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 
 import java.time.LocalDate
 

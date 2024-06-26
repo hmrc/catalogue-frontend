@@ -1,0 +1,205 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.deployments.{DeploymentGraphService, TimelinePalette}
+@import uk.gov.hmrc.cataloguefrontend.routes.CatalogueController
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
+@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
+
+@import java.time.Instant
+
+@this()
+
+@(service : Option[ServiceName],
+  start   : Instant,
+  end     : Instant,
+  events  : Seq[DeploymentTimelineEvent],
+  slugInfo: Seq[ServiceDependencies],
+  services: Seq[String]
+)(implicit
+  request: RequestHeader
+)
+
+@colorForVersion(version: String) = @{
+    if(version == DeploymentGraphService.notDeployedMessage) {
+      "color: #ccc"
+    } else {
+      TimelinePalette.rgb(Math.abs(version.hashCode) % TimelinePalette.rgb.length)
+    }
+}
+
+@previousJavaVersion(env: Environment, version: Version, events: Seq[DeploymentTimelineEvent], slugInfo: Seq[ServiceDependencies]): String = @{
+    val currentIndex = events.indexWhere(e => e.env == env && e.version == version)
+    if (currentIndex > 0) {
+        val previousVersion = events(currentIndex - 1).version
+        slugInfo.find(_.version == previousVersion).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")
+    } else {
+        "unknown"
+    }
+}
+
+@standard_layout("Deployment Timeline", active = "deployments") {
+    <style>
+        .timeline-tooltip {
+            padding: 6px;
+        }
+    </style>
+    <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load("current", {packages:["timeline"]});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+
+            let data = [
+                @events.map { e =>
+                    ['@e.env',
+                    '@{e.version.toString}',
+                    makeToolTip(
+                        '@{e.version}',
+                        '@{e.userName}',
+                        '@{e.displayStart.getOrElse(e.start).displayFormat}',
+                        '@{e.displayEnd.getOrElse(e.end).displayFormat}',
+                        @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
+                        '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")}',
+                        '@previousJavaVersion(e.env, e.version, events, slugInfo)',
+                        '@{e.configChanged.getOrElse("undefined")}'
+                    ),
+                    '@colorForVersion(e.version.toString)',
+                    new Date(@{e.start.toEpochMilli}),
+                    new Date(@{e.end.toEpochMilli}),
+                ], }
+
+            ]
+
+            let options = {tooltip: { isHtml: true }, enableInteractivity: true};
+            let container = document.getElementById('history-chart');
+            if (container == null) return
+            let chart = new google.visualization.Timeline(container);
+            let dataTable = new google.visualization.DataTable();
+            dataTable.addColumn({ type: 'string', id: 'Position' });
+            dataTable.addColumn({ type: 'string', id: 'Name' });
+            dataTable.addColumn({ type: 'string', role: 'tooltip' });
+            dataTable.addColumn({ type: 'string', role: 'style'});
+            dataTable.addColumn({ type: 'date', id: 'Start' });
+            dataTable.addColumn({ type: 'date', id: 'End' });
+
+            dataTable.addRows(data);
+            chart.draw(dataTable, options);
+        }
+
+        function makeToolTip(ver, user, start, end, days, java, previousJava, configChanged) {
+            let javaVersionChange = (java !== previousJava) ? `Changed from ${previousJava} to ${java}` : `${java}`;
+            let configChangeRow = '';
+
+            if (configChanged !== "undefined") {
+                configChangeRow = `<tr><th class="text-dark">Config Changed</th><td>${configChanged === "true" ? 'Yes' : 'No'}</td></tr>`;
+            }
+
+            if (ver === "@DeploymentGraphService.notDeployedMessage") {
+                return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
+            }
+            return `<div class="timeline-tooltip" style="width:250px">
+                        <table class="table table-striped mb-0">
+                            <tr><th class="text-dark">${ver}</th><td>Deployed for ${days} days</td></tr>
+                            <tr><th class="text-dark">By</th><td>${user}</td></tr>
+                            <tr><th class="text-dark">From</th><td>${start} UTC</td></tr>
+                            <tr><th class="text-dark">To</th><td>${end} UTC</td></tr>
+                            <tr><th class="text-dark">Java</th><td>${javaVersionChange}</td></tr>
+                            ${configChangeRow}
+                        </table>
+                    </div>`
+        }
+    </script>
+
+    <h1 class="page-heading mt-4">Deployment Timeline @service.map { s => <a id="link-to-service-info-page" href="@CatalogueController.service(s)">- @s.asString</a>}</h1>
+
+    <form id="form" action="" method="get">
+        <div class="form-group row">
+            <div class="col-md-6">
+              <dl>
+                <dt>
+                  <label class="form-label" for="service-search" >Service</label>
+                </dt>
+                <dd class="position-relative">
+                  <input id="service-search" name="service" value="@service" class="form-control" type="text" list="services" autocomplete="off">
+                  <div id="service-matches" class="search-matches-dropdown d-none"></div>
+                </dd>
+              </dl>
+            </div>
+
+            <div class="col-md-2">
+                <dl>
+                    <dt>
+                        <label for="start" class="form-label">Date From</label>
+                    </dt>
+                    <dd>
+                        <input type="date" id="start" name="start" value="@start.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-2">
+                <dl>
+                    <dt>
+                        <label for="end" class="form-label">Date To</label>
+                    </dt>
+                    <dd>
+                        <input type="date" id="end" name="end" value="@end.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-2" style="padding-top: 30px;">
+                <button id="form-submit-button" type="submit" value="Submit" class="btn btn-success">Submit</button>
+            </div>
+        </div>
+    </form>
+
+    @if(events.isEmpty) {
+        @if(start.equals(end) || start.isAfter(end)) {
+            <p class="red">Start date must be before the End date.</p>
+        }
+        @if(services.contains(service)) {
+            <p>No data in this date range.</p>
+        }
+    } else {
+        <div id="history-chart" style="height: 300px;"></div>
+    }
+}
+
+<script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+
+<script @CSPNonce.attr>
+        autoCompleteInit({
+          formId       : "form",
+          inputSearchId: "service-search",
+          matchesDivId : "service-matches",
+          allowPartial : false,
+          ignoreCase   : true,
+          values       : [@for(service <- services) {'@service',}],
+          minSearch    : 1
+        });
+</script>
+
+<script @CSPNonce.attr>
+  ["start", "end", "service"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+</script>

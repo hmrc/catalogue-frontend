@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import play.api.Logger
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
+import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2

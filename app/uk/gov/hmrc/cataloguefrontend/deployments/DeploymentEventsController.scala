@@ -24,10 +24,10 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
+import uk.gov.hmrc.cataloguefrontend.views.html.deployments.DeploymentEventsPage // TODO why nott deployments.views.html
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Pagination, ReleasesConnector}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.deployments.DeploymentEventsPage
 
 import java.time.LocalDate
 import javax.inject.{Inject, Singleton}

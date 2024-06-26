@@ -11,7 +11,6 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     scalaVersion := "3.3.3",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
-    // ***************
     RoutesKeys.routesImport ++= Seq(
       "uk.gov.hmrc.cataloguefrontend.model._",
       "uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType",
@@ -24,6 +23,9 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.cataloguefrontend.model._",
       "uk.gov.hmrc.cataloguefrontend.util.ViewHelper.csrfFormField",
       "views.html.helper.CSPNonce",
+      "uk.gov.hmrc.cataloguefrontend.views.html.helper._",
+      "uk.gov.hmrc.cataloguefrontend.views.html.partials",
+      "uk.gov.hmrc.cataloguefrontend.views.html.standard_layout",
       "uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches"
     ),
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html

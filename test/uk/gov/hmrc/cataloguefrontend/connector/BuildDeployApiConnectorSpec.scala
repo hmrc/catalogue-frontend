@@ -25,7 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncReq
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepoForm
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig

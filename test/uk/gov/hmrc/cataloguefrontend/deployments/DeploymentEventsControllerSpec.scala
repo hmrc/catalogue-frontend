@@ -23,16 +23,17 @@ import play.api.Configuration
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.DateHelper
+import uk.gov.hmrc.cataloguefrontend.views.html.deployments.DeploymentEventsPage
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
-import uk.gov.hmrc.cataloguefrontend.{DateHelper, FakeApplicationBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
-import views.html.deployments.DeploymentEventsPage
 
 import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}

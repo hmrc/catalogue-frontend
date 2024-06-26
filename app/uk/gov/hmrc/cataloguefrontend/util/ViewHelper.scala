@@ -14,12 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.util
+package uk.gov.hmrc.cataloguefrontend.util // TODO move to view
 
 import play.api.mvc.RequestHeader
 import play.twirl.api.Html
+import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
+
 
 object ViewHelper:
   def csrfFormField(implicit request: RequestHeader): Option[Html] =
     play.filters.csrf.CSRF.getToken(request)
       .map(_ => views.html.helper.CSRF.formField(request))
+
+  def teamNamesSortedByOwningTeam(repo: GitRepository): Seq[TeamName] =
+    repo.teamNames.sortBy(tn => (!repo.isDeFactoOwner(tn), tn))
+
+  def githubBadgeType(gr: GitRepository): String =
+    if gr.isPrivate
+    then "Private"
+    else "Public"

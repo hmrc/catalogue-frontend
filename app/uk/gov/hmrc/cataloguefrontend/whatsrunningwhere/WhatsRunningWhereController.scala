@@ -23,9 +23,9 @@ import play.api.i18n.Messages.implicitMessagesProviderToMessages
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.views.html.whatsrunningwhere.WhatsRunningWherePage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.whatsrunningwhere.WhatsRunningWherePage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

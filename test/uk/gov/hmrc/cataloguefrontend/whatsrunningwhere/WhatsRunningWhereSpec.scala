@@ -21,7 +21,7 @@ import org.scalatest._
 import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.{FakeApplicationBuilder, WireMockEndpoints}
 import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, TeamsAndRepositoriesJsonData}
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 
 class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder with WireMockEndpoints {
 

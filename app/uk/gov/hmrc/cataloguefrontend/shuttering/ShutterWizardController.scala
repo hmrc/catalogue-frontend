@@ -33,7 +33,7 @@ import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.shuttering.shutterService._
+import uk.gov.hmrc.cataloguefrontend.views.html.shuttering.shutterService.{Page1, Page2a, Page2b, Page3, Page4}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
