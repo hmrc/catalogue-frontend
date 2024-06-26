@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope}
+@import uk.gov.hmrc.cataloguefrontend.dependency.{routes => dependencyRoutes}
 
 @this()
 
@@ -74,9 +75,9 @@
 </div>
 
 @graphLink(serviceName: ServiceName, version: Version, scope: DependencyScope) = {
-  <a id="@rootId-view-dependency-graph" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.graphs(serviceName, version.toString, scope.asString)">View Dependency Graph</a>
+  <a id="@rootId-view-dependency-graph" href="@dependencyRoutes.DependenciesController.graphs(serviceName, version.toString, scope.asString)">View Dependency Graph</a>
 }
 
 @dependenciesLink(serviceName: ServiceName, version: Version) = {
-  <a id="@rootId-view-dependency-list" href="@uk.gov.hmrc.cataloguefrontend.routes.DependenciesController.service(serviceName, version.toString)">View Dependency List</a>
+  <a id="@rootId-view-dependency-list" href="@dependencyRoutes.DependenciesController.service(serviceName, version.toString)">View Dependency List</a>
 }

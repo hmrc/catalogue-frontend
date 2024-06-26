@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.dependency
 
 import cats.data.EitherT
 import cats.implicits._
@@ -27,10 +27,10 @@ import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, RepoWithDependency}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.dependency.view.html.DependencyExplorerPage
 import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, FormUtils}
-import uk.gov.hmrc.cataloguefrontend.view.html.DependencyExplorerPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -259,7 +259,7 @@ object DependencyExplorerController {
     artefact    : String,
     versionRange: VersionRange
   ): String =
-    uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search(
+    uk.gov.hmrc.cataloguefrontend.dependency.routes.DependencyExplorerController.search(
       group        = group,
       artefact     = artefact,
       `scope[]`    = Some(scopes.map(_.asString)),

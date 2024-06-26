@@ -22,9 +22,9 @@ import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.deployments.view.html.DeploymentEventsPage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
-import uk.gov.hmrc.cataloguefrontend.view.deployments.html.DeploymentEventsPage
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Pagination, ReleasesConnector}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController

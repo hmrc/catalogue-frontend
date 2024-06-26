@@ -27,7 +27,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
 import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
-import uk.gov.hmrc.cataloguefrontend.view.search.html.SearchResults
+import uk.gov.hmrc.cataloguefrontend.search.view.html.SearchResults
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 
 import scala.concurrent.ExecutionContext

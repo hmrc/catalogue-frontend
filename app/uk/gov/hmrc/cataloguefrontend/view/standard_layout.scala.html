@@ -15,16 +15,17 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
+@import uk.gov.hmrc.cataloguefrontend.costs.{routes => costsRoutes}
+@import uk.gov.hmrc.cataloguefrontend.dependency.{routes => dependencyRoutes}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthIndRoutes}
 @import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
-@import uk.gov.hmrc.cataloguefrontend.costs.{routes => costsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
+@import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 @import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-@import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 
 @(title      : String = "Home",
   active     : String = "",
@@ -177,7 +178,7 @@
                             Explore
                         </a>
                         <ul id="explore-menu" class="dropdown-menu">
-                            <li><a id="link-to-dependency-explorer" class="dropdown-item" href="@appRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
+                            <li><a id="link-to-dependency-explorer" class="dropdown-item" href="@dependencyRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
                             <li><a id="link-to-jdk-explorer" class="dropdown-item" href="@appRoutes.JdkVersionController.compareAllEnvironments()">JDK Explorer</a></li>
                             <li><a id="link-to-sbt-explorer" class="dropdown-item" href="@appRoutes.SbtVersionController.compareAllEnvironments()">SBT Explorer</a></li>
                             <li><a id="link-to-default-branch-names" class="dropdown-item" href="@appRoutes.CatalogueController.allDefaultBranches()">Default Branch Names</a></li>

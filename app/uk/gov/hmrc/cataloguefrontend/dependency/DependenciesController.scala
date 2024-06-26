@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.dependency
 
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.utils.UriEncoding
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
+import uk.gov.hmrc.cataloguefrontend.dependency.view.html.{DependencyGraphsPage, DependenciesPage}
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.view.html.DependenciesPage
-import uk.gov.hmrc.cataloguefrontend.view.dependencies.html.DependencyGraphs
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -38,7 +37,7 @@ class DependenciesController @Inject() (
   dependenciesService     : DependenciesService,
   whatsRunningWhereService: WhatsRunningWhereService,
   dependenciesPage        : DependenciesPage,
-  graphsPage              : DependencyGraphs,
+  dependencyGraphsPage    : DependencyGraphsPage,
   override val auth       : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
@@ -69,7 +68,7 @@ class DependenciesController @Inject() (
                            NotFound(s"No dependency data available for $name:$version:$scope")
                          )
        yield
-         Ok(graphsPage(
+         Ok(dependencyGraphsPage(
            name,
            dependencies.dotFileForScope(scope).map(d => UriEncoding.encodePathSegment(d, "UTF-8")),
            scope

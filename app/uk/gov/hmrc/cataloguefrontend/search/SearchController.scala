@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.search
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
-import uk.gov.hmrc.cataloguefrontend.view.search.html.SearchResults
+import uk.gov.hmrc.cataloguefrontend.search.view.html.SearchResults
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

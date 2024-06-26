@@ -24,8 +24,8 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.users.view.html.{UserInfoPage, UserListPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
-import uk.gov.hmrc.cataloguefrontend.view.users.html.{UserInfoPage, UserListPage}
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

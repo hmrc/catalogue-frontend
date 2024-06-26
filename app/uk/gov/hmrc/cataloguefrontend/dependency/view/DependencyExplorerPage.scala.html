@@ -14,8 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.dependency.{routes => dependencyRoutes}
+@import uk.gov.hmrc.cataloguefrontend.dependency.DependencyExplorerController
+@import uk.gov.hmrc.cataloguefrontend.dependency.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, GroupArtefacts, RepoWithDependency}
 @import views.html.helper.FieldConstructor
@@ -49,7 +51,7 @@
         @partials.form_global_errors(form)
 
         @helper.form(
-            action            =  appRoutes.DependencyExplorerController.search()
+            action            =  dependencyRoutes.DependencyExplorerController.search()
             , Symbol("class") -> "px-2 needs-validation"
             , Symbol("id")    -> "search-by-dependency-form"
             , Symbol("novalidate")    -> ""
