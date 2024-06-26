@@ -140,4 +140,106 @@ package object model:
         override def unbind(key: String, value: Version): Map[String, String] =
           Map(key -> value.original)
 
+  case class VersionBound(
+    version  : Version,
+    inclusive: Boolean
+  )
+
+  /** Iso to Either[Qualifier, (Option[LowerBound], Option[UpperBound])]*/
+  case class VersionRange(
+    lowerBound: Option[VersionBound],
+    upperBound: Option[VersionBound],
+    qualifier : Option[String],
+    range     : String
+  ):
+
+    def rangeDescr: Option[(String, String)] =
+      def comp(b: VersionBound) =
+        if b.inclusive then " <= " else " < "
+
+      if lowerBound.isDefined || upperBound.isDefined
+      then
+        Some(
+          ( lowerBound.map(b => s"${b.version} ${comp(b)}").getOrElse("0.0.0 <=")
+          , upperBound.map(b => s"${comp(b)} ${b.version}").getOrElse("<= ∞")
+          )
+        )
+      else None
+
+    override def toString: String =
+      range
+
+  end VersionRange
+
+  object VersionRange:
+
+    private val fixed      = """^\[(\d+\.\d+.\d+)\]""".r
+    private val fixedUpper = """^[\[\(],?(\d+\.\d+.\d+)[\]\)]""".r
+    private val fixedLower = """^[\[\(](\d+\.\d+.\d+),[\]\)]""".r
+    private val rangeRegex = """^[\[\(](\d+\.\d+.\d+),(\d+\.\d+.\d+)[\]\)]""".r
+    private val qualifier  = """^\[[-\*]+(.*)\]""".r
+
+    def parse(range: String): Option[VersionRange] =
+      val trimmedRange = range.replaceAll(" ", "")
+
+      PartialFunction
+        .condOpt(trimmedRange):
+          case fixed(v) =>
+            val fixed = VersionBound(Version(v), inclusive = true)
+              VersionRange(
+                lowerBound = Some(fixed),
+                upperBound = Some(fixed),
+                qualifier  = None,
+                range      = trimmedRange
+              )
+          case fixedUpper(v) =>
+            val ub = VersionBound(Version(v), inclusive = trimmedRange.endsWith("]"))
+            VersionRange(
+              lowerBound = None,
+              upperBound = Some(ub),
+              qualifier  = None,
+              range      = trimmedRange
+            )
+          case fixedLower(v) =>
+            val lb = VersionBound(Version(v), inclusive = trimmedRange.startsWith("["))
+            VersionRange(
+              lowerBound = Some(lb),
+              upperBound = None,
+              qualifier  = None,
+              range      = trimmedRange
+            )
+          case rangeRegex(v1, v2) =>
+            val lb = VersionBound(Version(v1), inclusive = trimmedRange.startsWith("["))
+            val ub = VersionBound(Version(v2), inclusive = trimmedRange.endsWith("]"))
+            VersionRange(
+              lowerBound = Some(lb),
+              upperBound = Some(ub),
+              qualifier  = None,
+              range      = trimmedRange
+            )
+          case qualifier(q) if q.length > 1 =>
+            VersionRange(
+              lowerBound = None,
+              upperBound = None,
+              qualifier  = Some(q),
+              range      = trimmedRange
+            )
+
+    end parse
+
+    def apply(range: String): VersionRange =
+      parse(range).getOrElse(sys.error(s"Could not parse range $range"))
+
+    val format: Format[VersionRange] =
+      new Format[VersionRange]:
+        override def reads(json: JsValue) =
+          json match
+            case JsString(s) => parse(s).map(v => JsSuccess(v)).getOrElse(JsError("Could not parse range"))
+            case _           => JsError("Not a string")
+
+        override def writes(v: VersionRange) =
+          JsString(v.range)
+
+  end VersionRange
+
 end model

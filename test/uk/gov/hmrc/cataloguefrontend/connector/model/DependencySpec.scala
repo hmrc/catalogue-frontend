@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.model.Version
+import uk.gov.hmrc.cataloguefrontend.model.{Version, VersionRange}
 
 class DependencySpec extends AnyWordSpec with Matchers {
 
@@ -75,8 +75,8 @@ class DependencySpec extends AnyWordSpec with Matchers {
       ).versionState shouldBe Some(VersionState.NewVersionAvailable)
     }
 
-    val activeViolation  = BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1)   )(using now = LocalDate.of(2000,1,2))
-    val pendingViolation = BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(using now = LocalDate.of(2000,1,2))
+    val activeViolation  = BobbyRuleViolation("banned library", VersionRange("[1.2.3]"), LocalDate.of(1,1,1)   )(using now = LocalDate.of(2000,1,2))
+    val pendingViolation = BobbyRuleViolation("banned library", VersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(using now = LocalDate.of(2000,1,2))
 
     "return BobbyRuleViolated if dependency has any broken bobby rules" in {
       Dependency(
@@ -119,7 +119,7 @@ class DependencySpec extends AnyWordSpec with Matchers {
       , group               = "uk.gov.hmrc"
       , currentVersion      = Version("1.2.3")
       , latestVersion       = Some(Version("2.2.3"))
-      , bobbyRuleViolations = Seq(BobbyRuleViolation("banned library",  BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))(using now = LocalDate.of(2000,1,2)))
+      , bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", VersionRange("[1.2.3]"), LocalDate.of(1,1,1))(using now = LocalDate.of(2000,1,2)))
       , scope               = DependencyScope.Compile
       )
 
@@ -128,7 +128,7 @@ class DependencySpec extends AnyWordSpec with Matchers {
       , group               = "uk.gov.hmrc"
       , currentVersion      = Version("1.2.3")
       , latestVersion       = Some(Version("2.2.3"))
-      , bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(using now = LocalDate.of(2000,1,2)))
+      , bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", VersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(using now = LocalDate.of(2000,1,2)))
       , scope               = DependencyScope.Compile
       )
 
@@ -156,7 +156,7 @@ class DependencySpec extends AnyWordSpec with Matchers {
       , group               = "uk.gov.hmrc"
       , currentVersion      = Version("1.2.3")
       , latestVersion       = Some(Version("2.2.3"))
-      , bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(1,1,1))(using now = LocalDate.of(2000,1,2)))
+      , bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", VersionRange("[1.2.3]"), LocalDate.of(1,1,1))(using now = LocalDate.of(2000,1,2)))
       , scope               = DependencyScope.Compile
       )
 
@@ -165,7 +165,7 @@ class DependencySpec extends AnyWordSpec with Matchers {
       , group               = "uk.gov.hmrc"
       , currentVersion      = Version("1.2.3")
       , latestVersion       = Some(Version("2.2.3"))
-      , bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", BobbyVersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(using now = LocalDate.of(2000,1,2)))
+      , bobbyRuleViolations = Seq(BobbyRuleViolation("banned library", VersionRange("[1.2.3]"), LocalDate.of(9999,1,1))(using now = LocalDate.of(2000,1,2)))
       , scope               = DependencyScope.Compile
       )
 

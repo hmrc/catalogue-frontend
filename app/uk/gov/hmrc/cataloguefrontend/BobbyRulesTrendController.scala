@@ -20,10 +20,9 @@ import cats.data.EitherT
 import cats.instances.future._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, VersionRange}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.BobbyRulesTrendPage
@@ -134,7 +133,7 @@ class BobbyRulesTrendController @Inject() (
 }
 
 object BobbyRulesTrendController:
-  def display(group: String, artefact: String, versionRange: BobbyVersionRange): String =
+  def display(group: String, artefact: String, versionRange: VersionRange): String =
     uk.gov.hmrc.cataloguefrontend.routes.BobbyRulesTrendController.display(
       `rules[]` = Seq(s"$group:$artefact:${versionRange.range}")
     ).toString

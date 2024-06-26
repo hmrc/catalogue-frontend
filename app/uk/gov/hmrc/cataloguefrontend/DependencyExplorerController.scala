@@ -25,9 +25,9 @@ import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, RepoWithDependency}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, RepoWithDependency}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, FormUtils}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -73,7 +73,7 @@ class DependencyExplorerController @Inject() (
           flags          = SlugInfoFlag.values,
           scopes         = DependencyScope.valuesAsSeq,
           groupArtefacts = groupArtefacts,
-          versionRange   = BobbyVersionRange(None, None, None, ""),
+          versionRange   = VersionRange(None, None, None, ""),
           searchResults  = None,
           pieData        = None,
           repoTypes      = RepoType.valuesAsSeq.filterNot(_ == RepoType.Prototype)
@@ -102,7 +102,7 @@ class DependencyExplorerController @Inject() (
           SearchForm(
             group        = group,
             artefact     = artefact,
-            versionRange = versionRange.getOrElse(BobbyVersionRange("[0.0.0,]").range),
+            versionRange = versionRange.getOrElse(VersionRange("[0.0.0,]").range),
             team         = team.fold("")(_.asString),
             flag         = flag.getOrElse(SlugInfoFlag.Latest.asString),
             scope        = `scope[]`.getOrElse(Seq(DependencyScope.Compile.asString)),
@@ -117,7 +117,7 @@ class DependencyExplorerController @Inject() (
               repoTypes,
               scopes,
               groupArtefacts,
-              versionRange  = BobbyVersionRange(None, None, None, ""),
+              versionRange  = VersionRange(None, None, None, ""),
               searchResults = None,
               pieData       = None
             )
@@ -127,13 +127,13 @@ class DependencyExplorerController @Inject() (
               hasErrors = formWithErrors => {
                 Future.successful(
                   BadRequest(
-                    page(formWithErrors, teams, flags, repoTypes, scopes, groupArtefacts, versionRange = BobbyVersionRange(None, None, None, ""), searchResults = None, pieData = None)
+                    page(formWithErrors, teams, flags, repoTypes, scopes, groupArtefacts, versionRange = VersionRange(None, None, None, ""), searchResults = None, pieData = None)
                   )
                 )
               },
               success = query =>
                 (for
-                  versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
+                  versionRange <- EitherT.fromOption[Future](VersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
                   team         =  Option.when(query.team.nonEmpty)(TeamName(query.team))
                   flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
                   scope        <- query.scope.traverse: s =>
@@ -257,7 +257,7 @@ object DependencyExplorerController {
     repoTypes   : Option[Seq[RepoType]] = None,
     group       : String,
     artefact    : String,
-    versionRange: BobbyVersionRange
+    versionRange: VersionRange
   ): String =
     uk.gov.hmrc.cataloguefrontend.routes.DependencyExplorerController.search(
       group        = group,

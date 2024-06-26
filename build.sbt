@@ -9,7 +9,6 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .settings(
     majorVersion := 5,
     scalaVersion := "3.3.3",
-    scalacOptions += "-Ywarn-macros:after",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
     // ***************

@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{DependencyExplorerController, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.PieData
 @import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyVersionRange, DependencyScope, GroupArtefacts, RepoWithDependency}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, GroupArtefacts, RepoWithDependency}
 @import views.html.helper.FieldConstructor
 @import views.html.partials.{TeamNamesPartial, form_global_errors}
 
@@ -31,7 +31,7 @@
   repoTypes       : Seq[RepoType],
   scopes          : Seq[DependencyScope],
   groupArtefacts  : List[GroupArtefacts],
-  versionRange    : BobbyVersionRange,
+  versionRange    : VersionRange,
   searchResults   : Option[Seq[RepoWithDependency]],
   pieData         : Option[PieData]
 )(implicit

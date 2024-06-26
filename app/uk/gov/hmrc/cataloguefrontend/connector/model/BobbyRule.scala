@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Json, Reads, __}
+import uk.gov.hmrc.cataloguefrontend.model.VersionRange
 
 import java.time.LocalDate
 
@@ -25,7 +26,7 @@ import java.time.LocalDate
 case class BobbyRule(
   group         : String,
   artefact      : String,
-  range         : BobbyVersionRange,
+  range         : VersionRange,
   reason        : String,
   from          : LocalDate,
   exemptProjects: Seq[String]
@@ -37,7 +38,7 @@ object BobbyRule:
   val reads: Reads[BobbyRule] =
     ( (__ \ "organisation" ).read[String]
     ~ (__ \ "name"         ).read[String]
-    ~ (__ \ "range"        ).read[BobbyVersionRange](BobbyVersionRange.format)
+    ~ (__ \ "range"        ).read[VersionRange](VersionRange.format)
     ~ (__ \ "reason"       ).read[String]
     ~ (__ \ "from"         ).read[LocalDate]
     ~(__ \ "exemptProjects").read[Seq[String]]

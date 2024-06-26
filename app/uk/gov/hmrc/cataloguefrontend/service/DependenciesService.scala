@@ -20,9 +20,9 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.util.DependencyGraphParser
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{JsonCodecs, WhatsRunningWhereVersion}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
@@ -62,7 +62,7 @@ class DependenciesService @Inject() (
     repoType    : Seq[RepoType],
     group       : String,
     artefact    : String,
-    versionRange: BobbyVersionRange,
+    versionRange: VersionRange,
     scope       : Seq[DependencyScope]
   )(using
     HeaderCarrier
