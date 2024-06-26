@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.config
 
-object Constant {
+object Constant:
   // Repos with joint ownership of 8+ teams, defines the repo as shared
   val sharedRepoTeamsCutOff = 8
-}

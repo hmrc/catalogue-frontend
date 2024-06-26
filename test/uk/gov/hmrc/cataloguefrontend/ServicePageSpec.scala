@@ -31,7 +31,7 @@ import scala.jdk.CollectionConverters._
 
 class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
     setupEnableBranchProtectionAuthEndpoint()
@@ -48,13 +48,11 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/service-metrics/service-1/non-performant-queries", willRespondWith = (200, Some("""[{"service": "service-1", "environment": "qa", "queryTypes": ["Slow Running"]}]""")))
     serviceEndpoint(GET, "/service-metrics/service-1/collections", willRespondWith = (200, Some("""[{"database": "database-1", "service": "service-1", "sizeBytes": 1024, "date": "2023-11-06", "collection": "collection-1", "environment": "qa", "queryTypes": []}]""")))
     serviceEndpoint(GET, "/service-commissioning-status/services/service-1/lifecycleStatus", willRespondWith = (200, Some("""{ "lifecycleStatus" : "Active" }""")))
-    ShutterType.values.map { shutterType =>
+    ShutterType.values.map: shutterType =>
       serviceEndpoint(GET, s"/shutter-api/qa/${shutterType.asString}/states?serviceName=service-1", willRespondWith = (200, Some("[]")))
       serviceEndpoint(GET, s"/shutter-api/production/${shutterType.asString}/states?serviceName=service-1", willRespondWith = (200, Some("[]")))
-    }
-  }
 
-  implicit val wrwf: Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
+  given Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
 
   "A service page" should {
     "return a 404 when a Library is viewed as a service" in {
@@ -169,12 +167,11 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     }
   }
 
-  def readFile(jsonFilePath: String): String = {
+  def readFile(jsonFilePath: String): String =
     val path = "__files/" + jsonFilePath
     try {
       Source.fromResource(path).getLines().mkString("\n")
     } catch {
       case _: NullPointerException => sys.error(s"Could not find file $path")
     }
-  }
 }

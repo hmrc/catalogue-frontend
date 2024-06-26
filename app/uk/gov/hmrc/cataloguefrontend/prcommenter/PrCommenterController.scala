@@ -34,10 +34,10 @@ class PrCommenterController @Inject() (
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   recommendationsPage          : PrCommenterRecommendationsPage,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   case class Filter(
     team       : Option[String],
@@ -60,7 +60,7 @@ class PrCommenterController @Inject() (
     commentType: Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         teams        <- teamsAndRepositoriesConnector.allTeams()
         repos        <- teamsAndRepositoriesConnector.allRepositories(team = teamName, name = name)
         reports      <- prCommenterConnector.search(
@@ -69,6 +69,5 @@ class PrCommenterController @Inject() (
                           commentType = commentType.filter(_.nonEmpty)
                         )
         commentTypes =  reports.flatMap(_.comments.map(_.commentType)).toSet
-      } yield Ok(recommendationsPage(form.bindFromRequest(), teams, reports, commentTypes))
+      yield Ok(recommendationsPage(form.bindFromRequest(), teams, reports, commentTypes))
     }
-}

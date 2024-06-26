@@ -44,19 +44,19 @@ class DependencyExplorerController @Inject() (
   dependenciesService: DependenciesService,
   page               : DependencyExplorerPage,
   override val auth  : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   import DependencyExplorerController._
 
   def landing: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
-        groupArtefacts <- dependenciesService.getGroupArtefacts
-      } yield Ok(
+        groupArtefacts <- dependenciesService.getGroupArtefacts()
+      yield Ok(
         page(
           form           = form.fill(
                              SearchForm(
@@ -92,12 +92,12 @@ class DependencyExplorerController @Inject() (
     asCsv       : Boolean
   ): Action[AnyContent] =
     BasicAuthAction.async(implicit request =>
-      for {
+      for
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values
         scopes         =  DependencyScope.valuesAsSeq
         repoTypes      =  RepoType.valuesAsSeq.filterNot(_ == RepoType.Prototype)
-        groupArtefacts <- dependenciesService.getGroupArtefacts
+        groupArtefacts <- dependenciesService.getGroupArtefacts()
         filledForm     =
           SearchForm(
             group        = group,
@@ -132,41 +132,39 @@ class DependencyExplorerController @Inject() (
                 )
               },
               success = query =>
-                (for {
+                (for
                   versionRange <- EitherT.fromOption[Future](BobbyVersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
                   team         =  Option.when(query.team.nonEmpty)(TeamName(query.team))
                   flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
-                  scope        <- query.scope.traverse { s =>
+                  scope        <- query.scope.traverse: s =>
                                     EitherT.fromEither[Future](DependencyScope.parse(s))
                                       .leftMap(msg => BadRequest(pageWithError(msg)))
-                                  }
-                  repoType     <- query.repoType.traverse { s =>
+                  repoType     <- query.repoType.traverse: s =>
                                     EitherT.fromEither[Future](RepoType.parse(s))
                                       .leftMap(msg => BadRequest(pageWithError(msg)))
-                                  }
-                  results      <- EitherT.right[Result] {
+                  results      <- EitherT.right[Result]:
                                     dependenciesService
                                       .getServicesWithDependency(team, flag, repoType, query.group, query.artefact, versionRange, scope)
-                                  }
-                  pieData      = if (results.nonEmpty)
-                                   Some(
-                                     PieData(
-                                       "Version spread",
-                                       results
-                                         .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
-                                         .map(r => r._1 -> r._2.size)
-                                     )
-                                   )
+                  pieData      = if results.nonEmpty
+                                 then Some(
+                                        PieData(
+                                          "Version spread",
+                                          results
+                                            .groupBy(r => s"${r.depGroup}:${r.depArtefact}:${r.depVersion}")
+                                            .map(r => r._1 -> r._2.size)
+                                        )
+                                      )
                                  else None
-                } yield
-                  if (asCsv) {
+                yield
+                  if asCsv
+                  then
                     val csv    = CsvUtils.toCsv(toRows(results, team))
                     val source = Source.single(ByteString(csv, "UTF-8"))
                     Result(
                       header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"depex.csv\"")),
                       body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                     )
-                  } else
+                  else
                     Ok(
                       page(
                         form.fill(filledForm),
@@ -183,7 +181,7 @@ class DependencyExplorerController @Inject() (
                 ).merge
             )
         }
-      } yield res
+      yield res
     )
 
   /** @param versionRange replaces versionOp and version, supporting Maven version range */
@@ -214,13 +212,12 @@ class DependencyExplorerController @Inject() (
     )
 
   val flagConstraint: Constraint[SearchForm] =
-    Constraint(""){ form =>
-      if (form.flag != SlugInfoFlag.Latest.asString && form.repoType != List(RepoType.Service.asString))
-        Invalid(Seq(ValidationError(s"Flag Integration is only applicable to Service")))
-      else
-        Valid
-    }
-}
+    Constraint(""): form =>
+      if form.flag != SlugInfoFlag.Latest.asString && form.repoType != List(RepoType.Service.asString)
+      then Invalid(Seq(ValidationError(s"Flag Integration is only applicable to Service")))
+      else Valid
+
+end DependencyExplorerController
 
 object DependencyExplorerController {
   case class PieData(
@@ -228,7 +225,7 @@ object DependencyExplorerController {
     results: Map[String, Int]
   )
 
-  def toRow(repoWithDependency: RepoWithDependency, teamName: String): Seq[(String, String)] = {
+  def toRow(repoWithDependency: RepoWithDependency, teamName: String): Seq[(String, String)] =
     Seq(
       "repoName"    -> repoWithDependency.repoName,
       "repoVersion" -> repoWithDependency.repoVersion.toString,
@@ -237,21 +234,21 @@ object DependencyExplorerController {
       "depArtefact" -> repoWithDependency.depArtefact,
       "depVersion"  -> repoWithDependency.depVersion.toString
     )
-  }
 
   def toRows(seq: Seq[RepoWithDependency], teamFilter: Option[TeamName]): Seq[Seq[(String, String)]] =
-    seq.flatMap { repoWithDependency =>
-      if (repoWithDependency.teams.nonEmpty)
+    seq.flatMap: repoWithDependency =>
+      if repoWithDependency.teams.nonEmpty
+      then
         teamFilter.fold(repoWithDependency.teams)(List(_))
           .map(team => toRow(repoWithDependency, team.asString))
-      else Seq(toRow(repoWithDependency, ""))
-    }
+      else
+        Seq(toRow(repoWithDependency, ""))
 
   def groupArtefactFromForm(form: Form[?]): Option[String] =
-    for {
+    for
       g <- form("group").value.filter(_.nonEmpty)
       a <- form("artefact").value.filter(_.nonEmpty)
-    } yield s"$g:$a"
+    yield s"$g:$a"
 
   def search(
     team        : Option[TeamName]      = None,

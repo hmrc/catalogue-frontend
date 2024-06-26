@@ -30,16 +30,16 @@ import scala.concurrent.{ExecutionContext, Future}
 class PrCommenterConnector @Inject()(
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit
-   ec           : ExecutionContext
-) extends Logging {
+)(using
+  ExecutionContext
+) extends Logging:
   import HttpReads.Implicits._
 
   private val baseUrl = servicesConfig.baseUrl("pr-commenter")
 
-  private implicit val rf: Reads[PrCommenterReport] = PrCommenterReport.reads
+  private given Reads[PrCommenterReport] = PrCommenterReport.reads
 
-  def report(name: String)(implicit hc: HeaderCarrier): Future[Option[PrCommenterReport]] =
+  def report(name: String)(using HeaderCarrier): Future[Option[PrCommenterReport]] =
     httpClientV2
       .get(url"$baseUrl/pr-commenter/repositories/$name/report")
       .execute[Option[PrCommenterReport]]
@@ -48,10 +48,9 @@ class PrCommenterConnector @Inject()(
     name       : Option[String],
     teamName   : Option[TeamName],
     commentType: Option[String]
-  )(implicit
-    hc          : HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[PrCommenterReport]] =
     httpClientV2
       .get(url"$baseUrl/pr-commenter/reports?name=$name&teamName=${teamName.map(_.asString)}&commentType=$commentType")
       .execute[Seq[PrCommenterReport]]
-}

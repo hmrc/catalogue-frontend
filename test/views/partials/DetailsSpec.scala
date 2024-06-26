@@ -20,6 +20,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.FakeRequest
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, RouteRulesConnector, ServiceType}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.Zone
 
 import java.time.Instant
@@ -44,7 +45,7 @@ class DetailsSpec extends AnyWordSpec with Matchers {
   )
 
   val environmentRoute = RouteRulesConnector.EnvironmentRoute(
-    environment = "EnvName",
+    environment = Environment.Production,
     routes      = Seq(RouteRulesConnector.Route("TestUrl0", "ruleConfigurationUrl0"),
                       RouteRulesConnector.Route("TestUrl1", "ruleConfigurationUrl1"))
   )

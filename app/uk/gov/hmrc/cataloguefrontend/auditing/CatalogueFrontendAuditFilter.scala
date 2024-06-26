@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.auditing
 
 import play.api.Configuration
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{OFormat, __}
+import play.api.libs.json.{Format, __}
 import play.api.mvc.{EssentialAction, RequestHeader}
 import play.api.routing.Router.Attrs
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -31,15 +31,15 @@ import scala.concurrent.ExecutionContext
 class CatalogueFrontendAuditFilter @Inject()(
   auditConnector : AuditConnector,
   configuration  : Configuration
-)(implicit
+)(using
   ec: ExecutionContext
 ) extends AuditFilter
-     with FrontendHeaderCarrierProvider {
+     with FrontendHeaderCarrierProvider:
 
   override def apply(nextFilter: EssentialAction): EssentialAction =
-    (rh: RequestHeader) => {
+    (rh: RequestHeader) =>
       val headerCarrier = hc(rh)
-      nextFilter(rh).map { res =>
+      nextFilter(rh).map: res =>
         if (needsAuditing(rh))
           auditConnector.sendExplicitAudit(
             auditType = "FrontendInteraction",
@@ -54,16 +54,15 @@ class CatalogueFrontendAuditFilter @Inject()(
                         )
           )(headerCarrier, ec, Detail.format)
         res
-      }
-    }
 
   private def needsAuditing(rh: RequestHeader): Boolean =
-    configuration.get[Boolean]("auditing.enabled") &&
-      rh.attrs.get(Attrs.HandlerDef).map(_.controller).forall(controllerNeedsAuditing)
+    configuration.get[Boolean]("auditing.enabled")
+      && rh.attrs.get(Attrs.HandlerDef).map(_.controller).forall(controllerNeedsAuditing)
 
   private def controllerNeedsAuditing(controllerName: String): Boolean =
     configuration.getOptional[Boolean](s"controllers.$controllerName.needsAuditing").getOrElse(true)
-}
+
+end CatalogueFrontendAuditFilter
 
 case class Detail(
   username       : String,
@@ -75,8 +74,8 @@ case class Detail(
   referrer       : String,
 )
 
-object Detail {
-  val format: OFormat[Detail] =
+object Detail:
+  val format: Format[Detail] =
     ( ( __ \ "username"       ).format[String]
     ~ ( __ \ "uri"            ).format[String]
     ~ ( __ \ "statusCode"     ).format[Int]
@@ -85,4 +84,3 @@ object Detail {
     ~ ( __ \ "deviceID"       ).format[String]
     ~ ( __ \ "referrer"       ).format[String]
     )(Detail.apply, d => Tuple.fromProductTyped(d))
-}

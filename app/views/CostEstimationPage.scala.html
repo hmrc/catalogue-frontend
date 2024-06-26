@@ -20,14 +20,13 @@
 
 @this()
 
-@(
-  serviceName                 : ServiceName,
+@(serviceName                 : ServiceName,
   repositoryDetails           : GitRepository,
   costEstimate                : ServiceCostEstimate,
   costEstimateConfig          : CostEstimateConfig,
   historicEstimatedCostCharts : HistoricEstimatedCostCharts
 )(implicit
-  request: RequestHeader
+  request                     : RequestHeader
 )
 
 @standard_layout(serviceName.asString, "services") {

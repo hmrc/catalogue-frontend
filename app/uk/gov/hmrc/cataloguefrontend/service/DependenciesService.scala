@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
@@ -31,22 +32,26 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class DependenciesService @Inject() (
   serviceDependenciesConnector: ServiceDependenciesConnector
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext):
 
-  def search(serviceName: ServiceName, deployments: Seq[WhatsRunningWhereVersion])(implicit hc: HeaderCarrier): Future[Seq[ServiceDependencies]] =
+  def search(
+    serviceName: ServiceName,
+    deployments: Seq[WhatsRunningWhereVersion]
+  )(using
+    HeaderCarrier
+  ): Future[Seq[ServiceDependencies]] =
     Future
-      .traverse(deployments)(wrwv =>
+      .traverse(deployments): wrwv =>
         serviceDependenciesConnector
           .getSlugInfo(serviceName, Some(wrwv.version))
           .map(_.map(_.copy(environment = Some(wrwv.environment))))
-      )
       .map(_.flatten)
 
   def getServiceDependencies(
     serviceName: ServiceName,
     version    : Version
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Option[ServiceDependencies]] =
     serviceDependenciesConnector
       .getSlugInfo(serviceName, Some(version)).map(_.headOption)
@@ -59,66 +64,66 @@ class DependenciesService @Inject() (
     artefact    : String,
     versionRange: BobbyVersionRange,
     scope       : Seq[DependencyScope]
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[RepoWithDependency]] =
     serviceDependenciesConnector
       .getDependenciesFromMetaData(flag, group, artefact, repoType, versionRange, scope)
-      .map { l =>
-        optTeam match {
+      .map: l =>
+        optTeam match
           case None       => l
           case Some(team) => l.filter(_.teams.contains(team))
-        }
-      }
       .map(
         _.sortBy(_.repoName)
           .sorted(Ordering.by((_: RepoWithDependency).depVersion).reverse)
       )
 
-  def getGroupArtefacts(implicit hc: HeaderCarrier): Future[List[GroupArtefacts]] =
-    serviceDependenciesConnector.getGroupArtefacts
+  def getGroupArtefacts()(using HeaderCarrier): Future[List[GroupArtefacts]] =
+    serviceDependenciesConnector.getGroupArtefacts()
       .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
 
-  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[JdkVersion]] =
+  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[List[JdkVersion]] =
     serviceDependenciesConnector.getJdkVersions(teamName, flag)
 
-  def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[JdkUsageByEnv] =
-    for {
+  def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[JdkUsageByEnv] =
+    for
       versions <- serviceDependenciesConnector.getJdkVersions(teamName, env)
       counts   =  versions.groupBy(v => (v.version, v.vendor)).view.mapValues(_.length).toMap
-    } yield JdkUsageByEnv(env, counts)
+    yield JdkUsageByEnv(env, counts)
 
-  def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[List[SbtVersion]] =
+  def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[List[SbtVersion]] =
     serviceDependenciesConnector.getSbtVersions(teamName, flag)
 
-  def getSbtCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[SbtUsageByEnv] =
-    for {
+  def getSbtCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[SbtUsageByEnv] =
+    for
       versions <- serviceDependenciesConnector.getSbtVersions(teamName, env)
       counts   =  versions.groupBy(_.version).view.mapValues(_.length).toMap
-    } yield SbtUsageByEnv(env, counts)
-}
+    yield SbtUsageByEnv(env, counts)
 
-object DependenciesService {
+end DependenciesService
+
+object DependenciesService:
   def sortDependencies(dependencies: Seq[ServiceDependency]): Seq[ServiceDependency] =
-    dependencies.sortBy(serviceDependency => (serviceDependency.group, serviceDependency.artifact))
+    dependencies.sortBy(serviceDependency => (serviceDependency.group, serviceDependency.artefact))
 
   def sortAndSeparateDependencies(serviceDependencies: ServiceDependencies): (Seq[ServiceDependency], Seq[TransitiveServiceDependency]) =
     serviceDependencies.dependencyDotCompile
       .fold(
         (serviceDependencies.dependencies, Seq.empty[TransitiveServiceDependency])
-      )(graph =>
+      ): graph =>
         DependencyGraphParser
           .parse(graph)
           .dependenciesWithImportPath
-          .partition(_._2.length == 2) match {
+          .partition(_._2.length == 2) match
             case (direct, transitive) =>
-              ( direct.map(_._1).sortBy(d => (d.group, d.artifact)),
-                transitive.map(t => TransitiveServiceDependency(t._1, t._2.takeRight(2).head)).sortBy(d => (d.dependency.group, d.dependency.artifact))
+              ( direct.map(_._1).sortBy(d => (d.group, d.artefact))
+              , transitive
+                  .map(t => TransitiveServiceDependency(t._1, t._2.takeRight(2).head))
+                  .sortBy(d => (d.dependency.group, d.dependency.artefact))
               )
-        }
-      )
-}
+
+end DependenciesService
 
 case class ServiceJdkVersion(
   version: String,
@@ -128,7 +133,7 @@ case class ServiceJdkVersion(
 
 case class ServiceDependency(
   group   : String,
-  artifact: String,
+  artefact: String,
   version : String
 )
 
@@ -151,25 +156,20 @@ case class ServiceDependencies(
   dependencyDotTest    : Option[String] = None,
   dependencyDotIt      : Option[String] = None,
   dependencyDotBuild   : Option[String] = None
-) {
+):
   val isEmpty: Boolean = dependencies.isEmpty
 
   val nonEmpty: Boolean = dependencies.nonEmpty
 
   def dotFileForScope(scope: DependencyScope): Option[String] =
-    scope match {
+    scope match
       case DependencyScope.Compile  => dependencyDotCompile
       case DependencyScope.Provided => dependencyDotProvided
       case DependencyScope.Test     => dependencyDotTest
       case DependencyScope.It       => dependencyDotIt
       case DependencyScope.Build    => dependencyDotBuild
-    }
-}
 
-object ServiceDependencies {
-  import play.api.libs.functional.syntax._
-  import play.api.libs.json.__
-
+object ServiceDependencies:
   private val serviceJdkVersionReads =
     ( (__ \ "version").read[String]
     ~ (__ \ "vendor" ).read[String]
@@ -177,13 +177,16 @@ object ServiceDependencies {
     )(ServiceJdkVersion.apply)
 
   private val serviceDependencyReads: Reads[ServiceDependency] =
-    Json.using[Json.WithDefaultValues].reads[ServiceDependency]
+    ( (__ \ "group"   ).read[String]
+    ~ (__ \ "artifact").read[String]
+    ~ (__ \ "version" ).read[String]
+    )(ServiceDependency.apply)
 
-  val reads: Reads[ServiceDependencies] = {
-    implicit val vf   = Version.format
-    implicit val jdkr = serviceJdkVersionReads
-    implicit val sdr  = serviceDependencyReads
-    implicit val envf = JsonCodecs.environmentFormat
+  val reads: Reads[ServiceDependencies] =
+    given Reads[Version          ] = Version.format
+    given Reads[ServiceJdkVersion] = serviceJdkVersionReads
+    given Reads[ServiceDependency] = serviceDependencyReads
+    given Reads[Environment      ] = Environment.format
     ( (__ \ "uri"                       ).read[String]
     ~ (__ \ "name"                      ).read[String]
     ~ (__ \ "version"                   ).read[Version]
@@ -198,8 +201,6 @@ object ServiceDependencies {
     ~ (__ \ "dependencyDot" \ "it"      ).readNullable[String].map(_.filter(_.nonEmpty))
     ~ (__ \ "dependencyDot" \ "build"   ).readNullable[String].map(_.filter(_.nonEmpty))
     )(ServiceDependencies.apply)
-  }
-}
 
 
 case class SlugVersionInfo(

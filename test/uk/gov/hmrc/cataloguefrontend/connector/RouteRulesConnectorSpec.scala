@@ -22,7 +22,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -38,22 +38,22 @@ class RouteRulesConnectorSpec
      with WireMockSupport
      with HttpClientV2Support {
 
-  private trait Fixture {
+  private trait Setup {
     val servicesConfig = mock[ServicesConfig]
     when(servicesConfig.baseUrl("service-configs"))
       .thenReturn(wireMockUrl)
 
-    implicit val hc: HeaderCarrier    = HeaderCarrier()
-    implicit val ec: ExecutionContext = ExecutionContext.global
-    val connector = new RouteRulesConnector(httpClientV2, servicesConfig)
+    given HeaderCarrier    = HeaderCarrier()
+    given ExecutionContext = ExecutionContext.global
+    val connector = RouteRulesConnector(httpClientV2, servicesConfig)
   }
 
   "RouteRulesConnector.serviceRoutes" should {
-    "return service routes" in new Fixture {
+    "return service routes" in new Setup {
       stubFor(
         get(urlPathEqualTo("/service-configs/frontend-route/service1"))
           .willReturn(aResponse().withBody("""[
-            { "environment": "prod",
+            { "environment": "production",
               "routes": [
                 {"frontendPath": "fp", "ruleConfigurationUrl": "rcu", "isRegex": false}
               ]
@@ -64,7 +64,7 @@ class RouteRulesConnectorSpec
       import RouteRulesConnector.{EnvironmentRoute, Route}
       connector.frontendRoutes(ServiceName("service1")).futureValue shouldBe Seq(
         EnvironmentRoute(
-          environment = "prod"
+          environment = Environment.Production
         , routes      = Route(
                           frontendPath         = "fp"
                         , ruleConfigurationUrl = "rcu"

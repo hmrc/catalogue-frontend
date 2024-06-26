@@ -41,61 +41,59 @@ class UsersController @Inject()(
 , umpConfig                    : UserManagementPortalConfig
 , override val mcc             : MessagesControllerComponents
 , override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders
-     with play.api.i18n.I18nSupport {
+     with play.api.i18n.I18nSupport:
 
   def user(username: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       userManagementConnector.getUser(username)
-        .map {
+        .map:
           case Some(user) =>
             val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
             Ok(userInfoPage(user, umpProfileUrl))
           case None =>
             NotFound(error_404_template())
-        }
     }
 
   def allUsers(username: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      (
-        for {
-          retrieval   <- EitherT.liftF(
-                           auth.verify(Retrieval.locations(
-                             resourceType = Some(ResourceType("catalogue-frontend")),
-                             action       = Some(IAAction("CREATE_USER"))
-                           ))
-                         )
-          isTeamAdmin =  retrieval.exists(_.nonEmpty)
-          form        <- EitherT.fromEither[Future](UsersListFilter.form.bindFromRequest().fold(
-                           formWithErrors => Left(
-                             BadRequest(
-                               userListPage(isTeamAdmin, Seq.empty, Seq.empty, formWithErrors)
-                             )
-                           ),
-                           validForm => Right(validForm)
-                         ))
-          users       <- EitherT.liftF[Future, Result, Seq[User]](userManagementConnector.getAllUsers(team = form.team))
-          teams       <- EitherT.liftF[Future, Result, Seq[GitHubTeam]](teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase)))
-        } yield
-          Ok(userListPage(isTeamAdmin, users, teams, UsersListFilter.form.fill(form.copy(username = username))))
+      (for
+         retrieval   <- EitherT.liftF(
+                          auth.verify(Retrieval.locations(
+                            resourceType = Some(ResourceType("catalogue-frontend")),
+                            action       = Some(IAAction("CREATE_USER"))
+                          ))
+                        )
+         isTeamAdmin =  retrieval.exists(_.nonEmpty)
+         form        <- EitherT.fromEither[Future](UsersListFilter.form.bindFromRequest().fold(
+                          formWithErrors => Left(
+                            BadRequest(
+                              userListPage(isTeamAdmin, Seq.empty, Seq.empty, formWithErrors)
+                            )
+                          ),
+                          validForm => Right(validForm)
+                        ))
+         users       <- EitherT.liftF[Future, Result, Seq[User]](userManagementConnector.getAllUsers(team = form.team))
+         teams       <- EitherT.liftF[Future, Result, Seq[GitHubTeam]](teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase)))
+       yield
+         Ok(userListPage(isTeamAdmin, users, teams, UsersListFilter.form.fill(form.copy(username = username))))
     ).merge
   }
-}
 
-object UsersController {
+end UsersController
+
+object UsersController:
   val maxRows = 500
-}
 
 case class UsersListFilter(
   team    : Option[TeamName] = None,
   username: Option[String]   = None
 )
 
-object UsersListFilter {
+object UsersListFilter:
   lazy val form: Form[UsersListFilter] =
     Form(
       mapping(
@@ -103,4 +101,3 @@ object UsersListFilter {
         "username" -> optional(text)
       )(UsersListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
-}

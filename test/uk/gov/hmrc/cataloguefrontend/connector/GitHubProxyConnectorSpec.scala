@@ -37,15 +37,15 @@ class GitHubProxyConnectorSpec
      with ScalaFutures {
 
   private lazy val gitHubProxyConnector =
-    new GitHubProxyConnector(
+    GitHubProxyConnector(
       httpClientV2   = httpClientV2,
-      new ServicesConfig(Configuration(
+      ServicesConfig(Configuration(
         "microservice.services.platops-github-proxy.port" -> wireMockPort,
         "microservice.services.platops-github-proxy.host" -> wireMockHost
       ))
     )
 
-  implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "getGitHubProxyRaw" should {
 
@@ -100,5 +100,3 @@ class GitHubProxyConnectorSpec
     }
   }
 }
-
-

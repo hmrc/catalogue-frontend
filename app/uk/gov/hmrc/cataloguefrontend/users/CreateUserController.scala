@@ -40,20 +40,21 @@ class CreateUserController @Inject()(
   createUserPage           : CreateUserPage,
   createUserRequestSentPage: CreateUserRequestSentPage,
   userManagementConnector  : UserManagementConnector
-) (implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders
-  with play.api.i18n.I18nSupport {
+  with play.api.i18n.I18nSupport:
 
   private val logger = Logger(getClass)
 
   private def createUserPermission(teamName: TeamName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_USER"))
 
-  def requestSent(isServiceAccount: Boolean, givenName: String, familyName: String): Action[AnyContent] = Action { implicit request =>
-    Ok(createUserRequestSentPage(isServiceAccount, givenName, familyName))
-  }
+  def requestSent(isServiceAccount: Boolean, givenName: String, familyName: String): Action[AnyContent] =
+    Action { implicit request =>
+      Ok(createUserRequestSentPage(isServiceAccount, givenName, familyName))
+    }
 
   def createUserLanding(isServiceAccount: Boolean): Action[AnyContent] =
     auth.authenticatedAction(
@@ -68,29 +69,28 @@ class CreateUserController @Inject()(
       continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
     ).async { implicit request =>
-      (
-        for {
-          form <- EitherT.fromEither[Future](CreateUserForm.form.bindFromRequest().fold(
-                    formWithErrors => {
-                      Left(
-                        BadRequest(
-                          createUserPage(
-                            form             = formWithErrors,
-                            teamNames        = cleanseUserTeams(request.retrieval),
-                            organisations    = Organisation.valuesAsSeq,
-                            isServiceAccount = isServiceAccount
-                          )
-                        )
-                      )
-                    },
-                    validForm => Right(validForm)
-                  ))
-          _    <- EitherT.liftF(auth.authorised(Some(createUserPermission(form.team))))
-          res  <- EitherT.right[Result](userManagementConnector.createUser(
-                  form.copy(isServiceAccount = isServiceAccount)
-                  ))
-          _    = logger.info(s"user management result: $res:")
-        } yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(isServiceAccount, form.givenName, form.familyName))
+      (for
+         form <- EitherT.fromEither[Future](CreateUserForm.form.bindFromRequest().fold(
+                   formWithErrors => {
+                     Left(
+                       BadRequest(
+                         createUserPage(
+                           form             = formWithErrors,
+                           teamNames        = cleanseUserTeams(request.retrieval),
+                           organisations    = Organisation.valuesAsSeq,
+                           isServiceAccount = isServiceAccount
+                         )
+                       )
+                     )
+                   },
+                   validForm => Right(validForm)
+                 ))
+         _    <- EitherT.liftF(auth.authorised(Some(createUserPermission(form.team))))
+         res  <- EitherT.right[Result](userManagementConnector.createUser(
+                   form.copy(isServiceAccount = isServiceAccount)
+                 ))
+         _    =  logger.info(s"user management result: $res:")
+       yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(isServiceAccount, form.givenName, form.familyName))
       ).merge
     }
 
@@ -99,9 +99,10 @@ class CreateUserController @Inject()(
       .map(TeamName.apply)
       .toSeq
       .sorted
-}
 
-object CreateUserForm {
+end CreateUserController
+
+object CreateUserForm:
   val form: Form[CreateUserRequest] =
     Form(
       mapping(
@@ -122,38 +123,42 @@ object CreateUserForm {
         "environments"     -> boolean
       )(CreateUserRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
-}
 
-object CreateUserConstraints {
+object CreateUserConstraints:
   def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] =
-    Constraint(constraintName){ toBeValidated => if (constraint(toBeValidated)) Valid else Invalid(error) }
+    Constraint(constraintName): toBeValidated =>
+      if constraint(toBeValidated) then Valid else Invalid(error)
 
 
-  def nameConstraints(fieldName: String): Seq[Constraint[String]] = {
+  def nameConstraints(fieldName: String): Seq[Constraint[String]] =
     val nameLengthValidation : String => Boolean = str => str.length >= 2 && str.length <= 30
     val whiteSpaceValidation : String => Boolean = str => !str.matches(".*\\s.*")
     val underscoreValidation : String => Boolean = str => !str.contains("_")
     val lowercaseValidation  : String => Boolean = str => str.toLowerCase.equals(str)
 
     Seq(
-      mkConstraint(s"constraints.${fieldName}LengthCheck"    )(constraint = nameLengthValidation,  error = "Should be between 2 and 30 characters long"),
-      mkConstraint(s"constraints.${fieldName}WhitespaceCheck")(constraint = whiteSpaceValidation,  error = "Cannot contain whitespace"),
-      mkConstraint(s"constraints.${fieldName}UnderscoreCheck")(constraint = underscoreValidation,  error = "Cannot contain underscores"),
-      mkConstraint(s"constraints.${fieldName}CaseCheck"      )(constraint = lowercaseValidation,   error = "Should only contain lowercase characters")
+      mkConstraint(s"constraints.${fieldName}LengthCheck"    )(constraint = nameLengthValidation,  error = "Should be between 2 and 30 characters long")
+    , mkConstraint(s"constraints.${fieldName}WhitespaceCheck")(constraint = whiteSpaceValidation,  error = "Cannot contain whitespace")
+    , mkConstraint(s"constraints.${fieldName}UnderscoreCheck")(constraint = underscoreValidation,  error = "Cannot contain underscores")
+    , mkConstraint(s"constraints.${fieldName}CaseCheck"      )(constraint = lowercaseValidation,   error = "Should only contain lowercase characters")
     )
-  }
 
-  private val containsServiceValidation: String => Boolean = str => !str.matches(".*\\bservice\\b.*")
+  private val containsServiceValidation: String => Boolean =
+    !_.matches(".*\\bservice\\b.*")
+
   val containsServiceConstraint: Constraint[String] =
     mkConstraint("constraints.givenNameNotAServiceCheck")(
       constraint = containsServiceValidation,
       error      = "Should not contain 'service' - if you are trying to create a non human user, please use <a href=\"/create-service-user\"'>Create A Service Account</a> instead"
     )
 
-  private val digitalEmailValidation: String => Boolean = str => !str.matches(".*digital\\.hmrc\\.gov\\.uk.*")
+  private val digitalEmailValidation: String => Boolean =
+    !_.matches(".*digital\\.hmrc\\.gov\\.uk.*")
+
   val digitalEmailConstraint: Constraint[String] =
     mkConstraint("constraints.digitalEmailCheck")(
       constraint = digitalEmailValidation,
       error      = "Cannot be a digital email such as: digital.hmrc.gov.uk"
     )
-}
+
+end CreateUserConstraints

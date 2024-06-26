@@ -39,18 +39,19 @@ class ShutterConnectorSpec
      with WireMockSupport
      with HttpClientV2Support {
 
-  private trait Fixture {
+  private trait Setup {
     val servicesConfig = mock[ServicesConfig]
     when(servicesConfig.baseUrl("shutter-api"))
       .thenReturn(wireMockUrl)
 
-    implicit val hc: HeaderCarrier    = HeaderCarrier()
-    implicit val ec: ExecutionContext = ExecutionContext.global
-    val connector = new ShutterConnector(httpClientV2, servicesConfig)
+    given HeaderCarrier    = HeaderCarrier()
+    given ExecutionContext = ExecutionContext.global
+
+    val connector = ShutterConnector(httpClientV2, servicesConfig)
   }
 
   "Shutter Events" should {
-    "be filtered by environment only when no service name is specified" in new Fixture {
+    "be filtered by environment only when no service name is specified" in new Setup {
       val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = None)
       stubFor(
         get(urlPathEqualTo("/shutter-api/events"))
@@ -66,7 +67,7 @@ class ShutterConnectorSpec
       )
     }
 
-    "be filtered by serviceName and environment when a service name is specified" in new Fixture {
+    "be filtered by serviceName and environment when a service name is specified" in new Setup {
       val filter = ShutterEventsFilter(environment = Environment.QA, serviceName = Some(ServiceName("abc-frontend")))
       stubFor(
         get(urlPathEqualTo("/shutter-api/events"))

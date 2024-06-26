@@ -23,9 +23,9 @@
 @this()
 
 @(rules: BobbyRulesView,
-    counts: Map[(BobbyRule, SlugInfoFlag), Int]
+  counts: Map[(BobbyRule, SlugInfoFlag), Int]
 )(implicit
-    request: RequestHeader
+  request: RequestHeader
 )
 
 @standard_layout(s"Bobby rules", active = "health") {
@@ -36,14 +36,14 @@
 
 @bobbyRulesTimeSection(heading: String, rulesByTime: BobbyRuleSet) = {
     @if(rulesByTime.libraries.nonEmpty || rulesByTime.plugins.nonEmpty) {
-        @bobbyRulesArtifactTypeSection(heading, rulesByTime.libraries, "Library", inclViewSlugsLink = true )
-        @bobbyRulesArtifactTypeSection(heading, rulesByTime.plugins  , "Plugin" , inclViewSlugsLink = false)
+        @bobbyRulesArtefactTypeSection(heading, rulesByTime.libraries, "Library", inclViewSlugsLink = true )
+        @bobbyRulesArtefactTypeSection(heading, rulesByTime.plugins  , "Plugin" , inclViewSlugsLink = false)
     }
 }
 
-@bobbyRulesArtifactTypeSection(heading: String, rulesByArtifactType: Seq[BobbyRule], artifactType: String, inclViewSlugsLink: Boolean) = {
-    @if(rulesByArtifactType.nonEmpty) {
-        <table class="@{artifactType.toLowerCase}-rules table table-striped sticky-header">
+@bobbyRulesArtefactTypeSection(heading: String, rulesByArtefactType: Seq[BobbyRule], artefactType: String, inclViewSlugsLink: Boolean) = {
+    @if(rulesByArtefactType.nonEmpty) {
+        <table class="@{artefactType.toLowerCase}-rules table table-striped sticky-header">
             <thead>
                 <tr>
                     <th colspan="11" class="border-bottom">
@@ -51,7 +51,7 @@
                     </th>
                 </tr>
                 <tr>
-                    <th class="col-3" colspan="1">@artifactType</th>
+                    <th class="col-3" colspan="1">@artefactType</th>
                     <th class="col-2" colspan="3" style="text-align: center">Banned Versions</th>
                     <th class="col-4">Reason</th>
                     <th class="">Exemptions</th>
@@ -63,7 +63,7 @@
                 </tr>
             </thead>
         <tbody>
-            @rulesByArtifactType.map(bobbyRuleRow(inclViewSlugsLink))
+            @rulesByArtefactType.map(bobbyRuleRow(inclViewSlugsLink))
         </tbody>
     </table>
 

@@ -32,7 +32,7 @@ class SlugInfoServiceSpec
   extends UnitSpec
      with MockitoSugar {
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   val group        = "group"
   val artefact     = "artefact"
@@ -166,12 +166,12 @@ class SlugInfoServiceSpec
     service                           : DependenciesService)
 
   object Boot {
-    def init: Boot = {
+    def init: Boot =
       val mockedServiceDependenciesConnector = mock[ServiceDependenciesConnector]
-      val dependenciesService = new DependenciesService(mockedServiceDependenciesConnector)
+      val dependenciesService = DependenciesService(mockedServiceDependenciesConnector)
       Boot(
         mockedServiceDependenciesConnector,
-        dependenciesService)
-    }
+        dependenciesService
+      )
   }
 }

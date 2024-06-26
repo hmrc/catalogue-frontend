@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.cataloguefrontend.config
 
-import com.google.inject.{Inject, Singleton}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import javax.inject.{Inject, Singleton}
+
 @Singleton
-class CatalogueConfig @Inject() (servicesConfig: ServicesConfig) {
-  def killSwitchLink(shutterType: String): String = {
+class CatalogueConfig @Inject() (servicesConfig: ServicesConfig):
+  def killSwitchLink(shutterType: String): String =
     servicesConfig.getString(s"killswitch.jenkins-job.$shutterType")
-  }
-}

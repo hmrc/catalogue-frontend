@@ -19,6 +19,7 @@ import org.jsoup.Jsoup
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
@@ -34,7 +35,7 @@ class JdkVersionPageSpec
 
   "JDK Usage list" should {
     "show a list of slugs and what JDK they're using" in {
-      implicit val request = FakeRequest()
+      given Request[?] = FakeRequest()
 
       val versions = List(
         JdkVersion(ServiceName("test-slug"    ), Version("1.181.0"), Vendor.OpenJDK, Kind.JDK)
@@ -43,7 +44,7 @@ class JdkVersionPageSpec
 
       val teams = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one", "repo-two")))
 
-      val document = asDocument(new JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
+      val document = asDocument(JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
       val slug1 = document.select("#jdk-slug-test-slug")
       val slug2 = document.select("#jdk-slug-thing-service")
@@ -55,11 +56,11 @@ class JdkVersionPageSpec
     }
 
     "include a link to the repository" in {
-      implicit val request = FakeRequest()
+      given Request[?] = FakeRequest()
 
       val versions = List(JdkVersion(ServiceName("thing-service"), Version("1.171.0"), Vendor.Oracle, Kind.JDK))
       val teams    = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one")))
-      val document = asDocument(new JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
+      val document = asDocument(JdkVersionPage()(versions, SlugInfoFlag.values, teams, SlugInfoFlag.Latest, None))
 
       val slug = document.select("#jdk-slug-thing-service")
       val link = slug.select("a[href*='/repositories/thing-service']")

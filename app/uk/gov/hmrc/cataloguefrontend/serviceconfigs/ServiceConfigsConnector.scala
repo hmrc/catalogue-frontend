@@ -36,30 +36,32 @@ class ServiceConfigsConnector @Inject() (
   httpClientV2  : HttpClientV2
 , servicesConfig: ServicesConfig
 , cache         : AsyncCacheApi
-)(implicit val ec: ExecutionContext) {
+)(using
+  ExecutionContext
+):
   import HttpReads.Implicits._
   import ServiceConfigsService._
 
   private val serviceConfigsBaseUrl: String = servicesConfig.baseUrl("service-configs")
   private val logger = Logger(getClass)
 
-  implicit val cber: Reads[ConfigByEnvironment]  = ConfigByEnvironment.reads
-  implicit val cwr : Reads[ConfigWarning]        = ConfigWarning.reads
-  implicit val cser: Reads[ConfigSourceEntries]  = ConfigSourceEntries.reads
-  implicit val srr : Reads[ServiceRelationships] = ServiceRelationships.reads
+  private given Reads[ConfigByEnvironment]  = ConfigByEnvironment.reads
+  private given Reads[ConfigWarning]        = ConfigWarning.reads
+  private given Reads[ServiceRelationships] = ServiceRelationships.reads
 
-  def repoNameForService(service: ServiceName)(implicit hc: HeaderCarrier): Future[Option[String]] =
+  def repoNameForService(service: ServiceName)(using HeaderCarrier): Future[Option[String]] =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/services/repo-name?serviceName=${service.asString}")
       .execute[Option[String]]
 
   def deploymentEvents(
     service: ServiceName,
-    from:    Instant,
-    to:      Instant
-  )(implicit
-    hc           : HeaderCarrier
+    from   : Instant,
+    to     : Instant
+  )(using
+    HeaderCarrier
    ): Future[Seq[DeploymentConfigEvent]] =
+    given Reads[DeploymentConfigEvent] = DeploymentConfigEvent.format
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events/${service.asString}?from=$from&to=$to")
       .execute[Seq[DeploymentConfigEvent]]
@@ -69,57 +71,54 @@ class ServiceConfigsConnector @Inject() (
   , environments: Seq[Environment]
   , version     : Option[Version]
   , latest      : Boolean
-  )(implicit
-    hc          : HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]  =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/${service.asString}?environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
       .execute[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]
 
-  def serviceRelationships(service: ServiceName)(implicit hc: HeaderCarrier): Future[ServiceRelationships] =
+  def serviceRelationships(service: ServiceName)(using HeaderCarrier): Future[ServiceRelationships] =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/service-relationships/${service.asString}")
       .execute[ServiceRelationships]
 
-  def bobbyRules()(implicit hc: HeaderCarrier): Future[BobbyRuleSet] = {
-    implicit val brsr = BobbyRuleSet.reads
+  def bobbyRules()(using HeaderCarrier): Future[BobbyRuleSet] =
+    given Reads[BobbyRuleSet] = BobbyRuleSet.reads
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/bobby/rules")
       .execute[BobbyRuleSet]
-  }
 
   def deploymentConfig(
     service    : Option[ServiceName] = None
   , environment: Option[Environment] = None
   , team       : Option[TeamName]    = None
   , applied    : Boolean             = true
-  )(implicit
-    hc         : HeaderCarrier
-  ): Future[Seq[DeploymentConfig]] = {
-    implicit val dcr = DeploymentConfig.reads
+  )(using
+    HeaderCarrier
+  ): Future[Seq[DeploymentConfig]] =
+    given Reads[DeploymentConfig] = DeploymentConfig.reads
     val queryParams = Seq(
       environment.map("environment" -> _.asString),
-      service.map("serviceName" -> _.asString),
-      team.map("teamName" -> _.asString)
+      service    .map("serviceName" -> _.asString),
+      team       .map("teamName"    -> _.asString)
     ).flatten.toMap
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$queryParams&applied=$applied")
       .execute[Option[Seq[DeploymentConfig]]]
-      .map(_.getOrElse {
+      .map(_.getOrElse:
         logger.info(s"No deployments found for $queryParams")
         Seq.empty
-      })
-  }
+      )
 
   private val configKeysCacheExpiration: Duration =
     servicesConfig.getConfDuration("configKeysCacheDuration", 1.hour)
 
-  def getConfigKeys(teamName: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[String]] =
-    cache.getOrElseUpdate(s"config-keys-cache-${teamName.getOrElse("all")}", configKeysCacheExpiration) {
+  def getConfigKeys(teamName: Option[TeamName])(using HeaderCarrier): Future[Seq[String]] =
+    cache.getOrElseUpdate(s"config-keys-cache-${teamName.getOrElse("all")}", configKeysCacheExpiration):
       httpClientV2
         .get(url"$serviceConfigsBaseUrl/service-configs/configkeys?teamName=${teamName.map(_.asString)}")
         .execute[Seq[String]]
-    }
 
   def configSearch(
     teamName       : Option[TeamName]
@@ -129,30 +128,29 @@ class ServiceConfigsConnector @Inject() (
   , keyFilterType  : KeyFilterType
   , value          : Option[String]
   , valueFilterType: ValueFilterType
-  )(implicit
-    hc             : HeaderCarrier
-  ): Future[Either[String, Seq[AppliedConfig]]] = {
-    implicit val acR: Reads[AppliedConfig] = AppliedConfig.reads
+  )(using
+    HeaderCarrier
+  ): Future[Either[String, Seq[AppliedConfig]]] =
+    given Reads[AppliedConfig] = AppliedConfig.reads
 
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/search?teamName=${teamName.map(_.asString)}&environment=${environments.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&key=$key&keyFilterType=${keyFilterType.asString}&value=${value}&valueFilterType=${valueFilterType.asString}")
       .execute[Either[UpstreamErrorResponse, Seq[AppliedConfig]]]
-      .flatMap {
+      .flatMap:
         case Left(err) if err.statusCode == 403 => Future.successful(Left("This search has too many results - please refine parameters."))
         case Left(other)                        => Future.failed(other)
         case Right(xs)                          => Future.successful(Right(xs))
-      }
-  }
 
   def configWarnings(
     serviceName : ServiceName
   , environments: Seq[Environment]
   , version     : Option[Version]
   , latest      : Boolean
-  )(implicit
-    hc          : HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[ConfigWarning]] =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/warnings?serviceName=${serviceName.asString}&environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
       .execute[Seq[ConfigWarning]]
-}
+
+end ServiceConfigsConnector

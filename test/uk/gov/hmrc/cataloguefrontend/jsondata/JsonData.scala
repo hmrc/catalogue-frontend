@@ -473,7 +473,7 @@ object JsonData {
       }
     """
 
-  val libraryData: String = {
+  val libraryData: String =
     """{
         "name"           : "lib",
         "isPrivate"      : false,
@@ -489,7 +489,6 @@ object JsonData {
         "url"            : "https://github.com/hmrc/lib"
       }
     """
-  }
 
   def repositoryModulesAllVersions(name: String, dependenciesCompile: String) =
     s"""[{

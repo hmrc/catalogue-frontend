@@ -24,6 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterGroup, ShutterGroupsConnector}
 
@@ -37,15 +38,16 @@ class ShutterGroupsConnectorSpec
      with IntegrationPatience {
 
   override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        Map(
-          "microservice.services.platops-github-proxy.port" -> wireMockPort,
-          "microservice.services.platops-github-proxy.host" -> wireMockHost,
-        ))
+    GuiceApplicationBuilder()
+      .configure(Map(
+        "microservice.services.platops-github-proxy.port" -> wireMockPort,
+        "microservice.services.platops-github-proxy.host" -> wireMockHost,
+      ))
       .build()
 
   private lazy val shutterGroupsConnnector = app.injector.instanceOf[ShutterGroupsConnector]
+
+  private given HeaderCarrier = HeaderCarrier()
 
   "shutterGroups" should {
     "return all shutter groups if the file is valid" in {
@@ -67,7 +69,7 @@ class ShutterGroupsConnectorSpec
           ))
       )
 
-      val response = shutterGroupsConnnector.shutterGroups.futureValue
+      val response = shutterGroupsConnnector.shutterGroups().futureValue
 
       response should contain theSameElementsAs List(
         ShutterGroup("FE-GROUP", List("fe1", "fe2")),
@@ -95,7 +97,7 @@ class ShutterGroupsConnectorSpec
           )
       )
 
-      val response = shutterGroupsConnnector.shutterGroups.futureValue
+      val response = shutterGroupsConnnector.shutterGroups().futureValue
 
       response shouldBe List.empty
     }
@@ -106,7 +108,7 @@ class ShutterGroupsConnectorSpec
           .willReturn(aResponse().withStatus(404))
       )
 
-      val response = shutterGroupsConnnector.shutterGroups.futureValue
+      val response = shutterGroupsConnnector.shutterGroups().futureValue
 
       response shouldBe List.empty
     }

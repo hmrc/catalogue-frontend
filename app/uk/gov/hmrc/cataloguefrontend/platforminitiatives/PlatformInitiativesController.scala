@@ -26,7 +26,6 @@ import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.html.PlatformInitiativesListPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -38,21 +37,19 @@ class PlatformInitiativesController @Inject()
 , platformInitiativesListPage   : PlatformInitiativesListPage
 , teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
 , override val auth             : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
-
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+     with CatalogueAuthBuilders:
 
   def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val boundForm = PlatformInitiativesFilter.form.bindFromRequest()
       boundForm.fold(
         formWithErrors =>
-          for {
+          for
             allTeams <- teamsAndRepositoriesConnector.allTeams()
-          } yield BadRequest(platformInitiativesListPage(
+          yield BadRequest(platformInitiativesListPage(
             initiatives = Seq.empty,
             display     = display,
             team        = None,
@@ -60,10 +57,10 @@ class PlatformInitiativesController @Inject()
             formWithErrors
           )),
         query =>
-          for {
+          for
             allTeams <- teamsAndRepositoriesConnector.allTeams()
             initiatives <- platformInitiativesConnector.getInitiatives(query.team)
-          } yield Ok(platformInitiativesListPage(
+          yield Ok(platformInitiativesListPage(
             initiatives = initiatives,
             display     = display,
             team        = team,
@@ -72,15 +69,15 @@ class PlatformInitiativesController @Inject()
           ))
       )
   }
-}
+
+end PlatformInitiativesController
 
 case class PlatformInitiativesFilter(
   initiativeName: Option[String] = None,
   team          : Option[TeamName]
-) {
+):
   def isEmpty: Boolean =
     initiativeName.isEmpty && team.isEmpty
-}
 
 object PlatformInitiativesFilter {
   lazy val form: Form[PlatformInitiativesFilter] =

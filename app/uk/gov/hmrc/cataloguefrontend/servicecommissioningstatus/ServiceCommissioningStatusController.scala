@@ -38,24 +38,23 @@ class ServiceCommissioningStatusController @Inject() (
 , searchServiceCommissioningStatusPage: SearchServiceCommissioningStatusPage
 , override val mcc                    : MessagesControllerComponents
 , override val auth                   : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   def getCommissioningState(serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         lifecycleStatus <- serviceCommissioningStatusConnector.getLifecycle(serviceName).map(_.map(_.lifecycleStatus).getOrElse(LifecycleStatus.Active))
         results         <- serviceCommissioningStatusConnector.commissioningStatus(serviceName)
-      } yield {
+      yield
         Ok(serviceCommissioningStatusPage(serviceName, lifecycleStatus, results))
-      }
     }
 
   val searchLanding: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         allTeams  <- teamsAndRepositoriesConnector.allTeams()
         allChecks <- serviceCommissioningStatusConnector.allChecks()
         form      =  SearchCommissioning.searchForm.fill(
@@ -69,7 +68,7 @@ class ServiceCommissioningStatusController @Inject() (
                        , warningFilter      = Option(false)
                        )
                      )
-      } yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
+      yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
     }
 
   //Params exist so they can be provided for deep linking
@@ -79,25 +78,24 @@ class ServiceCommissioningStatusController @Inject() (
         .searchForm
         .bindFromRequest()
         .fold(
-          formWithErrors => for {
+          formWithErrors => for
                               allTeams  <- teamsAndRepositoriesConnector.allTeams()
                               allChecks <- serviceCommissioningStatusConnector.allChecks()
-                            } yield BadRequest(searchServiceCommissioningStatusPage(formWithErrors, allTeams, allChecks))
-        , formObject     => for {
+                            yield BadRequest(searchServiceCommissioningStatusPage(formWithErrors, allTeams, allChecks))
+        , formObject     => for
                               allTeams   <- teamsAndRepositoriesConnector.allTeams()
                               allChecks  <- serviceCommissioningStatusConnector.allChecks()
-                              checks      = if (formObject.checks.isEmpty) allChecks.map(_._1).toList else formObject.checks
+                              checks      = if formObject.checks.isEmpty then allChecks.map(_._1).toList else formObject.checks
                               allResults <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType, formObject.lifecycleStatus)
-                              results     = allResults.filter { result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
-                                              val hasChecks = result.checks.exists {
+                              results     = allResults.filter: result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
+                                              val hasChecks = result.checks.exists:
                                                 case check: Check.SimpleCheck => check.checkResult.isRight
                                                 case check: Check.EnvCheck    => check.checkResults.values.exists(_.isRight)
-                                              }
                                               val hasWarnings = result.warnings.nonEmpty
                                               hasWarnings || (!formObject.warningFilter.getOrElse(false) && hasChecks)
-                                            }
-                            } yield
-                              if (formObject.asCsv) {
+                            yield
+                              if formObject.asCsv
+                              then
                                 val rows   = toRows(allChecks.filter { case (title, _) => checks.contains(title) }, formObject.environments, results)
                                 val csv    = CsvUtils.toCsv(rows)
                                 val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
@@ -105,9 +103,8 @@ class ServiceCommissioningStatusController @Inject() (
                                   header = ResponseHeader(200, Map("Content-Disposition" -> "inline; filename=\"commissioning-state.csv\"")),
                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                                 )
-                              } else {
+                              else
                                 Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(results)))
-                              }
         )
     }
 
@@ -116,26 +113,26 @@ class ServiceCommissioningStatusController @Inject() (
   , environments: Seq[Environment]
   , results     : Seq[CachedServiceCheck]
   ): Seq[Seq[(String, String)]] =
-    for {
+    for
       result <- results
-    } yield {
-      Seq("service" -> result.serviceName.asString) ++ checks.flatMap {case (title, formCheckType) =>
-        (formCheckType, result.checks.find(_.title == title)) match {
-          case (FormCheckType.Simple     , None)                       => Seq(title -> displayResult(None))
-          case (FormCheckType.Environment, None)                       => environments.flatMap { e => Seq(s"$title - ${e.asString}" -> displayResult(None)) }
-          case (FormCheckType.Simple     , Some(c: Check.SimpleCheck)) => Seq(title -> displayResult(Some(c.checkResult)))
-          case (FormCheckType.Environment, Some(c: Check.EnvCheck))    => environments.flatMap { e => Seq(s"$title - ${e.asString}" -> displayResult(c.checkResults.get(e))) }
-          case _                                                       => Nil
-        }
-      }
-    }
+    yield
+      Seq("service" -> result.serviceName.asString)
+         ++ checks.flatMap:
+              case (title, formCheckType) =>
+                (formCheckType, result.checks.find(_.title == title)) match
+                  case (FormCheckType.Simple     , None)                       => Seq(title -> displayResult(None))
+                  case (FormCheckType.Environment, None)                       => environments.flatMap { e => Seq(s"$title - ${e.asString}" -> displayResult(None)) }
+                  case (FormCheckType.Simple     , Some(c: Check.SimpleCheck)) => Seq(title -> displayResult(Some(c.checkResult)))
+                  case (FormCheckType.Environment, Some(c: Check.EnvCheck))    => environments.flatMap { e => Seq(s"$title - ${e.asString}" -> displayResult(c.checkResults.get(e))) }
+                  case _                                                       => Nil
 
-  private def displayResult(result: Option[Check.Result]) = result match {
-    case None                 => ""
-    case Some(Right(present)) => "Y"
-    case Some(Left(missing))  => "N"
-  }
-}
+  private def displayResult(result: Option[Check.Result]) =
+    result match
+      case None                 => ""
+      case Some(Right(present)) => "Y"
+      case Some(Left(missing))  => "N"
+
+end ServiceCommissioningStatusController
 
 import play.api.data.{Form, Forms}
 

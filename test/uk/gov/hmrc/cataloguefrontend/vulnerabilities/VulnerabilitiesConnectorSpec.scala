@@ -38,15 +38,15 @@ class VulnerabilitiesConnectorSpec
     with HttpClientV2Support
     with WireMockSupport {
 
-  val servicesConfig = new ServicesConfig(
+  val servicesConfig = ServicesConfig(
     Configuration(
       "microservice.services.vulnerabilities.host" -> wireMockHost,
       "microservice.services.vulnerabilities.port" -> wireMockPort
     )
   )
 
-  val vulnerabilitiesConnector = new VulnerabilitiesConnector(httpClientV2, servicesConfig)
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  val vulnerabilitiesConnector = VulnerabilitiesConnector(httpClientV2, servicesConfig)
+  given HeaderCarrier = HeaderCarrier()
 
   "timelineCounts" should {
     "return a sequence of VulnerabilitiesTimelineCounts" in {

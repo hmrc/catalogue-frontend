@@ -31,36 +31,37 @@ import scala.concurrent.{ExecutionContext, Future}
 class HealthIndicatorsConnector @Inject() (
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext):
   import HttpReads.Implicits._
 
-  private implicit val indicatorReads        : Reads[Indicator]            = Indicator.reads
-  private implicit val historicIndicatorReads: Reads[HistoricIndicatorAPI] = HistoricIndicatorAPI.format
-  private implicit val averageReads          : Reads[AveragePlatformScore] = AveragePlatformScore.format
+  private given Reads[Indicator]             = Indicator.reads
+  private given Reads[HistoricIndicatorData] = HistoricIndicatorData.format
+  private given Reads[AveragePlatformScore]  = AveragePlatformScore.format
 
   private val healthIndicatorsBaseUrl: String =
     servicesConfig.baseUrl("health-indicators")
 
-  def getIndicator(repoName: String)(implicit hc: HeaderCarrier): Future[Option[Indicator]] =
+  def getIndicator(repoName: String)(using HeaderCarrier): Future[Option[Indicator]] =
     httpClientV2
       .get(url"$healthIndicatorsBaseUrl/health-indicators/indicators/$repoName")
       .execute[Option[Indicator]]
 
-  def getIndicators(repoType: Option[RepoType])(implicit hc: HeaderCarrier): Future[Seq[Indicator]] =
+  def getIndicators(repoType: Option[RepoType])(using HeaderCarrier): Future[Seq[Indicator]] =
     httpClientV2
       .get(url"$healthIndicatorsBaseUrl/health-indicators/indicators?sort=desc&repoType=$repoType")
       .execute[Seq[Indicator]]
 
-  def getHistoricIndicators(repoName: String)(implicit hc: HeaderCarrier): Future[Option[HistoricIndicatorAPI]] =
+  def getHistoricIndicators(repoName: String)(using HeaderCarrier): Future[Option[HistoricIndicatorData]] =
     httpClientV2
       .get(url"$healthIndicatorsBaseUrl/health-indicators/history/$repoName")
-      .execute[Option[HistoricIndicatorAPI]]
+      .execute[Option[HistoricIndicatorData]]
 
-  def getAveragePlatformScore(implicit hc: HeaderCarrier): Future[Option[AveragePlatformScore]] =
+  def getAveragePlatformScore(using HeaderCarrier): Future[Option[AveragePlatformScore]] =
     httpClientV2
       .get(url"$healthIndicatorsBaseUrl/health-indicators/platform-average")
       .execute[Option[AveragePlatformScore]]
-}
+
+end HealthIndicatorsConnector
 
 enum MetricType:
   case GitHub         extends MetricType
@@ -68,18 +69,15 @@ enum MetricType:
   case BuildStability extends MetricType
   case AlertConfig    extends MetricType
 
-object MetricType {
-  val reads: Reads[MetricType] = new Reads[MetricType] {
-    override def reads(json: JsValue): JsResult[MetricType] =
-      json.validate[String].flatMap {
+object MetricType:
+  val reads: Reads[MetricType] =
+    (json: JsValue) =>
+      json.validate[String].flatMap:
         case "github"          => JsSuccess(GitHub)
         case "leak-detection"  => JsSuccess(LeakDetection)
         case "build-stability" => JsSuccess(BuildStability)
         case "alert-config"    => JsSuccess(AlertConfig)
         case s                 => JsError(s"Invalid MetricType: $s")
-      }
-  }
-}
 
 case class Breakdown(
   points     : Int,
@@ -87,13 +85,12 @@ case class Breakdown(
   href       : Option[String]
 )
 
-object Breakdown {
+object Breakdown:
   val reads: Reads[Breakdown] =
     ( (__ \ "points"     ).read[Int]
     ~ (__ \ "description").read[String]
     ~ (__ \ "href"       ).readNullable[String]
     )(Breakdown.apply)
-}
 
 case class WeightedMetric(
   metricType: MetricType,
@@ -101,16 +98,14 @@ case class WeightedMetric(
   breakdown : Seq[Breakdown]
 )
 
-object WeightedMetric {
-  val reads: Reads[WeightedMetric] = {
-    implicit val sR: Reads[Breakdown]   = Breakdown.reads
-    implicit val rtR: Reads[MetricType] = MetricType.reads
+object WeightedMetric:
+  val reads: Reads[WeightedMetric] =
+    given Reads[Breakdown]  = Breakdown.reads
+    given Reads[MetricType] = MetricType.reads
     ( (__ \ "metricType").read[MetricType]
     ~ (__ \ "score"     ).read[Int]
     ~ (__ \ "breakdown" ).read[Seq[Breakdown]]
     )(WeightedMetric.apply)
-  }
-}
 
 case class Indicator(
   repoName       : String,
@@ -119,17 +114,15 @@ case class Indicator(
   weightedMetrics: Seq[WeightedMetric]
 )
 
-object Indicator {
-  val reads: Reads[Indicator] = {
-    implicit val sR: Reads[WeightedMetric] = WeightedMetric.reads
-    implicit val rtR: Reads[RepoType]      = RepoType.format
+object Indicator:
+  val reads: Reads[Indicator] =
+    given Reads[WeightedMetric] = WeightedMetric.reads
+    given Reads[RepoType]       = RepoType.format
     ( (__ \ "repoName"       ).read[String]
     ~ (__ \ "repoType"       ).read[RepoType]
     ~ (__ \ "overallScore"   ).read[Int]
     ~ (__ \ "weightedMetrics").read[Seq[WeightedMetric]]
     )(Indicator.apply)
-  }
-}
 
 
 case class DataPoint(
@@ -137,25 +130,23 @@ case class DataPoint(
   overallScore: Int
 )
 
-object DataPoint {
-  val format: OFormat[DataPoint] = {
-    implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
-    ( (__ \ "timestamp"   ).format[Instant]
+object DataPoint:
+  val format: Format[DataPoint] =
+    ( (__ \ "timestamp"   ).format[Instant](MongoJavatimeFormats.instantFormat) // TODO mongo format!?
     ~ (__ \ "overallScore").format[Int]
     )(DataPoint.apply, r => Tuple.fromProductTyped(r))
-  }
-}
 
-case class HistoricIndicatorAPI(repoName: String, dataPoints: Seq[DataPoint])
+case class HistoricIndicatorData(
+  repoName: String,
+  dataPoints: Seq[DataPoint]
+)
 
-object HistoricIndicatorAPI {
-  val format: OFormat[HistoricIndicatorAPI] = {
-    implicit val dataFormat: Format[DataPoint] = DataPoint.format
+object HistoricIndicatorData:
+  val format: Format[HistoricIndicatorData] =
+    given Format[DataPoint] = DataPoint.format
     ( (__ \ "repoName"  ).format[String]
     ~ (__ \ "dataPoints").format[Seq[DataPoint]
-    ])(HistoricIndicatorAPI.apply, r => Tuple.fromProductTyped(r))
-  }
-}
+    ])(HistoricIndicatorData.apply, r => Tuple.fromProductTyped(r))
 
 case class AveragePlatformScore(
   timestamp   : Instant,
@@ -163,10 +154,8 @@ case class AveragePlatformScore(
 )
 
 object AveragePlatformScore {
-  val format: Format[AveragePlatformScore] = {
-    implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
-    ( (__ \ "timestamp"   ).format[Instant]
+  val format: Format[AveragePlatformScore] =
+    ( (__ \ "timestamp"   ).format[Instant](MongoJavatimeFormats.instantFormat) // TODO mongo format!?
     ~ (__ \ "averageScore").format[Int]
     )(AveragePlatformScore.apply, r => Tuple.fromProductTyped(r))
-  }
 }

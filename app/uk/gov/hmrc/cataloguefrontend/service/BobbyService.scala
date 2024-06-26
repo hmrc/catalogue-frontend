@@ -16,46 +16,46 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import java.time.{Clock, LocalDate}
-
-import javax.inject.Inject
+import uk.gov.hmrc.cataloguefrontend.DateHelper.atStartOfDayInstant
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.service.model.BobbyRulesView
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{Clock, LocalDate}
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.chaining.scalaUtilChainingOps
 
 class BobbyService @Inject() (
   serviceConfigsConnector: ServiceConfigsConnector
 , clock                  : Clock
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext):
 
-  def getRules()(implicit hc: HeaderCarrier): Future[BobbyRulesView] = {
+  def getRules()(using HeaderCarrier): Future[BobbyRulesView] =
     val today = LocalDate.now(clock)
 
-    def sort(ruleset: BobbyRuleSet, sortDateLt: (LocalDate, LocalDate) => Boolean) = {
-      def sortRulesLt(x: BobbyRule, y: BobbyRule) =
-        if (x.from == y.from)
-          if (x.group == y.group) x.artefact < y.artefact
-          else x.group < y.group
-        else sortDateLt(x.from, y.from)
-
-      BobbyRuleSet(
-        libraries = ruleset.libraries.sortWith(sortRulesLt),
-        plugins = ruleset.plugins.sortWith(sortRulesLt)
-      )
-    }
+    def ordering(dateAscending: Boolean) =
+      Ordering.by: (br: BobbyRule) =>
+        ( br.from.atStartOfDayInstant.toEpochMilli.pipe(x => if dateAscending then x else -x)
+        , br.group
+        , br.artefact
+        )
 
     serviceConfigsConnector
       .bobbyRules()
-      .map { ruleset =>
+      .map: ruleset =>
         val (upcomingLibraries, activeLibraries) = ruleset.libraries.partition(_.from.isAfter(today))
-        val (upcomingPlugins, activePlugins)     = ruleset.plugins.partition(_.from.isAfter(today))
+        val (upcomingPlugins  , activePlugins  ) = ruleset.plugins  .partition(_.from.isAfter(today))
         BobbyRulesView(
-          upcoming = sort(BobbyRuleSet(upcomingLibraries, upcomingPlugins), _.isBefore(_)),
-          active   = sort(BobbyRuleSet(activeLibraries, activePlugins), _.isAfter(_))
+          upcoming = { given Ordering[BobbyRule] = ordering(dateAscending = true)
+                       BobbyRuleSet(upcomingLibraries.sorted, upcomingPlugins.sorted)
+                     }
+        , active   = { given Ordering[BobbyRule] = ordering(dateAscending = false)
+                       BobbyRuleSet(activeLibraries.sorted, activePlugins.sorted)
+                     }
         )
-      }
-  }
-}
+
+  end getRules
+
+end BobbyService

@@ -35,10 +35,10 @@ class SearchByUrlController @Inject() (
   searchByUrlService: SearchByUrlService,
   searchByUrlPage   : SearchByUrlPage,
   override val auth : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   private val serviceNameToUrl = routes.CatalogueController.service
 
@@ -53,24 +53,22 @@ class SearchByUrlController @Inject() (
         .bindFromRequest()
         .fold(
           formWithErrors => Future.successful(Ok(searchByUrlPage(formWithErrors, Nil, serviceNameToUrl))),
-          query =>
-            searchByUrlService
-              .search(query.name)
-              .map { results =>
-                Ok(searchByUrlPage(UrlSearchFilter.form.bindFromRequest(), results, serviceNameToUrl))
-              }
+          query          => searchByUrlService
+                              .search(query.name)
+                              .map: results =>
+                                Ok(searchByUrlPage(UrlSearchFilter.form.bindFromRequest(), results, serviceNameToUrl))
         )
     }
 
-  case class UrlSearchFilter(name: Option[String] = None) {
-    def isEmpty: Boolean = name.isEmpty
-  }
+  case class UrlSearchFilter(name: Option[String] = None):
+    def isEmpty: Boolean =
+      name.isEmpty
 
-  object UrlSearchFilter {
+  object UrlSearchFilter:
     lazy val form = Form(
       mapping(
         "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
       )(UrlSearchFilter.apply)(f => Some(f.name))
     )
-  }
-}
+
+end SearchByUrlController

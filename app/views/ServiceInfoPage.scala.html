@@ -95,7 +95,7 @@
             </div>
         </div>
 
-        @serviceRoutes.environmentRoutes.find(er => er.environment == "production" && !er.isAdmin).map { envRoute =>
+        @serviceRoutes.environmentRoutes.find(er => er.environment == Environment.Production && !er.isAdmin).map { envRoute =>
             <div class="row mb-3">
                 <div class="col-md-12">
                     @partials.serviceUrlDetails(envRoute, isAdmin = false)
@@ -103,7 +103,7 @@
             </div>
         }
 
-        @serviceRoutes.environmentRoutes.find(er => er.environment == "production" && er.isAdmin).map { envRoute =>
+        @serviceRoutes.environmentRoutes.find(er => er.environment == Environment.Production && er.isAdmin).map { envRoute =>
             <div class="row mb-3">
                 <div class="col-md-12">
                     @partials.serviceUrlDetails(envRoute, isAdmin = true)

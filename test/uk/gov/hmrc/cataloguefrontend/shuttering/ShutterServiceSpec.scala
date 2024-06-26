@@ -95,21 +95,19 @@ class ShutterServiceSpec
   "findCurrentStates" should {
     "return a list of shutter events ordered by shutter status" in {
       val boot = Boot.init
-      implicit val hc = new HeaderCarrier()
+      given HeaderCarrier = HeaderCarrier()
 
       when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production))
         .thenReturn(Future.successful(mockShutterStates))
       when(boot.mockShutterConnector.latestShutterEvents(ShutterType.Frontend, Environment.Production))
         .thenReturn(Future.successful(mockEvents))
 
-      boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production).futureValue match {
-        case Seq((a, _), (b, _), (c, _)) =>
-          a.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
-          b.status shouldBe ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
-          c.status shouldBe ShutterStatus.Unshuttered
-        case other =>
-          other.size shouldBe(3)
-      }
+      val states = boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production).futureValue
+      states.map(_._1.status) shouldBe Seq(
+        ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+      , ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+      , ShutterStatus.Unshuttered
+      )
     }
   }
 
@@ -210,12 +208,11 @@ class ShutterServiceSpec
   case class Boot(shutterService: ShutterService, mockShutterConnector: ShutterConnector)
 
   object Boot {
-    def init: Boot = {
+    def init: Boot =
       val mockShutterConnector       = mock[ShutterConnector]
       val mockShutterGroupsConnector = mock[ShutterGroupsConnector]
       val routeRulesConnector        = mock[RouteRulesConnector]
-      val shutterService             = new ShutterService(mockShutterConnector, mockShutterGroupsConnector, routeRulesConnector)
+      val shutterService             = ShutterService(mockShutterConnector, mockShutterGroupsConnector, routeRulesConnector)
       Boot(shutterService, mockShutterConnector)
-    }
   }
 }

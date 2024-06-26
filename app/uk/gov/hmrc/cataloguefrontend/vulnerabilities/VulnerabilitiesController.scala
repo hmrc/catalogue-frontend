@@ -40,10 +40,10 @@ class VulnerabilitiesController @Inject() (
   vulnerabilitiesForServicesPage: VulnerabilitiesForServicesPage,
   vulnerabilitiesTimelinePage   : VulnerabilitiesTimelinePage,
   teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
-) (implicit
-   override val ec: ExecutionContext
+)(using
+  override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   def vulnerabilitiesList(
     vulnerability : Option[String],
@@ -58,7 +58,7 @@ class VulnerabilitiesController @Inject() (
         .fold(
           formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(None, Seq.empty, formWithErrors))),
           validForm =>
-            for {
+            for
               teams     <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
               summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(
                              flag           = Some(validForm.flag)
@@ -66,7 +66,7 @@ class VulnerabilitiesController @Inject() (
                            , team           = validForm.team
                            , curationStatus = validForm.curationStatus
                            )
-            } yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
+            yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
           )
     }
 
@@ -80,14 +80,14 @@ class VulnerabilitiesController @Inject() (
         .fold(
           formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
           validForm =>
-          for {
-            teams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-            counts <- vulnerabilitiesConnector.vulnerabilityCounts(
-                        flag        = validForm.flag
-                      , serviceName = None // Use listJS filters
-                      , team        = validForm.team
-                      )
-          } yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
+            for
+              teams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
+              counts <- vulnerabilitiesConnector.vulnerabilityCounts(
+                          flag        = validForm.flag
+                        , serviceName = None // Use listJS filters
+                        , team        = validForm.team
+                        )
+            yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
         )
     }
 
@@ -100,14 +100,14 @@ class VulnerabilitiesController @Inject() (
     to            : LocalDate
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesTimelineFilter.form
+      import VulnerabilitiesTimelineFilter.form
 
       form
         .bindFromRequest()
         .fold(
           formWithErrors => Future.successful(BadRequest(vulnerabilitiesTimelinePage(teams = Seq.empty, result = Seq.empty, formWithErrors))),
           validForm      =>
-            for {
+            for
               sortedTeams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
               teamNames    =  sortedTeams.map(_.name.asString)
               counts       <- vulnerabilitiesConnector.timelineCounts(
@@ -119,22 +119,22 @@ class VulnerabilitiesController @Inject() (
                                 to             = validForm.to
                               )
               sortedCounts =  counts.sortBy(_.weekBeginning)
-            } yield Ok(vulnerabilitiesTimelinePage(teams = teamNames, result = sortedCounts, form.fill(validForm)))
+            yield Ok(vulnerabilitiesTimelinePage(teams = teamNames, result = sortedCounts, form.fill(validForm)))
         )
     }
-  }
+
+end VulnerabilitiesController
 
 
-  case class VulnerabilitiesExplorerFilter(
-    flag          : SlugInfoFlag           = SlugInfoFlag.Latest,
-    vulnerability : Option[String]         = None,
-    curationStatus: Option[CurationStatus] = None,
-    service       : Option[ServiceName]    = None,
-    team          : Option[TeamName]       = None,
-  )
+case class VulnerabilitiesExplorerFilter(
+  flag          : SlugInfoFlag           = SlugInfoFlag.Latest,
+  vulnerability : Option[String]         = None,
+  curationStatus: Option[CurationStatus] = None,
+  service       : Option[ServiceName]    = None,
+  team          : Option[TeamName]       = None,
+)
 
-object VulnerabilitiesExplorerFilter {
-
+object VulnerabilitiesExplorerFilter:
   import play.api.data.Forms.{mapping, optional, text}
 
   lazy val form: Form[VulnerabilitiesExplorerFilter] =
@@ -150,7 +150,6 @@ object VulnerabilitiesExplorerFilter {
         "team"           -> optional(Forms.of[TeamName](TeamName.formFormat)),
       )(VulnerabilitiesExplorerFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
-}
 
 case class VulnerabilitiesCountFilter(
   flag   : SlugInfoFlag        = SlugInfoFlag.Latest,
@@ -158,7 +157,7 @@ case class VulnerabilitiesCountFilter(
   team   : Option[TeamName]    = None,
 )
 
-object VulnerabilitiesCountFilter {
+object VulnerabilitiesCountFilter:
   lazy val form: Form[VulnerabilitiesCountFilter] =
     Form(
       mapping(
@@ -170,7 +169,6 @@ object VulnerabilitiesCountFilter {
         "team"    -> optional(Forms.of[TeamName](TeamName.formFormat)),
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
-}
 
 case class VulnerabilitiesTimelineFilter(
   service       : Option[ServiceName],
@@ -182,14 +180,14 @@ case class VulnerabilitiesTimelineFilter(
   showDelta     : Boolean
 )
 
-object VulnerabilitiesTimelineFilter {
+object VulnerabilitiesTimelineFilter:
   def defaultFromTime(): LocalDate =
     LocalDate.now().minusMonths(6)
 
   def defaultToTime(): LocalDate =
     LocalDate.now()
 
-  lazy val form: Form[VulnerabilitiesTimelineFilter] = {
+  lazy val form: Form[VulnerabilitiesTimelineFilter] =
     val dateFormat = "yyyy-MM-dd"
     Form(
       mapping(
@@ -203,5 +201,3 @@ object VulnerabilitiesTimelineFilter {
       )(VulnerabilitiesTimelineFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying("To Date must be greater than From Date", form => form.to.isAfter(form.from))
     )
-  }
-}

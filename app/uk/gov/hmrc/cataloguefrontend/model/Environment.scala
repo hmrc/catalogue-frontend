@@ -29,18 +29,18 @@ enum Environment(val asString: String, val displayString: String) extends FromSt
 object Environment extends FromStringEnum[Environment]
 
 trait SlugInfoFlag { def asString: String; def displayString: String }
-object SlugInfoFlag {
+
+object SlugInfoFlag:
   case object Latest                          extends SlugInfoFlag { override def asString = "latest"    ; override def displayString = "Latest"          }
   case class ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString; override def displayString = env.displayString }
 
   val values: Seq[SlugInfoFlag] =
     Latest +: Environment.valuesAsSeq.map(ForEnvironment.apply)
 
-  implicit val ordering: Ordering[SlugInfoFlag] =
+  given Ordering[SlugInfoFlag] =
     Ordering.by(values.indexOf(_))
 
   def parse(s: String): Option[SlugInfoFlag] =
-    if (s == "external test")
-      Some(SlugInfoFlag.ForEnvironment(Environment.ExternalTest)) // service-dependencies currently represents with a space
+    if s == "external test"
+    then Some(SlugInfoFlag.ForEnvironment(Environment.ExternalTest)) // service-dependencies currently represents with a space
     else values.find(_.asString == s)
-}

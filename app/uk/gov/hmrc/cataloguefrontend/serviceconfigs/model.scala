@@ -20,7 +20,6 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Format, __}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
 
@@ -55,13 +54,12 @@ enum ValueFilterType(val asString: String) extends FromString:
 object ValueFilterType extends FromStringEnum[ValueFilterType]:
   // TODO move toValueFilterType(ignoreCase: Boolean) to FormValueFilterType
   def toValueFilterType(formValueFilterType: FormValueFilterType, isIgnoreCase: Boolean): ValueFilterType  =
-    formValueFilterType match {
-      case FormValueFilterType.Contains       => if (isIgnoreCase) ContainsIgnoreCase       else Contains
-      case FormValueFilterType.DoesNotContain => if (isIgnoreCase) DoesNotContainIgnoreCase else DoesNotContain
-      case FormValueFilterType.EqualTo        => if (isIgnoreCase) EqualToIgnoreCase        else EqualTo
-      case FormValueFilterType.NotEqualTo     => if (isIgnoreCase) NotEqualToIgnoreCase     else NotEqualTo
+    formValueFilterType match
+      case FormValueFilterType.Contains       => if isIgnoreCase then ContainsIgnoreCase       else Contains
+      case FormValueFilterType.DoesNotContain => if isIgnoreCase then DoesNotContainIgnoreCase else DoesNotContain
+      case FormValueFilterType.EqualTo        => if isIgnoreCase then EqualToIgnoreCase        else EqualTo
+      case FormValueFilterType.NotEqualTo     => if isIgnoreCase then NotEqualToIgnoreCase     else NotEqualTo
       case FormValueFilterType.IsEmpty        => IsEmpty
-    }
 
 enum GroupBy(val asString: String, val displayString: String) extends FromString:
   case Key     extends GroupBy(asString = "key"    , displayString = "Key"    )
@@ -85,8 +83,7 @@ case class DeploymentConfigEvent(
 )
 
 object DeploymentConfigEvent {
-  implicit val mongoFormats: Format[DeploymentConfigEvent] = {
-    implicit val instantFormat = MongoJavatimeFormats.instantFormat
+  val format: Format[DeploymentConfigEvent] =
     ( (__ \ "serviceName"  ).format[ServiceName](ServiceName.format)
     ~ (__ \ "environment"  ).format[Environment](Environment.format)
     ~ (__ \ "deploymentId" ).format[String]
@@ -94,5 +91,4 @@ object DeploymentConfigEvent {
     ~ (__ \ "configId"     ).formatNullable[String]
     ~ (__ \ "lastUpdated"  ).format[Instant]
     )(DeploymentConfigEvent.apply, dce => Tuple.fromProductTyped(dce))
-  }
 }

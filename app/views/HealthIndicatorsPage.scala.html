@@ -16,12 +16,11 @@
 
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.Indicator
 
-@import uk.gov.hmrc.cataloguefrontend.healthindicators.HistoricIndicatorAPI
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.HistoricIndicatorData
 @import views.html.partials.HealthIndicatorsHistory
 
-@(
-  indicator : Indicator,
-  optHistory: Option[HistoricIndicatorAPI],
+@(indicator : Indicator,
+  optHistory: Option[HistoricIndicatorData],
   optAverage: Option[Int]
 )(implicit
   request   : RequestHeader

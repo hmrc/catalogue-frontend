@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import java.time.format.DateTimeFormatter
 import cats.data.EitherT
 import cats.instances.future._
-
-import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
@@ -32,6 +29,8 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.BobbyRulesTrendPage
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -41,16 +40,16 @@ class BobbyRulesTrendController @Inject() (
   serviceDeps      : ServiceDependenciesConnector,
   page             : BobbyRulesTrendPage,
   override val auth: FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders {
 
-  def landing: Action[AnyContent] =
+  val landing: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         allRules <- configConnector.bobbyRules().map(_.libraries)
-      } yield Ok(
+      yield Ok(
         page(
           form.fill(SearchForm(rules = Seq.empty, from = LocalDate.now().minusYears(2) , to = LocalDate.now())),
           allRules,
@@ -66,7 +65,7 @@ class BobbyRulesTrendController @Inject() (
     to   : LocalDate,
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         allRules <- configConnector.bobbyRules()
                       .map(_.libraries)
                       .map(_.sortBy(-_.from.toEpochDay))
@@ -81,38 +80,38 @@ class BobbyRulesTrendController @Inject() (
                  .bindFromRequest()
                  .fold(
                    hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, allRules, flags = SlugInfoFlag.values, data = None))),
-                   success = query =>
-                     (for {
-                       violations <- EitherT.right[Result](serviceDeps.getHistoricBobbyRuleViolations(query.rules.toList, query.from, query.to))
-                       countData = violations.summary
-                     } yield Ok(
-                       page(
-                         form.bindFromRequest(),
-                         allRules,
-                         flags = SlugInfoFlag.values,
-                         Some(
-                           countData
-                             .groupBy { case ((_, e), _) => e }
-                             .view
-                             .mapValues(cd =>
-                               BobbyRulesTrendController.GraphData(
-                                 columns = List(("string", "Date")) ++
-                                             List(("number", "Total")) ++
-                                             cd.map(_._1).map { case (r, _) => s"${r.group}:${r.artefact}:${r.range.range}" }.toList.map(("number", _)),
-                                 rows    = cd
-                                             .map(_._2.toList)
-                                             .toList
-                                             .transpose
-                                             .map(x => List(x.sum) ++ x)
-                                             .zipWithIndex
-                                             .map { case (x, i) => List("\"" + violations.date.plusDays(i).format(DateTimeFormatter.ofPattern("dd MMM")) + "\"") ++ x }
-                               )
-                             ).toMap
-                         )
-                       )
-                     )).merge
+                   success   = query =>
+                     (for
+                        violations <- EitherT.right[Result](serviceDeps.getHistoricBobbyRuleViolations(query.rules.toList, query.from, query.to))
+                        countData = violations.summary
+                      yield
+                        Ok(page(
+                          form.bindFromRequest(),
+                          allRules,
+                          flags = SlugInfoFlag.values,
+                          Some(
+                            countData
+                              .groupBy { case ((_, e), _) => e }
+                              .view
+                              .mapValues : cd =>
+                                BobbyRulesTrendController.GraphData(
+                                  columns = List(("string", "Date"))
+                                              ++ List(("number", "Total"))
+                                              ++ cd.map(_._1).map { case (r, _) => s"${r.group}:${r.artefact}:${r.range.range}" }.toList.map(("number", _)),
+                                  rows    = cd
+                                              .map(_._2.toList)
+                                              .toList
+                                              .transpose
+                                              .map(x => List(x.sum) ++ x)
+                                              .zipWithIndex
+                                              .map { case (x, i) => List("\"" + violations.date.plusDays(i).format(DateTimeFormatter.ofPattern("dd MMM")) + "\"") ++ x }
+                                )
+                              .toMap
+                          )
+                        ))
+                     ).merge
                  )
-      } yield res
+      yield res
     }
 
   case class SearchForm(
@@ -121,7 +120,7 @@ class BobbyRulesTrendController @Inject() (
     to   : LocalDate
   )
 
-  val form = {
+  val form =
     import uk.gov.hmrc.cataloguefrontend.util.FormUtils._
     import play.api.data._
     import play.api.data.Forms._
@@ -132,10 +131,9 @@ class BobbyRulesTrendController @Inject() (
         "to"    -> default(Forms.localDate, LocalDate.now())
       )(SearchForm.apply)(sf => Some(Tuple.fromProductTyped(sf)))
     )
-  }
 }
 
-object BobbyRulesTrendController {
+object BobbyRulesTrendController:
   def display(group: String, artefact: String, versionRange: BobbyVersionRange): String =
     uk.gov.hmrc.cataloguefrontend.routes.BobbyRulesTrendController.display(
       `rules[]` = Seq(s"$group:$artefact:${versionRange.range}")
@@ -145,4 +143,3 @@ object BobbyRulesTrendController {
     columns: List[(String, String)],
     rows   : List[List[Any]]
   )
-}

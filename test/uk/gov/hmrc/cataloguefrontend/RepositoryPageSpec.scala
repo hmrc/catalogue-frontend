@@ -30,11 +30,10 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
     repositoryType: RepoType
   )
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
     setupEnableBranchProtectionAuthEndpoint()
-  }
 
   "A repository page" should {
     "return a 404 when the teams-and-repositories microservice returns a 404" in {

@@ -30,19 +30,21 @@ import scala.concurrent.ExecutionContext
 class BrowserSideAuditingController @Inject()(
   override val mcc : MessagesControllerComponents,
   override val auth: FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-  with CatalogueAuthBuilders {
+  with CatalogueAuthBuilders:
 
   private val logger = Logger(getClass)
 
-  // This endpoint exists for implicit auditing
+  /** This endpoint exists for implicit auditing */
   def sendAudit(): Action[JsValue] =
     BasicAuthAction(parse.tolerantJson) { implicit request =>
       val target = (request.body \ "target").asOpt[String]
       val referrer = request.headers.get(REFERER)
-      if ((request.body \ "id").asOpt[String].isEmpty) logger.warn(s"HTML element for the link to $target from $referrer, has no id attribute")
+
+      if (request.body \ "id").asOpt[String].isEmpty
+      then logger.warn(s"HTML element for the link to $target from $referrer, has no id attribute")
+
       NoContent
     }
-}

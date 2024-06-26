@@ -19,28 +19,29 @@ package views.partials
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{EnvironmentRoute, Route}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 
 class ServiceRouteRuleViolationsSpec extends AnyWordSpec with Matchers {
 
   val misMatchedServiceRoutes = ServiceRoutes(Seq(
     EnvironmentRoute(
-      environment = "EnvName0",
+      environment = Environment.Development,
       routes      = Seq(Route("TestUrl0", "ruleConfigurationUrl0"))
     ),
     EnvironmentRoute(
-      environment = "EnvName1",
+      environment = Environment.Production,
       routes      = Seq(Route("TestUrl1", "ruleConfigurationUrl1"))
     )
   ))
 
   val matchingServiceRoutes = ServiceRoutes(Seq(
     EnvironmentRoute(
-      environment = "EnvName0",
+      environment = Environment.Development,
       routes      = Seq(Route("TestUrl0", "ruleConfigurationUrl0"))
     ),
     EnvironmentRoute(
-      environment = "EnvName1",
+      environment = Environment.Production,
       routes      = Seq(Route("TestUrl0", "ruleConfigurationUrl1"))
     )
   ))

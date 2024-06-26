@@ -40,10 +40,10 @@ class ShutterOverviewController @Inject() (
   shutterService           : ShutterService,
   catalogueConfig          : CatalogueConfig,
   override val auth        : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   private val logger = Logger(getClass)
 
@@ -55,40 +55,37 @@ class ShutterOverviewController @Inject() (
 
   def allStatesForEnv(shutterType: ShutterType, env: Environment): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
-        envAndCurrentStates <- Environment.valuesAsSeq.traverse { env =>
+      for
+        envAndCurrentStates <- Environment.valuesAsSeq.traverse: env =>
                                  shutterService
                                    .findCurrentStates(shutterType, env)
-                                   .recover {
+                                   .recover:
                                      case NonFatal(ex) =>
                                        logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
                                        Seq.empty
-                                   }
                                    .map(ws => (env, ws))
-                               }
         hasGlobalPerm  <-  auth
-                            .verify(
+                            .verify:
                               Retrieval.hasPredicate(Predicate.Permission(Resource.from("shutter-api", "mdtp"), IAAction("SHUTTER")))
-                            ).map(_.exists(_ == true))
-        killSwitchLink =  if (hasGlobalPerm && shutterType != Rate) Some(catalogueConfig.killSwitchLink(shutterType.asString)) else None
+                            .map(_.exists(_ == true))
+        killSwitchLink =  if hasGlobalPerm && shutterType != Rate then Some(catalogueConfig.killSwitchLink(shutterType.asString)) else None
         page           =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
-      } yield Ok(page)
+      yield Ok(page)
     }
 
   def frontendRouteWarnings(env: Environment, serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
-        envsAndWarnings <- Environment.valuesAsSeq.traverse { env =>
+      for
+        envsAndWarnings <- Environment.valuesAsSeq.traverse: env =>
                              shutterService
                                .frontendRouteWarnings(env, serviceName)
-                               .recover {
+                               .recover:
                                  case NonFatal(ex) =>
                                    logger.error(s"Could not retrieve frontend route warnings for service '${serviceName.asString}' in env: '${env.asString}': ${ex.getMessage}", ex)
                                    Seq.empty
-                               }
                                .map(ws => (env, ws))
-                           }
-        page = frontendRouteWarningPage(envsAndWarnings.toMap, env, serviceName)
-      } yield Ok(page)
+        page            = frontendRouteWarningPage(envsAndWarnings.toMap, env, serviceName)
+      yield Ok(page)
     }
-}
+
+end ShutterOverviewController

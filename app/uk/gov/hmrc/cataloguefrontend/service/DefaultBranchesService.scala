@@ -20,9 +20,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
 
-class DefaultBranchesService @Inject()()(implicit val ec: ExecutionContext){
+class DefaultBranchesService @Inject()():
 
   def allTeams(repos: Seq[GitRepository]): Seq[TeamName] =
     repos.map(_.teamNames).flatten.distinct.sorted
@@ -41,4 +40,3 @@ class DefaultBranchesService @Inject()()(implicit val ec: ExecutionContext){
       .filter(repo => teamNames.fold(true)(repo.teamNames.contains(_)))
       .filter(repo => !singleOwnership || repo.teamNames.length == 1)
       .filter(repo => includeArchived || !repo.isArchived)
-}

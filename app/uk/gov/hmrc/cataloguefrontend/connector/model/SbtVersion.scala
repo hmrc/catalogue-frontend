@@ -25,12 +25,11 @@ case class SbtVersion(
   version    : Version
 )
 
-object SbtVersion {
+object SbtVersion:
   val reads: Reads[SbtVersion] =
     ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
-    ~ (__ \ "version"    ).read[Version](Version.format)
+    ~ (__ \ "version"    ).read[Version    ](Version.format    )
     )(SbtVersion.apply)
-}
 
 
 case class SbtUsageByEnv(

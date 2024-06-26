@@ -25,10 +25,9 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
-  }
 
   "Repositories list" should {
     "show a list of all non-archived repositories when repository type 'All' is selected" in {

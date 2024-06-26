@@ -26,7 +26,6 @@ import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class DefaultBranchesServiceSpec
@@ -82,9 +81,12 @@ class DefaultBranchesServiceSpec
   }
 
   private[this] trait Setup {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+    given HeaderCarrier = HeaderCarrier()
+
     val mockTeamsAndRepositoriesConnector: TeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
-    val defaultBranchesService: DefaultBranchesService = new DefaultBranchesService()
+
+    val defaultBranchesService: DefaultBranchesService = DefaultBranchesService()
+
     val mockRepositories: Seq[GitRepository] = Seq(
       GitRepository(
         name           = "test",

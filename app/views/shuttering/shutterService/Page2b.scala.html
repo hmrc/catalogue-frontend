@@ -21,18 +21,18 @@
 
 @this()
 
-@( form                  : Form[Step2bForm]
- , step0Out              : Step0Out
- , step1Out              : Step1Out
- , requiresOutageMessage : Boolean
- , outageMessageSrc      : Option[OutagePage]
- , defaultOutageMessage  : String
- , outagePages           : Seq[OutagePageStatus]
- , back                  : Call
- )(implicit
-   request               : RequestHeader
- , messagesProvider      : MessagesProvider
- )
+@(form                  : Form[Step2bForm]
+, step0Out              : Step0Out
+, step1Out              : Step1Out
+, requiresOutageMessage : Boolean
+, outageMessageSrc      : Option[OutagePage]
+, defaultOutageMessage  : String
+, outagePages           : Seq[OutagePageStatus]
+, back                  : Call
+)(implicit
+  request               : RequestHeader
+, messagesProvider      : MessagesProvider
+)
 
 @implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 

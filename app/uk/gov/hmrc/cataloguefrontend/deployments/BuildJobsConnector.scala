@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.deployments
 
 import play.api.{Configuration, Logging}
+import play.api.libs.json.Reads
 import play.api.libs.ws.writeableOf_urlEncodedForm
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
@@ -34,15 +35,15 @@ import scala.concurrent.{ExecutionContext, Future}
 class BuildJobsConnector @Inject()(
   httpClientV2: HttpClientV2,
   config      : Configuration
-)(implicit ec: ExecutionContext) extends Logging {
+)(using ExecutionContext)
+  extends Logging:
 
   import HttpReads.Implicits._
 
-  private val authorizationHeader = {
+  private val authorizationHeader =
     val username = config.get[String]("jenkins.buildjobs.username")
     val token    = config.get[String]("jenkins.buildjobs.token")
     s"Basic ${java.util.Base64.getEncoder().encodeToString(s"$username:$token".getBytes("UTF-8"))}"
-  }
 
   private val baseUrl = config.get[String]("jenkins.buildjobs.url")
 
@@ -51,15 +52,15 @@ class BuildJobsConnector @Inject()(
   , version    : Version
   , environment: Environment
   , user       : Retrieval.Username
-  )(implicit hc: HeaderCarrier): Future[String] = {
-    val url = new URL(s"$baseUrl/job/build-and-deploy/job/deploy-microservice/buildWithParameters")
+  )(using HeaderCarrier): Future[String] =
+    val url = URL(s"$baseUrl/job/build-and-deploy/job/deploy-microservice/buildWithParameters")
 
-    implicit val locationRead: HttpReads[String] =
-      HttpReads[HttpResponse].map(_.header("Location") match {
-        case Some(url) if baseUrl.startsWith("https:") => url.replace("http:", "https:") // Jenkins requires this switch
-        case Some(url)                                 => url                            // It should not happen for acceptance tests
-        case None                                      => sys.error(s"Could not find Location header for: $url")
-      })
+    given locationRead: HttpReads[String] =
+      HttpReads[HttpResponse].map:
+        _.header("Location") match
+          case Some(url) if baseUrl.startsWith("https:") => url.replace("http:", "https:") // Jenkins requires this switch
+          case Some(url)                                 => url                            // It should not happen for acceptance tests
+          case None                                      => sys.error(s"Could not find Location header for: $url")
 
     httpClientV2
       .post(url)
@@ -74,50 +75,52 @@ class BuildJobsConnector @Inject()(
       , "DEPLOYER_ID"     -> Seq(user.value)
       ))
       .execute[Either[UpstreamErrorResponse, String]]
-      .flatMap {
+      .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err)  => Future.failed(new RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
-      }
-  }
+        case Left(err)  => Future.failed(RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
 
-  def queueStatus(queueUrl: SafeRedirectUrl)(implicit hc: HeaderCarrier): Future[BuildJobsConnector.QueueStatus] = {
+  def queueStatus(queueUrl: SafeRedirectUrl)(using HeaderCarrier): Future[BuildJobsConnector.QueueStatus] =
     val url = url"${queueUrl.url}api/json?tree=cancelled,executable[number,url]"
-    implicit val r = BuildJobsConnector.QueueStatus.format
+    given Reads[BuildJobsConnector.QueueStatus] = BuildJobsConnector.QueueStatus.format
 
     httpClientV2
       .get(url)
       .setHeader("Authorization" -> authorizationHeader)
       .execute[Either[UpstreamErrorResponse, BuildJobsConnector.QueueStatus]]
-      .flatMap {
+      .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err)  => Future.failed(new RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
-      }
-  }
+        case Left(err)  => Future.failed(RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
 
-  def buildStatus(buildUrl: SafeRedirectUrl)(implicit hc: HeaderCarrier): Future[BuildJobsConnector.BuildStatus] = {
+  def buildStatus(buildUrl: SafeRedirectUrl)(using HeaderCarrier): Future[BuildJobsConnector.BuildStatus] =
     val url = url"${buildUrl.url}api/json?tree=number,url,timestamp,result"
-    implicit val r = BuildJobsConnector.BuildStatus.format
+    given Reads[BuildJobsConnector.BuildStatus] = BuildJobsConnector.BuildStatus.format
     httpClientV2
       .post(url)
       .setHeader("Authorization" -> authorizationHeader)
       .execute[Either[UpstreamErrorResponse, BuildJobsConnector.BuildStatus]]
-      .flatMap {
+      .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err)  => Future.failed(new RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
-      }
-  }
-}
+        case Left(err)  => Future.failed(RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
 
-object BuildJobsConnector {
+end BuildJobsConnector
+
+object BuildJobsConnector:
   import play.api.libs.functional.syntax._
   import play.api.libs.json._
 
-  case class QueueStatus(cancelled: Option[Boolean], executable: Option[QueueExecutable])
-  case class QueueExecutable(number: Int, url: String)
+  case class QueueExecutable(
+    number: Int,
+    url   : String
+  )
 
-  object QueueStatus {
-    val format: Format[QueueStatus] = {
-      implicit val f: Format[QueueExecutable] =
+  case class QueueStatus(
+    cancelled : Option[Boolean],
+    executable: Option[QueueExecutable]
+  )
+
+  object QueueStatus:
+    val format: Format[QueueStatus] =
+      given Format[QueueExecutable] =
         ( (__ \ "number").format[Int]
         ~ (__ \ "url"   ).format[String]
         )(QueueExecutable.apply, qe => Tuple.fromProductTyped(qe))
@@ -125,8 +128,6 @@ object BuildJobsConnector {
       ( (__ \ "cancelled" ).formatNullable[Boolean]
       ~ (__ \ "executable").formatNullable[QueueExecutable]
       )(QueueStatus.apply, qs => Tuple.fromProductTyped(qs))
-    }
-  }
 
   case class BuildStatus(
     number     : Int,
@@ -135,13 +136,13 @@ object BuildJobsConnector {
     result     : Option[String],
     description: Option[String]
   )
-  object BuildStatus {
-    val format: OFormat[BuildStatus] =
+  object BuildStatus:
+    val format: Format[BuildStatus] =
       ( (__ \ "number"     ).format[Int]
       ~ (__ \ "url"        ).format[String]
       ~ (__ \ "timestamp"  ).format[Instant]
       ~ (__ \ "result"     ).formatNullable[String]
       ~ (__ \ "description").formatNullable[String]
       )(BuildStatus.apply, bs => Tuple.fromProductTyped(bs))
-  }
-}
+
+end BuildJobsConnector

@@ -28,7 +28,6 @@ enum CreateServiceRepositoryType(val asString: String) extends FromString:
   case ApiMicroservice                  extends CreateServiceRepositoryType("API microservice"                     )
   case ApiMicroserviceWithMongodb       extends CreateServiceRepositoryType("API microservice - with mongodb"      )
 
-object CreateServiceRepositoryType extends FromStringEnum[CreateServiceRepositoryType]{
+object CreateServiceRepositoryType extends FromStringEnum[CreateServiceRepositoryType]:
   val parsingError: String =
     s"Not a valid CreateServiceRepositoryType. Should be one of ${values.mkString(", ")}"
-}

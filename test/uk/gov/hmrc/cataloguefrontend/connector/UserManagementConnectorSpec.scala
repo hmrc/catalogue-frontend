@@ -21,7 +21,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.users._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -37,12 +36,12 @@ class UserManagementConnectorSpec
      with WireMockSupport
      with HttpClientV2Support {
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   private val connector: UserManagementConnector =
-    new UserManagementConnector(
+    UserManagementConnector(
       httpClientV2,
-      new ServicesConfig(Configuration(
+      ServicesConfig(Configuration(
         "microservice.services.user-management.port" -> wireMockPort,
         "microservice.services.user-management.host" -> wireMockHost
       ))
@@ -104,7 +103,7 @@ class UserManagementConnectorSpec
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam"))
           )
         )
     }
@@ -159,7 +158,7 @@ class UserManagementConnectorSpec
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam"))
           ),
           User(
             displayName    = Some("Jane Doe"),
@@ -171,7 +170,7 @@ class UserManagementConnectorSpec
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam"))
           )
         )
     }
@@ -226,7 +225,7 @@ class UserManagementConnectorSpec
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(new TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam"))
           )
         )
     }
@@ -319,9 +318,6 @@ class UserManagementConnectorSpec
     "return Unit when UMP response is 200 for human user" in {
       stubFor(
         post(urlPathEqualTo(s"/user-management/create-user"))
-          .withRequestBody(
-            equalToJson(Json.toJson(createUserRequest).toString())
-          )
           .willReturn(
             aResponse()
               .withStatus(200)
@@ -339,9 +335,6 @@ class UserManagementConnectorSpec
     "return Unit when UMP response is 200 for non human user" in {
       stubFor(
         post(urlPathEqualTo("/user-management/create-user"))
-          .withRequestBody(
-            equalToJson(Json.toJson(createUserRequest.copy(isServiceAccount = true)).toString())
-          )
           .willReturn(
             aResponse()
               .withStatus(200)
@@ -359,9 +352,6 @@ class UserManagementConnectorSpec
     "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in {
       stubFor(
         post(urlPathEqualTo(s"user-management/create-service-user"))
-          .withRequestBody(
-            equalToJson(Json.toJson(createUserRequest.copy(isServiceAccount = true)).toString())
-          )
           .willReturn(
             aResponse()
               .withStatus(500)

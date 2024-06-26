@@ -24,11 +24,10 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class LibraryPageSpec extends UnitSpec with FakeApplicationBuilder {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
     setupEnableBranchProtectionAuthEndpoint()
-  }
 
   "A library page" should {
     "show the teams owning the service with github and ci links and info box" in {

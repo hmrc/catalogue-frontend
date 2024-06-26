@@ -63,7 +63,7 @@ class DeployServiceControllerSpec
       , archived    = eqTo(Some(false))
       , repoType    = eqTo(Some(RepoType.Service))
       , serviceType = any
-      )(any[HeaderCarrier]))
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
         .thenReturn(Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))))
@@ -84,7 +84,7 @@ class DeployServiceControllerSpec
       , archived    = eqTo(Some(false))
       , repoType    = eqTo(Some(RepoType.Service))
       , serviceType = any
-      )(any[HeaderCarrier]))
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
       // Matching on retrieval ANY since the type is erased and the mocks get confused
@@ -93,11 +93,11 @@ class DeployServiceControllerSpec
           Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))),
           Future.successful(true)
         )
-      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(any[HeaderCarrier]))
+      when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(someReleasesForService))
-      when(mockServiceCommissioningConnector.commissioningStatus(ServiceName(eqTo("some-service")))(any[HeaderCarrier]))
+      when(mockServiceCommissioningConnector.commissioningStatus(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(someCommissioningStatus))
 
       val futResult = underTest.step1(Some(ServiceName("some-service")))(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
@@ -124,7 +124,7 @@ class DeployServiceControllerSpec
       , archived    = eqTo(Some(false))
       , repoType    = eqTo(Some(RepoType.Service))
       , serviceType = any
-      )(any[HeaderCarrier]))
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
       // Matching on retrieval ANY since the type is erased and the mocks get confused
@@ -133,26 +133,26 @@ class DeployServiceControllerSpec
           Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))),
           Future.successful(true)
         )
-      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(any[HeaderCarrier]))
+      when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(someReleasesForService))
-      when(mockServiceCommissioningConnector.commissioningStatus(ServiceName(eqTo("some-service")))(any[HeaderCarrier]))
+      when(mockServiceCommissioningConnector.commissioningStatus(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(someCommissioningStatus))
-      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.2.0"))))(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.2.0"))))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo.copy(version = Version("0.2.0")))))
-      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockServiceConfigsService.configByKeyWithNextDeployment(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceConfigsService.configByKeyWithNextDeployment(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(someConfigByKeyWithNextDeployment))
-      when(mockServiceConfigsService.removedConfig(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceConfigsService.removedConfig(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(someRemoveConfig))
       when(mockServiceConfigsService.configWarnings(
         ServiceName(eqTo("some-service")),
         eqTo(List(Environment.QA)),
         eqTo(Some(Version("0.3.0"))),
         eqTo(true)
-      )(any[HeaderCarrier]))
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(someConfigWarning)))
       when(mockVulnerabilitiesConnector.vulnerabilitySummaries(
         flag           = any[Option[SlugInfoFlag]],
@@ -160,12 +160,12 @@ class DeployServiceControllerSpec
         version        = eqTo(Some(Version("0.3.0"))),
         team           = any[Option[TeamName]],
         curationStatus = eqTo(Some(CurationStatus.ActionRequired))
-      )(any[HeaderCarrier]))
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
       when(mockServiceConfigsService.deploymentConfigChanges(
         ServiceName(eqTo("some-service")),
         eqTo(Environment.QA)
-      )(any[HeaderCarrier]))
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(someDeploymentConfigChanges))
 
       val futResult = underTest.step2()(
@@ -201,7 +201,7 @@ class DeployServiceControllerSpec
       , archived    = eqTo(Some(false))
       , repoType    = eqTo(Some(RepoType.Service))
       , serviceType = any
-      )(any[HeaderCarrier]))
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
       // Matching on retrieval ANY since the type is erased and the mocks get confused
@@ -213,14 +213,14 @@ class DeployServiceControllerSpec
           ),
           Future.successful(true)
         )
-      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockBuildJobsConnector.deployMicroservice(
         serviceName = ServiceName(eqTo("some-service")),
         version     = eqTo(Version("0.3.0")),
         environment = eqTo(Environment.QA),
         user        = Retrieval.Username(eqTo("some-user"))
-      )(any[HeaderCarrier]))
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful("http://localhost:8461/some/queue/url"))
 
       val futResult = underTest.step3()(
@@ -245,7 +245,7 @@ class DeployServiceControllerSpec
     "watch deployment progress" in new Setup {
       when(mockAuthStubBehaviour.stubAuth(eqTo(None), any[Retrieval[Boolean]]))
         .thenReturn(Future.successful(true))
-      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(any[HeaderCarrier]))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
 
       val futResult = underTest.step4(
@@ -349,7 +349,7 @@ class DeployServiceControllerSpec
   )
 
   private trait Setup {
-    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+    given mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
 
     val mockAuthStubBehaviour             = mock[StubBehaviour]
     val mockBuildJobsConnector            = mock[BuildJobsConnector]
@@ -359,7 +359,7 @@ class DeployServiceControllerSpec
     val mockReleasesConnector             = mock[ReleasesConnector]
     val mockVulnerabilitiesConnector      = mock[VulnerabilitiesConnector]
     val mockServiceConfigsService         = mock[ServiceConfigsService]
-    val underTest                         = new DeployServiceController(
+    val underTest                         = DeployServiceController(
                                               auth                          = FrontendAuthComponentsStub(mockAuthStubBehaviour)
                                             , mcc                           = mcc
                                             , configuration                 = app.injector.instanceOf[Configuration]
@@ -370,12 +370,12 @@ class DeployServiceControllerSpec
                                             , releasesConnector             = mockReleasesConnector
                                             , vulnerabilitiesConnector      = mockVulnerabilitiesConnector
                                             , serviceConfigsService         = mockServiceConfigsService
-                                            , telemetryLinks                = new TelemetryLinks(app.injector.instanceOf[Configuration])
+                                            , telemetryLinks                = TelemetryLinks(app.injector.instanceOf[Configuration])
                                             , deployServicePage             = app.injector.instanceOf[DeployServicePage]
                                             , deployServiceStep4Page        = app.injector.instanceOf[DeployServiceStep4Page]
                                             )
-    implicit class ResultOps(eventualResult: Future[Result]) {
-      lazy val toDocument: Document = Jsoup.parse(Helpers.contentAsString(eventualResult))
-    }
+    extension (eventualResult: Future[Result])
+      def toDocument: Document =
+        Jsoup.parse(Helpers.contentAsString(eventualResult))
   }
 }

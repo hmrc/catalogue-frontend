@@ -36,22 +36,20 @@ class HealthIndicatorsController @Inject() (
   override val mcc             : MessagesControllerComponents,
   healthIndicatorsService      : HealthIndicatorsService,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   def breakdownForRepo(name: String): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         indicator <- healthIndicatorsConnector.getIndicator(name)
         history   <- healthIndicatorsConnector.getHistoricIndicators(name)
         average   <- healthIndicatorsConnector.getAveragePlatformScore
-        result = indicator match {
-          case Some(indicator: Indicator) => Ok(HealthIndicatorsPage(indicator, history, average.map(_.averageScore)))
-          case None                       =>  NotFound(error_404_template())
-        }
-      } yield result
+      yield indicator match
+        case Some(indicator) => Ok(HealthIndicatorsPage(indicator, history, average.map(_.averageScore)))
+        case None            => NotFound(error_404_template())
     }
 
   def indicatorsForRepoType(): Action[AnyContent] =
@@ -61,26 +59,24 @@ class HealthIndicatorsController @Inject() (
         .fold(
           formWithErrors => Future.successful(BadRequest(HealthIndicatorsLeaderBoard(Seq.empty, Seq.empty, Seq.empty, formWithErrors))),
           validForm =>
-            for {
+            for
               indicatorsWithTeams <- healthIndicatorsService.findIndicatorsWithTeams(
                                        repoType       = validForm.repoType
                                      , repoNameFilter = None // Use listjs filtering
                                      )
               teams               <- teamsAndRepositoriesConnector.allTeams()
               indicators          =  indicatorsWithTeams.filter(t => validForm.team.fold(true)(t.owningTeams.contains))
-            } yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.valuesAsSeq, teams.sortBy(_.name), form.fill(validForm)))
+            yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.valuesAsSeq, teams.sortBy(_.name), form.fill(validForm)))
         )
     }
-}
+end HealthIndicatorsController
 
-object HealthIndicatorsController {
+object HealthIndicatorsController:
   def getScoreColour(score: Int): String =
-    score match {
+    score match
       case x if x > 0    => "repo-score-green"
       case x if x > -100 => "repo-score-amber"
       case _             => "repo-score-red"
-    }
-}
 
 case class HealthIndicatorsFilter(
   repoName: Option[String],
@@ -88,7 +84,7 @@ case class HealthIndicatorsFilter(
   repoType: Option[RepoType] = None
 )
 
-object HealthIndicatorsFilter {
+object HealthIndicatorsFilter:
   lazy val form: Form[HealthIndicatorsFilter] =
     Form(
       mapping(
@@ -101,4 +97,3 @@ object HealthIndicatorsFilter {
                         )
       )(HealthIndicatorsFilter.apply)(r => Some(Tuple.fromProductTyped(r)))
     )
-}

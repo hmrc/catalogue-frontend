@@ -37,10 +37,10 @@ class ShutterGroupsConnector @Inject() (
   httpClientV2     : HttpClientV2,
   servicesConfig   : ServicesConfig,
   override val auth: FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   import HttpReads.Implicits._
 
@@ -48,54 +48,47 @@ class ShutterGroupsConnector @Inject() (
 
   val logger = Logger(this.getClass)
 
-  def shutterGroups: Future[Seq[ShutterGroup]] = {
+  def shutterGroups()(using HeaderCarrier): Future[Seq[ShutterGroup]] =
     val url = url"$gitHubProxyBaseURL/platops-github-proxy/github-raw/outage-pages/HEAD/conf/shutter-groups.json"
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    implicit val gr = ShutterGroup.reads
+    given Reads[Seq[ShutterGroup]] = ShutterGroup.reads
     httpClientV2
       .get(url)
       .execute[Option[Seq[ShutterGroup]]]
-      .map(_.getOrElse {
+      .map(_.getOrElse:
         logger.info(s"No shutter groups found at $url, defaulting to an empty list")
         Seq.empty[ShutterGroup]
-      })
-      .recover {
+      )
+      .recover:
         case NonFatal(ex) =>
           logger.error(s"Problem retrieving shutter groups at $url, defaulting to an empty list: ${ex.getMessage}", ex)
           Seq.empty
-      }
-  }
-}
+
+end ShutterGroupsConnector
 
 case class ShutterGroup(
   name    : String,
   services: List[String]
 )
 
-object ShutterGroup {
+object ShutterGroup:
 
-  private implicit val applicative: cats.Applicative[JsResult] =
-    new cats.Applicative[JsResult] {
-      def pure[A](a: A): JsResult[A] = JsSuccess(a)
+  private given cats.Applicative[JsResult] =
+    new cats.Applicative[JsResult]:
+      def pure[A](a: A): JsResult[A] =
+        JsSuccess(a)
+
       def ap[A, B](ff: JsResult[A => B])(fa: JsResult[A]): JsResult[B] =
-        fa match {
+        fa match
           case JsSuccess(a, p1) =>
-            ff match {
+            ff match
               case JsSuccess(f, p2) => JsSuccess(f(a), p1)
               case JsError(e1)      => JsError(e1)
-            }
           case JsError(e1) => JsError(e1)
-        }
-    }
 
-  val reads = new Reads[Seq[ShutterGroup]] {
-    def reads(js: JsValue): JsResult[Seq[ShutterGroup]] =
+  val reads: Reads[Seq[ShutterGroup]] =
+    (js: JsValue) =>
       js.validate[JsObject]
         .flatMap(
-          _.fields.toList.traverse {
-            case (name, jsarray) =>
-              jsarray.validate[List[String]].map(ShutterGroup(name, _))
-          }
+          _.fields.toList.traverse: (name, jsarray) =>
+            jsarray.validate[List[String]].map(ShutterGroup(name, _))
         )
-  }
-}

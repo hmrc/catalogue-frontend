@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.service
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.EnvironmentRoute
 import uk.gov.hmrc.http.HeaderCarrier
@@ -26,31 +26,33 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RouteRulesService @Inject() (
   routeRulesConnector: RouteRulesConnector
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext):
   import RouteRulesService._
 
-  def serviceRoutes(serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[ServiceRoutes] =
-    for {
+  def serviceRoutes(serviceName: ServiceName)(using HeaderCarrier): Future[ServiceRoutes] =
+    for
       frontendRoutes <- routeRulesConnector.frontendRoutes(serviceName)
       adminRoutes    <- routeRulesConnector.adminFrontendRoutes(serviceName)
-    } yield ServiceRoutes(frontendRoutes ++ adminRoutes)
-}
+    yield ServiceRoutes(frontendRoutes ++ adminRoutes)
 
 @Singleton
-object RouteRulesService {
-  case class ServiceRoutes(environmentRoutes: Seq[EnvironmentRoute]) {
-    private val normalisedEvironmentRoutes = // this should probably be a Map[Environment, Route] - we would need to move isAdmin onto the Route to remove EnvironmentRoute
+object RouteRulesService:
+  case class ServiceRoutes(
+    environmentRoutes: Seq[EnvironmentRoute]
+  ):
+    private val normalisedEvironmentRoutes: Seq[EnvironmentRoute] = // this should probably be a Map[Environment, Route] - we would need to move isAdmin onto the Route to remove EnvironmentRoute
       environmentRoutes
         .groupBy(_.environment)
-        .map { case (env, routes) => EnvironmentRoute(
-                                       environment = env
-                                     , routes      = routes.flatMap(_.routes)
-                                     )
-        }.toSeq
+        .map: (env, routes) =>
+          EnvironmentRoute(
+            environment = env
+          , routes      = routes.flatMap(_.routes)
+          )
+        .toSeq
 
     private[service] val referenceEnvironmentRoutes: Option[EnvironmentRoute] =
       normalisedEvironmentRoutes
-        .find(_.environment == "production")
+        .find(_.environment == Environment.Production)
         .orElse(normalisedEvironmentRoutes.headOption)
         .orElse(None)
 
@@ -62,25 +64,27 @@ object RouteRulesService {
 
     private def filterRoutesToDifferences(environmentRoute: EnvironmentRoute, referenceEnvironmentRoute: EnvironmentRoute) =
       environmentRoute.routes
-        .filter(r =>
+        .filter: r =>
           environmentRoute.routes
             .map(_.frontendPath)
             .diff(referenceEnvironmentRoute.routes.map(_.frontendPath))
             .contains(r.frontendPath)
-        )
 
     val inconsistentRoutes: Seq[EnvironmentRoute] =
       referenceEnvironmentRoutes
-        .map { refEnvRoutes =>
+        .map: refEnvRoutes =>
           normalisedEvironmentRoutes
             .filter(_.environment != refEnvRoutes.environment)
             .filter(environmentRoute => hasDifferentRoutesToReferenceEnvironment(environmentRoute, refEnvRoutes))
             .map(environmentRoute => environmentRoute.copy(routes = filterRoutesToDifferences(environmentRoute, refEnvRoutes)))
-        }
         .getOrElse(Nil)
 
-    val hasInconsistentRoutes: Boolean = inconsistentRoutes.nonEmpty
+    val hasInconsistentRoutes: Boolean =
+      inconsistentRoutes.nonEmpty
 
-    val isDefined: Boolean = environmentRoutes.nonEmpty
-  }
-}
+    val isDefined: Boolean =
+      environmentRoutes.nonEmpty
+
+  end ServiceRoutes
+
+end RouteRulesService

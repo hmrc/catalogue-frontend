@@ -53,45 +53,44 @@ class ShutterEventsControllerSpec
   import Helpers._
   import ShutterEventsControllerSpec._
 
-  private trait Fixture {
-    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+  private trait Setup {
+    given mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
 
     val connector           = mock[ShutterConnector]
     val authStubBehaviour   = mock[StubBehaviour]
     val routeRulesConnector = mock[RouteRulesConnector]
     val authComponent       = FrontendAuthComponentsStub(authStubBehaviour)
-    val underTest           = new ShutterEventsController(mcc, connector, routeRulesConnector, authComponent)
+    val underTest           = ShutterEventsController(mcc, connector, routeRulesConnector, authComponent)
 
     when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
       .thenReturn(Future.unit)
 
-    when(routeRulesConnector.frontendServices()(any[HeaderCarrier]))
+    when(routeRulesConnector.frontendServices()(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Seq.empty[String]))
 
     def stubConnectorSuccess(forFilter: ShutterEventsFilter, returnEvents: Seq[ShutterStateChangeEvent] = Seq.empty): Unit =
-      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(any[HeaderCarrier]))
+      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(returnEvents))
 
     def stubConnectorFailure(forFilter: ShutterEventsFilter): Unit =
-      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(any[HeaderCarrier]))
-        .thenReturn(Future.failed(new RuntimeException("connector failure")))
+      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(using any[HeaderCarrier]))
+        .thenReturn(Future.failed(RuntimeException("connector failure")))
 
-    implicit class ResultOps(eventualResult: Future[Result]) {
-      lazy val toDocument: Document = Jsoup.parse(contentAsString(eventualResult))
-    }
+    extension (eventualResult: Future[Result])
+      def toDocument: Document = Jsoup.parse(contentAsString(eventualResult))
   }
 
   private val fakeRequest =
     FakeRequest().withSession(SessionKeys.authToken -> "Token token")
 
   "Shutter Events Controller" should {
-    "redirect from the shutter events entry point to the production shutter events list" in new Fixture {
+    "redirect from the shutter events entry point to the production shutter events list" in new Setup {
       val futResult = underTest.shutterEvents(FakeRequest())
 
       redirectLocation(futResult).value shouldBe "/shutter-events/list?environment=production"
     }
 
-    "request shutter events from the shutter api for the specified environment" in new Fixture {
+    "request shutter events from the shutter api for the specified environment" in new Setup {
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
@@ -101,7 +100,7 @@ class ShutterEventsControllerSpec
       futResult.toDocument.select(ShutterEventCssSelector) should have length 1
     }
 
-    "request shutter events from the shutter api for the specified service and environment" in new Fixture {
+    "request shutter events from the shutter api for the specified service and environment" in new Setup {
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = Some(ServiceName("abc-frontend")))
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
@@ -111,7 +110,7 @@ class ShutterEventsControllerSpec
       futResult.toDocument.select(ShutterEventCssSelector) should have length 1
     }
 
-    "ignore a blank service name" in new Fixture {
+    "ignore a blank service name" in new Setup {
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorSuccess(forFilter = filter, returnEvents = Seq(sampleEvent))
 
@@ -121,7 +120,7 @@ class ShutterEventsControllerSpec
       futResult.toDocument.select(ShutterEventCssSelector) should have length 1
     }
 
-    "recover from a failure to retrieve events from the shutter api" in new Fixture {
+    "recover from a failure to retrieve events from the shutter api" in new Setup {
       val filter = ShutterEventsFilter(environment = Environment.Production, serviceName = None)
       stubConnectorFailure(filter)
 

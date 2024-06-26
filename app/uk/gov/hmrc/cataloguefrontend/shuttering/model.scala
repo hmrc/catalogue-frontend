@@ -24,24 +24,6 @@ import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.Instant
 
-object ShutterEnvironment {
-  val format: Format[Environment] =
-    new Format[Environment] {
-      override def reads(json: JsValue) =
-        json
-          .validate[String]
-          .flatMap { s =>
-            Environment.parse(s).fold(
-              _   => JsError(__, s"Invalid Environment '$s'")
-            ,  env => JsSuccess(env)
-            )
-          }
-
-      override def writes(e: Environment) =
-        JsString(e.asString)
-    }
-}
-
 enum ShutterType(val asString: String) extends FromString:
   case Frontend extends ShutterType("frontend")
   case Api      extends ShutterType("api"    )
@@ -63,29 +45,26 @@ enum ShutterStatus(val value: ShutterStatusValue):
   ) extends ShutterStatus(ShutterStatusValue.Shuttered)
   case Unshuttered extends ShutterStatus(ShutterStatusValue.Unshuttered)
 
-object ShutterStatus {
+object ShutterStatus:
   val format: Format[ShutterStatus] =
-    new Format[ShutterStatus] {
-      override def reads(json: JsValue) = {
-        implicit val ssvf = ShutterStatusValue.format
+    new Format[ShutterStatus]:
+      override def reads(json: JsValue) =
+        given Reads[ShutterStatusValue] = ShutterStatusValue.format
         (json \ "value")
           .validate[ShutterStatusValue]
-          .flatMap {
+          .flatMap:
             case ShutterStatusValue.Unshuttered => JsSuccess(Unshuttered)
             case ShutterStatusValue.Shuttered =>
-              JsSuccess(
+              JsSuccess:
                 Shuttered(
-                  reason = (json \ "reason").asOpt[String],
-                  outageMessage = (json \ "outageMessage").asOpt[String],
+                  reason               = (json \ "reason").asOpt[String],
+                  outageMessage        = (json \ "outageMessage").asOpt[String],
                   useDefaultOutagePage = (json \ "useDefaultOutagePage").as[Boolean]
                 )
-              )
-          }
-      }
 
-      override def writes(ss: ShutterStatus): JsValue = {
-        implicit val ssvf = ShutterStatusValue.format
-        ss match {
+      override def writes(ss: ShutterStatus): JsValue =
+        given Writes[ShutterStatusValue] = ShutterStatusValue.format
+        ss match
           case Shuttered(reason, outageMessage, useDefaultOutagePage) =>
             Json.obj(
               "value"                -> Json.toJson(ss.value),
@@ -97,10 +76,6 @@ object ShutterStatus {
             Json.obj(
               "value" -> Json.toJson(ss.value)
             )
-        }
-      }
-    }
-}
 
 case class ShutterState(
   serviceName: ServiceName,
@@ -112,17 +87,13 @@ case class ShutterState(
 
 object ShutterState {
 
-  val reads: Reads[ShutterState] = {
-    implicit val stf = ShutterType.format
-    implicit val ef  = ShutterEnvironment.format
-    implicit val ssf = ShutterStatus.format
+  val reads: Reads[ShutterState] =
     ( (__ \ "name"       ).read[ServiceName](ServiceName.format)
     ~ (__ \ "context"    ).readNullable[String]
-    ~ (__ \ "type"       ).read[ShutterType]
-    ~ (__ \ "environment").read[Environment]
-    ~ (__ \ "status"     ).read[ShutterStatus]
+    ~ (__ \ "type"       ).read[ShutterType](ShutterType.format)
+    ~ (__ \ "environment").read[Environment](Environment.format)
+    ~ (__ \ "status"     ).read[ShutterStatus](ShutterStatus.format)
     )(ShutterState.apply)
-  }
 }
 
 // -------------- Events ---------------------
@@ -165,7 +136,7 @@ enum EventData:
     status     : ShutterStatusValue
   ) extends EventData
 
-object EventData {
+object EventData:
   val shutterStateCreateDataFormat: Format[ShutterStateCreateData] =
     (__ \ "serviceName")
       .format[ServiceName](ServiceName.format)
@@ -178,45 +149,34 @@ object EventData {
 
   val shutterStateChangeDataFormat: Format[ShutterStateChangeData] =
     ( (__ \ "serviceName").format[ServiceName  ](ServiceName.format       )
-    ~ (__ \ "environment").format[Environment  ](ShutterEnvironment.format)
+    ~ (__ \ "environment").format[Environment  ](Environment.format)
     ~ (__ \ "shutterType").format[ShutterType  ](ShutterType.format       )
     ~ (__ \ "status"     ).format[ShutterStatus](ShutterStatus.format     )
     ~ (__ \ "cause"      ).format[ShutterCause ](ShutterCause.format      )
     )(ShutterStateChangeData.apply, d => Tuple.fromProductTyped(d))
 
-  val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] = {
-    implicit val ef   = ShutterEnvironment.format
-    implicit val ssvf = ShutterStatusValue.format
-
-    ( (__ \ "environment").format[Environment]
-    ~ (__ \ "status"     ).format[ShutterStatusValue]
+  val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] =
+    ( (__ \ "environment").format[Environment       ](Environment.format)
+    ~ (__ \ "status"     ).format[ShutterStatusValue](ShutterStatusValue.format)
     )(KillSwitchStateChangeData.apply, d => Tuple.fromProductTyped(d))
-  }
 
-  def reads(et: EventType) =
-    new Reads[EventData] {
-      implicit val sscrdf: Reads[EventData.ShutterStateCreateData]    = shutterStateCreateDataFormat
-      implicit val ssddf : Reads[EventData.ShutterStateDeleteData]    = shutterStateDeleteDataFormat
-      implicit val sscdf : Reads[EventData.ShutterStateChangeData]    = shutterStateChangeDataFormat
-      implicit val kscdf : Reads[EventData.KillSwitchStateChangeData] = killSwitchStateChangeDataFormat
-      def reads(js: JsValue): JsResult[EventData] =
-        et match {
-          case EventType.ShutterStateCreate    => js.validate[EventData.ShutterStateCreateData]
-          case EventType.ShutterStateDelete    => js.validate[EventData.ShutterStateDeleteData]
-          case EventType.ShutterStateChange    => js.validate[EventData.ShutterStateChangeData]
-          case EventType.KillSwitchStateChange => js.validate[EventData.KillSwitchStateChangeData]
-        }
-    }
-}
+  def reads(et: EventType): Reads[EventData] =
+    (js: JsValue) =>
+      et match
+        case EventType.ShutterStateCreate    => js.validate[EventData.ShutterStateCreateData](shutterStateCreateDataFormat)
+        case EventType.ShutterStateDelete    => js.validate[EventData.ShutterStateDeleteData](shutterStateDeleteDataFormat)
+        case EventType.ShutterStateChange    => js.validate[EventData.ShutterStateChangeData](shutterStateChangeDataFormat)
+        case EventType.KillSwitchStateChange => js.validate[EventData.KillSwitchStateChangeData](killSwitchStateChangeDataFormat)
+end EventData
 
 case class ShutterEvent(
   username : String,
   timestamp: Instant,
   eventType: EventType,
   data     : EventData
-) {
+):
   def toShutterStateChangeEvent: Option[ShutterStateChangeEvent] =
-    data match {
+    data match
       case sscd: EventData.ShutterStateChangeData =>
         Some(
           ShutterStateChangeEvent(
@@ -230,8 +190,6 @@ case class ShutterEvent(
           )
         )
       case _ => None
-    }
-}
 
 /** Special case flattened */
 case class ShutterStateChangeEvent(
@@ -244,42 +202,38 @@ case class ShutterStateChangeEvent(
   cause      : ShutterCause
 )
 
-object ShutterEvent {
+object ShutterEvent:
 
-  val reads: Reads[ShutterEvent] = {
-    implicit val etf = EventType.format
+  val reads: Reads[ShutterEvent] =
+    given Reads[EventType] = EventType.format
     ( (__ \ "username" ).read[String]
     ~ (__ \ "timestamp").read[Instant]
     ~ (__ \ "type"     ).read[EventType]
     ~ (__ \ "type"     ).read[EventType]
                         .flatMap[EventData](et => (__ \ "data").read(EventData.reads(et)))
     )(ShutterEvent.apply)
-  }
-}
 
 case class TemplatedContent(
   elementId: String,
   innerHtml: String
 )
 
-object TemplatedContent {
+object TemplatedContent:
   val format: Format[TemplatedContent] =
     ( (__ \ "elementID").format[String]
     ~ (__ \ "innerHTML").format[String]
     )(TemplatedContent.apply, c => Tuple.fromProductTyped(c))
-}
 
 case class OutagePageWarning(
   name   : String,
   message: String
 )
 
-object OutagePageWarning {
+object OutagePageWarning:
   val reads: Reads[OutagePageWarning] =
     ( (__ \ "type"   ).read[String]
     ~ (__ \ "message").read[String]
     )(OutagePageWarning.apply)
-}
 
 case class OutagePage(
   serviceName      : ServiceName,
@@ -287,25 +241,21 @@ case class OutagePage(
   outagePageURL    : String,
   warnings         : List[OutagePageWarning],
   templatedElements: List[TemplatedContent]
-) {
+):
   def templatedMessages: List[TemplatedContent] =
     templatedElements
       .filter(_.elementId == "templatedMessage")
-}
 
-object OutagePage {
-  val reads: Reads[OutagePage] = {
-    implicit val ef  : Reads[Environment]       = ShutterEnvironment.format
-    implicit val tcf : Reads[TemplatedContent]  = TemplatedContent.format
-    implicit val opwr: Reads[OutagePageWarning] = OutagePageWarning.reads
+object OutagePage:
+  val reads: Reads[OutagePage] =
+    given Reads[TemplatedContent]  = TemplatedContent.format
+    given Reads[OutagePageWarning] = OutagePageWarning.reads
     ( (__ \ "serviceName"      ).read[ServiceName](ServiceName.format)
-    ~ (__ \ "environment"      ).read[Environment]
+    ~ (__ \ "environment"      ).read[Environment](Environment.format)
     ~ (__ \ "outagePageURL"    ).read[String]
     ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
     ~ (__ \ "templatedElements").read[List[TemplatedContent]]
     )(OutagePage.apply)
-  }
-}
 
 case class OutagePageStatus(
   serviceName: ServiceName,
@@ -319,11 +269,10 @@ case class FrontendRouteWarning(
   ruleConfigurationURL: String
 )
 
-object FrontendRouteWarning {
+object FrontendRouteWarning:
   val reads: Reads[FrontendRouteWarning] =
     ( (__ \ "name"                ).read[String]
     ~ (__ \ "message"             ).read[String]
     ~ (__ \ "consequence"         ).read[String]
     ~ (__ \ "ruleConfigurationURL").read[String]
     )(FrontendRouteWarning.apply)
-}

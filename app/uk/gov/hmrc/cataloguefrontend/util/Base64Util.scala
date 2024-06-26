@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 import java.util.Base64
 
-object Base64Util {
+object Base64Util:
   def isBase64Decodable(in: String): Boolean =
     try {
       Base64.getDecoder.decode(in)
@@ -26,4 +26,3 @@ object Base64Util {
     } catch {
       case _: IllegalArgumentException => false
     }
-}

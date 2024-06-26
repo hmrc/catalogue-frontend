@@ -28,17 +28,15 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CatalogueErrorHandler @Inject()(
   override val messagesApi: MessagesApi
-)(implicit
+)(using
   override val ec: ExecutionContext
-) extends FrontendErrorHandler {
+) extends FrontendErrorHandler:
 
-  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: RequestHeader): Future[Html] =
+  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(using request: RequestHeader): Future[Html] =
     Future.successful(error_template(pageTitle, heading, message))
 
-  override def notFoundTemplate(implicit request: RequestHeader): Future[Html] =
+  override def notFoundTemplate(using request: RequestHeader): Future[Html] =
     Future.successful(error_404_template())
 
-  def forbiddenTemplate(implicit request: RequestHeader): Html =
+  def forbiddenTemplate(using request: RequestHeader): Html =
     error_403_template()
-
-}

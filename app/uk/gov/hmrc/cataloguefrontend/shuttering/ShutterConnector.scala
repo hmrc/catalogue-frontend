@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{Json, JsValue, JsNull, JsString, Reads}
+import play.api.libs.json.{Json, JsValue, JsNull, JsString, Reads, Writes}
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
@@ -32,22 +32,26 @@ import scala.concurrent.{ExecutionContext, Future}
 class ShutterConnector @Inject() (
   httpClientV2 : HttpClientV2,
   serviceConfig: ServicesConfig
-)(implicit
-  ec: ExecutionContext
-) {
+)(using
+  ExecutionContext
+):
   import HttpReads.Implicits._
 
   private val baseUrl = serviceConfig.baseUrl("shutter-api")
-
-  private implicit val ssr: Reads[ShutterState] = ShutterState.reads
-  private implicit val ser: Reads[ShutterEvent] = ShutterEvent.reads
 
   /**
     * GET
     * /shutter-api/{environment}/{serviceType}/states
     * Retrieves the current shutter states for all services in given environment
     */
-  def shutterStates(st: ShutterType, env: Environment, serviceName: Option[ServiceName] = None)(implicit hc: HeaderCarrier): Future[Seq[ShutterState]] =
+  def shutterStates(
+    st         : ShutterType,
+    env        : Environment,
+    serviceName: Option[ServiceName] = None
+  )(using
+    HeaderCarrier
+  ): Future[Seq[ShutterState]] =
+    given Reads[ShutterState] = ShutterState.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states?serviceName=${serviceName.map(_.asString)}")
       .execute[Seq[ShutterState]]
@@ -64,8 +68,10 @@ class ShutterConnector @Inject() (
     st         : ShutterType,
     env        : Environment,
     status     : ShutterStatus
-  )(implicit hc: HeaderCarrier): Future[Unit] = {
-    implicit val ssf = ShutterStatus.format
+  )(using
+    HeaderCarrier
+  ): Future[Unit] =
+    given Writes[ShutterStatus] = ShutterStatus.format
     httpClientV2
       .put(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states/${serviceName.asString}")
       .setHeader("Authorization" -> token.value)
@@ -75,28 +81,34 @@ class ShutterConnector @Inject() (
         , "shutterStatus" -> Json.toJson(status)
         )
       )
-      .execute[Unit](HttpReads.Implicits.throwOnFailure(implicitly[HttpReads[Either[UpstreamErrorResponse, Unit]]]), implicitly[ExecutionContext])
-  }
+      .execute[Unit](HttpReads.Implicits.throwOnFailure(summon[HttpReads[Either[UpstreamErrorResponse, Unit]]]), summon[ExecutionContext])
 
   /**
     * GET
     * /shutter-api/{environment}/events
     * Retrieves the current shutter events for all services for given environment
     */
-  def latestShutterEvents(st: ShutterType, env: Environment)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] = {
+  def latestShutterEvents(st: ShutterType, env: Environment)(using HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
     val queryParams = Seq(
       "type"             -> EventType.ShutterStateChange.asString,
       "namedFilter"      -> "latestByServiceName",
       "data.environment" -> env.asString,
       "data.shutterType" -> st.asString
     )
+    given Reads[ShutterEvent] = ShutterEvent.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/events?$queryParams")
       .execute[Seq[ShutterEvent]]
       .map(_.flatMap(_.toShutterStateChangeEvent))
-  }
 
-  def shutterEventsByTimestampDesc(filter: ShutterEventsFilter, limit: Option[Int] = None, offset: Option[Int] = None)(implicit hc: HeaderCarrier): Future[Seq[ShutterStateChangeEvent]] =
+  def shutterEventsByTimestampDesc(
+    filter: ShutterEventsFilter,
+    limit : Option[Int]         = None,
+    offset: Option[Int]         = None
+  )(using
+    HeaderCarrier
+  ): Future[Seq[ShutterStateChangeEvent]] =
+    given Reads[ShutterEvent] = ShutterEvent.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/events?type=${EventType.ShutterStateChange.asString}&${filter.asQueryParams}&limit=${limit.getOrElse(2500)}&offset=${offset.getOrElse(0)}")
       .execute[Seq[ShutterEvent]]
@@ -107,33 +119,30 @@ class ShutterConnector @Inject() (
     * /shutter-api/{environment}/outage-pages/{serviceName}
     * Retrieves the current shutter state for the given service in the given environment
     */
-  def outagePage(env: Environment, serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Option[OutagePage]] = {
-    implicit val ssf = OutagePage.reads
+  def outagePage(env: Environment, serviceName: ServiceName)(using HeaderCarrier): Future[Option[OutagePage]] =
+    given Reads[OutagePage] = OutagePage.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/${env.asString}/outage-pages/${serviceName.asString}")
       .execute[Option[OutagePage]]
-  }
 
   /**
     * GET
     * /shutter-api/{environment}/frontend-route-warnings/{serviceName}
     * Retrieves the warnings (if any) for the given service in the given environment, based on parsing the mdtp-frontend-routes
     */
-  def frontendRouteWarnings(env: Environment, serviceName: ServiceName)(implicit hc: HeaderCarrier): Future[Seq[FrontendRouteWarning]] = {
-    implicit val r = FrontendRouteWarning.reads
+  def frontendRouteWarnings(env: Environment, serviceName: ServiceName)(using HeaderCarrier): Future[Seq[FrontendRouteWarning]] =
+    given Reads[FrontendRouteWarning] = FrontendRouteWarning.reads
     httpClientV2
       .get(url"$baseUrl/shutter-api/${env.asString}/frontend-route-warnings/${serviceName.asString}")
       .execute[Seq[FrontendRouteWarning]]
-  }
-}
 
-object ShutterConnector {
+end ShutterConnector
+
+object ShutterConnector:
   case class ShutterEventsFilter(
     environment: Environment,
     serviceName: Option[ServiceName]
-  ) {
+  ):
     def asQueryParams: Seq[(String, String)] =
-      ("data.environment" -> environment.asString) +:
-        serviceName.map("data.serviceName" -> _.asString).toSeq
-  }
-}
+      ("data.environment" -> environment.asString)
+        +: serviceName.map("data.serviceName" -> _.asString).toSeq

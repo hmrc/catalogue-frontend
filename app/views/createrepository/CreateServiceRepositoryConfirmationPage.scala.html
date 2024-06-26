@@ -18,7 +18,10 @@
 
 @this()
 
-@(serviceName: ServiceName)(implicit request: RequestHeader)
+@(serviceName: ServiceName
+)(implicit
+  request: RequestHeader
+)
 
 @standard_layout(s"Creating service repository: ${serviceName.asString}") {
 

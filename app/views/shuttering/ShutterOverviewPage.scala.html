@@ -19,13 +19,13 @@
 
 @this()
 
-@( shutterStates : Map[Environment, Seq[(ShutterState, Option[ShutterStateChangeEvent])]]
- , shutterType   : ShutterType
- , selectedEnv   : Environment
- , killSwitchLink: Option[String]
- )(implicit
-   request       : RequestHeader
-, messages       : Messages
+@(shutterStates : Map[Environment, Seq[(ShutterState, Option[ShutterStateChangeEvent])]]
+, shutterType   : ShutterType
+, selectedEnv   : Environment
+, killSwitchLink: Option[String]
+)(implicit
+  request       : RequestHeader
+, messages      : Messages
 )
 
 @standard_layout(s"Shutter Overview - ${shutterType.asString.capitalize}", active = "shuttering") {

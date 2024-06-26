@@ -28,8 +28,8 @@
   groupedByKey    : Option[Map[ServiceConfigsService.KeyName, Map[ServiceName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]] = None,
   groupedByService: Option[Map[ServiceName, Map[ServiceConfigsService.KeyName, Map[Environment, ServiceConfigsService.ConfigSourceValue]]]] = None
 )(implicit
-  messages: Messages,
-  request : RequestHeader
+  messages        : Messages,
+  request         : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }

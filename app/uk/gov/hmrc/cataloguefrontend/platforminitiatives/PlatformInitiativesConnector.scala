@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
-import play.api.libs.json.OFormat
+import play.api.libs.json.Format
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -28,23 +28,21 @@ import scala.concurrent.{ExecutionContext, Future}
 class PlatformInitiativesConnector @Inject()(
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit val ec: ExecutionContext) {
+)(using ExecutionContext):
   import HttpReads.Implicits._
 
   private val platformInitiativesBaseUrl: String =
     servicesConfig.baseUrl("platform-initiatives")
 
-  private implicit val pif: OFormat[PlatformInitiative] = PlatformInitiative.format
+  private given Format[PlatformInitiative] = PlatformInitiative.format
 
-  def getInitiatives(team: Option[TeamName])(implicit hc: HeaderCarrier): Future[Seq[PlatformInitiative]] = {
-    val url = team match {
-      case None =>
-        url"$platformInitiativesBaseUrl/platform-initiatives/initiatives"
-      case Some(team) =>
-        url"$platformInitiativesBaseUrl/platform-initiatives/teams/${team.asString}/initiatives"
-    }
+  def getInitiatives(team: Option[TeamName])(using HeaderCarrier): Future[Seq[PlatformInitiative]] =
     httpClientV2
-      .get(url)
+      .get(
+        team.fold(
+          url"$platformInitiativesBaseUrl/platform-initiatives/initiatives"
+        )(t =>
+          url"$platformInitiativesBaseUrl/platform-initiatives/teams/${t.asString}/initiatives"
+        )
+      )
       .execute[Seq[PlatformInitiative]]
-  }
-}

@@ -28,22 +28,19 @@ case class Warning(
 , message: String
 )
 
-object Warning {
-  val reads: Reads[Warning] = {
+object Warning:
+  val reads: Reads[Warning] =
     ( (__ \ "title"  ).format[String]
     ~ (__ \ "message").format[String]
     )(Warning.apply, w => Tuple.fromProductTyped(w))
-  }
-}
 
-sealed trait Check {
+sealed trait Check:
   val id        : String = title.toLowerCase.replaceAll("\\s+", "-").replaceAll("-+", "-")
   val title     : String
   val helpText  : String
   val linkToDocs: Option[String]
-}
 
-object Check {
+object Check:
   case class Missing(addLink: String)
   case class Present(evidenceLink: String)
 
@@ -63,44 +60,41 @@ object Check {
   , linkToDocs: Option[String]
   ) extends Check
 
-  val reads: Reads[Check] = new Reads[Check] {
+  val reads: Reads[Check] =
+    (checkJson: JsValue) =>
+      given Reads[Result] =
+        (json: JsValue) =>
+          ((json \ "evidence").asOpt[String], (json \ "add").asOpt[String]) match
+            case (Some(str), _) => JsSuccess(Right(Present(str)): Result)
+            case (_, Some(str)) => JsSuccess(Left( Missing(str)): Result)
+            case _              => JsError("Could not find either field 'evidence' or 'add'")
 
-    implicit val writesResult: Reads[Result] = new Reads[Result] {
-      def reads(json: JsValue) =
-        ( (json \ "evidence").asOpt[String], (json \ "add").asOpt[String] ) match {
-          case (Some(str), _) => JsSuccess(Right(Present(str)): Result)
-          case (_, Some(str)) => JsSuccess(Left( Missing(str)): Result)
-          case _              => JsError("Could not find either field 'evidence' or 'add'")
-        }
-    }
+      given Reads[SimpleCheck] =
+        ( (__ \ "title"      ).read[String]
+        ~ (__ \ "simpleCheck").read[Result]
+        ~ (__ \ "helpText"   ).read[String]
+        ~ (__ \ "linkToDocs" ).readNullable[String]
+        ) (SimpleCheck.apply)
 
-    implicit val readsSimpleCheck: Reads[SimpleCheck] =
-      ( (__ \ "title"      ).read[String]
-      ~ (__ \ "simpleCheck").read[Result]
-      ~ (__ \ "helpText"   ).read[String]
-      ~ (__ \ "linkToDocs" ).readNullable[String]
-      ) (SimpleCheck.apply)
+      given Reads[Map[Environment, Result]] =
+        Reads
+          .of[Map[String, Check.Result]]
+          .map:
+            _.map: (k, v) =>
+              (Environment.parse(k).getOrElse(sys.error("Invalid Environment")), v)
 
-    implicit val mapFormat: Reads[Map[Environment, Result]] =
-      Reads
-        .of[Map[String, Check.Result]]
-        .map(
-          _.map { case (k, v) => (Environment.parse(k).getOrElse(sys.error("Invalid Environment")), v) }
-        )
+      given Reads[EnvCheck] =
+        ( (__ \ "title"           ).read[String]
+        ~ (__ \ "environmentCheck").read[Map[Environment, Result]]
+        ~ (__ \ "helpText"        ).read[String]
+        ~ (__ \ "linkToDocs"      ).readNullable[String]
+        ) (EnvCheck.apply)
 
-    implicit val readsEnvCheck: Reads[EnvCheck] =
-      ( (__ \ "title"           ).read[String]
-      ~ (__ \ "environmentCheck").read[Map[Environment, Result]]
-      ~ (__ \ "helpText"        ).read[String]
-      ~ (__ \ "linkToDocs"      ).readNullable[String]
-      ) (EnvCheck.apply)
-
-    def reads(json: JsValue) =
-      json
+      checkJson
         .validate[SimpleCheck]
-        .orElse(json.validate[EnvCheck])
-  }
-}
+        .orElse(checkJson.validate[EnvCheck])
+
+end Check
 
 case class CachedServiceCheck(
   serviceName    : ServiceName
@@ -109,17 +103,15 @@ case class CachedServiceCheck(
 , warnings       : Option[Seq[Warning]]
 )
 
-object CachedServiceCheck {
-  val reads: Reads[CachedServiceCheck] = {
-    implicit val readsWarning = Warning.reads
-    implicit val readsCheck   = Check.reads
+object CachedServiceCheck:
+  val reads: Reads[CachedServiceCheck] =
+    given Reads[Warning] = Warning.reads
+    given Reads[Check]   = Check.reads
     ( (__ \ "serviceName"    ).read[ServiceName](ServiceName.format)
     ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "checks"         ).read[Seq[Check]]
     ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]
     )(CachedServiceCheck.apply)
-  }
-}
 
 enum FormCheckType(val asString: String) extends FromString:
   case Simple      extends FormCheckType("simple"     )
@@ -133,13 +125,12 @@ case class Lifecycle(
 , createDate     : Option[Instant] = None
 )
 
-object Lifecycle {
+object Lifecycle:
   val reads: Reads[Lifecycle] =
     ( (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
     ~ (__ \ "username"       ).readNullable[String]
     ~ (__ \ "createDate"     ).readNullable[Instant]
     )(Lifecycle.apply)
-}
 
 sealed trait LifecycleStatus { val asString: String; val displayName: String }
 
@@ -151,7 +142,8 @@ object LifecycleStatus {
   object Deleted                extends LifecycleStatus { val asString: String = "Deleted";                val displayName: String = "Deleted"         }
 
 
-  val values: List[LifecycleStatus] = List(Active, Archived, DecommissionInProgress, Deprecated, Deleted)
+  val values: List[LifecycleStatus] =
+    List(Active, Archived, DecommissionInProgress, Deprecated, Deleted)
 
   def parse(s: String): Either[String, LifecycleStatus] =
     values

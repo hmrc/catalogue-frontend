@@ -25,10 +25,9 @@ import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 
 class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder with WireMockEndpoints {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
-  }
 
   "What's running where page" should {
     "show a list of applications, environments and version numbers for releases" in {

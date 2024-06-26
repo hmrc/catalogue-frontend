@@ -20,14 +20,13 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import scala.util.Random
 
-import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
-class BobbyRuleViolationSpec extends AnyFreeSpec with Matchers {
+class BobbyRuleViolationSpec extends AnyWordSpec with Matchers {
 
-  "BobbyRuleViolation" - {
-
-    "should order by next valid version" in {
+  "BobbyRuleViolation" should {
+    "order by next valid version" in {
       val orderedList =
         List(
           BobbyRuleViolation(

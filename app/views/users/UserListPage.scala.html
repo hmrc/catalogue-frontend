@@ -23,14 +23,13 @@
 
 @this()
 
-@(
-  isTeamAdmin: Boolean,
+@(isTeamAdmin: Boolean,
   users      : Seq[User],
   teams      : Seq[GitHubTeam],
   form       : Form[UsersListFilter],
 )(implicit
-  messages: Messages,
-  request : RequestHeader
+  messages   : Messages,
+  request    : RequestHeader
 )
 @implicitField: FieldConstructor = @{ FieldConstructor(helper2.catalogueFieldConstructor.f) }
 

@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, Version}
@@ -42,7 +42,7 @@ class ServiceDependenciesConnectorSpec
      with IntegrationPatience {
 
   override def fakeApplication(): Application =
-    new GuiceApplicationBuilder()
+    GuiceApplicationBuilder()
       .configure(
         Map(
           "microservice.services.service-dependencies.port" -> wireMockPort,
@@ -53,7 +53,7 @@ class ServiceDependenciesConnectorSpec
 
   private lazy val serviceDependenciesConnector = app.injector.instanceOf[ServiceDependenciesConnector]
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "getJdkVersions" should {
     "returns JDK versions with vendor" in {
@@ -86,7 +86,8 @@ class ServiceDependenciesConnectorSpec
 
   "JSON Reader" should {
     "read json with java section" in {
-      implicit val sdr = ServiceDependencies.reads
+      given Reads[ServiceDependencies] = ServiceDependencies.reads
+
       val json = """{
         "uri" : "https://artefactory/slugs/mobile-stub/mobile-stub_0.12.0_0.5.2.tgz",
         "name" : "mobile-auth-stub",

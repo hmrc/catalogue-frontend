@@ -42,10 +42,10 @@ class TeamsController @Inject()(
   outOfDateTeamDependenciesPage: OutOfDateTeamDependenciesPage,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   def team(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
@@ -56,13 +56,13 @@ class TeamsController @Inject()(
         , githubTeams
         ) =>
           val optGithubTeam = githubTeams.find(_.name == umpTeam.teamName)
-          optGithubTeam match {
+          optGithubTeam match
             case Some(githubTeam) =>
               ( teamsAndRepositoriesConnector.repositoriesForTeam(teamName, Some(false))
-              , leakDetectionService.repositoriesWithLeaks
+              , leakDetectionService.repositoriesWithLeaks()
               , serviceDependenciesConnector.dependenciesForTeam(teamName)
               , serviceDependenciesConnector.getCuratedSlugDependenciesForTeam(teamName, SlugInfoFlag.ForEnvironment(Environment.Production))
-              ).mapN {
+              ).mapN:
                 ( repos
                 , reposWithLeaks
                 , masterTeamDependencies
@@ -81,7 +81,6 @@ class TeamsController @Inject()(
                     , gitHubUrl              = Some(githubTeam.githubUrl)
                     )
                   )
-              }
             case _ =>
               Future.successful(
                 Ok(
@@ -98,7 +97,6 @@ class TeamsController @Inject()(
                   )
                 )
               )
-          }
       }.flatten
     }
 
@@ -106,12 +104,11 @@ class TeamsController @Inject()(
     BasicAuthAction.async { implicit request =>
       ( userManagementConnector.getAllTeams()
       , teamsAndRepositoriesConnector.allTeams()
-      ).mapN { (umpTeams, gitHubTeams) =>
+      ).mapN: (umpTeams, gitHubTeams) =>
         Ok(teams_list(
           teams = umpTeams.map(umpTeam => (umpTeam, gitHubTeams.find(_.name == umpTeam.teamName))),
           name
         ))
-      }
     }
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
@@ -132,4 +129,5 @@ class TeamsController @Inject()(
         ))
       }
     }
-}
+
+end TeamsController

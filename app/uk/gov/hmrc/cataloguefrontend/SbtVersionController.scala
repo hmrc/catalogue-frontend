@@ -37,28 +37,29 @@ class SbtVersionController @Inject()(
   sbtVersionPage               : SbtVersionPage,
   sbtAcrossEnvironmentsPage    : SbtAcrossEnvironmentsPage,
   override val auth            : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   def findLatestVersions(flag: String, teamName: Option[TeamName]) =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         teams        <- teamsAndRepositoriesConnector.allTeams()
         selectedFlag =  SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
         sbtVersions  <- dependenciesService.getSbtVersions(selectedFlag, selectedTeam.map(_.name))
-      } yield Ok(sbtVersionPage(sbtVersions.sortBy(_.version), SlugInfoFlag.values, teams, selectedFlag, selectedTeam))
+      yield Ok(sbtVersionPage(sbtVersions.sortBy(_.version), SlugInfoFlag.values, teams, selectedFlag, selectedTeam))
     }
 
   def compareAllEnvironments(teamName: Option[TeamName]) =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         teams        <- teamsAndRepositoriesConnector.allTeams()
         selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
         envs         <- SlugInfoFlag.values.traverse(env => dependenciesService.getSbtCountsForEnv(env, selectedTeam.map(_.name)))
         sbts         =  envs.flatMap(_.usage.keys).distinct.sorted
-      } yield Ok(sbtAcrossEnvironmentsPage(envs, sbts, teams, selectedTeam))
+      yield Ok(sbtAcrossEnvironmentsPage(envs, sbts, teams, selectedTeam))
     }
-}
+
+end SbtVersionController

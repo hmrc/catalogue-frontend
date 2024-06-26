@@ -33,20 +33,20 @@ class SearchController @Inject() (
   view             : SearchResults,
   config           : SearchConfig,
   override val auth: FrontendAuthComponents
-)(implicit
+)(using
   override val ec  : ExecutionContext
 ) extends FrontendController(mcc)
-  with CatalogueAuthBuilders {
+  with CatalogueAuthBuilders:
 
-  def search(query: String, limit: Int) = BasicAuthAction {
-    val searchTerms =
-      query.trim.split("\\s+") // query is space delimited
-        .take(5)               // cap number of searchable terms at 5
-        .filter(_.length > 2)  // ignore search terms less than 3 chars
-        .toIndexedSeq
-    Ok(view(
+  def search(query: String, limit: Int) =
+    BasicAuthAction {
+      val searchTerms =
+        query.trim.split("\\s+") // query is space delimited
+          .take(5)               // cap number of searchable terms at 5
+          .filter(_.length > 2)  // ignore search terms less than 3 chars
+          .toIndexedSeq
+      Ok(view(
         matches   = searchIndex.search(searchTerms).take(limit),
-        highlight = if (config.highlight) new BoldHighlighter(searchTerms) else NoHighlighter
-    ))
-  }
-}
+        highlight = if config.highlight then BoldHighlighter(searchTerms) else NoHighlighter
+      ))
+    }

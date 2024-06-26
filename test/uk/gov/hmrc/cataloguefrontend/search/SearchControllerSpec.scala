@@ -75,13 +75,13 @@ class SearchControllerSpec
   }
 
   private trait Setup {
-    implicit val ec: ExecutionContext = ExecutionContext.global
+    given ExecutionContext = ExecutionContext.global
 
     val mcc                = app.injector.instanceOf[MessagesControllerComponents]
     val view               = app.injector.instanceOf[SearchResults]
     val config             = app.injector.instanceOf[SearchConfig]
     val mockAuthComponents = mock[FrontendAuthComponents]
     val mockSearchIndex    = mock[SearchIndex]
-    val controller         = new SearchController(mcc, mockSearchIndex, view, config, mockAuthComponents)
+    val controller         = SearchController(mcc, mockSearchIndex, view, config, mockAuthComponents)
   }
 }

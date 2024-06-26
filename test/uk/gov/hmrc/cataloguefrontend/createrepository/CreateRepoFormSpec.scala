@@ -121,10 +121,9 @@ class CreateRepoFormSpec extends UnitSpec {
     }
   }
 
-  private def isRepoNameValid(repoName: String, length: Int, suffix: Option[String] = None) = {
+  private def isRepoNameValid(repoName: String, length: Int, suffix: Option[String] = None) =
     val constraints = CreateRepoConstraints.createRepoNameConstraints(length, suffix)
     !constraints.map(c => c(repoName)).exists(p => p.isInstanceOf[Invalid])
-  }
 
   "repoTypeValidation" when {
     "the repo type is invalid" should {

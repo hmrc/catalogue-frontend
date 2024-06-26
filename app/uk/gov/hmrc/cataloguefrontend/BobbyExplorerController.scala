@@ -35,17 +35,16 @@ class BobbyExplorerController @Inject() (
   bobbyService     : BobbyService,
   serviceDeps      : ServiceDependenciesConnector,
   override val auth: FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   def list(selector: Option[String]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      for {
+      for
         rules    <- bobbyService.getRules()
         counts   <- serviceDeps.getBobbyRuleViolations()
         response =  Ok(page(rules, counts))
-      } yield response
+      yield response
     }
-}

@@ -29,16 +29,16 @@ class ShutterService @Inject() (
   shutterConnector      : ShutterConnector,
   shutterGroupsConnector: ShutterGroupsConnector,
   routeRulesConnector   : RouteRulesConnector
-)(implicit
-  ec: ExecutionContext
-) {
+)(using
+  ExecutionContext
+):
 
   def getShutterStates(
     st         : ShutterType,
     env        : Environment,
     serviceName: Option[ServiceName] = None
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[ShutterState]] =
     shutterConnector.shutterStates(st, env, serviceName)
 
@@ -48,7 +48,7 @@ class ShutterService @Inject() (
     st         : ShutterType,
     env        : Environment,
     status     : ShutterStatus
-  )(implicit
+  )(using
     hc : HeaderCarrier,
     req: AuthenticatedRequest[?, ?]
   ): Future[Unit] =
@@ -57,51 +57,47 @@ class ShutterService @Inject() (
   def outagePage(
     env        : Environment,
     serviceName: ServiceName
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Option[OutagePage]] =
     shutterConnector.outagePage(env, serviceName)
 
   def frontendRouteWarnings(
     env        : Environment,
     serviceName: ServiceName
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[FrontendRouteWarning]] =
     shutterConnector.frontendRouteWarnings(env, serviceName)
 
   def findCurrentStates(
     st : ShutterType,
     env: Environment
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[(ShutterState, Option[ShutterStateChangeEvent])]] =
-    for {
+    for
       states <- shutterConnector.shutterStates(st, env)
       events <- shutterConnector.latestShutterEvents(st, env)
-      sorted =  states
-                  .map(state => (state, events.find(_.serviceName == state.serviceName)))
-                  .sortWith { case ((l, _), (r, _)) =>
-                    if (l.status.value == r.status.value)
-                      l.serviceName.asString < r.serviceName.asString
-                    else l.status.value == ShutterStatusValue.Shuttered
-                  }
-    } yield sorted
+    yield
+       states
+         .map(state => (state, events.find(_.serviceName == state.serviceName)))
+         .sortBy: (s, _) =>
+           (s.status.value, s.serviceName)
 
   /** Creates an [[OutagePageStatus]] for each service based on the contents of [[OutagePage]] */
   def toOutagePageStatus(serviceNames: Seq[ServiceName], outagePages: List[OutagePage]): Seq[OutagePageStatus] =
-    serviceNames.map { serviceName =>
-      outagePages.find(_.serviceName == serviceName) match {
+    serviceNames.map: serviceName =>
+      outagePages.find(_.serviceName == serviceName) match
         case Some(outagePage) if outagePage.warnings.nonEmpty =>
           OutagePageStatus(
             serviceName = serviceName,
             warning     = Some(
-                            ( outagePage.warnings.map(_.message).mkString("<br/>"),
-                              outagePage.warnings.head.name match {
+                            ( outagePage.warnings.map(_.message).mkString("<br/>")
+                            , outagePage.warnings.head.name match
                                 case "UnableToRetrievePage"        => "Default outage page will be displayed."
                                 case "MalformedHTML"               => "Outage page will be sent as is, without updating templates."
                                 case "DuplicateTemplateElementIDs" => "All matching elements will be updated"
-                              }
                             )
                           )
           )
@@ -125,19 +121,22 @@ class ShutterService @Inject() (
             serviceName = serviceName,
             warning     = Some(("No templatedMessage Element no outage-page", "Default outage page will be displayed."))
           )
-      }
-    }
 
-  def shutterGroups: Future[Seq[ShutterGroup]] =
-    shutterGroupsConnector.shutterGroups.map(_.sortBy(_.name))
+  def shutterGroups()(using HeaderCarrier): Future[Seq[ShutterGroup]] =
+    shutterGroupsConnector.shutterGroups().map(_.sortBy(_.name))
 
-  def lookupShutterRoute(serviceName: ServiceName, env: Environment)(implicit hc: HeaderCarrier): Future[Option[String]] =
-    for {
+  def lookupShutterRoute(
+    serviceName: ServiceName,
+    env        : Environment
+  )(using
+    HeaderCarrier
+  ): Future[Option[String]] =
+    for
       baseRoutes      <- routeRulesConnector.frontendRoutes(serviceName)
-      optFrontendPath =  for {
-                           envRoute      <- baseRoutes.find(_.environment == env.asString).map(_.routes)
-                           frontendRoute <- envRoute.find(_.isRegex == false)
-                         } yield ShutterLinkUtils.mkLink(env, frontendRoute.frontendPath)
+    yield
+      for
+        envRoute      <- baseRoutes.find(_.environment == env).map(_.routes)
+        frontendRoute <- envRoute.find(_.isRegex == false)
+      yield ShutterLinkUtils.mkLink(env, frontendRoute.frontendPath)
 
-    } yield optFrontendPath
-}
+end ShutterService

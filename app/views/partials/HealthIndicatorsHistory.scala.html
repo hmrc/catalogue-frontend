@@ -14,11 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.healthindicators.HistoricIndicatorAPI
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.HistoricIndicatorData
 @import java.time.format.DateTimeFormatter
 @import java.time.ZoneId
 
-@( history: HistoricIndicatorAPI,
+@(history   : HistoricIndicatorData,
   optAverage: Option[Int]
 )(implicit
   request: RequestHeader

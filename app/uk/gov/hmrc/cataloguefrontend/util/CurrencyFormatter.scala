@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 import java.util.Locale
 
-object CurrencyFormatter {
+object CurrencyFormatter:
 
   def formatUsd(value: Double): String =
     currencyFormatterUsd.format(value)
@@ -31,4 +31,3 @@ object CurrencyFormatter {
 
   private lazy val currencyFormatterGbp =
     java.text.NumberFormat.getCurrencyInstance(Locale.UK)
-}

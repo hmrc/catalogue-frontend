@@ -28,11 +28,10 @@ class PrototypePageSpec
   extends UnitSpec
   with FakeApplicationBuilder {
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     super.beforeEach()
     setupAuthEndpoint()
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
-  }
 
   private def setupPrototypeStatusEndpoint(prototype: String, responseCode: Int, status: PrototypeStatus) =
     serviceEndpoint(

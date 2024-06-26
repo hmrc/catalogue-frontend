@@ -18,11 +18,11 @@ package uk.gov.hmrc.cataloguefrontend.config
 
 import play.api.Configuration
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.FiniteDuration
 
-class SearchConfig @Inject()(configuration: Configuration) {
+@Singleton
+class SearchConfig @Inject()(configuration: Configuration):
   val indexRebuildEnabled: Boolean         = configuration.get[Boolean]("search.rebuild.enabled")
   val indexRebuildInterval: FiniteDuration = configuration.get[FiniteDuration]("search.rebuild.interval")
   val highlight: Boolean                   = configuration.get[Boolean]("search.highlight")
-}

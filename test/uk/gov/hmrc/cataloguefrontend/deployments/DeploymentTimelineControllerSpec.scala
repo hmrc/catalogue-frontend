@@ -27,7 +27,7 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
-import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
@@ -42,30 +42,33 @@ class DeploymentTimelineControllerSpec
      with FakeApplicationBuilder {
   import ExecutionContext.Implicits.global
 
-  private trait Fixture {
-    implicit val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
+  private trait Setup {
+    given HeaderCarrier = HeaderCarrier()
+
+    given mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
     lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     lazy val mockedServiceDependenciesConnector  = mock[ServiceDependenciesConnector]
     lazy val authStubBehaviour                   = mock[StubBehaviour]
     lazy val mockedDeploymentGraphService        = mock[DeploymentGraphService]
     lazy val authComponent                       = FrontendAuthComponentsStub(authStubBehaviour)
-    lazy val page                                = new DeploymentTimelinePage()
+    lazy val page                                = DeploymentTimelinePage()
 
-    lazy val controller = new DeploymentTimelineController(
-      mockedTeamsAndRepositoriesConnector,
-      mockedServiceDependenciesConnector,
-      mockedDeploymentGraphService,
-      page,
-      mcc,
-      authComponent
-    )
+    lazy val controller =
+      DeploymentTimelineController(
+        mockedTeamsAndRepositoriesConnector,
+        mockedServiceDependenciesConnector,
+        mockedDeploymentGraphService,
+        page,
+        mcc,
+        authComponent
+      )
   }
 
   "DeploymentTimeline" should {
-    "return 200" in new Fixture {
+    "return 200" in new Setup {
       val start = LocalDate.now().minusDays(1)
-      val end = LocalDate.now()
+      val end   = LocalDate.now()
 
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
@@ -75,11 +78,11 @@ class DeploymentTimelineControllerSpec
         archived    = any,
         repoType    = eqTo(Some(RepoType.Service)),
         serviceType = any
-      )(any))
+      )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq.empty))
-      when(mockedDeploymentGraphService.findEvents(service = any, start = any, end = any))
+      when(mockedDeploymentGraphService.findEvents(service = any, start = any, end = any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(DeploymentTimelineEvent(Environment.Integration, Version(1, 0, 0, ""), "deploymentId", "ua", Instant.now(), Instant.now()))))
-      when(mockedServiceDependenciesConnector.getSlugInfo(any, any)(any))
+      when(mockedServiceDependenciesConnector.getSlugInfo(any, any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
 
       val response = controller.graph(Some(ServiceName("foo")), start, end)(FakeRequest(GET, "/deployment-timeline").withSession(SessionKeys.authToken -> "Token token"))

@@ -35,7 +35,7 @@ final class ResourceUsageConnectorSpec
   import ResourceUsageConnector._
 
   val servicesConfig =
-    new ServicesConfig(
+    ServicesConfig(
       Configuration(
         "microservice.services.service-configs.host" -> wireMockHost,
         "microservice.services.service-configs.port" -> wireMockPort
@@ -46,9 +46,9 @@ final class ResourceUsageConnectorSpec
   val clock = Clock.fixed(today, ZoneId.of("UTC"))
 
   val resourceUsageConnector =
-    new ResourceUsageConnector(httpClientV2, servicesConfig, clock)
+    ResourceUsageConnector(httpClientV2, servicesConfig, clock)
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "The connector" should {
     "fetch and deserialise historic `ResourceUsage` for a service" in {

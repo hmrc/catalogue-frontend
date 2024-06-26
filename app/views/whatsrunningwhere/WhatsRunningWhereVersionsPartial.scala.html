@@ -16,6 +16,7 @@
 
 @import play.twirl.api.TwirlFeatureImports.defining
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.deployments.{routes => depRoutes}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
 
 @(whatsRunning: Seq[WhatsRunningWhere]
@@ -59,7 +60,7 @@
       }
     }
     <td>
-        <a aria-label="Link to deployment timeline for @{wrw.serviceName.asString}" id="link-to-deployment-timeline-for-@{wrw.serviceName.asString}" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController.graph(Some(wrw.serviceName))"><span class="glyphicon glyphicon-stats"></span> </a>
+        <a aria-label="Link to deployment timeline for @{wrw.serviceName.asString}" id="link-to-deployment-timeline-for-@{wrw.serviceName.asString}" href="@depRoutes.DeploymentTimelineController.graph(Some(wrw.serviceName))"><span class="glyphicon glyphicon-stats"></span> </a>
     </td>
   </tr>
 }

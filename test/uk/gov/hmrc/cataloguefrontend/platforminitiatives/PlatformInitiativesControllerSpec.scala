@@ -46,7 +46,7 @@ class PlatformInitiativesControllerSpec
      with OptionValues
      with ScalaFutures
      with IntegrationPatience {
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  given HeaderCarrier = HeaderCarrier()
 
   "Platform Initiatives controller" should {
     "have the correct url set up for the initiatives list" in {
@@ -83,10 +83,10 @@ class PlatformInitiativesControllerSpec
       when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
         .thenReturn(Future.unit)
 
-      when(mockTRConnector.allTeams()(any[HeaderCarrier]))
+      when(mockTRConnector.allTeams()(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq()))
 
-      when(mockPIConnector.getInitiatives(any[Option[TeamName]])(any[HeaderCarrier]))
+      when(mockPIConnector.getInitiatives(any[Option[TeamName]])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(mockInitiatives))
 
       val result: Future[Result] = controller
@@ -103,14 +103,16 @@ class PlatformInitiativesControllerSpec
   }
 
   private trait Setup {
-    implicit val hc : HeaderCarrier                = HeaderCarrier()
-    implicit val mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
+    given HeaderCarrier = HeaderCarrier()
+
+    given mcc: MessagesControllerComponents =
+      app.injector.instanceOf[MessagesControllerComponents]
 
     val mockPIView        = app.injector.instanceOf[PlatformInitiativesListPage]
     val mockTRConnector   = mock[TeamsAndRepositoriesConnector]
     val mockPIConnector   = mock[PlatformInitiativesConnector]
     val authStubBehaviour = mock[StubBehaviour]
     val authComponent     = FrontendAuthComponentsStub(authStubBehaviour)
-    val controller        = new PlatformInitiativesController(mcc, mockPIConnector, mockPIView, mockTRConnector, authComponent)
+    val controller        = PlatformInitiativesController(mcc, mockPIConnector, mockPIView, mockTRConnector, authComponent)
   }
 }

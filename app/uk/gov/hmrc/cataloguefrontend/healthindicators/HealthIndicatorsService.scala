@@ -28,22 +28,22 @@ import scala.concurrent.{ExecutionContext, Future}
 class HealthIndicatorsService @Inject() (
   teamsAndReposConnector   : TeamsAndRepositoriesConnector,
   healthIndicatorsConnector: HealthIndicatorsConnector
-)(implicit
-  ec: ExecutionContext
-) {
+)(using
+  ExecutionContext
+):
 
   def findIndicatorsWithTeams(
     repoType      : Option[RepoType],
     repoNameFilter: Option[String]
-  )(implicit
-    hc: HeaderCarrier
+  )(using
+    HeaderCarrier
   ): Future[Seq[IndicatorsWithTeams]] =
-    for {
+    for
       repoToTeams        <- teamsAndReposConnector.allTeamsByService()
       indicators         <- healthIndicatorsConnector.getIndicators(repoType)
       filteredIndicators =  indicators.filter(ind => repoNameFilter.fold(true)(name => ind.repoName.toLowerCase.contains(name.toLowerCase)))
-    } yield
-      filteredIndicators.map(i =>
+    yield
+      filteredIndicators.map: i =>
         IndicatorsWithTeams(
           i.repoName,
           owningTeams = repoToTeams.getOrElse(i.repoName, Seq.empty).sorted,
@@ -51,8 +51,6 @@ class HealthIndicatorsService @Inject() (
           i.overallScore,
           i.weightedMetrics
         )
-      )
-}
 
 case class IndicatorsWithTeams(
   repoName      : String,

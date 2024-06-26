@@ -42,122 +42,83 @@ case class WhatsRunningWhereConfig(
   commitId: String
 )
 
-object JsonCodecs {
-  def format[A, B](f: A => B, g: B => A)(implicit fa: Format[A]): Format[B] = fa.inmap(f, g)
+object JsonCodecs:
+  def format[A, B](f: A => B, g: B => A)(using fa: Format[A]): Format[B] =
+    fa.inmap(f, g)
 
   private def toResult[A](e: Either[String, A]): JsResult[A] =
-    e match {
+    e match
       case Right(r) => JsSuccess(r)
       case Left(l)  => JsError(__, l)
-    }
 
-  val serviceNameFormat     : Format[ServiceName]      = ServiceName.format
   val timeSeenFormat        : Format[TimeSeen]         = format(TimeSeen.apply        , _.time    )
-  val teamNameFormat        : Format[TeamName]         = TeamName.format
   val usernameReads         : Format[Username]         = format(Username.apply        , _.asString)
   val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, _.asString)
 
-  val environmentFormat: Format[Environment] = new Format[Environment] {
-    override def reads(json: JsValue): JsResult[Environment] =
-      json
-        .validate[String]
-        .flatMap { s =>
-          Environment.parse(s)
-            .fold(
-              _   => JsError(__, s"Invalid Environment '$s'")
-            , env => JsSuccess(env)
-            )
-        }
-
-    override def writes(e: Environment) =
-      JsString(e.asString)
-  }
-
-  val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] = {
-    implicit val wf  = environmentFormat
-    implicit val vnf = Version.format
-    implicit val cnf: Reads[WhatsRunningWhereConfig] =
+  val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] =
+    given Reads[WhatsRunningWhereConfig] =
       ( (__ \ "repoName").read[String]
       ~ (__ \ "fileName").read[String]
       ~ (__ \ "commitId").read[String]
       )(WhatsRunningWhereConfig.apply)
 
-    ( (__ \ "environment"  ).read[Environment]
-    ~ (__ \ "versionNumber").read[Version]
+    ( (__ \ "environment"  ).read[Environment](Environment.format)
+    ~ (__ \ "versionNumber").read[Version](Version.format)
     ~ (__ \ "config"       ).read[List[WhatsRunningWhereConfig]]
     )(WhatsRunningWhereVersion.apply)
-  }
 
-  val whatsRunningWhereReads: Reads[WhatsRunningWhere] = {
-    implicit val wf    = serviceNameFormat
-    implicit val wrwvf = whatsRunningWhereVersionReads
+  val whatsRunningWhereReads: Reads[WhatsRunningWhere] =
+    given Reads[ServiceName]              = ServiceName.format
+    given Reads[WhatsRunningWhereVersion] = whatsRunningWhereVersionReads
     ( (__ \ "applicationName").read[ServiceName]
     ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
     )(WhatsRunningWhere.apply)
-  }
 
-  val profileTypeFormat: Format[ProfileType] = new Format[ProfileType] {
-    override def reads(js: JsValue): JsResult[ProfileType] =
-      js.validate[String]
-        .flatMap(s => toResult(ProfileType.parse(s)))
+  val profileTypeFormat: Format[ProfileType] =
+    new Format[ProfileType]:
+      override def reads(js: JsValue): JsResult[ProfileType] =
+        js.validate[String]
+          .flatMap(s => toResult(ProfileType.parse(s)))
 
-    override def writes(et: ProfileType): JsValue =
-      JsString(et.asString)
-  }
+      override def writes(et: ProfileType): JsValue =
+        JsString(et.asString)
 
   val profileNameFormat: Format[ProfileName] =
     format(ProfileName.apply, _.asString)
 
-  val profileFormat: OFormat[Profile] = {
-    implicit val ptf = profileTypeFormat
-    implicit val pnf = profileNameFormat
-    ( (__ \ "type").format[ProfileType]
-    ~ (__ \ "name").format[ProfileName]
+  val profileFormat: Format[Profile] =
+    ( (__ \ "type").format[ProfileType](profileTypeFormat)
+    ~ (__ \ "name").format[ProfileName](profileNameFormat)
     )(Profile.apply, p => Tuple.fromProductTyped(p))
-  }
 
   // Deployment Event
-  val deploymentEventFormat: Format[DeploymentEvent] = {
-    implicit val vnf = Version.format
-    implicit val tsf = timeSeenFormat
-    implicit val dsf = deploymentStatusFormat
+  val deploymentEventFormat: Format[DeploymentEvent] =
     ( (__ \ "deploymentId").format[String]
-    ~ (__ \ "status"      ).format[DeploymentStatus]
-    ~ (__ \ "version"     ).format[Version]
-    ~ (__ \ "time"        ).format[TimeSeen]
+    ~ (__ \ "status"      ).format[DeploymentStatus](deploymentStatusFormat)
+    ~ (__ \ "version"     ).format[Version](Version.format)
+    ~ (__ \ "time"        ).format[TimeSeen](timeSeenFormat)
     )(DeploymentEvent.apply, de => Tuple.fromProductTyped(de))
-  }
 
-  val serviceDeploymentsFormat: Format[ServiceDeployment] = {
-    implicit val devf = deploymentEventFormat
-    implicit val snf  = serviceNameFormat
-    implicit val enf  = environmentFormat
-    ( (__ \ "serviceName"     ).format[ServiceName]
-    ~ (__ \ "environment"     ).format[Environment]
+  val serviceDeploymentsFormat: Format[ServiceDeployment] =
+    given Format[DeploymentEvent] = deploymentEventFormat
+    ( (__ \ "serviceName"     ).format[ServiceName](ServiceName.format)
+    ~ (__ \ "environment"     ).format[Environment](Environment.format)
     ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
     ~ (__ \ "lastCompleted"   ).formatNullable[DeploymentEvent]
     )(ServiceDeployment.apply, sd => Tuple.fromProductTyped(sd))
-  }
 
-  val deploymentHistoryReads: Reads[DeploymentHistory] = {
-    implicit val snf = serviceNameFormat
-    implicit val ef  = environmentFormat
-    implicit val vnf = Version.format
-    implicit val tsf = timeSeenFormat
-    implicit val dar = usernameReads
-    implicit val tmf = teamNameFormat
-    ( (__ \ "serviceName").read[ServiceName]
-    ~ (__ \ "environment").read[Environment]
-    ~ (__ \ "version"    ).read[Version]
+  val deploymentHistoryReads: Reads[DeploymentHistory] =
+    given Reads[TeamName] = TeamName.format
+    ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
+    ~ (__ \ "environment").read[Environment](Environment.format)
+    ~ (__ \ "version"    ).read[Version](Version.format)
     ~ (__ \ "teams"      ).read[Seq[TeamName]]
-    ~ (__ \ "time"       ).read[TimeSeen]
-    ~ (__ \ "username"   ).read[Username]
+    ~ (__ \ "time"       ).read[TimeSeen](timeSeenFormat)
+    ~ (__ \ "username"   ).read[Username](usernameReads)
     )(DeploymentHistory.apply)
-  }
 
-  val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] = {
-    implicit val ef  = environmentFormat
-    ( (__ \ "environment"  ).read[Environment]
+  val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] =
+    ( (__ \ "environment"  ).read[Environment](Environment.format)
     ~ (__ \ "version"      ).read[Version](Version.format)
     ~ (__ \ "deploymentId" ).read[String]
     ~ (__ \ "username"     ).read[String]
@@ -168,22 +129,20 @@ object JsonCodecs {
     ~ (__ \ "configChanged").readNullable[Boolean]
     ~ (__ \ "configId"     ).readNullable[String]
     )(DeploymentTimelineEvent.apply)
-  }
-}
+end JsonCodecs
+
 
 case class TimeSeen(time: Instant)
 
-object TimeSeen {
-  implicit val timeSeenOrdering: Ordering[TimeSeen] =
+object TimeSeen:
+  given Ordering[TimeSeen] =
     Ordering.by(_.time.toEpochMilli)
-}
 
 case class ProfileName(asString: String) extends AnyVal
 
-object ProfileName {
-  implicit val ordering: Ordering[ProfileName] =
+object ProfileName:
+  given Ordering[ProfileName] =
     Ordering.by(_.asString)
-}
 
 enum ViewMode(val asString: String) extends FromString:
   case Versions  extends ViewMode("versions")
@@ -240,12 +199,11 @@ case class Pagination(
   total   : Long
 )
 
-object Pagination {
+object Pagination:
   def uriForPage(uri: String, page: Int): URI =
-    new URIBuilder(uri)
+    URIBuilder(uri)
       .setParameter("page", page.toString)
       .build()
-}
 
 case class DeploymentTimelineEvent(
   env          : Environment,

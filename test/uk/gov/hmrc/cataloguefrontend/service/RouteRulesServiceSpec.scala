@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{EnvironmentRoute, Route}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 
 class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
@@ -31,26 +32,29 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
     "determine if there is inconsistency in the public URL rules" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", Seq(Route("frontendPath", "ruleConfigurationUrl"))),
-        EnvironmentRoute("qa",
-          Seq(Route("frontendPath", "ruleConfigurationUrlQa"),
-          Route("inconsistent", "ruleConfigurationUrlQa")))
+        EnvironmentRoute(Environment.Production, Seq(Route("frontendPath", "ruleConfigurationUrl"))),
+        EnvironmentRoute(Environment.QA,
+          Seq(
+            Route("frontendPath", "ruleConfigurationUrlQa"),
+            Route("inconsistent", "ruleConfigurationUrlQa")
+          )
+        )
       )
 
       val inconsistentRoutes = ServiceRoutes(environmentRoutes).inconsistentRoutes
-      inconsistentRoutes.nonEmpty shouldBe true
-      inconsistentRoutes.head.environment shouldBe "qa"
-      inconsistentRoutes.head.routes.length shouldBe 1
+      inconsistentRoutes.nonEmpty                      shouldBe true
+      inconsistentRoutes.head.environment              shouldBe Environment.QA
+      inconsistentRoutes.head.routes.length            shouldBe 1
       inconsistentRoutes.head.routes.head.frontendPath shouldBe "inconsistent"
     }
 
     "determine if there is inconsistency with public URL rules when duplicates exist" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", Seq(
+        EnvironmentRoute(Environment.Production, Seq(
           Route("frontendPathOne", "ruleConfigurationUrlOne"),
           Route("frontendPathTwo", "ruleConfigurationUrlTwo")
         )),
-        EnvironmentRoute("qa", Seq(
+        EnvironmentRoute(Environment.QA, Seq(
           Route("frontendPathOne", "ruleConfigurationUrlOne"),
           Route("frontendPathTwo", "ruleConfigurationUrlTwo"),
           Route("frontendPathTwo", "ruleConfigurationUrlTwo")
@@ -58,17 +62,17 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
       )
 
       val inconsistentRoutes = ServiceRoutes(environmentRoutes).inconsistentRoutes
-      inconsistentRoutes.nonEmpty shouldBe true
-      inconsistentRoutes.head.environment shouldBe "qa"
+      inconsistentRoutes.nonEmpty         shouldBe true
+      inconsistentRoutes.head.environment shouldBe Environment.QA
     }
 
     "determine if there is consistency with public URL rules" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", Seq(
+        EnvironmentRoute(Environment.Production, Seq(
           Route("frontendPathOne", "ruleConfigurationUrlOne"),
           Route("frontendPathTwo", "ruleConfigurationUrlTwo")
         )),
-        EnvironmentRoute("qa", Seq(
+        EnvironmentRoute(Environment.QA, Seq(
           Route("frontendPathOne", "ruleConfigurationUrlOne"),
           Route("frontendPathTwo", "ruleConfigurationUrlTwo")
         ))
@@ -79,8 +83,8 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
     "be consistent when no routes" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", Nil),
-        EnvironmentRoute("qa", Nil)
+        EnvironmentRoute(Environment.Production, Seq.empty),
+        EnvironmentRoute(Environment.QA        , Seq.empty)
       )
 
       ServiceRoutes(environmentRoutes).inconsistentRoutes.nonEmpty shouldBe false
@@ -88,8 +92,8 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
     "return Production environment route as default reference route" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("production", Seq(Route("frontendPath", "ruleConfigurationUrl"))),
-        EnvironmentRoute("qa", Seq(Route("inconsistent", "ruleConfigurationUrl")))
+        EnvironmentRoute(Environment.Production, Seq(Route("frontendPath", "ruleConfigurationUrl"))),
+        EnvironmentRoute(Environment.QA        , Seq(Route("inconsistent", "ruleConfigurationUrl")))
       )
 
       ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe true
@@ -97,8 +101,8 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
     "return next environment route as reference when no production" in {
       val environmentRoutes = Seq(
-        EnvironmentRoute("development", Seq(Route("frontendPath", "ruleConfigurationUrl"))),
-        EnvironmentRoute("qa", Seq(Route("inconsistent", "ruleConfigurationUrl")))
+        EnvironmentRoute(Environment.Development, Seq(Route("frontendPath", "ruleConfigurationUrl"))),
+        EnvironmentRoute(Environment.QA         , Seq(Route("inconsistent", "ruleConfigurationUrl")))
       )
 
       ServiceRoutes(environmentRoutes).referenceEnvironmentRoutes.isDefined shouldBe true
@@ -113,7 +117,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
     "handle Admin and Frontend routes" in {
       val adminRoutes = Seq(
         EnvironmentRoute(
-          environment = "qa",
+          environment = Environment.QA,
           routes      = Seq(Route(
                           frontendPath         = "/fh-admin-page",
                           ruleConfigurationUrl = "",
@@ -122,7 +126,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
           isAdmin     = true
         ),
         EnvironmentRoute(
-          environment = "production",
+          environment = Environment.Production,
           routes      = Seq(Route(
                           frontendPath         = "/fh-admin-page",
                           ruleConfigurationUrl = "",
@@ -131,7 +135,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
           isAdmin     = true
         ),
         EnvironmentRoute(
-          environment = "staging",
+          environment = Environment.Staging,
           routes      = Seq(Route(
                           frontendPath         = "/fh-admin-page",
                           ruleConfigurationUrl = "",
@@ -142,7 +146,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
       val frontendRoutes = Seq(
         EnvironmentRoute(
-          environment = "qa",
+          environment = Environment.QA,
           routes      = Seq(Route(
                           frontendPath         = "/fhdds",
                           ruleConfigurationUrl = "",
@@ -151,7 +155,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
           isAdmin     = false
         ),
         EnvironmentRoute(
-          environment = "staging",
+          environment = Environment.Staging,
           routes      = Seq(Route(
                           frontendPath         = "/fhdds",
                           ruleConfigurationUrl = "",
@@ -159,7 +163,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
                         )),
         ),
         EnvironmentRoute(
-        environment = "production",
+        environment = Environment.Production,
           routes    = Seq(Route(
                         frontendPath         = "/fhdds",
                         ruleConfigurationUrl = "",
@@ -167,7 +171,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
                       )),
         ),
         EnvironmentRoute(
-        environment = "integration",
+        environment = Environment.Integration,
           routes    = Seq(Route(
                         frontendPath         = "/fhdds",
                         ruleConfigurationUrl = "",
@@ -175,7 +179,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
                       )),
         ),
         EnvironmentRoute(
-        environment = "development",
+        environment = Environment.Development,
           routes    = Seq(Route(
                         frontendPath         = "/fhdds",
                         ruleConfigurationUrl = "",

@@ -17,20 +17,20 @@
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{OFormat, __}
+import play.api.libs.json.{Format, __}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 case class Progress(
   current : Int,
   target  : Int,
-) {
+):
   def percent: Int =
-    if (target == 0) 0
+    if target == 0
+    then 0
     else (current.toFloat / target.toFloat * 100).toInt
-}
 
 object Progress {
-  implicit val format: OFormat[Progress] =
+  val format: Format[Progress] =
     ( (__ \ "current").format[Int]
     ~ (__ \ "target" ).format[Int]
     )(Progress.apply, p => Tuple.fromProductTyped(p))
@@ -44,15 +44,14 @@ case class PlatformInitiative(
   inProgressLegend     : String
 )
 
-object PlatformInitiative {
-  val format: OFormat[PlatformInitiative] =
+object PlatformInitiative:
+  val format: Format[PlatformInitiative] =
     ( (__ \ "initiativeName"       ).format[String]
     ~ (__ \ "initiativeDescription").format[String]
-    ~ (__ \ "progress"             ).format[Progress]
+    ~ (__ \ "progress"             ).format[Progress](Progress.format)
     ~ (__ \ "completedLegend"      ).format[String]
     ~ (__ \ "inProgressLegend"     ).format[String]
     )(apply, pi => Tuple.fromProductTyped(pi))
-}
 
 enum DisplayType(val asString: String) extends FromString:
   case Progress  extends DisplayType("Progress")

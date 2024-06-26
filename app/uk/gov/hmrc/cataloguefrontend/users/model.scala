@@ -17,21 +17,20 @@
 package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{JsObject, Json, OWrites, Reads, __}
+import play.api.libs.json.{JsObject, Json, OWrites, Reads, Writes, __}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
-case class Role(asString: String) {
+case class Role(asString: String):
   def displayName: String =
     asString.split("_").map(_.capitalize).mkString(" ")
 
   def isUser: Boolean =
     asString == "user"
-}
 
-object Role {
-  val reads: Reads[Role] = Reads.StringReads.map(Role.apply)
-}
+object Role:
+  val reads: Reads[Role] =
+    summon[Reads[String]].map(Role.apply)
 
 case class Member(
   username   : String
@@ -39,18 +38,14 @@ case class Member(
 , role       : Role
 )
 
-object Member {
-
-  val reads: Reads[Member] = {
-    implicit val rR : Reads[Role] = Role.reads
+object Member:
+  val reads: Reads[Member] =
     ( (__ \ "username"   ).read[String]
     ~ (__ \ "displayName").readNullable[String]
-    ~ (__ \ "role"       ).read[Role]
+    ~ (__ \ "role"       ).read[Role](Role.reads)
     )(Member.apply)
-  }
-}
 
-case class SlackInfo(url: String) {
+case class SlackInfo(url: String):
   val name: String =
     url.split("/").lastOption.getOrElse(url)
 
@@ -59,10 +54,11 @@ case class SlackInfo(url: String) {
 
   val hasValidName: Boolean =
     "^[A-Z0-9]+$".r.findFirstIn(name).isEmpty
-}
+end SlackInfo
 
 object SlackInfo {
-  val reads: Reads[SlackInfo] = Reads.StringReads.map(SlackInfo.apply)
+  val reads: Reads[SlackInfo] =
+    summon[Reads[String]].map(SlackInfo.apply)
 }
 
 case class UmpTeam(
@@ -74,11 +70,11 @@ case class UmpTeam(
 , slackNotification: Option[SlackInfo]
 )
 
-object UmpTeam {
-  val reads: Reads[UmpTeam] = {
-    implicit val mr : Reads[Member]    = Member.reads
-    implicit val sir: Reads[SlackInfo] = SlackInfo.reads
-    implicit val tnr: Reads[TeamName]  = TeamName.format
+object UmpTeam:
+  val reads: Reads[UmpTeam] =
+    given Reads[Member]    = Member.reads
+    given Reads[SlackInfo] = SlackInfo.reads
+    given Reads[TeamName]  = TeamName.format
     ( (__ \ "members"          ).read[Seq[Member]]
     ~ (__ \ "teamName"         ).read[TeamName]
     ~ (__ \ "description"      ).readNullable[String]
@@ -86,8 +82,6 @@ object UmpTeam {
     ~ (__ \ "slack"            ).readNullable[SlackInfo]
     ~ (__ \ "slackNotification").readNullable[SlackInfo]
     )(UmpTeam.apply)
-  }
-}
 
 case class User(
   displayName   : Option[String],
@@ -102,8 +96,8 @@ case class User(
   teamNames     : Seq[TeamName]
 )
 
-object User {
-  val reads: Reads[User] = {
+object User:
+  val reads: Reads[User] =
     ( ( __ \ "displayName"   ).readNullable[String]
     ~ ( __ \ "familyName"    ).read[String]
     ~ ( __ \ "givenName"     ).readNullable[String]
@@ -114,9 +108,7 @@ object User {
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
     ~ ( __ \ "role"          ).read[Role](Role.reads)
     ~ ( __ \ "teamNames"     ).read[Seq[TeamName]](Reads.seq(TeamName.format))
-      )(User.apply)
-  }
-}
+    )(User.apply)
 
 enum Organisation(val asString: String) extends FromString:
   case Mdtp  extends Organisation("MDTP" )
@@ -144,9 +136,8 @@ case class CreateUserRequest(
 )
 
 
-object CreateUserRequest {
-
-  implicit val writes: OWrites[CreateUserRequest] =
+object CreateUserRequest:
+  val writes: Writes[CreateUserRequest] =
     OWrites.transform[CreateUserRequest](
       ( (__ \ "givenName"               ).write[String]
       ~ (__ \ "familyName"              ).write[String]
@@ -163,9 +154,9 @@ object CreateUserRequest {
       ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
       ~ (__ \ "access" \ "environments" ).write[Boolean]
       )(r => Tuple.fromProductTyped(r))
-    ) { (req, json) =>
-      val givenName   = if (req.isServiceAccount) s"service_${req.givenName}" else req.givenName
-      val displayName = if (req.isServiceAccount) s"$givenName ${req.familyName}" else s"${givenName.capitalize} ${req.familyName.capitalize}"
+    ): (req, json) =>
+      val givenName   = if req.isServiceAccount then s"service_${req.givenName}"     else req.givenName
+      val displayName = if req.isServiceAccount then s"$givenName ${req.familyName}" else s"${givenName.capitalize} ${req.familyName.capitalize}"
       json ++ Json.obj(
         "givenName"          -> givenName,
         "username"           -> s"$givenName.${req.familyName}",
@@ -173,5 +164,3 @@ object CreateUserRequest {
         "isExistingLDAPUser" -> false,
         "access"             -> ((json \ "access").as[JsObject] ++ Json.obj("ldap" -> true))
       )
-    }
-}

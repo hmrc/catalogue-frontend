@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Reads
+import uk.gov.hmrc.cataloguefrontend.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.{Instant, LocalDate, LocalTime, ZoneOffset}
-import java.time.format.DateTimeFormatter
+import javax.inject.{Inject, Singleton}
+import java.time.{Instant, LocalDate}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -33,18 +33,18 @@ import scala.util.control.NonFatal
 class ReleasesConnector @Inject() (
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
-)(implicit ec: ExecutionContext) {
+)(using ExecutionContext):
   import HttpReads.Implicits._
 
   private val logger = Logger(getClass)
 
   private val serviceUrl: String = servicesConfig.baseUrl("releases-api")
 
-  private implicit val wrwf: Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
-  private implicit val pf  : Reads[Profile]           = JsonCodecs.profileFormat
+  private given Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
+  private given Reads[Profile]           = JsonCodecs.profileFormat
 
 
-  def releases(profile: Option[Profile])(implicit hc: HeaderCarrier): Future[Seq[WhatsRunningWhere]] = {
+  def releases(profile: Option[Profile])(using HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     val url = s"$serviceUrl/releases-api/whats-running-where"
     val params = Seq(
       "profileName" -> profile.map(_.profileName.asString),
@@ -53,46 +53,39 @@ class ReleasesConnector @Inject() (
     httpClientV2
       .get(url"$url?$params")
       .execute[Seq[WhatsRunningWhere]]
-      .recover {
+      .recover:
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
-      }
-  }
 
-  def profiles()(implicit hc: HeaderCarrier): Future[Seq[Profile]] = {
+  def profiles()(using HeaderCarrier): Future[Seq[Profile]] =
     val url = url"$serviceUrl/releases-api/profiles"
     httpClientV2
       .get(url)
       .execute[Seq[Profile]]
-      .recover {
+      .recover:
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
-      }
-  }
 
-  def releasesForService(service: ServiceName)(implicit hc: HeaderCarrier): Future[WhatsRunningWhere] = {
+  def releasesForService(service: ServiceName)(using HeaderCarrier): Future[WhatsRunningWhere] =
     val url = url"$serviceUrl/releases-api/whats-running-where/${service.asString}"
     httpClientV2
       .get(url)
       .execute[Option[WhatsRunningWhere]]
       .map(_.getOrElse(WhatsRunningWhere(service, Nil)))
-      .recover {
+      .recover:
         case ex =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           throw ex
-      }
-  }
 
-  private val paginatedHistoryReads: HttpReads[PaginatedDeploymentHistory] = {
+  private val paginatedHistoryReads: HttpReads[PaginatedDeploymentHistory] =
     implicit val rf = JsonCodecs.deploymentHistoryReads
-    for {
-      history <- implicitly[HttpReads[Seq[DeploymentHistory]]]
+    for
+      history <- summon[HttpReads[Seq[DeploymentHistory]]]
       resp    <- HttpReads.ask.map(_._3)
       totals  =  resp.header("X-Total-Count").map(_.toLong).getOrElse(0L)
-    } yield PaginatedDeploymentHistory(history, totals)
-  }
+    yield PaginatedDeploymentHistory(history, totals)
 
   def deploymentHistory(
     environment: Environment,
@@ -102,11 +95,13 @@ class ReleasesConnector @Inject() (
     service: Option[String]    = None,
     skip   : Option[Int]       = None,
     limit  : Option[Int]       = None
-  )(implicit hc: HeaderCarrier): Future[PaginatedDeploymentHistory] = {
+  )(using
+    HeaderCarrier
+  ): Future[PaginatedDeploymentHistory] =
     implicit val mr: HttpReads[PaginatedDeploymentHistory] = paginatedHistoryReads
     val params = Seq(
-      "from"    -> from.map(from => DateTimeFormatter.ISO_INSTANT.format(from.atStartOfDay().toInstant(ZoneOffset.UTC))),
-      "to"      -> to.map(to => DateTimeFormatter.ISO_INSTANT.format(to.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC))),
+      "from"    -> from.map(from => from.atStartOfDayInstant.toString),
+      "to"      -> to.map(to => to.atEndOfDayInstant.toString),
       "team"    -> team,
       "service" -> service,
       "skip"    -> skip.map(_.toString),
@@ -116,18 +111,17 @@ class ReleasesConnector @Inject() (
     httpClientV2
       .get(url"$serviceUrl/releases-api/deployments/${environment.asString}?$params")
       .execute[PaginatedDeploymentHistory]
-  }
 
   def deploymentTimeline(
     service: ServiceName,
     from:    Instant,
     to:      Instant
-  )(implicit
-    hc: HeaderCarrier
-  ): Future[Map[String, Seq[DeploymentTimelineEvent]]] = {
+  )(using
+    HeaderCarrier
+  ): Future[Map[String, Seq[DeploymentTimelineEvent]]] =
     implicit val dtr  = JsonCodecs.deploymentTimelineEventReads
     httpClientV2
       .get(url"$serviceUrl/releases-api/timeline/${service.asString}?from=$from&to=$to")
       .execute[Map[String, Seq[DeploymentTimelineEvent]]]
-  }
-}
+
+end ReleasesConnector

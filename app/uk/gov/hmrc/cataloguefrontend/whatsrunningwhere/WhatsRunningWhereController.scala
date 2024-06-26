@@ -37,19 +37,19 @@ class WhatsRunningWhereController @Inject() (
   config            : WhatsRunningWhereServiceConfig,
   override val mcc  : MessagesControllerComponents,
   override val auth : FrontendAuthComponents
-)(implicit
+)(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders {
+     with CatalogueAuthBuilders:
 
   private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
     form.fold(
       _ => None,
       f =>
-        for {
+        for
           profileType <- f.profileType
           profileName <- f.profileName
-        } yield Profile(profileType, profileName)
+        yield Profile(profileType, profileName)
     )
 
   private def distinctEnvironments(releases: Seq[WhatsRunningWhere]): Seq[Environment] =
@@ -62,10 +62,9 @@ class WhatsRunningWhereController @Inject() (
       val selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
       val selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
 
-      selectedViewMode match {
+      selectedViewMode match
         case ViewMode.Instances => instancesPage(form, profile, selectedProfileType, selectedViewMode).map(page => Ok(page))
         case ViewMode.Versions  => versionsPage (form, profile, selectedProfileType, selectedViewMode).map(page => Ok(page))
-      }
     }
 
 
@@ -74,15 +73,15 @@ class WhatsRunningWhereController @Inject() (
     profile            : Option[Profile],
     selectedProfileType: ProfileType,
     selectedViewMode   : ViewMode,
-  )(implicit
-    request: MessagesRequest[AnyContent
+  )(using
+    request            : MessagesRequest[AnyContent
   ]) =
-    for {
+    for
       profiles     <- service.profiles()
       releases     <- service.releasesForProfile(profile).map(_.sortBy(_.serviceName.asString))
       environments =  distinctEnvironments(releases)
       profileNames =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-    } yield page(environments, releases, selectedProfileType, profileNames, form, Seq.empty, config.maxMemoryAmount, selectedViewMode)
+    yield page(environments, releases, selectedProfileType, profileNames, form, Seq.empty, config.maxMemoryAmount, selectedViewMode)
 
 
   private def instancesPage(
@@ -90,17 +89,18 @@ class WhatsRunningWhereController @Inject() (
     profile            : Option[Profile],
     selectedProfileType: ProfileType,
     selectedViewMode   : ViewMode
-  )(implicit
-    request: MessagesRequest[AnyContent]
+  )(using
+    request            : MessagesRequest[AnyContent]
   ) =
-    for {
+    for
       profiles           <- service.profiles()
       releases           <- service.releasesForProfile(profile).map(_.sortBy(_.serviceName.asString))
       environments       =  distinctEnvironments(releases)
       serviceDeployments <- service.allDeploymentConfigs(releases)
       profileNames       =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-    } yield page(environments, Seq.empty, selectedProfileType, profileNames, form, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
-}
+    yield page(environments, Seq.empty, selectedProfileType, profileNames, form, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
+
+end WhatsRunningWhereController
 
 case class WhatsRunningWhereFilter(
   profileName: Option[ProfileName] = None,
@@ -109,7 +109,7 @@ case class WhatsRunningWhereFilter(
   viewMode:    Option[ViewMode]    = None
 )
 
-object WhatsRunningWhereFilter {
+object WhatsRunningWhereFilter:
   private def filterEmptyString(x: Option[String]) =
     x.filter(_.trim.nonEmpty)
 
@@ -138,4 +138,3 @@ object WhatsRunningWhereFilter {
                           )
       )(WhatsRunningWhereFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
-}
