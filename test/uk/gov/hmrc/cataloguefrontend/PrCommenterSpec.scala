@@ -21,7 +21,7 @@ import org.jsoup.Jsoup
 import org.scalatest.BeforeAndAfter
 import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.jsondata.{PrCommenterJsonData, TeamsAndRepositoriesJsonData}
-import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
 
 class PrCommenterSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.test
 
 import com.github.tomakehurst.wiremock.client.{WireMock, ResponseDefinitionBuilder}
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.http.RequestMethod
 import org.scalatest.Suite
+import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 import uk.gov.hmrc.http.test.WireMockSupport
 
 trait WireMockEndpoints extends WireMockSupport {

@@ -19,9 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import play.api.libs.ws.readableAsString
-import uk.gov.hmrc.cataloguefrontend.{FakeApplicationBuilder, WireMockEndpoints}
 import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, TeamsAndRepositoriesJsonData}
-import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec, WireMockEndpoints}
 
 class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder with WireMockEndpoints {
 

@@ -17,8 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.cost.DeploymentSize
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentSize
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 

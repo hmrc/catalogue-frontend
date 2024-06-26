@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.util // TODO move to view
+package uk.gov.hmrc.cataloguefrontend.view
 
 import play.api.mvc.RequestHeader
 import play.twirl.api.Html

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.costs
+package uk.gov.hmrc.cataloguefrontend.cost
 
+import cats.data.OptionT
 import cats.implicits._
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
@@ -24,13 +25,12 @@ import play.api.data.Forms.{mapping, optional}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.costs.view.html.CostExplorerPage
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.cost.view.html.{CostEstimationPage, CostExplorerPage}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
+import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -38,10 +38,12 @@ import java.time.Instant
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class CostsSummaryController @Inject() (
+class CostController @Inject() (
   serviceConfigsConnector      : ServiceConfigsConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  costEstimationService        : CostEstimationService,
   costExplorerPage             : CostExplorerPage,
+  costEstimationPage           : CostEstimationPage,
   costEstimateConfig           : CostEstimateConfig,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
@@ -88,6 +90,25 @@ class CostsSummaryController @Inject() (
         else
           Ok(costExplorerPage(groupedConfigs, teams, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
       }
+
+  def costEstimation(serviceName: ServiceName): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      (for
+         repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString))
+         if repositoryDetails.repoType == RepoType.Service
+         serviceCostEstimation              <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
+         historicEstimatedCostCharts <- OptionT.liftF(costEstimationService.historicEstimatedCostChartsForService(serviceName))
+       yield
+         Ok(costEstimationPage(
+           serviceName,
+           repositoryDetails,
+           serviceCostEstimation,
+           costEstimateConfig,
+           historicEstimatedCostCharts
+         ))
+      ).getOrElse(NotFound(error_404_template()))
+    }
+
 
 case class RepoListFilter(
   team: Option[TeamName] = None

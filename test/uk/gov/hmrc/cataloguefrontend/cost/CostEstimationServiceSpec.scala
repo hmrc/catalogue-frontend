@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.service
+package uk.gov.hmrc.cataloguefrontend.cost
 
 import com.typesafe.config.ConfigFactory
 import org.mockito.Mockito.when
@@ -38,7 +38,6 @@ final class CostEstimationServiceSpec
      with ScalaFutures
      with IntegrationPatience
      with MockitoSugar {
-  import CostEstimationService._
 
   given HeaderCarrier = HeaderCarrier()
 

@@ -20,8 +20,8 @@ import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.util.Base64Util
 import uk.gov.hmrc.http.HeaderCarrier

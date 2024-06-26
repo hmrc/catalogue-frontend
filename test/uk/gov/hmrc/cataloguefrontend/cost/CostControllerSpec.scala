@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.costs
+package uk.gov.hmrc.cataloguefrontend.cost
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
@@ -26,16 +26,16 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
+import uk.gov.hmrc.cataloguefrontend.test.FakeApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.StubBehaviour
 
 import scala.concurrent.Future
 
-class CostExplorerControllerSpec
+class CostControllerSpec
   extends AnyWordSpec
      with Matchers
      with FakeApplicationBuilder
@@ -63,7 +63,7 @@ class CostExplorerControllerSpec
     when(mockServiceConfigConnector.deploymentConfig(any, any, any, any)(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Seq.empty))
 
-    val request = FakeRequest(GET, routes.CostsSummaryController.costExplorer().url)
+    val request = FakeRequest(GET, routes.CostController.costExplorer().url)
 
     val result = route(app, request).value
 

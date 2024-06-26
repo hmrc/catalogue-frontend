@@ -21,7 +21,7 @@ import org.jsoup.Jsoup
 import org.scalatest.BeforeAndAfter
 import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, TeamsAndRepositoriesJsonData}
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
-import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
 
 class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 

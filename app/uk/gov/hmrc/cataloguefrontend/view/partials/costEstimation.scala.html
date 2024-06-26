@@ -14,9 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
-@import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
+@import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate, routes => costRoutes}
 @import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatGbp
 
 @(serviceCostEstimate: ServiceCostEstimate,
@@ -33,7 +31,7 @@
             <p>
                 <b id="service-costs">@formatGbp(serviceCostEstimate.totalYearlyCostGbp(costEstimateConfig))</b> per year.
                 @if(linkToCostsPage) {
-                    <a id="link-to-service-costs" href="@appRoutes.CatalogueController.costEstimation(serviceName)">
+                    <a id="link-to-service-costs" href="@costRoutes.CostController.costEstimation(serviceName)">
                         See costs over time.
                     </a>
                 }

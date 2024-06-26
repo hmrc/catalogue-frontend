@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes }
-@import uk.gov.hmrc.cataloguefrontend.costs.{routes => costsRoutes}
+@import uk.gov.hmrc.cataloguefrontend.cost.{routes => costRoutes}
 @import uk.gov.hmrc.cataloguefrontend.dependency.{routes => dependencyRoutes}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthIndRoutes}
@@ -204,7 +204,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a id="link-to-cost-explorer-page" class="dropdown-item" href="@costsRoutes.CostsSummaryController.costExplorer()">
+                                <a id="link-to-cost-explorer-page" class="dropdown-item" href="@costRoutes.CostController.costExplorer()">
                                     Cost Explorer
                                 </a>
                             </li>

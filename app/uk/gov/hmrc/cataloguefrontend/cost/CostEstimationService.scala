@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.service
+package uk.gov.hmrc.cataloguefrontend.cost
 
 import play.api.Configuration
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector.ResourceUsage
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
-import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter, FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, CurrencyFormatter}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -37,7 +35,6 @@ class CostEstimationService @Inject() (
 )(using
   ExecutionContext
 ):
-  import CostEstimationService._
 
   def estimateServiceCost(
     serviceName: ServiceName
@@ -119,93 +116,6 @@ class CostEstimationService @Inject() (
         .toList
 
     ChartDataTable(headerRow +: dataRows)
-
-end CostEstimationService
-
-object CostEstimationService:
-
-  case class DeploymentSize(
-    slots       : Int,
-    instances   : Int,
-  ):
-    def totalSlots: TotalSlots =
-      TotalSlots(slots * instances)
-
-    val slotsToMemory: Int =
-      slots * 128
-
-    val slotsAndInstancesToMemory: Int =
-      slotsToMemory * instances
-
-  object DeploymentSize:
-    val empty: DeploymentSize =
-      DeploymentSize(slots = 0, instances = 0)
-
-    val reads: Reads[DeploymentSize] =
-      ( (__ \ "slots"    ).read[Int]
-      ~ (__ \ "instances").read[Int]
-      )(DeploymentSize.apply)
-
-  case class DeploymentConfig(
-    serviceName   : ServiceName,
-    deploymentSize: DeploymentSize,
-    environment   : Environment,
-    zone          : Zone,
-    envVars       : Map[String, String],
-    jvm           : Map[String, String]
-  ):
-    def asMap: Map[String, String] =
-      Map(
-        "instances" -> deploymentSize.instances.toString,
-        "slots"     -> deploymentSize.slots.toString
-      )
-        ++ jvm.map : (key, value) =>
-             (s"jvm.$key", value)
-        ++ envVars.map: (key, value) =>
-             (s"environment.$key", value)
-
-  case class TotalSlots(asInt: Int) extends AnyVal:
-    def costGbp(costEstimateConfig: CostEstimateConfig) =
-      asInt * costEstimateConfig.slotCostPerYear
-
-  enum Zone(val asString: String) extends FromString:
-    case Protected      extends Zone("protected"      )
-    case Public         extends Zone("public"         )
-    case ProtectedRate  extends Zone("protected-rate" )
-    case PublicMonolith extends Zone("public-monolith")
-    case PublicRate     extends Zone("public-rate"    )
-    case Private        extends Zone("private"        )
-
-    def displayName: String =
-      asString.capitalize
-
-  object Zone extends FromStringEnum[Zone]
-
-  object DeploymentConfig:
-    val reads: Reads[DeploymentConfig] =
-      ( (__ \ "name"       ).read[ServiceName        ](ServiceName.format)
-      ~ (__ \ "slots"      ).read[Int                ]
-      ~ (__ \ "instances"  ).read[Int                ]
-      ~ (__ \ "environment").read[Environment        ](Environment.format)
-      ~ (__ \ "zone"       ).read[Zone               ](Zone.format)
-      ~ (__ \ "envVars"    ).read[Map[String, String]]
-      ~ (__ \ "jvm"        ).read[Map[String, String]]
-      ){ (n, s, i, e, z, ev, j) => DeploymentConfig(n, DeploymentSize(s, i), e, z, ev, j) }
-
-  case class HistoricEstimatedCostCharts(
-    totalsChart: ChartDataTable,
-    byEnvChart : ChartDataTable
-  )
-
-  case class ServiceCostEstimate(
-    slotsByEnv: Seq[(Environment, TotalSlots)],
-    chart     : ChartDataTable
-  ):
-    lazy val totalSlots: TotalSlots =
-      TotalSlots(slotsByEnv.map(_._2.asInt).sum)
-
-    def totalYearlyCostGbp(costEstimateConfig: CostEstimateConfig): Double =
-      totalSlots.costGbp(costEstimateConfig)
 
 end CostEstimationService
 

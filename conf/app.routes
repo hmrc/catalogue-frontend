@@ -44,7 +44,7 @@ POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefro
 POST       /repositories/:name/mark-for-decommissioning uk.gov.hmrc.cataloguefrontend.CatalogueController.markForDecommissioning(name: ServiceName)
 
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name: ServiceName)
-GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name: ServiceName)
+GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.cost.CostController.costEstimation(name: ServiceName)
 
 GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name: ServiceName)
 GET        /commissioning-state/search                  uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchLanding()
@@ -91,7 +91,7 @@ GET        /config/search/results                       uk.gov.hmrc.cataloguefro
 GET        /config/warnings/search                      uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningLanding()
 GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningResults()
 
-GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.costs.CostsSummaryController.costExplorer(team: Option[TeamName] ?= None, asCSV: Boolean ?= false)
+GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.cost.CostController.costExplorer(team: Option[TeamName] ?= None, asCSV: Boolean ?= false)
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list(selector: Option[String] ?= None)
 

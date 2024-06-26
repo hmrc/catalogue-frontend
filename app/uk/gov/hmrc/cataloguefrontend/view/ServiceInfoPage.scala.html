@@ -17,8 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{EnableBranchProtection, EnvData, MarkForDecommissioning}
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
-@import uk.gov.hmrc.cataloguefrontend.service.CostEstimateConfig
-@import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.ServiceCostEstimate
+@import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
@@ -33,7 +32,7 @@
 
 @(serviceName                  : ServiceName,
   repositoryDetails            : GitRepository,
-  costEstimate                 : ServiceCostEstimate,
+  serviceCostEstimate          : ServiceCostEstimate,
   costEstimateConfig           : CostEstimateConfig,
   repositoryCreationDate       : Instant,
   envDatas                     : Map[SlugInfoFlag, EnvData],
@@ -91,7 +90,7 @@
                 @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, lifecycle = lifecycle, isGuest = isGuest, hideDecommissioning = false)
             </div>
             <div class="col-md-6">
-                @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
+                @partials.costEstimation(serviceCostEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
             </div>
         </div>
 
