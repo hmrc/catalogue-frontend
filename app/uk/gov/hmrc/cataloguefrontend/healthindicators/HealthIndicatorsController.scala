@@ -22,10 +22,11 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsFilter.form
+import uk.gov.hmrc.cataloguefrontend.healthindicators.view.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{HealthIndicatorsLeaderBoard, HealthIndicatorsPage, error_404_template}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}

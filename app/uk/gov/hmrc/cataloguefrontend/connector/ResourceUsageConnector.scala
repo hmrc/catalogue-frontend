@@ -18,8 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, __}
+import uk.gov.hmrc.cataloguefrontend.cost.DeploymentSize
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.DeploymentSize
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._

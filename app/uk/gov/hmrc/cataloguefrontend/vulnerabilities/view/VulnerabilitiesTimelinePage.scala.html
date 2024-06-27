@@ -1,0 +1,222 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesTimelineCount}
+@import views.html.helper.{FieldConstructor, select}
+
+@this()
+
+@(teams   : Seq[String],
+  result  : Seq[VulnerabilitiesTimelineCount],
+  form    : Form[?]
+)(implicit
+  messages: Messages,
+  request : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Vulnerabilities Timeline", active = "health") {
+    <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            let data = [
+                @result.map { d =>
+                        [
+                            new Date(@{d.weekBeginning.toEpochMilli}),
+                            @{d.count}
+                        ],
+                }
+            ];
+
+            let container = document.getElementById('timeline-chart');
+
+            let dataTable = new google.visualization.DataTable();
+            dataTable.addColumn({ type: 'date', id: 'week', label: 'week' });
+            @form("curationStatus").value match {
+                    case Some("ACTION_REQUIRED") => {
+                        dataTable.addColumn({ type: 'number', id: 'ActionRequired', label: 'Action Required'});
+                    }
+                    case Some("NO_ACTION_REQUIRED") => {
+                        dataTable.addColumn({ type: 'number', id: 'NoActionRequired', label: 'No Action Required' });
+                    }
+                    case Some("INVESTIGATION_ONGOING") => {
+                        dataTable.addColumn({ type: 'number', id: 'InvestigationOngoing', label: 'Investigation Ongoing' });
+                    }
+                    case Some("UNCURATED") => {
+                        dataTable.addColumn({ type: 'number', id: 'Uncurated', label: 'Uncurated' });
+                    }
+                    case _ => {
+                        dataTable.addColumn({ type: 'number', id: 'Total', label: 'Total' });
+
+                    }
+                  }
+            dataTable.addRows(data);
+
+          var lineOptions = {
+            tooltip: {isHtml: true},
+            pointSize: 5,
+            lineWidth: 3,
+            height: 400,
+            legend: { position: 'bottom', maxLines: 3 },
+            colors: ['#F7696b'],
+            vAxis: { title: 'Vulnerabilities Count', color: '#FF0000', baselineColor: 'black', format: 0, viewWindow: {min: 0, max: dataTable.getColumnRange(1).max}, },
+            hAxis: {
+              gridlines: {
+                count: -1,
+                units: {
+                  months: {format: ['MMM yyyy'] },
+                }
+              },
+              maxTextLines: 1,
+              baselineColor: 'black',
+              minorGridlines: {
+                minSpacing: 80,
+                units: {
+                  months: {format: ['dd MMM'] },
+                  days: {format: ['dd MMM'] },
+                }
+              },
+            }
+          };
+
+          const showDeltaToggle = document.getElementById('show-delta-toggle')
+          var lineChart = new google.visualization.LineChart(container);
+
+          function chartDisplayOptions() {
+            lineOptions.vAxis.viewWindow = showDeltaToggle.checked ? null : { min: 0, max: dataTable.getColumnRange(1).max };
+            lineChart.draw(dataTable, lineOptions);
+          }
+
+          chartDisplayOptions();
+          showDeltaToggle.addEventListener("change", chartDisplayOptions);
+        }
+    </script>
+
+    <h1 class="page-heading mt-4">Vulnerabilities Timeline</h1>
+
+    @if(form.hasErrors) {
+    <div class="alert alert-danger" role="alert">
+        <ul class="list">
+            @form.errors.map { error =>
+            <li class="alert-danger"> @Messages(error.message, error.args*)</li>
+            }
+        </ul>
+    </div>
+    }
+
+    <form id="form" action="" method="get">
+        <div class="row">
+            <div class="col-md-4">
+                <dl>
+                    <dt>
+                        <label for="id-search" class="form-label">Vulnerability ID:</label>
+                    </dt>
+                    <dd>
+                        <input class="form-control" id="id-search" type="search" name="vulnerability" value='@form("vulnerability").value' autofocus>
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-4">
+                <dl>
+                    <dt>
+                        <label for="service-search" class="form-label">Service:</label>
+                    </dt>
+                    <dd>
+                        <input class="form-control" id="service-search" type="search" name="service" value='@form("service").value'>
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-4">
+                @select(
+                    field                 =  form("team"),
+                    options               =  teams.map(t => t -> t),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Team:",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "team-filter",
+                    Symbol("class")       -> "form-select"
+                )
+            </div>
+            <div class="col-md-3">
+                @select(
+                    field                 =  form("curationStatus"),
+                    options               =  (""->"All") +: CurationStatus.valuesAsSeq.map(cs => cs.asString -> cs.display),
+                    Symbol("_label")      -> "Curation status:",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "curation-status-filter",
+                    Symbol("class")       -> "form-select"
+                )
+            </div>
+            <div class="col-md-3">
+                <dl>
+                    <dt>
+                        <label for="from" class="form-label">Date From: </label>
+                    </dt>
+                    <dd>
+                        <input type="date" id="from" name="from" value='@form("from").value' class="form-control">
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-3">
+                <dl>
+                    <dt>
+                        <label for="to" class="form-label">Date To: </label>
+                    </dt>
+                    <dd>
+                        <input type="date" id="to" name="to" value='@form("to").value' class="form-control">
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-3">
+                <dl>
+                    <dt><label class="form-label">&nbsp;</label></dt> @* empty label for form alignment *@
+                    <dd>
+                        <input type="submit" value="Submit" class="form-control btn btn-success">
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        <div class="col-md-2 offset-10 form-check form-switch">
+            <input id="show-delta-toggle" class="form-check-input" name="showDelta" type="checkbox" role="switch" value="true" @if(form("showDelta").value.contains("true")){checked}>
+            <label class="form-check-label" for="show-delta-toggle">Show Delta</label>
+        </div>
+    </form>
+
+
+    @if(result.isEmpty) {
+        <p>No data was returned based on the provided filters</p>
+    } else if(result.size == 1) {
+        <p>Only one data point was returned - so unable to draw timeline. </p>
+        <p>Please expand the date filter criteria.</p>
+    } else {
+        <div id="timeline-chart" style="height: 300px"></div>
+    }
+
+}
+
+
+<script @CSPNonce.attr>
+  ["team-filter", "curation-status-filter"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+</script>

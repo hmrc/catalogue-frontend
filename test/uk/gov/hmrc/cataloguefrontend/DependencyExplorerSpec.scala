@@ -21,7 +21,7 @@ import org.jsoup.Jsoup
 import org.scalatest.BeforeAndAfter
 import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, ServiceDependenciesJsonData, TeamsAndRepositoriesJsonData}
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
 
 class DependencyExplorerSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 

@@ -19,10 +19,10 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.client.WireMock.{postRequestedFor, urlPathEqualTo}
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import play.api.libs.ws.{readableAsString, writeableOf_urlEncodedForm}
-import uk.gov.hmrc.cataloguefrontend.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, TeamsAndRepositoriesJsonData}
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
 
 class PrototypePageSpec
   extends UnitSpec

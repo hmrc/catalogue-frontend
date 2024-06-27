@@ -1,0 +1,106 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionBranchSummary, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+
+@this()
+
+@(repoName        : String,
+  includeNonIssues: Boolean,
+  summaries       : Seq[LeakDetectionBranchSummary],
+  canRescan       : Boolean
+)(implicit
+  request         : RequestHeader
+)
+
+@standard_layout(s"Leak detection: $repoName", active = "health") {
+    <h1 class="page-heading mt-4">Leak Detection: @repoName</h1>
+
+    <form id="form" method="GET">
+        <div class="row mb-3">
+            <div class="col-xs-12">
+                <input name="includeNonIssues" id="includeNonIssues" type="checkbox" value="true"
+                @if(includeNonIssues) {checked}/>
+                <label>Show all branch reports</label>
+            </div>
+        </div>
+    </form>
+
+    @if(summaries.isEmpty) {
+        <div class="alert alert-success">
+            There are no unresolved leaks associated to this repository
+        </div>
+    } else {
+        <div id="branch-list">
+          <form id="rescan-form" method="POST">
+            @csrfFormField
+            <table class="table table-striped sticky-header">
+                <thead>
+                    <tr>
+                        <th class="col-xs-5"><button type="button" class="sort no-border fw-bold" data-sort="branch">Branch</button></th>
+                        <th class="col-xs-3"><button type="button" class="sort no-border fw-bold" data-sort="scanned">Last scanned</button></th>
+                        <th class="col-xs-1 text-center"><button type="button" class="sort no-border fw-bold" data-sort="warnings">Warnings</button></th>
+                        <th class="col-xs-1 text-center"><button type="button" class="sort no-border fw-bold" data-sort="exemptions">Exemptions</button></th>
+                        <th class="col-xs-1 text-center"><button type="button" class="sort no-border fw-bold" data-sort="violations">Violations</button></th>
+                        @if(canRescan){<th class="col-xs-1 text-center">Rescan</th>}
+                    </tr>
+                </thead>
+                <tbody class="list">
+                @summaries.map(leakDetectionBranchSummary(repoName, _))
+                </tbody>
+            </table>
+          </form>
+        </div>
+
+        <script @CSPNonce.attr>
+            let options = {valueNames: ['branch', 'scanned', 'warnings', 'exemptions', 'violations']};
+            new List('branch-list', options);
+        </script>
+    }
+}
+
+@leakDetectionBranchSummary(repoName: String, summary: LeakDetectionBranchSummary) = {
+    <tr>
+        <td class="branch"><a id="branch-link-@{summary.branch}" href="@appRoutes.LeakDetectionController.report(repoName, summary.branch)">@summary.branch</a></td>
+        <td class="scanned">@summary.scannedAt.displayFormat</td>
+        @countWithLinkCell(repoName, summary.branch, "warnings", summary.warningCount)
+        @countWithLinkCell(repoName, summary.branch, "exemptions", summary.excludedCount)
+        @countWithLinkCell(repoName, summary.branch, "violations", summary.unresolvedCount)
+        @if(canRescan){<td class="text-center"><button type="submit" formaction="@appRoutes.LeakDetectionController.rescan(repoName, summary.branch)" class="no-border glyphicon glyphicon-refresh"/></td>}
+    </tr>
+}
+
+@countWithLinkCell(repoName: String, branch: String, name: String, count: Int) = {
+    <td class="@name text-center"><div class="d-none">@count</div>
+        @if(count > 0) {
+            <a id="@branch-@name-count" href="
+                @if(name == "exemptions") {
+                    @appRoutes.LeakDetectionController.reportExemptions(repoName, branch)
+                } else {
+                    @appRoutes.LeakDetectionController.report(repoName, branch)
+                }
+            ">@count</a>
+        } else {
+            <span>0</span>
+        }
+    </td>
+}
+<script @CSPNonce.attr>
+  document.getElementById("includeNonIssues").addEventListener("change", function() {
+    document.getElementById("form").submit();
+  });
+</script>

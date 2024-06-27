@@ -20,12 +20,11 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService
+import uk.gov.hmrc.cataloguefrontend.view.html.SearchByUrlPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.SearchByUrlPage
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -1,0 +1,206 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.MarkForDecommissioning
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{DecommissionInProgress, Deprecated, Archived}
+@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.view.ViewHelper.githubBadgeType
+
+@import java.time.Instant
+
+@(
+  repositoryDetails        : GitRepository,
+  version                  : Option[Version]                         = None,
+  hideDecommissioning      : Boolean                                 = true,
+  canMarkForDecommissioning: MarkForDecommissioning.HasAuthorisation = MarkForDecommissioning.HasAuthorisation(false),
+  isGuest                  : Boolean                                 = false,
+  lifecycle                : Option[Lifecycle]                       = None
+)(implicit
+  request                  : RequestHeader
+)
+
+<style>
+.dropdown-button-item {
+    color: rgba(var(--bs-link-color-rgb),var(--bs-link-opacity,1))
+}
+
+.dropdown-button-item:disabled,
+.dropdown-button-item[disabled]{
+    color: #666666;
+}
+
+</style>
+
+<div id="details" class="card">
+    <div class="card-header">
+        <div class="h4 mb-0">
+        Details
+          @if(!hideDecommissioning) {
+            <div class="dropdown d-inline">
+                <button aria-label="Config menu" class="btn btn-default border-0" type="button" id="config-menu" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="glyphicon glyphicon-cog"></i>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="config-menu">
+                    <li>
+                        <span
+                        data-bs-toggle="popover"
+                        data-bs-trigger="hover"
+                        data-bs-placement="right"
+                        data-bs-html="true"
+                        data-bs-content='@{if(isGuest) "You are currently logged onto a guest account, login using your LDAP credentials to decommission" else if(!canMarkForDecommissioning.value) "You must be a team admin for the team that owns this service to decommission" else ""}'>
+                         <button type="button" class="dropdown-item dropdown-button-item btn btn-default" data-bs-toggle="modal" data-bs-target="#confirm-mark-for-decommissioning" @{if(isGuest | !canMarkForDecommissioning.value) "disabled" else ""}>Mark for decommissioning</button>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+          }
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row gy-3">
+
+            <div id="repository-description" class="col-12">
+
+                <div class="@if(repositoryDetails.descriptionAboveLimit) {content-grow  content-grow-gradient}">
+                    <div class="content-grow-wrapper">
+                        <label class="fw-bold">Description <a href="#"
+                        tabindex="0"
+                        aria-label="Description"
+                        data-bs-toggle="popover"
+                        data-bs-trigger="focus"
+                        data-bs-placement="left"
+                        data-bs-html="true"
+                        data-bs-content='Description is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. You will need to add the `description` key to this file if it is missing. Changes can take a few minutes to appear in the MDTP catalogue.'>
+                            <span class="glyphicon glyphicon-question-sign"/>
+                        </a>: </label>
+                    @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
+                    </div>
+                </div>
+                @if(repositoryDetails.descriptionAboveLimit) {
+                    <footer class="text-center">
+                        <a id="see-all-expand-link" href="#" title="See all" class="content-grow-expand-link glyphicon glyphicon-chevron-down">
+                        </a>
+                    </footer>
+                }
+            </div>
+
+            <div id="repository-visibility" class="col-6">
+                <label class="fw-bold">Repository Visibility: </label>
+                @githubBadgeType(repositoryDetails)
+            </div>
+
+            @repositoryDetails.zone.map { zone =>
+                <div id="repository-zone" class="col-6">
+                    <label class="fw-bold">Zone: </label>
+                    @zone
+                </div>
+            }
+
+
+            @repositoryDetails.serviceType.map { serviceType =>
+                <div id="repository-service-type" class="col-6">
+                    <label class="fw-bold">Service type: </label>
+                    @serviceType
+                </div>
+            }
+
+            @lifecycle.map { lifecycle =>
+                <div class="col-6">
+
+                    @lifecycle match {
+                        case Lifecycle(Deprecated, _, _) => {
+                            <label class="fw-bold">Status <a href="#"
+                            tabindex="0"
+                            aria-label="Status"
+                            data-bs-toggle="popover"
+                            data-bs-trigger="focus"
+                            data-bs-placement="left"
+                            data-bs-html="true"
+                            data-bs-content='@deprecatedStatusPopoverContent(repositoryDetails.endOfLifeDate)'>
+                                <span class="glyphicon glyphicon-question-sign"/>
+                            </a>: </label>
+                            @lifecycle.lifecycleStatus.displayName @repositoryDetails.endOfLifeDate.map(date => Html(s"(<abbr title='End of life date' >EOL ${date.dateOnlyFormat}</abbr>)"))
+                        }
+                        case _ => {
+                            <label class="fw-bold">Status: </label>
+                            @lifecycle.lifecycleStatus.displayName
+                        }
+                    }
+
+                    @lifecycle match {
+                        case Lifecycle(DecommissionInProgress, Some(username), Some(createdDate)) => {
+                            <span class="glyphicon glyphicon-info-sign ms-1"
+                            title=""
+                            data-bs-toggle="popover"
+                            data-bs-trigger="hover"
+                            data-bs-placement="bottom"
+                            data-bs-html="true"
+                            data-bs-content='<div>Since: @{createdDate.displayFormat}</div><div>By: @{username}</div>'>
+                            </span>
+                        }
+                        case _ => {}
+                    }
+                </div>
+            }
+
+            <div id="repository-created-at" class="col-6">
+                <label class="fw-bold">Created: </label>
+                @repositoryDetails.createdDate.displayFormat
+            </div>
+
+            <div id="repository-last-active" class="col-6">
+                <label class="fw-bold">Last Active: </label>
+                @repositoryDetails.lastActiveDate.displayFormat
+            </div>
+
+            @version.map { version =>
+                <div class="col-6">
+                  <label class="fw-bold">Latest Version: </label>
+                  @version.toString
+                </div>
+            }
+
+            @repositoryDetails.tags match {
+                case Some(tags) if tags.nonEmpty => {
+                    <div id="repository-tags" class="col-6">
+                        <label class="fw-bold">Tags: </label>
+                        @tags.map { tag => <span class="repository-tags badge rounded-pill text-bg-secondary">@tag.asString</span> }
+                    </div>
+                }
+                case _ => {}
+            }
+        </div>
+    </div>
+</div>
+
+@{
+    lifecycle.map(_.lifecycleStatus) match {
+        case None                         => decommissionErrorModal("Cannot determine repository status", "You cannot decommission this service as the status is unknown.")
+        case Some(DecommissionInProgress) => decommissionErrorModal("Repository is already marked for decommissioning", "You cannot decommission this service as decommissioning is already in progress.")
+        case Some(Archived)               => decommissionErrorModal("Repository is archived", "You cannot decommission a service that is already archived.")
+        case _                            => decommissionWarnModal(ServiceName(repositoryDetails.name))
+    }
+}
+
+
+@deprecatedStatusPopoverContent(endOfLifeDate: Option[Instant]) = {
+    @endOfLifeDate match {
+        case Some(_)    => { Deprecated status and end of life date is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. To change deprecated status you will need to either remove the `deprecated` key or change its value to `false`. To change the end of life date you will need to update the value of `end-of-life-date` key. Changes can take a few minutes to appear in the MDTP catalogue. }
+        case _          => { Deprecated status is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. To change this you will need to either remove the `deprecated` key or change its value to `false`. Changes can take a few minutes to appear in the MDTP catalogue. }
+    }
+}

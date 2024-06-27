@@ -21,7 +21,7 @@ import org.jsoup.Jsoup
 import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.jsondata.JsonData
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
 
 class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
 

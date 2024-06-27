@@ -1,0 +1,113 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, HistoricEstimatedCostCharts, ServiceCostEstimate}
+
+@this()
+
+@(serviceName                 : ServiceName,
+  repositoryDetails           : GitRepository,
+  costEstimate                : ServiceCostEstimate,
+  costEstimateConfig          : CostEstimateConfig,
+  historicEstimatedCostCharts : HistoricEstimatedCostCharts
+)(implicit
+  request                     : RequestHeader
+)
+
+@standard_layout(serviceName.asString, "services") {
+    <header class="header-with-github-badge">
+        <div>
+            <h1 id="service-header" class="page-heading mt-4">Cost Estimation: @serviceName.asString</h1>
+        </div>
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
+    </header>
+
+    <section class="section-wrapper">
+        <div class="row">
+            <div class="col-md-12">
+                @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = false)
+            </div>
+        </div>
+    </section>
+
+    <section class="section-wrapper">
+        <div class="row">
+            <div class="col-md-12">
+                <div id="cost-estimation-over-time">
+                    <div class="card">
+                        <h5 class="card-header fw-bold">Estimated cost over time</h5>
+                        <div class="card-body">
+                            <div id="estimated-cost-over-time-chart" style="height: 400px"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-wrapper">
+        <div class="row">
+            <div class="col-md-12">
+                <div id="cost-estimation-over-time-by-env">
+                    <div class="card">
+                        <h5 class="card-header fw-bold">Estimated cost over time (by environment)</h5>
+                        <div class="card-body">
+                            <div id="estimated-cost-over-time-per-env-chart" style="height: 400px"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load('current', {'packages':['corechart'], 'language': 'en-GB'});
+        google.charts.setOnLoadCallback(drawCharts);
+
+        function drawCharts() {
+          var totalsChartData =
+            google.visualization.arrayToDataTable(@Html(historicEstimatedCostCharts.totalsChart.render));
+
+          var totalsChartOptions = {
+            legend: { position: 'none' },
+            interpolateNulls: true,
+            vAxis: { title: 'Yearly Cost', format: 'currency' }
+          };
+
+          @* SteppedChart displays the date on the right, rather than the left, which was confusing *@
+          var totalsChart =
+            new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-chart'));
+
+          var byEnvChartData =
+            google.visualization.arrayToDataTable(@Html(historicEstimatedCostCharts.byEnvChart.render));
+
+          var byEnvChartOptions = {
+            legend: { position: 'bottom' },
+            interpolateNulls: true,
+            vAxis: { title: 'Yearly Cost', format: 'currency' }
+          };
+
+          var byEnvChart =
+            new google.visualization.LineChart(document.getElementById('estimated-cost-over-time-per-env-chart'));
+
+          byEnvChart.draw(byEnvChartData, byEnvChartOptions);
+          totalsChart.draw(totalsChartData, totalsChartOptions);
+        }
+    </script>
+}

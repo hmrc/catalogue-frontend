@@ -1,0 +1,148 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import views.html.helper.{FieldConstructor, select}
+
+@this(
+  teamNamesPartial: partials.TeamNamesPartial
+)
+
+@(repositories   : Seq[GitRepository],
+  teamNames      : Seq[TeamName],
+  singleOwnership: Boolean,
+  includeArchived: Boolean,
+  form           : Form[?]
+)(implicit
+  messages       : Messages,
+  request        : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ helper.FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout(s"Default Branches", active = "explore") {
+    <h1 class="page-heading mt-4">Default Branch Naming Progress</h1>
+
+    @if(form.hasErrors) {
+        <div class="alert alert-danger" role="alert">
+            <ul class="list">
+                @form.errors.map { error =>
+                    <li class="alert-danger"> @Messages(error.message, error.args*)</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div id="default-branches">
+        <form action="/defaultbranch" method="get">
+            <div class="row">
+                <div class="col-md-3">
+                    <dl>
+                        <dt>
+                            <label for="search" class="form-label">Name:</label>
+                        </dt>
+                        <dd>
+                            <input class="form-control" id="search" type="search" name="name" value='@form("name").value'>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    @select(
+                        field                 =  form("teamNames"),
+                        options               =  teamNames.map(t => t.asString -> t.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Teams: ",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("name")        -> "teamNames",
+                        Symbol("value")       -> "form('teamNames').value",
+                        Symbol("id")          -> "teamNames",
+                        Symbol("class")       -> "form-select"
+                    )
+                    <div class="form-check form-switch">
+                        <input id="singleOwnership" name="singleOwnership" class="form-check-input" type="checkbox" role="switch" value="true" @if(singleOwnership){checked}>
+                        <label class="form-check-label" for="singleOwnership" data-bs-toggle="tooltip" data-bs-title="Return repositories that are owned solely by the selected team.">
+                            Single ownership
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <dl>
+                        <dt>
+                            <label for="defaultBranch" class="form-label">Branch:</label>
+                        </dt>
+                        <dd>
+                            <input class="form-control" id="defaultBranch" type="search" name="defaultBranch" value='@form("defaultBranch").value'>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            <button id="search-button" class="btn btn-success" type="submit" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.allDefaultBranches()">Search</button>
+        </form>
+
+        <div class="row mt-3">
+            <div class="col">
+                @defining(repositories.filter(_.defaultBranch != "master").length) { nonMasterCount =>
+                  @defining((nonMasterCount.toDouble / repositories.length) * 100) { progress =>
+                      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="@repositories.length" aria-valuenow="@nonMasterCount">
+                          <div class="progress-bar" style="width: @progress%;"></div>
+                      </div>
+                      Updated default branch names: @nonMasterCount/@repositories.length
+                  }
+                }
+            </div>
+        </div>
+
+        <table class="table table-striped sticky-header">
+            <thead>
+                <tr>
+                    <th class="col-lg-6"><button role="button" class="sort no-border fw-bold" data-sort="repo-name">Name</button></th>
+                    <th class="col-lg-6"><button role="button" class="sort no-border fw-bold" data-sort="teamNames">Team/s</button></th>
+                    <th class="col-lg-6"><button role="button" class="sort no-border fw-bold" data-sort="defaultBranch">Default Branch</button></th>
+                    @if(includeArchived) {
+                        <th class="col-lg-6"><button role="button" class="sort no-border fw-bold" data-sort="isArchived">Archived</button></th>
+                    }
+                </tr>
+            </thead>
+            <tbody class="list">
+            @repositories.zipWithIndex.map{case (repo, i) =>
+            <tr id="row@i">
+                <td class="service-name" id="row@{i}_name">
+                    <a aria-label="Link to @{repo.name}" class="repo-name" id="link-to-@{repo.name}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)">@repo.name</a>
+                </td>
+                <td class="teams" id="row@{i}_teamNames">
+                  @teamNamesPartial(repo.owningTeams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#owning-team")
+                </td>
+                <td class="defaultBranch font-monospace" id="row@{i}_defaultBranch">
+                    @repo.defaultBranch
+                </td>
+                @if(includeArchived) {
+                  <td class="isArchived font-monospace" id="row@{i}_isArchived">
+                    @repo.isArchived
+                  </td>
+                }
+            </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+<script @CSPNonce.attr>
+    let options = { valueNames: [ 'service-name', 'repo-name', 'teamNames', 'defaultBranch', 'isArchived'],
+                    searchColumns: ['repo-name', 'teamNames', 'defaultBranch', 'isArchived'] };
+
+    let serviceList = new List('default-branches', options);
+</script>

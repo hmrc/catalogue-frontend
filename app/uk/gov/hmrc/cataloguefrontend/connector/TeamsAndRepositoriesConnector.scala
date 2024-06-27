@@ -21,7 +21,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.config.Constant
-import uk.gov.hmrc.cataloguefrontend.service.CostEstimationService.Zone
+import uk.gov.hmrc.cataloguefrontend.cost.Zone
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}

@@ -16,48 +16,49 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.should.Matchers
+import uk.gov.hmrc.cataloguefrontend.model.VersionRange
+
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import scala.util.Random
 
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.matchers.should.Matchers
-
 class BobbyRuleViolationSpec extends AnyWordSpec with Matchers {
-
   "BobbyRuleViolation" should {
     "order by next valid version" in {
+      val now = LocalDate.now()
       val orderedList =
         List(
           BobbyRuleViolation(
             reason = "reason1"
-          , range  = BobbyVersionRange.parse("[1.0.0,)").get
-          , from   = LocalDate.now
+          , range  = VersionRange("[1.0.0,)")
+          , from   = now
           )
         , BobbyRuleViolation(
             reason = "reason2"
-          , range  = BobbyVersionRange.parse("(,99.99.99)").get
-          , from   = LocalDate.now
+          , range  = VersionRange("(,99.99.99)")
+          , from   = now
           )
         , BobbyRuleViolation(
             reason = "reason3"
-          , range  = BobbyVersionRange.parse("(,2.1.0)").get
-          , from   = LocalDate.now
+          , range  = VersionRange("(,2.1.0)")
+          , from   = now
           )
         , BobbyRuleViolation(
             reason = "reason4"
-          , range  = BobbyVersionRange.parse("(,1.2.0]").get
-          , from   = LocalDate.now
+          , range  = VersionRange("(,1.2.0]")
+          , from   = now
           )
         , BobbyRuleViolation(
             reason = "reason5"
-          , range  = BobbyVersionRange.parse("(,1.2.0)").get
-          , from   = LocalDate.now
+          , range  = VersionRange("(,1.2.0)")
+          , from   = now
           )
         , BobbyRuleViolation(
             reason = "reason6"
-          , range  = BobbyVersionRange.parse("(,1.2.0)").get
-          , from   = LocalDate.now.minus(1, ChronoUnit.DAYS)
+          , range  = VersionRange("(,1.2.0)")
+          , from   = now.minus(1, ChronoUnit.DAYS)
           )
         )
       Random.shuffle(orderedList).sorted shouldBe orderedList

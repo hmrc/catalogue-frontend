@@ -21,8 +21,8 @@ import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -36,7 +36,7 @@ class SlugInfoServiceSpec
 
   val group        = "group"
   val artefact     = "artefact"
-  val versionRange = BobbyVersionRange("[1.0.1,)")
+  val versionRange = VersionRange("[1.0.1,)")
 
   val v100 =
     RepoWithDependency(

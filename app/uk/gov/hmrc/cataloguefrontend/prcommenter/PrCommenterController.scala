@@ -21,9 +21,9 @@ import play.api.data.{Form, Forms}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.prcommenter.view.html.PrCommenterRecommendationsPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.prcommenter.PrCommenterRecommendationsPage
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext

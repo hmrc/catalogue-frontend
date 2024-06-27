@@ -25,14 +25,14 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
-import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
+import uk.gov.hmrc.cataloguefrontend.test.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.users.{CreateUserController, CreateUserRequest, Organisation, routes}
+import uk.gov.hmrc.cataloguefrontend.users.view.html.{CreateUserPage, CreateUserRequestSentPage}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.internalauth.client._
-import views.html.users.{CreateUserPage, CreateUserRequestSentPage}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

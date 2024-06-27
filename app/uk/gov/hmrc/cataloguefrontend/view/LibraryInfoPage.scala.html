@@ -1,0 +1,125 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
+@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
+@import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
+
+@this(
+  viewMessages  : ViewMessages,
+  modulesPartial: partials.ModulesPartial
+)
+
+@(library                : GitRepository,
+  repositoryModules      : Seq[RepositoryModules],
+  linkToLeakDetection    : Option[String],
+  hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
+  commenterReport        : Option[PrCommenterReport]
+)(implicit
+  request                : RequestHeader
+)
+
+@standard_layout(library.name, active = "repositories") {
+    <h1 class="page-heading mt-4">
+        Library: @library.name
+        @{
+            if(library.isArchived) {
+                <span>Archived</span>
+            } else if(library.isDeprecated) {
+                <span>Deprecated</span>
+            }
+        }
+    </h1>
+
+    @partials.leak_detection_banner(linkToLeakDetection)
+    @defining(repositoryModules.headOption) { latestRepositoryModules =>
+        @defining(latestRepositoryModules.fold(Seq.empty[Dependency])(_.allDependencies)){ dependencies =>
+          @partials.bobby_violations_banner(environment = None, dependencies, pending = false)
+          @partials.bobby_violations_banner(environment = None, dependencies, pending = true )
+        }
+
+        <section class="section-wrapper">
+            <div class="row mb-3">
+              <div class="col-12">
+                @partials.details(
+                  repositoryDetails = library,
+                  version           = latestRepositoryModules.flatMap(_.version)
+                )
+              </div>
+            </div>
+
+            <div class="row gy-3 mb-3">
+                <div class="col-md-6">
+                    @partials.repo_owning_teams(library)
+                </div>
+
+                <div class="col-md-6">
+                    @partials.code(library, hasBranchProtectionAuth, commenterReport, None)
+                </div>
+
+                <div class="col-md-6">
+                    @partials.build(library, hasBranchProtectionAuth, commenterReport)
+                </div>
+
+                <div class="col-md-6">
+                    @partials.dependency_legend(showNewVersionAvailable = true)
+                </div>
+            </div>
+
+            <div class="accordion">
+                @for((modules, idx) <- repositoryModules.zipWithIndex) {
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#module-@idx" aria-expanded="false" aria-controls="module-@idx">
+                                @if(
+                                    modules.modules.exists(_.pendingBobbyRules.nonEmpty) ||
+                                        modules.allDependencies
+                                            .flatMap { dependency => dependency.pendingBobbyRuleViolations }
+                                            .toSet.nonEmpty
+                                ) {
+                                    <span id="bobby-violation-pending-badge" class="environment-badge bobby-violation-pending-badge" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Bobby rule pending"></span>
+                                } else {
+                                    <span class="environment-badge no-badge"></span>
+                                }
+                                @if(
+                                    modules.modules.exists(_.activeBobbyRules.nonEmpty) ||
+                                        modules.allDependencies
+                                            .flatMap { dependency => dependency.activeBobbyRuleViolations }
+                                            .toSet.nonEmpty
+                                ) {
+                                    <span id="bobby-violation-active-badge" class="environment-badge bobby-violation-active-badge" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Bobby rule violated"></span>
+                                } else {
+                                    <span class="environment-badge no-badge"></span>
+                                }
+                                Version @modules.version.get
+                            </button>
+                        </h2>
+                        <div id="module-@idx" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                @modulesPartial(modules, displayBuildInfo = idx == 0, showLegend = false)
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+    <div class="alert alert-success" role="alert" id="@library.name">
+        @Html(viewMessages.informationalText)
+    </div>
+}

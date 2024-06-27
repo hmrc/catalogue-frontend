@@ -1,0 +1,64 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate, routes => costRoutes}
+@import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatGbp
+
+@(serviceCostEstimate: ServiceCostEstimate,
+  costEstimateConfig : CostEstimateConfig,
+  serviceName        : ServiceName,
+  linkToCostsPage    : Boolean
+)(implicit
+  request            : RequestHeader
+)
+
+    <div id="cost-estimation" class="card">
+        <div class="card-header"><div class="h4 mb-0">Estimated Cost</div></div>
+        <div class="card-body">
+            <p>
+                <b id="service-costs">@formatGbp(serviceCostEstimate.totalYearlyCostGbp(costEstimateConfig))</b> per year.
+                @if(linkToCostsPage) {
+                    <a id="link-to-service-costs" href="@costRoutes.CostController.costEstimation(serviceName)">
+                        See costs over time.
+                    </a>
+                }
+            </p>
+
+            <p>This is based on a usage of @serviceCostEstimate.totalSlots.asInt slots across all environments, where
+               each slot is estimated to cost
+               <em data-bs-toggle="tooltip"
+                   data-bs-placement="bottom"
+                   data-bs-title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
+                                  @costEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
+                                  services across all environments" style="border-bottom: dotted 1px">
+                   @formatGbp(costEstimateConfig.slotCostPerYear) per year
+               </em>.</p>
+            <div id="chart"></div>
+        </div>
+    </div>
+
+<script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script @CSPNonce.attr type="text/javascript">
+    google.charts.load("current", {packages: ["corechart"], 'language': 'en-GB'});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+        var data = google.visualization.arrayToDataTable(@Html(serviceCostEstimate.chart.render));
+        var options = {};
+        var chart = new google.visualization.PieChart(document.getElementById('chart'));
+        chart.draw(data, options);
+      }
+</script>

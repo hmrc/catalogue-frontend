@@ -18,8 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, Reads, __}
-import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyVersionRange
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version, VersionRange}
 
 import java.time.Instant
 import scala.collection.Seq
@@ -40,10 +39,9 @@ case class VulnerableComponent(
   def artefact: String =
     component.stripPrefix("gav://").split(":")(1).split("_")(0)
 
-  def bobbyRange: BobbyVersionRange =
-    val v       = Version(cleansedVersion)
-    val vString = s"${v.major}.${v.minor}.${v.patch}"
-    BobbyVersionRange(s"[$vString]")
+  def versionRange: VersionRange =
+    val v = Version(cleansedVersion)
+    VersionRange(s"[${v.major}.${v.minor}.${v.patch}]")
 
   def componentWithoutPrefix: Option[String] =
     component.split("://").lift(1)

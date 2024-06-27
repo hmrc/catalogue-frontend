@@ -19,15 +19,15 @@ package uk.gov.hmrc.cataloguefrontend.deployments
 import cats.implicits._
 import play.api.mvc._
 
-import uk.gov.hmrc.cataloguefrontend.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.deployments.view.html.DeploymentTimelinePage
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
+import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.deployments.DeploymentTimelinePage
 
 import java.time.LocalDate
 import javax.inject.{Inject, Singleton}

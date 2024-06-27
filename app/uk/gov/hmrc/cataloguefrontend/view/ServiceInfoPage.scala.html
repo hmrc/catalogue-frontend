@@ -1,0 +1,155 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{EnableBranchProtection, EnvData, MarkForDecommissioning}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
+@import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate}
+@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+@import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
+
+@import java.time.Instant
+
+@this(
+  dependenciesByEnvironmentPartial: partials.DependenciesByEnvironmentPartial,
+  viewMessages                    : ViewMessages
+)
+
+@(serviceName                  : ServiceName,
+  repositoryDetails            : GitRepository,
+  serviceCostEstimate          : ServiceCostEstimate,
+  costEstimateConfig           : CostEstimateConfig,
+  repositoryCreationDate       : Instant,
+  envDatas                     : Map[SlugInfoFlag, EnvData],
+  linkToLeakDetection          : Option[String],
+  serviceRoutes                : ServiceRoutes,
+  hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
+  commenterReport              : Option[PrCommenterReport],
+  distinctVulnerabilitiesCount : Option[Int],
+  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsEnriched,
+  canMarkForDecommissioning    : MarkForDecommissioning.HasAuthorisation,
+  lifecycle                    : Option[Lifecycle],
+  testJobMap                   : Map[String, Seq[JenkinsJob]],
+  isGuest                      : Boolean
+)(implicit
+  messages                     : Messages,
+  request                      : RequestHeader,
+)
+
+@standard_layout(serviceName.asString, active = "repositories") {
+    <header class="header-with-github-badge">
+        <div>
+            <h1 id="service-header" class="page-heading mt-4 position-relative">
+              Service: @serviceName.asString
+                @{
+                    if(repositoryDetails.isArchived) {
+                        <span>Archived</span>
+                    } else if(repositoryDetails.isDeprecated) {
+                        <span>Deprecated</span>
+                    }
+                }
+            </h1>
+        </div>
+
+        <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
+    </header>
+
+    @partials.leak_detection_banner(linkToLeakDetection)
+    @defining(envDatas.get(SlugInfoFlag.ForEnvironment(Environment.Production)).toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)){ dependencies =>
+      @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = false)
+      @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = true )
+    }
+
+    @if(serviceRelationships.hasDeprecatedDownstream) {
+      <div class="alert alert-warning">
+          <strong>
+              One or more of your <a id="service-relationships-deprecated-anchor-link" href="#service_relationships">downstream dependencies</a> has been deprecated.
+          </strong>
+      </div>
+    }
+
+    <section class="section-wrapper">
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, lifecycle = lifecycle, isGuest = isGuest, hideDecommissioning = false)
+            </div>
+            <div class="col-md-6">
+                @partials.costEstimation(serviceCostEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
+            </div>
+        </div>
+
+        @serviceRoutes.environmentRoutes.find(er => er.environment == Environment.Production && !er.isAdmin).map { envRoute =>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    @partials.serviceUrlDetails(envRoute, isAdmin = false)
+                </div>
+            </div>
+        }
+
+        @serviceRoutes.environmentRoutes.find(er => er.environment == Environment.Production && er.isAdmin).map { envRoute =>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    @partials.serviceUrlDetails(envRoute, isAdmin = true)
+                </div>
+            </div>
+        }
+
+        @if(serviceRoutes.hasInconsistentRoutes) {
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    @partials.serviceRouteRuleViolations(serviceRoutes)
+                </div>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                @partials.repo_owning_teams(repositoryDetails)
+            </div>
+
+            <div class="col-md-6 mb-3">
+                @partials.code(repositoryDetails, hasBranchProtectionAuth, commenterReport, distinctVulnerabilitiesCount)
+            </div>
+            <div class="col-md-6 mb-3">
+                @partials.service_relationships(serviceRelationships)
+            </div>
+            <div class="col-md-6 mb-3">
+                @partials.build(repositoryDetails, hasBranchProtectionAuth, commenterReport)
+            </div>
+        </div>
+
+        @if(CatalogueFrontendSwitches.showTestRepoRelationships.isEnabled) {
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                @partials.tests(testJobMap)
+                </div>
+            </div>
+        }
+
+        @dependenciesByEnvironmentPartial(serviceName, envDatas)
+    </section>
+
+    <div class="alert alert-success" role="alert" id="@repositoryDetails.name">
+        <p>
+          @Html(viewMessages.informationalText)
+        </p>
+    </div>
+
+    <script @CSPNonce.attr src="@routes.Assets.versioned("confirm-buttons.js")"></script>
+}

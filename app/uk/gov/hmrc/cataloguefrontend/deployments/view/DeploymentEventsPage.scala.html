@@ -1,0 +1,213 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.deployments.routes
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Username, DeploymentHistory, Pagination}
+@import views.html.helper.{FieldConstructor, select}
+
+@this()
+
+@(selectedEnv       : Environment,
+  deployments       : Seq[DeploymentHistory],
+  teams             : Seq[GitHubTeam],
+  userProfileBaseUrl: Option[String],
+  pagination        : Pagination,
+  form              : Form[?]
+)(implicit
+  messages          : Messages,
+  request           : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Deployment Events", "deployments") {
+    <h1 class="page-heading mt-4">
+        Deployment Events
+    </h1>
+
+    @if(form.hasErrors) {
+      <div class="alert alert-danger" role="alert">
+        <ul class="list">
+            @form.errors.map { error =>
+              <li class="alert-danger"> @Messages(error.message, error.args*)</li>
+            }
+        </ul>
+      </div>
+    }
+
+    <div id="service-list">
+        <form id="form">
+            <div class="row">
+                <input type="hidden" id="selected-environment" value="@selectedEnv.asString">
+                <div class="col-md-5">
+                    <dl id="service_field">
+                        <dt>
+                            <label for="service" class="form-label">Service</label>
+                        </dt>
+                        <dd>
+                            <input id="service" class="search form-control" type="text" name="service" value='@form("service").value' autofocus autocomplete="off">
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                    @select(
+                        field                 =  form("team"),
+                        options               =  teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Team",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "team-search",
+                        Symbol("class")       -> "form-select"
+                    )
+                </div>
+                <div class="col-md-2">
+                    <dl id="from-search-input_field">
+                        <dt>
+                            <label for="from-search-input" class="form-label">Date From</label>
+                        </dt>
+                        <dd>
+                            <input id="from-search-input" class="form-control" type="date" name="from" value='@form("from").value'>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-2">
+                    <dl id="to-search-input_field">
+                        <dt>
+                            <label for="to-search-input" class="form-label">Date To</label>
+                        </dt>
+                        <dd>
+                            <input id="to-search-input" class="form-control" type="date" name="to" value='@form("to").value'>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </form>
+
+        <div class="row container">
+            <ul id="environment" class="nav nav-tabs mb-2">
+                @Environment.valuesAsSeq.map(envOption)
+            </ul>
+        </div>
+
+        <table class="table table-striped sticky-header">
+            <thead>
+                @pageNavigation()
+                <tr>
+                    <th class="col-lg-3">Service</th>
+                    <th class="col-lg-2">Teams</th>
+                    <th class="col-lg-2">Version</th>
+                    <th class="col-lg-3">Deploy Time</th>
+                    <th class="col-lg-2">Deployer</th>
+                </tr>
+            </thead>
+            <tbody class="list">
+              @deployments.zipWithIndex.map{case (d, i) =>
+                <tr id="row@i">
+                  <td id="row@{i}_name">
+                      <a id="link-to-@{d.name.asString}" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(d.name)">@{d.name.asString}</a>
+                  </td>
+                  <td id="row@{i}_team">
+                    <ul class="list-unstyled">
+                    @for(team <- d.teams) {
+                      <li><a id="link-to-team-page-for-@{team.asString.replace(" ", "-")}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.team(team)">@{team.asString}</a></li>
+                    }
+                    </ul>
+                  </td>
+                  <td id="row@{i}_version">@{d.version.toString}</td>
+                  <td id="row@{i}_deploytime" class="font-monospace">@{d.time.time.asPattern(`yyyy-MM-dd HH:mm:ss z`)}</td>
+                  <td id="row@{i}_deployer">@userLink(d.username)</td>
+                </tr>
+              }
+            </tbody>
+            @pageNavigation()
+        </table>
+    </div>
+}
+
+<script @CSPNonce.attr>
+  // Reload the form with the new date when entered. Designed to be entered
+  // via the date picker, not typed manually
+  ["from-search-input", "to-search-input"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        $('#form').submit();
+      });
+    });
+
+  function selectEnvironment(environment) {
+    // Update the hidden environment field with what was selected
+    $('#selected-environment').value = environment;
+
+    // Post the form back to the chosen environment endpoint
+    $('#form').attr('action', "/deployments/" + environment).submit();
+  }
+
+  document.getElementById("team-search").addEventListener("change", function() {
+    document.getElementById("form").submit();
+  });
+</script>
+
+@envOption(env: Environment) = {
+  @defining(env == selectedEnv) { active =>
+      <li id="tab-@env.asString" class="nav-item">
+          <a id="@env.asString-tab" class="nav-link @if(active){active}" href="@routes.DeploymentEventsController.deploymentEvents(env)">
+              @env.displayString
+          </a>
+      </li>
+      <script @CSPNonce.attr>
+          document.getElementById("@{env.asString}-tab").addEventListener("click", function(e) {
+              e.preventDefault() // prevent following the href as we submit the form via js.
+              selectEnvironment('@{env.asString}')
+          });
+      </script>
+  }
+}
+
+@pageNavigation() = {
+  <tr>
+      <td>
+          @if(pagination.page <= 0) {
+              <a class="btn btn-outline-secondary" href="#">Prev</a>
+          }else {
+              <a class="btn btn-outline-secondary" href="@{Pagination.uriForPage(request.uri, pagination.page - 1)}">Prev</a>
+          }
+      </td>
+      <td colspan="3">
+          @if(pagination.total > 0) {
+              <span style="color: #6f777b;margin-left: 25%;">Showing @{(pagination.page * pagination.pageSize) + 1} to @{(pagination.page * pagination.pageSize) + deployments.length} of @{pagination.total}</span>
+          } else {
+              <span style="color: #6f777b;margin-left: 25%;">No matches found</span>
+          }
+      </td>
+      <td style="text-align: right">
+          @if( (pagination.page * pagination.pageSize) + deployments.length >= pagination.total) {
+              <a class="btn btn-outline-secondary" href="#">Next</a>
+          } else {
+              <a class="btn btn-outline-secondary" href="@{Pagination.uriForPage(request.uri, pagination.page + 1) }">Next</a>
+          }
+      </td>
+  </tr>
+}
+
+@userLink(username: Username) = {
+    @if(username.asString.equalsIgnoreCase("remoterequest")) {
+        <span>@{username.asString}</span>
+    } else {
+        @userProfileBaseUrl.map { url => <a href= "@url/@{username.asString}" target="_blank" rel="noreferrer noopener">@{username.asString}<span class="glyphicon glyphicon-new-window"></span></a> }.getOrElse(username.asString)
+    }
+}

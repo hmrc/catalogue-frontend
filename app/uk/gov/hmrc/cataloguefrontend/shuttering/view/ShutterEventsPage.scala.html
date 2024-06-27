@@ -1,0 +1,133 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterEventsView, ShutterStateChangeEvent}
+@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+
+@(services    : Seq[String],
+  events      : Seq[ShutterStateChangeEvent],
+  form        : Form[?],
+  environments: Seq[Environment]
+)(implicit
+  request     : RequestHeader
+)
+
+@standard_layout("Shutter Events", active = "shuttering") {
+    <h1 class="page-heading mt-4">Shutter Events</h1>
+
+    <div id="events" class="row">
+        <div class="col-12">
+
+            <form id="shutter-events-form" action="/shutter-events/list" method="get">
+                <input id="environment" name="environment" type="hidden" value="@form("environment").value">
+
+                <datalist id="servicenames">
+                    @services.map { (s: String) => <option>@s</option> }
+                </datalist>
+
+                <div class="row mb-4">
+                    <label for="serviceName" class="col-md-1 col-form-label fw-bold">Service:</label>
+                    <div class="col-md-4">
+                        <input class="search form-control" id="serviceName" name="serviceName" type="search" autofocus autocomplete="off" list="servicenames" value=@form("serviceName").value>
+                    </div>
+                    <div class="col-md-3">
+                        <button id="search-button" class="btn btn-success" type="submit">Search</button>
+                    </div>
+                </div>
+            </form>
+
+            <ul id="environmentTabs" class="nav nav-tabs mb-2" >
+              @environments.map(envOption)
+            </ul>
+
+            <table class="table table-striped shutter-events" id="events-list">
+                <thead>
+                    <tr class="d-flex">
+                        <th class="service col-2">
+                            <button role="button" class="sort no-border fw-bold" data-sort="service">Service</button>
+                        </th>
+                        <th class="type col-1">
+                            <button role="button" class="sort no-border fw-bold" data-sort="type">Type</button>
+                        </th>
+                        <th class="status col-1">
+                            <button role="button" class="sort no-border fw-bold" data-sort="status">Status</button>
+                        </th>
+                        <th class="reason col-4">
+                            <button role="button" class="sort no-border fw-bold" data-sort="reason">Reason</button>
+                        </th>
+                        <th class="cause col-1">
+                            <button role="button" class="sort no-border fw-bold" data-sort="cause">Cause</button>
+                        </th>
+                        <th class="username col-1">
+                            <button role="button" class="sort no-border fw-bold" data-sort="username">Username</button>
+                        </th>
+                        <th class="timestamp col-2">
+                            <button role="button" class="sort no-border fw-bold" data-sort="timestamp">Timestamp</button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="list">
+                    @events.zipWithIndex.map { case (event, i) =>
+                        <tr id="row@i" class="d-flex">
+                            <td class="service col-2" id="row@{i}_service">@event.serviceName.asString</td>
+                            <td class="type col-1" id="row@{i}_type">@event.shutterType.asString</td>
+                            <td class="status col-1" id="row@{i}_status">@event.status.value.asString</td>
+                            <td class="reason col-4" id="row@{i}_reason">@ShutterEventsView.reasonFor(event.status)</td>
+                            <td class="cause col-1" id="row@{i}_cause">@event.cause.asString</td>
+                            <td class="username col-1" id="row@{i}_username">@event.username</td>
+                            <td class="timestamp col-2 font-monospace" id="row@{i}_timestamp">@event.timestamp.asPattern(`yyyy-MM-dd HH:mm:ss z`)</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script @CSPNonce.attr>
+        let options = {
+            valueNames: ['service', 'status', 'reason', 'cause', 'username', 'timestamp'],
+            searchColumns: ['service'],
+            searchDelay: 350
+        };
+
+        let eventsList = new List('events', options);
+
+        let searchBox = document.getElementById("serviceName");
+        let length = searchBox.value.length;
+
+        searchBox.focus();
+        searchBox.setSelectionRange(length, length);
+
+        eventsList.search(searchBox.value);
+    </script>
+}
+
+@envOption(env: Environment) = {
+    @defining(form("environment").value.contains(env.asString)) { active =>
+        <li id="tab-@env.asString" class="nav-item">
+            <a id="@env.asString-tab" class="nav-link @if(active){active}" href="#">
+                @env.displayString
+            </a>
+        </li>
+        <script @CSPNonce.attr>
+            document.getElementById("@{env.asString}-tab").addEventListener("click", function(e) {
+                e.preventDefault(); // prevent following the href as we submit the form via js.
+                document.getElementById('environment').value = '@{env.asString}';
+                document.getElementById('shutter-events-form').submit();
+            });
+        </script>
+    }
+}

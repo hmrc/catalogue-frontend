@@ -1,0 +1,154 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, GitHubTeam}
+@import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => repoRoutes}
+@import views.html.helper.{FieldConstructor, select}
+
+@this(
+  repoSearchResultsPage: partials.RepoSearchResultsPage
+)
+
+@(repositories: Seq[GitRepository],
+  teams       : Seq[GitHubTeam],
+  form        : Form[?]
+)(implicit
+  messages    : Messages,
+  request     : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Repositories", "repositories") {
+    <h1 class="page-heading mt-4">
+        Repositories
+        <div class="btn-group float-end" role="group">
+            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                Create
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createServiceRepositoryLanding()">Create a Service</a></li>
+                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding()">Create a Prototype</a></li>
+                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createTestRepositoryLanding()">Create a Test Repository</a></li>
+            </ul>
+        </div>
+    </h1>
+
+    @if(form.hasErrors) {
+        <div class="alert alert-danger" role="alert">
+            <ul class="list">
+            @form.errors.map { error =>
+                <li class="alert-danger"> @Messages(error.message, error.args*)</li>
+            }
+            </ul>
+        </div>
+    }
+
+    <div id="service-list">
+        <form id="repos-form" action="/repositories" method="get">
+            <div id="repos-form-row" class="row">
+                <div class="col-md-5">
+                    <dl id="search_field">
+                        <dt>
+                            <label for="search" class="form-label">Name</label>
+                        </dt>
+                        <dd>
+                            <input class="search form-control" id="search" type="search" name="name" value='@form("name").value' autofocus>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-3">
+                @select(
+                    field                 = form("team"),
+                    options               = teams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Team",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "team-filter",
+                    Symbol("class")       -> "form-select"
+                )
+                </div>
+                <div class="col-md-2">
+                @select(
+                    field                 =  form("repoType"),
+                    options               =  Seq(
+                                                "Library"           -> "Library",
+                                                "Prototype"         -> "Prototype",
+                                                "Service"           -> "Service (All)",
+                                                "FrontendService"   -> "Service (Frontend)",
+                                                "BackendService"    -> "Service (Backend)",
+                                                "Test"              -> "Test",
+                                                "Other"             -> "Other"
+                                             ),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Type",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "type-search",
+                    Symbol("class")       -> "form-select"
+                )
+                </div>
+                <div class="col-md-2 col-form-label" style="margin-top: 35px;">
+                    <div class="form-check form-switch">
+                        <input aria-label="Show Archived" class="form-check-input" name="showArchived" type="checkbox" role="switch" id="show-archived" value=true @if(form("showArchived").value.contains("true")) {checked}>
+                        <label class="form-check-label" for="github-only">Include Archived</label>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-striped sticky-header">
+            <thead id="repo-table-headings">
+                <tr>
+                    <th class="col-lg-3"><button role="button" id="name" data-sort="repo-name" class="fw-bold sort no-border">Name</button></th>
+                    <th class="col-lg-1"><button role="button" id="status" data-sort="repo-status" class="fw-bold sort no-border">Status</button></th>
+                    <th class="col-lg-2"><button role="button" id="repoType" data-sort="repo-type" class="fw-bold sort no-border">Type</button></th>
+                    <th class="col-lg-2"><button role="button" id="teamNames" data-sort="repo-team" class="fw-bold sort no-border">Team</button></th>
+                    <th class="col-lg-1"><button role="button" id="branchProtection" data-sort="repo-bp" class="fw-bold sort no-border">Branch Protection</button></th>
+                    <th class="col-lg-2"><button role="button" id="createdDate" data-sort="created" class="fw-bold sort no-border">First Active</button></th>
+                    <th class="col-lg-1"><button role="button" id="lastActiveDate" data-sort="last-active" class="fw-bold sort no-border">Last Active</button></th>
+                </tr>
+            </thead>
+            @repoSearchResultsPage(repositories)
+        </table>
+    </div>
+}
+<!-- listjs configuration -->
+<script @CSPNonce.attr>
+  let options = {
+      valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
+      searchColumns: ['repo-name'],
+      searchDelay: 350
+  };
+
+  let serviceList = new List('service-list', options);
+
+  let searchBox = document.getElementById('search');
+  // set autofocus cursor to right of text in search box
+  let length = searchBox.value.length;
+  searchBox.focus();
+  searchBox.setSelectionRange(length, length);
+  // re-search the list upon page load.
+  serviceList.search(searchBox.value);
+</script>
+<script @CSPNonce.attr>
+  ["team-filter", "type-search", "show-archived"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("repos-form").submit();
+      });
+    });
+</script>

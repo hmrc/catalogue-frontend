@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, SlugVersionInfo}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -83,7 +83,7 @@ class ServiceDependenciesConnector @Inject() (
     flag        : SlugInfoFlag,
     group       : String,
     artefact    : String,
-    versionRange: BobbyVersionRange,
+    versionRange: VersionRange,
     scopes      : List[DependencyScope]
   )(using
     HeaderCarrier
@@ -105,7 +105,7 @@ class ServiceDependenciesConnector @Inject() (
     group       : String,
     artefact    : String,
     repoType    : Seq[RepoType],
-    versionRange: BobbyVersionRange,
+    versionRange: VersionRange,
     scopes      : Seq[DependencyScope]
   )(using
     HeaderCarrier

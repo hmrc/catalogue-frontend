@@ -29,6 +29,7 @@ import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, DeployServiceStep4Page}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
@@ -41,7 +42,6 @@ import uk.gov.hmrc.internalauth.client.{Predicate, Resource, ResourceLocation, R
 import uk.gov.hmrc.internalauth.client.syntax._
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-import views.html.deployments.{DeployServicePage, DeployServiceStep4Page}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global

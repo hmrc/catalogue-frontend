@@ -23,12 +23,12 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.repository.view.html.RepositoriesListPage
+import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.http.SessionKeys
-import views.html._
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -21,10 +21,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseH
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.view.html.{SearchServiceCommissioningStatusPage, ServiceCommissioningStatusPage}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
-import views.html.servicecommissioningstatus.{SearchServiceCommissioningStatusPage, ServiceCommissioningStatusPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

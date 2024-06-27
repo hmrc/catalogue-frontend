@@ -44,7 +44,7 @@ POST       /repositories/:name/branch-protection/enable uk.gov.hmrc.cataloguefro
 POST       /repositories/:name/mark-for-decommissioning uk.gov.hmrc.cataloguefrontend.CatalogueController.markForDecommissioning(name: ServiceName)
 
 GET        /service/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.service(name: ServiceName)
-GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.CatalogueController.costEstimation(name: ServiceName)
+GET        /service/:name/costs                         uk.gov.hmrc.cataloguefrontend.cost.CostController.costEstimation(name: ServiceName)
 
 GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name: ServiceName)
 GET        /commissioning-state/search                  uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchLanding()
@@ -70,12 +70,12 @@ GET        /sign-out                                    uk.gov.hmrc.cataloguefro
 GET        /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchLanding
 POST       /search                                      uk.gov.hmrc.cataloguefrontend.SearchByUrlController.searchUrl
 
-GET        /dependencies/:name                          uk.gov.hmrc.cataloguefrontend.DependenciesController.services(name: ServiceName)
-GET        /dependencies/:name/:version                 uk.gov.hmrc.cataloguefrontend.DependenciesController.service(name: ServiceName, version)
-GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefrontend.DependenciesController.graphs(name: ServiceName, version, scope: String ?= "compile")
+GET        /dependencies/:name                          uk.gov.hmrc.cataloguefrontend.dependency.DependenciesController.services(name: ServiceName)
+GET        /dependencies/:name/:version                 uk.gov.hmrc.cataloguefrontend.dependency.DependenciesController.service(name: ServiceName, version)
+GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefrontend.dependency.DependenciesController.graphs(name: ServiceName, version, scope: String ?= "compile")
 
-GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.landing
-GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.DependencyExplorerController.search(group: String ?= "", artefact: String ?= "", versionRange: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None, `scope[]`: Option[Seq[String]] ?= None, `repoType[]`: Option[Seq[String]] ?= None, asCsv: Boolean ?= false)
+GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.dependency.DependencyExplorerController.landing
+GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.dependency.DependencyExplorerController.search(group: String ?= "", artefact: String ?= "", versionRange: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None, `scope[]`: Option[Seq[String]] ?= None, `repoType[]`: Option[Seq[String]] ?= None, asCsv: Boolean ?= false)
 
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
@@ -91,7 +91,7 @@ GET        /config/search/results                       uk.gov.hmrc.cataloguefro
 GET        /config/warnings/search                      uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningLanding()
 GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningResults()
 
-GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.costs.CostsSummaryController.costExplorer(team: Option[TeamName] ?= None, asCSV: Boolean ?= false)
+GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.cost.CostController.costExplorer(team: Option[TeamName] ?= None, asCSV: Boolean ?= false)
 
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list(selector: Option[String] ?= None)
 

@@ -1,0 +1,475 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.deployments.{DeployServiceForm, routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityDetails
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
+@import views.html.helper.{FieldConstructor, select}
+
+@this()
+
+@(form          : Form[DeployServiceForm]
+, hasPerm       : Boolean
+, services      : Seq[ServiceName]
+, latestVersion : Option[Version]
+, releases      : Seq[WhatsRunningWhereVersion]
+, environments  : Seq[Environment]
+, evaluations   : Option[(
+                    Map[ServiceConfigsService.KeyName, (ServiceConfigsService.ConfigSourceValue, Boolean)]
+                  , Seq[ServiceConfigsService.ConfigWarning]
+                  , Option[Seq[VulnerabilitySummary]]
+                  , (Option[ServiceJdkVersion], ServiceJdkVersion)
+                  , Seq[ConfigChange]
+                  )]
+)(implicit
+  messages      : Messages
+, request       : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Deploy Service", "deployments") {
+  <h1 class="page-heading mt-4">Deploy Service</h1>
+  <div class="row">
+    <div class="col-md-4">
+      <div class="sticky-container">
+        @partials.form_global_errors(form)
+
+        @views.html.helper.form(
+          action           =  appRoutes.DeployServiceController.step1(form("serviceName").value.map(ServiceName.apply))
+        , Symbol("id")     -> "service-name-form"
+        , Symbol("method") -> "GET"
+        ) {
+          <dl>
+            <dt><label class="form-label" for="service-name">Service Name:</label></dt>
+            <dd>
+              <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
+              <div id="service-name-matches" class="search-matches-dropdown d-none"></div>
+            </dd>
+          </dl>
+        }
+
+        @if(form("serviceName").value.isDefined && latestVersion.nonEmpty && environments.nonEmpty) {
+          @helper.form(
+            action           =  appRoutes.DeployServiceController.step2()
+          , Symbol("id")     -> "version-environment-form"
+          , Symbol("method") -> "POST"
+          ) {
+            @csrfFormField
+            <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+            <dl>
+              <dt><label class="form-label" for="version">Version:</label></dt>
+              <dd>
+                <input type="text" id="version" name="version" value='@form("version").value' class="form-control" required="required" autocomplete="off" placeholder="0.0.0">
+                <span class="form-text">Enter a version or select one from below</span>
+                <div id="helpful-versions" class="list-group mt-2">
+                  @defining(
+                    ( latestVersion.map(x => (x, "Latest")) ++
+                      releases
+                        .sortBy(_.environment)
+                        .map(x => (x.version, x.environment.displayString))
+                    ).groupBy { case (version, _) => version }
+                      .toList
+                      .sortBy  { case (version, _) => version }(Ordering[Version].reverse)
+                      .map     { case (v, xs)      => (v, xs.map(_._2).mkString(", ")) }
+                  ) { xs => @xs.map { case (version, text) =>
+                    @defining(form("version").value.contains(version.toString)) { isActive =>
+                      <a href="#" class="list-group-item list-group-item-action @if(isActive) {active}" data-content="@version">
+                        <div class="row">
+                          <div class="col-xs-3 col-md-3">@version</div>
+                          <div class="col-xs-9 col-md-9">@text</div>
+                        </div>
+                      </a>
+                    }
+                  }}
+                </div>
+              </dd>
+            </dl>
+
+            @helper.select(
+              field                 =  form("environment")
+            , options               =  environments.map(t => t.asString -> t.displayString)
+            , Symbol("_label")      -> "Environment:"
+            , Symbol("_labelClass") -> "form-label"
+            , Symbol("_default")    -> "Please choose"
+            , Symbol("id")          -> "environment"
+            , Symbol("class")       -> "form-select"
+            , Symbol("title")       -> "On change updates 'Config Key' autocomplete"
+            , Symbol("required")    -> "required"
+            )
+          }
+        }
+      </div>
+    </div>
+    <div class="col-md-8">
+      @evaluations.map { case (configUpdates, configWarnings, optVulnerabilities, jvmChanges, deploymentConfigUpdates) =>
+        <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
+          You are about to deploy <strong>@form.get.serviceName:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
+          @if(releases.isEmpty || !releases.map(_.environment).contains(form.get.environment)) {
+            <div>
+              <br><strong>Note:</strong> this service is <strong>not</strong> currently deployed into this environment, so you may see a lot of configuration updates etc.
+            </div>
+          }
+        </div>
+        <label class="form-label fw-bold">Please review before deploying:</label>
+        <div class="accordion mb-3" id="accordion">
+          @defining(
+            releases.find(_.environment == form.get.environment).fold(Version("0.0.0"))(_.version)
+          ) { existingVersion =>
+            @if(form.get.version < existingVersion){
+              <div class="accordion-item">
+                <div class="accordion-header" id="headingVersionWarning">
+                  <button class="accordion-button collapsed" type="button" aria-expanded="false" disabled>
+                    Lower version detected - Please be certain you intend to deploy a lower version into @form.get.environment.displayString
+                  </button>
+                </div>
+              </div>
+            }
+          }
+
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingJvmChanges">
+              @defining((jvmChanges._1, jvmChanges._2)) { case (oldJvm, newJvm) =>
+                @defining(oldJvm.map(_ != newJvm).getOrElse(true)){ isJvmChanged =>
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJvmChanges" aria-expanded="false" aria-controls="collapseJvmChanges" @if(!isJvmChanged) {disabled}>
+                    JVM: @newJvm.version @newJvm.vendor
+                    @changesBadge(if (isJvmChanged) 1 else 0)
+                  </button>
+                }
+
+                <div id="collapseJvmChanges" class="accordion-collapse collapse" aria-labelledby="headingJvmChanges" data-bs-parent="#accordion">
+                  <div class="accordion-body">
+                    <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+                      <thead>
+                        <tr>
+                          <th>Previously</th>
+                        </tr>
+                      </thead>
+                      <tbody id="jvm-changes-rows">
+                        <tr>
+                          @oldJvm match {
+                            case None => { <td>Not deployed</td> }
+                            case Some(current) => { <td>@current.version @current.vendor</td> }
+                          }
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingDeploymentConfigUpdates">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDeploymentConfigUpdates" aria-expanded="false" aria-controls="collapseDeploymentConfigUpdates" @if(deploymentConfigUpdates.isEmpty) {disabled} >
+                Deployment Config Updates
+                @changesBadge(deploymentConfigUpdates.size)
+              </button>
+            </div>
+            <div id="collapseDeploymentConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingDeploymentConfigUpdates" data-bs-parent="#accordion">
+              <div class="accordion-body">
+                <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="deployment-config-updates-rows">
+                    @deploymentConfigUpdates.map {
+                      case ConfigChange.NewConfig(k, v) => {
+                        <tr>
+                          <td><code>@k</code></td>
+                          <td>@v</td>
+                        </tr>
+                      }
+                      case ConfigChange.DeletedConfig(k, previousV) => {
+                        <tr>
+                          <td><del><code>@k</code></del></td>
+                          <td><del>@previousV</del></td>
+                        </tr>
+                      }
+                      case ConfigChange.ChangedConfig(k, previousV, newV) => {
+                        <tr>
+                          <td><code>@k</code></td>
+                          <td><del>@previousV</del> @newV</td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingConfigUpdates">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(configUpdates.isEmpty) {disabled} >
+                Config Updates
+                @changesBadge(configUpdates.size)
+              </button>
+            </div>
+            <div id="collapseConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+              <div class="accordion-body">
+                <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="config-updates-rows">
+                    @for((key, (configSourceValue, isNew)) <- configUpdates.toList.sortBy(_._1.asString) ) {
+                      <tr>
+                        @if(isNew) {
+                          <td><code>@key.asString</code></td>
+                          <td>@displayConfigSourceValue(form.get.serviceName, key, form.get.environment, configSourceValue)</td>
+                        } else {
+                          <td><del><code>@key.asString</code></del></td>
+                          <td><del>@displayConfigSourceValue(form.get.serviceName, key, form.get.environment, configSourceValue)</del></td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingConfigWarnings">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigWarnings" aria-expanded="false" aria-controls="collapseConfigWarnings" @if(configWarnings.isEmpty) {disabled}>
+                Config Warnings
+                @changesBadge(configWarnings.size)
+              </button>
+            </div>
+            <div id="collapseConfigWarnings" class="accordion-collapse collapse" aria-labelledby="headingConfigWarnings" data-bs-parent="#accordion">
+              <div class="accordion-body">
+                <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Warning</th>
+                    </tr>
+                  </thead>
+                  <tbody id="config-warnings-rows">
+                    @for(x <- configWarnings) {
+                      <tr>
+                        <td><code>@x.key.asString</code></td>
+                        <td>@displayConfigWarning(form.get.serviceName, x.key, x.environment, x)</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" id="headingVulnerabilities">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVulnerabilities" aria-expanded="false" aria-controls="collapseVulnerabilities" @if(optVulnerabilities.getOrElse(Nil).isEmpty) {disabled}>
+                @if(optVulnerabilities.isEmpty) {
+                  Vulnerabilities unknown - needs to be already deployed in an environment
+                } else {
+                  Vulnerabilities with action required
+                  @changesBadge(optVulnerabilities.getOrElse(Nil).size)
+                }
+              </button>
+            </div>
+            <div id="collapseVulnerabilities" class="accordion-collapse collapse" aria-labelledby="headingVulnerabilities" data-bs-parent="#accordion">
+              <div class="accordion-body">
+                <table class="table table-striped sticky-header text-break">
+                  <thead>
+                    <tr>
+                      <th class="visually-hidden" style="width: 30px;">-</th>
+                      <th class="col-2"><button class="sort no-border fw-bold" data-sort="vuln-id">Vulnerability ID</button></th>
+                      <th class="col-3">Vulnerable Component</th>
+                      <th class="">Assessment</th>
+                      <th class="col-1 text-right" style="width: 90px;"><button class="sort no-border fw-bold" data-sort="score">Score</button></th>
+                      <th class="visually-hidden">-</th>
+                      <th class="visually-hidden">-</th>
+                      <th class="visually-hidden">-</th>
+                      <th class="visually-hidden">-</th>
+                      <th class="visually-hidden">-</th>
+                    </tr>
+                  </thead>
+                  <tbody id="vulnerabilities-rows" class="list">
+                    @optVulnerabilities.getOrElse(Nil).map(vulnerabilitiesSummary)
+                  </tbody>
+                </table>
+                <script @CSPNonce.attr>
+                  document.querySelectorAll('[data-bs-toggle="collapse"]').forEach( function(el) {
+                    let chevron = el.querySelector('.glyphicon');
+                    let collapseId = el.getAttribute('data-bs-target');
+                    let collapse = document.querySelector(collapseId);
+
+                    collapse.addEventListener('hidden.bs.collapse', () => {
+                      chevron.classList.remove('glyphicon-chevron-down');
+                      chevron.classList.add('glyphicon-chevron-right');
+                    });
+
+                    collapse.addEventListener('show.bs.collapse', () => {
+                      chevron.classList.remove('glyphicon-chevron-right');
+                      chevron.classList.add('glyphicon-chevron-down');
+                    });
+                  });
+                </script>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @helper.form(
+          action           =  appRoutes.DeployServiceController.step3()
+        , Symbol("method") -> "POST"
+        ) {
+          @csrfFormField
+          <hr/>
+          <input type="hidden" name="serviceName" value='@form("serviceName").value' />
+          <input type="hidden" name="version" value='@form("version").value' />
+          <input type="hidden" name="environment" value='@form("environment").value' />
+          <button id="deploy-btn" class="btn btn-success float-end" type="submit" @if(!hasPerm){disabled}>Deploy</button>
+          <br/><br/>
+        }
+      }
+    </div>
+  </div>
+
+  <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+  <script @CSPNonce.attr>
+
+
+    autoCompleteInit({
+      formId           : "service-name-form",
+      inputSearchId    : "service-name",
+      matchesDivId     : "service-name-matches",
+      allowPartial     : false,
+      ignoreCase       : true,
+      submitOnSelection: true,
+      values           : [@for(service <- services) {'@service.asString',}],
+      minSearch        : 1
+    });
+
+    @if(form("serviceName").value.isDefined) {
+      let form2           = document.forms['version-environment-form'];
+      let helpfulVersions = document.getElementById('helpful-versions')
+      let version         = document.getElementById('version');
+      let environment     = document.getElementById('environment');
+
+      function setVersionActive(v) {
+        Array
+          .from(helpfulVersions.getElementsByTagName('a'))
+          .map(el => el.classList.remove('active'));
+
+        if(v) {
+          v.classList.add('active');
+        }
+      }
+
+      Array
+        .from(helpfulVersions.getElementsByTagName('a'))
+        .map(el => el.onclick = function() {
+          version.value = el.getAttribute('data-content');
+          setVersionActive(el);
+          submitWhenReady();
+        });
+
+      version.onchange     = function() {
+        setVersionActive(null);
+        submitWhenReady();
+      }
+
+      environment.onchange = function() { submitWhenReady() }
+
+      function submitWhenReady() {
+        if (version.value && environment.value) {
+          form2.dispatchEvent(new Event("submit")); // Call form listener
+          form2.submit();
+        }
+      }
+    }
+  </script>
+}
+
+@displayConfigSourceValue(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue) = {
+  <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(configKey)).url"
+    target="_blank"
+    data-bs-toggle="popover"
+    data-bs-trigger="hover"
+    data-bs-placement="bottom"
+    data-bs-html="true"
+    data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
+      @configSourceValue.displayString
+  </a>
+}
+
+@popoverConfigSourceValue(key: ServiceConfigsService.KeyName, sourceValue: ServiceConfigsService.ConfigSourceValue, env: Environment) = {
+  <div>@ServiceConfigsService.friendlySourceName(sourceValue.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(key))</div>
+}
+
+@displayConfigWarning(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configWarning: ServiceConfigsService.ConfigWarning) = {
+  <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(configKey)).url"
+      target="_blank"
+      data-bs-toggle="popover"
+      data-bs-trigger="hover"
+      data-bs-placement="bottom"
+      data-bs-html="true"
+      data-bs-content='@popoverConfigWarning(configWarning, env)'>
+      @configWarning.warning
+  </a>
+}
+
+@popoverConfigWarning(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
+  <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
+  <strong>Value:</strong> @play.twirl.api.XmlFormat.escape(warning.value.displayString)
+}
+
+@vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
+  @defining(summary.distinctVulnerability.vulnerableComponentName.split("://")) { splitVulnerableComponent =>
+      <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">
+          <td><span class="glyphicon glyphicon-chevron-right"></span></td>
+          <td class="vuln-id">@summary.distinctVulnerability.id</td>
+          <td class="vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+          <td class="assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+          <td class="score text-end">@summary.distinctVulnerability.score.getOrElse("")</td>
+          <td class="d-none"></td>
+          <td class="d-none"></td>
+          <td class="d-none"></td>
+          <td class="d-none"></td>
+          <td class="d-none"></td>
+      </tr>
+      <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
+          @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
+          <td class="vuln-id d-none">@summary.distinctVulnerability.id</td>
+          <td class="vulnerable-component-name d-none">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+          <td class="assessment d-none">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+          <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
+          <td colspan="5">
+              @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
+          </td>
+      </tr>
+  }
+}
+
+@changesBadge(changeCount: Int) = {
+  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3 @if(changeCount == 0) {text-bg-secondary} else {text-bg-info}">
+  @changeCount
+  <span class="visually-hidden">Number of changes</span>
+}

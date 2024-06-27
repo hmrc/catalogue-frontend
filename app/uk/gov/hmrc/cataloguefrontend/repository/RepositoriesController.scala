@@ -22,10 +22,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.repository
+import uk.gov.hmrc.cataloguefrontend.repository.{routes => repositoryRoutes}
+import uk.gov.hmrc.cataloguefrontend.repository.view.html.RepositoriesListPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.RepositoriesListPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -78,17 +78,17 @@ class RepositoriesController @Inject() (
   def allServices: Action[AnyContent] =
     Action {
       Redirect(
-        repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Service.asString)))
+        repositoryRoutes.RepositoriesController.allRepositories(repoType = Some(RepoType.Service.asString)))
     }
 
   def allLibraries: Action[AnyContent] =
     Action {
-      Redirect(repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Library.asString)))
+      Redirect(repositoryRoutes.RepositoriesController.allRepositories(repoType = Some(RepoType.Library.asString)))
     }
 
   def allPrototypes: Action[AnyContent] =
     Action {
-      Redirect(repository.routes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
+      Redirect(repositoryRoutes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
     }
 
 case class RepoListFilter(

@@ -1,0 +1,217 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.Dependency
+@import uk.gov.hmrc.cataloguefrontend.teams.RepoAndDependencies
+@import uk.gov.hmrc.cataloguefrontend.users.{UmpTeam, SlackInfo, routes => userRoutes}
+@import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
+
+@this(
+  viewMessages: ViewMessages
+)
+
+@(teamName              : TeamName,
+  repos                 : Map[RepoType, Seq[GitRepository]],
+  umpTeam               : UmpTeam,
+  umpMyTeamsUrl         : String,
+  leaksFoundForTeam     : Boolean,
+  hasLeaks              : String => Boolean,
+  masterTeamDependencies: Seq[RepoAndDependencies],
+  prodDependencies      : Map[String, Seq[Dependency]],
+  gitHubUrl             : Option[String]
+)(implicit
+  request               : RequestHeader
+)
+
+@standard_layout(teamName.asString, active = "teams") {
+    <h1 class="page-heading mt-4">@teamName.asString</h1>
+    <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
+
+    @partials.team_leak_detection_banner(leaksFoundForTeam)
+    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, teamName = Option(teamName))
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = false, team = true, teamName = Option(teamName))
+    @partials.bobby_violations_banner(environment = None                        , dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, teamName = Option(teamName))
+    @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = masterTeamDependencies.flatMap(_.dependencies.toDependencySeq), pending = true , team = true, teamName = Option(teamName))
+
+    <section class="section-wrapper">
+
+        <div class="row mb-3">
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="h4 mb-0">Details</div>
+                    </div>
+                    <div class="card-body">
+                        <dl id="team-description" class="row mb-0">
+                            <dt class="col-sm-4">Description:</dt>
+                            <dd class="col-sm-8">@umpTeam.description.getOrElse("")</dd>
+                        </dl>
+                        <dl id="team-documentation" class="row mb-0">
+                            <dt class="col-sm-4">Documentation:</dt>
+                            <dd class="col-sm-8">
+                                @umpTeam.documentation.map { docs =>
+                                  <a href="@docs" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window"/></a>
+                                }
+                            </dd>
+                        </dl>
+                        <dl id="team-slack-channels" class="row mb-0">
+                            <dt class="col-sm-4">Slack:</dt>
+                            <dd class="col-sm-8"></dd>
+                        </dl>
+                        @umpTeam.slack.map(addSlackInfo("Team", _))
+                        @umpTeam.slackNotification.map(addSlackInfo("Notification", _))
+                        @umpUpdateLink(isMemberBox = false)
+
+                        <dl id="github" class="row mb-0">
+                          <dt class="col-sm-4">GitHub:</dt>
+                          <dd class="col-sm-8">
+                              @gitHubUrl.map { url =>
+                                <a href=@url target="_blank" rel="noreferrer noopener"><img src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github"/> @umpTeam.teamName.asString<span class="glyphicon glyphicon-new-window"/></a>
+                              }
+                          </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="h4 mb-0">Team Members</div>
+                    </div>
+                    <div class="card-body">
+                        @if(umpTeam.members.isEmpty){
+                            <p class="card-text col-6">
+                               @teamName.asString has no members.
+                            </p>
+                        } else {
+                          <ul id="team_members" class="list-unstyled" style="column-count: 2;">
+                              @for(teamMember <- umpTeam.members) {
+                                <li>
+                                    <a href="@userRoutes.UsersController.user(teamMember.username)">
+                                        @teamMember.displayName
+                                    </a>
+                                    @if(!teamMember.role.isUser) {
+                                      <span class="badge rounded-pill text-bg-secondary">@teamMember.role.displayName</span>
+                                    }
+                                </li>
+                              }
+                          </ul>
+                        }
+                      @umpUpdateLink(isMemberBox = true)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+      @if(gitHubUrl.isDefined){
+        <div class="row mb-3">
+            <div class="col md-1">
+                <div class="card">
+                  @partials.servicesAndDependencies(masterTeamDependencies, teamName)
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            @showRepositories(repos.getOrElse(RepoType.Service  , Seq.empty), "Services"    , "service")
+            @showRepositories(repos.getOrElse(RepoType.Library  , Seq.empty), "Libraries"   , "library")
+            @showRepositories(repos.getOrElse(RepoType.Prototype, Seq.empty), "Prototypes"  , "prototype")
+            @showRepositories(repos.getOrElse(RepoType.Test     , Seq.empty), "Tests"       , "test")
+            @showRepositories(repos.getOrElse(RepoType.Other    , Seq.empty), "Repositories", "repository")
+        </div>
+      }
+    </section>
+}
+
+@addSlackInfo(label: String, slackInfo: SlackInfo) = {
+  @if(!slackInfo.hasValidUrl) {
+    <dl id="slack-@label.toLowerCase" class="row mb-0">
+        <dt class="col-sm-3 offset-1">@label:</dt>
+        <dd class="col-sm-8">
+            <p>@slackInfo.url <span class="glyphicon glyphicon-warning-sign" /></p>
+            <p>Please change to a URL via <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">UMP<span class="glyphicon glyphicon-new-window"/></a></p>
+        </dd>
+    </dl>
+  } else if (!slackInfo.hasValidName) {
+    <dl id="slack-@label.toLowerCase" class="row mb-0">
+        <dt class="col-sm-3 offset-1">@label:</dt>
+        <dd class="col-sm-8">
+            <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window"/></a>
+        </dd>
+    </dl>
+  } else {
+    <dl id="slack-@label.toLowerCase" class="row mb-0">
+        <dt class="col-sm-3 offset-1">@label:</dt>
+        <dd class="col-sm-8">
+            <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window"/></a>
+        </dd>
+    </dl>
+  }
+}
+
+@umpUpdateLink(isMemberBox: Boolean) = {
+    <p id="ump-correct-data-link" class="card-text"><small class="text-body-secondary">
+        @if(isMemberBox) {
+            To update @teamName.asString team members, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+        } else {
+            To update @teamName.asString team details, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
+        }
+    </small></p>
+}
+
+@showRepositories(repos: Seq[GitRepository], headerName: String, typeName: String) = {
+  <div class="col">
+      <div class="card">
+          <div class="card-header">
+              <div class="h4 mb-0">@headerName</div>
+          </div>
+          <div class="card-body">
+              @if(repos.isEmpty) {
+                <p class="card-text">
+                    @Html(viewMessages.noRepoOfTypeForTeam(typeName))
+                </p>
+              } else {
+                <ul class="list-unstyled">
+                    @defining(repos.partition(_.isShared)) { case (shared, nonShared) =>
+                      @repoListFor(nonShared)
+                      @if(shared.nonEmpty){
+                        <li class="fw-bold mt-2">Shared</li>
+                        @repoListFor(shared)
+                      }
+                    }
+                </ul>
+              }
+          </div>
+      </div>
+  </div>
+}
+
+@repoListFor(repos: Seq[GitRepository]) = {
+    @for(repo <- repos.sortBy(_.name.toLowerCase)) {
+        <li id="@repo.name" class="mb-2">
+            <div>
+                <a class="@if(hasLeaks(repo.name)) {fw-bold} @if(repo.isDeprecated){fst-italic}" href="@appRoutes.CatalogueController.repository(repo.name)">
+                    @repo.name
+                    @if(hasLeaks(repo.name)) {<span class="glyphicon glyphicon-warning-sign"></span>}
+                    @if(repo.isDeprecated){ <span class="badge rounded-pill text-bg-secondary fst-normal">deprecated</span> }
+                </a>
+            </div>
+        </li>
+    }
+}

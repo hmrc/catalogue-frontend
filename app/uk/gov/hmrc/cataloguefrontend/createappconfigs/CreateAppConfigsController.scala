@@ -27,9 +27,9 @@ import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
+import uk.gov.hmrc.cataloguefrontend.view.html.{CreateAppConfigsPage, error_404_template}
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.{CreateAppConfigsPage, error_404_template}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -102,7 +102,8 @@ class CreateAppConfigsController @Inject()(
           hasPerm       =  request.retrieval
           form          =  { val f = CreateAppConfigsForm.form
                              if !hasPerm
-                               then f.withGlobalError(s"You do not have permission to create App Configs for: ${serviceName.asString}")
+                             then
+                               f.withGlobalError(s"You do not have permission to create App Configs for: ${serviceName.asString}")
                              else
                                f.fill(CreateAppConfigsForm(true, true, true, true, true))
                            }
@@ -162,10 +163,9 @@ class CreateAppConfigsController @Inject()(
           optSlugInfo   <- EitherT.liftF(serviceDependenciesConnector.getSlugInfo(serviceName))
           requiresMongo <- optSlugInfo match
                              case Some(slugInfo) => EitherT.rightT[Future, Result](slugInfo.dependencyDotCompile.exists(_.contains("\"hmrc-mongo\"")))
-                             case None           => EitherT.liftF[Future, Result, Boolean](
+                             case None           => EitherT.liftF[Future, Result, Boolean]:
                                                       gitHubProxyConnector.getGitHubProxyRaw(s"/$serviceName/main/project/AppDependencies.scala")
                                                         .map(_.exists(_.contains("mongo")))
-                                                    )
           id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo, isApi))
                              .leftMap: errMsg =>
                                logger.info(s"createAppConfigs failed with: $errMsg")

@@ -18,9 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.EitherValues
-import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
-import uk.gov.hmrc.cataloguefrontend.util.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 

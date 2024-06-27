@@ -25,10 +25,10 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
-import uk.gov.hmrc.cataloguefrontend.FakeApplicationBuilder
+import uk.gov.hmrc.cataloguefrontend.test.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
+import uk.gov.hmrc.cataloguefrontend.search.view.html.SearchResults
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
-import views.html.search.SearchResults
 
 import scala.concurrent.ExecutionContext
 
@@ -41,8 +41,6 @@ class SearchControllerSpec
      with OptionValues
      with ScalaFutures
      with IntegrationPatience {
-
-
 
   "Search controller" should {
     "limit results" in new Setup {

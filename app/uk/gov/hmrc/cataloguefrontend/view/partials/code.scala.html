@@ -1,0 +1,77 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.dependency.{routes => dependencyRoutes}
+@import uk.gov.hmrc.cataloguefrontend.deployments.{routes => deploymentRoutes}
+@import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
+@import uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
+
+@(repo                          : GitRepository,
+  hasBranchProtectionAuth       : EnableBranchProtection.HasAuthorisation,
+  commenterReport               : Option[PrCommenterReport],
+  distinctVulnerabilitiesCount  : Option[Int]
+)(implicit
+  request                       : RequestHeader
+)
+
+<div id="code" class="card">
+    <div class="card-header">
+        <div class="h4 mb-0">Code</div>
+    </div>
+    <div class="card-body">
+        @partials.branchProtection(repo, hasBranchProtectionAuth)
+        <hr>
+        <ul class="list-unstyled" style="column-count: 2;">
+            <li><a id="link-to-github" href="@repo.githubUrl" target="_blank" rel="noreferrer noopener"><img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github" /> GitHub<span class="glyphicon glyphicon-new-window"/></a></li>
+            @if(repo.repoType == RepoType.Service) {
+                <li><a id="link-to-timeline" href="@deploymentRoutes.DeploymentTimelineController.graph(Some(ServiceName(repo.name)))">Deployment Timeline</a></li>
+                <li><a id="link-to-@{repo.name}-config" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(repo.name))" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
+                <li><a id="link-to-dependency-list" href="@dependencyRoutes.DependenciesController.services(ServiceName(repo.name))">Service Dependencies</a></li>
+                <li><a id="link-to-frontend-route-warnings" href="@ShutterOverviewController.frontendRouteWarnings(Environment.Production, ServiceName(repo.name))">Frontend Route Warnings</a></li>
+            }
+            @if(repo.repoType == RepoType.Service || repo.repoType == RepoType.Library) {
+                <li><a id="link-to-@{repo.name}-health" href="@HealthIndicatorsController.breakdownForRepo(repo.name)">Health-Indicator</a></li>
+            }
+            @commenterReport.map { report =>
+                <li><a id="link-to-@{repo.name}-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(name = Some(report.name))">PR-Commenter recommendations (@report.comments.size)</a></li>
+            }
+            @if(repo.repoType == RepoType.Service) {
+                <li>
+                    <a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesList(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${repo.name}\""), None)">
+                        Vulnerabilities (@distinctVulnerabilitiesCount.getOrElse(0))
+                    </a>
+                    @distinctVulnerabilitiesCount.collect { case dvc if dvc > 0 =>
+                        <span class="glyphicon glyphicon-info-sign ms-1"
+                            title=""
+                            data-bs-toggle="popover"
+                            data-bs-trigger="hover"
+                            data-bs-placement="bottom"
+                            data-bs-html="true"
+                            data-bs-content='<div>This service contains @{dvc} unique @{if(dvc > 1) "vulnerabilities" else "vulnerability"} across all environments.</div><div>Please make sure these are addressed and released in the affected environments.</div>'
+                        ></span>
+                    }
+                </li>
+                <li><a id="link-to-@{repo.name}-commissioning" href="@ServiceCommissioningStatusController.getCommissioningState(ServiceName(repo.name))">Commissioning State</a></li>
+            }
+        </ul>
+    </div>
+</div>

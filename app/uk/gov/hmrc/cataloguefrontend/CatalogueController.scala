@@ -29,10 +29,11 @@ import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
+import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, CostEstimationService, Zone}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
-import uk.gov.hmrc.cataloguefrontend.service.{CostEstimateConfig, CostEstimationService, DefaultBranchesService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.{DefaultBranchesService, RouteRulesService}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
@@ -43,7 +44,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html._
+import uk.gov.hmrc.cataloguefrontend.view.html.{DefaultBranchListPage, IndexPage, LibraryInfoPage, PrototypeInfoPage, RepositoryInfoPage, ServiceInfoPage, TestRepoInfoPage, error_404_template}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -62,7 +63,7 @@ class CatalogueController @Inject() (
   teamsAndRepositoriesConnector      : TeamsAndRepositoriesConnector,
   serviceConfigsService              : ServiceConfigsService,
   costEstimationService              : CostEstimationService,
-  serviceCostEstimateConfig          : CostEstimateConfig,
+  costEstimateConfig                 : CostEstimateConfig,
   routeRulesService                  : RouteRulesService,
   serviceDependenciesConnector       : ServiceDependenciesConnector,
   serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector,
@@ -83,7 +84,6 @@ class CatalogueController @Inject() (
   testRepoInfoPage                   : TestRepoInfoPage,
   repositoryInfoPage                 : RepositoryInfoPage,
   defaultBranchListPage              : DefaultBranchListPage,
-  costEstimationPage                 : CostEstimationPage,
   serviceMetricsConnector            : ServiceMetricsConnector,
   serviceConfigsConnector            : ServiceConfigsConnector,
   override val auth                  : FrontendAuthComponents
@@ -130,7 +130,7 @@ class CatalogueController @Inject() (
       yield result
     }
 
-  private def retrieveZone(serviceName: ServiceName)(using request: Request[?]): Future[Option[CostEstimationService.Zone]] =
+  private def retrieveZone(serviceName: ServiceName)(using request: Request[?]): Future[Option[Zone]] =
     serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
       .map: deploymentConfigs =>
         val zones = deploymentConfigs.map(_.zone).distinct
@@ -193,7 +193,7 @@ class CatalogueController @Inject() (
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes             <- routeRulesService.serviceRoutes(serviceName)
       optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(ServiceName(repositoryName))
-      costEstimate              <- costEstimationService.estimateServiceCost(ServiceName(repositoryName))
+      serviceCostEstimate       <- costEstimationService.estimateServiceCost(ServiceName(repositoryName))
       commenterReport           <- prCommenterConnector.report(repositoryName)
       vulnerabilitiesCount      <- vulnerabilitiesConnector.deployedVulnerabilityCount(serviceName)
       serviceRelationships      <- serviceConfigsService.serviceRelationships(serviceName)
@@ -214,8 +214,8 @@ class CatalogueController @Inject() (
       Ok(serviceInfoPage(
         serviceName                  = serviceName,
         repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = zone),
-        costEstimate                 = costEstimate,
-        costEstimateConfig           = serviceCostEstimateConfig,
+        serviceCostEstimate          = serviceCostEstimate,
+        costEstimateConfig           = costEstimateConfig,
         repositoryCreationDate       = repositoryDetails.createdDate,
         envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
         linkToLeakDetection          = urlIfLeaksFound,
@@ -465,24 +465,6 @@ class CatalogueController @Inject() (
                 DefaultBranchesFilter.form.bindFromRequest()
               ))
           )
-    }
-
-  def costEstimation(serviceName: ServiceName): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      (for
-         repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString))
-         if repositoryDetails.repoType == RepoType.Service
-         costEstimation              <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
-         historicEstimatedCostCharts <- OptionT.liftF(costEstimationService.historicEstimatedCostChartsForService(serviceName))
-       yield
-         Ok(costEstimationPage(
-           serviceName,
-           repositoryDetails,
-           costEstimation,
-           serviceCostEstimateConfig,
-           historicEstimatedCostCharts
-         ))
-      ).getOrElse(notFound)
     }
 
 end CatalogueController

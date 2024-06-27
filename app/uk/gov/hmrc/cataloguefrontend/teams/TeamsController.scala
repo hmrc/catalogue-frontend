@@ -19,14 +19,14 @@ package uk.gov.hmrc.cataloguefrontend.teams
 import cats.implicits._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag, TeamName}
-import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
+import uk.gov.hmrc.cataloguefrontend.teams.view.html.{TeamInfoPage, TeamsListPage}
+import uk.gov.hmrc.cataloguefrontend.view.html.OutOfDateTeamDependenciesPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import views.html.teams.{TeamInfoPage, teams_list}
-import views.html.OutOfDateTeamDependenciesPage
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -105,7 +105,7 @@ class TeamsController @Inject()(
       ( userManagementConnector.getAllTeams()
       , teamsAndRepositoriesConnector.allTeams()
       ).mapN: (umpTeams, gitHubTeams) =>
-        Ok(teams_list(
+        Ok(TeamsListPage(
           teams = umpTeams.map(umpTeam => (umpTeam, gitHubTeams.find(_.name == umpTeam.teamName))),
           name
         ))
