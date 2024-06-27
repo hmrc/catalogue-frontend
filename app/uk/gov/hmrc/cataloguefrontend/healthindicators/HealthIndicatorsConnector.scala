@@ -21,7 +21,6 @@ import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.Instant
@@ -66,7 +65,6 @@ end HealthIndicatorsConnector
 enum MetricType:
   case GitHub         extends MetricType
   case LeakDetection  extends MetricType
-  case BuildStability extends MetricType
   case AlertConfig    extends MetricType
 
 object MetricType:
@@ -75,7 +73,6 @@ object MetricType:
       json.validate[String].flatMap:
         case "github"          => JsSuccess(GitHub)
         case "leak-detection"  => JsSuccess(LeakDetection)
-        case "build-stability" => JsSuccess(BuildStability)
         case "alert-config"    => JsSuccess(AlertConfig)
         case s                 => JsError(s"Invalid MetricType: $s")
 
@@ -124,7 +121,6 @@ object Indicator:
     ~ (__ \ "weightedMetrics").read[Seq[WeightedMetric]]
     )(Indicator.apply)
 
-
 case class DataPoint(
   timestamp   : Instant,
   overallScore: Int
@@ -132,7 +128,7 @@ case class DataPoint(
 
 object DataPoint:
   val format: Format[DataPoint] =
-    ( (__ \ "timestamp"   ).format[Instant](MongoJavatimeFormats.instantFormat) // TODO mongo format!?
+    ( (__ \ "timestamp"   ).format[Instant]
     ~ (__ \ "overallScore").format[Int]
     )(DataPoint.apply, r => Tuple.fromProductTyped(r))
 
@@ -155,7 +151,7 @@ case class AveragePlatformScore(
 
 object AveragePlatformScore {
   val format: Format[AveragePlatformScore] =
-    ( (__ \ "timestamp"   ).format[Instant](MongoJavatimeFormats.instantFormat) // TODO mongo format!?
+    ( (__ \ "timestamp"   ).format[Instant]
     ~ (__ \ "averageScore").format[Int]
     )(AveragePlatformScore.apply, r => Tuple.fromProductTyped(r))
 }

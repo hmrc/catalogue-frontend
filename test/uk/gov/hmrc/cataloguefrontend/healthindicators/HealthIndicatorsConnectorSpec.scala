@@ -25,7 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
-import uk.gov.hmrc.cataloguefrontend.healthindicators.MetricType.{BuildStability, GitHub, LeakDetection}
+import uk.gov.hmrc.cataloguefrontend.healthindicators.MetricType.{GitHub, LeakDetection}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 
@@ -64,8 +64,7 @@ class HealthIndicatorsConnectorSpec
 
       val weightedMetrics = Seq(
         WeightedMetric(LeakDetection , 0  , Seq()),
-        WeightedMetric(GitHub        , -50, Seq(Breakdown(-50, "No Readme defined", None))),
-        WeightedMetric(BuildStability, 0  , Seq(Breakdown(0  , "Build Not Found"  , None)))
+        WeightedMetric(GitHub        , -50, Seq(Breakdown(-50, "No Readme defined", None)))
       )
 
       val expectedResponse = Indicator("team-indicator-dashboard-frontend", RepoType.Service, -450, weightedMetrics)
@@ -125,16 +124,6 @@ class HealthIndicatorsConnectorSpec
               {
                 "points": -50,
                 "description": "No Readme defined"
-              }
-            ]
-          },
-          {
-            "metricType": "build-stability",
-            "score": 0,
-            "breakdown": [
-              {
-                "points": 0,
-                "description": "Build Not Found"
               }
             ]
           }
