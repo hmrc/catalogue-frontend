@@ -120,7 +120,7 @@
     <div class="col-md-8">
       @evaluations.map { case (configUpdates, configWarnings, optVulnerabilities, jvmChanges, deploymentConfigUpdates) =>
         <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
-          You are about to deploy <strong>@form.get.serviceName:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
+          You are about to deploy <strong>@form.get.serviceName.asString:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
           @if(releases.isEmpty || !releases.map(_.environment).contains(form.get.environment)) {
             <div>
               <br><strong>Note:</strong> this service is <strong>not</strong> currently deployed into this environment, so you may see a lot of configuration updates etc.

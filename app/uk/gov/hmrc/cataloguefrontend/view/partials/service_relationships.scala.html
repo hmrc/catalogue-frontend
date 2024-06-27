@@ -65,7 +65,7 @@
     @for(relationship <- relationships) {
         <li class="list-item">
         @if(relationship.hasRepo) {
-            <a id="link-to-@idSnippet-@{relationship.service}" href="/repositories/@{relationship.service}">@relationship.service</a>
+            <a id="link-to-@idSnippet-@{relationship.service.asString}" href="/repositories/@relationship.service.asString">@relationship.service.asString</a>
             @if(relationship.lifecycleStatus.contains(LifecycleStatus.Deprecated) | relationship.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress)) {
                 <a href="#"
                 tabindex="0"
@@ -79,7 +79,7 @@
                 </a>
             }
         } else {
-            <span id="label-for-@idSnippet-@{relationship.service}">@relationship.service</span>
+            <span id="label-for-@idSnippet-@relationship.service.asString">@relationship.service.asString</span>
         }
         </li>
     }

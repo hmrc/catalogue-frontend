@@ -98,7 +98,7 @@
                 <tr>
                     <td class="repo-name" id="row@{
                         index
-                    }_name"><a id="link-to-@serviceName-page" href="/repositories/@serviceName">@serviceName</a></td>
+                    }_name"><a id="link-to-@serviceName-page" href="/repositories/@serviceName.asString">@serviceName.asString</a></td>
                     @Environment.valuesAsSeq.map { env =>
                         <td style="text-align: center">@configs.find(_.environment == env).map(_.deploymentSize.slots)</td>
                         <td style="text-align: center">@configs.find(_.environment == env).map(_.deploymentSize.instances)</td>

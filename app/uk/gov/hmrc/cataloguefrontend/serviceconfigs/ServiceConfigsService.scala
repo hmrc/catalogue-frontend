@@ -209,7 +209,7 @@ class ServiceConfigsService @Inject()(
       .groupBy(_.key)
       .view
       .mapValues: xs =>
-        sorted(xs.groupBy(_.serviceName).view.mapValues(_.map(_.environments).flatten.toMap).toMap)//(using Ordering.by(_.asString))
+        sorted(xs.groupBy(_.serviceName).view.mapValues(_.map(_.environments).flatten.toMap).toMap)
       .toMap
 
   def toServiceKeyEnvironmentMap(appliedConfig: Seq[AppliedConfig]): Map[ServiceName, Map[KeyName, Map[Environment, ConfigSourceValue]]] =
@@ -217,7 +217,7 @@ class ServiceConfigsService @Inject()(
       .groupBy(_.serviceName)
       .view
       .mapValues: xs =>
-        sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)//(using Ordering.by(_.asString))
+        sorted(xs.groupBy(_.key).view.mapValues(_.map(_.environments).flatten.toMap).toMap)
       .toMap
 
   def configWarnings(
@@ -291,7 +291,7 @@ object ServiceConfigsService:
 
   case class KeyName(asString: String) extends AnyVal
   object KeyName:
-    given Ordering[KeyName] = Ordering.by(_.asString)
+    given Ordering[KeyName] = Ordering.by(_.asString.toLowerCase)
 
     val deploymentConfigOrder: Ordering[KeyName] =
       Ordering.by: (key: KeyName) =>

@@ -21,10 +21,10 @@ import play.api.libs.json.{JsPath, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, Version}
 
 case class JdkVersion(
-  name   : ServiceName,
-  version: Version,
-  vendor : Vendor,
-  kind   : Kind
+  serviceName: ServiceName,
+  version    : Version,
+  vendor     : Vendor,
+  kind       : Kind
 )
 
 object JdkVersion:

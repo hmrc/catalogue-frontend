@@ -142,7 +142,7 @@ case class ProfileName(asString: String) extends AnyVal
 
 object ProfileName:
   given Ordering[ProfileName] =
-    Ordering.by(_.asString)
+    Ordering.by(_.asString.toLowerCase)
 
 enum ViewMode(val asString: String) extends FromString:
   case Versions  extends ViewMode("versions")

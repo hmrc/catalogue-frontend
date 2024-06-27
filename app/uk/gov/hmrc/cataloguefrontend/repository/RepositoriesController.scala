@@ -51,7 +51,7 @@ class RepositoriesController @Inject() (
       val allTeams =
         teamsAndRepositoriesConnector
           .allTeams()
-          .map(_.sortBy(_.name.asString))
+          .map(_.sortBy(_.name))
 
       val (repoType, serviceType) = repoTypeString match
         case Some("FrontendService")  => (Some(RepoType.Service)        , Some(ServiceType.Frontend))
@@ -67,7 +67,7 @@ class RepositoriesController @Inject() (
             archived    = if showArchived.contains(true) then None else Some(false),
             repoType    = repoType,
             serviceType = serviceType
-          ).map(_.sortBy(_.name.toLowerCase))
+          ).map(_.sortBy(_.name))
 
       for
         teams        <- allTeams
