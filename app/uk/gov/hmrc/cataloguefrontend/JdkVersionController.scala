@@ -49,7 +49,7 @@ class JdkVersionController @Inject() (
         selectedFlag     =  SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeamName =  teamName.flatMap(n => teams.find(_.name == n)).map(_.name)
         jdkVersions      <- dependenciesService.getJdkVersions(selectedFlag, selectedTeamName)
-      yield Ok(jdkVersionPage(jdkVersions.sortBy(_.version), SlugInfoFlag.values, teams, selectedFlag, selectedTeamName))
+      yield Ok(jdkVersionPage(jdkVersions.sortBy(j => (j.version, j.serviceName)), SlugInfoFlag.values, teams, selectedFlag, selectedTeamName))
     }
 
   def compareAllEnvironments(teamName: Option[TeamName]) =

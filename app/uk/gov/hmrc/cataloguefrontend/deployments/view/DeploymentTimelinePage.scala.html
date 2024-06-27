@@ -29,7 +29,7 @@
   end     : Instant,
   events  : Seq[DeploymentTimelineEvent],
   slugInfo: Seq[ServiceDependencies],
-  services: Seq[String]
+  services: Seq[ServiceName]
 )(implicit
   request: RequestHeader
 )
@@ -137,7 +137,7 @@
                   <label class="form-label" for="service-search" >Service</label>
                 </dt>
                 <dd class="position-relative">
-                  <input id="service-search" name="service" value="@service" class="form-control" type="text" list="services" autocomplete="off">
+                  <input id="service-search" name="service" value="@service.fold("")(_.asString)" class="form-control" type="text" list="services" autocomplete="off">
                   <div id="service-matches" class="search-matches-dropdown d-none"></div>
                 </dd>
               </dl>
@@ -190,7 +190,7 @@
           matchesDivId : "service-matches",
           allowPartial : false,
           ignoreCase   : true,
-          values       : [@for(service <- services) {'@service',}],
+          values       : [@for(service <- services) {'@service.asString',}],
           minSearch    : 1
         });
 </script>

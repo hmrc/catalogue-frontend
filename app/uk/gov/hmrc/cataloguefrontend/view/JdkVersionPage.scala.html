@@ -156,8 +156,8 @@
 }
 
 @jdkVersion(jdk: JdkVersion) = {
-    <tr id="jdk-slug-@jdk.name.asString">
-        <td><a id="link-to-@{jdk.name.asString}" href="@appRoutes.CatalogueController.repository(jdk.name.asString)">@jdk.name.asString</a></td>
+    <tr id="jdk-slug-@jdk.serviceName.asString">
+        <td><a id="link-to-@{jdk.serviceName.asString}" href="@appRoutes.CatalogueController.repository(jdk.serviceName.asString)">@jdk.serviceName.asString</a></td>
         <td>
           <img src="@routes.Assets.versioned(jdk.vendor.imgPath)" width="70px" alt="@jdk.vendor.asString" />
         </td>

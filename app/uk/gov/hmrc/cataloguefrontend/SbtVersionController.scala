@@ -49,7 +49,7 @@ class SbtVersionController @Inject()(
         selectedFlag =  SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
         sbtVersions  <- dependenciesService.getSbtVersions(selectedFlag, selectedTeam.map(_.name))
-      yield Ok(sbtVersionPage(sbtVersions.sortBy(_.version), SlugInfoFlag.values, teams, selectedFlag, selectedTeam))
+      yield Ok(sbtVersionPage(sbtVersions.sortBy(s => (s.version, s.serviceName)), SlugInfoFlag.values, teams, selectedFlag, selectedTeam))
     }
 
   def compareAllEnvironments(teamName: Option[TeamName]) =

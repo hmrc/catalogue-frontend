@@ -53,7 +53,7 @@ class DeploymentTimelineController @Inject()(
 
       for
         services     <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service))
-        serviceNames =  services.map(_.name.toLowerCase).sorted
+        serviceNames =  services.map(s => ServiceName(s.name))
         data         <- service.fold(Future.successful(Seq.empty[DeploymentTimelineEvent])): serviceName =>
                           deploymentGraphService.findEvents(serviceName, start, end).map(_.filter(_.env != Environment.Integration)) // filter as only platform teams are interested in this env
         slugInfo     <- data

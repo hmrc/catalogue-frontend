@@ -34,7 +34,7 @@ package object model:
       Format.of[String].inmap(TeamName.apply, _.asString)
 
     given Ordering[TeamName] =
-      Ordering.by(_.asString)
+      Ordering.by(_.asString.toLowerCase)
 
     given pathBindable: PathBindable[TeamName] =
       Binders.pathBindableFromString(
@@ -69,7 +69,7 @@ package object model:
       Format.of[String].inmap(ServiceName.apply, _.asString)
 
     given Ordering[ServiceName] =
-      Ordering.by(_.asString)
+      Ordering.by(_.asString.toLowerCase)
 
     val formFormat: Formatter[ServiceName] =
       new Formatter[ServiceName]:

@@ -293,6 +293,7 @@ class TeamsAndRepositoriesConnector @Inject()(
     httpClientV2
       .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[Seq[GitRepository]]
+      .map(_.sortBy(_.name))
 
   def repositoryDetails(name: String)(using HeaderCarrier): Future[Option[GitRepository]] =
     for
