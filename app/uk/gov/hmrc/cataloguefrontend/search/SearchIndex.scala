@@ -133,7 +133,7 @@ object SearchIndex:
         if normalised.exists(_.equalsIgnoreCase(st.name))
         then st.copy(weight = 1f)  //Increase weighting of an exact match
         else st
-      .sortBy(st => -st.weight -> st.name)
+      .sortBy(st => -st.weight -> st.name.toLowerCase)
       .distinct
 
   def optimizeIndex(index: Seq[SearchTerm]): Map[String, Seq[SearchTerm]] =

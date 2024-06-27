@@ -67,7 +67,7 @@ class RepositoriesController @Inject() (
             archived    = if showArchived.contains(true) then None else Some(false),
             repoType    = repoType,
             serviceType = serviceType
-          ).map(_.sortBy(_.name))
+          ).map(_.sortBy(_.name.toLowerCase))
 
       for
         teams        <- allTeams
