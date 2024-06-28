@@ -22,8 +22,6 @@ import java.time.format.DateTimeFormatter
 object DateHelper {
   val utc = ZoneId.of("UTC")
 
-  // TODO consolidate presentation of dates
-  // Search for "yyy-MM-dd" across service too
   val `yyyy-MM-dd`           : DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
   val `dd MMM uuuu`          : DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM uuuu")
   val `dd MMM uuuu HH:mm`    : DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM uuuu HH:mm")
@@ -38,9 +36,6 @@ object DateHelper {
   end extension
 
   extension (d: Instant)
-    def asPattern(pattern: String): String =
-      d.atZone(utc).format(DateTimeFormatter.ofPattern(pattern))
-
     def asPattern(dtf: DateTimeFormatter): String =
       d.atZone(utc).format(dtf)
 

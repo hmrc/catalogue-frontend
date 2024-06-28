@@ -281,7 +281,8 @@
     </script>
 }
 
-@* TODO review how internal auth config works *@
+@* TODO We shouldn't be identifying this by title - maybe backend data should support PreProd/Prod
+   and we choose how to display it (in theory service may not even be deployed in QA)  *@
 @availableEnvironments(title: String) = @{
     if (title == "Internal Auth Configs") {
         form.get.environments.filter(e => e == Environment.QA || e == Environment.Production)
