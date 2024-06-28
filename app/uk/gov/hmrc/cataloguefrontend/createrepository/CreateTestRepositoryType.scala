@@ -18,7 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.createrepository
 
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
-enum CreateTestRepositoryType(val asString: String) extends FromString:
+import FromStringEnum._
+
+enum CreateTestRepositoryType(val asString: String) extends FromString derives Ordering:
   case UITest          extends CreateTestRepositoryType("UI Journey Test" )
   case APITest         extends CreateTestRepositoryType("API Test"        )
   case PerformanceTest extends CreateTestRepositoryType("Performance Test")

@@ -23,7 +23,9 @@ import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.Instant
 
-enum KeyFilterType(val asString: String) extends FromString:
+import FromStringEnum._
+
+enum KeyFilterType(val asString: String) extends FromString derives Ordering:
   case Contains           extends KeyFilterType(asString = "contains"          )
   case ContainsIgnoreCase extends KeyFilterType(asString = "containsIgnoreCase")
 
@@ -31,16 +33,17 @@ object KeyFilterType extends FromStringEnum[KeyFilterType]:
   def toKeyFilterType(isIgnoreCase: Boolean): KeyFilterType =
     if (isIgnoreCase) ContainsIgnoreCase else Contains
 
-enum FormValueFilterType(val asString: String, val displayString: String) extends FromString:
+enum FormValueFilterType(val asString: String, val displayString: String) extends FromString derives Ordering:
   case Contains       extends FormValueFilterType(asString = "contains"      , displayString = "Contains"        )
   case DoesNotContain extends FormValueFilterType(asString = "doesNotContain", displayString = "Does not contain")
   case EqualTo        extends FormValueFilterType(asString = "equalTo"       , displayString = "Equal to"        )
   case NotEqualTo     extends FormValueFilterType(asString = "notEqualTo"    , displayString = "Not Equal to"    )
   case IsEmpty        extends FormValueFilterType(asString = "isEmpty"       , displayString = "Is Empty"        )
+
 object FormValueFilterType extends FromStringEnum[FormValueFilterType]
 
 
-enum ValueFilterType(val asString: String) extends FromString:
+enum ValueFilterType(val asString: String) extends FromString derives Ordering:
   case Contains                 extends ValueFilterType("contains"                )
   case ContainsIgnoreCase       extends ValueFilterType("containsIgnoreCase"      )
   case DoesNotContain           extends ValueFilterType("doesNotContain"          )
@@ -61,13 +64,13 @@ object ValueFilterType extends FromStringEnum[ValueFilterType]:
       case FormValueFilterType.NotEqualTo     => if isIgnoreCase then NotEqualToIgnoreCase     else NotEqualTo
       case FormValueFilterType.IsEmpty        => IsEmpty
 
-enum GroupBy(val asString: String, val displayString: String) extends FromString:
+enum GroupBy(val asString: String, val displayString: String) extends FromString derives Ordering:
   case Key     extends GroupBy(asString = "key"    , displayString = "Key"    )
   case Service extends GroupBy(asString = "service", displayString = "Service")
 
 object GroupBy extends FromStringEnum[GroupBy]
 
-enum ServiceType(val asString: String, val displayString: String) extends FromString:
+enum ServiceType(val asString: String, val displayString: String) extends FromString derives Ordering:
   case Frontend extends ServiceType(asString = "frontend", displayString = "Frontend")
   case Backend  extends ServiceType(asString = "backend" , displayString = "Backend" )
 

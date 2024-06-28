@@ -24,6 +24,8 @@ import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.LocalDate
 
+import FromStringEnum._
+
 case class BobbyRuleViolation(
   reason: String,
   range : VersionRange,
@@ -193,7 +195,7 @@ object GroupArtefacts {
     )(GroupArtefacts.apply, ga => Tuple.fromProductTyped(ga))
 }
 
-enum DependencyScope(val asString: String) extends FromString:
+enum DependencyScope(val asString: String) extends FromString derives Ordering:
   case Compile  extends DependencyScope("compile" )
   case Provided extends DependencyScope("provided")
   case Test     extends DependencyScope("test"    )

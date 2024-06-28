@@ -18,7 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.model
 
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
-enum Environment(val asString: String, val displayString: String) extends FromString:
+import FromStringEnum._
+
+enum Environment(val asString: String, val displayString: String) extends FromString derives Ordering:
   case Integration  extends Environment(asString = "integration" , displayString = "Integration"  )
   case Development  extends Environment(asString = "development" , displayString = "Development"  )
   case QA           extends Environment(asString = "qa"          , displayString = "QA"           )

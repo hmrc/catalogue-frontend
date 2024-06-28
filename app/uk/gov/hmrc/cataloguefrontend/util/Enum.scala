@@ -31,8 +31,8 @@ trait FromStringEnum[T <: scala.reflect.Enum with FromString]:
   lazy val valuesAsSeq: Seq[T] =
     scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
 
-  given Ordering[T] =
-    Ordering.by(_.ordinal)
+  // given Ordering[T] =
+  //   Ordering.by(_.ordinal)
 
   def parse(s: String): Either[String, T] =
     values
@@ -72,3 +72,10 @@ trait FromStringEnum[T <: scala.reflect.Enum with FromString]:
     )
 
 end FromStringEnum
+
+
+object FromStringEnum:
+
+  extension (obj: Ordering.type)
+    def derived[A <: scala.reflect.Enum]: Ordering[A] =
+      Ordering.by(_.ordinal)

@@ -251,7 +251,9 @@ object BuildDeployApiConnector:
 
   case class AsyncRequestId(request: JsValue)
 
-  enum PrototypeStatus(val asString: String, val displayString: String) extends FromString:
+  import FromStringEnum._
+
+  enum PrototypeStatus(val asString: String, val displayString: String) extends FromString derives Ordering:
     case Running      extends PrototypeStatus(asString = "running"     , displayString = "Running"     )
     case Stopped      extends PrototypeStatus(asString = "stopped"     , displayString = "Stopped"     )
     case Undetermined extends PrototypeStatus(asString = "undetermined", displayString = "Undetermined")

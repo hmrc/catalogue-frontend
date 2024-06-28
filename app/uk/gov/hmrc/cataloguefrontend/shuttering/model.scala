@@ -24,14 +24,16 @@ import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.Instant
 
-enum ShutterType(val asString: String) extends FromString:
+import FromStringEnum._
+
+enum ShutterType(val asString: String) extends FromString derives Ordering:
   case Frontend extends ShutterType("frontend")
   case Api      extends ShutterType("api"    )
   case Rate     extends ShutterType("rate"   )
 
 object ShutterType extends FromStringEnum[ShutterType]
 
-enum ShutterStatusValue(val asString: String) extends FromString:
+enum ShutterStatusValue(val asString: String) extends FromString derives Ordering:
   case Shuttered   extends ShutterStatusValue("shuttered"  )
   case Unshuttered extends ShutterStatusValue("unshuttered")
 
@@ -98,7 +100,7 @@ object ShutterState {
 
 // -------------- Events ---------------------
 
-enum EventType(val asString: String) extends FromString:
+enum EventType(val asString: String) extends FromString derives Ordering:
   case ShutterStateCreate    extends EventType("shutter-state-create"   )
   case ShutterStateDelete    extends EventType("shutter-state-delete"   )
   case ShutterStateChange    extends EventType("shutter-state-change"   )
@@ -106,7 +108,7 @@ enum EventType(val asString: String) extends FromString:
 
 object EventType extends FromStringEnum[EventType]
 
-enum ShutterCause(val asString: String) extends FromString:
+enum ShutterCause(val asString: String) extends FromString derives Ordering:
   case Scheduled      extends ShutterCause("scheduled"      )
   case UserCreated    extends ShutterCause("user-shutter"   )
   case AutoReconciled extends ShutterCause("auto-reconciled")

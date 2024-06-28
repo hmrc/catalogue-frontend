@@ -20,6 +20,8 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Format, __}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
+import FromStringEnum._
+
 case class Progress(
   current : Int,
   target  : Int,
@@ -53,7 +55,7 @@ object PlatformInitiative:
     ~ (__ \ "inProgressLegend"     ).format[String]
     )(apply, pi => Tuple.fromProductTyped(pi))
 
-enum DisplayType(val asString: String) extends FromString:
+enum DisplayType(val asString: String) extends FromString derives Ordering:
   case Progress  extends DisplayType("Progress")
   case Chart     extends DisplayType("Chart"   )
 

@@ -22,10 +22,21 @@ import play.api.libs.json.{Format, JsError, JsObject, JsString, JsSuccess, JsVal
 import play.api.data.FormError
 import play.api.data.format.Formatter
 import uk.gov.hmrc.cataloguefrontend.binders.Binders
+import uk.gov.hmrc.cataloguefrontend.util.FromString
 
 package object model:
 
-  case class UserName(asString: String) extends AnyVal
+  /*extension (obj: Ordering.type)
+    def derived[A <: FromString]: Ordering[A] =
+      Ordering.by(_.asString.toLowerCase)
+
+    // inline def derived[T]: Ordering[T] =
+    //   ${ derivedMacro[T] }
+
+    // def derivedMacro[T: quoted.Type](using quoted.Quotes): quoted.Expr[Ordering[T]] = ???
+*/
+
+  case class UserName(asString: String) extends AnyVal// with FromString derives Ordering
 
   object UserName:
     val format: Format[UserName] =

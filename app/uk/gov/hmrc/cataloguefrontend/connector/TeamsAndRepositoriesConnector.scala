@@ -33,7 +33,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-enum RepoType(val asString: String) extends FromString:
+import FromStringEnum._
+
+enum RepoType(val asString: String) extends FromString derives Ordering:
   case Service   extends RepoType("Service"  )
   case Library   extends RepoType("Library"  )
   case Prototype extends RepoType("Prototype")
@@ -42,13 +44,13 @@ enum RepoType(val asString: String) extends FromString:
 
 object RepoType extends FromStringEnum[RepoType]
 
-enum ServiceType(val asString: String, val displayString: String) extends FromString:
+enum ServiceType(val asString: String, val displayString: String) extends FromString derives Ordering:
   case Frontend extends ServiceType(asString = "frontend", displayString = "Service (Frontend)")
   case Backend  extends ServiceType(asString = "backend" , displayString = "Service (Backend)")
 
 object ServiceType extends FromStringEnum[ServiceType]
 
-enum Tag(val asString: String, val displayString: String) extends FromString:
+enum Tag(val asString: String, val displayString: String) extends FromString derives Ordering:
   case AdminFrontend    extends Tag(asString = "admin"             , displayString = "Admin Frontend"    )
   case Api              extends Tag(asString = "api"               , displayString = "API"               )
   case BuiltOffPlatform extends Tag(asString = "built-off-platform", displayString = "Built Off Platform")
@@ -92,7 +94,7 @@ object BuildData:
     ~ (__ \ "description").formatNullable[String]
   )(apply, bd => Tuple.fromProductTyped(bd))
 
-enum BuildJobType(val asString: String) extends FromString:
+enum BuildJobType(val asString: String) extends FromString derives Ordering:
   case Job         extends BuildJobType("job"         )
   case Pipeline    extends BuildJobType("pipeline"    )
   case PullRequest extends BuildJobType("pull-request")

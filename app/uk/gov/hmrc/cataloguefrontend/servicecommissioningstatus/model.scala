@@ -23,6 +23,8 @@ import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.Instant
 
+import FromStringEnum._
+
 case class Warning(
   title: String
 , message: String
@@ -113,7 +115,7 @@ object CachedServiceCheck:
     ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]
     )(CachedServiceCheck.apply)
 
-enum FormCheckType(val asString: String) extends FromString:
+enum FormCheckType(val asString: String) extends FromString derives Ordering:
   case Simple      extends FormCheckType("simple"     )
   case Environment extends FormCheckType("environment")
 

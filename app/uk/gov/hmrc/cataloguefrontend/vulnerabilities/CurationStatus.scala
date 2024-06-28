@@ -18,7 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
-enum CurationStatus(val asString: String, val display: String) extends FromString:
+import FromStringEnum._
+
+enum CurationStatus(val asString: String, val display: String) extends FromString derives Ordering:
   case InvestigationOngoing extends CurationStatus(asString = "INVESTIGATION_ONGOING", display = "Investigation ongoing")
   case NoActionRequired     extends CurationStatus(asString = "NO_ACTION_REQUIRED"   , display = "No action required"   )
   case ActionRequired       extends CurationStatus(asString = "ACTION_REQUIRED"      , display = "Action required"      )

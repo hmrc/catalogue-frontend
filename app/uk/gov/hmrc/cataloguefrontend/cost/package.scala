@@ -22,6 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, FromString, FromStringEnum}
 
 package object cost:
+  import FromStringEnum._
 
   case class DeploymentSize(
     slots       : Int,
@@ -67,7 +68,7 @@ package object cost:
     def costGbp(costEstimateConfig: CostEstimateConfig) =
       asInt * costEstimateConfig.slotCostPerYear
 
-  enum Zone(val asString: String) extends FromString:
+  enum Zone(val asString: String) extends FromString derives Ordering:
     case Protected      extends Zone("protected"      )
     case Public         extends Zone("public"         )
     case ProtectedRate  extends Zone("protected-rate" )

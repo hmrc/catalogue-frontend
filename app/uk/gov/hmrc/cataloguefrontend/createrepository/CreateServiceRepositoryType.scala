@@ -18,7 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.createrepository
 
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
-enum CreateServiceRepositoryType(val asString: String) extends FromString:
+import FromStringEnum._
+
+enum CreateServiceRepositoryType(val asString: String) extends FromString derives Ordering:
   case Empty                            extends CreateServiceRepositoryType("Empty"                                )
   case FrontendMicroservice             extends CreateServiceRepositoryType("Frontend microservice"                )
   case FrontendMicroserviceWithScaffold extends CreateServiceRepositoryType("Frontend microservice - with scaffold")
