@@ -115,7 +115,7 @@ object CachedServiceCheck:
     ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]
     )(CachedServiceCheck.apply)
 
-enum FormCheckType(val asString: String) extends FromString derives Ordering:
+enum FormCheckType(val asString: String) extends FromString derives Ordering, Writes:
   case Simple      extends FormCheckType("simple"     )
   case Environment extends FormCheckType("environment")
 

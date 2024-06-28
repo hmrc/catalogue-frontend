@@ -35,7 +35,7 @@ import scala.util.control.NonFatal
 
 import FromStringEnum._
 
-enum RepoType(val asString: String) extends FromString derives Ordering:
+enum RepoType(val asString: String) extends FromString derives Ordering, Writes:
   case Service   extends RepoType("Service"  )
   case Library   extends RepoType("Library"  )
   case Prototype extends RepoType("Prototype")
@@ -44,13 +44,13 @@ enum RepoType(val asString: String) extends FromString derives Ordering:
 
 object RepoType extends FromStringEnum[RepoType]
 
-enum ServiceType(val asString: String, val displayString: String) extends FromString derives Ordering:
+enum ServiceType(val asString: String, val displayString: String) extends FromString derives Ordering, Writes:
   case Frontend extends ServiceType(asString = "frontend", displayString = "Service (Frontend)")
   case Backend  extends ServiceType(asString = "backend" , displayString = "Service (Backend)")
 
 object ServiceType extends FromStringEnum[ServiceType]
 
-enum Tag(val asString: String, val displayString: String) extends FromString derives Ordering:
+enum Tag(val asString: String, val displayString: String) extends FromString derives Ordering, Writes:
   case AdminFrontend    extends Tag(asString = "admin"             , displayString = "Admin Frontend"    )
   case Api              extends Tag(asString = "api"               , displayString = "API"               )
   case BuiltOffPlatform extends Tag(asString = "built-off-platform", displayString = "Built Off Platform")
@@ -94,7 +94,7 @@ object BuildData:
     ~ (__ \ "description").formatNullable[String]
   )(apply, bd => Tuple.fromProductTyped(bd))
 
-enum BuildJobType(val asString: String) extends FromString derives Ordering:
+enum BuildJobType(val asString: String) extends FromString derives Ordering, Writes:
   case Job         extends BuildJobType("job"         )
   case Pipeline    extends BuildJobType("pipeline"    )
   case PullRequest extends BuildJobType("pull-request")

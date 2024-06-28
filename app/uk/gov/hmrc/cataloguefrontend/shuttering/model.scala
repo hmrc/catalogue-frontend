@@ -26,14 +26,14 @@ import java.time.Instant
 
 import FromStringEnum._
 
-enum ShutterType(val asString: String) extends FromString derives Ordering:
+enum ShutterType(val asString: String) extends FromString derives Ordering, Writes:
   case Frontend extends ShutterType("frontend")
   case Api      extends ShutterType("api"    )
   case Rate     extends ShutterType("rate"   )
 
 object ShutterType extends FromStringEnum[ShutterType]
 
-enum ShutterStatusValue(val asString: String) extends FromString derives Ordering:
+enum ShutterStatusValue(val asString: String) extends FromString derives Ordering, Writes:
   case Shuttered   extends ShutterStatusValue("shuttered"  )
   case Unshuttered extends ShutterStatusValue("unshuttered")
 
@@ -108,7 +108,7 @@ enum EventType(val asString: String) extends FromString derives Ordering:
 
 object EventType extends FromStringEnum[EventType]
 
-enum ShutterCause(val asString: String) extends FromString derives Ordering:
+enum ShutterCause(val asString: String) extends FromString derives Ordering, Writes:
   case Scheduled      extends ShutterCause("scheduled"      )
   case UserCreated    extends ShutterCause("user-shutter"   )
   case AutoReconciled extends ShutterCause("auto-reconciled")

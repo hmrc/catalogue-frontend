@@ -45,11 +45,12 @@ trait FromStringEnum[T <: scala.reflect.Enum with FromString]:
     _.validate[String]
      .flatMap(parse(_).fold(JsError(_), JsSuccess(_)))
 
-  val writes: Writes[T] =
-    t => JsString(t.asString)
+  //val writes: Writes[T] =
+  //  t => JsString(t.asString)
 
   val format: Format[T] =
-    Format[T](reads, writes)
+    ???
+    //Format[T](reads, writes)
 
   val formFormat: Formatter[T] =
     new Formatter[T]:
@@ -79,3 +80,7 @@ object FromStringEnum:
   extension (obj: Ordering.type)
     def derived[A <: scala.reflect.Enum]: Ordering[A] =
       Ordering.by(_.ordinal)
+
+  extension (obj: Writes.type)
+    def derived[A <: FromString]: Writes[A] =
+      a => JsString(a.asString)

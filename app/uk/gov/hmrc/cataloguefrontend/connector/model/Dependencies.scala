@@ -195,7 +195,7 @@ object GroupArtefacts {
     )(GroupArtefacts.apply, ga => Tuple.fromProductTyped(ga))
 }
 
-enum DependencyScope(val asString: String) extends FromString derives Ordering:
+enum DependencyScope(val asString: String) extends FromString derives Ordering, Writes:
   case Compile  extends DependencyScope("compile" )
   case Provided extends DependencyScope("provided")
   case Test     extends DependencyScope("test"    )

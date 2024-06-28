@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
+import play.api.libs.json.{Reads, Writes}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import FromStringEnum._
 
-enum CurationStatus(val asString: String, val display: String) extends FromString derives Ordering:
+enum CurationStatus(val asString: String, val display: String) extends FromString derives Ordering, Writes:
   case InvestigationOngoing extends CurationStatus(asString = "INVESTIGATION_ONGOING", display = "Investigation ongoing")
   case NoActionRequired     extends CurationStatus(asString = "NO_ACTION_REQUIRED"   , display = "No action required"   )
   case ActionRequired       extends CurationStatus(asString = "ACTION_REQUIRED"      , display = "Action required"      )

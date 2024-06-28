@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
+import play.api.libs.json.{Reads, Writes}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import FromStringEnum._
 
-enum CreateTestRepositoryType(val asString: String) extends FromString derives Ordering:
+enum CreateTestRepositoryType(val asString: String) extends FromString derives Ordering, Writes:
   case UITest          extends CreateTestRepositoryType("UI Journey Test" )
   case APITest         extends CreateTestRepositoryType("API Test"        )
   case PerformanceTest extends CreateTestRepositoryType("Performance Test")

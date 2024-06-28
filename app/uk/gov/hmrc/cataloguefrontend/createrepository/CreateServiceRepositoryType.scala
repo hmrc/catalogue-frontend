@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
+import play.api.libs.json.{Reads, Writes}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import FromStringEnum._
 
-enum CreateServiceRepositoryType(val asString: String) extends FromString derives Ordering:
+enum CreateServiceRepositoryType(val asString: String) extends FromString derives Ordering, Writes:
   case Empty                            extends CreateServiceRepositoryType("Empty"                                )
   case FrontendMicroservice             extends CreateServiceRepositoryType("Frontend microservice"                )
   case FrontendMicroserviceWithScaffold extends CreateServiceRepositoryType("Frontend microservice - with scaffold")

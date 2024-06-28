@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Reads, __}
+import play.api.libs.json.{Reads, Writes, __}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, FromString, FromStringEnum}
 
@@ -68,7 +68,7 @@ package object cost:
     def costGbp(costEstimateConfig: CostEstimateConfig) =
       asInt * costEstimateConfig.slotCostPerYear
 
-  enum Zone(val asString: String) extends FromString derives Ordering:
+  enum Zone(val asString: String) extends FromString derives Ordering, Writes:
     case Protected      extends Zone("protected"      )
     case Public         extends Zone("public"         )
     case ProtectedRate  extends Zone("protected-rate" )

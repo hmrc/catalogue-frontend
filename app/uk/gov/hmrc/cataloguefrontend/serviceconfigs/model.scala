@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Format, __}
+import play.api.libs.json.{Format, Reads, Writes, __}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
@@ -25,7 +25,7 @@ import java.time.Instant
 
 import FromStringEnum._
 
-enum KeyFilterType(val asString: String) extends FromString derives Ordering:
+enum KeyFilterType(val asString: String) extends FromString derives Ordering, Writes:
   case Contains           extends KeyFilterType(asString = "contains"          )
   case ContainsIgnoreCase extends KeyFilterType(asString = "containsIgnoreCase")
 
@@ -33,7 +33,7 @@ object KeyFilterType extends FromStringEnum[KeyFilterType]:
   def toKeyFilterType(isIgnoreCase: Boolean): KeyFilterType =
     if (isIgnoreCase) ContainsIgnoreCase else Contains
 
-enum FormValueFilterType(val asString: String, val displayString: String) extends FromString derives Ordering:
+enum FormValueFilterType(val asString: String, val displayString: String) extends FromString derives Ordering, Writes:
   case Contains       extends FormValueFilterType(asString = "contains"      , displayString = "Contains"        )
   case DoesNotContain extends FormValueFilterType(asString = "doesNotContain", displayString = "Does not contain")
   case EqualTo        extends FormValueFilterType(asString = "equalTo"       , displayString = "Equal to"        )
@@ -43,7 +43,7 @@ enum FormValueFilterType(val asString: String, val displayString: String) extend
 object FormValueFilterType extends FromStringEnum[FormValueFilterType]
 
 
-enum ValueFilterType(val asString: String) extends FromString derives Ordering:
+enum ValueFilterType(val asString: String) extends FromString derives Ordering, Writes:
   case Contains                 extends ValueFilterType("contains"                )
   case ContainsIgnoreCase       extends ValueFilterType("containsIgnoreCase"      )
   case DoesNotContain           extends ValueFilterType("doesNotContain"          )
@@ -64,13 +64,13 @@ object ValueFilterType extends FromStringEnum[ValueFilterType]:
       case FormValueFilterType.NotEqualTo     => if isIgnoreCase then NotEqualToIgnoreCase     else NotEqualTo
       case FormValueFilterType.IsEmpty        => IsEmpty
 
-enum GroupBy(val asString: String, val displayString: String) extends FromString derives Ordering:
+enum GroupBy(val asString: String, val displayString: String) extends FromString derives Ordering, Writes:
   case Key     extends GroupBy(asString = "key"    , displayString = "Key"    )
   case Service extends GroupBy(asString = "service", displayString = "Service")
 
 object GroupBy extends FromStringEnum[GroupBy]
 
-enum ServiceType(val asString: String, val displayString: String) extends FromString derives Ordering:
+enum ServiceType(val asString: String, val displayString: String) extends FromString derives Ordering, Writes:
   case Frontend extends ServiceType(asString = "frontend", displayString = "Frontend")
   case Backend  extends ServiceType(asString = "backend" , displayString = "Backend" )
 

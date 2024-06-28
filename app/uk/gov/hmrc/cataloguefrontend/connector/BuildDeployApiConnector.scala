@@ -253,7 +253,7 @@ object BuildDeployApiConnector:
 
   import FromStringEnum._
 
-  enum PrototypeStatus(val asString: String, val displayString: String) extends FromString derives Ordering:
+  enum PrototypeStatus(val asString: String, val displayString: String) extends FromString derives Ordering, Writes:
     case Running      extends PrototypeStatus(asString = "running"     , displayString = "Running"     )
     case Stopped      extends PrototypeStatus(asString = "stopped"     , displayString = "Stopped"     )
     case Undetermined extends PrototypeStatus(asString = "undetermined", displayString = "Undetermined")
@@ -268,7 +268,7 @@ object BuildDeployApiConnector:
   object PrototypeDetails:
     val reads: Reads[PrototypeDetails] =
       ( (__ \ "prototypeUrl").readNullable[String]
-      ~ (__ \ "status").read[PrototypeStatus](PrototypeStatus.reads)
+      ~ (__ \ "status"      ).read[PrototypeStatus](PrototypeStatus.reads)
       )(PrototypeDetails.apply)
 
   case class ChangePrototypePasswordRequest(
