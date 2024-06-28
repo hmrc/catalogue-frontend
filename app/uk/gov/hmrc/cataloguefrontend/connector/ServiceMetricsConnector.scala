@@ -63,7 +63,7 @@ object ServiceMetricsConnector:
   object NonPerformantQueries:
     val reads: Reads[NonPerformantQueries] =
       ( (__ \ "service"    ).read[ServiceName](ServiceName.format)
-      ~ (__ \ "environment").read[Environment](Environment.format)
+      ~ (__ \ "environment").read[Environment]
       ~ (__ \ "queryTypes" ).read[Seq[String]]
       )(NonPerformantQueries.apply)
 
@@ -82,6 +82,6 @@ object ServiceMetricsConnector:
       ~ (__ \ "collection" ).read[String]
       ~ (__ \ "sizeBytes"  ).read[BigDecimal]
       ~ (__ \ "date"       ).read[LocalDate]
-      ~ (__ \ "environment").read[Environment](Environment.format)
+      ~ (__ \ "environment").read[Environment]
       ~ (__ \ "service"    ).readNullable[String]
       )(apply)

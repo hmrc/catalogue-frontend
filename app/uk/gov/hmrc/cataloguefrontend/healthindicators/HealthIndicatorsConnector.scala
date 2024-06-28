@@ -55,7 +55,7 @@ class HealthIndicatorsConnector @Inject() (
       .get(url"$healthIndicatorsBaseUrl/health-indicators/history/$repoName")
       .execute[Option[HistoricIndicatorData]]
 
-  def getAveragePlatformScore(using HeaderCarrier): Future[Option[AveragePlatformScore]] =
+  def getAveragePlatformScore()(using HeaderCarrier): Future[Option[AveragePlatformScore]] =
     httpClientV2
       .get(url"$healthIndicatorsBaseUrl/health-indicators/platform-average")
       .execute[Option[AveragePlatformScore]]
@@ -114,7 +114,6 @@ case class Indicator(
 object Indicator:
   val reads: Reads[Indicator] =
     given Reads[WeightedMetric] = WeightedMetric.reads
-    given Reads[RepoType]       = RepoType.format
     ( (__ \ "repoName"       ).read[String]
     ~ (__ \ "repoType"       ).read[RepoType]
     ~ (__ \ "overallScore"   ).read[Int]

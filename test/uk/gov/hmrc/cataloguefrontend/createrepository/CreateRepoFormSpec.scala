@@ -125,29 +125,6 @@ class CreateRepoFormSpec extends UnitSpec {
     val constraints = CreateRepoConstraints.createRepoNameConstraints(length, suffix)
     !constraints.map(c => c(repoName)).exists(p => p.isInstanceOf[Invalid])
 
-  "repoTypeValidation" when {
-    "the repo type is invalid" should {
-      "return false" in {
-        CreateServiceRepoForm.repoTypeValidation("frontend") shouldBe false
-        CreateServiceRepoForm.repoTypeValidation("backend-service") shouldBe false
-      }
-    }
-
-    "the repo type is valid" should {
-      "return true" in {
-        CreateServiceRepoForm.repoTypeValidation("Empty") shouldBe true
-        CreateServiceRepoForm.repoTypeValidation("Frontend microservice") shouldBe true
-        CreateServiceRepoForm.repoTypeValidation("Frontend microservice - with scaffold") shouldBe true
-        CreateServiceRepoForm.repoTypeValidation("Frontend microservice - with mongodb") shouldBe true
-        CreateServiceRepoForm.repoTypeValidation("Backend microservice") shouldBe true
-        CreateServiceRepoForm.repoTypeValidation("Backend microservice - with mongodb") shouldBe true
-        CreateServiceRepoForm.repoTypeValidation("API microservice") shouldBe true
-        CreateServiceRepoForm.repoTypeValidation("API microservice - with mongodb") shouldBe true
-
-      }
-    }
-  }
-
   "conflictingFieldsValidation1" when {
     "the repo type contains 'backend' and the repo name contains 'frontend'" should {
       "return false" in {

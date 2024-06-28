@@ -127,13 +127,13 @@ class ShutterWizardController @Inject() (
          step1f        <- serviceName match
                             case Some(sn) => EitherT.pure[Future, Result](Step1Form(
                                                serviceNameAndContexts = ServiceNameAndContext(sn, context) :: Nil
-                                             , status                 = inverseShutterStatusValue(shutterStates)(sn, context).fold("")(_.asString)
+                                             , status                 = inverseShutterStatusValue(shutterStates)(sn, context)
                                              ))
                             case None     => EitherT.liftF[Future, Result, Step1Form](
                                                getFromSession(step1Key)
-                                                 .map(_.fold(Step1Form(serviceNameAndContexts = Seq.empty, status = ""))(step1Out => Step1Form(
+                                                 .map(_.fold(Step1Form(serviceNameAndContexts = Seq.empty, status = None))(step1Out => Step1Form(
                                                    serviceNameAndContexts = step1Out.serviceNameAndContexts
-                                                 , status                 = step1Out.status.asString
+                                                 , status                 = Some(step1Out.status)
                                                  )))
                                             )
          html          <- EitherT.liftF[Future, Result, Result]:
@@ -162,9 +162,9 @@ class ShutterWizardController @Inject() (
                             hasErrors = formWithErrors => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, formWithErrors).map(BadRequest(_)))
                           , success   = data           => EitherT.pure[Future, Result](data)
                           )
-         status        <- ShutterStatusValue.parse(sf.status).fold(
-                            _       => EitherT.left(showPage1(step0Out.shutterType, step0Out.env, boundForm).map(BadRequest(_)))
-                          ,  status => EitherT.pure[Future, Result](status)
+         status        <- sf.status.fold(
+                            EitherT.left(showPage1(step0Out.shutterType, step0Out.env, boundForm).map(BadRequest(_)))
+                          )(status => EitherT.pure[Future, Result](status)
                           )
          // check has permission to shutter selected services (TODO only display locations that can be shuttered)
          serviceNameAndContexts
@@ -533,7 +533,7 @@ end ShutterWizardController
 object ShutterWizardController:
 
   import play.api.libs.functional.syntax._
-  import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmpty, notEmptySeq}
+  import uk.gov.hmrc.cataloguefrontend.util.FormUtils.{notEmptyOption, notEmptySeq}
 
   // -- Step 0 -------------------------
 
@@ -545,8 +545,6 @@ object ShutterWizardController:
   )
 
   val step0OutFormats =
-    given Format[ShutterType] = ShutterType.format
-    given Format[Environment] = Environment.format
     Json.format[Step0Out]
 
   // -- Step 1 -------------------------
@@ -568,13 +566,13 @@ object ShutterWizardController:
     Form(
       Forms.mapping(
         "selectedServices" -> Forms.seq(Forms.text.transform[ServiceNameAndContext](ServiceNameAndContext.apply(_), _.asString)).verifying(notEmptySeq)
-      , "status"           -> Forms.text.verifying(notEmpty)
+      , "status"           -> Forms.optional(Forms.of[ShutterStatusValue]).verifying(notEmptyOption)
       )(Step1Form.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
   case class Step1Form(
     serviceNameAndContexts: Seq[ServiceNameAndContext],
-    status                : String
+    status                : Option[ShutterStatusValue]
   )
 
   case class Step1Out(
@@ -583,8 +581,6 @@ object ShutterWizardController:
   )
 
   val step1OutFormats: Format[Step1Out] =
-    given Format[ShutterStatusValue] = ShutterStatusValue.format
-
     given Format[ServiceNameAndContext] =
       summon[Format[String]].inmap[ServiceNameAndContext](ServiceNameAndContext.apply, _.asString)
 

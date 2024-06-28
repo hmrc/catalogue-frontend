@@ -73,23 +73,22 @@ case class DistinctVulnerability(
 
 object DistinctVulnerability {
 
-  val apiFormat: Format[DistinctVulnerability] =
-    given Format[CurationStatus]      = CurationStatus.format
+  val reads: Reads[DistinctVulnerability] =
     given Format[VulnerableComponent] = VulnerableComponent.format
-    ( (__ \ "vulnerableComponentName"   ).format[String]
-    ~ (__ \ "vulnerableComponentVersion").format[String]
-    ~ (__ \ "vulnerableComponents"      ).format[Seq[VulnerableComponent]]
-    ~ (__ \ "id"                        ).format[String]
-    ~ (__ \ "score"                     ).formatNullable[Double]
-    ~ (__ \ "description"               ).format[String]
-    ~ (__ \ "fixedVersions"             ).formatNullable[Seq[String]]
-    ~ (__ \ "references"                ).format[Seq[String]]
-    ~ (__ \ "publishedDate"             ).format[Instant]
-    ~ (__ \ "firstDetected"             ).formatNullable[Instant]
-    ~ (__ \ "assessment"                ).formatNullable[String]
-    ~ (__ \ "curationStatus"            ).formatNullable[CurationStatus]
-    ~ (__ \ "ticket"                    ).formatNullable[String]
-    )(apply, dv => Tuple.fromProductTyped(dv))
+    ( (__ \ "vulnerableComponentName"   ).read[String]
+    ~ (__ \ "vulnerableComponentVersion").read[String]
+    ~ (__ \ "vulnerableComponents"      ).read[Seq[VulnerableComponent]]
+    ~ (__ \ "id"                        ).read[String]
+    ~ (__ \ "score"                     ).readNullable[Double]
+    ~ (__ \ "description"               ).read[String]
+    ~ (__ \ "fixedVersions"             ).readNullable[Seq[String]]
+    ~ (__ \ "references"                ).read[Seq[String]]
+    ~ (__ \ "publishedDate"             ).read[Instant]
+    ~ (__ \ "firstDetected"             ).readNullable[Instant]
+    ~ (__ \ "assessment"                ).readNullable[String]
+    ~ (__ \ "curationStatus"            ).readNullable[CurationStatus]
+    ~ (__ \ "ticket"                    ).readNullable[String]
+    )(apply)
 }
 
 case class VulnerabilityOccurrence(
@@ -99,11 +98,11 @@ case class VulnerabilityOccurrence(
 )
 
 object VulnerabilityOccurrence {
-  val reads: Format[VulnerabilityOccurrence] =
-    ( (__ \ "service"            ).format[ServiceName](ServiceName.format)
-    ~ (__ \ "serviceVersion"     ).format[String]
-    ~ (__ \ "componentPathInSlug").format[String]
-    )(apply, vo => Tuple.fromProductTyped(vo))
+  val reads: Reads[VulnerabilityOccurrence] =
+    ( (__ \ "service"            ).read[ServiceName](ServiceName.format)
+    ~ (__ \ "serviceVersion"     ).read[String]
+    ~ (__ \ "componentPathInSlug").read[String]
+    )(apply)
 }
 
 case class VulnerabilitySummary(
@@ -113,14 +112,14 @@ case class VulnerabilitySummary(
  )
 
 object VulnerabilitySummary:
-  val apiFormat: Format[VulnerabilitySummary] =
-    given Format[DistinctVulnerability]   = DistinctVulnerability.apiFormat
-    given Format[VulnerabilityOccurrence] = VulnerabilityOccurrence.reads
+  val reads: Reads[VulnerabilitySummary] =
+    given Reads[DistinctVulnerability]   = DistinctVulnerability.reads
+    given Reads[VulnerabilityOccurrence] = VulnerabilityOccurrence.reads
 
-    ( (__ \ "distinctVulnerability").format[DistinctVulnerability]
-    ~ (__ \ "occurrences"          ).format[Seq[VulnerabilityOccurrence]]
-    ~ (__ \ "teams"                ).format[Seq[String]]
-    ) (apply, vs => Tuple.fromProductTyped(vs))
+    ( (__ \ "distinctVulnerability").read[DistinctVulnerability]
+    ~ (__ \ "occurrences"          ).read[Seq[VulnerabilityOccurrence]]
+    ~ (__ \ "teams"                ).read[Seq[String]]
+    )(apply)
 
 case class TotalVulnerabilityCount(
   service             : ServiceName
@@ -132,11 +131,11 @@ case class TotalVulnerabilityCount(
 
 object TotalVulnerabilityCount:
   val reads: Reads[TotalVulnerabilityCount] =
-    ( (__ \ "service"               ).read[ServiceName](ServiceName.format)
-    ~ (__ \ "actionRequired"        ).read[Int]
-    ~ (__ \ "noActionRequired"      ).read[Int]
-    ~ (__ \ "investigationOngoing"  ).read[Int]
-    ~ (__ \ "uncurated"             ).read[Int]
+    ( (__ \ "service"             ).read[ServiceName](ServiceName.format)
+    ~ (__ \ "actionRequired"      ).read[Int]
+    ~ (__ \ "noActionRequired"    ).read[Int]
+    ~ (__ \ "investigationOngoing").read[Int]
+    ~ (__ \ "uncurated"           ).read[Int]
     )(apply)
 
 case class VulnerabilitiesTimelineCount(

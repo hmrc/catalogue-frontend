@@ -46,7 +46,7 @@ class SearchByUrlConnector @Inject() (
 
   private given Reads[FrontendRoutes] =
     ( (__ \ "service"    ).read[ServiceName](ServiceName.format)
-    ~ (__ \ "environment").read[Environment](Environment.format)
+    ~ (__ \ "environment").read[Environment]
     ~ (__ \ "routes"     ).read[Seq[FrontendRoute]]
     )(FrontendRoutes.apply)
 

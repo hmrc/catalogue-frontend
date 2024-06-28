@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.data.{Form, Forms}
-import play.api.data.Forms.{boolean, mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
@@ -135,19 +134,17 @@ case class VulnerabilitiesExplorerFilter(
 )
 
 object VulnerabilitiesExplorerFilter:
-  import play.api.data.Forms.{mapping, optional, text}
-
   lazy val form: Form[VulnerabilitiesExplorerFilter] =
     Form(
-      mapping(
-        "flag"           -> optional(text).transform[SlugInfoFlag](
+      Forms.mapping(
+        "flag"           -> Forms.optional(Forms.text).transform[SlugInfoFlag](
                               opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
                             , flag => Some(flag.asString)
                             ),
-        "vulnerability"  -> optional(text),
-        "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
-        "service"        -> optional(Forms.of[ServiceName](ServiceName.formFormat)),
-        "team"           -> optional(Forms.of[TeamName](TeamName.formFormat)),
+        "vulnerability"  -> Forms.optional(Forms.text),
+        "curationStatus" -> Forms.optional(Forms.of[CurationStatus]),
+        "service"        -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat)),
+        "team"           -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
       )(VulnerabilitiesExplorerFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
@@ -160,13 +157,14 @@ case class VulnerabilitiesCountFilter(
 object VulnerabilitiesCountFilter:
   lazy val form: Form[VulnerabilitiesCountFilter] =
     Form(
-      mapping(
-        "flag"    -> optional(text).transform[SlugInfoFlag](
-                      opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
-                    , flag => Some(flag.asString)
-                    ),
-        "service" -> optional(Forms.of[ServiceName](ServiceName.formFormat)),
-        "team"    -> optional(Forms.of[TeamName](TeamName.formFormat)),
+      Forms.mapping(
+        "flag"    -> // TODO create Formatter
+                     Forms.optional(Forms.text).transform[SlugInfoFlag](
+                       opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
+                     , flag => Some(flag.asString)
+                     ),
+        "service" -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat)),
+        "team"    -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
@@ -190,14 +188,14 @@ object VulnerabilitiesTimelineFilter:
   lazy val form: Form[VulnerabilitiesTimelineFilter] =
     val dateFormat = "yyyy-MM-dd"
     Form(
-      mapping(
-        "service"        -> optional(Forms.of[ServiceName](ServiceName.formFormat)),
-        "team"           -> optional(Forms.of[TeamName](TeamName.formFormat)),
-        "vulnerability"  -> optional(text),
-        "curationStatus" -> optional(Forms.of[CurationStatus](CurationStatus.formFormat)),
-        "from"           -> optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply), // Default to 6 months ago if loading initial page/value not set
-        "to"             -> optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultToTime()  ), Some.apply), // Default to now if loading initial page/value not set
-        "showDelta"      -> boolean
+      Forms.mapping(
+        "service"        -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat)),
+        "team"           -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "vulnerability"  -> Forms.optional(Forms.text),
+        "curationStatus" -> Forms.optional(Forms.of[CurationStatus]),
+        "from"           -> Forms.optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply), // Default to 6 months ago if loading initial page/value not set
+        "to"             -> Forms.optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultToTime()  ), Some.apply), // Default to now if loading initial page/value not set
+        "showDelta"      -> Forms.boolean
       )(VulnerabilitiesTimelineFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying("To Date must be greater than From Date", form => form.to.isAfter(form.from))
     )

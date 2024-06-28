@@ -86,7 +86,7 @@ private object ShutterEventsForm:
   lazy val form =
     Form(
       Forms.mapping(
-        "environment" -> Forms.of[Environment](Environment.formFormat)
+        "environment" -> Forms.of[Environment]
       , "serviceName" -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat))
       )(ShutterEventsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

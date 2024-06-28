@@ -61,7 +61,7 @@ class ServiceConfigsConnector @Inject() (
   )(using
     HeaderCarrier
    ): Future[Seq[DeploymentConfigEvent]] =
-    given Reads[DeploymentConfigEvent] = DeploymentConfigEvent.format
+    given Reads[DeploymentConfigEvent] = DeploymentConfigEvent.reads
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events/${service.asString}?from=$from&to=$to")
       .execute[Seq[DeploymentConfigEvent]]

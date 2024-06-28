@@ -186,7 +186,6 @@ object ServiceDependencies:
     given Reads[Version          ] = Version.format
     given Reads[ServiceJdkVersion] = serviceJdkVersionReads
     given Reads[ServiceDependency] = serviceDependencyReads
-    given Reads[Environment      ] = Environment.format
     ( (__ \ "uri"                       ).read[String]
     ~ (__ \ "name"                      ).read[String]
     ~ (__ \ "version"                   ).read[Version]

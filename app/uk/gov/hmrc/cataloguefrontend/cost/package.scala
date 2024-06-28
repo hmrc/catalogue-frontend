@@ -17,9 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Reads, Writes, __}
+import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.util.{ChartDataTable, FromString, FromStringEnum, Parser}
 
 package object cost:
   import FromStringEnum._
@@ -68,7 +68,9 @@ package object cost:
     def costGbp(costEstimateConfig: CostEstimateConfig) =
       asInt * costEstimateConfig.slotCostPerYear
 
-  enum Zone(val asString: String) extends FromString derives Ordering, Writes:
+  given Parser[Zone] = Parser.parser(Zone.values)
+
+  enum Zone(val asString: String) extends FromString derives Ordering, Reads:
     case Protected      extends Zone("protected"      )
     case Public         extends Zone("public"         )
     case ProtectedRate  extends Zone("protected-rate" )
@@ -86,8 +88,8 @@ package object cost:
       ( (__ \ "name"       ).read[ServiceName        ](ServiceName.format)
       ~ (__ \ "slots"      ).read[Int                ]
       ~ (__ \ "instances"  ).read[Int                ]
-      ~ (__ \ "environment").read[Environment        ](Environment.format)
-      ~ (__ \ "zone"       ).read[Zone               ](Zone.format)
+      ~ (__ \ "environment").read[Environment        ]
+      ~ (__ \ "zone"       ).read[Zone               ]
       ~ (__ \ "envVars"    ).read[Map[String, String]]
       ~ (__ \ "jvm"        ).read[Map[String, String]]
       ){ (n, s, i, e, z, ev, j) => DeploymentConfig(n, DeploymentSize(s, i), e, z, ev, j) }

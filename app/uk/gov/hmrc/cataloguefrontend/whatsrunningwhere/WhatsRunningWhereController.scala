@@ -17,8 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import cats.implicits._
-import play.api.data.Form
-import play.api.data.Forms.{mapping, optional, text}
+import play.api.data.{Form, Forms}
 import play.api.i18n.Messages.implicitMessagesProviderToMessages
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -115,26 +114,18 @@ object WhatsRunningWhereFilter:
 
   lazy val form: Form[WhatsRunningWhereFilter] =
     Form(
-      mapping(
-        "profile_name" -> optional(text)
+      Forms.mapping(
+        "profile_name" -> Forms.optional(Forms.text)
                             .transform[Option[ProfileName]](
                               _.map(ProfileName.apply),
                               _.map(_.asString)
                             ),
-        "profile_type" -> optional(text)
-                            .transform[Option[ProfileType]](
-                              _.flatMap(s => ProfileType.parse(s).toOption),
-                              _.map(_.asString)
-                            ),
-        "service_name" -> optional(text)
+        "profile_type" -> Forms.optional(Forms.of[ProfileType]),
+        "service_name" -> Forms.optional(Forms.text)
                             .transform[Option[ServiceName]](
                               filterEmptyString(_).map(ServiceName.apply),
                               _.map(_.asString)
                             ),
-        "view_mode"    -> optional(text)
-                          .transform[Option[ViewMode]](
-                            _.flatMap(s => ViewMode.parse(s).toOption),
-                            _.map(_.asString)
-                          )
+        "view_mode"    -> Forms.optional(Forms.of[ViewMode])
       )(WhatsRunningWhereFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

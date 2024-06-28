@@ -120,14 +120,13 @@ class BobbyRulesTrendController @Inject() (
   )
 
   val form =
-    import uk.gov.hmrc.cataloguefrontend.util.FormUtils._
-    import play.api.data._
-    import play.api.data.Forms._
+    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
+    import play.api.data.{Form, Forms}
     Form(
       Forms.mapping(
         "rules" -> Forms.seq(Forms.text).verifying(notEmptySeq),
-        "from"  -> default(Forms.localDate, LocalDate.now().minusYears(2)),
-        "to"    -> default(Forms.localDate, LocalDate.now())
+        "from"  -> Forms.default(Forms.localDate, LocalDate.now().minusYears(2)),
+        "to"    -> Forms.default(Forms.localDate, LocalDate.now())
       )(SearchForm.apply)(sf => Some(Tuple.fromProductTyped(sf)))
     )
 }

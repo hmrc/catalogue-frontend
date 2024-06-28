@@ -21,9 +21,9 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version, given}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.util.Base64Util
+import uk.gov.hmrc.cataloguefrontend.util.{Base64Util, Parser}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
@@ -322,7 +322,8 @@ object ServiceConfigsService:
           .validate[String]
           .flatMap:
             case "local" => JsSuccess(ConfigEnvironment.Local)
-            case s       => Environment.parse(s).fold(_ => JsError(__, s"Invalid Environment '$s'"), env => JsSuccess(ForEnvironment(env)))
+            case s       => // TODO use Reads[Environment]
+                            Parser.parse[Environment](s).fold(_ => JsError(__, s"Invalid Environment '$s'"), env => JsSuccess(ForEnvironment(env)))
 
   type ConfigByEnvironment = Map[ConfigEnvironment, Seq[ConfigSourceEntries]]
 
@@ -447,7 +448,12 @@ object ServiceConfigsService:
       given Reads[Map[Environment, ConfigSourceValue]] =
         Reads
           .of[Map[String, ConfigSourceValue]]
-          .map(_.map { case (k, v) => (Environment.parse(k).getOrElse(sys.error(s"Invalid Environment: $k")), v) })
+          .map:
+            _.map: (k, v) =>
+              // TODO use EnvironmentReads and feed failure through
+              ( Parser.parse[Environment](k).getOrElse(sys.error(s"Invalid Environment: $k"))
+              , v
+              )
 
       ( (__ \ "serviceName"  ).read[ServiceName](ServiceName.format)
       ~ (__ \ "key"          ).read[String].map(KeyName.apply)
@@ -465,7 +471,7 @@ object ServiceConfigsService:
   object ConfigWarning:
     val reads: Reads[ConfigWarning] =
       ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
-      ~ (__ \ "environment").read[Environment](Environment.format)
+      ~ (__ \ "environment").read[Environment]
       ~ (__ \ "key"        ).read[String].map(KeyName.apply)
       ~ (__ \ "value"      ).read[ConfigSourceValue](ConfigSourceValue.reads)
       ~ (__ \ "warning"    ).read[String]

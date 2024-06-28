@@ -209,18 +209,12 @@ object SearchConfig {
       , "configKeyIgnoreCase"   -> Forms.default(Forms.boolean, false)
       , "configValue"           -> Forms.optional(Forms.text)
       , "configValueIgnoreCase" -> Forms.default(Forms.boolean, false)
-      , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType](FormValueFilterType.formFormat), FormValueFilterType.Contains)
-      , "showEnvironments"      -> Forms.seq(Forms.text)
-                                        .transform[Seq[Environment]](
-                                          xs => { val ys = xs.map(Environment.parse(_).toOption).flatten
-                                                  if ys.nonEmpty then ys else Environment.valuesAsSeq.filterNot(_ == Environment.Integration) // populate environments for config explorer link
-                                                }
-                                        , x  => identity(x).map(_.asString)
-                                        )
-      , "serviceType"           -> Forms.optional(Forms.of[ServiceType](ServiceType.formFormat))
+      , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType], FormValueFilterType.Contains)
+      , "showEnvironments"      -> Forms.seq(Forms.of[Environment])
+      , "serviceType"           -> Forms.optional(Forms.of[ServiceType])
       , "teamChange"            -> Forms.default(Forms.boolean, false)
       , "asCsv"                 -> Forms.default(Forms.boolean, false)
-      , "groupBy"               -> Forms.default(Forms.of[GroupBy](GroupBy.formFormat), GroupBy.Key)
+      , "groupBy"               -> Forms.default(Forms.of[GroupBy], GroupBy.Key)
       )(SearchConfigForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

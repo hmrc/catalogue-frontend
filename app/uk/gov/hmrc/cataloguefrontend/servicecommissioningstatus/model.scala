@@ -18,8 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, given}
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser}
 
 import java.time.Instant
 
@@ -78,12 +78,13 @@ object Check:
         ~ (__ \ "linkToDocs" ).readNullable[String]
         ) (SimpleCheck.apply)
 
+      // TODO can we use Reads[Environment] and feed the error through?
       given Reads[Map[Environment, Result]] =
         Reads
           .of[Map[String, Check.Result]]
           .map:
             _.map: (k, v) =>
-              (Environment.parse(k).getOrElse(sys.error("Invalid Environment")), v)
+              (Parser.parse[Environment](k).getOrElse(sys.error("Invalid Environment")), v)
 
       given Reads[EnvCheck] =
         ( (__ \ "title"           ).read[String]
@@ -115,7 +116,9 @@ object CachedServiceCheck:
     ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]
     )(CachedServiceCheck.apply)
 
-enum FormCheckType(val asString: String) extends FromString derives Ordering, Writes:
+given Parser[FormCheckType] = Parser.parser(FormCheckType.values)
+
+enum FormCheckType(val asString: String) extends FromString derives Ordering, Reads:
   case Simple      extends FormCheckType("simple"     )
   case Environment extends FormCheckType("environment")
 

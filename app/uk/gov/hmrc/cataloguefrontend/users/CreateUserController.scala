@@ -18,10 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import cats.data.EitherT
 import play.api.Logger
-import play.api.data.Forms._
-import play.api.data.validation.Constraints.maxLength
-import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.data.{Form, Forms}
+import play.api.data.validation.{Constraint, Constraints, Invalid, Valid}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
@@ -105,22 +103,22 @@ end CreateUserController
 object CreateUserForm:
   val form: Form[CreateUserRequest] =
     Form(
-      mapping(
-        "givenName"        -> text.verifying(CreateUserConstraints.nameConstraints("givenName")*)
-                                  .verifying(CreateUserConstraints.containsServiceConstraint),
-        "familyName"       -> text.verifying(CreateUserConstraints.nameConstraints("familyName")*),
-        "organisation"     -> nonEmptyText,
+      Forms.mapping(
+        "givenName"        -> Forms.text.verifying(CreateUserConstraints.nameConstraints("givenName")*)
+                                        .verifying(CreateUserConstraints.containsServiceConstraint),
+        "familyName"       -> Forms.text.verifying(CreateUserConstraints.nameConstraints("familyName")*),
+        "organisation"     -> Forms.nonEmptyText,
         "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.digitalEmailConstraint),
-        "contactComments"  -> default(text, "").verifying(maxLength(512)),
+        "contactComments"  -> Forms.default(Forms.text, "").verifying(Constraints.maxLength(512)),
         "team"             -> Forms.of[TeamName](TeamName.formFormat),
-        "isReturningUser"  -> boolean,
-        "isTransitoryUser" -> boolean,
-        "isServiceAccount" -> boolean,
-        "vpn"              -> boolean,
-        "jira"             -> boolean,
-        "confluence"       -> boolean,
-        "googleApps"       -> boolean,
-        "environments"     -> boolean
+        "isReturningUser"  -> Forms.boolean,
+        "isTransitoryUser" -> Forms.boolean,
+        "isServiceAccount" -> Forms.boolean,
+        "vpn"              -> Forms.boolean,
+        "jira"             -> Forms.boolean,
+        "confluence"       -> Forms.boolean,
+        "googleApps"       -> Forms.boolean,
+        "environments"     -> Forms.boolean
       )(CreateUserRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 

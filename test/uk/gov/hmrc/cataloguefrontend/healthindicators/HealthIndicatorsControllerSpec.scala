@@ -188,7 +188,7 @@ class HealthIndicatorsControllerSpec
         willRespondWith = (200, Some(teamsJSON))
       )
 
-      val response = wsClient.url(s"http://localhost:$port/health-indicators?team=Classic+Services+Manchester&repoType=All+Types").withAuthToken("Token token").get().futureValue
+      val response = wsClient.url(s"http://localhost:$port/health-indicators?team=Classic+Services+Manchester").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
       response.body should include("""<a href="/health-indicators/team-indicator-dashboard-frontend"><span class="repoName">team-indicator-dashboard-frontend</span></a>""")
       response.body shouldNot include("""<a href="/health-indicators/api-platform-scripts"><span class="repoName">api-platform-scripts</span></a>""")

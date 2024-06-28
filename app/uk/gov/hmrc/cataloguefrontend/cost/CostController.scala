@@ -21,7 +21,6 @@ import cats.implicits._
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
 import play.api.data.{Form, Forms}
-import play.api.data.Forms.{mapping, optional}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -117,7 +116,7 @@ case class RepoListFilter(
 object RepoListFilter:
   val form: Form[RepoListFilter] =
     Form(
-      mapping(
-        "team" -> optional(Forms.of[TeamName](TeamName.formFormat))
+      Forms.mapping(
+        "team" -> Forms.optional(Forms.of[TeamName](TeamName.formFormat))
       )(RepoListFilter.apply)(r => Some(r.team))
     )

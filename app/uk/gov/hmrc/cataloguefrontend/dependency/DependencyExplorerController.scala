@@ -25,12 +25,12 @@ import play.api.data.{Form, Forms}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, RepoWithDependency}
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, RepoWithDependency, given}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, given}
 import uk.gov.hmrc.cataloguefrontend.dependency.view.html.DependencyExplorerPage
 import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
-import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, FormUtils}
+import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, FormUtils, Parser}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -137,10 +137,10 @@ class DependencyExplorerController @Inject() (
                   team         =  Option.when(query.team.nonEmpty)(TeamName(query.team))
                   flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
                   scope        <- query.scope.traverse: s =>
-                                    EitherT.fromEither[Future](DependencyScope.parse(s))
+                                    EitherT.fromEither[Future](Parser.parse[DependencyScope](s))
                                       .leftMap(msg => BadRequest(pageWithError(msg)))
                   repoType     <- query.repoType.traverse: s =>
-                                    EitherT.fromEither[Future](RepoType.parse(s))
+                                    EitherT.fromEither[Future](Parser.parse[RepoType](s))
                                       .leftMap(msg => BadRequest(pageWithError(msg)))
                   results      <- EitherT.right[Result]:
                                     dependenciesService

@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import cats.data.EitherT
 import play.api.data.{Form, Forms}
-import play.api.data.Forms.{mapping, optional}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
@@ -96,8 +95,8 @@ case class UsersListFilter(
 object UsersListFilter:
   lazy val form: Form[UsersListFilter] =
     Form(
-      mapping(
-        "team"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
-        "username" -> optional(Forms.of[UserName](UserName.formFormat))
+      Forms.mapping(
+        "team"     -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "username" -> Forms.optional(Forms.of[UserName](UserName.formFormat))
       )(UsersListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

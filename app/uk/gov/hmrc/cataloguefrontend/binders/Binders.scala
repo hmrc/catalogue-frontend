@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.binders
 
 import play.api.mvc.{PathBindable, QueryStringBindable}
-import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 
 import java.time.{Instant, LocalDate}
 import scala.util.Try
@@ -34,15 +33,6 @@ object Binders:
     queryStringBindableFromString[LocalDate](
       s => Some(Try(LocalDate.parse(s)).toEither.left.map(_.getMessage)),
       _.toString
-    )
-
-  implicit val serviceTypeQueryStringBindable: QueryStringBindable[ServiceType] =
-    queryStringBindableFromString[ServiceType](
-      {
-        case s if s.nonEmpty => Some(ServiceType.parse(s))
-        case _               => None
-      },
-      _.asString
     )
 
   /** `summon[QueryStringBindable[String]].transform` doesn't allow us to provide failures.

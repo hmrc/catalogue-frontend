@@ -44,7 +44,6 @@ class ServiceCommissioningStatusConnector @Inject() (
       .execute[List[Check]]
 
   def allChecks()(using HeaderCarrier): Future[Seq[(String, FormCheckType)]] =
-    given Reads[FormCheckType] = FormCheckType.reads
     httpClientV2
       .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/checks")
       .execute[Seq[Map[String, FormCheckType]]]

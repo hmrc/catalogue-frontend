@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend
 import cats.data.{EitherT, OptionT}
 import cats.implicits._
 import play.api.data.{Form, Forms}
-import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import play.api.{Configuration, Logger}
@@ -477,8 +476,8 @@ case class TeamFilter(
 
 object TeamFilter:
   lazy val form = Form(
-    mapping(
-      "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+    Forms.mapping(
+      "name" -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(TeamFilter.apply)(f => Some.apply(f.name))
   )
 
@@ -540,10 +539,10 @@ case class DefaultBranchesFilter(
 object DefaultBranchesFilter {
   lazy val form: Form[DefaultBranchesFilter] =
     Form(
-      mapping(
-        "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "teamNames"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
-        "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+      Forms.mapping(
+        "name"          -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "teamNames"     -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "defaultBranch" -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
       )(DefaultBranchesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

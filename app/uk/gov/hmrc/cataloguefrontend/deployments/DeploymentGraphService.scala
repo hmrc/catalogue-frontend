@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.deployments
 
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version, given}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{DeploymentConfigEvent, ServiceConfigsConnector}
+import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentTimelineEvent, ReleasesConnector}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -70,8 +71,8 @@ object DeploymentGraphService:
 
   // generates a placeholder timeline event so that the timeline still shows the environment but with nothing deployed in it
   def noEventsPlaceholder(env: String, start: Instant, end: Instant): Seq[DeploymentTimelineEvent] =
-    Environment
-      .parse(env)
+    Parser
+      .parse[Environment](env)
       .fold(
         _ => Seq.empty[DeploymentTimelineEvent]
       , e => Seq(DeploymentTimelineEvent(e, Version(notDeployedMessage), "", "", start.plusSeconds(1), end.minusSeconds(1)))

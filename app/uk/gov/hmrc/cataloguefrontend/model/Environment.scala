@@ -17,11 +17,14 @@
 package uk.gov.hmrc.cataloguefrontend.model
 
 import play.api.libs.json.{Reads, Writes}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import play.api.mvc.{PathBindable, QueryStringBindable}
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser, FormFormat}
 
 import FromStringEnum._
 
-enum Environment(val asString: String, val displayString: String) extends FromString derives Ordering, Writes:
+given Parser[Environment] = Parser.parser(Environment.values)
+
+enum Environment(val asString: String, val displayString: String) extends FromString derives Ordering, Reads, Writes, FormFormat, PathBindable, QueryStringBindable:
   case Integration  extends Environment(asString = "integration" , displayString = "Integration"  )
   case Development  extends Environment(asString = "development" , displayString = "Development"  )
   case QA           extends Environment(asString = "qa"          , displayString = "QA"           )
