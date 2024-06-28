@@ -182,8 +182,8 @@ class CatalogueController @Inject() (
                                                                                             telemetryLinks.grafanaDashboard(env, serviceName),
                                                                                             telemetryLinks.kibanaDashboard(env, serviceName)
                                                                                           ),
-                                                                nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]()): d =>
-                                                                                            telemetryLinks.kibanaNonPerformantQueries(env, ServiceName(d), nonPerformantQueries) // TODO should this really be Database rather than ServiceName?
+                                                                nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]()): databaseName =>
+                                                                                            telemetryLinks.kibanaNonPerformantQueries(env, serviceName, databaseName, nonPerformantQueries)
                                                               )
                                            yield Some((SlugInfoFlag.ForEnvironment(env): SlugInfoFlag) -> data)
                                          case None =>

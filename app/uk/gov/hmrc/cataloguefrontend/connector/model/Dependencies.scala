@@ -24,12 +24,15 @@ import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.LocalDate
 
-// TODO avoid caching LocalDate, and provide to isActive function
 case class BobbyRuleViolation(
   reason: String,
   range : VersionRange,
   from  : LocalDate
-)(using now: LocalDate = LocalDate.now()) {
+)(using
+  // caching the current date is not ideal, but these instances
+  // are short lived (backend to page only)
+  now: LocalDate = LocalDate.now()
+) {
   val isActive: Boolean =
     now.isAfter(from)
 }

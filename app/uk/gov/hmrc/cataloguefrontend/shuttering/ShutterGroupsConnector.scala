@@ -72,18 +72,7 @@ case class ShutterGroup(
 
 object ShutterGroup:
 
-  private given cats.Applicative[JsResult] =
-    new cats.Applicative[JsResult]:
-      def pure[A](a: A): JsResult[A] =
-        JsSuccess(a)
-
-      def ap[A, B](ff: JsResult[A => B])(fa: JsResult[A]): JsResult[B] =
-        fa match
-          case JsSuccess(a, p1) =>
-            ff match
-              case JsSuccess(f, p2) => JsSuccess(f(a), p1)
-              case JsError(e1)      => JsError(e1)
-          case JsError(e1) => JsError(e1)
+  import uk.gov.hmrc.cataloguefrontend.util.CategoryHelper.given cats.Applicative[JsResult]
 
   val reads: Reads[Seq[ShutterGroup]] =
     (js: JsValue) =>
