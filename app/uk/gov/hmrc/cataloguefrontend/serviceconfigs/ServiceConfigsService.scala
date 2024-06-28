@@ -114,20 +114,20 @@ class ServiceConfigsService @Inject()(
                         .map: repo =>
                           serviceCommissioningConnector
                             .getLifecycle(service)
-                            .map(status => ServiceRelationship(service, hasRepo = true, status.map(_.lifecycleStatus), repo.endOfLifeDate))
+                            .map: status =>
+                              ServiceRelationship(service, hasRepo = true, status.map(_.lifecycleStatus), repo.endOfLifeDate)
                         .getOrElse(Future.successful(ServiceRelationship(service, hasRepo = false, lifecycleStatus = None, endOfLifeDate = None)))
                         .map(_ +: acc)
       inbound  =  srs.inboundServices
                     .filterNot(_ == serviceName)
-                    .sorted
                     .map: service =>
                       ServiceRelationship(service, hasRepo = repos.exists(_.name == service.asString), lifecycleStatus = None, endOfLifeDate = None)
     yield
       ServiceRelationshipsEnriched(
-        inbound
+        inbound.sortBy(_.service)
       , outbound.sortBy: a =>
-        ( if a.lifecycleStatus.contains(LifecycleStatus.DecommissionInProgress) then 0 else 1
-        , a.service.asString.toLowerCase
+        ( !List(LifecycleStatus.Deprecated, LifecycleStatus.DecommissionInProgress).contains(a.lifecycleStatus)
+        , a.service
         )
       )
 
