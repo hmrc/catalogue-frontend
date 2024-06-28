@@ -29,6 +29,7 @@ import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Kind, Vendor}
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, DeployServiceStep4Page}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
@@ -285,7 +286,7 @@ class DeployServiceControllerSpec
   , name          = "some-service"
   , version       = Version("0.3.0")
   , runnerVersion = "some-runner-version"
-  , java          = ServiceJdkVersion("", "", "")
+  , java          = ServiceJdkVersion("", Vendor.OpenJDK, Kind.JRE)
   , classpath     = "some-classpath"
   , dependencies  = Nil
   )

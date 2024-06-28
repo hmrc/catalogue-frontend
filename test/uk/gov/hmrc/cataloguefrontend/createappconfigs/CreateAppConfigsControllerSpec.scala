@@ -29,6 +29,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.AsyncRequestId
 import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.model.{Kind, Vendor}
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector, routes}
@@ -419,7 +420,7 @@ class CreateAppConfigsControllerSpec
         name                 = serviceName.asString,
         version              = Version(1, 1, 1, ""),
         runnerVersion        = "",
-        java                 = ServiceJdkVersion("", "", ""),
+        java                 = ServiceJdkVersion("", Vendor.OpenJDK, Kind.JRE),
         classpath            = "",
         dependencies         = Seq.empty,
         dependencyDotCompile = Some(""" "test" "hmrc-mongo" """)

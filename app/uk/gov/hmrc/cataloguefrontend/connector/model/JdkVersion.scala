@@ -28,29 +28,11 @@ case class JdkVersion(
 )
 
 object JdkVersion:
-  private val vendorRead: Reads[Vendor] =
-    JsPath
-      .read[String]
-      .map:
-        _.toUpperCase match
-          case "OPENJDK" => Vendor.OpenJDK
-          case "ORACLE"  => Vendor.Oracle
-          case _         => Vendor.Oracle // default to oracle
-
-  private val kindRead: Reads[Kind] =
-    JsPath
-      .read[String]
-      .map:
-        _.toUpperCase match
-          case "JRE" => Kind.JRE
-          case "JDK" => Kind.JDK
-          case _     => Kind.JDK // default to JDK
-
   val reads: Reads[JdkVersion] =
     ( (__ \ "name"   ).read[ServiceName](ServiceName.format)
     ~ (__ \ "version").read[Version](Version.format)
-    ~ (__ \ "vendor" ).read[Vendor](vendorRead)
-    ~ (__ \ "kind"   ).read[Kind](kindRead)
+    ~ (__ \ "vendor" ).read[Vendor](Vendor.reads)
+    ~ (__ \ "kind"   ).read[Kind](Kind.reads)
     )(JdkVersion.apply)
 
 case class JdkUsageByEnv(
@@ -62,12 +44,26 @@ enum Vendor(val asString: String, val imgPath: String):
   case Oracle  extends Vendor("Oracle" , "img/oracle2.gif")
   case OpenJDK extends Vendor("OpenJDK", "img/openjdk.png")
 
-  override def toString(): String = // TODO remove this - for backward compatibility only
-    asString
+object Vendor:
+   val reads: Reads[Vendor] =
+    JsPath
+      .read[String]
+      .map:
+        _.toUpperCase match
+          case "OPENJDK" => Vendor.OpenJDK
+          case "ORACLE"  => Vendor.Oracle
+          case _         => Vendor.Oracle // default to oracle
 
 enum Kind(val asString: String):
   case JRE extends Kind("JRE")
   case JDK extends Kind("JDK")
 
-  override def toString(): String = // TODO remove this - for backward compatibility only
-    asString
+object Kind:
+  val reads: Reads[Kind] =
+    JsPath
+      .read[String]
+      .map:
+        _.toUpperCase match
+          case "JRE" => Kind.JRE
+          case "JDK" => Kind.JDK
+          case _     => Kind.JDK // default to JDK

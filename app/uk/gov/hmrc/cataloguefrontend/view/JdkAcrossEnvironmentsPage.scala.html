@@ -106,7 +106,7 @@
             let data = new google.visualization.DataTable();
             data.addColumn('string', 'Environment');
             @for((version, vendor) <- jdks) {
-                data.addColumn('number','@version @vendor');
+                data.addColumn('number','@version @vendor.asString');
             }
 
             data.addRows([

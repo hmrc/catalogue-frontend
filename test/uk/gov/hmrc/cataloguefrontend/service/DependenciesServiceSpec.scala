@@ -126,7 +126,7 @@ class SlugInfoServiceSpec
         name          = "test",
         version       = Version("1.0.0"),
         runnerVersion = "0.5.4",
-        java          = ServiceJdkVersion("1.8.222", "openjdk", "jre"),
+        java          = ServiceJdkVersion("1.8.222", Vendor.OpenJDK, Kind.JRE),
         classpath     = "",
         dependencies  = Seq(depFoo),
         environment   = None
@@ -142,7 +142,7 @@ class SlugInfoServiceSpec
         name                 = "test",
         version              = Version("1.0.0"),
         runnerVersion        = "0.5.4",
-        java                 = ServiceJdkVersion("1.8.222", "openjdk", "jre"),
+        java                 = ServiceJdkVersion("1.8.222", Vendor.OpenJDK, Kind.JRE),
         classpath            = "",
         dependencies         = Seq(depFoo, depBar),
         environment          = None,

@@ -129,9 +129,9 @@ class ServiceDependenciesConnectorSpec
       }"""
       val res = Json.fromJson[ServiceDependencies](Json.parse(json)).get
 
-      res.java.version shouldBe "1.8.0_191"
-      res.java.vendor  shouldBe "OpenJDK"
-      res.java.kind    shouldBe "JDK"
+      res.java.version         shouldBe "1.8.0_191"
+      res.java.vendor.asString shouldBe "OpenJDK"
+      res.java.kind.asString   shouldBe "JDK"
     }
   }
 }
