@@ -16,8 +16,10 @@
 
 @import uk.gov.hmrc.cataloguefrontend.deployments.routes
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.model.UserName
+@import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Username, DeploymentHistory, Pagination}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentHistory, Pagination}
 @import views.html.helper.{FieldConstructor, select}
 
 @this()
@@ -25,7 +27,6 @@
 @(selectedEnv       : Environment,
   deployments       : Seq[DeploymentHistory],
   teams             : Seq[GitHubTeam],
-  userProfileBaseUrl: Option[String],
   pagination        : Pagination,
   form              : Form[?]
 )(implicit
@@ -184,7 +185,7 @@
           @if(pagination.page <= 0) {
               <a class="btn btn-outline-secondary" href="#">Prev</a>
           }else {
-              <a class="btn btn-outline-secondary" href="@{Pagination.uriForPage(request.uri, pagination.page - 1)}">Prev</a>
+              <a class="btn btn-outline-secondary" href="@Pagination.uriForPage(request.uri, pagination.page - 1)">Prev</a>
           }
       </td>
       <td colspan="3">
@@ -195,19 +196,19 @@
           }
       </td>
       <td style="text-align: right">
-          @if( (pagination.page * pagination.pageSize) + deployments.length >= pagination.total) {
+          @if((pagination.page * pagination.pageSize) + deployments.length >= pagination.total) {
               <a class="btn btn-outline-secondary" href="#">Next</a>
           } else {
-              <a class="btn btn-outline-secondary" href="@{Pagination.uriForPage(request.uri, pagination.page + 1) }">Next</a>
+              <a class="btn btn-outline-secondary" href="@Pagination.uriForPage(request.uri, pagination.page + 1)">Next</a>
           }
       </td>
   </tr>
 }
 
-@userLink(username: Username) = {
-    @if(username.asString.equalsIgnoreCase("remoterequest")) {
+@userLink(username: UserName) = {
+    @if(username.asString.equalsIgnoreCase("remoterequest") || username.asString.startsWith("service_")) {
         <span>@{username.asString}</span>
     } else {
-        @userProfileBaseUrl.map { url => <a href= "@url/@{username.asString}" target="_blank" rel="noreferrer noopener">@{username.asString}<span class="glyphicon glyphicon-new-window"></span></a> }.getOrElse(username.asString)
+        <a href="@userRoutes.UsersController.user(username).url">@username.asString</a>
     }
 }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import org.apache.http.client.utils.URIBuilder
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, UserName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.net.URI
@@ -52,7 +52,6 @@ object JsonCodecs:
       case Left(l)  => JsError(__, l)
 
   val timeSeenFormat        : Format[TimeSeen]         = format(TimeSeen.apply        , _.time    )
-  val usernameReads         : Format[Username]         = format(Username.apply        , _.asString)
   val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, _.asString)
 
   val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] =
@@ -114,7 +113,7 @@ object JsonCodecs:
     ~ (__ \ "version"    ).read[Version](Version.format)
     ~ (__ \ "teams"      ).read[Seq[TeamName]]
     ~ (__ \ "time"       ).read[TimeSeen](timeSeenFormat)
-    ~ (__ \ "username"   ).read[Username](usernameReads)
+    ~ (__ \ "username"   ).read[UserName](UserName.format)
     )(DeploymentHistory.apply)
 
   val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] =
@@ -188,10 +187,8 @@ case class DeploymentHistory(
   version    : Version,
   teams      : Seq[TeamName],
   time       : TimeSeen,
-  username   : Username
+  username   : UserName
 )
-
-case class Username(asString: String)
 
 case class Pagination(
   page    : Int,

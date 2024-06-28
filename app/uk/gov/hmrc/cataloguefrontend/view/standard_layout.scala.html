@@ -228,7 +228,7 @@
                     @partials.with_username { username =>
                       <li class="nav-item dropdown">
                           <a id="logged-in-user" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                              @username
+                              @username.asString
                           </a>
                           <ul class="dropdown-menu">
                               <li><a id="profile" class="dropdown-item" href="@userRoutes.UsersController.user(username)">Profile</a></li>

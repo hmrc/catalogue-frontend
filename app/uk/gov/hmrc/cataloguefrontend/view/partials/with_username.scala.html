@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 
-@(ifLoggedIn: String => Html)(ifNotLoggedIn: => Html)(implicit request: RequestHeader)
+@(ifLoggedIn: UserName => Html)(ifNotLoggedIn: => Html)(implicit request: RequestHeader)
 
 @{
   request
@@ -26,5 +26,6 @@
       case u if u.startsWith("guest-") => "Guest"
       case u                           => u
     }
+    .map(UserName.apply)
     .fold(ifNotLoggedIn)(ifLoggedIn)
 }

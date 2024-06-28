@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 import play.api.Logging
 import play.api.libs.json.{Json, Reads}
 import play.api.libs.ws.writeableOf_JsValue
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, UmpTeam, User}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -64,10 +64,10 @@ class UserManagementConnector @Inject()(
           logger.warn(s"Unexpected response from user-management $url - ${e.getMessage}", e)
           Seq.empty[User]
 
-  def getUser(username: String)(using HeaderCarrier): Future[Option[User]] =
+  def getUser(username: UserName)(using HeaderCarrier): Future[Option[User]] =
     given Reads[User] = User.reads
     httpClientV2
-      .get(url"$baseUrl/user-management/users/$username")
+      .get(url"$baseUrl/user-management/users/${username.asString}")
       .execute[Option[User]]
 
   def createUser(userRequest: CreateUserRequest)(using HeaderCarrier): Future[Unit] =

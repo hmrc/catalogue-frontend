@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.deployments
 
 import cats.implicits._
-import play.api.Configuration
 import play.api.data.{Form, Forms}
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -37,8 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class DeploymentEventsController @Inject()(
   releasesConnector            : ReleasesConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  page                         : DeploymentEventsPage,
-  config                       : Configuration,
+  deploymentEventsPage         : DeploymentEventsPage,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
 )(using
@@ -48,15 +46,12 @@ class DeploymentEventsController @Inject()(
 
   import DeploymentEventsController._
 
-  //TODO: link to users page in catalogue rather than UMP - this config has been deleted
-  private val userProfileUrl = config.getOptional[String]("microservice.services.user-management.profileBaseUrl")
-
   def deploymentEvents(env: Environment = Production): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(BadRequest(page(env, Seq.empty, Seq.empty, None, Pagination(0, pageSize, 0), formWithErrors))),
+          formWithErrors => Future.successful(BadRequest(deploymentEventsPage(env, Seq.empty, Seq.empty, Pagination(0, pageSize, 0), formWithErrors))),
           validForm =>
             for
               deployments <- releasesConnector.deploymentHistory(
@@ -71,11 +66,10 @@ class DeploymentEventsController @Inject()(
               teams       <- teamsAndRepositoriesConnector.allTeams()
               pagination  =  Pagination(page = validForm.page.getOrElse(0), pageSize = pageSize, total = deployments.total)
             yield Ok(
-              page(
+              deploymentEventsPage(
                 env,
                 deployments.history,
                 teams.sortBy(_.name.asString),
-                userProfileUrl,
                 pagination,
                 form.fill(validForm)
               )

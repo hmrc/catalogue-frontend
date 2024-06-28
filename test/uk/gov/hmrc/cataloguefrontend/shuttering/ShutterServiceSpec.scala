@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -64,7 +63,7 @@ class ShutterServiceSpec
 
   val mockEvents = Seq(
       ShutterStateChangeEvent(
-          username    = "test.user"
+          username    = UserName("test.user")
         , timestamp   = Instant.now().minus(2, ChronoUnit.DAYS)
         , serviceName = ServiceName("abc-frontend")
         , environment = Environment.Production
@@ -73,7 +72,7 @@ class ShutterServiceSpec
         , cause       = ShutterCause.UserCreated
         )
     , ShutterStateChangeEvent(
-          username    = "fake.user"
+          username    = UserName("fake.user")
         , timestamp   = Instant.now()
         , serviceName = ServiceName("zxy-frontend")
         , environment = Environment.Production
@@ -82,7 +81,7 @@ class ShutterServiceSpec
         , cause       = ShutterCause.UserCreated
         )
     , ShutterStateChangeEvent(
-          username    = "test.user"
+          username    = UserName("test.user")
         , timestamp   = Instant.now().minus(1, ChronoUnit.DAYS)
         , serviceName = ServiceName("ijk-frontend")
         , environment = Environment.Production

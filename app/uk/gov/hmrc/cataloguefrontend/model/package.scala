@@ -25,7 +25,40 @@ import uk.gov.hmrc.cataloguefrontend.binders.Binders
 
 package object model:
 
-  case class Username(asString: String) extends AnyVal
+  case class UserName(asString: String) extends AnyVal
+
+  object UserName:
+    val format: Format[UserName] =
+      Format.of[String].inmap(UserName.apply, _.asString)
+
+    given Ordering[UserName] =
+      Ordering.by(_.asString.toLowerCase)
+
+    given pathBindable: PathBindable[UserName] =
+      Binders.pathBindableFromString(
+        s => Right(UserName(s)),
+        _.asString
+      )
+
+    implicit val queryStringBindable: QueryStringBindable[UserName] =
+      Binders.queryStringBindableFromString(
+        s => Some(Right(UserName(s))),
+        _.asString
+      )
+
+    val formFormat: Formatter[UserName] =
+      new Formatter[UserName]:
+        override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], UserName] =
+          data
+            .get(key)
+            .map(_.trim) match
+              case Some(s) if s.nonEmpty => Right(UserName(s))
+              case _                     => Left(Seq(FormError(key, s"$key is missing")))
+
+        override def unbind(key: String, value: UserName): Map[String, String] =
+          Map(key -> value.asString)
+
+  end UserName
 
   case class TeamName(asString: String) extends AnyVal
 

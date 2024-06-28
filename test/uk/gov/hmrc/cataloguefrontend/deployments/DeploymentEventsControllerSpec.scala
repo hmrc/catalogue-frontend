@@ -19,13 +19,12 @@ package uk.gov.hmrc.cataloguefrontend.deployments
 import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.Configuration
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.DeploymentEventsPage
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName, Version}
 import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere._
@@ -57,7 +56,6 @@ class DeploymentEventsControllerSpec
         mockedReleasesConnector,
         mockedTeamsAndRepositoriesConnector,
         page,
-        Configuration.empty,
         mcc,
         authComponent
       )
@@ -94,7 +92,7 @@ class DeploymentEventsControllerSpec
           Version("1.1.1"),
           Seq.empty,
           TimeSeen(d1),
-          Username("user_a")
+          UserName("user_a")
         )
       )
 
@@ -124,7 +122,7 @@ class DeploymentEventsControllerSpec
           Version("1.1.1"),
           Seq.empty,
           TimeSeen(d1),
-          Username("user_a")
+          UserName("user_a")
         )
       )
 

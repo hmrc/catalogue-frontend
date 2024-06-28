@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
 
 import java.time.Instant
@@ -170,7 +170,7 @@ object EventData:
 end EventData
 
 case class ShutterEvent(
-  username : String,
+  username : UserName,
   timestamp: Instant,
   eventType: EventType,
   data     : EventData
@@ -193,7 +193,7 @@ case class ShutterEvent(
 
 /** Special case flattened */
 case class ShutterStateChangeEvent(
-  username   : String,
+  username   : UserName,
   timestamp  : Instant,
   serviceName: ServiceName,
   environment: Environment,
@@ -206,7 +206,7 @@ object ShutterEvent:
 
   val reads: Reads[ShutterEvent] =
     given Reads[EventType] = EventType.format
-    ( (__ \ "username" ).read[String]
+    ( (__ \ "username" ).read[UserName](UserName.format)
     ~ (__ \ "timestamp").read[Instant]
     ~ (__ \ "type"     ).read[EventType]
     ~ (__ \ "type"     ).read[EventType]

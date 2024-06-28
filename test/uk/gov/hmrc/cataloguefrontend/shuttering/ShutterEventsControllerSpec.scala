@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import java.time.Instant
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.mockito.ArgumentMatchers.{any, eq => eqTo}
@@ -29,16 +28,16 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterCause.UserCreated
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterStatus.Unshuttered
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType.Frontend
-
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.Retrieval
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -136,7 +135,7 @@ private object ShutterEventsControllerSpec {
   val ShutterEventCssSelector = ".shutter-events > tbody > tr"
 
   def sampleEvent = ShutterStateChangeEvent(
-    "username",
+    UserName("username"),
     timestamp = Instant.now(),
     ServiceName("service name"),
     environment = Environment.Development,
