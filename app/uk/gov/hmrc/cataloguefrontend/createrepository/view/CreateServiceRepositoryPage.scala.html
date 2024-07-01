@@ -19,8 +19,7 @@
 @this()
 
 @(form     : Form[?],
-  teamNames: Seq[TeamName],
-  repoTypes: Seq[CreateServiceRepositoryType]
+  teamNames: Seq[TeamName]
  )(implicit
    messages: Messages,
    request : RequestHeader
@@ -104,7 +103,7 @@
                     <p class="mt-2">Repositories automatically include HMRC templating, depending on the type of microservice they support. Choose how you would like this repository to be set up.
                     </p>
                     <select class="form-select" id="typeInput" name="repoType">
-                        @repoTypes.map { rt =>
+                        @CreateServiceRepositoryType.values.map { rt =>
                          <option value="@{rt.asString}"
                                  @if(form.data.getOrElse("repoType", "").equals(rt.asString)) { selected="selected" else ""}
                          >@rt.asString</option>

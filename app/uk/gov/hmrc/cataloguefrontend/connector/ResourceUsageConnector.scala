@@ -58,7 +58,7 @@ class ResourceUsageConnector @Inject() (
                 acc.lastOption match
                   case Some(previous) =>
                     Environment
-                      .valuesAsSeq.map: env =>
+                      .values.map: env =>
                         env -> resourceUsages
                                 .find(_.environment == env).map(_.deploymentSize)
                                 .orElse(previous.values.get(env))
@@ -66,7 +66,7 @@ class ResourceUsageConnector @Inject() (
                       .toMap
                   case None =>
                     Environment
-                      .valuesAsSeq.map: env =>
+                      .values.map: env =>
                         env -> resourceUsages
                                 .find(_.environment == env).map(_.deploymentSize)
                                 .getOrElse(DeploymentSize.empty)

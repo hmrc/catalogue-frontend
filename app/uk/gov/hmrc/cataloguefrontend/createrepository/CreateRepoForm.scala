@@ -59,7 +59,7 @@ object CreateServiceRepoForm:
         "repositoryName" -> Forms.nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> Forms.boolean,
         "teamName"       -> Forms.of[TeamName](TeamName.formFormat),
-        "repoType"       -> Forms.of[CreateServiceRepositoryType].transform(_.asString, s => Parser.parse[CreateServiceRepositoryType](s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
+        "repoType"       -> Forms.of[CreateServiceRepositoryType].transform(_.asString, s => Parser[CreateServiceRepositoryType].parse(s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
         .verifying(repoTypeAndNameConstraints*)
     )
@@ -82,7 +82,7 @@ object CreateTestRepoForm:
         "repositoryName" -> Forms.nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> Forms.boolean,
         "teamName"       -> Forms.of[TeamName](TeamName.formFormat),
-        "repoType"       -> Forms.of[CreateTestRepositoryType].transform(_.asString, s => Parser.parse[CreateTestRepositoryType](s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
+        "repoType"       -> Forms.of[CreateTestRepositoryType].transform(_.asString, s => Parser[CreateTestRepositoryType].parse(s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
         .verifying(repoTypeAndNameConstraints*)
     )

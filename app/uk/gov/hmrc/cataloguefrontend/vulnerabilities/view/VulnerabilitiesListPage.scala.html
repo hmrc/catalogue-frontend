@@ -71,7 +71,7 @@
                 <div class="col-md-2">
                     @select(
                         field                 =  form("curationStatus"),
-                        options               =  (""->"All") +: CurationStatus.valuesAsSeq.map(cs => cs.asString -> cs.display),
+                        options               =  ("" -> "All") +: CurationStatus.values.toSeq.map(cs => cs.asString -> cs.displayString),
                         Symbol("_label")      -> "Curation status:",
                         Symbol("_labelClass") -> "form-label",
                         Symbol("id")          -> "curation-status-search",
@@ -81,7 +81,7 @@
                 <div class="col-md-2">
                     @select(
                         field                 =  form("flag"),
-                        options               =  SlugInfoFlag.values.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString),
+                        options               =  SlugInfoFlag.values.toSeq.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString),
                         Symbol("_label")      -> "Flag",
                         Symbol("_labelClass") -> "form-label",
                         Symbol("id")          -> "flag-filter",
@@ -174,7 +174,7 @@
             <td class="vulnerability">@summary.distinctVulnerability.id</td>
             <td class="component">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
             <td class="assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-            <td class="curation-status text-center"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+            <td class="curation-status text-center"><div>@summary.distinctVulnerability.curationStatus.map(_.displayString).getOrElse("")</div></td>
             <td class="score text-center">@summary.distinctVulnerability.score.getOrElse("")</td>
             <td class="services text-center">@summary.occurrences.groupBy(_.service).size</td>
             <td class="first-detected text-center">@summary.distinctVulnerability.firstDetected.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")</td>
@@ -192,7 +192,7 @@
             <td class="vulnerability d-none">@summary.distinctVulnerability.id</td>
             <td class="component d-none">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
             <td class="assessment d-none">@summary.distinctVulnerability.assessment.getOrElse("")</td>
-            <td class="curation-status d-none"><div>@summary.distinctVulnerability.curationStatus.map(_.display).getOrElse("")</div></td>
+            <td class="curation-status d-none"><div>@summary.distinctVulnerability.curationStatus.map(_.displayString).getOrElse("")</div></td>
             <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
             <td class="services d-none">@summary.occurrences.groupBy(_.service).size</td>
             <td class="first-detected d-none">@summary.distinctVulnerability.firstDetected.map(_.asPattern(`yyyy-MM-dd`)).getOrElse("")</td>

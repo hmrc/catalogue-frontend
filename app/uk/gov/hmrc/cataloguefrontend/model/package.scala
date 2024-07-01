@@ -16,27 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
+import play.api.data.FormError
+import play.api.data.format.Formatter
 import play.api.mvc.{PathBindable, QueryStringBindable}
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, JsError, JsObject, JsString, JsSuccess, JsValue}
-import play.api.data.FormError
-import play.api.data.format.Formatter
 import uk.gov.hmrc.cataloguefrontend.binders.Binders
-import uk.gov.hmrc.cataloguefrontend.util.FromString
 
 package object model:
 
-  /*extension (obj: Ordering.type)
-    def derived[A <: FromString]: Ordering[A] =
-      Ordering.by(_.asString.toLowerCase)
-
-    // inline def derived[T]: Ordering[T] =
-    //   ${ derivedMacro[T] }
-
-    // def derivedMacro[T: quoted.Type](using quoted.Quotes): quoted.Expr[Ordering[T]] = ???
-*/
-
-  case class UserName(asString: String) extends AnyVal// with FromString derives Ordering
+  case class UserName(asString: String) extends AnyVal
 
   object UserName:
     val format: Format[UserName] =
@@ -58,16 +47,10 @@ package object model:
       )
 
     val formFormat: Formatter[UserName] =
-      new Formatter[UserName]:
-        override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], UserName] =
-          data
-            .get(key)
-            .map(_.trim) match
-              case Some(s) if s.nonEmpty => Right(UserName(s))
-              case _                     => Left(Seq(FormError(key, s"$key is missing")))
-
-        override def unbind(key: String, value: UserName): Map[String, String] =
-          Map(key -> value.asString)
+      Binders.formFormatFromString(
+        s => Right(UserName(s)),
+        _.asString
+      )
 
   end UserName
 
@@ -93,16 +76,10 @@ package object model:
       )
 
     val formFormat: Formatter[TeamName] =
-      new Formatter[TeamName]:
-        override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], TeamName] =
-          data
-            .get(key)
-            .map(_.trim) match
-              case Some(s) if s.nonEmpty => Right(TeamName(s))
-              case _                     => Left(Seq(FormError(key, s"$key is missing")))
-
-        override def unbind(key: String, value: TeamName): Map[String, String] =
-          Map(key -> value.asString)
+      Binders.formFormatFromString(
+        s => Right(TeamName(s)),
+        _.asString
+      )
 
   end TeamName
 
@@ -116,16 +93,10 @@ package object model:
       Ordering.by(_.asString.toLowerCase)
 
     val formFormat: Formatter[ServiceName] =
-      new Formatter[ServiceName]:
-        override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], ServiceName] =
-          data
-            .get(key)
-            .map(_.trim) match
-              case Some(s) if s.nonEmpty => Right(ServiceName(s))
-              case _                     => Left(Seq(FormError(key, s"$key is missing")))
-
-        override def unbind(key: String, value: ServiceName): Map[String, String] =
-          Map(key -> value.asString)
+      Binders.formFormatFromString(
+        s => Right(ServiceName(s)),
+        _.asString
+      )
 
   end ServiceName
 

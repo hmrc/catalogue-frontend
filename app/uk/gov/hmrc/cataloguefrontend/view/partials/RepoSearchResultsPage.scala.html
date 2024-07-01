@@ -41,7 +41,7 @@
     </td>
 
     <td class="repo-type font-monospace" id="row@{i}_repotype">
-        @repo.serviceType.map(_.displayString).getOrElse(repo.repoType.asString)
+        @repo.serviceType.map(st => s"Service (${st.displayString})").getOrElse(repo.repoType.asString)
     </td>
 
     <td id="row@{i}_team">

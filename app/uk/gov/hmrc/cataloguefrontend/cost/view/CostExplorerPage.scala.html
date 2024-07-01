@@ -77,7 +77,7 @@
                     <tr>
                         <th rowspan="2"><button role="button" id="name" data-sort="repo-name" class="fw-bold sort no-border">
                             Application Name</button></th>
-                        @Environment.valuesAsSeq.map { environment =>
+                        @Environment.values.map { environment =>
                             <th colspan="2" style="text-align: center">@environment.toString</th>
                         }
                         <th rowspan="2" style="text-align: center">
@@ -87,7 +87,7 @@
                         </th>
                     </tr>
                     <tr>
-                    @Environment.valuesAsSeq.map(_ =>
+                    @Environment.values.map(_ =>
                         <th>Slots</th>
                         <th>Instances</th>
                     )
@@ -99,7 +99,7 @@
                     <td class="repo-name" id="row@{
                         index
                     }_name"><a id="link-to-@serviceName-page" href="/repositories/@serviceName.asString">@serviceName.asString</a></td>
-                    @Environment.valuesAsSeq.map { env =>
+                    @Environment.values.map { env =>
                         <td style="text-align: center">@configs.find(_.environment == env).map(_.deploymentSize.slots)</td>
                         <td style="text-align: center">@configs.find(_.environment == env).map(_.deploymentSize.instances)</td>
                     }

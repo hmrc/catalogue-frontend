@@ -114,7 +114,7 @@ final class CostEstimationServiceSpec
       "it exists" in {
         val zone = "public"
 
-        val result = Parser.parse[Zone](zone)
+        val result = Parser[Zone].parse(zone)
 
         result shouldBe Right(Zone.Public)
       }
@@ -123,7 +123,7 @@ final class CostEstimationServiceSpec
       "zone doesn't exists" in {
         val invalidZone = "invalid-zone"
 
-        val result = Parser.parse[Zone](invalidZone)
+        val result = Parser[Zone].parse(invalidZone)
 
         result shouldBe Left("Invalid value: \"invalid-zone\" - should be one of: protected, public, protected-rate, public-monolith, public-rate, private")
       }

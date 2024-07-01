@@ -62,7 +62,7 @@ class DependenciesController @Inject() (
   def graphs(name: ServiceName, version: String, scope: String): Action[AnyContent] =
     BasicAuthAction.async { implicit  request =>
       (for
-         scope        <- EitherT.fromEither[Future](Parser.parse[DependencyScope](scope))
+         scope        <- EitherT.fromEither[Future](Parser[DependencyScope].parse(scope))
                            .leftMap(_ => BadRequest(s"Invalid scope $scope"))
          dependencies <- EitherT.fromOptionF(
                            dependenciesService.getServiceDependencies(name, Version(version)),

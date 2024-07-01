@@ -57,7 +57,7 @@ class CostController @Inject() (
         val configEstimateCosts = String.format("%.0f", configList.map(_.deploymentSize.totalSlots.costGbp(costEstimateConfig)).sum)
 
         val slotsAndInstances =
-          Environment.valuesAsSeq.flatMap: env =>
+          Environment.values.flatMap: env =>
             Seq(
               s"slots.{${env.asString}}" -> configList.find(_.environment == env).map(_.deploymentSize.slots.toString).getOrElse(""),
               s"instances.{${env.asString}}" -> configList.find(_.environment == env).map(_.deploymentSize.instances.toString).getOrElse("")

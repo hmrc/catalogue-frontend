@@ -38,34 +38,39 @@ import FromStringEnum._
 
 given Parser[RepoType] = Parser.parser(RepoType.values)
 
-enum RepoType(val asString: String) extends FromString derives Ordering, Reads, Writes, FormFormat:
+enum RepoType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads, Writes, FormFormat:
   case Service   extends RepoType("Service"  )
   case Library   extends RepoType("Library"  )
   case Prototype extends RepoType("Prototype")
   case Test      extends RepoType("Test"     )
   case Other     extends RepoType("Other"    )
 
-object RepoType extends FromStringEnum[RepoType]
-
 given Parser[ServiceType] = Parser.parser(ServiceType.values)
 
-enum ServiceType(val asString: String, val displayString: String) extends FromString derives Ordering, Reads, Writes, FormFormat, QueryStringBindable:
-  case Frontend extends ServiceType(asString = "frontend", displayString = "Service (Frontend)")
-  case Backend  extends ServiceType(asString = "backend" , displayString = "Service (Backend)")
-
-object ServiceType extends FromStringEnum[ServiceType]
+enum ServiceType(
+  override val asString: String,
+  val displayString    : String
+) extends FromString
+  derives Ordering, Reads, Writes, FormFormat, QueryStringBindable:
+  case Frontend extends ServiceType(asString = "frontend", displayString = "Frontend")
+  case Backend  extends ServiceType(asString = "backend" , displayString = "Backend")
 
 given Parser[Tag] = Parser.parser(Tag.values)
 
-enum Tag(val asString: String, val displayString: String) extends FromString derives Ordering, Reads:
+enum Tag(
+  override val asString: String,
+  val displayString    : String
+) extends FromString
+  derives Ordering, Reads:
   case AdminFrontend    extends Tag(asString = "admin"             , displayString = "Admin Frontend"    )
   case Api              extends Tag(asString = "api"               , displayString = "API"               )
   case BuiltOffPlatform extends Tag(asString = "built-off-platform", displayString = "Built Off Platform")
   case Maven            extends Tag(asString = "maven"             , displayString = "Maven"             )
   case Stub             extends Tag(asString = "stub"              , displayString = "Stub"              )
 
-
-object Tag extends FromStringEnum[Tag]
 
 case class Link(
   name       : String,
@@ -103,12 +108,13 @@ object BuildData:
 
 given Parser[BuildJobType] = Parser.parser(BuildJobType.values)
 
-enum BuildJobType(val asString: String) extends FromString derives Ordering, Reads:
+enum BuildJobType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads:
   case Job         extends BuildJobType("job"         )
   case Pipeline    extends BuildJobType("pipeline"    )
   case PullRequest extends BuildJobType("pull-request")
-
-object BuildJobType extends FromStringEnum[BuildJobType]
 
 case class JenkinsJob(
   name       : String,

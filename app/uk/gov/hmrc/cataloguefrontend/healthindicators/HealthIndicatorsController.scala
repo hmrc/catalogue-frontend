@@ -66,7 +66,7 @@ class HealthIndicatorsController @Inject() (
                                      )
               teams               <- teamsAndRepositoriesConnector.allTeams()
               indicators          =  indicatorsWithTeams.filter(t => validForm.team.fold(true)(t.owningTeams.contains))
-            yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.valuesAsSeq, teams.sortBy(_.name), form.fill(validForm)))
+            yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.values.toSeq, teams.sortBy(_.name), form.fill(validForm)))
         )
     }
 end HealthIndicatorsController

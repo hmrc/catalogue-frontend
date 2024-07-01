@@ -22,6 +22,9 @@ import play.api.libs.json.{JsError, JsString, JsSuccess, Reads, Writes}
 import play.api.mvc.{PathBindable, QueryStringBindable}
 import uk.gov.hmrc.cataloguefrontend.binders.Binders
 
+trait FromString { def asString: String }
+
+// Kleisli[Either[String, _], String, T]
 trait Parser[T] { def parse(s: String): Either[String, T] }
 
 object Parser:
@@ -31,18 +34,8 @@ object Parser:
         .find(_.asString.equalsIgnoreCase(s))
         .toRight(s"Invalid value: \"$s\" - should be one of: ${values.map(_.asString).mkString(", ")}")
 
-  def parse[T](s: String)(using parser: Parser[T]): Either[String, T] =
-    parser.parse(s)
+  @inline def apply[T](using instance: Parser[T]): Parser[T] = instance
 
-trait FromString { def asString: String }
-
-trait FromStringEnum[T <: scala.reflect.Enum with FromString]:
-  def values: Array[T]
-
-  lazy val valuesAsSeq: Seq[T] =
-    scala.collection.immutable.ArraySeq.unsafeWrapArray(values)
-
-end FromStringEnum
 
 // Formatter does not have a companion object - so we can't extend it (like we have for other type)
 // lets create an alias (name shows our usage intent better) with companion object
@@ -54,15 +47,13 @@ object FormFormat:
       override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], A] =
         data
           .get(key)
-          .flatMap(Parser.parse[A](_).toOption)
+          .flatMap(Parser[A].parse(_).toOption)
           .fold[Either[Seq[FormError], A]](Left(Seq(FormError(key, "Invalid value"))))(Right.apply)
 
       override def unbind(key: String, value: A): Map[String, String] =
         Map(key -> value.asString)
 
 object FromStringEnum:
-  import scala.deriving.Mirror
-
   extension (obj: Ordering.type)
     def derived[A <: scala.reflect.Enum]: Ordering[A] =
       Ordering.by(_.ordinal)
@@ -74,15 +65,15 @@ object FromStringEnum:
   extension (obj: Reads.type)
     def derived[A : Parser]: Reads[A] =
       _.validate[String]
-        .flatMap(Parser.parse[A](_).fold(JsError(_), JsSuccess(_)))
+        .flatMap(Parser[A].parse(_).fold(JsError(_), JsSuccess(_)))
 
   extension (obj: PathBindable.type)
     def derived[A <: FromString : Parser]: PathBindable[A] =
-      Binders.pathBindableFromString(Parser.parse, _.asString)
+      Binders.pathBindableFromString(Parser[A].parse, _.asString)
 
   extension (obj: QueryStringBindable.type)
     def derived[A <: FromString : Parser]: QueryStringBindable[A] =
       Binders.queryStringBindableFromString(
-        s => Some(Parser.parse[A](s)),
+        s => Some(Parser[A].parse(s)),
         _.asString
       )

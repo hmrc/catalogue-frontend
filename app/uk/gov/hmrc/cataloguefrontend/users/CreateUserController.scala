@@ -59,7 +59,7 @@ class CreateUserController @Inject()(
       continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
     ).apply { implicit request =>
-      Ok(createUserPage(CreateUserForm.form, cleanseUserTeams(request.retrieval), Organisation.valuesAsSeq, isServiceAccount))
+      Ok(createUserPage(CreateUserForm.form, cleanseUserTeams(request.retrieval), Organisation.values.toSeq, isServiceAccount))
     }
 
   def createUser(isServiceAccount: Boolean): Action[AnyContent] =
@@ -75,7 +75,7 @@ class CreateUserController @Inject()(
                          createUserPage(
                            form             = formWithErrors,
                            teamNames        = cleanseUserTeams(request.retrieval),
-                           organisations    = Organisation.valuesAsSeq,
+                           organisations    = Organisation.values.toSeq,
                            isServiceAccount = isServiceAccount
                          )
                        )

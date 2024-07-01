@@ -256,12 +256,14 @@ object BuildDeployApiConnector:
 
   given Parser[PrototypeStatus] = Parser.parser(PrototypeStatus.values)
 
-  enum PrototypeStatus(val asString: String, val displayString: String) extends FromString derives Ordering, Reads, PathBindable:
+  enum PrototypeStatus(
+    override val asString: String,
+    val displayString    : String
+  ) extends FromString
+    derives Ordering, Reads, PathBindable:
     case Running      extends PrototypeStatus(asString = "running"     , displayString = "Running"     )
     case Stopped      extends PrototypeStatus(asString = "stopped"     , displayString = "Stopped"     )
     case Undetermined extends PrototypeStatus(asString = "undetermined", displayString = "Undetermined")
-
-  object PrototypeStatus extends FromStringEnum[PrototypeStatus]
 
   case class PrototypeDetails(
     url   : Option[String],

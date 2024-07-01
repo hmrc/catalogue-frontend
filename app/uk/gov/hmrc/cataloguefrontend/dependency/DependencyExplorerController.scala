@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, RepoWithDependency, given}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, given}
 import uk.gov.hmrc.cataloguefrontend.dependency.view.html.DependencyExplorerPage
-import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, VersionRange}
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, VersionRange, given}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, FormUtils, Parser}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -39,11 +39,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependencyExplorerController @Inject() (
-  override val mcc   : MessagesControllerComponents,
-  trConnector        : TeamsAndRepositoriesConnector,
-  dependenciesService: DependenciesService,
-  page               : DependencyExplorerPage,
-  override val auth  : FrontendAuthComponents
+  override val mcc      : MessagesControllerComponents,
+  trConnector           : TeamsAndRepositoriesConnector,
+  dependenciesService   : DependenciesService,
+  dependencyExplorerPage: DependencyExplorerPage,
+  override val auth     : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -51,13 +51,14 @@ class DependencyExplorerController @Inject() (
 
   import DependencyExplorerController._
 
+
   def landing: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         groupArtefacts <- dependenciesService.getGroupArtefacts()
       yield Ok(
-        page(
+        dependencyExplorerPage(
           form           = form.fill(
                              SearchForm(
                                team         = "",
@@ -70,13 +71,13 @@ class DependencyExplorerController @Inject() (
                              )
                            ),
           teams          = teams,
-          flags          = SlugInfoFlag.values,
-          scopes         = DependencyScope.valuesAsSeq,
+          flags          = SlugInfoFlag.values.toSeq,
+          scopes         = DependencyScope.values.toSeq,
           groupArtefacts = groupArtefacts,
           versionRange   = VersionRange(None, None, None, ""),
           searchResults  = None,
           pieData        = None,
-          repoTypes      = RepoType.valuesAsSeq.filterNot(_ == RepoType.Prototype)
+          repoTypes      = RepoType.values.toSeq.filterNot(_ == RepoType.Prototype)
         )
       )
     }
@@ -94,9 +95,9 @@ class DependencyExplorerController @Inject() (
     BasicAuthAction.async(implicit request =>
       for
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
-        flags          =  SlugInfoFlag.values
-        scopes         =  DependencyScope.valuesAsSeq
-        repoTypes      =  RepoType.valuesAsSeq.filterNot(_ == RepoType.Prototype)
+        flags          =  SlugInfoFlag.values.toSeq
+        scopes         =  DependencyScope.values.toSeq
+        repoTypes      =  RepoType.values.toSeq.filterNot(_ == RepoType.Prototype)
         groupArtefacts <- dependenciesService.getGroupArtefacts()
         filledForm     =
           SearchForm(
@@ -110,7 +111,7 @@ class DependencyExplorerController @Inject() (
           )
         res <- {
           def pageWithError(msg: String) =
-            page(
+            dependencyExplorerPage(
               form.fill(filledForm).withGlobalError(msg),
               teams,
               flags,
@@ -127,7 +128,7 @@ class DependencyExplorerController @Inject() (
               hasErrors = formWithErrors => {
                 Future.successful(
                   BadRequest(
-                    page(formWithErrors, teams, flags, repoTypes, scopes, groupArtefacts, versionRange = VersionRange(None, None, None, ""), searchResults = None, pieData = None)
+                    dependencyExplorerPage(formWithErrors, teams, flags, repoTypes, scopes, groupArtefacts, versionRange = VersionRange(None, None, None, ""), searchResults = None, pieData = None)
                   )
                 )
               },
@@ -135,12 +136,13 @@ class DependencyExplorerController @Inject() (
                 (for
                   versionRange <- EitherT.fromOption[Future](VersionRange.parse(query.versionRange), BadRequest(pageWithError(s"Invalid version range")))
                   team         =  Option.when(query.team.nonEmpty)(TeamName(query.team))
-                  flag         <- EitherT.fromOption[Future](SlugInfoFlag.parse(query.flag), BadRequest(pageWithError("Invalid flag")))
+                  flag         <- EitherT.fromEither[Future](Parser[SlugInfoFlag].parse(query.flag))
+                                    .leftMap(msg => BadRequest(pageWithError(msg)))
                   scope        <- query.scope.traverse: s =>
-                                    EitherT.fromEither[Future](Parser.parse[DependencyScope](s))
+                                    EitherT.fromEither[Future](Parser[DependencyScope].parse(s))
                                       .leftMap(msg => BadRequest(pageWithError(msg)))
                   repoType     <- query.repoType.traverse: s =>
-                                    EitherT.fromEither[Future](Parser.parse[RepoType](s))
+                                    EitherT.fromEither[Future](Parser[RepoType].parse(s))
                                       .leftMap(msg => BadRequest(pageWithError(msg)))
                   results      <- EitherT.right[Result]:
                                     dependenciesService
@@ -166,7 +168,7 @@ class DependencyExplorerController @Inject() (
                     )
                   else
                     Ok(
-                      page(
+                      dependencyExplorerPage(
                         form.fill(filledForm),
                         teams,
                         flags,

@@ -22,7 +22,7 @@ import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import play.api.http.HttpEntity
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.view.html.{ConfigExplorerPage, ConfigWarningPage, SearchConfigPage}
@@ -96,9 +96,9 @@ class ServiceConfigsController @Inject()(
                                                         , environments    = formObject.showEnvironments
                                                         , serviceType     = formObject.serviceType
                                                         , key             = formObject.configKey
-                                                        , keyFilterType   = KeyFilterType.toKeyFilterType(formObject.configKeyIgnoreCase)
+                                                        , keyFilterType   = KeyFilterType(formObject.configKeyIgnoreCase)
                                                         , value           = formObject.configValue
-                                                        , valueFilterType = ValueFilterType.toValueFilterType(formObject.valueFilterType, formObject.configValueIgnoreCase)
+                                                        , valueFilterType = ValueFilterType(formObject.valueFilterType, formObject.configValueIgnoreCase)
                                                         )).leftMap(msg => Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys)))
                                                           .map(Option.apply)
                               (groupedByKey, groupedByService)
@@ -194,7 +194,7 @@ object SearchConfig {
   , configValue          : Option[String]      = None
   , configValueIgnoreCase: Boolean             = true
   , valueFilterType      : FormValueFilterType = FormValueFilterType.Contains
-  , showEnvironments     : Seq[Environment]    = Environment.valuesAsSeq.filterNot(_ == Environment.Integration)
+  , showEnvironments     : Seq[Environment]    = Environment.values.toSeq.filterNot(_ == Environment.Integration)
   , serviceType          : Option[ServiceType] = None
   , teamChange           : Boolean             = false
   , asCsv                : Boolean             = false

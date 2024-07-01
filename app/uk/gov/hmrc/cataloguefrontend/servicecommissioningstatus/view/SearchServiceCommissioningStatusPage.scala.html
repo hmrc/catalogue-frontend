@@ -117,14 +117,14 @@
                     Symbol("_labelClass") -> "form-label",
                     Symbol("class")       -> "form-select",
                     Symbol("multiple")    -> None,
-                    Symbol("size")        -> Environment.valuesAsSeq.size
+                    Symbol("size")        -> Environment.values.size
                 )
             </div>
             <div class="col-md-2">
                 <dl>
                     <dt><label>Environments</label></dt>
                     <dd>
-                        @for(env <-  Environment.valuesAsSeq) {
+                        @for(env <-  Environment.values) {
                             <div class="checkbox-group">
                                 <input name="environments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.environments.contains(env)) {checked} />
                                 <label class="form-check-label" for="@{env.asString}-checkbox">@env.displayString</label>

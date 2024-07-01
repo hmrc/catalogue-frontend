@@ -62,7 +62,7 @@
                 <div class="col-md-3">
                     @select(
                         field                 =  form("flag"),
-                        options               =  SlugInfoFlag.values.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString),
+                        options               =  SlugInfoFlag.values.toSeq.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString),
                         Symbol("_label")      -> "Flag",
                         Symbol("_labelClass") -> "form-label",
                         Symbol("id")          -> "flag-filter",

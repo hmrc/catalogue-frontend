@@ -137,10 +137,7 @@ object VulnerabilitiesExplorerFilter:
   lazy val form: Form[VulnerabilitiesExplorerFilter] =
     Form(
       Forms.mapping(
-        "flag"           -> Forms.optional(Forms.text).transform[SlugInfoFlag](
-                              opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
-                            , flag => Some(flag.asString)
-                            ),
+        "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply),
         "vulnerability"  -> Forms.optional(Forms.text),
         "curationStatus" -> Forms.optional(Forms.of[CurationStatus]),
         "service"        -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat)),
@@ -158,11 +155,7 @@ object VulnerabilitiesCountFilter:
   lazy val form: Form[VulnerabilitiesCountFilter] =
     Form(
       Forms.mapping(
-        "flag"    -> // TODO create Formatter
-                     Forms.optional(Forms.text).transform[SlugInfoFlag](
-                       opt  => opt.fold(SlugInfoFlag.Latest: SlugInfoFlag)(s => SlugInfoFlag.parse(s).getOrElse(SlugInfoFlag.Latest))
-                     , flag => Some(flag.asString)
-                     ),
+        "flag"    -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply),
         "service" -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat)),
         "team"    -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))

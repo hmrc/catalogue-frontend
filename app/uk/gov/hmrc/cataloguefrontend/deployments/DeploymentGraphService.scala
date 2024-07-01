@@ -71,8 +71,8 @@ object DeploymentGraphService:
 
   // generates a placeholder timeline event so that the timeline still shows the environment but with nothing deployed in it
   def noEventsPlaceholder(env: String, start: Instant, end: Instant): Seq[DeploymentTimelineEvent] =
-    Parser
-      .parse[Environment](env)
+    Parser[Environment]
+      .parse(env)
       .fold(
         _ => Seq.empty[DeploymentTimelineEvent]
       , e => Seq(DeploymentTimelineEvent(e, Version(notDeployedMessage), "", "", start.plusSeconds(1), end.minusSeconds(1)))

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import cats.implicits._
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsError, JsResult, JsSuccess, JsValue, Reads, __}
+import play.api.libs.json.{JsResult, JsString, JsValue, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 import java.time.LocalDate
@@ -39,23 +39,21 @@ private object DataFormat:
 
   def dataReads[A: Reads]: Reads[Map[(BobbyRule, SlugInfoFlag), A]] =
     given Reads[BobbyRule] = BobbyRule.reads
-    summon[Reads[List[(JsValue, Map[String, A])]]]
-      .flatMap: x =>
-        val y = x // List
-         .flatTraverse: (k1, v1) =>
-            v1
-              .toList.traverse: (k2, v2) =>
-                SlugInfoFlag.parse(k2) match
-                  case Some(flag) =>
-                    JsSuccess:
+    summon[Reads[List[(JsValue, Map[JsString, A])]]]
+      .flatMap: l =>
+        _ =>
+          l
+            .flatTraverse: (k1, v1) =>
+              v1
+                .toList.traverse: (k2, v2) =>
+                  summon[Reads[SlugInfoFlag]].reads(k2)
+                    .map: flag =>
                       ( ( k1.as[BobbyRule]
                         , flag
                         )
                       , v2
                       )
-                  case None =>
-                    JsError(__, s"Invalid SlugInfoFlag $k2")
-        _ => y.map(_.toMap)
+            .map(_.toMap)
 
 object BobbyRulesSummary:
   val reads: Reads[BobbyRulesSummary] =

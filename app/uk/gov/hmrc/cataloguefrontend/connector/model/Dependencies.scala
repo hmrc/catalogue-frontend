@@ -194,7 +194,10 @@ object GroupArtefacts {
 
 given Parser[DependencyScope] = Parser.parser(DependencyScope.values)
 
-enum DependencyScope(val asString: String) extends FromString derives Ordering, Reads, Writes:
+enum DependencyScope(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads, Writes:
   case Compile  extends DependencyScope("compile" )
   case Provided extends DependencyScope("provided")
   case Test     extends DependencyScope("test"    )
@@ -205,6 +208,3 @@ enum DependencyScope(val asString: String) extends FromString derives Ordering, 
     asString match
       case "it"  => "Integration Test"
       case other => other.capitalize
-
-
-object DependencyScope extends FromStringEnum[DependencyScope]

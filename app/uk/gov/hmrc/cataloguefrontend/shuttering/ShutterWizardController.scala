@@ -108,8 +108,8 @@ class ShutterWizardController @Inject() (
   ): Future[Html] =
     for
       shutterStates <- shutterService.getShutterStates(shutterType, env)
-      envs          =  Environment.valuesAsSeq
-      statusValues  =  ShutterStatusValue.valuesAsSeq
+      envs          =  Environment.values
+      statusValues  =  ShutterStatusValue.values
       shutterGroups <- shutterService.shutterGroups()
       back          =  appRoutes.ShutterOverviewController.allStatesForEnv(shutterType, env)
     yield page1(form, shutterType, env, shutterStates, shutterGroups, back)

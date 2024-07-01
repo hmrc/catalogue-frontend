@@ -56,7 +56,7 @@ class RepositoriesController @Inject() (
       val (repoType, serviceType) = repoTypeString match
         case Some("FrontendService")  => (Some(RepoType.Service)        , Some(ServiceType.Frontend))
         case Some("BackendService")   => (Some(RepoType.Service)        , Some(ServiceType.Backend))
-        case Some(other)              => (Parser.parse[RepoType](other).toOption
+        case Some(other)              => ( Parser[RepoType].parse(other).toOption
                                          , None
                                          )
         case None                     => (None                          , None)

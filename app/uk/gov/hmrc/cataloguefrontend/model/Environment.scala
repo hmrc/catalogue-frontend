@@ -18,13 +18,17 @@ package uk.gov.hmrc.cataloguefrontend.model
 
 import play.api.libs.json.{Reads, Writes}
 import play.api.mvc.{PathBindable, QueryStringBindable}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser, FormFormat}
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import FromStringEnum._
 
 given Parser[Environment] = Parser.parser(Environment.values)
 
-enum Environment(val asString: String, val displayString: String) extends FromString derives Ordering, Reads, Writes, FormFormat, PathBindable, QueryStringBindable:
+enum Environment(
+  override val asString: String,
+  val displayString    : String
+) extends FromString
+  derives Ordering, Reads, Writes, FormFormat, PathBindable, QueryStringBindable:
   case Integration  extends Environment(asString = "integration" , displayString = "Integration"  )
   case Development  extends Environment(asString = "development" , displayString = "Development"  )
   case QA           extends Environment(asString = "qa"          , displayString = "QA"           )
@@ -32,21 +36,29 @@ enum Environment(val asString: String, val displayString: String) extends FromSt
   case ExternalTest extends Environment(asString = "externaltest", displayString = "External Test")
   case Production   extends Environment(asString = "production"  , displayString = "Production"   )
 
-object Environment extends FromStringEnum[Environment]
 
-trait SlugInfoFlag { def asString: String; def displayString: String }
+given Parser[SlugInfoFlag] =
+  // TODO service-dependencies currently represents `external test` with a space
+  //Parser.parser(SlugInfoFlag.values)
+  (s: String) =>
+    if s == "external test"
+    then Right(SlugInfoFlag.ForEnvironment(Environment.ExternalTest))
+    else SlugInfoFlag.values
+           .find(_.asString == s)
+           .toRight(s"Invalid value: \"$s\" - should be one of: ${SlugInfoFlag.values.map(_.asString).mkString(", ")}")
+
+trait SlugInfoFlag
+  extends FromString
+  derives FormFormat, Reads {
+  def displayString: String
+}
 
 object SlugInfoFlag:
   case object Latest                          extends SlugInfoFlag { override def asString = "latest"    ; override def displayString = "Latest"          }
   case class ForEnvironment(env: Environment) extends SlugInfoFlag { override def asString = env.asString; override def displayString = env.displayString }
 
-  val values: Seq[SlugInfoFlag] =
-    Latest +: Environment.valuesAsSeq.map(ForEnvironment.apply)
+  val values: Array[SlugInfoFlag] =
+    Latest +: Environment.values.map(ForEnvironment.apply)
 
   given Ordering[SlugInfoFlag] =
     Ordering.by(values.indexOf(_))
-
-  def parse(s: String): Option[SlugInfoFlag] =
-    if s == "external test"
-    then Some(SlugInfoFlag.ForEnvironment(Environment.ExternalTest)) // service-dependencies currently represents with a space
-    else values.find(_.asString == s)

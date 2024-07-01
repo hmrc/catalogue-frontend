@@ -58,8 +58,9 @@ object PlatformInitiative:
 
 given Parser[DisplayType] = Parser.parser(DisplayType.values)
 
-enum DisplayType(val asString: String) extends FromString derives Ordering, PathBindable, QueryStringBindable:
+enum DisplayType(
+  override val asString: String
+) extends FromString
+  derives Ordering, PathBindable, QueryStringBindable:
   case Progress  extends DisplayType("Progress")
   case Chart     extends DisplayType("Chart"   )
-
-object DisplayType extends FromStringEnum[DisplayType]

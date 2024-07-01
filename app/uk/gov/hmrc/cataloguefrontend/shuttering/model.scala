@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser, FormFormat}
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import java.time.Instant
 
@@ -28,20 +28,22 @@ import FromStringEnum._
 
 given Parser[ShutterType] = Parser.parser(ShutterType.values)
 
-enum ShutterType(val asString: String) extends FromString derives Ordering, Reads, Writes, PathBindable:
+enum ShutterType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads, Writes, PathBindable:
   case Frontend extends ShutterType("frontend")
   case Api      extends ShutterType("api"    )
   case Rate     extends ShutterType("rate"   )
 
-object ShutterType extends FromStringEnum[ShutterType]
-
 given Parser[ShutterStatusValue] = Parser.parser(ShutterStatusValue.values)
 
-enum ShutterStatusValue(val asString: String) extends FromString derives Ordering, Reads, Writes, FormFormat:
+enum ShutterStatusValue(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads, Writes, FormFormat:
   case Shuttered   extends ShutterStatusValue("shuttered"  )
   case Unshuttered extends ShutterStatusValue("unshuttered")
-
-object ShutterStatusValue extends FromStringEnum[ShutterStatusValue]
 
 enum ShutterStatus(val value: ShutterStatusValue):
   case Shuttered(
@@ -104,23 +106,27 @@ object ShutterState {
 
 given Parser[EventType] = Parser.parser(EventType.values)
 
-enum EventType(val asString: String) extends FromString derives Ordering, Reads:
+enum EventType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads:
   case ShutterStateCreate    extends EventType("shutter-state-create"   )
   case ShutterStateDelete    extends EventType("shutter-state-delete"   )
   case ShutterStateChange    extends EventType("shutter-state-change"   )
   case KillSwitchStateChange extends EventType("killswitch-state-change")
 
-object EventType extends FromStringEnum[EventType]
 
 given Parser[ShutterCause] = Parser.parser(ShutterCause.values)
 
-enum ShutterCause(val asString: String) extends FromString derives Ordering, Reads:
+enum ShutterCause(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads:
   case Scheduled      extends ShutterCause("scheduled"      )
   case UserCreated    extends ShutterCause("user-shutter"   )
   case AutoReconciled extends ShutterCause("auto-reconciled")
   case Legacy         extends ShutterCause("legacy-shutter" )
 
-object ShutterCause extends FromStringEnum[ShutterCause]
 
 enum EventData:
   case ShutterStateCreateData(

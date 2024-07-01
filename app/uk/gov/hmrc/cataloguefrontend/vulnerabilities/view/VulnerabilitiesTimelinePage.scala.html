@@ -157,7 +157,7 @@
             <div class="col-md-3">
                 @select(
                     field                 =  form("curationStatus"),
-                    options               =  (""->"All") +: CurationStatus.valuesAsSeq.map(cs => cs.asString -> cs.display),
+                    options               =  ("" -> "All") +: CurationStatus.values.toSeq.map(cs => cs.asString -> cs.displayString),
                     Symbol("_label")      -> "Curation status:",
                     Symbol("_labelClass") -> "form-label",
                     Symbol("id")          -> "curation-status-filter",

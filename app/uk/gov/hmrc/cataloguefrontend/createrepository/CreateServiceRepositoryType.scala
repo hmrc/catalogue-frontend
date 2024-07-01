@@ -16,13 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser, FormFormat}
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import FromStringEnum._
 
 given Parser[CreateServiceRepositoryType] = Parser.parser(CreateServiceRepositoryType.values)
 
-enum CreateServiceRepositoryType(val asString: String) extends FromString derives Ordering, FormFormat:
+enum CreateServiceRepositoryType(
+  override val asString: String
+) extends FromString
+  derives Ordering, FormFormat:
   case Empty                            extends CreateServiceRepositoryType("Empty"                                )
   case FrontendMicroservice             extends CreateServiceRepositoryType("Frontend microservice"                )
   case FrontendMicroserviceWithScaffold extends CreateServiceRepositoryType("Frontend microservice - with scaffold")
@@ -31,5 +34,3 @@ enum CreateServiceRepositoryType(val asString: String) extends FromString derive
   case BackendMicroserviceWithMongodb   extends CreateServiceRepositoryType("Backend microservice - with mongodb"  )
   case ApiMicroservice                  extends CreateServiceRepositoryType("API microservice"                     )
   case ApiMicroserviceWithMongodb       extends CreateServiceRepositoryType("API microservice - with mongodb"      )
-
-object CreateServiceRepositoryType extends FromStringEnum[CreateServiceRepositoryType]

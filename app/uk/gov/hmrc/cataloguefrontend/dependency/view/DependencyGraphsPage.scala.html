@@ -33,7 +33,7 @@
 
     <div class="row">
         <ul class="nav nav-tabs mb-2">
-            @DependencyScope.valuesAsSeq.map { value =>
+            @DependencyScope.values.map { value =>
               @if(value == scope) {
                 <li class="nav-item">
                     <a id="@scope.displayString-graph" class="nav-link active" href='?scope=@{

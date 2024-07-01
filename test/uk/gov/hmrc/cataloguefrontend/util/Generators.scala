@@ -23,6 +23,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 object Generators {
 
   val repoTypeGen: Gen[RepoType] =
-    oneOf(RepoType.valuesAsSeq)
+    oneOf(RepoType.values.toSeq)
 
 }

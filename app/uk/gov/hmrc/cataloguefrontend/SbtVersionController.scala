@@ -20,8 +20,9 @@ import cats.implicits._
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, given}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.cataloguefrontend.view.html.{SbtVersionPage, SbtAcrossEnvironmentsPage}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -46,10 +47,10 @@ class SbtVersionController @Inject()(
     BasicAuthAction.async { implicit request =>
       for
         teams        <- teamsAndRepositoriesConnector.allTeams()
-        selectedFlag =  SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
+        selectedFlag =  Parser[SlugInfoFlag].parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
         sbtVersions  <- dependenciesService.getSbtVersions(selectedFlag, selectedTeam.map(_.name))
-      yield Ok(sbtVersionPage(sbtVersions.sortBy(s => (s.version, s.serviceName)), SlugInfoFlag.values, teams, selectedFlag, selectedTeam))
+      yield Ok(sbtVersionPage(sbtVersions.sortBy(s => (s.version, s.serviceName)), SlugInfoFlag.values.toSeq, teams, selectedFlag, selectedTeam))
     }
 
   def compareAllEnvironments(teamName: Option[TeamName]) =
@@ -57,7 +58,7 @@ class SbtVersionController @Inject()(
       for
         teams        <- teamsAndRepositoriesConnector.allTeams()
         selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
-        envs         <- SlugInfoFlag.values.traverse(env => dependenciesService.getSbtCountsForEnv(env, selectedTeam.map(_.name)))
+        envs         <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getSbtCountsForEnv(env, selectedTeam.map(_.name)))
         sbts         =  envs.flatMap(_.usage.keys).distinct.sorted
       yield Ok(sbtAcrossEnvironmentsPage(envs, sbts, teams, selectedTeam))
     }

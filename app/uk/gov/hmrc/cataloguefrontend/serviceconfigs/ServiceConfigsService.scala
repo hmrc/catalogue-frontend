@@ -19,11 +19,11 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version, given}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.util.{Base64Util, Parser}
+import uk.gov.hmrc.cataloguefrontend.util.Base64Util
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
@@ -314,16 +314,15 @@ object ServiceConfigsService:
       override def displayString = env.displayString
 
     val values: Seq[ConfigEnvironment] =
-      Local +: Environment.valuesAsSeq.map(ForEnvironment.apply)
+      Local +: Environment.values.toSeq.map(ForEnvironment.apply)
 
     val reads: Reads[ConfigEnvironment] =
       (json: JsValue) =>
         json
-          .validate[String]
+          .validate[JsString]
           .flatMap:
-            case "local" => JsSuccess(ConfigEnvironment.Local)
-            case s       => // TODO use Reads[Environment]
-                            Parser.parse[Environment](s).fold(_ => JsError(__, s"Invalid Environment '$s'"), env => JsSuccess(ForEnvironment(env)))
+            case JsString("local") => JsSuccess(ConfigEnvironment.Local)
+            case s                 => summon[Reads[Environment]].reads(s).map(ForEnvironment.apply)
 
   type ConfigByEnvironment = Map[ConfigEnvironment, Seq[ConfigSourceEntries]]
 
@@ -446,14 +445,19 @@ object ServiceConfigsService:
     val reads: Reads[AppliedConfig] =
       given Reads[ConfigSourceValue] = ConfigSourceValue.reads
       given Reads[Map[Environment, ConfigSourceValue]] =
+        import uk.gov.hmrc.cataloguefrontend.util.CategoryHelper.given cats.Applicative[JsResult]
+
         Reads
-          .of[Map[String, ConfigSourceValue]]
-          .map:
-            _.map: (k, v) =>
-              // TODO use EnvironmentReads and feed failure through
-              ( Parser.parse[Environment](k).getOrElse(sys.error(s"Invalid Environment: $k"))
-              , v
-              )
+          .of[Map[JsString, ConfigSourceValue]]
+          .flatMap: m =>
+            _ =>
+              m
+                .toSeq
+                .traverse: (k, v) =>
+                  summon[Reads[Environment]].reads(k).map: e =>
+                    (e, v)
+                .map(_.toMap)
+
 
       ( (__ \ "serviceName"  ).read[ServiceName](ServiceName.format)
       ~ (__ \ "key"          ).read[String].map(KeyName.apply)

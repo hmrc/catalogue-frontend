@@ -70,7 +70,10 @@ package object cost:
 
   given Parser[Zone] = Parser.parser(Zone.values)
 
-  enum Zone(val asString: String) extends FromString derives Ordering, Reads:
+  enum Zone(
+    override val asString: String
+  ) extends FromString
+    derives Ordering, Reads:
     case Protected      extends Zone("protected"      )
     case Public         extends Zone("public"         )
     case ProtectedRate  extends Zone("protected-rate" )
@@ -80,8 +83,6 @@ package object cost:
 
     def displayName: String =
       asString.capitalize
-
-  object Zone extends FromStringEnum[Zone]
 
   object DeploymentConfig:
     val reads: Reads[DeploymentConfig] =

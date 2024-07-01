@@ -160,7 +160,7 @@ class CatalogueController @Inject() (
                                      serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
                                    else
                                      Future.successful(Seq.empty)
-      envDatas                  <- Environment.valuesAsSeq
+      envDatas                  <- Environment.values.toSeq
                                      .traverse: env =>
                                        val deployedVersions = deployments.filter(_.environment == env).map(_.version)
                                        // a single environment may have multiple versions during a deployment
@@ -169,7 +169,7 @@ class CatalogueController @Inject() (
                                          case Some(version) =>
                                            for
                                              repoModules   <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
-                                             shutterStates <- ShutterType.valuesAsSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
+                                             shutterStates <- ShutterType.values.toSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
                                                                 shutterService
                                                                   .getShutterStates(shutterType, env, Some(serviceName))
                                                                   .map(acc ++ _)
