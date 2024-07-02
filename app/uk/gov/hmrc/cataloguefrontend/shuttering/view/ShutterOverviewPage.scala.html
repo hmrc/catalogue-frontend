@@ -172,6 +172,6 @@
 
 @usernameFor(eventOpt: Option[ShutterStateChangeEvent]) = @{
   eventOpt.map { evt =>
-    if (evt.cause == ShutterCause.AutoReconciled) "<outside the MDTP catalogue>" else evt.username
+    if (evt.cause == ShutterCause.AutoReconciled) "<outside the MDTP catalogue>" else evt.username.asString
   }.getOrElse("")
 }

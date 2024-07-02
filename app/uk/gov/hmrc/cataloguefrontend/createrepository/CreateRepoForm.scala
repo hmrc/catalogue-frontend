@@ -40,7 +40,6 @@ object CreateServiceRepoForm:
     ~ (__ \ "repoType"      ).write[String]
     )(r => Tuple.fromProductTyped(r))
 
-  // TODO can test use repoTypeAndNameConstraints so we can inline these?
   val conflictingFieldsValidation1 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("backend")  && crf.repositoryName.toLowerCase.contains("frontend"))
   val conflictingFieldsValidation2 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
   val frontendValidation1          : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("frontend")  && !crf.repositoryName.toLowerCase.contains("frontend"))

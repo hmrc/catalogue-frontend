@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
-@import uk.gov.hmrc.cataloguefrontend.users.{User, UsersListFilter, routes => usersRoutes}
+@import uk.gov.hmrc.cataloguefrontend.users.{User, UsersListFilter, routes => userRoutes}
 @import uk.gov.hmrc.cataloguefrontend.users.UsersController.maxRows
 @import views.html.helper.{FieldConstructor, select}
 
@@ -40,8 +40,8 @@
           Create
         </button>
         <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="@usersRoutes.CreateUserController.createUser(isServiceAccount = false)">Create a User</a></li>
-          <li><a class="dropdown-item" href="@usersRoutes.CreateUserController.createUser(isServiceAccount = true)">Create a Service User</a></li>
+          <li><a class="dropdown-item" href="@userRoutes.CreateUserController.createUser(isServiceAccount = false)">Create a User</a></li>
+          <li><a class="dropdown-item" href="@userRoutes.CreateUserController.createUser(isServiceAccount = true)">Create a Service User</a></li>
         </ul>
       </div>
     </h1>
@@ -98,7 +98,7 @@
         @users.zipWithIndex.map{ case(user, i) =>
         <tr id="row@i">
           <td class="username" id="row@{i}_name">
-            <a class="ldap-username" href="/users/@user.username">@user.username</a>
+            <a class="ldap-username" href="@userRoutes.UsersController.user(user.username)">@user.username.asString</a>
           </td>
 
 
