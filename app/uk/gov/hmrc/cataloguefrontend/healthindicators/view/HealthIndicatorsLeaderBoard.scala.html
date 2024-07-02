@@ -60,7 +60,7 @@
                 <div class="col-md-3">
                     @select(
                         field                 =  form("repoType"),
-                        options               =  repoTypes.map(r => r.asString -> r.asString),
+                        options               =  ("" -> "All Types") +: repoTypes.map(r => r.asString -> r.asString),
                         Symbol("_label")      -> "Repository Type",
                         Symbol("_labelClass") -> "form-label",
                         Symbol("id")          -> "repo-type-search",
@@ -116,22 +116,22 @@
         //Add a custom sorting function, as the default List.js sorting algorithm cannot handle negative numbers.
         //Note: A Listener is required, as the List.js custom 'sortFunction' only auto-fires on page load, not on button click.
         document.getElementById("overall-score-button").addEventListener("click", function (e) {
-            indicatorsList.sort('overallScore', {
-                order: e.target.classList.contains("desc") ? "desc" : "asc",
-                sortFunction: function(a, b) {
-                    return parseInt(a._values.overallScore) - parseInt(b._values.overallScore);
-                }
-            })
+          indicatorsList.sort('overallScore', {
+            order: e.target.classList.contains("desc") ? "desc" : "asc",
+            sortFunction: function(a, b) {
+              return parseInt(a._values.overallScore) - parseInt(b._values.overallScore);
+            }
+          })
         });
-      }
 
-      let searchBox = document.getElementById("repo-name-search");
-      // set autofocus cursor to right of text in search box
-      let length = searchBox.value.length;
-      searchBox.focus();
-      searchBox.setSelectionRange(length, length);
-      // re-search the list upon page load.
-      indicatorsList.search(searchBox.value);
+        let searchBox = document.getElementById("repo-name-search");
+        // set autofocus cursor to right of text in search box
+        let length = searchBox.value.length;
+        searchBox.focus();
+        searchBox.setSelectionRange(length, length);
+        // re-search the list upon page load.
+        indicatorsList.search(searchBox.value);
+      }
     </script>
 }
 

@@ -16,12 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
+import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import java.time.Instant
+
+import FromStringEnum._
 
 case class Warning(
   title: String
@@ -77,11 +80,18 @@ object Check:
         ) (SimpleCheck.apply)
 
       given Reads[Map[Environment, Result]] =
+        import uk.gov.hmrc.cataloguefrontend.util.CategoryHelper.given cats.Applicative[JsResult]
+
         Reads
-          .of[Map[String, Check.Result]]
-          .map:
-            _.map: (k, v) =>
-              (Environment.parse(k).getOrElse(sys.error("Invalid Environment")), v)
+          .of[Map[JsString, Check.Result]]
+          .flatMap: m =>
+            _ =>
+              m
+                .toSeq
+                .traverse: (k, v) =>
+                  summon[Reads[Environment]].reads(k).map: e =>
+                    (e, v)
+                .map(_.toMap)
 
       given Reads[EnvCheck] =
         ( (__ \ "title"           ).read[String]
@@ -108,16 +118,19 @@ object CachedServiceCheck:
     given Reads[Warning] = Warning.reads
     given Reads[Check]   = Check.reads
     ( (__ \ "serviceName"    ).read[ServiceName](ServiceName.format)
-    ~ (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
+    ~ (__ \ "lifecycleStatus").read[LifecycleStatus]
     ~ (__ \ "checks"         ).read[Seq[Check]]
     ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]
     )(CachedServiceCheck.apply)
 
-enum FormCheckType(val asString: String) extends FromString:
+given Parser[FormCheckType] = Parser.parser(FormCheckType.values)
+
+enum FormCheckType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads:
   case Simple      extends FormCheckType("simple"     )
   case Environment extends FormCheckType("environment")
-
-object FormCheckType extends FromStringEnum[FormCheckType]
 
 case class Lifecycle(
   lifecycleStatus: LifecycleStatus
@@ -127,35 +140,24 @@ case class Lifecycle(
 
 object Lifecycle:
   val reads: Reads[Lifecycle] =
-    ( (__ \ "lifecycleStatus").read[LifecycleStatus](LifecycleStatus.reads)
+    ( (__ \ "lifecycleStatus").read[LifecycleStatus]
     ~ (__ \ "username"       ).readNullable[String]
     ~ (__ \ "createDate"     ).readNullable[Instant]
     )(Lifecycle.apply)
 
-sealed trait LifecycleStatus { val asString: String; val displayName: String }
+given Parser[LifecycleStatus] = Parser.parser(LifecycleStatus.values)
 
-object LifecycleStatus {
-  object Active                 extends LifecycleStatus { val asString: String = "Active";                 val displayName: String = "Active"          }
-  object Archived               extends LifecycleStatus { val asString: String = "Archived";               val displayName: String = "Archived"        }
-  object DecommissionInProgress extends LifecycleStatus { val asString: String = "DecommissionInProgress"; val displayName: String = "Decommissioning" }
-  object Deprecated             extends LifecycleStatus { val asString: String = "Deprecated";             val displayName: String = "Deprecated"      }
-  object Deleted                extends LifecycleStatus { val asString: String = "Deleted";                val displayName: String = "Deleted"         }
+enum LifecycleStatus(
+  override val asString: String,
+  val displayName      : String
+) extends FromString
+  derives Reads, FormFormat:
+  case Active                 extends LifecycleStatus(asString = "Active"                , displayName = "Active"         )
+  case Archived               extends LifecycleStatus(asString = "Archived"              , displayName = "Archived"       )
+  case DecommissionInProgress extends LifecycleStatus(asString = "DecommissionInProgress", displayName = "Decommissioning")
+  case Deprecated             extends LifecycleStatus(asString = "Deprecated"            , displayName = "Deprecated"     )
+  case Deleted                extends LifecycleStatus(asString = "Deleted"               , displayName = "Deleted"        )
 
-
-  val values: List[LifecycleStatus] =
-    List(Active, Archived, DecommissionInProgress, Deprecated, Deleted)
-
-  def parse(s: String): Either[String, LifecycleStatus] =
-    values
-      .find(_.asString == s)
-      .toRight(s"Invalid service status - should be one of: ${values.map(_.asString).mkString(", ")}")
-
-  val reads: Reads[LifecycleStatus] =
-    (json: JsValue) =>
-      json
-        .validate[String]
-        .flatMap(s => parse(s).fold(msg => JsError(msg), rt => JsSuccess(rt)))
-
+object LifecycleStatus:
   def canDecommission(lifecycleStatus: LifecycleStatus): Boolean =
     List(Archived, DecommissionInProgress, Deleted).contains(lifecycleStatus)
-}

@@ -19,8 +19,8 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import org.apache.http.client.utils.URIBuilder
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, UserName, Version}
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, Parser}
 
 import java.net.URI
 import java.time.Instant
@@ -52,7 +52,6 @@ object JsonCodecs:
       case Left(l)  => JsError(__, l)
 
   val timeSeenFormat        : Format[TimeSeen]         = format(TimeSeen.apply        , _.time    )
-  val usernameReads         : Format[Username]         = format(Username.apply        , _.asString)
   val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, _.asString)
 
   val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] =
@@ -62,7 +61,7 @@ object JsonCodecs:
       ~ (__ \ "commitId").read[String]
       )(WhatsRunningWhereConfig.apply)
 
-    ( (__ \ "environment"  ).read[Environment](Environment.format)
+    ( (__ \ "environment"  ).read[Environment]
     ~ (__ \ "versionNumber").read[Version](Version.format)
     ~ (__ \ "config"       ).read[List[WhatsRunningWhereConfig]]
     )(WhatsRunningWhereVersion.apply)
@@ -78,7 +77,7 @@ object JsonCodecs:
     new Format[ProfileType]:
       override def reads(js: JsValue): JsResult[ProfileType] =
         js.validate[String]
-          .flatMap(s => toResult(ProfileType.parse(s)))
+          .flatMap(s => toResult(Parser[ProfileType].parse(s)))
 
       override def writes(et: ProfileType): JsValue =
         JsString(et.asString)
@@ -102,7 +101,7 @@ object JsonCodecs:
   val serviceDeploymentsFormat: Format[ServiceDeployment] =
     given Format[DeploymentEvent] = deploymentEventFormat
     ( (__ \ "serviceName"     ).format[ServiceName](ServiceName.format)
-    ~ (__ \ "environment"     ).format[Environment](Environment.format)
+    ~ (__ \ "environment"     ).format[Environment]
     ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
     ~ (__ \ "lastCompleted"   ).formatNullable[DeploymentEvent]
     )(ServiceDeployment.apply, sd => Tuple.fromProductTyped(sd))
@@ -110,15 +109,15 @@ object JsonCodecs:
   val deploymentHistoryReads: Reads[DeploymentHistory] =
     given Reads[TeamName] = TeamName.format
     ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
-    ~ (__ \ "environment").read[Environment](Environment.format)
+    ~ (__ \ "environment").read[Environment]
     ~ (__ \ "version"    ).read[Version](Version.format)
     ~ (__ \ "teams"      ).read[Seq[TeamName]]
     ~ (__ \ "time"       ).read[TimeSeen](timeSeenFormat)
-    ~ (__ \ "username"   ).read[Username](usernameReads)
+    ~ (__ \ "username"   ).read[UserName](UserName.format)
     )(DeploymentHistory.apply)
 
   val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] =
-    ( (__ \ "environment"  ).read[Environment](Environment.format)
+    ( (__ \ "environment"  ).read[Environment]
     ~ (__ \ "version"      ).read[Version](Version.format)
     ~ (__ \ "deploymentId" ).read[String]
     ~ (__ \ "username"     ).read[String]
@@ -144,17 +143,25 @@ object ProfileName:
   given Ordering[ProfileName] =
     Ordering.by(_.asString.toLowerCase)
 
-enum ViewMode(val asString: String) extends FromString:
+given Parser[ViewMode] = Parser.parser(ViewMode.values)
+
+enum ViewMode(
+  override val asString: String
+) extends FromString
+  derives FormFormat:
   case Versions  extends ViewMode("versions")
   case Instances extends ViewMode("instances")
 
-object ViewMode extends FromStringEnum[ViewMode]
 
-enum ProfileType(val asString: String) extends FromString:
+given Parser[ProfileType] = Parser.parser(ProfileType.values)
+
+enum ProfileType(
+  override val asString: String
+) extends FromString
+  derives FormFormat:
   case Team           extends ProfileType("team")
   case ServiceManager extends ProfileType("servicemanager")
 
-object ProfileType extends FromStringEnum[ProfileType]
 
 case class Profile(
   profileType: ProfileType,
@@ -188,10 +195,8 @@ case class DeploymentHistory(
   version    : Version,
   teams      : Seq[TeamName],
   time       : TimeSeen,
-  username   : Username
+  username   : UserName
 )
-
-case class Username(asString: String)
 
 case class Pagination(
   page    : Int,

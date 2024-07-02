@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.model
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.mvc.QueryStringBindable
 
 class EnvironmentQueryStringBindableSpec extends AnyWordSpec with Matchers with OptionValues {
 
@@ -26,22 +27,22 @@ class EnvironmentQueryStringBindableSpec extends AnyWordSpec with Matchers with 
     "be bound to an Environment value when valid" in {
       Environment.values.foreach { environment =>
         val params = Map("environment" -> Seq(environment.asString))
-        Environment.queryStringBindable.bind(key = "environment", params).value shouldBe Right(environment)
+        summon[QueryStringBindable[Environment]].bind(key = "environment", params).value shouldBe Right(environment)
       }
     }
 
     "not be bound when missing" in {
-      Environment.queryStringBindable.bind(key = "environment", Map.empty) shouldBe None
+      summon[QueryStringBindable[Environment]].bind(key = "environment", Map.empty) shouldBe None
     }
 
     "fail to be bound when there is no associated value" in {
       val params = Map("environment" -> Seq.empty)
-      Environment.queryStringBindable.bind(key = "environment", params) shouldBe None
+      summon[QueryStringBindable[Environment]].bind(key = "environment", params) shouldBe None
     }
 
     "fail to be bound when the value is unrecognised" in {
       val params = Map("environment" -> Seq("unknown"))
-      Environment.queryStringBindable.bind(key = "environment", params).value shouldBe Symbol("Left")
+      summon[QueryStringBindable[Environment]].bind(key = "environment", params).value shouldBe Symbol("Left")
     }
   }
 }

@@ -17,30 +17,43 @@
 package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Format, __}
+import play.api.libs.json.{Reads, Writes, __}
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import java.time.Instant
 
-enum KeyFilterType(val asString: String) extends FromString:
+import FromStringEnum._
+
+enum KeyFilterType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Writes:
   case Contains           extends KeyFilterType(asString = "contains"          )
   case ContainsIgnoreCase extends KeyFilterType(asString = "containsIgnoreCase")
 
-object KeyFilterType extends FromStringEnum[KeyFilterType]:
-  def toKeyFilterType(isIgnoreCase: Boolean): KeyFilterType =
-    if (isIgnoreCase) ContainsIgnoreCase else Contains
+object KeyFilterType:
+  def apply(isIgnoreCase: Boolean): KeyFilterType =
+    if isIgnoreCase then ContainsIgnoreCase else Contains
 
-enum FormValueFilterType(val asString: String, val displayString: String) extends FromString:
+given Parser[FormValueFilterType] = Parser.parser(FormValueFilterType.values)
+
+enum FormValueFilterType(
+  override val asString: String,
+  val displayString    : String
+) extends FromString
+  derives Ordering, Writes, FormFormat:
   case Contains       extends FormValueFilterType(asString = "contains"      , displayString = "Contains"        )
   case DoesNotContain extends FormValueFilterType(asString = "doesNotContain", displayString = "Does not contain")
   case EqualTo        extends FormValueFilterType(asString = "equalTo"       , displayString = "Equal to"        )
   case NotEqualTo     extends FormValueFilterType(asString = "notEqualTo"    , displayString = "Not Equal to"    )
   case IsEmpty        extends FormValueFilterType(asString = "isEmpty"       , displayString = "Is Empty"        )
-object FormValueFilterType extends FromStringEnum[FormValueFilterType]
 
-
-enum ValueFilterType(val asString: String) extends FromString:
+enum ValueFilterType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Writes:
   case Contains                 extends ValueFilterType("contains"                )
   case ContainsIgnoreCase       extends ValueFilterType("containsIgnoreCase"      )
   case DoesNotContain           extends ValueFilterType("doesNotContain"          )
@@ -51,9 +64,8 @@ enum ValueFilterType(val asString: String) extends FromString:
   case NotEqualToIgnoreCase     extends ValueFilterType("notEqualToIgnoreCase"    )
   case IsEmpty                  extends ValueFilterType("isEmpty"                 )
 
-object ValueFilterType extends FromStringEnum[ValueFilterType]:
-  // TODO move toValueFilterType(ignoreCase: Boolean) to FormValueFilterType
-  def toValueFilterType(formValueFilterType: FormValueFilterType, isIgnoreCase: Boolean): ValueFilterType  =
+object ValueFilterType:
+  def apply(formValueFilterType: FormValueFilterType, isIgnoreCase: Boolean): ValueFilterType  =
     formValueFilterType match
       case FormValueFilterType.Contains       => if isIgnoreCase then ContainsIgnoreCase       else Contains
       case FormValueFilterType.DoesNotContain => if isIgnoreCase then DoesNotContainIgnoreCase else DoesNotContain
@@ -61,17 +73,17 @@ object ValueFilterType extends FromStringEnum[ValueFilterType]:
       case FormValueFilterType.NotEqualTo     => if isIgnoreCase then NotEqualToIgnoreCase     else NotEqualTo
       case FormValueFilterType.IsEmpty        => IsEmpty
 
-enum GroupBy(val asString: String, val displayString: String) extends FromString:
+given Parser[GroupBy] = Parser.parser(GroupBy.values)
+
+enum GroupBy(
+  override val asString: String,
+  val displayString    : String
+) extends FromString
+  derives Ordering, Writes, FormFormat:
   case Key     extends GroupBy(asString = "key"    , displayString = "Key"    )
   case Service extends GroupBy(asString = "service", displayString = "Service")
 
-object GroupBy extends FromStringEnum[GroupBy]
-
-enum ServiceType(val asString: String, val displayString: String) extends FromString:
-  case Frontend extends ServiceType(asString = "frontend", displayString = "Frontend")
-  case Backend  extends ServiceType(asString = "backend" , displayString = "Backend" )
-
-object ServiceType extends FromStringEnum[ServiceType]
+given Parser[ServiceType] = Parser.parser(ServiceType.values)
 
 case class DeploymentConfigEvent(
   serviceName  : ServiceName,
@@ -83,12 +95,12 @@ case class DeploymentConfigEvent(
 )
 
 object DeploymentConfigEvent {
-  val format: Format[DeploymentConfigEvent] =
-    ( (__ \ "serviceName"  ).format[ServiceName](ServiceName.format)
-    ~ (__ \ "environment"  ).format[Environment](Environment.format)
-    ~ (__ \ "deploymentId" ).format[String]
-    ~ (__ \ "configChanged").formatNullable[Boolean]
-    ~ (__ \ "configId"     ).formatNullable[String]
-    ~ (__ \ "lastUpdated"  ).format[Instant]
-    )(DeploymentConfigEvent.apply, dce => Tuple.fromProductTyped(dce))
+  val reads: Reads[DeploymentConfigEvent] =
+    ( (__ \ "serviceName"  ).read[ServiceName](ServiceName.format)
+    ~ (__ \ "environment"  ).read[Environment]
+    ~ (__ \ "deploymentId" ).read[String]
+    ~ (__ \ "configChanged").readNullable[Boolean]
+    ~ (__ \ "configId"     ).readNullable[String]
+    ~ (__ \ "lastUpdated"  ).read[Instant]
+    )(DeploymentConfigEvent.apply)
 }

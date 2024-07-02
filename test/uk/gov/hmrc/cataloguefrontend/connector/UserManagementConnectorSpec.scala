@@ -21,7 +21,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -99,7 +99,7 @@ class UserManagementConnectorSpec
             givenName      = Some("Joe"),
             organisation   = Some("MDTP"),
             primaryEmail   = "joe.bloggs@digital.hmrc.gov.uk",
-            username       = "joe.bloggs",
+            username       = UserName("joe.bloggs"),
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
@@ -154,7 +154,7 @@ class UserManagementConnectorSpec
             givenName      = Some("Joe"),
             organisation   = Some("MDTP"),
             primaryEmail   = "joe.bloggs@digital.hmrc.gov.uk",
-            username       = "joe.bloggs",
+            username       = UserName("joe.bloggs"),
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
@@ -166,7 +166,7 @@ class UserManagementConnectorSpec
             givenName      = Some("Jane"),
             organisation   = Some("MDTP"),
             primaryEmail   = "jane.doe@digital.hmrc.gov.uk",
-            username       = "jane.doe",
+            username       = UserName("jane.doe"),
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
@@ -190,10 +190,10 @@ class UserManagementConnectorSpec
 
   "getUser" should {
     "return user when found" in {
-      val username = "joe.bloggs"
+      val username = UserName("joe.bloggs")
 
       stubFor(
-        get(urlPathEqualTo(s"/user-management/users/$username"))
+        get(urlPathEqualTo(s"/user-management/users/${username.asString}"))
           .willReturn(
             aResponse()
               .withBody("""{
@@ -221,7 +221,7 @@ class UserManagementConnectorSpec
             givenName      = Some("Joe"),
             organisation   = Some("MDTP"),
             primaryEmail   = "joe.bloggs@digital.hmrc.gov.uk",
-            username       = "joe.bloggs",
+            username       = UserName("joe.bloggs"),
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
@@ -231,7 +231,7 @@ class UserManagementConnectorSpec
     }
 
     "return None when not found" in {
-      val username = "non.existent"
+      val username = UserName("non.existent")
 
       stubFor(
         get(urlPathEqualTo(s"/user-management/users/$username"))

@@ -127,8 +127,8 @@ end DependenciesService
 
 case class ServiceJdkVersion(
   version: String,
-  vendor : String,
-  kind   : String
+  vendor : Vendor,
+  kind   : Kind
 )
 
 case class ServiceDependency(
@@ -172,8 +172,8 @@ case class ServiceDependencies(
 object ServiceDependencies:
   private val serviceJdkVersionReads =
     ( (__ \ "version").read[String]
-    ~ (__ \ "vendor" ).read[String]
-    ~ (__ \ "kind"   ).read[String]
+    ~ (__ \ "vendor" ).read[Vendor](Vendor.reads)
+    ~ (__ \ "kind"   ).read[Kind  ](Kind.reads)
     )(ServiceJdkVersion.apply)
 
   private val serviceDependencyReads: Reads[ServiceDependency] =
@@ -186,7 +186,6 @@ object ServiceDependencies:
     given Reads[Version          ] = Version.format
     given Reads[ServiceJdkVersion] = serviceJdkVersionReads
     given Reads[ServiceDependency] = serviceDependencyReads
-    given Reads[Environment      ] = Environment.format
     ( (__ \ "uri"                       ).read[String]
     ~ (__ \ "name"                      ).read[String]
     ~ (__ \ "version"                   ).read[Version]

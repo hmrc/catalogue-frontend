@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend
 import cats.data.{EitherT, OptionT}
 import cats.implicits._
 import play.api.data.{Form, Forms}
-import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import play.api.{Configuration, Logger}
@@ -161,7 +160,7 @@ class CatalogueController @Inject() (
                                      serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
                                    else
                                      Future.successful(Seq.empty)
-      envDatas                  <- Environment.valuesAsSeq
+      envDatas                  <- Environment.values.toSeq
                                      .traverse: env =>
                                        val deployedVersions = deployments.filter(_.environment == env).map(_.version)
                                        // a single environment may have multiple versions during a deployment
@@ -170,7 +169,7 @@ class CatalogueController @Inject() (
                                          case Some(version) =>
                                            for
                                              repoModules   <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
-                                             shutterStates <- ShutterType.valuesAsSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
+                                             shutterStates <- ShutterType.values.toSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
                                                                 shutterService
                                                                   .getShutterStates(shutterType, env, Some(serviceName))
                                                                   .map(acc ++ _)
@@ -182,8 +181,8 @@ class CatalogueController @Inject() (
                                                                                             telemetryLinks.grafanaDashboard(env, serviceName),
                                                                                             telemetryLinks.kibanaDashboard(env, serviceName)
                                                                                           ),
-                                                                nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]()): d =>
-                                                                                            telemetryLinks.kibanaNonPerformantQueries(env, ServiceName(d), nonPerformantQueries) // TODO should this really be Database rather than ServiceName?
+                                                                nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]()): databaseName =>
+                                                                                            telemetryLinks.kibanaNonPerformantQueries(env, serviceName, databaseName, nonPerformantQueries)
                                                               )
                                            yield Some((SlugInfoFlag.ForEnvironment(env): SlugInfoFlag) -> data)
                                          case None =>
@@ -477,8 +476,8 @@ case class TeamFilter(
 
 object TeamFilter:
   lazy val form = Form(
-    mapping(
-      "name" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+    Forms.mapping(
+      "name" -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
     )(TeamFilter.apply)(f => Some.apply(f.name))
   )
 
@@ -540,10 +539,10 @@ case class DefaultBranchesFilter(
 object DefaultBranchesFilter {
   lazy val form: Form[DefaultBranchesFilter] =
     Form(
-      mapping(
-        "name"          -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "teamNames"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
-        "defaultBranch" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
+      Forms.mapping(
+        "name"          -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "teamNames"     -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "defaultBranch" -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
       )(DefaultBranchesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

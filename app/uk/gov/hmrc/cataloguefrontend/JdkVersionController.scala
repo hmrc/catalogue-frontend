@@ -20,8 +20,9 @@ import cats.implicits._
 import play.api.mvc.MessagesControllerComponents
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, given}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.cataloguefrontend.view.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -46,10 +47,10 @@ class JdkVersionController @Inject() (
     BasicAuthAction.async { implicit request =>
       for
         teams            <- teamsAndRepositoriesConnector.allTeams()
-        selectedFlag     =  SlugInfoFlag.parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
+        selectedFlag     =  Parser[SlugInfoFlag].parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeamName =  teamName.flatMap(n => teams.find(_.name == n)).map(_.name)
         jdkVersions      <- dependenciesService.getJdkVersions(selectedFlag, selectedTeamName)
-      yield Ok(jdkVersionPage(jdkVersions.sortBy(j => (j.version, j.serviceName)), SlugInfoFlag.values, teams, selectedFlag, selectedTeamName))
+      yield Ok(jdkVersionPage(jdkVersions.sortBy(j => (j.version, j.serviceName)), SlugInfoFlag.values.toSeq, teams, selectedFlag, selectedTeamName))
     }
 
   def compareAllEnvironments(teamName: Option[TeamName]) =
@@ -57,7 +58,7 @@ class JdkVersionController @Inject() (
       for
         teams            <- teamsAndRepositoriesConnector.allTeams()
         selectedTeamName =  teamName.flatMap(n => teams.find(_.name == n)).map(_.name)
-        envs             <- SlugInfoFlag.values.traverse(env => dependenciesService.getJdkCountsForEnv(env, selectedTeamName))
+        envs             <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getJdkCountsForEnv(env, selectedTeamName))
         jdks             =  envs.flatMap(_.usage.keys).distinct.sortBy(_._1)
       yield Ok(jdkAcrossEnvironmentsPage(envs, jdks, teams, selectedTeamName))
     }

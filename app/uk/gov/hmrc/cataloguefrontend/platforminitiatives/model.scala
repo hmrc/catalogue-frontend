@@ -17,8 +17,11 @@
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Format, __}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import play.api.libs.json.{Format, Reads, Writes, __}
+import play.api.mvc.{PathBindable, QueryStringBindable}
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser}
+
+import FromStringEnum._
 
 case class Progress(
   current : Int,
@@ -53,8 +56,11 @@ object PlatformInitiative:
     ~ (__ \ "inProgressLegend"     ).format[String]
     )(apply, pi => Tuple.fromProductTyped(pi))
 
-enum DisplayType(val asString: String) extends FromString:
+given Parser[DisplayType] = Parser.parser(DisplayType.values)
+
+enum DisplayType(
+  override val asString: String
+) extends FromString
+  derives Ordering, PathBindable, QueryStringBindable:
   case Progress  extends DisplayType("Progress")
   case Chart     extends DisplayType("Chart"   )
-
-object DisplayType extends FromStringEnum[DisplayType]

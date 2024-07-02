@@ -342,7 +342,7 @@ object DeployServiceForm {
       Forms.mapping(
         "serviceName" -> Forms.of[ServiceName](ServiceName.formFormat)
       , "version"     -> Forms.of[Version](Version.formFormat)
-      , "environment" -> Forms.of[Environment](Environment.formFormat)
+      , "environment" -> Forms.of[Environment]
       )(DeployServiceForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

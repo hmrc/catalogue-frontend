@@ -18,8 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{JsObject, Json, OWrites, Reads, Writes, __}
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
+import uk.gov.hmrc.cataloguefrontend.util.FromString
 
 case class Role(asString: String):
   def displayName: String =
@@ -33,14 +33,14 @@ object Role:
     summon[Reads[String]].map(Role.apply)
 
 case class Member(
-  username   : String
+  username   : UserName
 , displayName: Option[String]
 , role       : Role
 )
 
 object Member:
   val reads: Reads[Member] =
-    ( (__ \ "username"   ).read[String]
+    ( (__ \ "username"   ).read[UserName](UserName.format)
     ~ (__ \ "displayName").readNullable[String]
     ~ (__ \ "role"       ).read[Role](Role.reads)
     )(Member.apply)
@@ -89,7 +89,7 @@ case class User(
   givenName     : Option[String],
   organisation  : Option[String],
   primaryEmail  : String,
-  username      : String,
+  username      : UserName,
   githubUsername: Option[String],
   phoneNumber   : Option[String],
   role          : Role,
@@ -103,7 +103,7 @@ object User:
     ~ ( __ \ "givenName"     ).readNullable[String]
     ~ ( __ \ "organisation"  ).readNullable[String]
     ~ ( __ \ "primaryEmail"  ).read[String]
-    ~ ( __ \ "username"      ).read[String]
+    ~ ( __ \ "username"      ).read[UserName](UserName.format)
     ~ ( __ \ "githubUsername").readNullable[String]
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
     ~ ( __ \ "role"          ).read[Role](Role.reads)
@@ -114,8 +114,6 @@ enum Organisation(val asString: String) extends FromString:
   case Mdtp  extends Organisation("MDTP" )
   case Voa   extends Organisation("VOA"  )
   case Other extends Organisation("Other")
-
-object Organisation extends FromStringEnum[Organisation]
 
 
 case class CreateUserRequest(

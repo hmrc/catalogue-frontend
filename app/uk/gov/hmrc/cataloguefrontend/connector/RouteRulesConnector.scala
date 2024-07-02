@@ -108,7 +108,7 @@ object RouteRulesConnector:
         ~ (__ \"isRegex"             ).read[Boolean]
         )(Route.apply)
 
-      ( (__ \"environment").read[Environment](Environment.format)
+      ( (__ \"environment").read[Environment]
       ~ (__ \"routes"     ).read[Seq[Route]]
       ~ Reads.pure(false)
       )(EnvironmentRoute.apply)
@@ -122,7 +122,6 @@ object RouteRulesConnector:
 
   object AdminFrontendRoute:
     val reads: Reads[AdminFrontendRoute] =
-      given Reads[Environment] = Environment.format
       ( (__ \"service" ).read[ServiceName](ServiceName.format)
       ~ (__ \"route"   ).read[String]
       ~ (__ \"allow"   ).read[Map[Environment, List[String]]]

@@ -20,10 +20,11 @@ import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.utils.UriEncoding
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
+import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, given}
 import uk.gov.hmrc.cataloguefrontend.dependency.view.html.{DependencyGraphsPage, DependenciesPage}
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
+import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -61,7 +62,7 @@ class DependenciesController @Inject() (
   def graphs(name: ServiceName, version: String, scope: String): Action[AnyContent] =
     BasicAuthAction.async { implicit  request =>
       (for
-         scope        <- EitherT.fromEither[Future](DependencyScope.parse(scope))
+         scope        <- EitherT.fromEither[Future](Parser[DependencyScope].parse(scope))
                            .leftMap(_ => BadRequest(s"Invalid scope $scope"))
          dependencies <- EitherT.fromOptionF(
                            dependenciesService.getServiceDependencies(name, Version(version)),

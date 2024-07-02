@@ -22,7 +22,7 @@ import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import play.api.http.HttpEntity
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.view.html.{ConfigExplorerPage, ConfigWarningPage, SearchConfigPage}
@@ -96,9 +96,9 @@ class ServiceConfigsController @Inject()(
                                                         , environments    = formObject.showEnvironments
                                                         , serviceType     = formObject.serviceType
                                                         , key             = formObject.configKey
-                                                        , keyFilterType   = KeyFilterType.toKeyFilterType(formObject.configKeyIgnoreCase)
+                                                        , keyFilterType   = KeyFilterType(formObject.configKeyIgnoreCase)
                                                         , value           = formObject.configValue
-                                                        , valueFilterType = ValueFilterType.toValueFilterType(formObject.valueFilterType, formObject.configValueIgnoreCase)
+                                                        , valueFilterType = ValueFilterType(formObject.valueFilterType, formObject.configValueIgnoreCase)
                                                         )).leftMap(msg => Ok(searchConfigPage(SearchConfig.form.withGlobalError(msg).fill(formObject), allTeams, configKeys)))
                                                           .map(Option.apply)
                               (groupedByKey, groupedByService)
@@ -194,7 +194,7 @@ object SearchConfig {
   , configValue          : Option[String]      = None
   , configValueIgnoreCase: Boolean             = true
   , valueFilterType      : FormValueFilterType = FormValueFilterType.Contains
-  , showEnvironments     : Seq[Environment]    = Environment.valuesAsSeq.filterNot(_ == Environment.Integration)
+  , showEnvironments     : Seq[Environment]    = Environment.values.toSeq.filterNot(_ == Environment.Integration)
   , serviceType          : Option[ServiceType] = None
   , teamChange           : Boolean             = false
   , asCsv                : Boolean             = false
@@ -209,18 +209,12 @@ object SearchConfig {
       , "configKeyIgnoreCase"   -> Forms.default(Forms.boolean, false)
       , "configValue"           -> Forms.optional(Forms.text)
       , "configValueIgnoreCase" -> Forms.default(Forms.boolean, false)
-      , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType](FormValueFilterType.formFormat), FormValueFilterType.Contains)
-      , "showEnvironments"      -> Forms.seq(Forms.text)
-                                        .transform[Seq[Environment]](
-                                          xs => { val ys = xs.map(Environment.parse(_).toOption).flatten
-                                                  if ys.nonEmpty then ys else Environment.valuesAsSeq.filterNot(_ == Environment.Integration) // populate environments for config explorer link
-                                                }
-                                        , x  => identity(x).map(_.asString)
-                                        )
-      , "serviceType"           -> Forms.optional(Forms.of[ServiceType](ServiceType.formFormat))
+      , "valueFilterType"       -> Forms.default(Forms.of[FormValueFilterType], FormValueFilterType.Contains)
+      , "showEnvironments"      -> Forms.seq(Forms.of[Environment])
+      , "serviceType"           -> Forms.optional(Forms.of[ServiceType])
       , "teamChange"            -> Forms.default(Forms.boolean, false)
       , "asCsv"                 -> Forms.default(Forms.boolean, false)
-      , "groupBy"               -> Forms.default(Forms.of[GroupBy](GroupBy.formFormat), GroupBy.Key)
+      , "groupBy"               -> Forms.default(Forms.of[GroupBy], GroupBy.Key)
       )(SearchConfigForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

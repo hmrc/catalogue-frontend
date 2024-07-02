@@ -56,7 +56,7 @@
                     <div class="col-5">
                         @select(
                           field                 =  form("status")
-                        , options               =  ShutterStatusValue.valuesAsSeq.map {
+                        , options               =  ShutterStatusValue.values.toSeq.map {
                                                       case ShutterStatusValue.Shuttered   => (ShutterStatusValue.Shuttered  .asString, "Shutter"  )
                                                       case ShutterStatusValue.Unshuttered => (ShutterStatusValue.Unshuttered.asString, "Unshutter")
                                                     }

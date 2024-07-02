@@ -52,7 +52,7 @@ class BobbyRulesTrendController @Inject() (
         page(
           form.fill(SearchForm(rules = Seq.empty, from = LocalDate.now().minusYears(2) , to = LocalDate.now())),
           allRules,
-          flags = SlugInfoFlag.values,
+          flags = SlugInfoFlag.values.toSeq,
           data  = None
         )
       )
@@ -68,17 +68,18 @@ class BobbyRulesTrendController @Inject() (
         allRules <- configConnector.bobbyRules()
                       .map(_.libraries)
                       .map(_.sortBy(-_.from.toEpochDay))
+        flags         = SlugInfoFlag.values.toSeq
         pageWithError = (msg: String) =>
                           page(
                             form.bindFromRequest().withGlobalError(msg),
                             allRules,
-                            flags = SlugInfoFlag.values,
+                            flags,
                             data = None
                           )
         res <- form
                  .bindFromRequest()
                  .fold(
-                   hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, allRules, flags = SlugInfoFlag.values, data = None))),
+                   hasErrors = formWithErrors => Future.successful(BadRequest(page(formWithErrors, allRules, flags, data = None))),
                    success   = query =>
                      (for
                         violations <- EitherT.right[Result](serviceDeps.getHistoricBobbyRuleViolations(query.rules.toList, query.from, query.to))
@@ -87,7 +88,7 @@ class BobbyRulesTrendController @Inject() (
                         Ok(page(
                           form.bindFromRequest(),
                           allRules,
-                          flags = SlugInfoFlag.values,
+                          flags,
                           Some(
                             countData
                               .groupBy { case ((_, e), _) => e }
@@ -120,14 +121,13 @@ class BobbyRulesTrendController @Inject() (
   )
 
   val form =
-    import uk.gov.hmrc.cataloguefrontend.util.FormUtils._
-    import play.api.data._
-    import play.api.data.Forms._
+    import uk.gov.hmrc.cataloguefrontend.util.FormUtils.notEmptySeq
+    import play.api.data.{Form, Forms}
     Form(
       Forms.mapping(
         "rules" -> Forms.seq(Forms.text).verifying(notEmptySeq),
-        "from"  -> default(Forms.localDate, LocalDate.now().minusYears(2)),
-        "to"    -> default(Forms.localDate, LocalDate.now())
+        "from"  -> Forms.default(Forms.localDate, LocalDate.now().minusYears(2)),
+        "to"    -> Forms.default(Forms.localDate, LocalDate.now())
       )(SearchForm.apply)(sf => Some(Tuple.fromProductTyped(sf)))
     )
 }

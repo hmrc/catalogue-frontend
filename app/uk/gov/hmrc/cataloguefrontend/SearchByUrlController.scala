@@ -17,8 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.{Inject, Singleton}
-import play.api.data.Form
-import play.api.data.Forms.{mapping, optional, text}
+import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService
@@ -65,8 +64,8 @@ class SearchByUrlController @Inject() (
 
   object UrlSearchFilter:
     lazy val form = Form(
-      mapping(
-        "name" -> optional(text).transform[Option[String]](x => if (x.exists(_.trim.isEmpty)) None else x, identity)
+      Forms.mapping(
+        "name" -> Forms.optional(Forms.text).transform[Option[String]](x => if x.exists(_.trim.isEmpty) then None else x, identity)
       )(UrlSearchFilter.apply)(f => Some(f.name))
     )
 

@@ -26,6 +26,7 @@ import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.ResourceUsageConnector
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
+import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -113,7 +114,7 @@ final class CostEstimationServiceSpec
       "it exists" in {
         val zone = "public"
 
-        val result = Zone.parse(zone)
+        val result = Parser[Zone].parse(zone)
 
         result shouldBe Right(Zone.Public)
       }
@@ -122,7 +123,7 @@ final class CostEstimationServiceSpec
       "zone doesn't exists" in {
         val invalidZone = "invalid-zone"
 
-        val result = Zone.parse(invalidZone)
+        val result = Parser[Zone].parse(invalidZone)
 
         result shouldBe Left("Invalid value: \"invalid-zone\" - should be one of: protected, public, protected-rate, public-monolith, public-rate, private")
       }

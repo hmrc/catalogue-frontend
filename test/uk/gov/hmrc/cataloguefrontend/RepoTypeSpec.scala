@@ -18,12 +18,10 @@ package uk.gov.hmrc.cataloguefrontend
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.Json
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 
 class RepoTypeSpec extends AnyWordSpec with Matchers {
-  given Format[RepoType] = RepoType.format
-
   "RepoType" should {
     "be able to be read from a json string" in {
       Json.parse("""{"type":"Service"}""").as[Map[String, RepoType]] shouldBe Map("type" -> RepoType.Service)

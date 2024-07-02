@@ -21,7 +21,6 @@ import cats.implicits._
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
 import play.api.data.{Form, Forms}
-import play.api.data.Forms.{mapping, optional}
 import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -58,7 +57,7 @@ class CostController @Inject() (
         val configEstimateCosts = String.format("%.0f", configList.map(_.deploymentSize.totalSlots.costGbp(costEstimateConfig)).sum)
 
         val slotsAndInstances =
-          Environment.valuesAsSeq.flatMap: env =>
+          Environment.values.flatMap: env =>
             Seq(
               s"slots.{${env.asString}}" -> configList.find(_.environment == env).map(_.deploymentSize.slots.toString).getOrElse(""),
               s"instances.{${env.asString}}" -> configList.find(_.environment == env).map(_.deploymentSize.instances.toString).getOrElse("")
@@ -117,7 +116,7 @@ case class RepoListFilter(
 object RepoListFilter:
   val form: Form[RepoListFilter] =
     Form(
-      mapping(
-        "team" -> optional(Forms.of[TeamName](TeamName.formFormat))
+      Forms.mapping(
+        "team" -> Forms.optional(Forms.of[TeamName](TeamName.formFormat))
       )(RepoListFilter.apply)(r => Some(r.team))
     )

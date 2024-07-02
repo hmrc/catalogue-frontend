@@ -16,26 +16,34 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import cats.implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import play.api.mvc.PathBindable
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import java.time.Instant
 
-enum ShutterType(val asString: String) extends FromString:
+import FromStringEnum._
+
+given Parser[ShutterType] = Parser.parser(ShutterType.values)
+
+enum ShutterType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads, Writes, PathBindable:
   case Frontend extends ShutterType("frontend")
   case Api      extends ShutterType("api"    )
   case Rate     extends ShutterType("rate"   )
 
-object ShutterType extends FromStringEnum[ShutterType]
+given Parser[ShutterStatusValue] = Parser.parser(ShutterStatusValue.values)
 
-enum ShutterStatusValue(val asString: String) extends FromString:
+enum ShutterStatusValue(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads, Writes, FormFormat:
   case Shuttered   extends ShutterStatusValue("shuttered"  )
   case Unshuttered extends ShutterStatusValue("unshuttered")
-
-object ShutterStatusValue extends FromStringEnum[ShutterStatusValue]
 
 enum ShutterStatus(val value: ShutterStatusValue):
   case Shuttered(
@@ -49,7 +57,6 @@ object ShutterStatus:
   val format: Format[ShutterStatus] =
     new Format[ShutterStatus]:
       override def reads(json: JsValue) =
-        given Reads[ShutterStatusValue] = ShutterStatusValue.format
         (json \ "value")
           .validate[ShutterStatusValue]
           .flatMap:
@@ -57,13 +64,12 @@ object ShutterStatus:
             case ShutterStatusValue.Shuttered =>
               JsSuccess:
                 Shuttered(
-                  reason               = (json \ "reason").asOpt[String],
-                  outageMessage        = (json \ "outageMessage").asOpt[String],
+                  reason               = (json \ "reason"              ).asOpt[String],
+                  outageMessage        = (json \ "outageMessage"       ).asOpt[String],
                   useDefaultOutagePage = (json \ "useDefaultOutagePage").as[Boolean]
                 )
 
       override def writes(ss: ShutterStatus): JsValue =
-        given Writes[ShutterStatusValue] = ShutterStatusValue.format
         ss match
           case Shuttered(reason, outageMessage, useDefaultOutagePage) =>
             Json.obj(
@@ -90,29 +96,37 @@ object ShutterState {
   val reads: Reads[ShutterState] =
     ( (__ \ "name"       ).read[ServiceName](ServiceName.format)
     ~ (__ \ "context"    ).readNullable[String]
-    ~ (__ \ "type"       ).read[ShutterType](ShutterType.format)
-    ~ (__ \ "environment").read[Environment](Environment.format)
+    ~ (__ \ "type"       ).read[ShutterType]
+    ~ (__ \ "environment").read[Environment]
     ~ (__ \ "status"     ).read[ShutterStatus](ShutterStatus.format)
     )(ShutterState.apply)
 }
 
 // -------------- Events ---------------------
 
-enum EventType(val asString: String) extends FromString:
+given Parser[EventType] = Parser.parser(EventType.values)
+
+enum EventType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads:
   case ShutterStateCreate    extends EventType("shutter-state-create"   )
   case ShutterStateDelete    extends EventType("shutter-state-delete"   )
   case ShutterStateChange    extends EventType("shutter-state-change"   )
   case KillSwitchStateChange extends EventType("killswitch-state-change")
 
-object EventType extends FromStringEnum[EventType]
 
-enum ShutterCause(val asString: String) extends FromString:
+given Parser[ShutterCause] = Parser.parser(ShutterCause.values)
+
+enum ShutterCause(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads:
   case Scheduled      extends ShutterCause("scheduled"      )
   case UserCreated    extends ShutterCause("user-shutter"   )
   case AutoReconciled extends ShutterCause("auto-reconciled")
   case Legacy         extends ShutterCause("legacy-shutter" )
 
-object ShutterCause extends FromStringEnum[ShutterCause]
 
 enum EventData:
   case ShutterStateCreateData(
@@ -137,40 +151,40 @@ enum EventData:
   ) extends EventData
 
 object EventData:
-  val shutterStateCreateDataFormat: Format[ShutterStateCreateData] =
+  val shutterStateCreateDataReads: Reads[ShutterStateCreateData] =
     (__ \ "serviceName")
-      .format[ServiceName](ServiceName.format)
-      .inmap(ShutterStateCreateData.apply, _.serviceName)
+      .read[ServiceName](ServiceName.format)
+      .map(ShutterStateCreateData.apply)
 
-  val shutterStateDeleteDataFormat: Format[ShutterStateDeleteData] =
+  val shutterStateDeleteDataReads: Reads[ShutterStateDeleteData] =
     (__ \ "serviceName")
-      .format[ServiceName](ServiceName.format)
-      .inmap(ShutterStateDeleteData.apply, _.serviceName)
+      .read[ServiceName](ServiceName.format)
+      .map(ShutterStateDeleteData.apply)
 
-  val shutterStateChangeDataFormat: Format[ShutterStateChangeData] =
-    ( (__ \ "serviceName").format[ServiceName  ](ServiceName.format       )
-    ~ (__ \ "environment").format[Environment  ](Environment.format)
-    ~ (__ \ "shutterType").format[ShutterType  ](ShutterType.format       )
-    ~ (__ \ "status"     ).format[ShutterStatus](ShutterStatus.format     )
-    ~ (__ \ "cause"      ).format[ShutterCause ](ShutterCause.format      )
-    )(ShutterStateChangeData.apply, d => Tuple.fromProductTyped(d))
+  val shutterStateChangeDataReads: Reads[ShutterStateChangeData] =
+    ( (__ \ "serviceName").read[ServiceName  ](ServiceName.format  )
+    ~ (__ \ "environment").read[Environment  ]
+    ~ (__ \ "shutterType").read[ShutterType  ]
+    ~ (__ \ "status"     ).read[ShutterStatus](ShutterStatus.format)
+    ~ (__ \ "cause"      ).read[ShutterCause ]
+    )((a, b, c, d, e) => ShutterStateChangeData(a, b, c, d, e))
 
-  val killSwitchStateChangeDataFormat: Format[KillSwitchStateChangeData] =
-    ( (__ \ "environment").format[Environment       ](Environment.format)
-    ~ (__ \ "status"     ).format[ShutterStatusValue](ShutterStatusValue.format)
-    )(KillSwitchStateChangeData.apply, d => Tuple.fromProductTyped(d))
+  val killSwitchStateChangeDataReads: Reads[KillSwitchStateChangeData] =
+    ( (__ \ "environment").read[Environment       ]
+    ~ (__ \ "status"     ).read[ShutterStatusValue]
+    )((a, b) => KillSwitchStateChangeData(a, b))
 
   def reads(et: EventType): Reads[EventData] =
     (js: JsValue) =>
       et match
-        case EventType.ShutterStateCreate    => js.validate[EventData.ShutterStateCreateData](shutterStateCreateDataFormat)
-        case EventType.ShutterStateDelete    => js.validate[EventData.ShutterStateDeleteData](shutterStateDeleteDataFormat)
-        case EventType.ShutterStateChange    => js.validate[EventData.ShutterStateChangeData](shutterStateChangeDataFormat)
-        case EventType.KillSwitchStateChange => js.validate[EventData.KillSwitchStateChangeData](killSwitchStateChangeDataFormat)
+        case EventType.ShutterStateCreate    => js.validate[ShutterStateCreateData](shutterStateCreateDataReads)
+        case EventType.ShutterStateDelete    => js.validate[ShutterStateDeleteData](shutterStateDeleteDataReads)
+        case EventType.ShutterStateChange    => js.validate[ShutterStateChangeData](shutterStateChangeDataReads)
+        case EventType.KillSwitchStateChange => js.validate[KillSwitchStateChangeData](killSwitchStateChangeDataReads)
 end EventData
 
 case class ShutterEvent(
-  username : String,
+  username : UserName,
   timestamp: Instant,
   eventType: EventType,
   data     : EventData
@@ -193,7 +207,7 @@ case class ShutterEvent(
 
 /** Special case flattened */
 case class ShutterStateChangeEvent(
-  username   : String,
+  username   : UserName,
   timestamp  : Instant,
   serviceName: ServiceName,
   environment: Environment,
@@ -205,8 +219,7 @@ case class ShutterStateChangeEvent(
 object ShutterEvent:
 
   val reads: Reads[ShutterEvent] =
-    given Reads[EventType] = EventType.format
-    ( (__ \ "username" ).read[String]
+    ( (__ \ "username" ).read[UserName](UserName.format)
     ~ (__ \ "timestamp").read[Instant]
     ~ (__ \ "type"     ).read[EventType]
     ~ (__ \ "type"     ).read[EventType]
@@ -251,7 +264,7 @@ object OutagePage:
     given Reads[TemplatedContent]  = TemplatedContent.format
     given Reads[OutagePageWarning] = OutagePageWarning.reads
     ( (__ \ "serviceName"      ).read[ServiceName](ServiceName.format)
-    ~ (__ \ "environment"      ).read[Environment](Environment.format)
+    ~ (__ \ "environment"      ).read[Environment]
     ~ (__ \ "outagePageURL"    ).read[String]
     ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
     ~ (__ \ "templatedElements").read[List[TemplatedContent]]

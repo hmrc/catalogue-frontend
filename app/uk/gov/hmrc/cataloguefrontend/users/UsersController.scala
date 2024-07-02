@@ -18,12 +18,11 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import cats.data.EitherT
 import play.api.data.{Form, Forms}
-import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, TeamsAndRepositoriesConnector, UserManagementConnector}
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{UserInfoPage, UserListPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
@@ -47,18 +46,18 @@ class UsersController @Inject()(
      with CatalogueAuthBuilders
      with play.api.i18n.I18nSupport:
 
-  def user(username: String): Action[AnyContent] =
+  def user(username: UserName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       userManagementConnector.getUser(username)
         .map:
           case Some(user) =>
-            val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username}"
+            val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
             Ok(userInfoPage(user, umpProfileUrl))
           case None =>
             NotFound(error_404_template())
     }
 
-  def allUsers(username: Option[String]): Action[AnyContent] =
+  def allUsers(username: Option[UserName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (for
          retrieval   <- EitherT.liftF(
@@ -90,14 +89,14 @@ object UsersController:
 
 case class UsersListFilter(
   team    : Option[TeamName] = None,
-  username: Option[String]   = None
+  username: Option[UserName] = None
 )
 
 object UsersListFilter:
   lazy val form: Form[UsersListFilter] =
     Form(
-      mapping(
-        "team"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
-        "username" -> optional(text)
+      Forms.mapping(
+        "team"     -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "username" -> Forms.optional(Forms.of[UserName](UserName.formFormat))
       )(UsersListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

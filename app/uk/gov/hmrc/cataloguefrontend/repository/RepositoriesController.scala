@@ -17,13 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend.repository
 
 import play.api.data.{Form, Forms}
-import play.api.data.Forms.{boolean, mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector, given}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.repository.{routes => repositoryRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.view.html.RepositoriesListPage
+import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -56,7 +56,9 @@ class RepositoriesController @Inject() (
       val (repoType, serviceType) = repoTypeString match
         case Some("FrontendService")  => (Some(RepoType.Service)        , Some(ServiceType.Frontend))
         case Some("BackendService")   => (Some(RepoType.Service)        , Some(ServiceType.Backend))
-        case Some(other)              => (RepoType.parse(other).toOption, None)
+        case Some(other)              => ( Parser[RepoType].parse(other).toOption
+                                         , None
+                                         )
         case None                     => (None                          , None)
 
       val allRepositories =
@@ -103,11 +105,11 @@ case class RepoListFilter(
 object RepoListFilter {
   lazy val form =
     Form(
-      mapping(
-        "name"         -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"         -> optional(Forms.of[TeamName](TeamName.formFormat)),
-        "repoType"     -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "showArchived" -> optional(boolean)
+      Forms.mapping(
+        "name"         -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "team"         -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "repoType"     -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "showArchived" -> Forms.optional(Forms.boolean)
       )(RepoListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

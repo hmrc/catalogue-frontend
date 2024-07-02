@@ -68,7 +68,7 @@ class ShutterEventsController @Inject() (
                         case NonFatal(ex) =>
                           logger.error(s"Failed to retrieve shutter events: ${ex.getMessage}", ex)
                           Seq.empty
-        page     =  ShutterEventsPage(services, events, form, Environment.valuesAsSeq)
+        page     =  ShutterEventsPage(services, events, form, Environment.values.toSeq)
       yield Ok(page)
     }
 
@@ -86,7 +86,7 @@ private object ShutterEventsForm:
   lazy val form =
     Form(
       Forms.mapping(
-        "environment" -> Forms.of[Environment](Environment.formFormat)
+        "environment" -> Forms.of[Environment]
       , "serviceName" -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat))
       )(ShutterEventsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

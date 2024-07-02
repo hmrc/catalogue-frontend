@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,19 @@
 
 package uk.gov.hmrc.cataloguefrontend.util
 
-import org.scalacheck.Gen
-import org.scalacheck.Gen.oneOf
-import uk.gov.hmrc.cataloguefrontend.connector.RepoType
+import play.api.libs.json.{JsError, JsResult, JsSuccess}
 
-object Generators {
 
-  val repoTypeGen: Gen[RepoType] =
-    oneOf(RepoType.values.toSeq)
+object CategoryHelper:
+  given cats.Applicative[JsResult] =
+    new cats.Applicative[JsResult]:
+      def pure[A](a: A): JsResult[A] =
+        JsSuccess(a)
 
-}
+      def ap[A, B](ff: JsResult[A => B])(fa: JsResult[A]): JsResult[B] =
+        fa match
+          case JsSuccess(a, p1) =>
+            ff match
+              case JsSuccess(f, p2) => JsSuccess(f(a), p1)
+              case JsError(e1)      => JsError(e1)
+          case JsError(e1) => JsError(e1)

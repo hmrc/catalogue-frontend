@@ -17,16 +17,15 @@
 package uk.gov.hmrc.cataloguefrontend.createappconfigs
 
 import cats.data.EitherT
-import play.api.data.Form
-import play.api.data.Forms.{boolean, mapping}
+import play.api.data.{Form, Forms}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Check.{EnvCheck, Present, SimpleCheck}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, given}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
+import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.cataloguefrontend.view.html.{CreateAppConfigsPage, error_404_template}
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -59,18 +58,18 @@ class CreateAppConfigsController @Inject()(
   private val envsToHide: Set[Environment] =
     configuration.underlying.getStringList("environmentsToHideByDefault").asScala.toSet
       .map: str =>
-        Environment.parse(str).getOrElse(sys.error(s"config 'environmentsToHideByDefault' contains an invalid environment: $str"))
+        Parser[Environment].parse(str).getOrElse(sys.error(s"config 'environmentsToHideByDefault' contains an invalid environment: $str"))
 
   private def checkAppConfigBaseExists(checks: List[Check]): Boolean =
     checks.exists:
-      case SimpleCheck("App Config Base", Right(Present(_)), _, _) => true
-      case _                                                       => false
+      case Check.SimpleCheck("App Config Base", Right(Check.Present(_)), _, _) => true
+      case _                                                                   => false
 
   private def checkAppConfigEnvExists(checks: List[Check]): Seq[Environment] =
     checks.flatMap:
-      case EnvCheck("App Config Environment", checkResults, _, _) =>
+      case Check.EnvCheck("App Config Environment", checkResults, _, _) =>
         checkResults.collect:
-          case (env, Right(Present(_))) => env
+          case (env, Right(Check.Present(_))) => env
       case _                                                      =>
         Seq.empty[Environment]
 
@@ -98,7 +97,7 @@ class CreateAppConfigsController @Inject()(
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
           isApi         =  serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
-          envsToDisplay =  Environment.valuesAsSeq.diff(envsToHide.toSeq)
+          envsToDisplay =  Environment.values.toSeq.diff(envsToHide.toSeq)
           hasPerm       =  request.retrieval
           form          =  { val f = CreateAppConfigsForm.form
                              if !hasPerm
@@ -141,6 +140,7 @@ class CreateAppConfigsController @Inject()(
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
           isApi         =  serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
+          envsToDisplay =  Environment.values.toSeq.diff(envsToHide.toSeq)
           form          <- EitherT.fromEither[Future](CreateAppConfigsForm.form.bindFromRequest().fold(
                              formWithErrors =>
                                Left(
@@ -153,7 +153,7 @@ class CreateAppConfigsController @Inject()(
                                      hasPerm       = true,
                                      hasBaseConfig = baseConfig,
                                      envConfigs    = envConfigs,
-                                     envsToDisplay = Environment.valuesAsSeq.diff(envsToHide.toSeq)
+                                     envsToDisplay = envsToDisplay
                                    )
                                  )
                                ),
@@ -178,7 +178,7 @@ class CreateAppConfigsController @Inject()(
                                    hasPerm       = true,
                                    hasBaseConfig = baseConfig,
                                    envConfigs    = envConfigs,
-                                   envsToDisplay = Environment.valuesAsSeq.diff(envsToHide.toSeq)
+                                   envsToDisplay = envsToDisplay
                                  )
                                )
           _              = logger.info(s"Bnd api request id: $id:")
@@ -200,12 +200,12 @@ case class CreateAppConfigsForm(
 object CreateAppConfigsForm:
   val form: Form[CreateAppConfigsForm] =
     Form(
-      mapping(
-        "appConfigBase"         -> boolean,
-        "appConfigDevelopment"  -> boolean,
-        "appConfigQA"           -> boolean,
-        "appConfigStaging"      -> boolean,
-        "appConfigProduction"   -> boolean
+      Forms.mapping(
+        "appConfigBase"         -> Forms.boolean,
+        "appConfigDevelopment"  -> Forms.boolean,
+        "appConfigQA"           -> Forms.boolean,
+        "appConfigStaging"      -> Forms.boolean,
+        "appConfigProduction"   -> Forms.boolean
       )(CreateAppConfigsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying("No update requested", form =>
           Seq(

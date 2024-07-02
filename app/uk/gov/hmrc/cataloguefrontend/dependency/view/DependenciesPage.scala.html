@@ -43,7 +43,7 @@
                     </div>
                     <div id="collapsible-area-@index" class="accordion-collapse collapse @if(!collapsable) {show}">
                         <div class="accordion-body">
-                            <span class="jdk-version">@{serviceDependency.java.kind}: @{serviceDependency.java.version} @{serviceDependency.java.vendor}</span>
+                            <span class="jdk-version">@{serviceDependency.java.kind.asString}: @{serviceDependency.java.version} @{serviceDependency.java.vendor.asString}</span>
 
                             @defining(DependenciesService.sortAndSeparateDependencies(serviceDependency)) { dependencies =>
                                 <table id="dependencies-list" class="table table-condensed table-striped">

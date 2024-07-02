@@ -16,13 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
-enum CreateTestRepositoryType(val asString: String) extends FromString:
+import FromStringEnum._
+
+given Parser[CreateTestRepositoryType] = Parser.parser(CreateTestRepositoryType.values)
+
+enum CreateTestRepositoryType(
+  override val asString: String
+) extends FromString
+  derives Ordering, FormFormat:
   case UITest          extends CreateTestRepositoryType("UI Journey Test" )
   case APITest         extends CreateTestRepositoryType("API Test"        )
   case PerformanceTest extends CreateTestRepositoryType("Performance Test")
-
-object CreateTestRepositoryType extends FromStringEnum[CreateTestRepositoryType]:
-  val parsingError: String =
-    s"Not a valid CreateTestRepositoryType. Should be one of ${values.mkString(", ")}"

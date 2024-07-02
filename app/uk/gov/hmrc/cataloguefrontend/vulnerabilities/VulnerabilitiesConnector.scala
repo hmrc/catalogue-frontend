@@ -47,7 +47,7 @@ class VulnerabilitiesConnector @Inject() (
   )(using
     HeaderCarrier
   ): Future[Option[Seq[VulnerabilitySummary]]] =
-    given Reads[VulnerabilitySummary] = VulnerabilitySummary.apiFormat
+    given Reads[VulnerabilitySummary] = VulnerabilitySummary.reads
     httpClientV2
       .get(url"$url/vulnerabilities/api/summaries?flag=${flag.map(_.asString)}&service=$serviceQuery&version=${version.map(_.original)}&team=${team.map(_.asString)}&curationStatus=${curationStatus.map(_.asString)}")
       .execute[Option[Seq[VulnerabilitySummary]]]

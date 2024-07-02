@@ -20,16 +20,21 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, Version, VersionRange}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser}
 
 import java.time.LocalDate
 
-// TODO avoid caching LocalDate, and provide to isActive function
+import FromStringEnum._
+
 case class BobbyRuleViolation(
   reason: String,
   range : VersionRange,
   from  : LocalDate
-)(using now: LocalDate = LocalDate.now()) {
+)(using
+  // caching the current date is not ideal, but these instances
+  // are short lived (backend to page only)
+  now: LocalDate = LocalDate.now()
+) {
   val isActive: Boolean =
     now.isAfter(from)
 }
@@ -117,7 +122,6 @@ object Dependency:
     given Reads[Version           ] = Version.format
     given Reads[BobbyRuleViolation] = BobbyRuleViolation.format
     given Reads[ImportedBy        ] = ImportedBy.format
-    given Reads[DependencyScope   ] = DependencyScope.format
     ( (__ \ "name"               ).read[String]
     ~ (__ \ "group"              ).read[String]
     ~ (__ \ "currentVersion"     ).read[Version]
@@ -166,8 +170,6 @@ object RepoWithDependency:
   val reads: Reads[RepoWithDependency] =
     given Reads[TeamName       ] = TeamName.format
     given Reads[Version        ] = Version.format
-    given Reads[DependencyScope] = DependencyScope.format
-    given Reads[RepoType       ] = RepoType.format
     ( (__ \ "repoName"   ).read[String]
     ~ (__ \ "repoVersion").read[Version]
     ~ (__ \ "teams"      ).read[List[TeamName]]
@@ -190,7 +192,12 @@ object GroupArtefacts {
     )(GroupArtefacts.apply, ga => Tuple.fromProductTyped(ga))
 }
 
-enum DependencyScope(val asString: String) extends FromString:
+given Parser[DependencyScope] = Parser.parser(DependencyScope.values)
+
+enum DependencyScope(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads, Writes:
   case Compile  extends DependencyScope("compile" )
   case Provided extends DependencyScope("provided")
   case Test     extends DependencyScope("test"    )
@@ -201,6 +208,3 @@ enum DependencyScope(val asString: String) extends FromString:
     asString match
       case "it"  => "Integration Test"
       case other => other.capitalize
-
-
-object DependencyScope extends FromStringEnum[DependencyScope]

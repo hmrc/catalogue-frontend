@@ -26,6 +26,11 @@ object FormUtils:
     Constraint[String](""): o =>
       if o == null || o.trim.isEmpty then Invalid(ValidationError("error.required")) else Valid
 
+  def notEmptyOption: Constraint[Option[?]] =
+    import play.api.data.validation._
+    Constraint[Option[?]](""): o =>
+      if o == null || o.isEmpty then Invalid(ValidationError("error.required")) else Valid
+
   def notEmptySeq: Constraint[Seq[?]] =
     import play.api.data.validation._
     Constraint[Seq[?]](""): o =>

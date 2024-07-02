@@ -61,7 +61,7 @@ class CreateRepositoryController @Inject()(
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
       val userTeams = cleanseUserTeams(request.retrieval)
-      Ok(createServiceRepositoryPage(CreateServiceRepoForm.form, userTeams, CreateServiceRepositoryType.valuesAsSeq))
+      Ok(createServiceRepositoryPage(CreateServiceRepoForm.form, userTeams))
     }
 
   val createServiceRepository: Action[AnyContent] =
@@ -73,16 +73,16 @@ class CreateRepositoryController @Inject()(
          userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
          submittedForm =  CreateServiceRepoForm.form.bindFromRequest()
          validForm     <- submittedForm.fold[EitherT[Future, Result, CreateServiceRepoForm]](
-                            formWithErrors => EitherT.leftT(BadRequest(createServiceRepositoryPage(formWithErrors, userTeams, CreateServiceRepositoryType.valuesAsSeq))),
+                            formWithErrors => EitherT.leftT(BadRequest(createServiceRepositoryPage(formWithErrors, userTeams))),
                             validForm      => EitherT.pure(validForm)
                           )
          _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
          _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
-                            .leftMap(error => BadRequest(createServiceRepositoryPage(submittedForm.withError("teamName", error), userTeams, CreateServiceRepositoryType.valuesAsSeq)))
+                            .leftMap(error => BadRequest(createServiceRepositoryPage(submittedForm.withError("teamName", error), userTeams)))
          id            <- EitherT(buildDeployApiConnector.createServiceRepository(validForm))
                             .leftMap: error =>
                               logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} failed with message: $error")
-                              BadRequest(createServiceRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams, CreateServiceRepositoryType.valuesAsSeq))
+                              BadRequest(createServiceRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
          _             =  logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
        yield Redirect(routes.CreateRepositoryController.createServiceRepositoryConfirmation(ServiceName(validForm.repositoryName)))
       ).merge
@@ -128,7 +128,7 @@ class CreateRepositoryController @Inject()(
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
     ) { implicit request =>
       val userTeams = cleanseUserTeams(request.retrieval)
-      Ok(createTestRepositoryPage(CreateTestRepoForm.form, userTeams, CreateTestRepositoryType.valuesAsSeq))
+      Ok(createTestRepositoryPage(CreateTestRepoForm.form, userTeams))
     }
 
   val createTestRepository: Action[AnyContent] =
@@ -140,17 +140,17 @@ class CreateRepositoryController @Inject()(
          userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
          submittedForm =  CreateTestRepoForm.form.bindFromRequest()
          validForm     <- submittedForm.fold[EitherT[Future, Result, CreateServiceRepoForm]](
-                            formWithErrors => EitherT.leftT(BadRequest(createTestRepositoryPage(formWithErrors, userTeams, CreateTestRepositoryType.valuesAsSeq))),
+                            formWithErrors => EitherT.leftT(BadRequest(createTestRepositoryPage(formWithErrors, userTeams))),
                             validForm      => EitherT.pure(validForm)
                           )
          _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
          _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
                             .leftMap: error =>
-                              BadRequest(createTestRepositoryPage(submittedForm.withError("teamName", error), userTeams, CreateTestRepositoryType.valuesAsSeq))
+                              BadRequest(createTestRepositoryPage(submittedForm.withError("teamName", error), userTeams))
          id            <- EitherT(buildDeployApiConnector.createTestRepository(validForm))
                             .leftMap: error =>
                               logger.info(s"CreateTestRepository request for ${validForm.repositoryName} failed with message: $error")
-                              BadRequest(createTestRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams, CreateTestRepositoryType.valuesAsSeq))
+                              BadRequest(createTestRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
          _             =  logger.info(s"CreateTestRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
        yield Redirect(routes.CreateRepositoryController.createTestRepositoryConfirmation(validForm.repositoryName))
       ).merge

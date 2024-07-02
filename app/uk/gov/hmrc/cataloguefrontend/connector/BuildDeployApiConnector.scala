@@ -20,13 +20,14 @@ import play.api.Logging
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.ws.writeableOf_JsValue
+import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
 import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -251,12 +252,18 @@ object BuildDeployApiConnector:
 
   case class AsyncRequestId(request: JsValue)
 
-  enum PrototypeStatus(val asString: String, val displayString: String) extends FromString:
+  import FromStringEnum._
+
+  given Parser[PrototypeStatus] = Parser.parser(PrototypeStatus.values)
+
+  enum PrototypeStatus(
+    override val asString: String,
+    val displayString    : String
+  ) extends FromString
+    derives Ordering, Reads, PathBindable:
     case Running      extends PrototypeStatus(asString = "running"     , displayString = "Running"     )
     case Stopped      extends PrototypeStatus(asString = "stopped"     , displayString = "Stopped"     )
     case Undetermined extends PrototypeStatus(asString = "undetermined", displayString = "Undetermined")
-
-  object PrototypeStatus extends FromStringEnum[PrototypeStatus]
 
   case class PrototypeDetails(
     url   : Option[String],
@@ -266,7 +273,7 @@ object BuildDeployApiConnector:
   object PrototypeDetails:
     val reads: Reads[PrototypeDetails] =
       ( (__ \ "prototypeUrl").readNullable[String]
-      ~ (__ \ "status").read[PrototypeStatus](PrototypeStatus.reads)
+      ~ (__ \ "status"      ).read[PrototypeStatus]
       )(PrototypeDetails.apply)
 
   case class ChangePrototypePasswordRequest(

@@ -58,7 +58,7 @@ class ResourceUsageConnector @Inject() (
                 acc.lastOption match
                   case Some(previous) =>
                     Environment
-                      .valuesAsSeq.map: env =>
+                      .values.map: env =>
                         env -> resourceUsages
                                 .find(_.environment == env).map(_.deploymentSize)
                                 .orElse(previous.values.get(env))
@@ -66,7 +66,7 @@ class ResourceUsageConnector @Inject() (
                       .toMap
                   case None =>
                     Environment
-                      .valuesAsSeq.map: env =>
+                      .values.map: env =>
                         env -> resourceUsages
                                 .find(_.environment == env).map(_.deploymentSize)
                                 .getOrElse(DeploymentSize.empty)
@@ -102,7 +102,7 @@ object ResourceUsageConnector:
     val format: Format[RawResourceUsage] =
       ( (__ \ "date"        ).format[Instant]
       ~ (__ \ "serviceName" ).format[ServiceName](ServiceName.format)
-      ~ (__ \ "environment" ).format[Environment](Environment.format)
+      ~ (__ \ "environment" ).format[Environment]
       ~ (__ \ "slots"       ).format[Int]
       ~ (__ \ "instances"   ).format[Int]
       )((d, sn, e, s, i) => RawResourceUsage(d, sn, e, DeploymentSize(s, i))

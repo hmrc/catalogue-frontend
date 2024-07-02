@@ -19,6 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.serviceconfigs
 import play.api.Logger
 import play.api.cache.AsyncCacheApi
 import play.api.libs.json.Reads
+import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 import uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
@@ -61,7 +62,7 @@ class ServiceConfigsConnector @Inject() (
   )(using
     HeaderCarrier
    ): Future[Seq[DeploymentConfigEvent]] =
-    given Reads[DeploymentConfigEvent] = DeploymentConfigEvent.format
+    given Reads[DeploymentConfigEvent] = DeploymentConfigEvent.reads
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-events/${service.asString}?from=$from&to=$to")
       .execute[Seq[DeploymentConfigEvent]]

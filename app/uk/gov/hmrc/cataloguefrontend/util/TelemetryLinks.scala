@@ -71,9 +71,10 @@ class TelemetryLinks @Inject()(configuration: Configuration):
     )
 
   def kibanaNonPerformantQueries(
-    env                 : Environment,
-    serviceName         : ServiceName,
-    nonPerformantQueries: Seq[ServiceMetricsConnector.NonPerformantQueries] = Seq.empty
+    env                     : Environment,
+    serviceName             : ServiceName,
+    databaseName            : String,
+    nonPerformantQueries    : Seq[ServiceMetricsConnector.NonPerformantQueries] = Seq.empty
   ): Seq[Link] =
     telemetryLogsDiscoverLinkTemplates.toSeq.map: (name, linkTemplate) =>
       Link(
@@ -81,7 +82,7 @@ class TelemetryLinks @Inject()(configuration: Configuration):
         displayName = s"$name Queries",
         url         = linkTemplate
                         .replace(s"$${env}"    , UrlUtils.encodePathParam(env.asString))
-                        .replace(s"$${service}", UrlUtils.encodePathParam(serviceName.asString)),
+                        .replace(s"$${service}", UrlUtils.encodePathParam(databaseName)),
         cls         = nonPerformantQueries.collectFirst:
                         case npq if npq.service == serviceName
                                  && npq.queryTypes.exists(_.contains(name))

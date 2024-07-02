@@ -61,7 +61,7 @@ object DependencyGraphParser:
 
   case class Node(value: String) extends Token:
 
-    private lazy val nodeRegex(g, a, sv, v) = value
+    private lazy val nodeRegex(g, a, sv, v) = value: @unchecked
 
     def group               = g
     def artefact            = a

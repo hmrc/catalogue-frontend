@@ -46,7 +46,7 @@
     val currentIndex = events.indexWhere(e => e.env == env && e.version == version)
     if (currentIndex > 0) {
         val previousVersion = events(currentIndex - 1).version
-        slugInfo.find(_.version == previousVersion).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")
+        slugInfo.find(_.version == previousVersion).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString}")
     } else {
         "unknown"
     }
@@ -76,7 +76,7 @@
                         '@{e.displayStart.getOrElse(e.start).displayFormat}',
                         '@{e.displayEnd.getOrElse(e.end).displayFormat}',
                         @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
-                        '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor}")}',
+                        '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString}")}',
                         '@previousJavaVersion(e.env, e.version, events, slugInfo)',
                         '@{e.configChanged.getOrElse("undefined")}'
                     ),
@@ -149,7 +149,7 @@
                         <label for="start" class="form-label">Date From</label>
                     </dt>
                     <dd>
-                        <input type="date" id="start" name="start" value="@start.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
+                        <input type="date" id="start" name="start" value="@start.asPattern(`yyyy-MM-dd`)" class="form-control" style="line-height: 20px">
                     </dd>
                 </dl>
             </div>
@@ -159,7 +159,7 @@
                         <label for="end" class="form-label">Date To</label>
                     </dt>
                     <dd>
-                        <input type="date" id="end" name="end" value="@end.asPattern("yyyy-MM-dd")" class="form-control" style="line-height: 20px">
+                        <input type="date" id="end" name="end" value="@end.asPattern(`yyyy-MM-dd`)" class="form-control" style="line-height: 20px">
                     </dd>
                 </dl>
             </div>

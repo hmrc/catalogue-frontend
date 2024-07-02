@@ -141,5 +141,5 @@ GET        /vulnerabilities                              uk.gov.hmrc.cataloguefr
 GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(team: Option[TeamName] ?= None)
 GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[ServiceName] ?= None, team: Option[TeamName] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
-GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.allUsers(username: Option[String] ?= None)
-GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: String)
+GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.allUsers(username: Option[UserName] ?= None)
+GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: UserName)

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import play.api.data.{Form, Forms}
-import play.api.data.Forms.{mapping, optional, text}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
@@ -47,7 +46,7 @@ class HealthIndicatorsController @Inject() (
       for
         indicator <- healthIndicatorsConnector.getIndicator(name)
         history   <- healthIndicatorsConnector.getHistoricIndicators(name)
-        average   <- healthIndicatorsConnector.getAveragePlatformScore
+        average   <- healthIndicatorsConnector.getAveragePlatformScore()
       yield indicator match
         case Some(indicator) => Ok(HealthIndicatorsPage(indicator, history, average.map(_.averageScore)))
         case None            => NotFound(error_404_template())
@@ -67,7 +66,7 @@ class HealthIndicatorsController @Inject() (
                                      )
               teams               <- teamsAndRepositoriesConnector.allTeams()
               indicators          =  indicatorsWithTeams.filter(t => validForm.team.fold(true)(t.owningTeams.contains))
-            yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.valuesAsSeq, teams.sortBy(_.name), form.fill(validForm)))
+            yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.values.toSeq, teams.sortBy(_.name), form.fill(validForm)))
         )
     }
 end HealthIndicatorsController
@@ -88,13 +87,9 @@ case class HealthIndicatorsFilter(
 object HealthIndicatorsFilter:
   lazy val form: Form[HealthIndicatorsFilter] =
     Form(
-      mapping(
-        "repoName" -> optional(text),
-        "team"     -> optional(Forms.of[TeamName](TeamName.formFormat)),
-        "repoType" -> optional(text)
-                        .transform[Option[RepoType]](
-                          _.flatMap(s => RepoType.parse(s).toOption),
-                          _.map(_.asString)
-                        )
+      Forms.mapping(
+        "repoName" -> Forms.optional(Forms.text),
+        "team"     -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "repoType" -> Forms.optional(Forms.of[RepoType])
       )(HealthIndicatorsFilter.apply)(r => Some(Tuple.fromProductTyped(r)))
     )

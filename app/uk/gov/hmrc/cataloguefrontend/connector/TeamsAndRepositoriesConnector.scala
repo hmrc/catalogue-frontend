@@ -20,10 +20,11 @@ import play.api.Logger
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.ws.writeableOf_JsValue
+import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.cataloguefrontend.config.Constant
 import uk.gov.hmrc.cataloguefrontend.cost.Zone
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser, FormFormat}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -33,30 +34,43 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-enum RepoType(val asString: String) extends FromString:
+import FromStringEnum._
+
+given Parser[RepoType] = Parser.parser(RepoType.values)
+
+enum RepoType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads, Writes, FormFormat:
   case Service   extends RepoType("Service"  )
   case Library   extends RepoType("Library"  )
   case Prototype extends RepoType("Prototype")
   case Test      extends RepoType("Test"     )
   case Other     extends RepoType("Other"    )
 
-object RepoType extends FromStringEnum[RepoType]
+given Parser[ServiceType] = Parser.parser(ServiceType.values)
 
-enum ServiceType(val asString: String, val displayString: String) extends FromString:
-  case Frontend extends ServiceType(asString = "frontend", displayString = "Service (Frontend)")
-  case Backend  extends ServiceType(asString = "backend" , displayString = "Service (Backend)")
+enum ServiceType(
+  override val asString: String,
+  val displayString    : String
+) extends FromString
+  derives Ordering, Reads, Writes, FormFormat, QueryStringBindable:
+  case Frontend extends ServiceType(asString = "frontend", displayString = "Frontend")
+  case Backend  extends ServiceType(asString = "backend" , displayString = "Backend")
 
-object ServiceType extends FromStringEnum[ServiceType]
+given Parser[Tag] = Parser.parser(Tag.values)
 
-enum Tag(val asString: String, val displayString: String) extends FromString:
+enum Tag(
+  override val asString: String,
+  val displayString    : String
+) extends FromString
+  derives Ordering, Reads:
   case AdminFrontend    extends Tag(asString = "admin"             , displayString = "Admin Frontend"    )
   case Api              extends Tag(asString = "api"               , displayString = "API"               )
   case BuiltOffPlatform extends Tag(asString = "built-off-platform", displayString = "Built Off Platform")
   case Maven            extends Tag(asString = "maven"             , displayString = "Maven"             )
   case Stub             extends Tag(asString = "stub"              , displayString = "Stub"              )
 
-
-object Tag extends FromStringEnum[Tag]
 
 case class Link(
   name       : String,
@@ -68,12 +82,12 @@ case class Link(
     displayName.toLowerCase.replaceAll(" ", "-")
 
 object Link:
-  val format: Format[Link] =
-    ( (__ \ "name"       ).format[String]
-    ~ (__ \ "displayName").format[String]
-    ~ (__ \ "url"        ).format[String]
-    ~ (__ \ "cls"        ).formatNullable[String]
-    )(apply, l => Tuple.fromProductTyped(l))
+  val reads: Reads[Link] =
+    ( (__ \ "name"       ).read[String]
+    ~ (__ \ "displayName").read[String]
+    ~ (__ \ "url"        ).read[String]
+    ~ (__ \ "cls"        ).readNullable[String]
+    )(apply)
 
 case class BuildData(
   number     : Int,
@@ -84,20 +98,23 @@ case class BuildData(
 )
 
 object BuildData:
-  val apiFormat: Format[BuildData] =
-    ( (__ \ "number"     ).format[Int]
-    ~ (__ \ "url"        ).format[String]
-    ~ (__ \ "timestamp"  ).format[Instant]
-    ~ (__ \ "result"     ).formatNullable[String]
-    ~ (__ \ "description").formatNullable[String]
-  )(apply, bd => Tuple.fromProductTyped(bd))
+  val reads: Reads[BuildData] =
+    ( (__ \ "number"     ).read[Int]
+    ~ (__ \ "url"        ).read[String]
+    ~ (__ \ "timestamp"  ).read[Instant]
+    ~ (__ \ "result"     ).readNullable[String]
+    ~ (__ \ "description").readNullable[String]
+  )(apply)
 
-enum BuildJobType(val asString: String) extends FromString:
+given Parser[BuildJobType] = Parser.parser(BuildJobType.values)
+
+enum BuildJobType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads:
   case Job         extends BuildJobType("job"         )
   case Pipeline    extends BuildJobType("pipeline"    )
   case PullRequest extends BuildJobType("pull-request")
-
-object BuildJobType extends FromStringEnum[BuildJobType]
 
 case class JenkinsJob(
   name       : String,
@@ -107,12 +124,12 @@ case class JenkinsJob(
 )
 
 object JenkinsJob:
-  val apiFormat: Format[JenkinsJob] =
-    ( (__ \ "jobName"    ).format        [String]
-    ~ (__ \ "jenkinsURL" ).format        [String]
-    ~ (__ \ "jobType"    ).format        [BuildJobType](BuildJobType.format)
-    ~ (__ \ "latestBuild").formatNullable[BuildData   ](BuildData.apiFormat)
-  )(apply, j => Tuple.fromProductTyped(j))
+  val reads: Reads[JenkinsJob] =
+    ( (__ \ "jobName"    ).read        [String]
+    ~ (__ \ "jenkinsURL" ).read        [String]
+    ~ (__ \ "jobType"    ).read        [BuildJobType]
+    ~ (__ \ "latestBuild").readNullable[BuildData   ](BuildData.reads)
+  )(apply)
 
 case class GitRepository(
   name                : String,
@@ -150,37 +167,33 @@ case class GitRepository(
 end GitRepository
 
 object GitRepository:
-  val apiFormat: Format[GitRepository] =
-    given Format[RepoType]    = RepoType.format
-    given Format[ServiceType] = ServiceType.format
-    given Format[JenkinsJob]  = JenkinsJob.apiFormat
-    given Format[Tag]         = Tag.format
-    given Format[Zone]        = Zone.format
-    given Format[TeamName]    = TeamName.format
+  val reads: Reads[GitRepository] =
+    given Reads[JenkinsJob] = JenkinsJob.reads
+    given Reads[TeamName]   = TeamName.format
 
-    ( (__ \ "name"                ).format[String]
-    ~ (__ \ "description"         ).format[String]
-    ~ (__ \ "url"                 ).format[String]
-    ~ (__ \ "createdDate"         ).format[Instant]
-    ~ (__ \ "lastActiveDate"      ).format[Instant]
-    ~ (__ \ "endOfLifeDate"       ).formatNullable[Instant]
-    ~ (__ \ "isPrivate"           ).formatWithDefault[Boolean](false)
-    ~ (__ \ "repoType"            ).format[RepoType]
-    ~ (__ \ "serviceType"         ).formatNullable[ServiceType]
-    ~ (__ \ "tags"                ).formatNullable[Set[Tag]]
-    ~ (__ \ "digitalServiceName"  ).formatNullable[String]
-    ~ (__ \ "owningTeams"         ).formatWithDefault[Seq[TeamName]](Seq.empty)
-    ~ (__ \ "language"            ).formatNullable[String]
-    ~ (__ \ "isArchived"          ).formatWithDefault[Boolean](false)
-    ~ (__ \ "defaultBranch"       ).format[String]
-    ~ (__ \ "branchProtection"    ).formatNullable(BranchProtection.format)
-    ~ (__ \ "isDeprecated"        ).formatWithDefault[Boolean](false)
-    ~ (__ \ "teamNames"           ).formatWithDefault[Seq[TeamName]](Seq.empty)
-    ~ (__ \ "jenkinsJobs"         ).formatWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
-    ~ (__ \ "prototypeName"       ).formatNullable[String]
-    ~ (__ \ "prototypeAutoPublish").formatNullable[Boolean]
-    ~ (__ \ "zone"                ).formatNullable[Zone]
-    ) (apply, r => Tuple.fromProductTyped(r))
+    ( (__ \ "name"                ).read[String]
+    ~ (__ \ "description"         ).read[String]
+    ~ (__ \ "url"                 ).read[String]
+    ~ (__ \ "createdDate"         ).read[Instant]
+    ~ (__ \ "lastActiveDate"      ).read[Instant]
+    ~ (__ \ "endOfLifeDate"       ).readNullable[Instant]
+    ~ (__ \ "isPrivate"           ).readWithDefault[Boolean](false)
+    ~ (__ \ "repoType"            ).read[RepoType]
+    ~ (__ \ "serviceType"         ).readNullable[ServiceType]
+    ~ (__ \ "tags"                ).readNullable[Set[Tag]]
+    ~ (__ \ "digitalServiceName"  ).readNullable[String]
+    ~ (__ \ "owningTeams"         ).readWithDefault[Seq[TeamName]](Seq.empty)
+    ~ (__ \ "language"            ).readNullable[String]
+    ~ (__ \ "isArchived"          ).readWithDefault[Boolean](false)
+    ~ (__ \ "defaultBranch"       ).read[String]
+    ~ (__ \ "branchProtection"    ).readNullable(BranchProtection.reads)
+    ~ (__ \ "isDeprecated"        ).readWithDefault[Boolean](false)
+    ~ (__ \ "teamNames"           ).readWithDefault[Seq[TeamName]](Seq.empty)
+    ~ (__ \ "jenkinsJobs"         ).readWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
+    ~ (__ \ "prototypeName"       ).readNullable[String]
+    ~ (__ \ "prototypeAutoPublish").readNullable[Boolean]
+    ~ (__ \ "zone"                ).readNullable[Zone]
+    )(apply)
 
 case class BranchProtection(
   requiresApprovingReviews: Boolean,
@@ -192,11 +205,11 @@ case class BranchProtection(
 
 object BranchProtection:
 
-  val format: Format[BranchProtection] =
-    ( (__ \ "requiresApprovingReviews").format[Boolean]
-    ~ (__ \ "dismissesStaleReviews"   ).format[Boolean]
-    ~ (__ \ "requiresCommitSignatures").format[Boolean]
-    )(apply, bp => Tuple.fromProductTyped(bp))
+  val reads: Reads[BranchProtection] =
+    ( (__ \ "requiresApprovingReviews").read[Boolean]
+    ~ (__ \ "dismissesStaleReviews"   ).read[Boolean]
+    ~ (__ \ "requiresCommitSignatures").read[Boolean]
+    )(apply)
 
 case class GitHubTeam(
   name           : TeamName,
@@ -207,11 +220,11 @@ case class GitHubTeam(
     s"https://github.com/orgs/hmrc/teams/${name.asString.toLowerCase.replace(" ", "-")}"
 
 object GitHubTeam:
-  val format: Format[GitHubTeam] =
-    ( (__ \ "name"          ).format[TeamName](TeamName.format)
-    ~ (__ \ "lastActiveDate").formatNullable[Instant]
-    ~ (__ \ "repos"         ).format[Seq[String]]
-    )(apply, t => Tuple.fromProductTyped(t))
+  val reads: Reads[GitHubTeam] =
+    ( (__ \ "name"          ).read[TeamName](TeamName.format)
+    ~ (__ \ "lastActiveDate").readNullable[Instant]
+    ~ (__ \ "repos"         ).read[Seq[String]]
+    )(apply)
 
 @Singleton
 class TeamsAndRepositoriesConnector @Inject()(
@@ -225,12 +238,12 @@ class TeamsAndRepositoriesConnector @Inject()(
   private val teamsAndServicesBaseUrl: String =
     servicesConfig.baseUrl("teams-and-repositories")
 
-  private given Format[GitHubTeam]    = GitHubTeam.format
-  private given Format[GitRepository] = GitRepository.apiFormat // v2 model
+  private given Reads[GitHubTeam]    = GitHubTeam.reads
+  private given Reads[GitRepository] = GitRepository.reads // v2 model
 
   def lookupLatestJenkinsJobs(service: String)(using HeaderCarrier): Future[Seq[JenkinsJob]] =
     given Reads[Seq[JenkinsJob]] =
-      Reads.at(__ \ "jobs")(Reads.seq(JenkinsJob.apiFormat))
+      Reads.at(__ \ "jobs")(Reads.seq(JenkinsJob.reads))
 
     val url = url"$teamsAndServicesBaseUrl/api/v2/repositories/$service/jenkins-jobs"
     httpClientV2

@@ -61,9 +61,9 @@ class ServiceCommissioningStatusController @Inject() (
                        SearchCommissioning.SearchCommissioningForm(
                          teamName           = None
                        , serviceType        = None
-                       , lifecycleStatus    = LifecycleStatus.values
+                       , lifecycleStatus    = LifecycleStatus.values.toSeq
                        , checks             = allChecks.map(_._1)
-                       , environments       = Environment.valuesAsSeq.filterNot(_ == Environment.Integration)
+                       , environments       = Environment.values.toSeq.filterNot(_ == Environment.Integration)
                        , groupByEnvironment = Option(false)
                        , warningFilter      = Option(false)
                        )
@@ -152,28 +152,15 @@ object SearchCommissioning {
     Form(
       Forms.mapping(
         "team"               -> Forms.optional(Forms.of[TeamName](TeamName.formFormat))
-      , "serviceType"        -> Forms.optional(Forms.text.transform[ServiceType](
-                                  ServiceType.parse(_).getOrElse(ServiceType.Backend)
-                                , _.asString
-                                ))
+      , "serviceType"        -> Forms.optional(Forms.of[ServiceType])
       , "lifecycleStatus"    -> Forms.default(
-                                  Forms
-                                    .seq(Forms.text)
-                                    .transform[Seq[LifecycleStatus]](
-                                      xs => xs.map(LifecycleStatus.parse(_).toOption).flatten
-                                    , x  => identity(x).map(_.asString)
-                                    )
-                                , LifecycleStatus.values
+                                  Forms.seq(Forms.of[LifecycleStatus])
+                                , LifecycleStatus.values.toSeq
                                 )
       , "checks"             -> Forms.seq(Forms.text)
       , "environments"       -> Forms.default(
-                                  Forms
-                                    .seq(Forms.text)
-                                    .transform[Seq[Environment]](
-                                      xs => xs.map(Environment.parse(_).toOption).flatten
-                                    , x  => identity(x).map(_.asString)
-                                    )
-                                , Environment.valuesAsSeq.filterNot(_ == Environment.Integration)
+                                  Forms.seq(Forms.of[Environment])
+                                , Environment.values.toSeq.filterNot(_ == Environment.Integration)
                                 )
       , "asCsv"              -> Forms.boolean
       , "groupByEnvironment" -> Forms.optional(Forms.boolean)

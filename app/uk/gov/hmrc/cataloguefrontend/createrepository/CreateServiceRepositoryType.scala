@@ -16,9 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
-import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum}
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
-enum CreateServiceRepositoryType(val asString: String) extends FromString:
+import FromStringEnum._
+
+given Parser[CreateServiceRepositoryType] = Parser.parser(CreateServiceRepositoryType.values)
+
+enum CreateServiceRepositoryType(
+  override val asString: String
+) extends FromString
+  derives Ordering, FormFormat:
   case Empty                            extends CreateServiceRepositoryType("Empty"                                )
   case FrontendMicroservice             extends CreateServiceRepositoryType("Frontend microservice"                )
   case FrontendMicroserviceWithScaffold extends CreateServiceRepositoryType("Frontend microservice - with scaffold")
@@ -27,7 +34,3 @@ enum CreateServiceRepositoryType(val asString: String) extends FromString:
   case BackendMicroserviceWithMongodb   extends CreateServiceRepositoryType("Backend microservice - with mongodb"  )
   case ApiMicroservice                  extends CreateServiceRepositoryType("API microservice"                     )
   case ApiMicroserviceWithMongodb       extends CreateServiceRepositoryType("API microservice - with mongodb"      )
-
-object CreateServiceRepositoryType extends FromStringEnum[CreateServiceRepositoryType]:
-  val parsingError: String =
-    s"Not a valid CreateServiceRepositoryType. Should be one of ${values.mkString(", ")}"
