@@ -122,7 +122,7 @@ object RouteRulesConnector:
 
   object AdminFrontendRoute:
     val reads: Reads[AdminFrontendRoute] =
-      ( (__ \"service" ).read[ServiceName](ServiceName.format)
+      ( (__ \"service" ).read[ServiceName]
       ~ (__ \"route"   ).read[String]
       ~ (__ \"allow"   ).read[Map[Environment, List[String]]]
       ~ (__ \"location").read[String]

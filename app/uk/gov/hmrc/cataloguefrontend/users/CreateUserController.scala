@@ -110,7 +110,7 @@ object CreateUserForm:
         "organisation"     -> Forms.nonEmptyText,
         "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.digitalEmailConstraint),
         "contactComments"  -> Forms.default(Forms.text, "").verifying(Constraints.maxLength(512)),
-        "team"             -> Forms.of[TeamName](TeamName.formFormat),
+        "team"             -> Forms.of[TeamName],
         "isReturningUser"  -> Forms.boolean,
         "isTransitoryUser" -> Forms.boolean,
         "isServiceAccount" -> Forms.boolean,

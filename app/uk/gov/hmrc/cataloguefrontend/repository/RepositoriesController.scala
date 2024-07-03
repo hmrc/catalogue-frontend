@@ -107,7 +107,7 @@ object RepoListFilter {
     Form(
       Forms.mapping(
         "name"         -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"         -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "team"         -> Forms.optional(Forms.of[TeamName]),
         "repoType"     -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
         "showArchived" -> Forms.optional(Forms.boolean)
       )(RepoListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))

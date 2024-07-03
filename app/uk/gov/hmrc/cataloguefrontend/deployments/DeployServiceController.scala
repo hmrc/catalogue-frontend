@@ -340,7 +340,7 @@ object DeployServiceForm {
   val form: Form[DeployServiceForm] =
     Form(
       Forms.mapping(
-        "serviceName" -> Forms.of[ServiceName](ServiceName.formFormat)
+        "serviceName" -> Forms.of[ServiceName]
       , "version"     -> Forms.of[Version](Version.formFormat)
       , "environment" -> Forms.of[Environment]
       )(DeployServiceForm.apply)(f => Some(Tuple.fromProductTyped(f)))

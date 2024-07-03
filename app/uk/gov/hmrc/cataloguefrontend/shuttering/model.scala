@@ -94,7 +94,7 @@ case class ShutterState(
 object ShutterState {
 
   val reads: Reads[ShutterState] =
-    ( (__ \ "name"       ).read[ServiceName](ServiceName.format)
+    ( (__ \ "name"       ).read[ServiceName]
     ~ (__ \ "context"    ).readNullable[String]
     ~ (__ \ "type"       ).read[ShutterType]
     ~ (__ \ "environment").read[Environment]
@@ -153,16 +153,16 @@ enum EventData:
 object EventData:
   val shutterStateCreateDataReads: Reads[ShutterStateCreateData] =
     (__ \ "serviceName")
-      .read[ServiceName](ServiceName.format)
+      .read[ServiceName]
       .map(ShutterStateCreateData.apply)
 
   val shutterStateDeleteDataReads: Reads[ShutterStateDeleteData] =
     (__ \ "serviceName")
-      .read[ServiceName](ServiceName.format)
+      .read[ServiceName]
       .map(ShutterStateDeleteData.apply)
 
   val shutterStateChangeDataReads: Reads[ShutterStateChangeData] =
-    ( (__ \ "serviceName").read[ServiceName  ](ServiceName.format  )
+    ( (__ \ "serviceName").read[ServiceName  ]
     ~ (__ \ "environment").read[Environment  ]
     ~ (__ \ "shutterType").read[ShutterType  ]
     ~ (__ \ "status"     ).read[ShutterStatus](ShutterStatus.format)
@@ -219,7 +219,7 @@ case class ShutterStateChangeEvent(
 object ShutterEvent:
 
   val reads: Reads[ShutterEvent] =
-    ( (__ \ "username" ).read[UserName](UserName.format)
+    ( (__ \ "username" ).read[UserName]
     ~ (__ \ "timestamp").read[Instant]
     ~ (__ \ "type"     ).read[EventType]
     ~ (__ \ "type"     ).read[EventType]
@@ -263,7 +263,7 @@ object OutagePage:
   val reads: Reads[OutagePage] =
     given Reads[TemplatedContent]  = TemplatedContent.format
     given Reads[OutagePageWarning] = OutagePageWarning.reads
-    ( (__ \ "serviceName"      ).read[ServiceName](ServiceName.format)
+    ( (__ \ "serviceName"      ).read[ServiceName]
     ~ (__ \ "environment"      ).read[Environment]
     ~ (__ \ "outagePageURL"    ).read[String]
     ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]

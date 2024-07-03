@@ -36,7 +36,7 @@ object CreateServiceRepoForm:
   val writes: Writes[CreateServiceRepoForm] =
     ( (__ \ "repositoryName").write[String]
     ~ (__ \ "makePrivate"   ).write[Boolean]
-    ~ (__ \ "teamName"      ).write[TeamName](TeamName.format)
+    ~ (__ \ "teamName"      ).write[TeamName]
     ~ (__ \ "repoType"      ).write[String]
     )(r => Tuple.fromProductTyped(r))
 
@@ -57,7 +57,7 @@ object CreateServiceRepoForm:
       Forms.mapping(
         "repositoryName" -> Forms.nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> Forms.boolean,
-        "teamName"       -> Forms.of[TeamName](TeamName.formFormat),
+        "teamName"       -> Forms.of[TeamName],
         "repoType"       -> Forms.of[CreateServiceRepositoryType].transform(_.asString, s => Parser[CreateServiceRepositoryType].parse(s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
         .verifying(repoTypeAndNameConstraints*)
@@ -80,7 +80,7 @@ object CreateTestRepoForm:
       Forms.mapping(
         "repositoryName" -> Forms.nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> Forms.boolean,
-        "teamName"       -> Forms.of[TeamName](TeamName.formFormat),
+        "teamName"       -> Forms.of[TeamName],
         "repoType"       -> Forms.of[CreateTestRepositoryType].transform(_.asString, s => Parser[CreateTestRepositoryType].parse(s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
       )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
         .verifying(repoTypeAndNameConstraints*)
@@ -124,7 +124,7 @@ object CreatePrototypeRepoForm:
       Forms.mapping(
         "repositoryName"      -> Forms.nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype"))*),
         "password"            -> Forms.nonEmptyText.verifying(passwordConstraint),
-        "teamName"            -> Forms.of[TeamName](TeamName.formFormat),
+        "teamName"            -> Forms.of[TeamName],
         "slackChannels"       -> Forms.text.verifying(slackChannelConstraint*),
       )(CreatePrototypeRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
     )

@@ -101,7 +101,7 @@ object ResourceUsageConnector:
   object RawResourceUsage:
     val format: Format[RawResourceUsage] =
       ( (__ \ "date"        ).format[Instant]
-      ~ (__ \ "serviceName" ).format[ServiceName](ServiceName.format)
+      ~ (__ \ "serviceName" ).format[ServiceName]
       ~ (__ \ "environment" ).format[Environment]
       ~ (__ \ "slots"       ).format[Int]
       ~ (__ \ "instances"   ).format[Int]

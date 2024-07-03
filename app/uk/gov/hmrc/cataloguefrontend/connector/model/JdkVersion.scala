@@ -29,7 +29,7 @@ case class JdkVersion(
 
 object JdkVersion:
   val reads: Reads[JdkVersion] =
-    ( (__ \ "name"   ).read[ServiceName](ServiceName.format)
+    ( (__ \ "name"   ).read[ServiceName]
     ~ (__ \ "version").read[Version](Version.format)
     ~ (__ \ "vendor" ).read[Vendor](Vendor.reads)
     ~ (__ \ "kind"   ).read[Kind](Kind.reads)

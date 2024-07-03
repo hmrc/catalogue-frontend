@@ -168,8 +168,7 @@ case class RepoWithDependency(
 
 object RepoWithDependency:
   val reads: Reads[RepoWithDependency] =
-    given Reads[TeamName       ] = TeamName.format
-    given Reads[Version        ] = Version.format
+    given Reads[Version] = Version.format
     ( (__ \ "repoName"   ).read[String]
     ~ (__ \ "repoVersion").read[Version]
     ~ (__ \ "teams"      ).read[List[TeamName]]

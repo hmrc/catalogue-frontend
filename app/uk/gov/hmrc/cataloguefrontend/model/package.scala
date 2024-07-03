@@ -25,80 +25,45 @@ import uk.gov.hmrc.cataloguefrontend.binders.Binders
 
 package object model:
 
+  // we're not using opaque types since they are not supported in PathBindable
+
+  private trait StringAnyValUtils[T](fromString: String => T, toString: T => String):
+    given Format[T] =
+      Format.of[String].inmap(fromString, toString)
+
+    given Ordering[T] =
+      Ordering.by(toString(_).toLowerCase)
+
+    given PathBindable[T] =
+      Binders.pathBindableFromString(
+        s => Right(fromString(s)),
+        toString
+      )
+
+    given QueryStringBindable[T] =
+      Binders.queryStringBindableFromString(
+        s => Some(Right(fromString(s))),
+        toString
+      )
+
+    given Formatter[T] =
+      Binders.formFormatFromString(
+        s => Right(fromString(s)),
+        toString
+      )
+
+
   case class UserName(asString: String) extends AnyVal
 
-  object UserName:
-    val format: Format[UserName] =
-      Format.of[String].inmap(UserName.apply, _.asString)
-
-    given Ordering[UserName] =
-      Ordering.by(_.asString.toLowerCase)
-
-    given pathBindable: PathBindable[UserName] =
-      Binders.pathBindableFromString(
-        s => Right(UserName(s)),
-        _.asString
-      )
-
-    implicit val queryStringBindable: QueryStringBindable[UserName] =
-      Binders.queryStringBindableFromString(
-        s => Some(Right(UserName(s))),
-        _.asString
-      )
-
-    val formFormat: Formatter[UserName] =
-      Binders.formFormatFromString(
-        s => Right(UserName(s)),
-        _.asString
-      )
-
-  end UserName
+  object UserName extends StringAnyValUtils(UserName.apply, _.asString)
 
   case class TeamName(asString: String) extends AnyVal
 
-  object TeamName:
-    val format: Format[TeamName] =
-      Format.of[String].inmap(TeamName.apply, _.asString)
-
-    given Ordering[TeamName] =
-      Ordering.by(_.asString.toLowerCase)
-
-    given pathBindable: PathBindable[TeamName] =
-      Binders.pathBindableFromString(
-        s => Right(TeamName(s)),
-        _.asString
-      )
-
-    implicit val queryStringBindable: QueryStringBindable[TeamName] =
-      Binders.queryStringBindableFromString(
-        s => Some(Right(TeamName(s))),
-        _.asString
-      )
-
-    val formFormat: Formatter[TeamName] =
-      Binders.formFormatFromString(
-        s => Right(TeamName(s)),
-        _.asString
-      )
-
-  end TeamName
+  object TeamName extends StringAnyValUtils(TeamName.apply, _.asString)
 
   case class ServiceName(asString: String) extends AnyVal
 
-  object ServiceName:
-    val format: Format[ServiceName] =
-      Format.of[String].inmap(ServiceName.apply, _.asString)
-
-    given Ordering[ServiceName] =
-      Ordering.by(_.asString.toLowerCase)
-
-    val formFormat: Formatter[ServiceName] =
-      Binders.formFormatFromString(
-        s => Right(ServiceName(s)),
-        _.asString
-      )
-
-  end ServiceName
+  object ServiceName extends StringAnyValUtils(ServiceName.apply, _.asString)
 
   case class Version(
     major   : Int,

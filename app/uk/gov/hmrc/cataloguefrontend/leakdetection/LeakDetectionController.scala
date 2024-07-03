@@ -143,6 +143,6 @@ object LeakDetectionExplorerFilter:
     Form(
       Forms.mapping(
         "rule" -> Forms.optional(Forms.text),
-        "team" -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "team" -> Forms.optional(Forms.of[TeamName]),
       )(LeakDetectionExplorerFilter.apply)(r => Some(Tuple.fromProductTyped(r)))
     )

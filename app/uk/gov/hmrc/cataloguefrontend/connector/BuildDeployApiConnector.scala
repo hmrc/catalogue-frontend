@@ -317,7 +317,7 @@ object BuildDeployApiConnector:
   object CreateServiceRepoRequest:
     val writes: Writes[CreateServiceRepoRequest] =
       ( (__ \ "repositoryName"           ).write[String]
-      ~ (__ \ "teamName"                 ).write[TeamName](TeamName.format)
+      ~ (__ \ "teamName"                 ).write[TeamName]
       ~ (__ \ "makePrivate"              ).write[Boolean]
       ~ (__ \ "repositoryType"           ).write[String]
       ~ (__ \ "slackNotificationChannels").write[String]
@@ -333,7 +333,7 @@ object BuildDeployApiConnector:
   object CreatePrototypeRepoRequest:
     val writes: Writes[CreatePrototypeRepoRequest] =
       ( (__ \ "repositoryName"           ).write[String]
-      ~ (__ \ "teamName"                 ).write[TeamName](TeamName.format)
+      ~ (__ \ "teamName"                 ).write[TeamName]
       ~ (__ \ "password"                 ).write[String]
       ~ (__ \ "slackNotificationChannels").write[String]
       )(r => Tuple.fromProductTyped(r))
@@ -348,7 +348,7 @@ object BuildDeployApiConnector:
   object CreateTestRepoRequest:
     val writes: Writes[CreateTestRepoRequest] =
       ( (__ \ "repositoryName"       ).write[String]
-      ~ (__ \ "teamName"             ).write[TeamName](TeamName.format)
+      ~ (__ \ "teamName"             ).write[TeamName]
       ~ (__ \ "makePrivate"          ).write[Boolean]
       ~ (__ \ "repositoryType"       ).write[String]
       )(r => Tuple.fromProductTyped(r))
@@ -363,7 +363,7 @@ object BuildDeployApiConnector:
 
   object CreateAppConfigsRequest:
     val writes: Writes[CreateAppConfigsRequest] =
-      ( (__ \ "microserviceName").write[ServiceName](ServiceName.format)
+      ( (__ \ "microserviceName").write[ServiceName]
       ~ (__ \ "microserviceType").write[String]
       ~ (__ \ "hasMongo"        ).write[Boolean]
       ~ (__ \ "environments"    ).write[Seq[String]]

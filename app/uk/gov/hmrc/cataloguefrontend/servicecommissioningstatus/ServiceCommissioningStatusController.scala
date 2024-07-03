@@ -151,7 +151,7 @@ object SearchCommissioning {
   lazy val searchForm: Form[SearchCommissioningForm] =
     Form(
       Forms.mapping(
-        "team"               -> Forms.optional(Forms.of[TeamName](TeamName.formFormat))
+        "team"               -> Forms.optional(Forms.of[TeamName])
       , "serviceType"        -> Forms.optional(Forms.of[ServiceType])
       , "lifecycleStatus"    -> Forms.default(
                                   Forms.seq(Forms.of[LifecycleStatus])
