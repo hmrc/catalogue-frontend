@@ -69,10 +69,12 @@
 }
 
     @leakDetectionRuleSummary(summary: LeakDetectionRulesWithCounts) = {
-        <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.rule.id" aria-expanded="false">
-            <td><span class="glyphicon glyphicon-chevron-right"></span></td>
-            <td class="rule-id">@summary.rule.id</td>
-            <td class="description">@summary.rule.description</td>
+        <tr>
+            <td><button class="btn btn-link p-0 expand-collapse" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.rule.id" aria-expanded="false">
+                <span class="glyphicon glyphicon-chevron-right"></span>
+            </button></td>
+            <td class="rule-id collapse-trigger cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.rule.id">@summary.rule.id</td>
+            <td class="description collapse-trigger cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.rule.id">@summary.rule.description</td>
             @countWithLinkCell(summary.rule.id, "repo-count", summary.repoCount, false)
             @countWithLinkCell(summary.rule.id, "excluded", summary.excludedCount, false)
             @countWithLinkCell(summary.rule.id, "unresolved", summary.unresolvedCount, false)
