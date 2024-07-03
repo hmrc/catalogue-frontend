@@ -153,11 +153,10 @@ class ServiceConfigsService @Inject()(
         .map: key =>
           val keyValues =
             for
-              env <- allEnvs
+              env          <- allEnvs
+              appliedValue =  applied.find(_.environment == env).flatMap(_.asMap.get(key))
+              nextValue    =  nextDeployment.find(_.environment == env).flatMap(_.asMap.get(key))
             yield
-              val appliedValue = applied.find(_.environment == env).flatMap(_.asMap.get(key))
-              val nextValue    = nextDeployment.find(_.environment == env).flatMap(_.asMap.get(key))
-
               ((appliedValue, nextValue) match
                 case (Some(applied), Some(next)) if applied == next => Seq((applied, false))
                 case (Some(applied), Some(next)) => Seq((applied, false), (next, true))
@@ -165,12 +164,13 @@ class ServiceConfigsService @Inject()(
                 case (None         , Some(next)) => Seq((next, true))
                 case _                           => Seq.empty
               ).map: (value, nextDeployment) =>
-                val displayValue =
-                  if(key.startsWith("environment.") && value.length > 100 && Base64Util.isBase64Decodable(value)) "<<BASE64 ENCODED STRING>>" else value
-
-                val sourceUrl = Some(s"https://github.com/hmrc/app-config-${env.asString}/blob/main/$serviceName.yaml")
-
-                ConfigSourceValue("appConfigEnvironment", sourceUrl, displayValue) -> nextDeployment
+                ConfigSourceValue(
+                  source    = "appConfigEnvironment"
+                , sourceUrl = Some(s"https://github.com/hmrc/app-config-${env.asString}/blob/main/${serviceName.asString}.yaml")
+                , value     = if   key.startsWith("environment.") && value.length > 100 && Base64Util.isBase64Decodable(value)
+                              then "<<BASE64 ENCODED STRING>>"
+                              else value
+                ) -> nextDeployment
 
           val configEnvs: Seq[ConfigEnvironment] =
             allEnvs.map(ConfigEnvironment.ForEnvironment.apply)
