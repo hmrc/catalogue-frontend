@@ -89,7 +89,7 @@ object HealthIndicatorsFilter:
     Form(
       Forms.mapping(
         "repoName" -> Forms.optional(Forms.text),
-        "team"     -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "team"     -> Forms.optional(Forms.of[TeamName]),
         "repoType" -> Forms.optional(Forms.of[RepoType])
       )(HealthIndicatorsFilter.apply)(r => Some(Tuple.fromProductTyped(r)))
     )

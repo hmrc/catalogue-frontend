@@ -87,7 +87,7 @@ private object ShutterEventsForm:
     Form(
       Forms.mapping(
         "environment" -> Forms.of[Environment]
-      , "serviceName" -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat))
+      , "serviceName" -> Forms.optional(Forms.of[ServiceName])
       )(ShutterEventsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 

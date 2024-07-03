@@ -96,7 +96,7 @@ case class DeploymentConfigEvent(
 
 object DeploymentConfigEvent {
   val reads: Reads[DeploymentConfigEvent] =
-    ( (__ \ "serviceName"  ).read[ServiceName](ServiceName.format)
+    ( (__ \ "serviceName"  ).read[ServiceName]
     ~ (__ \ "environment"  ).read[Environment]
     ~ (__ \ "deploymentId" ).read[String]
     ~ (__ \ "configChanged").readNullable[Boolean]

@@ -117,6 +117,6 @@ object RepoListFilter:
   val form: Form[RepoListFilter] =
     Form(
       Forms.mapping(
-        "team" -> Forms.optional(Forms.of[TeamName](TeamName.formFormat))
+        "team" -> Forms.optional(Forms.of[TeamName])
       )(RepoListFilter.apply)(r => Some(r.team))
     )

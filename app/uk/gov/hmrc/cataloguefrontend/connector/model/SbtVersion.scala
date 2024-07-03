@@ -27,7 +27,7 @@ case class SbtVersion(
 
 object SbtVersion:
   val reads: Reads[SbtVersion] =
-    ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
+    ( (__ \ "serviceName").read[ServiceName]
     ~ (__ \ "version"    ).read[Version    ](Version.format    )
     )(SbtVersion.apply)
 

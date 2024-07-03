@@ -43,8 +43,6 @@ object PrCommenterReport:
       ~ (__ \ "params" \ "id").read[String]
       )(PrCommenterComment.apply)
 
-    given Reads[TeamName] = TeamName.format
-
     ( (__ \ "name"     ).read[String]
     ~ (__ \ "teamNames").read[List[TeamName]]
     ~ (__ \ "version"  ).read[Version](Version.format)

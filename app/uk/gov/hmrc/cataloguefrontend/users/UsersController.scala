@@ -96,7 +96,7 @@ object UsersListFilter:
   lazy val form: Form[UsersListFilter] =
     Form(
       Forms.mapping(
-        "team"     -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
-        "username" -> Forms.optional(Forms.of[UserName](UserName.formFormat))
+        "team"     -> Forms.optional(Forms.of[TeamName]),
+        "username" -> Forms.optional(Forms.of[UserName])
       )(UsersListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

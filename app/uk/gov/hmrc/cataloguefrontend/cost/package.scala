@@ -86,7 +86,7 @@ package object cost:
 
   object DeploymentConfig:
     val reads: Reads[DeploymentConfig] =
-      ( (__ \ "name"       ).read[ServiceName        ](ServiceName.format)
+      ( (__ \ "name"       ).read[ServiceName        ]
       ~ (__ \ "slots"      ).read[Int                ]
       ~ (__ \ "instances"  ).read[Int                ]
       ~ (__ \ "environment").read[Environment        ]

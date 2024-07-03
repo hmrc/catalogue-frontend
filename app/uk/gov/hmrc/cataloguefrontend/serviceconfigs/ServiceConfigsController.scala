@@ -181,7 +181,7 @@ object ConfigWarning {
 
   lazy val form: Form[ConfigWarningForm] = Form(
     Forms.mapping(
-      "serviceName" -> Forms.of[ServiceName](ServiceName.formFormat)
+      "serviceName" -> Forms.of[ServiceName]
     )(ConfigWarningForm.apply)(r => Some(r.serviceName))
   )
 }
@@ -204,7 +204,7 @@ object SearchConfig {
   lazy val form: Form[SearchConfigForm] =
     Form(
       Forms.mapping(
-        "teamName"              -> Forms.optional(Forms.of[TeamName](TeamName.formFormat))
+        "teamName"              -> Forms.optional(Forms.of[TeamName])
       , "configKey"             -> Forms.optional(Forms.nonEmptyText(minLength = 3))
       , "configKeyIgnoreCase"   -> Forms.default(Forms.boolean, false)
       , "configValue"           -> Forms.optional(Forms.text)

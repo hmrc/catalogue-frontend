@@ -169,7 +169,6 @@ end GitRepository
 object GitRepository:
   val reads: Reads[GitRepository] =
     given Reads[JenkinsJob] = JenkinsJob.reads
-    given Reads[TeamName]   = TeamName.format
 
     ( (__ \ "name"                ).read[String]
     ~ (__ \ "description"         ).read[String]
@@ -221,7 +220,7 @@ case class GitHubTeam(
 
 object GitHubTeam:
   val reads: Reads[GitHubTeam] =
-    ( (__ \ "name"          ).read[TeamName](TeamName.format)
+    ( (__ \ "name"          ).read[TeamName]
     ~ (__ \ "lastActiveDate").readNullable[Instant]
     ~ (__ \ "repos"         ).read[Seq[String]]
     )(apply)

@@ -70,7 +70,7 @@
                     <select id="teamName" name="team" class="form-select">
                         <option class="blank" value>All</option>
                         @for(team <- allTeams.map(_.name).distinct.sorted) {
-                            <option value="@team" @{if(form("team").value.contains(team.asString)) "selected" else ""}>@team.asString</option>
+                            <option value="@team.asString" @{if(form("team").value.contains(team.asString)) "selected" else ""}>@team.asString</option>
                         }
                     </select>
                 </div>

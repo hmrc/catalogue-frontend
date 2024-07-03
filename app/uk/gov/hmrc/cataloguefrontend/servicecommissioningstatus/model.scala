@@ -117,7 +117,7 @@ object CachedServiceCheck:
   val reads: Reads[CachedServiceCheck] =
     given Reads[Warning] = Warning.reads
     given Reads[Check]   = Check.reads
-    ( (__ \ "serviceName"    ).read[ServiceName](ServiceName.format)
+    ( (__ \ "serviceName"    ).read[ServiceName]
     ~ (__ \ "lifecycleStatus").read[LifecycleStatus]
     ~ (__ \ "checks"         ).read[Seq[Check]]
     ~ (__ \ "warnings"       ).readNullable[Seq[Warning]]

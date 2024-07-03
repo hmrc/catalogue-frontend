@@ -40,7 +40,7 @@ case class Member(
 
 object Member:
   val reads: Reads[Member] =
-    ( (__ \ "username"   ).read[UserName](UserName.format)
+    ( (__ \ "username"   ).read[UserName]
     ~ (__ \ "displayName").readNullable[String]
     ~ (__ \ "role"       ).read[Role](Role.reads)
     )(Member.apply)
@@ -74,7 +74,6 @@ object UmpTeam:
   val reads: Reads[UmpTeam] =
     given Reads[Member]    = Member.reads
     given Reads[SlackInfo] = SlackInfo.reads
-    given Reads[TeamName]  = TeamName.format
     ( (__ \ "members"          ).read[Seq[Member]]
     ~ (__ \ "teamName"         ).read[TeamName]
     ~ (__ \ "description"      ).readNullable[String]
@@ -103,11 +102,11 @@ object User:
     ~ ( __ \ "givenName"     ).readNullable[String]
     ~ ( __ \ "organisation"  ).readNullable[String]
     ~ ( __ \ "primaryEmail"  ).read[String]
-    ~ ( __ \ "username"      ).read[UserName](UserName.format)
+    ~ ( __ \ "username"      ).read[UserName]
     ~ ( __ \ "githubUsername").readNullable[String]
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
     ~ ( __ \ "role"          ).read[Role](Role.reads)
-    ~ ( __ \ "teamNames"     ).read[Seq[TeamName]](Reads.seq(TeamName.format))
+    ~ ( __ \ "teamNames"     ).read[Seq[TeamName]]
     )(User.apply)
 
 enum Organisation(val asString: String) extends FromString:
@@ -142,7 +141,7 @@ object CreateUserRequest:
       ~ (__ \ "organisation"            ).write[String]
       ~ (__ \ "contactEmail"            ).write[String]
       ~ (__ \ "contactComments"         ).write[String]
-      ~ (__ \ "team"                    ).write[TeamName](TeamName.format)
+      ~ (__ \ "team"                    ).write[TeamName]
       ~ (__ \ "isReturningUser"         ).write[Boolean]
       ~ (__ \ "isTransitoryUser"        ).write[Boolean]
       ~ (__ \ "isServiceAccount"        ).write[Boolean]

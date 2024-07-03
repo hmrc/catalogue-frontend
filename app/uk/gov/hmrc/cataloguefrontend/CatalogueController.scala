@@ -541,7 +541,7 @@ object DefaultBranchesFilter {
     Form(
       Forms.mapping(
         "name"          -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "teamNames"     -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "teamNames"     -> Forms.optional(Forms.of[TeamName]),
         "defaultBranch" -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
       )(DefaultBranchesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

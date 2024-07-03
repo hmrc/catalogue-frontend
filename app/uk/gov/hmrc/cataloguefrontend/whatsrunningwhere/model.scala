@@ -67,7 +67,6 @@ object JsonCodecs:
     )(WhatsRunningWhereVersion.apply)
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] =
-    given Reads[ServiceName]              = ServiceName.format
     given Reads[WhatsRunningWhereVersion] = whatsRunningWhereVersionReads
     ( (__ \ "applicationName").read[ServiceName]
     ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
@@ -100,20 +99,19 @@ object JsonCodecs:
 
   val serviceDeploymentsFormat: Format[ServiceDeployment] =
     given Format[DeploymentEvent] = deploymentEventFormat
-    ( (__ \ "serviceName"     ).format[ServiceName](ServiceName.format)
+    ( (__ \ "serviceName"     ).format[ServiceName]
     ~ (__ \ "environment"     ).format[Environment]
     ~ (__ \ "deploymentEvents").format[Seq[DeploymentEvent]]
     ~ (__ \ "lastCompleted"   ).formatNullable[DeploymentEvent]
     )(ServiceDeployment.apply, sd => Tuple.fromProductTyped(sd))
 
   val deploymentHistoryReads: Reads[DeploymentHistory] =
-    given Reads[TeamName] = TeamName.format
-    ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
+    ( (__ \ "serviceName").read[ServiceName]
     ~ (__ \ "environment").read[Environment]
     ~ (__ \ "version"    ).read[Version](Version.format)
     ~ (__ \ "teams"      ).read[Seq[TeamName]]
     ~ (__ \ "time"       ).read[TimeSeen](timeSeenFormat)
-    ~ (__ \ "username"   ).read[UserName](UserName.format)
+    ~ (__ \ "username"   ).read[UserName]
     )(DeploymentHistory.apply)
 
   val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] =

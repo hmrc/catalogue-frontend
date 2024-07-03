@@ -380,7 +380,6 @@ object ServiceConfigsService:
 
   object ServiceRelationships {
     val reads: Reads[ServiceRelationships] =
-      given Reads[ServiceName] = ServiceName.format
       ( (__ \ "inboundServices" ).read[Seq[ServiceName]]
       ~ (__ \ "outboundServices").read[Seq[ServiceName]]
       )(ServiceRelationships.apply)
@@ -459,7 +458,7 @@ object ServiceConfigsService:
                 .map(_.toMap)
 
 
-      ( (__ \ "serviceName"  ).read[ServiceName](ServiceName.format)
+      ( (__ \ "serviceName"  ).read[ServiceName]
       ~ (__ \ "key"          ).read[String].map(KeyName.apply)
       ~ (__ \ "environments" ).read[Map[Environment, ConfigSourceValue]]
       )(AppliedConfig.apply)
@@ -474,7 +473,7 @@ object ServiceConfigsService:
 
   object ConfigWarning:
     val reads: Reads[ConfigWarning] =
-      ( (__ \ "serviceName").read[ServiceName](ServiceName.format)
+      ( (__ \ "serviceName").read[ServiceName]
       ~ (__ \ "environment").read[Environment]
       ~ (__ \ "key"        ).read[String].map(KeyName.apply)
       ~ (__ \ "value"      ).read[ConfigSourceValue](ConfigSourceValue.reads)

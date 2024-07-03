@@ -49,7 +49,7 @@ class PrCommenterController @Inject() (
     Form(
       Forms.mapping(
         "name"        -> Forms.optional(Forms.text),
-        "teamName"    -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "teamName"    -> Forms.optional(Forms.of[TeamName]),
         "commentType" -> Forms.optional(Forms.text)
       )(Filter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

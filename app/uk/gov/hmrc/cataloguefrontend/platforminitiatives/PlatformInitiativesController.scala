@@ -84,7 +84,7 @@ object PlatformInitiativesFilter {
     Form(
       mapping(
         "initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"           -> optional(Forms.of[TeamName](TeamName.formFormat))
+        "team"           -> optional(Forms.of[TeamName])
         )
       (PlatformInitiativesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

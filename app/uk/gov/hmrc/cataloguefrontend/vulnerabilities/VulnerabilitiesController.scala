@@ -140,8 +140,8 @@ object VulnerabilitiesExplorerFilter:
         "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply),
         "vulnerability"  -> Forms.optional(Forms.text),
         "curationStatus" -> Forms.optional(Forms.of[CurationStatus]),
-        "service"        -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat)),
-        "team"           -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "service"        -> Forms.optional(Forms.of[ServiceName]),
+        "team"           -> Forms.optional(Forms.of[TeamName]),
       )(VulnerabilitiesExplorerFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
@@ -156,8 +156,8 @@ object VulnerabilitiesCountFilter:
     Form(
       Forms.mapping(
         "flag"    -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply),
-        "service" -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat)),
-        "team"    -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "service" -> Forms.optional(Forms.of[ServiceName]),
+        "team"    -> Forms.optional(Forms.of[TeamName]),
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
@@ -182,8 +182,8 @@ object VulnerabilitiesTimelineFilter:
     val dateFormat = "yyyy-MM-dd"
     Form(
       Forms.mapping(
-        "service"        -> Forms.optional(Forms.of[ServiceName](ServiceName.formFormat)),
-        "team"           -> Forms.optional(Forms.of[TeamName](TeamName.formFormat)),
+        "service"        -> Forms.optional(Forms.of[ServiceName]),
+        "team"           -> Forms.optional(Forms.of[TeamName]),
         "vulnerability"  -> Forms.optional(Forms.text),
         "curationStatus" -> Forms.optional(Forms.of[CurationStatus]),
         "from"           -> Forms.optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply), // Default to 6 months ago if loading initial page/value not set

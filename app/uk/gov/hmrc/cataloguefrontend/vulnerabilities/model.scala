@@ -99,7 +99,7 @@ case class VulnerabilityOccurrence(
 
 object VulnerabilityOccurrence {
   val reads: Reads[VulnerabilityOccurrence] =
-    ( (__ \ "service"            ).read[ServiceName](ServiceName.format)
+    ( (__ \ "service"            ).read[ServiceName]
     ~ (__ \ "serviceVersion"     ).read[String]
     ~ (__ \ "componentPathInSlug").read[String]
     )(apply)
@@ -131,7 +131,7 @@ case class TotalVulnerabilityCount(
 
 object TotalVulnerabilityCount:
   val reads: Reads[TotalVulnerabilityCount] =
-    ( (__ \ "service"             ).read[ServiceName](ServiceName.format)
+    ( (__ \ "service"             ).read[ServiceName]
     ~ (__ \ "actionRequired"      ).read[Int]
     ~ (__ \ "noActionRequired"    ).read[Int]
     ~ (__ \ "investigationOngoing").read[Int]
