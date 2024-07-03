@@ -38,14 +38,7 @@ enum Environment(
 
 
 given Parser[SlugInfoFlag] =
-  // TODO service-dependencies currently represents `external test` with a space
-  //Parser.parser(SlugInfoFlag.values)
-  (s: String) =>
-    if s == "external test"
-    then Right(SlugInfoFlag.ForEnvironment(Environment.ExternalTest))
-    else SlugInfoFlag.values
-           .find(_.asString == s)
-           .toRight(s"Invalid value: \"$s\" - should be one of: ${SlugInfoFlag.values.map(_.asString).mkString(", ")}")
+  Parser.parser(SlugInfoFlag.values)
 
 trait SlugInfoFlag
   extends FromString
