@@ -15,13 +15,13 @@
  *@
 
 @import play.api.mvc.Call
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
 
 @this()
 
 @(form            : Form[?],
-  searchResults   : Seq[FrontendRoutes],
-  serviceNameToUrl: ServiceName => Call
+  searchResults   : Seq[FrontendRoutes]
 )(implicit
   request         : RequestHeader
 )
@@ -64,7 +64,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="@uk.gov.hmrc.cataloguefrontend.routes.SearchByUrlController.searchUrl" method="post">
+            <form action="@appRoutes.SearchByUrlController.searchUrl" method="post">
                 @csrfFormField
                 <div class="row mb-3">
                     <label for="search-box" class="col-md-3 col-form-label fw-bold">https://www.tax.service.gov.uk/</label>
@@ -86,7 +86,7 @@
                         @for(route <- result.routes) {
                             <tr>
                                 <td>
-                                    <a id="link-to-@{result.service}" href="@serviceNameToUrl(result.service)">@result.service</a>
+                                    <a id="link-to-@{result.service.asString}" href="@appRoutes.CatalogueController.service(result.service)">@result.service.asString</a>
                                 </td>
                                 <td>
                                     @if(route.isRegex) {

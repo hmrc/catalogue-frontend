@@ -38,11 +38,9 @@ class SearchByUrlController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  private val serviceNameToUrl = routes.CatalogueController.service
-
   def searchLanding: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      Future.successful(Ok(searchByUrlPage(UrlSearchFilter.form, Nil, serviceNameToUrl)))
+      Future.successful(Ok(searchByUrlPage(UrlSearchFilter.form, Nil)))
     }
 
   def searchUrl =
@@ -50,11 +48,11 @@ class SearchByUrlController @Inject() (
       UrlSearchFilter.form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(Ok(searchByUrlPage(formWithErrors, Nil, serviceNameToUrl))),
+          formWithErrors => Future.successful(Ok(searchByUrlPage(formWithErrors, Nil))),
           query          => searchByUrlService
                               .search(query.name)
                               .map: results =>
-                                Ok(searchByUrlPage(UrlSearchFilter.form.bindFromRequest(), results, serviceNameToUrl))
+                                Ok(searchByUrlPage(UrlSearchFilter.form.bindFromRequest(), results))
         )
     }
 
