@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
 import play.api.mvc.PathBindable
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceDisplayName, ServiceName, UserName}
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
+import scala.util.Try
 import java.time.Instant
-
-import FromStringEnum._
+import FromStringEnum.*
+import org.jsoup.nodes.Document
 
 given Parser[ShutterType] = Parser.parser(ShutterType.values)
 
@@ -49,6 +50,7 @@ enum ShutterStatus(val value: ShutterStatusValue):
   case Shuttered(
     reason              : Option[String],
     outageMessage       : Option[String],
+    outageMessageWelsh  : Option[String],
     useDefaultOutagePage: Boolean
   ) extends ShutterStatus(ShutterStatusValue.Shuttered)
   case Unshuttered extends ShutterStatus(ShutterStatusValue.Unshuttered)
@@ -66,16 +68,18 @@ object ShutterStatus:
                 Shuttered(
                   reason               = (json \ "reason"              ).asOpt[String],
                   outageMessage        = (json \ "outageMessage"       ).asOpt[String],
+                  outageMessageWelsh   = (json \ "outageMessageWelsh"  ).asOpt[String],
                   useDefaultOutagePage = (json \ "useDefaultOutagePage").as[Boolean]
                 )
 
       override def writes(ss: ShutterStatus): JsValue =
         ss match
-          case Shuttered(reason, outageMessage, useDefaultOutagePage) =>
+          case Shuttered(reason, outageMessage, outageMessageWelsh, useDefaultOutagePage) =>
             Json.obj(
               "value"                -> Json.toJson(ss.value),
               "reason"               -> reason,
               "outageMessage"        -> outageMessage,
+              "outageMessageWelsh"   -> outageMessageWelsh,
               "useDefaultOutagePage" -> useDefaultOutagePage
             )
           case Unshuttered =>
@@ -249,25 +253,49 @@ object OutagePageWarning:
     )(OutagePageWarning.apply)
 
 case class OutagePage(
-  serviceName      : ServiceName,
-  environment      : Environment,
-  outagePageURL    : String,
-  warnings         : List[OutagePageWarning],
-  templatedElements: List[TemplatedContent]
+  serviceName       : ServiceName,
+  serviceDisplayName: Option[ServiceDisplayName],
+  outagePageURL     : String,
+  warnings          : List[OutagePageWarning],
+  mainContent       : String,
+  templatedElements : List[TemplatedContent]
 ):
   def templatedMessages: List[TemplatedContent] =
     templatedElements
       .filter(_.elementId == "templatedMessage")
+    
+  def renderTemplate(
+    template        : Document, // mutable
+    templatedMessage: Option[String]
+  ): Document = {
+    Try {
+      serviceDisplayName.map:
+        displayName =>
+          val current = template.title()
+          val updated = current.split("–").mkString(s"– ${displayName.asString} –") // not a standard hyphen '-'
+          template.title(updated)
+          template.getElementById("header-service-name").text(displayName.asString)
+
+      template.getElementById("main-content").html(mainContent)
+
+      templatedMessage.map:
+        message =>
+          template.getElementById("templatedMessage").text(message)
+    }
+    
+    template
+  }
 
 object OutagePage:
   val reads: Reads[OutagePage] =
     given Reads[TemplatedContent]  = TemplatedContent.format
     given Reads[OutagePageWarning] = OutagePageWarning.reads
-    ( (__ \ "serviceName"      ).read[ServiceName]
-    ~ (__ \ "environment"      ).read[Environment]
-    ~ (__ \ "outagePageURL"    ).read[String]
-    ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
-    ~ (__ \ "templatedElements").read[List[TemplatedContent]]
+    ( (__ \ "serviceName"       ).read[ServiceName]
+    ~ (__ \ "serviceDisplayName").readNullable[ServiceDisplayName]
+    ~ (__ \ "outagePageURL"     ).read[String]
+    ~ (__ \ "warnings"          ).read[List[OutagePageWarning]]
+    ~ (__ \ "mainContent"       ).read[String]
+    ~ (__ \ "templatedElements" ).read[List[TemplatedContent]]
     )(OutagePage.apply)
 
 case class OutagePageStatus(

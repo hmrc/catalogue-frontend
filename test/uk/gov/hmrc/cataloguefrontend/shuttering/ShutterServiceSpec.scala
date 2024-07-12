@@ -21,7 +21,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -43,7 +43,7 @@ class ShutterServiceSpec
       , context      = None
       , shutterType  = ShutterType.Frontend
       , environment  = Environment.Production
-      , status       = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+      , status       = ShutterStatus.Shuttered(reason = None, outageMessage = None, outageMessageWelsh = None, useDefaultOutagePage = false)
       )
     , ShutterState(
         serviceName  = ServiceName("zxy-frontend")
@@ -57,7 +57,7 @@ class ShutterServiceSpec
       , context      = None
       , shutterType  = ShutterType.Frontend
       , environment  = Environment.Production
-      , status       = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+      , status       = ShutterStatus.Shuttered(reason = None, outageMessage = None, outageMessageWelsh = None, useDefaultOutagePage = false)
       )
     )
 
@@ -68,7 +68,7 @@ class ShutterServiceSpec
         , serviceName = ServiceName("abc-frontend")
         , environment = Environment.Production
         , shutterType = ShutterType.Frontend
-        , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+        , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, outageMessageWelsh = None, useDefaultOutagePage = false)
         , cause       = ShutterCause.UserCreated
         )
     , ShutterStateChangeEvent(
@@ -86,7 +86,7 @@ class ShutterServiceSpec
         , serviceName = ServiceName("ijk-frontend")
         , environment = Environment.Production
         , shutterType = ShutterType.Frontend
-        , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+        , status      = ShutterStatus.Shuttered(reason = None, outageMessage = None, outageMessageWelsh = None, useDefaultOutagePage = false)
         , cause       = ShutterCause.UserCreated
         )
     )
@@ -103,8 +103,8 @@ class ShutterServiceSpec
 
       val states = boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production).futureValue
       states.map(_._1.status) shouldBe Seq(
-        ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
-      , ShutterStatus.Shuttered(reason = None, outageMessage = None, useDefaultOutagePage = false)
+        ShutterStatus.Shuttered(reason = None, outageMessage = None, outageMessageWelsh = None, useDefaultOutagePage = false)
+      , ShutterStatus.Shuttered(reason = None, outageMessage = None, outageMessageWelsh = None, useDefaultOutagePage = false)
       , ShutterStatus.Unshuttered
       )
     }
@@ -197,11 +197,12 @@ class ShutterServiceSpec
 
   def mkOutagePage(serviceName: ServiceName, warnings: List[OutagePageWarning]): OutagePage =
     OutagePage(
-        serviceName      = serviceName
-      , environment      = Environment.Production
-      , outagePageURL    = ""
-      , warnings         = warnings
-      , templatedElements = List.empty
+        serviceName        = serviceName
+      , serviceDisplayName = None
+      , outagePageURL      = ""
+      , warnings           = warnings
+      , mainContent        = ""
+      , templatedElements  = List.empty
       )
 
   case class Boot(shutterService: ShutterService, mockShutterConnector: ShutterConnector)
@@ -211,7 +212,8 @@ class ShutterServiceSpec
       val mockShutterConnector       = mock[ShutterConnector]
       val mockShutterGroupsConnector = mock[ShutterGroupsConnector]
       val routeRulesConnector        = mock[RouteRulesConnector]
-      val shutterService             = ShutterService(mockShutterConnector, mockShutterGroupsConnector, routeRulesConnector)
+      val mockGithubProxyConnector   = mock[GitHubProxyConnector]
+      val shutterService             = ShutterService(mockShutterConnector, mockShutterGroupsConnector, routeRulesConnector, mockGithubProxyConnector)
       Boot(shutterService, mockShutterConnector)
   }
 }

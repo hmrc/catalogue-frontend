@@ -62,7 +62,7 @@
                 </div>
 
                 <div class="row mb-3">
-                    @if(step1Out.status == ShutterStatusValue.Shuttered && step2Out.requiresOutageMessage) {
+                    @if(step1Out.status == ShutterStatusValue.Shuttered) {
                         @if(step2Out.useDefaultOutagePage) {
                             <div class="col">
                                 <label>Outage message: </label> None - will use platform default outage page.

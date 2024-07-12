@@ -385,3 +385,9 @@ table.table-striped-columns-custom > :not(caption) > tr > td:nth-child(even) {
 /* Fixes a Google Charts flickering-on-over issue outlined here:
    https://github.com/google/google-visualization-issues/issues/2162 */
 svg > g:last-child > g.google-visualization-tooltip { pointer-events: none }
+
+/* Shuttering Outage Page Preview */
+
+.shutter-preview h1 {
+    font-size: 1.2em;
+}

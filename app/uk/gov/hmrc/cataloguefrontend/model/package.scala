@@ -64,6 +64,10 @@ package object model:
   case class ServiceName(asString: String) extends AnyVal
 
   object ServiceName extends StringAnyValUtils(ServiceName.apply, _.asString)
+  
+  case class ServiceDisplayName(asString: String) extends AnyVal
+  
+  object ServiceDisplayName extends StringAnyValUtils(ServiceDisplayName.apply, _.asString)
 
   case class Version(
     major   : Int,

@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, OutagePageStatus, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step0Out, Step1Out, Step2bForm}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => shutterRoutes}
 @import views.html.helper.{FieldConstructor, textarea}
 @import partials.form_global_errors
 
@@ -24,10 +25,9 @@
 @(form                  : Form[Step2bForm]
 , step0Out              : Step0Out
 , step1Out              : Step1Out
-, requiresOutageMessage : Boolean
 , outageMessageSrc      : Option[OutagePage]
 , defaultOutageMessage  : String
-, outagePages           : Seq[OutagePageStatus]
+, outagePages           : Seq[OutagePage]
 , back                  : Call
 )(implicit
   request               : RequestHeader
@@ -36,7 +36,13 @@
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
-@standard_layout("Shutter Frontend", active = "shuttering") {
+@head = {
+    <link rel="stylesheet" href="@routes.Assets.versioned("flatpickr.min.css")" />
+    <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("flatpickr.min.js")"></script>
+    <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("flatpickr.localisations.cy.js")"></script>
+}
+
+@standard_layout("Shutter Frontend", active = "shuttering", head = head) {
 
     <h1 class="page-heading mt-4">Shutter Frontend: Check outage-pages</h1>
 
@@ -80,6 +86,34 @@
                 </div>
 
                 <div class="row mb-3">
+                    <div class="col-4 flatpickr">
+                        <label for="dateTime" class="form-label fw-bold">When will the service(s) be unshuttered? (leave blank if unknown)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="dateTime" name="outageMessage">
+                            <button id="clear-dateTime" class="btn btn-outline-secondary">Clear</button>
+                        </div>
+                    </div>
+                    <div id="dateFormatter" class="col-4 d-none">
+                        <label for="dateFormat" class="form-label fw-bold">Select a format</label>
+                        <select id="dateFormat" class="form-select">
+                            @* https://flatpickr.js.org/formatting/ *@
+                            <option value="\\o\\n l J F \\a\\t H:i."></option>
+                            <option value="\\o\\n l J F."></option>
+                            <option value="\\a\\f\\t\\e\\r l J F \\a\\t H:i."></option>
+                            <option value="\\a\\f\\t\\e\\r l J F."></option>
+                        </select>
+                    </div>
+
+                    <select id="dateFormatWelsh" class="d-none">
+                        <option value="\\a\\r l J F \\a\\m H:i."></option>
+                        <option value="\\a\\r l J F."></option>
+                        <option value="\\a\\r \\ô\\l l J F \\a\\m H:i."></option>
+                        <option value="\\a\\r \\ô\\l l J F."></option>
+                    </select>
+                    <input type="hidden" name="outageMessageWelsh" id="outageMessageWelsh">
+                </div>
+
+                <div class="row mb-3">
                     <div class="col-4">
                         <p class="fw-bold">Select outage page</p>
                         @defining(form("useDefaultOutagePage").value.map(_.toBoolean).getOrElse(false)) { useDefaultOutagePage =>
@@ -99,6 +133,46 @@
                     </div>
                 </div>
 
+                <div class="card mb-3" id="outagePagePanel">
+                    <div class="card-header">
+                        Outage Pages:
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Please review, you can still continue to shutter.</p>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Service Display Name</th>
+                                    <th>Content Preview</th>
+                                    <th>Full Preview</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @outagePages.map { outagePage =>
+                                <tr>
+                                    <td>
+                                        @outagePage.serviceName.asString
+                                    </td>
+                                    <td>
+                                    @outagePage.serviceDisplayName match {
+                                        case Some(value) => {@value.asString}
+                                        case None => {-}
+                                    }
+                                    </td>
+                                    <td class="shutter-preview">@Html(outagePage.mainContent)</td>
+                                    <td>
+                                        <a href="@shutterRoutes.ShutterWizardController.step2bPreview(outagePage.serviceName)" class="preview-link btn btn-outline-secondary" target="_blank" rel="noreferrer noopener">
+                                            Preview<span class="glyphicon glyphicon-new-window"></span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="card mb-3" id="defaultOutagePagePanel">
                     <div class="card-header bg-warning-subtle">
                         <span class="glyphicon glyphicon-warning-sign"></span>
@@ -111,81 +185,7 @@
                     </div>
                 </div>
 
-                <div class="card mb-3" id="outagePagePanel">
-                    <div class="card-header">
-                        Outage Pages:
-                    </div>
-                    <div class="card-body">
-                        <input type="hidden" name="requiresOutageMessage" value="@requiresOutageMessage">
 
-                        @if(requiresOutageMessage) {
-                            @if(outagePages.find(_.warning.isDefined)) {
-                                <div class="card mb-3">
-                                    <div class="card-header bg-warning-subtle">
-                                        <span class="glyphicon glyphicon-warning-sign"></span>
-                                        There were some warnings with the Outage pages.
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="card-text">Please review, you can still continue to shutter.</p>
-
-                                        <table class="table table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <td>Service</td>
-                                                    <td>Warning</td>
-                                                    <td>Consequence</td>
-                                                </tr>
-                                            </thead>
-                                            @outagePages.map { outagePageStatus =>
-                                                <tr class="@if(outagePageStatus.warning.isDefined) { alert-warning } else {}">
-                                                    <td>@outagePageStatus.serviceName.asString</td>
-                                                    @outagePageStatus.warning match {
-                                                        case Some((warning, consequence)) => {
-                                                            <td>@Html(warning)</td>
-                                                            <td>@consequence</td>
-                                                        }
-                                                        case None => {
-                                                            <td>None</td>
-                                                            <td></td>
-                                                        }
-                                                    }
-                                                </tr>
-                                            }
-                                        </table>
-                                    </div>
-                                </div>
-                            }
-
-                            <div class="row">
-                                <div class="col-8">
-                                    @textarea(
-                                        field                 =  form("outageMessage")
-                                      , Symbol("_label")      -> "Outage Message"
-                                      , Symbol("_labelClass") -> "form-label"
-                                      , Symbol("_help")       -> "The outage message will replace any 'templatedMessage' placeholder found in the outage-page(s)."
-                                      , Symbol("rows")        -> 2
-                                      , Symbol("cols")        -> 60
-                                      , Symbol("class")       -> "form-control"
-                                    )
-                                </div>
-                                <div class="col-4 my-auto">
-                                    <a id="revertToTemplate" class="btn btn-outline-secondary">
-                                        Revert to template
-                                    </a>
-                                    <script @CSPNonce.attr>
-                                        document.getElementById('revertToTemplate').addEventListener('click', function () {
-                                          revertTemplate();
-                                        });
-                                    </script>
-                                </div>
-                            </div>
-                            <p>@Html(outageMessageSrc.map(src => s"The templated value was extracted from the ${src.serviceName.asString} outage page for ${step0Out.env.asString}.").getOrElse(""))</p>
-                        } else {
-                            <input type="hidden" name="outageMessage" value=""/>
-                            <p class="card-text">Outage page(s) will be sent as is.</p>
-                        }
-                    </div>
-                </div>
 
                 <div class="row">
                     <div class="col-1">
@@ -206,10 +206,6 @@
     </div>
 
   <script @CSPNonce.attr type="text/javascript">
-    function revertTemplate() {
-      $('#outageMessage').val('@defaultOutageMessage')
-    }
-
     function syncUseDefaultOutagePage() {
       let useDefaultOutagePage = $('input[name=useDefaultOutagePage]:checked').val();
       if (useDefaultOutagePage === "true") {
@@ -228,8 +224,104 @@
         });
       });
 
+    let fp;
+    let previewLinks;
+    let dateFormatDiv;
+    let dateFormat;
+    let dateFormatWelsh;
+    let outageMessageWelsh;
+
+    function updateContentPreview(dateStr) {
+        let templatedMessage = dateStr || '@defaultOutageMessage'
+        document.querySelectorAll('#templatedMessage').forEach( function(el) {
+            el.textContent = templatedMessage;
+        });
+    }
+
+    function updatePreviewLinks(dateStr) {
+        if(dateStr === "") {
+            previewLinks.forEach( function(el) {
+               let current = el.getAttribute('href');
+               let updated = current.split('?')[0];
+               el.setAttribute('href', updated);
+            });
+        } else {
+            previewLinks.forEach( function(el) {
+                let current = el.getAttribute('href');
+                let updated = current.split('?')[0] + '?templatedMessage=' + encodeURIComponent(dateStr);
+                el.setAttribute('href', updated);
+            });
+        }
+    }
+
+    function updateFormatOptions(date) {
+        if(date) {
+            for (let i = 0; i < dateFormat.options.length; i++) {
+                let format = dateFormat.options[i].value
+                let formatted = fp.formatDate(date, format);
+                dateFormat.options[i].text = formatted;
+            }
+
+            dateFormatDiv.classList.remove('d-none');
+        } else {
+            dateFormatDiv.classList.add('d-none');
+        }
+    }
+
+    function updateWelsh() {
+        fp.set('locale', 'cy');
+        let format = dateFormatWelsh.value
+        let formatted = fp.formatDate(fp.selectedDates[0], format);
+        outageMessageWelsh.value = formatted;
+        fp.set('locale', 'default');
+    }
+
     $(document).ready(function() {
       syncUseDefaultOutagePage();
+
+      previewLinks       = document.querySelectorAll('.preview-link');
+      dateFormatDiv      = document.getElementById('dateFormatter');
+      dateFormat         = document.getElementById('dateFormat');
+      dateFormatWelsh    = document.getElementById('dateFormatWelsh');
+      outageMessageWelsh = document.getElementById('outageMessageWelsh');
+
+      fp = flatpickr("#dateTime", {
+          enableTime: true,
+          dateFormat: "\\o\\n l J F \\a\\t H:i.", // e.g. "on Monday 1st January 1 at 00:00." https://flatpickr.js.org/formatting/
+          minDate: "today", // Can't select a datetime in the past
+          mode: "single", // Select a single datetime
+          time_24hr: true,
+          minuteIncrement: 30, // Restrict time selection to every 30 minutes
+          onOpen: function(selectedDates, dateStr, instance) { // Empty by default but pre-populate onOpen
+              // Calculate the next 30-minute interval only if the input is empty
+              if (!dateStr) {
+                  const now = new Date();
+                  now.setMinutes(now.getMinutes() + 30 - now.getMinutes() % 30, 0, 0);
+                  instance.setDate(now, false);
+              }
+          },
+          onChange: function(selectedDates, dateStr, instance) {
+              updateContentPreview(dateStr);
+              updatePreviewLinks(dateStr);
+              updateFormatOptions(selectedDates[0]);
+              updateWelsh();
+          }
+      });
+
+      dateFormat.addEventListener('change', function() {
+        let format = this.value
+        fp.set('dateFormat', format);
+        dateFormatWelsh.selectedIndex = dateFormat.selectedIndex;
+        updateContentPreview(fp.formatDate(fp.selectedDates[0], format));
+        updatePreviewLinks(fp.formatDate(fp.selectedDates[0], format));
+        updateWelsh();
+      });
+
+      $('#clear-dateTime').on('click', function(event) {
+          event.preventDefault();
+          outageMessageWelsh.value = "";
+          fp.clear(); // triggers onChange
+      });
     });
   </script>
 }

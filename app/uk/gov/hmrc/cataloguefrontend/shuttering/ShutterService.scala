@@ -16,11 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
+import cats.data.OptionT
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,7 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class ShutterService @Inject() (
   shutterConnector      : ShutterConnector,
   shutterGroupsConnector: ShutterGroupsConnector,
-  routeRulesConnector   : RouteRulesConnector
+  routeRulesConnector   : RouteRulesConnector,
+  githubConnector       : GitHubProxyConnector
 )(using
   ExecutionContext
 ):
@@ -55,12 +60,23 @@ class ShutterService @Inject() (
     shutterConnector.updateShutterStatus(req.authorizationToken, serviceName, context, st, env, status)
 
   def outagePage(
-    env        : Environment,
     serviceName: ServiceName
   )(using
     HeaderCarrier
   ): Future[Option[OutagePage]] =
-    shutterConnector.outagePage(env, serviceName)
+    shutterConnector.outagePage(serviceName)
+
+  def outagePagePreview(
+    serviceName     : ServiceName,
+    templatedMessage: Option[String]
+  )(using
+    HeaderCarrier
+  ): Future[Option[Document]] =
+    (for { //TODO change BDOG-3178 to HEAD
+      template   <- OptionT(githubConnector.getGitHubProxyRaw("/shutter-api/BDOG-3178/conf/default-outage-page.html.tmpl"))
+      outagePage <- OptionT(outagePage(serviceName))
+      html       =  Jsoup.parse(template)
+    } yield outagePage.renderTemplate(html, templatedMessage)).value
 
   def frontendRouteWarnings(
     env        : Environment,

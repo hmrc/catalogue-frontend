@@ -119,10 +119,10 @@ class ShutterConnector @Inject() (
     * /shutter-api/{environment}/outage-pages/{serviceName}
     * Retrieves the current shutter state for the given service in the given environment
     */
-  def outagePage(env: Environment, serviceName: ServiceName)(using HeaderCarrier): Future[Option[OutagePage]] =
+  def outagePage(serviceName: ServiceName)(using HeaderCarrier): Future[Option[OutagePage]] =
     given Reads[OutagePage] = OutagePage.reads
     httpClientV2
-      .get(url"$baseUrl/shutter-api/${env.asString}/outage-pages/${serviceName.asString}")
+      .get(url"$baseUrl/shutter-api/outage-pages/${serviceName.asString}")
       .execute[Option[OutagePage]]
 
   /**
