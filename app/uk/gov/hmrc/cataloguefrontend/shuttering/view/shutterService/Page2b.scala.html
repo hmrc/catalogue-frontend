@@ -25,8 +25,6 @@
 @(form                  : Form[Step2bForm]
 , step0Out              : Step0Out
 , step1Out              : Step1Out
-, outageMessageSrc      : Option[OutagePage]
-, defaultOutageMessage  : String
 , outagePages           : Seq[OutagePage]
 , back                  : Call
 )(implicit
@@ -113,26 +111,6 @@
                     <input type="hidden" name="outageMessageWelsh" id="outageMessageWelsh">
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-4">
-                        <p class="fw-bold">Select outage page</p>
-                        @defining(form("useDefaultOutagePage").value.map(_.toBoolean).getOrElse(false)) { useDefaultOutagePage =>
-                            <div class="form-check">
-                                <input type="radio" id="useDefaultOutagePageFalse" class="form-check-input" name="useDefaultOutagePage" value="false" @if(!useDefaultOutagePage){checked}>
-                                <label class="form-check-label" for="useDefaultOutagePageFalse">
-                                    Service outage page
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input type="radio" id="useDefaultOutagePageTrue" class="form-check-input" name="useDefaultOutagePage" value="true" @if(useDefaultOutagePage){checked}>
-                                <label class="form-check-label" for="useDefaultOutagePageTrue">
-                                    None
-                                </label>
-                            </div>
-                        }
-                    </div>
-                </div>
-
                 <div class="card mb-3" id="outagePagePanel">
                     <div class="card-header">
                         Outage Pages:
@@ -160,7 +138,7 @@
                                         case None => {-}
                                     }
                                     </td>
-                                    <td class="shutter-preview">@Html(outagePage.mainContent)</td>
+                                    <td class="shutter-preview">@Html(outagePage.contentPreview)</td>
                                     <td>
                                         <a href="@shutterRoutes.ShutterWizardController.step2bPreview(outagePage.serviceName)" class="preview-link btn btn-outline-secondary" target="_blank" rel="noreferrer noopener">
                                             Preview<span class="glyphicon glyphicon-new-window"></span>
@@ -172,20 +150,6 @@
                         </table>
                     </div>
                 </div>
-
-                <div class="card mb-3" id="defaultOutagePagePanel">
-                    <div class="card-header bg-warning-subtle">
-                        <span class="glyphicon glyphicon-warning-sign"></span>
-                        No outage page selected
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">
-                            The service will be shuttered with the platform default page, rather than any outage page defined in github.
-                        </p>
-                    </div>
-                </div>
-
-
 
                 <div class="row">
                     <div class="col-1">
@@ -206,24 +170,6 @@
     </div>
 
   <script @CSPNonce.attr type="text/javascript">
-    function syncUseDefaultOutagePage() {
-      let useDefaultOutagePage = $('input[name=useDefaultOutagePage]:checked').val();
-      if (useDefaultOutagePage === "true") {
-        $("#outagePagePanel").hide();
-        $("#defaultOutagePagePanel").show();
-      } else {
-        $("#outagePagePanel").show();
-        $("#defaultOutagePagePanel").hide();
-      }
-    }
-
-    ["useDefaultOutagePageFalse", "useDefaultOutagePageTrue"]
-      .forEach(function(id) {
-        document.getElementById(id).addEventListener("change", function() {
-          syncUseDefaultOutagePage();
-        });
-      });
-
     let fp;
     let previewLinks;
     let dateFormatDiv;
@@ -232,10 +178,15 @@
     let outageMessageWelsh;
 
     function updateContentPreview(dateStr) {
-        let templatedMessage = dateStr || '@defaultOutageMessage'
-        document.querySelectorAll('#templatedMessage').forEach( function(el) {
-            el.textContent = templatedMessage;
-        });
+        if(dateStr) {
+            document.querySelectorAll('#templatedMessage').forEach( function(el) {
+                el.textContent = dateStr;
+            });
+        } else {
+            document.querySelectorAll('#templatedMessage').forEach( function (el) {
+                el.textContent = el.getAttribute('default'); 
+            });
+        }
     }
 
     function updatePreviewLinks(dateStr) {
@@ -277,8 +228,6 @@
     }
 
     $(document).ready(function() {
-      syncUseDefaultOutagePage();
-
       previewLinks       = document.querySelectorAll('.preview-link');
       dateFormatDiv      = document.getElementById('dateFormatter');
       dateFormat         = document.getElementById('dateFormat');

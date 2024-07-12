@@ -26,6 +26,7 @@ import scala.util.Try
 import java.time.Instant
 import FromStringEnum.*
 import org.jsoup.nodes.Document
+import org.jsoup.Jsoup
 
 given Parser[ShutterType] = Parser.parser(ShutterType.values)
 
@@ -263,6 +264,16 @@ case class OutagePage(
   def templatedMessages: List[TemplatedContent] =
     templatedElements
       .filter(_.elementId == "templatedMessage")
+
+  def contentPreview: String = {
+    val document = Jsoup.parse(mainContent)
+    Try {
+      val default = document.getElementById("templatedMessage").text
+      document.getElementById("templatedMessage").attr("default", default)
+    }
+
+    document.outerHtml
+  }
     
   def renderTemplate(
     template        : Document, // mutable

@@ -324,8 +324,6 @@ class ShutterWizardController @Inject() (
       outageMessageTemplate =  outagePages
                                  .flatMap(op => op.templatedMessages.map((op, _)))
                                  .headOption
-      outageMessageSrc      =  outageMessageTemplate.map(_._1)
-      defaultOutageMessage  =  outageMessageTemplate.fold("")(_._2.innerHtml)
       outagePageStatus      =  shutterService.toOutagePageStatus(step1Out.serviceNameAndContexts.map(_.serviceName), outagePages)
       back                  =
                                if step1Out.status == ShutterStatusValue.Shuttered && !step2aOut.map(_.skipped).getOrElse(true)
@@ -333,20 +331,11 @@ class ShutterWizardController @Inject() (
                                  appRoutes.ShutterWizardController.step2aGet
                                else
                                  appRoutes.ShutterWizardController.step1Post
-      form2b                =  step2bForm.fill:
-                                 val s2f = form.get
-                                 if s2f.outageMessage.isEmpty
-                                 then
-                                   s2f.copy(outageMessage = defaultOutageMessage)
-                                 else
-                                   s2f
     yield
       page2b(
-        form2b,
+        form,
         step0Out,
         step1Out,
-        outageMessageSrc,
-        defaultOutageMessage,
         outagePages,
         back
       )
