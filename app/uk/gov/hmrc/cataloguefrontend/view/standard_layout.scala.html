@@ -255,12 +255,22 @@
         @postContent
 
         <script @CSPNonce.attr>
+            // Allow table tags in popovers
+            const myAllowList = bootstrap.Popover.Default.allowList;
+            myAllowList.table = [];
+            myAllowList.thead = [];
+            myAllowList.tbody = [];
+            myAllowList.tr = [];
+            myAllowList.td = [];
+            myAllowList.th = [];
             // Activate bootstrap tooltips
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
             // Activate bootstrap popovers
-            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
-            const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+            const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl, {
+                allowList: myAllowList
+            }));
         </script>
     </body>
     <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("bootstrapFormValidation.js")"></script>

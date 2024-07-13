@@ -101,43 +101,6 @@ class ShutterService @Inject() (
          .sortBy: (s, _) =>
            (s.status.value, s.serviceName)
 
-  /** Creates an [[OutagePageStatus]] for each service based on the contents of [[OutagePage]] */
-  def toOutagePageStatus(serviceNames: Seq[ServiceName], outagePages: List[OutagePage]): Seq[OutagePageStatus] =
-    serviceNames.map: serviceName =>
-      outagePages.find(_.serviceName == serviceName) match
-        case Some(outagePage) if outagePage.warnings.nonEmpty =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = Some(
-                            ( outagePage.warnings.map(_.message).mkString("<br/>")
-                            , outagePage.warnings.head.name match
-                                case "UnableToRetrievePage"        => "Default outage page will be displayed."
-                                case "MalformedHTML"               => "Outage page will be sent as is, without updating templates."
-                                case "DuplicateTemplateElementIDs" => "All matching elements will be updated"
-                            )
-                          )
-          )
-        case Some(outagePage) if outagePage.templatedMessages.isEmpty =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = Some(("No templatedMessage Element in outage-page", "Outage page will be sent as is."))
-          )
-        case Some(outagePage) if outagePage.templatedMessages.length > 1 =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = Some(("Multiple templatedMessage Element in outage-page", "All matching elements will be updated."))
-          )
-        case Some(_) =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = None
-          )
-        case None =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = Some(("No templatedMessage Element no outage-page", "Default outage page will be displayed."))
-          )
-
   def shutterGroups()(using HeaderCarrier): Future[Seq[ShutterGroup]] =
     shutterGroupsConnector.shutterGroups().map(_.sortBy(_.name))
 

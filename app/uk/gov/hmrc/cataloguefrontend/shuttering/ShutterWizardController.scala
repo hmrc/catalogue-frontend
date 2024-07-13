@@ -324,7 +324,6 @@ class ShutterWizardController @Inject() (
       outageMessageTemplate =  outagePages
                                  .flatMap(op => op.templatedMessages.map((op, _)))
                                  .headOption
-      outagePageStatus      =  shutterService.toOutagePageStatus(step1Out.serviceNameAndContexts.map(_.serviceName), outagePages)
       back                  =
                                if step1Out.status == ShutterStatusValue.Shuttered && !step2aOut.map(_.skipped).getOrElse(true)
                                then

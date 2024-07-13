@@ -391,3 +391,9 @@ svg > g:last-child > g.google-visualization-tooltip { pointer-events: none }
 .shutter-preview h1 {
     font-size: 1.2em;
 }
+
+.shutter-warning {
+    --bs-popover-max-width: 800px;
+    --bs-popover-body-padding-x: 0.5rem;
+    --bs-popover-body-padding-y: 0.5rem;
+}

@@ -274,6 +274,17 @@ case class OutagePage(
 
     document.outerHtml
   }
+
+  def warningsAndConsequences: List[(String, String)] =
+    warnings.map:
+      warning =>
+        val consequence: String = warning.name match {
+          case "UnableToRetrievePage"        => "Default outage page will be displayed."
+          case "MalformedHTML"               => "Outage page will be sent as is, without updating templates."
+          case "DuplicateTemplateElementIDs" => "All matching elements will be updated"
+        }
+
+        (warning.message -> consequence)
     
   def renderTemplate(
     template        : Document, // mutable
@@ -308,11 +319,6 @@ object OutagePage:
     ~ (__ \ "mainContent"       ).read[String]
     ~ (__ \ "templatedElements" ).read[List[TemplatedContent]]
     )(OutagePage.apply)
-
-case class OutagePageStatus(
-  serviceName: ServiceName,
-  warning    : Option[(String, String)]
-)
 
 case class FrontendRouteWarning(
   name                : String,

@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, OutagePageStatus, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step0Out, Step1Out, Step2bForm}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => shutterRoutes}
 @import views.html.helper.{FieldConstructor, textarea}
@@ -130,6 +130,7 @@
                             @outagePages.map { outagePage =>
                                 <tr>
                                     <td>
+                                        @warningPopover(outagePage.warningsAndConsequences)
                                         @outagePage.serviceName.asString
                                     </td>
                                     <td>
@@ -273,4 +274,42 @@
       });
     });
   </script>
+}
+
+@warningPopover(warnings: List[(String, String)]) = {
+    @if(warnings.nonEmpty) {
+        <a href="#"
+        class="me-1 text-decoration-none"
+        tabindex="0"
+        data-bs-trigger="hover"
+        data-bs-toggle="popover"
+        data-bs-placement="right"
+        data-bs-html="true"
+        data-bs-custom-class="shutter-warning"
+        data-bs-content='@popoverContent(warnings)'
+        >
+            <span class="badge rounded-pill text-bg-warning">
+                <i class="glyphicon glyphicon-alert"></i>
+            </span>
+        </a>
+    }
+}
+
+@popoverContent(warnings: List[(String, String)]) = {
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Warning</th>
+                <th>Consequence</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for((warning, consequence) <- warnings) {
+                <tr>
+                    <td>@warning</td>
+                    <td>@consequence</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
