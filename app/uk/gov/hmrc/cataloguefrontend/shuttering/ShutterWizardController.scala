@@ -38,6 +38,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.Logger
+import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 
 @Singleton
 class ShutterWizardController @Inject() (
@@ -368,19 +369,17 @@ class ShutterWizardController @Inject() (
       ).merge
     }
     
-  def step2bPreview(
+  def outagePagePreview(
       serviceName: ServiceName,
       templatedMessage: Option[String]
-  ) =
-    auth.authenticatedAction(
-      continueUrl = AuthController.continueUrl(appRoutes.ShutterWizardController.step2bGet)
-    ).async { implicit request =>
+  ) = Action.async {
+    implicit request =>
       shutterService
         .outagePagePreview(serviceName, templatedMessage)
         .map {
           case None       =>
             logger.warn(s"Unable to retrieve outage page preview for service: ${serviceName.asString}")
-            Redirect(appRoutes.ShutterWizardController.step2bGet)
+            NotFound(error_404_template())
           case Some(page) => Ok(Html(page.outerHtml))
         }
     }
