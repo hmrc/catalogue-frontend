@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import play.api.libs.functional.syntax.*
 import play.api.libs.json.*
 import play.api.mvc.PathBindable
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceDisplayName, ServiceName, UserName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import scala.util.Try
@@ -242,15 +242,28 @@ object TemplatedContent:
     ~ (__ \ "innerHTML").format[String]
     )(TemplatedContent.apply, c => Tuple.fromProductTyped(c))
 
+case class ServiceDisplayName(
+  value     : String,
+  messageKey: String
+)
+
+object ServiceDisplayName:
+  val format: Format[ServiceDisplayName] =
+    ( (__ \ "value"     ).format[String]
+    ~ (__ \ "messageKey").format[String]
+    )(ServiceDisplayName.apply, s => Tuple.fromProductTyped(s))
+
 case class OutagePageWarning(
-  name   : String,
-  message: String
+  name       : String,
+  message    : String,
+  consequence: String,
 )
 
 object OutagePageWarning:
   val reads: Reads[OutagePageWarning] =
-    ( (__ \ "type"   ).read[String]
-    ~ (__ \ "message").read[String]
+    ( (__ \ "type"       ).read[String]
+    ~ (__ \ "message"    ).read[String]
+    ~ (__ \ "consequence").read[String]
     )(OutagePageWarning.apply)
 
 case class OutagePage(
@@ -274,17 +287,6 @@ case class OutagePage(
 
     document.outerHtml
   }
-
-  def warningsAndConsequences: List[(String, String)] =
-    warnings.map:
-      warning =>
-        val consequence: String = warning.name match {
-          case "UnableToRetrievePage"        => "Default outage page will be displayed."
-          case "MalformedHTML"               => "Outage page will be sent as is, without updating templates."
-          case "DuplicateTemplateElementIDs" => "All matching elements will be updated"
-        }
-
-        (warning.message -> consequence)
     
   def renderTemplate(
     template        : Document, // mutable
@@ -294,9 +296,9 @@ case class OutagePage(
       serviceDisplayName.map:
         displayName =>
           val current = template.title()
-          val updated = current.split("–").mkString(s"– ${displayName.asString} –") // not a standard hyphen '-'
+          val updated = current.split("–").mkString(s"– ${displayName.value} –") // not a standard hyphen '-'
           template.title(updated)
-          template.getElementById("header-service-name").text(displayName.asString)
+          template.getElementById("header-service-name").text(displayName.value)
 
       template.getElementById("main-content").html(mainContent)
 
@@ -310,8 +312,9 @@ case class OutagePage(
 
 object OutagePage:
   val reads: Reads[OutagePage] =
-    given Reads[TemplatedContent]  = TemplatedContent.format
-    given Reads[OutagePageWarning] = OutagePageWarning.reads
+    given Reads[ServiceDisplayName] = ServiceDisplayName.format
+    given Reads[TemplatedContent]   = TemplatedContent.format
+    given Reads[OutagePageWarning]  = OutagePageWarning.reads
     ( (__ \ "serviceName"       ).read[ServiceName]
     ~ (__ \ "serviceDisplayName").readNullable[ServiceDisplayName]
     ~ (__ \ "outagePageURL"     ).read[String]

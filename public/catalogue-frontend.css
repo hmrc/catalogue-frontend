@@ -397,3 +397,9 @@ svg > g:last-child > g.google-visualization-tooltip { pointer-events: none }
     --bs-popover-body-padding-x: 0.5rem;
     --bs-popover-body-padding-y: 0.5rem;
 }
+
+.service-display-name-help {
+    --bs-popover-max-width: 400px;
+    --bs-popover-body-padding-x: 0.5rem;
+    --bs-popover-body-padding-y: 0.5rem;
+}

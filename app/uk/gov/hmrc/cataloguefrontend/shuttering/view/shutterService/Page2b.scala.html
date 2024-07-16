@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, ShutterType}
+@import uk.gov.hmrc.cataloguefrontend.shuttering.{OutagePage, OutagePageWarning, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.{Step0Out, Step1Out, Step2bForm}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{routes => shutterRoutes}
 @import views.html.helper.{FieldConstructor, textarea}
@@ -96,17 +96,25 @@
                         <select id="dateFormat" class="form-select">
                             @* https://flatpickr.js.org/formatting/ *@
                             <option value="\\o\\n l J F \\a\\t H:i."></option>
+                            <option value="\\o\\n l J F Y \\a\\t H:i."></option>
                             <option value="\\o\\n l J F."></option>
+                            <option value="\\o\\n l J F Y."></option>
                             <option value="\\a\\f\\t\\e\\r l J F \\a\\t H:i."></option>
+                            <option value="\\a\\f\\t\\e\\r l J F Y \\a\\t H:i."></option>
                             <option value="\\a\\f\\t\\e\\r l J F."></option>
+                            <option value="\\a\\f\\t\\e\\r l J F Y."></option>
                         </select>
                     </div>
 
                     <select id="dateFormatWelsh" class="d-none">
                         <option value="\\a\\r l J F \\a\\m H:i."></option>
+                        <option value="\\a\\r l J F Y \\a\\m H:i."></option>
                         <option value="\\a\\r l J F."></option>
+                        <option value="\\a\\r l J F Y."></option>
                         <option value="\\a\\r \\ô\\l l J F \\a\\m H:i."></option>
+                        <option value="\\a\\r \\ô\\l l J F Y \\a\\m H:i."></option>
                         <option value="\\a\\r \\ô\\l l J F."></option>
+                        <option value="\\a\\r \\ô\\l l J F Y."></option>
                     </select>
                     <input type="hidden" name="outageMessageWelsh" id="outageMessageWelsh">
                 </div>
@@ -121,7 +129,21 @@
                             <thead>
                                 <tr>
                                     <th>Service</th>
-                                    <th>Service Display Name</th>
+                                    <th>
+                                        Service Display Name
+                                        <a href="#"
+                                        class="ps-1 text-decoration-none"
+                                        tabindex="0"
+                                        data-bs-trigger="hover"
+                                        data-bs-toggle="popover"
+                                        data-bs-placement="bottom"
+                                        data-bs-html="true"
+                                        data-bs-custom-class="service-display-name-help"
+                                        data-bs-content='@serviceDisplayNameHelp'
+                                        >
+                                            <i class="glyphicon glyphicon-question-sign"></i>
+                                        </a>
+                                    </th>
                                     <th>Content Preview</th>
                                     <th>Full Preview</th>
                                 </tr>
@@ -130,18 +152,26 @@
                             @outagePages.map { outagePage =>
                                 <tr>
                                     <td>
-                                        @warningPopover(outagePage.warningsAndConsequences)
+                                        @warningPopover(outagePage.warnings)
                                         @outagePage.serviceName.asString
                                     </td>
                                     <td>
                                     @outagePage.serviceDisplayName match {
-                                        case Some(value) => {@value.asString}
+                                        case Some(displayName) => {
+                                            <span
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="bottom"
+                                            data-bs-title="@{displayName.messageKey}"
+                                            >
+                                                @displayName.value
+                                            </span>
+                                        }
                                         case None => {-}
                                     }
                                     </td>
                                     <td class="shutter-preview">@Html(outagePage.contentPreview)</td>
                                     <td>
-                                        <a href="@shutterRoutes.ShutterWizardController.outagePagePreview(outagePage.serviceName)" class="preview-link btn btn-outline-secondary" target="_blank" rel="noreferrer noopener">
+                                        <a href="@shutterRoutes.ShutterWizardController.outagePagePreview(outagePage.serviceName)" class="preview-link btn btn-outline-secondary text-nowrap" target="_blank" rel="noreferrer noopener">
                                             Preview<span class="glyphicon glyphicon-new-window"></span>
                                         </a>
                                     </td>
@@ -276,10 +306,10 @@
   </script>
 }
 
-@warningPopover(warnings: List[(String, String)]) = {
+@warningPopover(warnings: List[OutagePageWarning]) = {
     @if(warnings.nonEmpty) {
         <a href="#"
-        class="me-1 text-decoration-none"
+        class="pe-1 text-decoration-none"
         tabindex="0"
         data-bs-trigger="hover"
         data-bs-toggle="popover"
@@ -295,7 +325,7 @@
     }
 }
 
-@popoverContent(warnings: List[(String, String)]) = {
+@popoverContent(warnings: List[OutagePageWarning]) = {
     <table class="table table-striped">
         <thead>
             <tr>
@@ -304,12 +334,26 @@
             </tr>
         </thead>
         <tbody>
-            @for((warning, consequence) <- warnings) {
+            @for(warning <- warnings) {
                 <tr>
-                    <td>@warning</td>
-                    <td>@consequence</td>
+                    <td>@warning.message</td>
+                    <td>@warning.consequence</td>
                 </tr>
             }
         </tbody>
     </table>
+}
+
+@serviceDisplayNameHelp = {
+    <div>
+        <p>Used in the title and nav bar heading of the outage page.</p>
+        <p>It is derived from conf/messages - Hover over the values to see the message key.</p>
+        <p>The following keys are checked in priority order:</p>
+        <ul>
+            <li>outage-page.serviceDisplayName</li>
+            <li>service.name</li>
+            <li>site.service_name</li>
+            <li>app.name</li>
+        </ul>
+    </div>
 }
