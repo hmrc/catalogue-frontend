@@ -202,6 +202,7 @@
 
   <script @CSPNonce.attr type="text/javascript">
     let fp;
+    let fpWelsh; // only used for formatting
     let previewLinks;
     let dateFormatDiv;
     let dateFormat;
@@ -251,11 +252,9 @@
     }
 
     function updateWelsh() {
-        fp.set('locale', 'cy');
         let format = dateFormatWelsh.value
-        let formatted = fp.formatDate(fp.selectedDates[0], format);
+        let formatted = fpWelsh.formatDate(fp.selectedDates[0], format);
         outageMessageWelsh.value = formatted;
-        fp.set('locale', 'default');
     }
 
     $(document).ready(function() {
@@ -285,6 +284,15 @@
               updatePreviewLinks(dateStr);
               updateFormatOptions(selectedDates[0]);
               updateWelsh();
+          }
+      });
+
+      fpWelsh = flatpickr(document.createElement('input'), {
+          enableTime: true,
+          time_24hr: true,
+          locale: 'cy',
+          onReady: function(selectedDates, dateStr, instance) {
+              instance.calendarContainer.style.display = 'none';
           }
       });
 
