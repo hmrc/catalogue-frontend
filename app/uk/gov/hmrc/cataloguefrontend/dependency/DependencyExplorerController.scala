@@ -146,7 +146,7 @@ class DependencyExplorerController @Inject() (
                                       .leftMap(msg => BadRequest(pageWithError(msg)))
                   results      <- EitherT.right[Result]:
                                     dependenciesService
-                                      .getServicesWithDependency(team, flag, repoType, query.group, query.artefact, versionRange, scope)
+                                      .getDependencies(team, flag, repoType, query.group, query.artefact, versionRange, scope)
                   pieData      = if results.nonEmpty
                                  then Some(
                                         PieData(

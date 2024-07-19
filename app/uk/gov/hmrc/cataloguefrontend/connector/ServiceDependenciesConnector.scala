@@ -79,28 +79,7 @@ class ServiceDependenciesConnector @Inject() (
       .get(url"$servicesDependenciesBaseUrl/api/teams/${teamName.asString}/slug-dependencies?flag=${flag.asString}")
       .execute[Map[String, Seq[Dependency]]]
 
-  def getServicesWithDependency(
-    flag        : SlugInfoFlag,
-    group       : String,
-    artefact    : String,
-    versionRange: VersionRange,
-    scopes      : List[DependencyScope]
-  )(using
-    HeaderCarrier
-  ): Future[Seq[RepoWithDependency]] =
-    given Reads[RepoWithDependency] = RepoWithDependency.reads
-    val queryParams = Seq(
-      "flag"         -> flag.asString,
-      "group"        -> group,
-      "artefact"     -> artefact,
-      "versionRange" -> versionRange.range
-    )
-
-    httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/serviceDeps?$queryParams&scope=${scopes.map(_.asString)}")
-      .execute[Seq[RepoWithDependency]]
-
-  def getDependenciesFromMetaData(
+  def getDependencies(
     flag        : SlugInfoFlag,
     group       : String,
     artefact    : String,
