@@ -79,9 +79,9 @@ class SearchIndex @Inject()(
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,                         1.0f),
     SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,                     1.0f),
     SearchTerm("page",     "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,              1.0f),
-    SearchTerm("page",     "create service repository",    createRepoRoutes.CreateRepositoryController.createServiceRepositoryLanding().url,      1.0f),
-    SearchTerm("page",     "create prototype repository",  createRepoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding().url,    1.0f),
-    SearchTerm("page",     "create test repository",       createRepoRoutes.CreateRepositoryController.createTestRepository().url,                1.0f),
+    //SearchTerm("page",     "create service repository",    createRepoRoutes.CreateRepositoryController.createServiceRepositoryLanding().url,      1.0f),
+    //SearchTerm("page",     "create prototype repository",  createRepoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding().url,    1.0f),
+    //SearchTerm("page",     "create test repository",       createRepoRoutes.CreateRepositoryController.createTestRepository().url,                1.0f),
     SearchTerm("page",     "deploy service",               deployRoutes.DeployServiceController.step1(None).url,                                     1.0f),
     SearchTerm("page",     "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f)
   )

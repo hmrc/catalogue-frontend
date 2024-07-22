@@ -14,25 +14,28 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.createrepository.TestType
+@import uk.gov.hmrc.cataloguefrontend.createrepository.CreateTest
+
 @this()
 
-@(form     : Form[?],
+@(form     : Form[CreateTest],
   teamNames: Seq[TeamName]
 )(implicit
   messages : Messages,
   request  : RequestHeader
 )
 
-@standard_layout("Create a Prototype Repository", "create a prototype repository") {
+@standard_layout("Create a Test Repository", "create a test repository") {
 
     <section class="section-wrapper">
-        <h1 class="page-heading mt-4">Create A Prototype Repository</h1>
+        <h1 class="page-heading mt-4">Create A Test Repository</h1>
         <p>Use the below form to create a new repository. Make sure to follow the guidance for each field.</p>
 
         @partials.form_global_errors(form)
 
         @helper.form(
-            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createPrototypeRepository(),
+            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createRepoPost(),
             Symbol("id")         -> "createRepoForm",
             Symbol("method")     -> "post",
             Symbol("class")      -> "needs-validation",
@@ -50,43 +53,29 @@
                         </div>
                         <ul>
                             <li>separate words with hyphens; don't use spaces or slashes</li>
-                            <li>all prototype repositories are suffixed with '-prototype'</li>
-                            <li>maximum 30 characters</li>
+                            <li>maximum 47 characters</li>
                             <li>lowercase only</li>
-                            <li>First character must be a letter</li>
-                            <li>describe the domain</li>
-                            <li>avoid time-limited words, such as 'new'</li>
-                            <li>avoid unnecessary words, such as 'service'</li>
+                            <li>avoid uncommon initialisms or acronyms</li>
+                            <li>prefix the test repository with the name of the relevant service</li>
+                            <li>suffix test repository with the type of tests it will include, such as: -ui-tests, -api-tests, -performance-tests</li>
                         </ul>
                         <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
                     </div>
                 </div>
             </div>
-
-            <div class="form-group row mb-2">
-                <div class="col-md-6 d-grid gap-2">
-                    <label class="fw-bold" for="passwordInput">Password:</label>
-                    <div id="password" class="mb-2">
-                        <div class="mb-2">
-                            You must comply with the following password rules:
-                        </div>
-                        <ul>
-                            <li>Cannot be blank</li>
-                            <li>
-                                Should only contain the following characters
-                                <ul>
-                                    <li>uppercase letters</li>
-                                    <li>lowercase letters</li>
-                                    <li> numbers</li>
-                                    <li>underscores</li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <input class="form-control" type="password" id="passwordInput" name="password" value="@form.data.getOrElse("password", "")">
+            <div class="form-group row mb-4">
+                <div class="col-md-6">
+                    <div id="makePrivate" style="white-space: nowrap;" class="mb-2">
+                        <label class="fw-bold" for="makePrivateInput">Make Private: </label>
+                        <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate" value=true
+                            @form.data.get("makePrivate").map{ _ => checked }
+                        >
                     </div>
+                    <p>You must decide now if you will code in the open, or privately. If you select ‘Make Private’ the GitHub repository you create will only be visible within HMRC.
+                        Private coding usually relates to data security. Open repositories are visible to the public.
+                        As a general rule, most services are open by default. If you’re unsure, talk to your architect or digital service manager (DSM).</p>
                 </div>
             </div>
-
             <div class="form-group row">
                 <div id="teamName" class="col-md-6 mb-3">
                     <label class="fw-bold" for="teamInput">Team name:</label>
@@ -106,33 +95,24 @@
                     </select>
                 </div>
             </div>
-
-            <div class="form-group row mb-2">
-                <div class="col-md-6 d-grid gap-2">
-                    <label class="fw-bold" for="slackChannelsInput">Slack Channels:</label>
-                    <div id="slackChannels" class="mb-2">
-                        <div class="mb-2">
-                            (Optional) A comma separated list of Slack channels for receiving prototype notifications. These channels can be added to and changed in the repository.yaml file in the prototype's repository.
-                        </div>
-                        <div class="mb-2">
-                            Slack channel names can only contain the following characters:
-                        </div>
-                        <ul>
-                            <li>lowercase letters</li>
-                            <li> numbers</li>
-                            <li>underscores</li>
-                            <li>hyphens</li>
-                            <li>Can start with a '#' character but is not required to</li>
-                        </ul>
-                        <input class="form-control" type="text" id="slackChannelsInput" name="slackChannels" value="@form.data.getOrElse("slackChannels", "")">
-                    </div>
+            <div class="form-group row mb-3">
+                <div id="repoType" class="col-md-6">
+                    <label class="fw-bold" for="testTypeInput">Type:</label>
+                    <p class="mt-2">Repositories automatically include HMRC templating, depending on the type of tests they support. Choose how you would like this repository to be set up.
+                    </p>
+                    <select class="form-select" id="testTypeInput" name="testType">
+                        <option value="" @if(form.data.getOrElse("testType", "").isEmpty) { selected="selected" } >Select a test type</option>
+                        @TestType.values.map { tt =>
+                         <option value="@{tt.asString}"
+                                 @if(form.data.getOrElse("testType", "").equals(tt.asString)) { selected="selected" else ""}
+                         >@tt.asString</option>
+                        }
+                    </select>
                 </div>
             </div>
-
             <div>
-                <button id="create-repository-submission-button" class="btn btn-success" type="submit">Build</button>
+                <button id="createTestSubmitBtn" class="btn btn-success" type="submit">Build</button>
             </div>
        }
     </section>
-
 }

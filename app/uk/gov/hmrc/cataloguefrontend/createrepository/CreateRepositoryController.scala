@@ -17,16 +17,23 @@
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 import play.api.Logger
+import play.api.data.Form
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
+import play.api.libs.json.{Format, Json, Reads, Writes}
+import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.AsyncRequestId
 import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.createrepository.view.html.{CreatePrototypeRepositoryConfirmationPage, CreatePrototypeRepositoryPage, CreateServiceRepositoryConfirmationPage, CreateServiceRepositoryPage, CreateTestRepositoryConfirmationPage, CreateTestRepositoryPage}
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.createrepository.view.html.{CreatePrototypePage, CreateServicePage, CreateTestPage, SelectRepoTypePage, CreateRepositoryConfirmationPage}
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.internalauth.client.*
+import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
+import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
@@ -34,142 +41,177 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CreateRepositoryController @Inject()(
-   override val auth                        : FrontendAuthComponents,
-   override val mcc                         : MessagesControllerComponents,
-   createServiceRepositoryPage              : CreateServiceRepositoryPage,
-   createServiceRepositoryConfirmationPage  : CreateServiceRepositoryConfirmationPage,
-   createPrototypePage                      : CreatePrototypeRepositoryPage,
-   createPrototypeRepositoryConfirmationPage: CreatePrototypeRepositoryConfirmationPage,
-   createTestRepositoryPage                 : CreateTestRepositoryPage,
-   createTestRepositoryConfirmationPage     : CreateTestRepositoryConfirmationPage,
-   buildDeployApiConnector                  : BuildDeployApiConnector,
-   teamsAndReposConnector                   : TeamsAndRepositoriesConnector
+  override val auth               : FrontendAuthComponents,
+  override val mcc                : MessagesControllerComponents,
+  mongoComponent                  : MongoComponent,
+  servicesConfig                  : ServicesConfig,
+  timestampSupport                : TimestampSupport,
+  selectRepoTypePage              : SelectRepoTypePage,
+  createServicePage               : CreateServicePage,
+  createPrototypePage             : CreatePrototypePage,
+  createTestPage                  : CreateTestPage,
+  createRepositoryConfirmationPage: CreateRepositoryConfirmationPage,
+  buildDeployApiConnector         : BuildDeployApiConnector,
+  teamsAndReposConnector          : TeamsAndRepositoriesConnector
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
     with CatalogueAuthBuilders
     with I18nSupport:
 
-  private val logger = Logger(getClass)
+  import CreateRepositoryController._
+
+  val sessionIdKey = "CreateRepoWizardController"
+
+  val cacheRepo: SessionCacheRepository = SessionCacheRepository(
+    mongoComponent   = mongoComponent,
+    collectionName   = "sessions.createRepo",
+    ttl              = servicesConfig.getDuration("mongodb.session.expireAfter"),
+    timestampSupport = timestampSupport,
+    sessionIdKey     = sessionIdKey
+  )
+
+  given Format[RepoTypeOut] = repoTypeOutFormats
+  given Format[RepoNameOut] = repoNameOutFormats
 
   private def createRepositoryPermission(teamName: TeamName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_REPOSITORY"))
 
-  val createServiceRepositoryLanding: Action[AnyContent] =
+  private val logger = Logger(getClass)
+
+  private val createRepoRetrieval: Retrieval.SimpleRetrieval[Set[Resource]] =
+    Retrieval.locations(
+      resourceType = Some(ResourceType("catalogue-frontend")),
+      action       = Some(IAAction("CREATE_REPOSITORY"))
+    )
+
+  // Step One GET
+  val createRepoLandingGet: Action[AnyContent] =
     auth.authenticatedAction(
-      continueUrl = routes.CreateRepositoryController.createServiceRepositoryLanding(),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      continueUrl = routes.CreateRepositoryController.createRepoLandingGet()
     ) { implicit request =>
-      val userTeams = cleanseUserTeams(request.retrieval)
-      Ok(createServiceRepositoryPage(CreateServiceRepoForm.form, userTeams))
+      Ok(selectRepoTypePage(SelectRepoType.form))
     }
 
-  val createServiceRepository: Action[AnyContent] =
+  // Step One POST
+  val createRepoLandingPost: Action[AnyContent] =
     auth.authenticatedAction(
-      continueUrl = routes.CreateRepositoryController.createServiceRepositoryLanding(),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      continueUrl = routes.CreateRepositoryController.createRepoLandingGet(),
     ).async { implicit request =>
       (for
-         userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
-         submittedForm =  CreateServiceRepoForm.form.bindFromRequest()
-         validForm     <- submittedForm.fold[EitherT[Future, Result, CreateServiceRepoForm]](
-                            formWithErrors => EitherT.leftT(BadRequest(createServiceRepositoryPage(formWithErrors, userTeams))),
-                            validForm      => EitherT.pure(validForm)
+        submittedForm <- EitherT.pure[Future, Result](SelectRepoType.form.bindFromRequest())
+        repoType      <- submittedForm.fold[EitherT[Future, Result, RepoType]](
+                            formWithErrors => EitherT.leftT(BadRequest(selectRepoTypePage(formWithErrors))),
+                            repoType       => EitherT.pure(repoType)
                           )
-         _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
-         _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
-                            .leftMap(error => BadRequest(createServiceRepositoryPage(submittedForm.withError("teamName", error), userTeams)))
-         id            <- EitherT(buildDeployApiConnector.createServiceRepository(validForm))
-                            .leftMap: error =>
-                              logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} failed with message: $error")
-                              BadRequest(createServiceRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
-         _             =  logger.info(s"CreateServiceRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       yield Redirect(routes.CreateRepositoryController.createServiceRepositoryConfirmation(ServiceName(validForm.repositoryName)))
+        pageState     <- EitherT.liftF(putSession(repoTypeKey, RepoTypeOut(repoType)))
+       yield Redirect(routes.CreateRepositoryController.createRepoGet()).withSession(request.session + pageState)
       ).merge
     }
 
-  val createPrototypeRepositoryLanding: Action[AnyContent] =
+  // Step Two GET
+  val createRepoGet: Action[AnyContent] =
     auth.authenticatedAction(
-      continueUrl = routes.CreateRepositoryController.createPrototypeRepositoryLanding(),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
-    ) { implicit request =>
-      val userTeams = cleanseUserTeams(request.retrieval)
-      Ok(createPrototypePage(CreatePrototypeRepoForm.form, userTeams))
-    }
-
-  val createPrototypeRepository: Action[AnyContent] =
-    auth.authenticatedAction(
-      continueUrl = routes.CreateRepositoryController.createPrototypeRepositoryLanding(),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+      continueUrl = routes.CreateRepositoryController.createRepoGet(),
+      retrieval   = createRepoRetrieval
     ).async { implicit request =>
       (for
-         userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
-         submittedForm =  CreatePrototypeRepoForm.form.bindFromRequest()
-         validForm     <- submittedForm.fold[EitherT[Future, Result, CreatePrototypeRepoForm]](
-                            formWithErrors => EitherT.leftT(BadRequest(createPrototypePage(formWithErrors, userTeams))),
-                            validForm      => EitherT.pure(validForm)
-                          )
-         _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
-         _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
-                            .leftMap(error => BadRequest(createPrototypePage(submittedForm.withError("teamName", error), userTeams)))
-         id            <- EitherT(buildDeployApiConnector.createPrototypeRepository(validForm))
-                            .leftMap{ error =>
-                              logger.info(s"CreatePrototypeRepository request for ${validForm.repositoryName} failed with message: $error")
-                              BadRequest(createPrototypePage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
-                            }
-         _             =  logger.info(s"CreatePrototypeRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       yield Redirect(routes.CreateRepositoryController.createPrototypeRepositoryConfirmation(validForm.repositoryName))
+        userTeams   <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
+        repoTypeOut <- getRepoTypeOut()
+        result      =  repoTypeOut.repoType match
+                         case RepoType.Prototype => Ok(createPrototypePage(CreatePrototype.form, userTeams))
+                         case RepoType.Test      => Ok(createTestPage(CreateTest.form, userTeams))
+                         case RepoType.Service   => Ok(createServicePage(CreateService.form, userTeams))
+                         case _                  => Redirect(routes.CreateRepositoryController.createRepoLandingGet())
+       yield result
       ).merge
     }
 
-  val createTestRepositoryLanding: Action[AnyContent] =
-    auth.authenticatedAction(
-      continueUrl = routes.CreateRepositoryController.createTestRepositoryLanding(),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
-    ) { implicit request =>
-      val userTeams = cleanseUserTeams(request.retrieval)
-      Ok(createTestRepositoryPage(CreateTestRepoForm.form, userTeams))
-    }
+  private def createRepoAction[T <: CreateRepo](
+    bindForm  : Form[T],
+    createPage: (Form[T], Seq[TeamName]) => Html,
+    createRepo: T => Future[Either[String, AsyncRequestId]],
+  )(implicit request: AuthenticatedRequest[_, Set[Resource]]): Future[Result] =
+    (for
+      userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
+      submittedForm =  bindForm.bindFromRequest()
+      validForm     <- submittedForm.fold[EitherT[Future, Result, T]](
+                         formWithErrors => EitherT.leftT(BadRequest(createPage(formWithErrors, userTeams))),
+                         validForm => EitherT.pure(validForm)
+                       )
+      _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
+      _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
+                         .leftMap: error =>
+                           BadRequest(createPage(submittedForm.withError("teamName", error), userTeams))
+      id            <- EitherT(createRepo(validForm))
+                         .leftMap: error =>
+                           logger.info(s"CreateRepository request for ${validForm.repositoryName} failed with message: $error")
+                           BadRequest(createPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
+      _             =  logger.info(s"CreateRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
+      pageState     <- EitherT.liftF(putSession(repoNameKey, RepoNameOut(validForm.repositoryName)))
+     yield Redirect(routes.CreateRepositoryController.createRepoConfirmation()).withSession(request.session + pageState)
+    ).merge
 
-  val createTestRepository: Action[AnyContent] =
+  // Step Two POST
+  val createRepoPost: Action[AnyContent] =
     auth.authenticatedAction(
-      continueUrl = routes.CreateRepositoryController.createTestRepositoryLanding(),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_REPOSITORY")))
+    continueUrl = routes.CreateRepositoryController.createRepoGet(),
+    retrieval   = createRepoRetrieval
     ).async { implicit request =>
       (for
-         userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
-         submittedForm =  CreateTestRepoForm.form.bindFromRequest()
-         validForm     <- submittedForm.fold[EitherT[Future, Result, CreateServiceRepoForm]](
-                            formWithErrors => EitherT.leftT(BadRequest(createTestRepositoryPage(formWithErrors, userTeams))),
-                            validForm      => EitherT.pure(validForm)
-                          )
-         _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
-         _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
-                            .leftMap: error =>
-                              BadRequest(createTestRepositoryPage(submittedForm.withError("teamName", error), userTeams))
-         id            <- EitherT(buildDeployApiConnector.createTestRepository(validForm))
-                            .leftMap: error =>
-                              logger.info(s"CreateTestRepository request for ${validForm.repositoryName} failed with message: $error")
-                              BadRequest(createTestRepositoryPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
-         _             =  logger.info(s"CreateTestRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-       yield Redirect(routes.CreateRepositoryController.createTestRepositoryConfirmation(validForm.repositoryName))
+        repoTypeOut <- getRepoTypeOut()
+        result      <- EitherT(repoTypeOut.repoType match
+                         case RepoType.Test =>
+                           createRepoAction(
+                             bindForm   = CreateTest.form,
+                             createPage = (form: Form[CreateTest], teams: Seq[TeamName]) => createTestPage(form, teams),
+                             createRepo = (form: CreateTest) => buildDeployApiConnector.createTestRepository(form),
+                           ).map(Right(_))
+                         case RepoType.Prototype =>
+                           createRepoAction(
+                             bindForm      = CreatePrototype.form,
+                             createPage    = (form: Form[CreatePrototype], teams: Seq[TeamName]) => createPrototypePage(form, teams),
+                             createRepo    = (form: CreatePrototype) => buildDeployApiConnector.createPrototypeRepository(form),
+                           ).map(Right(_))
+                         case RepoType.Service =>
+                           createRepoAction(
+                             bindForm      = CreateService.form,
+                             createPage    = (form: Form[CreateService], teams: Seq[TeamName]) => createServicePage(form, teams),
+                             createRepo    = (form: CreateService) => buildDeployApiConnector.createServiceRepository(form),
+                           ).map(Right(_))
+                         case _ =>
+                           Future.successful(Left(Redirect(routes.CreateRepositoryController.createRepoLandingGet())))
+                       )
+       yield result
       ).merge
+  }
+
+  def createRepoConfirmation(): Action[AnyContent] =
+    BasicAuthAction.async { implicit request =>
+      (for
+        repoTypeOut <- getRepoTypeOut()
+        repoNameOut <- getRepoNameOut()
+       yield Ok(createRepositoryConfirmationPage(repoNameOut.repoName, repoTypeOut.repoType))
+      ).valueOr(identity)
     }
 
-  def createTestRepositoryConfirmation(repoName: String): Action[AnyContent] =
-    BasicAuthAction { implicit request =>
-      Ok(createTestRepositoryConfirmationPage(repoName))
-    }
+  private def getFromSession[A: Reads](dataKey: DataKey[A])(using Request[?]): Future[Option[A]] =
+    cacheRepo.getFromSession(dataKey)
 
-  def createPrototypeRepositoryConfirmation(repoName: String): Action[AnyContent] =
-    BasicAuthAction { implicit request =>
-      Ok(createPrototypeRepositoryConfirmationPage(repoName))
-    }
+  private def putSession[A: Writes](dataKey: DataKey[A], data: A)(using Request[?]): Future[(String, String)] =
+    cacheRepo.putSession(dataKey, data)
 
-  def createServiceRepositoryConfirmation(repoName: ServiceName): Action[AnyContent] =
-    BasicAuthAction { implicit request =>
-      Ok(createServiceRepositoryConfirmationPage(repoName))
-    }
+  private def getRepoTypeOut()(using Request[?]) =
+    EitherT.fromOptionF[Future, Result, RepoTypeOut](
+      getFromSession(repoTypeKey),
+      Redirect(routes.CreateRepositoryController.createRepoLandingGet())
+    )
+
+  private def getRepoNameOut()(using Request[?]) =
+    EitherT.fromOptionF[Future, Result, RepoNameOut](
+      getFromSession(repoNameKey),
+      Redirect(routes.CreateRepositoryController.createRepoLandingGet())
+    )
 
   private def verifyGithubTeamExists(
     selectedTeam: TeamName
@@ -186,3 +228,18 @@ class CreateRepositoryController @Inject()(
       .map(TeamName.apply)
       .toSeq
       .sorted
+
+end CreateRepositoryController
+
+object CreateRepositoryController:
+
+  case class RepoTypeOut(repoType: RepoType)
+  val repoTypeKey        = DataKey[RepoTypeOut]("repoType")
+  val repoTypeOutFormats = Json.format[RepoTypeOut]
+
+  // Store subtype and if private to use on confirmation page
+  case class RepoNameOut(repoName: String)
+  val repoNameKey        = DataKey[RepoNameOut]("repoName")
+  val repoNameOutFormats = Json.format[RepoNameOut]
+
+end CreateRepositoryController

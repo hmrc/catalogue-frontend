@@ -35,15 +35,10 @@
 @standard_layout("Repositories", "repositories") {
     <h1 class="page-heading mt-4">
         Repositories
-        <div class="btn-group float-end" role="group">
-            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                Create
+        <div class="btn float-end" role="group">
+            <button type="button" class="btn btn-success" aria-expanded="false">
+                <a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createRepoLandingGet()">Create a Repository</a>
             </button>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createServiceRepositoryLanding()">Create a Service</a></li>
-                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding()">Create a Prototype</a></li>
-                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createTestRepositoryLanding()">Create a Test Repository</a></li>
-            </ul>
         </div>
     </h1>
 

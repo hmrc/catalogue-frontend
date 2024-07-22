@@ -14,27 +14,28 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.createrepository.CreateTestRepositoryType
+@import uk.gov.hmrc.cataloguefrontend.createrepository.ServiceType
+@import uk.gov.hmrc.cataloguefrontend.createrepository.CreateService
 
 @this()
 
-@(form     : Form[?],
+@(form     : Form[CreateService],
   teamNames: Seq[TeamName]
-)(implicit
-  messages : Messages,
-  request  : RequestHeader
+ )(implicit
+   messages: Messages,
+   request : RequestHeader
 )
 
-@standard_layout("Create a Test Repository", "create a test repository") {
+@standard_layout("Create service repository", "repositories") {
 
     <section class="section-wrapper">
-        <h1 class="page-heading mt-4">Create A Test Repository</h1>
+        <h1 class="page-heading mt-4">Create a service repository</h1>
         <p>Use the below form to create a new repository. Make sure to follow the guidance for each field.</p>
 
         @partials.form_global_errors(form)
 
         @helper.form(
-            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createTestRepository(),
+            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createRepoPost(),
             Symbol("id")         -> "createRepoForm",
             Symbol("method")     -> "post",
             Symbol("class")      -> "needs-validation",
@@ -54,9 +55,12 @@
                             <li>separate words with hyphens; don't use spaces or slashes</li>
                             <li>maximum 47 characters</li>
                             <li>lowercase only</li>
-                            <li>avoid uncommon initialisms or acronyms</li>
-                            <li>prefix the test repository with the name of the relevant service</li>
-                            <li>suffix test repository with the type of tests it will include, such as: -ui-tests, -api-tests, -performance-tests</li>
+                            <li>do not automatically name backend services after frontend services</li>
+                            <li>suffix frontend services with '-frontend'</li>
+                            <li>suffix stubs with '-stubs'</li>
+                            <li>describe the domain</li>
+                            <li>avoid time-limited words, such as 'new'</li>
+                            <li>avoid unnecessary words, such as 'service'</li>
                         </ul>
                         <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
                     </div>
@@ -64,13 +68,13 @@
             </div>
             <div class="form-group row mb-4">
                 <div class="col-md-6">
-                    <div id="makePrivate" style="white-space: nowrap;" class="mb-2">
+                    <div id="makePrivate" style = "white-space: nowrap;" class="mb-2">
                         <label class="fw-bold" for="makePrivateInput">Make Private: </label>
                         <input style="display:inline-block;"  type="checkbox" id="makePrivateInput" name="makePrivate" value=true
                             @form.data.get("makePrivate").map{ _ => checked }
                         >
                     </div>
-                    <p>You must decide now if you will code in the open, or privately. If you select ‘Make Private’ the GitHub repository you create will only be visible within HMRC.
+                    <p>You must decide now if you will code in the open, or privately. If you select ‘MAKE_PRIVATE’ the GitHub repository you create will only be visible within HMRC.
                         Private coding usually relates to data security. Open repositories are visible to the public.
                         As a general rule, most services are open by default. If you’re unsure, talk to your architect or digital service manager (DSM).</p>
                 </div>
@@ -96,21 +100,23 @@
             </div>
             <div class="form-group row mb-3">
                 <div id="repoType" class="col-md-6">
-                    <label class="fw-bold" for="typeInput">Type:</label>
-                    <p class="mt-2">Repositories automatically include HMRC templating, depending on the type of tests they support. Choose how you would like this repository to be set up.
+                    <label class="fw-bold" for="serviceTypeInput">Type:</label>
+                    <p class="mt-2">Repositories automatically include HMRC templating, depending on the type of microservice they support. Choose how you would like this repository to be set up.
                     </p>
-                    <select class="form-select" id="typeInput" name="repoType">
-                        @CreateTestRepositoryType.values.map { rt =>
-                         <option value="@{rt.asString}"
-                                 @if(form.data.getOrElse("repoType", "").equals(rt.asString)) { selected="selected" else ""}
-                         >@rt.asString</option>
+                    <select class="form-select" id="serviceTypeInput" name="serviceType">
+                        <option value="" @if(form.data.getOrElse("serviceType", "").isEmpty) { selected="selected" } >Select a service type</option>
+                        @ServiceType.values.map { st =>
+                         <option value="@{st.asString}"
+                                 @if(form.data.getOrElse("serviceType", "").equals(st.asString)) { selected="selected" else ""}
+                         >@st.asString</option>
                         }
                     </select>
                 </div>
             </div>
             <div>
-                <button id="create-repository-submission-button" class="btn btn-success" type="submit">Build</button>
+                <button id="createServiceSubmitBtn" class="btn btn-success" type="submit">Build</button>
             </div>
        }
     </section>
+
 }
