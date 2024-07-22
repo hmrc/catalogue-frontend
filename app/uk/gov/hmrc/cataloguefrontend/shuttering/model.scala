@@ -289,25 +289,26 @@ case class OutagePage(
   }
     
   def renderTemplate(
-    template        : Document, // mutable
+    rawHtml         : String,
     templatedMessage: Option[String]
   ): Document = {
+    val html: Document = Jsoup.parse(rawHtml) //mutable
     Try {
       serviceDisplayName.map:
         displayName =>
-          val current = template.title()
+          val current = html.title()
           val updated = current.split("–").mkString(s"– ${displayName.value} –") // not a standard hyphen '-'
-          template.title(updated)
-          template.getElementById("header-service-name").text(displayName.value)
+          html.title(updated)
+          html.getElementById("header-service-name").text(displayName.value)
 
-      template.getElementById("main-content").html(mainContent)
+      html.getElementById("main-content").html(mainContent)
 
       templatedMessage.map:
         message =>
-          template.getElementById("templatedMessage").text(message)
+          html.getElementById("templatedMessage").text(message)
     }
     
-    template
+    html
   }
 
 object OutagePage:

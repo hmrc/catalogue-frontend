@@ -23,10 +23,9 @@ import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRules
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 
 import scala.concurrent.{ExecutionContext, Future}
+import org.jsoup.nodes.Document
 
 @Singleton
 class ShutterService @Inject() (
@@ -75,8 +74,8 @@ class ShutterService @Inject() (
     (for {
       template   <- OptionT(githubConnector.getGitHubProxyRaw("/shutter-api/HEAD/conf/default-outage-page.html.tmpl"))
       outagePage <- OptionT(outagePage(serviceName))
-      html       =  Jsoup.parse(template)
-    } yield outagePage.renderTemplate(html, templatedMessage)).value
+     } yield outagePage.renderTemplate(template, templatedMessage)
+    ).value
 
   def frontendRouteWarnings(
     env        : Environment,
