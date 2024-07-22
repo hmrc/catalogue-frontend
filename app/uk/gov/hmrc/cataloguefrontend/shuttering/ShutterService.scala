@@ -72,8 +72,8 @@ class ShutterService @Inject() (
   )(using
     HeaderCarrier
   ): Future[Option[Document]] =
-    (for { //TODO change BDOG-3178 to HEAD
-      template   <- OptionT(githubConnector.getGitHubProxyRaw("/shutter-api/BDOG-3178/conf/default-outage-page.html.tmpl"))
+    (for {
+      template   <- OptionT(githubConnector.getGitHubProxyRaw("/shutter-api/HEAD/conf/default-outage-page.html.tmpl"))
       outagePage <- OptionT(outagePage(serviceName))
       html       =  Jsoup.parse(template)
     } yield outagePage.renderTemplate(html, templatedMessage)).value

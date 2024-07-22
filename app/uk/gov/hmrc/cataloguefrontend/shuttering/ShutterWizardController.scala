@@ -170,7 +170,7 @@ class ShutterWizardController @Inject() (
                             EitherT.left(showPage1(step0Out.shutterType, step0Out.env, boundForm).map(BadRequest(_)))
                           )(status => EitherT.pure[Future, Result](status)
                           )
-         // check has permission to shutter selected services (TODO only display locations that can be shuttered)
+         // check has permission to shutter selected services
          serviceNameAndContexts
                        <- EitherT
                             .fromOption[Future](NonEmptyList.fromList(sf.serviceNameAndContexts.toList), ())
