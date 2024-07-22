@@ -37,6 +37,8 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.Logger
+import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 
 @Singleton
 class ShutterWizardController @Inject() (
@@ -58,6 +60,8 @@ class ShutterWizardController @Inject() (
      with play.api.i18n.I18nSupport:
 
   import ShutterWizardController._
+
+  private val logger: Logger = Logger(getClass)
 
   val sessionIdKey = "ShutterWizardController"
 
@@ -166,7 +170,7 @@ class ShutterWizardController @Inject() (
                             EitherT.left(showPage1(step0Out.shutterType, step0Out.env, boundForm).map(BadRequest(_)))
                           )(status => EitherT.pure[Future, Result](status)
                           )
-         // check has permission to shutter selected services (TODO only display locations that can be shuttered)
+         // check has permission to shutter selected services
          serviceNameAndContexts
                        <- EitherT
                             .fromOption[Future](NonEmptyList.fromList(sf.serviceNameAndContexts.toList), ())
@@ -206,7 +210,7 @@ class ShutterWizardController @Inject() (
                                            Step2bOut(
                                              reason                = "",
                                              outageMessage         = "",
-                                             requiresOutageMessage = false,
+                                             outageMessageWelsh    = "",
                                              useDefaultOutagePage  = false
                                            )
                                          )
@@ -316,37 +320,23 @@ class ShutterWizardController @Inject() (
       outagePages           <- EitherT.liftF[Future, Result, List[OutagePage]]:
                                  step1Out
                                    .serviceNameAndContexts
-                                   .traverse[Future, Option[OutagePage]] { service => shutterService.outagePage(step0Out.env, service.serviceName) }
+                                   .traverse[Future, Option[OutagePage]] { service => shutterService.outagePage(service.serviceName) }
                                    .map(_.toList.collect { case Some(op) => op })
       outageMessageTemplate =  outagePages
                                  .flatMap(op => op.templatedMessages.map((op, _)))
                                  .headOption
-      requiresOutageMessage =  outageMessageTemplate.isDefined || outagePages.flatMap(_.warnings).nonEmpty
-      outageMessageSrc      =  outageMessageTemplate.map(_._1)
-      defaultOutageMessage  =  outageMessageTemplate.fold("")(_._2.innerHtml)
-      outagePageStatus      =  shutterService.toOutagePageStatus(step1Out.serviceNameAndContexts.map(_.serviceName), outagePages)
       back                  =
                                if step1Out.status == ShutterStatusValue.Shuttered && !step2aOut.map(_.skipped).getOrElse(true)
                                then
                                  appRoutes.ShutterWizardController.step2aGet
                                else
                                  appRoutes.ShutterWizardController.step1Post
-      form2b                =  step2bForm.fill:
-                                 val s2f = form.get
-                                 if s2f.outageMessage.isEmpty
-                                 then
-                                   s2f.copy(outageMessage = defaultOutageMessage)
-                                 else
-                                   s2f
     yield
       page2b(
-        form2b,
+        form,
         step0Out,
         step1Out,
-        requiresOutageMessage,
-        outageMessageSrc,
-        defaultOutageMessage,
-        outagePageStatus,
+        outagePages,
         back
       )
 
@@ -364,19 +354,34 @@ class ShutterWizardController @Inject() (
                               Step2bForm(
                                 reason                = step2bOut.reason,
                                 outageMessage         = step2bOut.outageMessage,
-                                requiresOutageMessage = step2bOut.requiresOutageMessage,
+                                outageMessageWelsh    = step2bOut.outageMessageWelsh,
                                 useDefaultOutagePage  = step2bOut.useDefaultOutagePage
                               )
                             case None =>
                               Step2bForm(
                                 reason                = "",
                                 outageMessage         = "",
-                                requiresOutageMessage = true,
+                                outageMessageWelsh    = "",
                                 useDefaultOutagePage  = false
                               )
          html      <- showPage2b(step2bForm.fill(step2bf), step1Out, step2aOut)
        yield Ok(html)
       ).merge
+    }
+    
+  def outagePagePreview(
+      serviceName: ServiceName,
+      templatedMessage: Option[String]
+  ) = Action.async {
+    implicit request =>
+      shutterService
+        .outagePagePreview(serviceName, templatedMessage)
+        .map {
+          case None       =>
+            logger.warn(s"Unable to retrieve outage page preview for service: ${serviceName.asString}")
+            NotFound(error_404_template())
+          case Some(page) => Ok(Html(page.outerHtml))
+        }
     }
 
   val step2bPost =
@@ -393,7 +398,7 @@ class ShutterWizardController @Inject() (
                                       ),
                           success   = data => EitherT.pure[Future, Result](data)
                         )
-         step2bOut =  Step2bOut(sf.reason, sf.outageMessage, sf.requiresOutageMessage, sf.useDefaultOutagePage)
+         step2bOut =  Step2bOut(sf.reason, sf.outageMessage, sf.outageMessageWelsh, sf.useDefaultOutagePage)
          _         <- EitherT.liftF[Future, Result, (String, String)]:
                         putSession(step2bKey, step2bOut)
        yield Redirect(appRoutes.ShutterWizardController.step3Get)
@@ -473,6 +478,7 @@ class ShutterWizardController @Inject() (
                         case ShutterStatusValue.Shuttered   => ShutterStatus.Shuttered(
                                                                  reason               = Some(step2bOut.reason).filter(_.nonEmpty)
                                                                , outageMessage        = Some(step2bOut.outageMessage).filter(_.nonEmpty)
+                                                               , outageMessageWelsh   = Some(step2bOut.outageMessageWelsh).filter(_.nonEmpty)
                                                                , useDefaultOutagePage = step2bOut.useDefaultOutagePage
                                                                )
                         case ShutterStatusValue.Unshuttered => ShutterStatus.Unshuttered
@@ -617,7 +623,7 @@ object ShutterWizardController:
       Forms.mapping(
         "reason"                -> Forms.text,
         "outageMessage"         -> Forms.text,
-        "requiresOutageMessage" -> Forms.boolean,
+        "outageMessageWelsh"    -> Forms.text,
         "useDefaultOutagePage"  -> Forms.boolean
       )(Step2bForm.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
@@ -625,14 +631,14 @@ object ShutterWizardController:
   case class Step2bForm(
     reason               : String,
     outageMessage        : String,
-    requiresOutageMessage: Boolean,
+    outageMessageWelsh   : String,
     useDefaultOutagePage : Boolean
   )
 
   case class Step2bOut(
     reason               : String,
     outageMessage        : String,
-    requiresOutageMessage: Boolean,
+    outageMessageWelsh   : String,
     useDefaultOutagePage : Boolean
   )
 

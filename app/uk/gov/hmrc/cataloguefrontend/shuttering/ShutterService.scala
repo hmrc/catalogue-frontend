@@ -16,19 +16,23 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
+import cats.data.OptionT
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
+import org.jsoup.nodes.Document
 
 @Singleton
 class ShutterService @Inject() (
   shutterConnector      : ShutterConnector,
   shutterGroupsConnector: ShutterGroupsConnector,
-  routeRulesConnector   : RouteRulesConnector
+  routeRulesConnector   : RouteRulesConnector,
+  githubConnector       : GitHubProxyConnector
 )(using
   ExecutionContext
 ):
@@ -55,12 +59,23 @@ class ShutterService @Inject() (
     shutterConnector.updateShutterStatus(req.authorizationToken, serviceName, context, st, env, status)
 
   def outagePage(
-    env        : Environment,
     serviceName: ServiceName
   )(using
     HeaderCarrier
   ): Future[Option[OutagePage]] =
-    shutterConnector.outagePage(env, serviceName)
+    shutterConnector.outagePage(serviceName)
+
+  def outagePagePreview(
+    serviceName     : ServiceName,
+    templatedMessage: Option[String]
+  )(using
+    HeaderCarrier
+  ): Future[Option[Document]] =
+    (for {
+      template   <- OptionT(githubConnector.getGitHubProxyRaw("/shutter-api/HEAD/conf/default-outage-page.html.tmpl"))
+      outagePage <- OptionT(outagePage(serviceName))
+     } yield outagePage.renderTemplate(template, templatedMessage)
+    ).value
 
   def frontendRouteWarnings(
     env        : Environment,
@@ -84,43 +99,6 @@ class ShutterService @Inject() (
          .map(state => (state, events.find(_.serviceName == state.serviceName)))
          .sortBy: (s, _) =>
            (s.status.value, s.serviceName)
-
-  /** Creates an [[OutagePageStatus]] for each service based on the contents of [[OutagePage]] */
-  def toOutagePageStatus(serviceNames: Seq[ServiceName], outagePages: List[OutagePage]): Seq[OutagePageStatus] =
-    serviceNames.map: serviceName =>
-      outagePages.find(_.serviceName == serviceName) match
-        case Some(outagePage) if outagePage.warnings.nonEmpty =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = Some(
-                            ( outagePage.warnings.map(_.message).mkString("<br/>")
-                            , outagePage.warnings.head.name match
-                                case "UnableToRetrievePage"        => "Default outage page will be displayed."
-                                case "MalformedHTML"               => "Outage page will be sent as is, without updating templates."
-                                case "DuplicateTemplateElementIDs" => "All matching elements will be updated"
-                            )
-                          )
-          )
-        case Some(outagePage) if outagePage.templatedMessages.isEmpty =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = Some(("No templatedMessage Element in outage-page", "Outage page will be sent as is."))
-          )
-        case Some(outagePage) if outagePage.templatedMessages.length > 1 =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = Some(("Multiple templatedMessage Element in outage-page", "All matching elements will be updated."))
-          )
-        case Some(_) =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = None
-          )
-        case None =>
-          OutagePageStatus(
-            serviceName = serviceName,
-            warning     = Some(("No templatedMessage Element no outage-page", "Default outage page will be displayed."))
-          )
 
   def shutterGroups()(using HeaderCarrier): Future[Seq[ShutterGroup]] =
     shutterGroupsConnector.shutterGroups().map(_.sortBy(_.name))

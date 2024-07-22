@@ -25,13 +25,13 @@ class ShutterEventsViewSpec extends AnyWordSpec with Matchers {
   "The Shutter Events view" should {
     "present the reason for a shuttered event when the reason is known" in {
       val reasonText = "some reason"
-      val status = Shuttered(reason = Some(reasonText), outageMessage = None, useDefaultOutagePage = true)
+      val status = Shuttered(reason = Some(reasonText), outageMessage = None, outageMessageWelsh = None, useDefaultOutagePage = true)
 
       ShutterEventsView.reasonFor(status) shouldBe reasonText
     }
 
     "present an empty reason for a shuttered event when the reason is not known" in {
-      val status = Shuttered(reason = None, outageMessage = Some("outage text"), useDefaultOutagePage = false)
+      val status = Shuttered(reason = None, outageMessage = Some("outage text"), outageMessageWelsh = Some("llyh ggyl"), useDefaultOutagePage = false)
 
       ShutterEventsView.reasonFor(status) shouldBe ""
     }

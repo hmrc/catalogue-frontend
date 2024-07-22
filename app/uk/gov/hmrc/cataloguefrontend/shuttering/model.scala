@@ -16,15 +16,17 @@
 
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
+import scala.util.Try
 import java.time.Instant
-
-import FromStringEnum._
+import FromStringEnum.*
+import org.jsoup.nodes.Document
+import org.jsoup.Jsoup
 
 given Parser[ShutterType] = Parser.parser(ShutterType.values)
 
@@ -49,6 +51,7 @@ enum ShutterStatus(val value: ShutterStatusValue):
   case Shuttered(
     reason              : Option[String],
     outageMessage       : Option[String],
+    outageMessageWelsh  : Option[String],
     useDefaultOutagePage: Boolean
   ) extends ShutterStatus(ShutterStatusValue.Shuttered)
   case Unshuttered extends ShutterStatus(ShutterStatusValue.Unshuttered)
@@ -66,16 +69,18 @@ object ShutterStatus:
                 Shuttered(
                   reason               = (json \ "reason"              ).asOpt[String],
                   outageMessage        = (json \ "outageMessage"       ).asOpt[String],
+                  outageMessageWelsh   = (json \ "outageMessageWelsh"  ).asOpt[String],
                   useDefaultOutagePage = (json \ "useDefaultOutagePage").as[Boolean]
                 )
 
       override def writes(ss: ShutterStatus): JsValue =
         ss match
-          case Shuttered(reason, outageMessage, useDefaultOutagePage) =>
+          case Shuttered(reason, outageMessage, outageMessageWelsh, useDefaultOutagePage) =>
             Json.obj(
               "value"                -> Json.toJson(ss.value),
               "reason"               -> reason,
               "outageMessage"        -> outageMessage,
+              "outageMessageWelsh"   -> outageMessageWelsh,
               "useDefaultOutagePage" -> useDefaultOutagePage
             )
           case Unshuttered =>
@@ -237,43 +242,87 @@ object TemplatedContent:
     ~ (__ \ "innerHTML").format[String]
     )(TemplatedContent.apply, c => Tuple.fromProductTyped(c))
 
+case class ServiceDisplayName(
+  value     : String,
+  messageKey: String
+)
+
+object ServiceDisplayName:
+  val format: Format[ServiceDisplayName] =
+    ( (__ \ "value"     ).format[String]
+    ~ (__ \ "messageKey").format[String]
+    )(ServiceDisplayName.apply, s => Tuple.fromProductTyped(s))
+
 case class OutagePageWarning(
-  name   : String,
-  message: String
+  name       : String,
+  message    : String,
+  consequence: String,
 )
 
 object OutagePageWarning:
   val reads: Reads[OutagePageWarning] =
-    ( (__ \ "type"   ).read[String]
-    ~ (__ \ "message").read[String]
+    ( (__ \ "type"       ).read[String]
+    ~ (__ \ "message"    ).read[String]
+    ~ (__ \ "consequence").read[String]
     )(OutagePageWarning.apply)
 
 case class OutagePage(
-  serviceName      : ServiceName,
-  environment      : Environment,
-  outagePageURL    : String,
-  warnings         : List[OutagePageWarning],
-  templatedElements: List[TemplatedContent]
+  serviceName       : ServiceName,
+  serviceDisplayName: Option[ServiceDisplayName],
+  outagePageURL     : String,
+  warnings          : List[OutagePageWarning],
+  mainContent       : String,
+  templatedElements : List[TemplatedContent]
 ):
   def templatedMessages: List[TemplatedContent] =
     templatedElements
       .filter(_.elementId == "templatedMessage")
 
+  def contentPreview: String = {
+    val document = Jsoup.parse(mainContent)
+    Try {
+      val default = document.getElementById("templatedMessage").text
+      document.getElementById("templatedMessage").attr("default", default)
+    }
+
+    document.outerHtml
+  }
+    
+  def renderTemplate(
+    rawHtml         : String,
+    templatedMessage: Option[String]
+  ): Document = {
+    val html: Document = Jsoup.parse(rawHtml) //mutable
+    Try {
+      serviceDisplayName.map:
+        displayName =>
+          val current = html.title()
+          val updated = current.split("–").mkString(s"– ${displayName.value} –") // not a standard hyphen '-'
+          html.title(updated)
+          html.getElementById("header-service-name").text(displayName.value)
+
+      html.getElementById("main-content").html(mainContent)
+
+      templatedMessage.map:
+        message =>
+          html.getElementById("templatedMessage").text(message)
+    }
+    
+    html
+  }
+
 object OutagePage:
   val reads: Reads[OutagePage] =
-    given Reads[TemplatedContent]  = TemplatedContent.format
-    given Reads[OutagePageWarning] = OutagePageWarning.reads
-    ( (__ \ "serviceName"      ).read[ServiceName]
-    ~ (__ \ "environment"      ).read[Environment]
-    ~ (__ \ "outagePageURL"    ).read[String]
-    ~ (__ \ "warnings"         ).read[List[OutagePageWarning]]
-    ~ (__ \ "templatedElements").read[List[TemplatedContent]]
+    given Reads[ServiceDisplayName] = ServiceDisplayName.format
+    given Reads[TemplatedContent]   = TemplatedContent.format
+    given Reads[OutagePageWarning]  = OutagePageWarning.reads
+    ( (__ \ "serviceName"       ).read[ServiceName]
+    ~ (__ \ "serviceDisplayName").readNullable[ServiceDisplayName]
+    ~ (__ \ "outagePageURL"     ).read[String]
+    ~ (__ \ "warnings"          ).read[List[OutagePageWarning]]
+    ~ (__ \ "mainContent"       ).read[String]
+    ~ (__ \ "templatedElements" ).read[List[TemplatedContent]]
     )(OutagePage.apply)
-
-case class OutagePageStatus(
-  serviceName: ServiceName,
-  warning    : Option[(String, String)]
-)
 
 case class FrontendRouteWarning(
   name                : String,
