@@ -56,7 +56,7 @@ class DependenciesService @Inject() (
     serviceDependenciesConnector
       .getSlugInfo(serviceName, Some(version)).map(_.headOption)
 
-  def getServicesWithDependency(
+  def getDependencies(
     optTeam     : Option[TeamName],
     flag        : SlugInfoFlag,
     repoType    : Seq[RepoType],
@@ -68,7 +68,7 @@ class DependenciesService @Inject() (
     HeaderCarrier
   ): Future[Seq[RepoWithDependency]] =
     serviceDependenciesConnector
-      .getDependenciesFromMetaData(flag, group, artefact, repoType, versionRange, scope)
+      .getDependencies(flag, group, artefact, repoType, versionRange, scope)
       .map: l =>
         optTeam match
           case None       => l

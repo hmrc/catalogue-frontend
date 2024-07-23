@@ -76,16 +76,16 @@ class SlugInfoServiceSpec
 
   val scopes = List(DependencyScope.Compile)
 
-  "DependenciesService.getServicesWithDependency" should {
+  "DependenciesService.getDependencies" should {
     "filter results by team" in {
 
       val boot = Boot.init
 
-      when(boot.mockedServiceDependenciesConnector.getDependenciesFromMetaData(SlugInfoFlag.Latest, group, artefact, List(Service), versionRange, scopes))
+      when(boot.mockedServiceDependenciesConnector.getDependencies(SlugInfoFlag.Latest, group, artefact, List(Service), versionRange, scopes))
         .thenReturn(Future.successful(Seq(v100, v200, v205)))
 
-      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, List(Service), group, artefact, versionRange, scopes).futureValue shouldBe Seq(v200, v100)
-      boot.service.getServicesWithDependency(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, List(Service), group, artefact, versionRange, scopes).futureValue shouldBe Seq(v205, v200)
+      boot.service.getDependencies(optTeam = Some(TeamName("T1")), SlugInfoFlag.Latest, List(Service), group, artefact, versionRange, scopes).futureValue shouldBe Seq(v200, v100)
+      boot.service.getDependencies(optTeam = Some(TeamName("T2")), SlugInfoFlag.Latest, List(Service), group, artefact, versionRange, scopes).futureValue shouldBe Seq(v205, v200)
     }
   }
 
