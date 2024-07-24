@@ -198,7 +198,7 @@
 </script>
 
 <script @CSPNonce.attr>
-  ["start", "end", "service"]
+  ["service"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("form").submit();
