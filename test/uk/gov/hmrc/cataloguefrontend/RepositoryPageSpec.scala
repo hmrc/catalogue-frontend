@@ -39,7 +39,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
     "return a 404 when the teams-and-repositories microservice returns a 404" in {
       val repoName = "other"
 
-      serviceEndpoint(GET, s"/api/repositories/$repoName"       , willRespondWith = (404, None))
+      serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (404, None))
       serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version-latest", willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get().futureValue
@@ -50,7 +50,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       val repoName = "other"
       val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
 
-      serviceEndpoint(GET, s"/api/v2/repositories/$repoName"    , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
+      serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (200, Some(repositoryData(repositoryDetails))))
       serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get().futureValue
@@ -66,7 +66,7 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       val repoName = "other"
       val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
 
-      serviceEndpoint(GET, s"/api/v2/repositories/$repoName"    , willRespondWith = (200, Some(repositoryData(repositoryDetails))))
+      serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (200, Some(repositoryData(repositoryDetails))))
       serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some(JsonData.repositoryModules(
                                                                                                 repoName,
                                                                                                 dependenciesCompile = JsonData.dependencies
