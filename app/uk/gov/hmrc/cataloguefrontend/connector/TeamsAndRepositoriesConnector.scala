@@ -281,6 +281,11 @@ class TeamsAndRepositoriesConnector @Inject()(
       .get(url"$teamsAndServicesBaseUrl/api/v2/teams")
       .execute[Seq[GitHubTeam]]
 
+  def allDigitalServices()(using HeaderCarrier): Future[Seq[String]] =
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/digital-services")
+      .execute[Seq[String]]
+
   def repositoriesForTeam(
     teamName       : TeamName,
     includeArchived: Option[Boolean] = None
@@ -296,14 +301,15 @@ class TeamsAndRepositoriesConnector @Inject()(
           Nil
 
   def allRepositories(
-     name       : Option[String]      = None,
-     team       : Option[TeamName]    = None,
-     archived   : Option[Boolean]     = None,
-     repoType   : Option[RepoType]    = None,
-     serviceType: Option[ServiceType] = None
+     name              : Option[String]      = None,
+     team              : Option[TeamName]    = None,
+     digitalServiceName: Option[String]      = None,
+     archived          : Option[Boolean]     = None,
+     repoType          : Option[RepoType]    = None,
+     serviceType       : Option[ServiceType] = None
    )(using HeaderCarrier): Future[Seq[GitRepository]] =
     httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
+      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&digitalServiceName=$digitalServiceName&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[Seq[GitRepository]]
       .map(_.sortBy(_.name))
 

@@ -44,6 +44,8 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     serviceType    = Option(ServiceType.Backend),
   )
 
+  val repoWithDigitalServiceGrouping = repo.copy(digitalServiceName = Some("Digital Service Name"))
+
   val environmentRoute = RouteRulesConnector.EnvironmentRoute(
     environment = Environment.Production,
     routes      = Seq(RouteRulesConnector.Route("TestUrl0", "ruleConfigurationUrl0"),
@@ -90,6 +92,18 @@ class DetailsSpec extends AnyWordSpec with Matchers {
       val result = details(repo)(request).body
       result should include ("id=\"repository-last-active\"")
       result should include ("31 Dec 2018 18:30")
+    }
+
+    "not display Digital Service when not specified" in {
+      val result = details(repo)(request).body
+      result should not include ("id=\"repository-digital-service-name\"")
+      result should not include ("Digital Service Name")
+    }
+
+    "display Digital Service when specified" in {
+      val result = details(repoWithDigitalServiceGrouping)(request).body
+      result should include ("id=\"repository-digital-service-name\"")
+      result should include ("Digital Service Name")
     }
   }
 }
