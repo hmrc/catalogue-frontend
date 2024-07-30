@@ -24,7 +24,7 @@
 
 @this()
 
-@(service : Option[ServiceName],
+@(service : ServiceName,
   start   : Instant,
   end     : Instant,
   events  : Seq[DeploymentTimelineEvent],
@@ -129,7 +129,7 @@
         }
     </script>
 
-    <h1 class="page-heading mt-4">Deployment Timeline @service.map { s => <a id="link-to-service-info-page" href="@CatalogueController.service(s)">- @s.asString</a>}</h1>
+    <h1 class="page-heading mt-4">Deployment Timeline <a id="link-to-service-info-page" href="@CatalogueController.service(service)">- @service.asString</a></h1>
 
     <form id="form" action="" method="get">
         <div class="form-group row">
@@ -139,7 +139,7 @@
                   <label class="form-label" for="service-search" >Service</label>
                 </dt>
                 <dd class="position-relative">
-                  <input id="service-search" name="service" value="@service.fold("")(_.asString)" class="form-control" type="text" list="services" autocomplete="off">
+                  <input id="service-search" name="service" value="@service.asString" class="form-control" type="text" list="services" autocomplete="off">
                   <div id="service-matches" class="search-matches-dropdown d-none"></div>
                 </dd>
               </dl>
@@ -175,7 +175,7 @@
         @if(start.equals(end) || start.isAfter(end)) {
             <p class="red">Start date must be before the End date.</p>
         }
-        @if(!services.contains(service.getOrElse(ServiceName("")))){
+        @if(!services.contains(service)){
             <p>No data in this date range.</p>
         }
     } else {
