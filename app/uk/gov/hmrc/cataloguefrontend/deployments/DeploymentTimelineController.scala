@@ -51,21 +51,26 @@ class DeploymentTimelineController @Inject()(
       val start  = to.atStartOfDayInstant
       val end    = from.atEndOfDayInstant
 
+      val parsedService = service.fold(service)(serviceName => if (serviceName.asString == "") None else service) // route reads parameters with empty values as "", only reads in None when no parameter supplied (fresh page loaded from navbar)
+
       for
         services     <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service))
         serviceNames =  services.map(s => ServiceName(s.name))
-        data         <- service.fold(Future.successful(Seq.empty[DeploymentTimelineEvent])): serviceName =>
+        data         <- parsedService.fold(Future.successful(Seq.empty[DeploymentTimelineEvent])) { serviceName =>
+                        if (start.isBefore(end))
                           deploymentGraphService.findEvents(serviceName, start, end).map(_.filter(_.env != Environment.Integration)) // filter as only platform teams are interested in this env
+                        else Future.successful(Seq.empty[DeploymentTimelineEvent])
+                        }
         slugInfo     <- data
                           .groupBy(_.version)
                           .keys
                           .toList
                           .foldLeftM[Future, Seq[ServiceDependencies]](Seq.empty): (xs, v) =>
-                            service
+                            parsedService
                               .fold(Future.successful(Option.empty[ServiceDependencies])): serviceName =>
                                 serviceDependenciesConnector.getSlugInfo(serviceName, Some(v))
                               .map:
                                 xs ++ _.toSeq
-        view         =  deploymentTimelinePage(service, start, end, data, slugInfo, serviceNames)
+        view = deploymentTimelinePage(parsedService, start, end, data, slugInfo, serviceNames)
       yield Ok(view)
     }

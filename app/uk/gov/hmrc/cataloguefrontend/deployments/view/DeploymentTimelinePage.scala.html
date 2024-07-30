@@ -175,7 +175,7 @@
         @if(start.equals(end) || start.isAfter(end)) {
             <p class="red">Start date must be before the End date.</p>
         }
-        @if(services.contains(service)) {
+        @if(!services.contains(service.getOrElse(ServiceName("")))){
             <p>No data in this date range.</p>
         }
     } else {
@@ -195,13 +195,4 @@
           values       : [@for(service <- services) {'@service.asString',}],
           minSearch    : 1
         });
-</script>
-
-<script @CSPNonce.attr>
-  ["start", "end", "service"]
-    .forEach(function(id) {
-      document.getElementById(id).addEventListener("change", function() {
-        document.getElementById("form").submit();
-      });
-    });
 </script>
