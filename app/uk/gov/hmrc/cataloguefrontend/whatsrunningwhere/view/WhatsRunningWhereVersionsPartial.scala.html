@@ -60,7 +60,7 @@
       }
     }
     <td>
-        <a aria-label="Link to deployment timeline for @{wrw.serviceName.asString}" id="link-to-deployment-timeline-for-@{wrw.serviceName.asString}" href="@depRoutes.DeploymentTimelineController.graph(Some(wrw.serviceName))"><span class="glyphicon glyphicon-stats"></span> </a>
+        <a aria-label="Link to deployment timeline for @{wrw.serviceName.asString}" id="link-to-deployment-timeline-for-@{wrw.serviceName.asString}" href="@depRoutes.DeploymentTimelineController.graph(wrw.serviceName)"><span class="glyphicon glyphicon-stats"></span> </a>
     </td>
   </tr>
 }

@@ -46,7 +46,7 @@ class DeploymentTimelineController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  def graph(service: Option[ServiceName], to: LocalDate, from: LocalDate) =
+  def graph(service: ServiceName, to: LocalDate, from: LocalDate) =
     BasicAuthAction.async { implicit request =>
       val start  = to.atStartOfDayInstant
       val end    = from.atEndOfDayInstant
@@ -54,18 +54,19 @@ class DeploymentTimelineController @Inject()(
       for
         services     <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service))
         serviceNames =  services.map(s => ServiceName(s.name))
-        data         <- service.fold(Future.successful(Seq.empty[DeploymentTimelineEvent])): serviceName =>
-                          deploymentGraphService.findEvents(serviceName, start, end).map(_.filter(_.env != Environment.Integration)) // filter as only platform teams are interested in this env
+        data         <- if (service.asString != "" && start.isBefore(end)) {
+                          deploymentGraphService.findEvents(service, start, end).map(_.filter(_.env != Environment.Integration)) // filter as only platform teams are interested in this env
+                        } else Future.successful(Seq.empty[DeploymentTimelineEvent])
         slugInfo     <- data
                           .groupBy(_.version)
                           .keys
                           .toList
-                          .foldLeftM[Future, Seq[ServiceDependencies]](Seq.empty): (xs, v) =>
-                            service
-                              .fold(Future.successful(Option.empty[ServiceDependencies])): serviceName =>
-                                serviceDependenciesConnector.getSlugInfo(serviceName, Some(v))
-                              .map:
-                                xs ++ _.toSeq
+                          .foldLeftM[Future, Seq[ServiceDependencies]](Seq.empty) { (xs, v) =>
+                            if (service.asString != "") {
+                              serviceDependenciesConnector.getSlugInfo(service, Some(v))
+                                .map(optionDependencies => xs ++ optionDependencies.toSeq)
+                            } else Future.successful(xs)
+                          }
         view         =  deploymentTimelinePage(service, start, end, data, slugInfo, serviceNames)
       yield Ok(view)
     }

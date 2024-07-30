@@ -18,9 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import play.api.Logger
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
+import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atEndOfDayInstant, atStartOfDayInstant}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -123,5 +123,10 @@ class ReleasesConnector @Inject() (
     httpClientV2
       .get(url"$serviceUrl/releases-api/timeline/${service.asString}?from=$from&to=$to")
       .execute[Map[String, Seq[DeploymentTimelineEvent]]]
+      .recover {
+        case e: UpstreamErrorResponse if e.statusCode == 404 =>
+          logger.warn(s"Received 404 from API for timeline of service ${service.asString}")
+          Map.empty[String, Seq[DeploymentTimelineEvent]]
+      }
 
 end ReleasesConnector
