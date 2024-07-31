@@ -45,8 +45,8 @@ object Binders:
     new QueryStringBindable[T]:
       override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, T]] =
         strBinder.bind(key, params) match
-          case Some(Right(s)) => parse(s)
-          case _              => None
+          case Some(Right(s)) if s.trim.nonEmpty => parse(s.trim)
+          case _                                 => None
 
       override def unbind(key: String, value: T): String =
         strBinder.unbind(key, asString(value))

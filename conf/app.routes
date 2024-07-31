@@ -133,7 +133,7 @@ POST       /leak-detection/repositories/:repository/:branch                uk.go
 GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.reportExemptions(repository: String, branch: String)
 
 GET        /quicksearch                                                    uk.gov.hmrc.cataloguefrontend.search.SearchController.search(query: String, limit: Int ?= 20)
-GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.deployments.DeploymentTimelineController.graph(service: ServiceName ?= ServiceName(""), start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
+GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.deployments.DeploymentTimelineController.graph(service: Option[ServiceName] ?= None, start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
 
 +nocsrf
 POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()
