@@ -24,6 +24,7 @@
 
 @(repositories: Seq[GitRepository],
   teams       : Seq[GitHubTeam],
+  serviceNames: Seq[String],
   form        : Form[?]
 )(implicit
   messages    : Messages,
@@ -81,6 +82,17 @@
                     Symbol("class")       -> "form-select"
                 )
                 </div>
+                <div class="col-md-3">
+                @select(
+                    field                 = form("digitalService"),
+                    options               = serviceNames.map(dsn => dsn -> dsn),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Digital Service",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "service-filter",
+                    Symbol("class")       -> "form-select"
+                )
+                </div>
                 <div class="col-md-2">
                 @select(
                     field                 =  form("repoType"),
@@ -117,8 +129,9 @@
                     <th class="col-lg-1"><button role="button" id="status" data-sort="repo-status" class="fw-bold sort no-border">Status</button></th>
                     <th class="col-lg-2"><button role="button" id="repoType" data-sort="repo-type" class="fw-bold sort no-border">Type</button></th>
                     <th class="col-lg-2"><button role="button" id="teamNames" data-sort="repo-team" class="fw-bold sort no-border">Team</button></th>
+                    <th class="col-lg-1"><button role="button" id="serviceName" data-sort="repo-service" class="fw-bold sort no-border">Digital Service</button></th>
                     <th class="col-lg-1"><button role="button" id="branchProtection" data-sort="repo-bp" class="fw-bold sort no-border">Branch Protection</button></th>
-                    <th class="col-lg-2"><button role="button" id="createdDate" data-sort="created" class="fw-bold sort no-border">First Active</button></th>
+                    <th class="col-lg-1"><button role="button" id="createdDate" data-sort="created" class="fw-bold sort no-border">First Active</button></th>
                     <th class="col-lg-1"><button role="button" id="lastActiveDate" data-sort="last-active" class="fw-bold sort no-border">Last Active</button></th>
                 </tr>
             </thead>
@@ -129,7 +142,7 @@
 <!-- listjs configuration -->
 <script @CSPNonce.attr>
   let options = {
-      valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
+      valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-service', 'repo-bp', 'created', 'last-active' ],
       searchColumns: ['repo-name'],
       searchDelay: 350
   };
@@ -145,7 +158,7 @@
   serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
-  ["team-filter", "type-search", "show-archived"]
+  ["team-filter", "service-filter", "type-search", "show-archived"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("repos-form").submit();

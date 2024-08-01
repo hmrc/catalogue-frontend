@@ -59,11 +59,12 @@ class DeployServiceControllerSpec
   "Deploy Service Page step1" should {
     "allow a service to be specified" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
-        name        = any
-      , team        = any
-      , archived    = eqTo(Some(false))
-      , repoType    = eqTo(Some(RepoType.Service))
-      , serviceType = any
+        name               = any
+      , team               = any
+      , digitalServiceName = any
+      , archived           = eqTo(Some(false))
+      , repoType           = eqTo(Some(RepoType.Service))
+      , serviceType        = any
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
@@ -80,11 +81,12 @@ class DeployServiceControllerSpec
 
     "allow a service to be provided" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
-        name        = any
-      , team        = any
-      , archived    = eqTo(Some(false))
-      , repoType    = eqTo(Some(RepoType.Service))
-      , serviceType = any
+        name               = any
+      , team               = any
+      , digitalServiceName = any
+      , archived           = eqTo(Some(false))
+      , repoType           = eqTo(Some(RepoType.Service))
+      , serviceType        = any
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
@@ -120,11 +122,12 @@ class DeployServiceControllerSpec
   "Deploy Service Page step2" should {
     "help evaluate deployment" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
-        name        = any
-      , team        = any
-      , archived    = eqTo(Some(false))
-      , repoType    = eqTo(Some(RepoType.Service))
-      , serviceType = any
+        name               = any
+      , team               = any
+      , digitalServiceName = any
+      , archived           = eqTo(Some(false))
+      , repoType           = eqTo(Some(RepoType.Service))
+      , serviceType        = any
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
@@ -197,11 +200,12 @@ class DeployServiceControllerSpec
   "Deploy Service Page step3" should {
     "deploy service" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
-        name        = any
-      , team        = any
-      , archived    = eqTo(Some(false))
-      , repoType    = eqTo(Some(RepoType.Service))
-      , serviceType = any
+        name               = any
+      , team               = any
+      , digitalServiceName = any
+      , archived           = eqTo(Some(false))
+      , repoType           = eqTo(Some(RepoType.Service))
+      , serviceType        = any
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
