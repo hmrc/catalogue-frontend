@@ -33,7 +33,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show a list of all non-archived repositories when repository type 'All' is selected" in {
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams )))
       serviceEndpoint(GET, "/api/v2/repositories?archived=false", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
-      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.digitalServicesData)))
+      serviceEndpoint(GET, "/api/v2/digital-services", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.digitalServicesData)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories?repoType=&archived=false").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -74,7 +74,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show a list of all non-archived libraries when 'Library' is selected" in {
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
       serviceEndpoint(GET, "/api/v2/repositories?archived=false&repoType=Library", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamADataLibrary)))
-      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.digitalServicesData)))
+      serviceEndpoint(GET, "/api/v2/digital-services", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.digitalServicesData)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories?archived=false&repoType=Library").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -93,7 +93,7 @@ class RepositoriesSpec extends UnitSpec with BeforeAndAfter with FakeApplication
     "show shared by repositories shared by more than five teams" in {
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
       serviceEndpoint(GET, "/api/v2/repositories?archived=false", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesDataSharedRepo)))
-      serviceEndpoint(GET, "/api/digital-services", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.digitalServicesData)))
+      serviceEndpoint(GET, "/api/v2/digital-services", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.digitalServicesData)))
 
       val response = wsClient.url(s"http://localhost:$port/repositories?repoType=?archived=false").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200

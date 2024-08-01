@@ -283,7 +283,7 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   def allDigitalServices()(using HeaderCarrier): Future[Seq[String]] =
     httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/digital-services")
+      .get(url"$teamsAndServicesBaseUrl/api/v2/digital-services")
       .execute[Seq[String]]
 
   def repositoriesForTeam(
