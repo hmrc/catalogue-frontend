@@ -119,10 +119,9 @@ class CreateRepositoryController @Inject()(
         userTeams   <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
         repoTypeOut <- getRepoTypeOut()
         result      =  repoTypeOut.repoType match
-                         case RepoType.Prototype => Ok(createPrototypePage(CreatePrototype.form, userTeams))
+                         case RepoType.Prototype => Ok(createPrototypePage(CreatePrototype.form, userTeams.filterNot(_ == TeamName("Designers"))))
                          case RepoType.Test      => Ok(createTestPage(CreateTest.form, userTeams))
                          case RepoType.Service   => Ok(createServicePage(CreateService.form, userTeams))
-                         //case _                  => Redirect(routes.CreateRepositoryController.createRepoLandingGet())
        yield result
       ).merge
     }
@@ -137,12 +136,9 @@ class CreateRepositoryController @Inject()(
       submittedForm =  bindForm.bindFromRequest()
       validForm     <- submittedForm.fold[EitherT[Future, Result, T]](
                          formWithErrors => EitherT.leftT(BadRequest(createPage(formWithErrors, userTeams))),
-                         validForm => EitherT.pure(validForm)
+                         validForm      => EitherT.pure(validForm)
                        )
       _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
-      _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
-                         .leftMap: error =>
-                           BadRequest(createPage(submittedForm.withError("teamName", error), userTeams))
       id            <- EitherT(createRepo(validForm))
                          .leftMap: error =>
                            logger.info(s"CreateRepository request for ${validForm.repositoryName} failed with message: $error")
@@ -161,17 +157,17 @@ class CreateRepositoryController @Inject()(
       (for
         repoTypeOut <- getRepoTypeOut()
         result      <- EitherT(repoTypeOut.repoType match
-                         case RepoType.Test =>
-                           createRepoAction(
-                             bindForm   = CreateTest.form,
-                             createPage = (form: Form[CreateTest], teams: Seq[TeamName]) => createTestPage(form, teams),
-                             createRepo = (form: CreateTest) => buildDeployApiConnector.createTestRepository(form),
-                           ).map(Right(_))
                          case RepoType.Prototype =>
                            createRepoAction(
                              bindForm      = CreatePrototype.form,
                              createPage    = (form: Form[CreatePrototype], teams: Seq[TeamName]) => createPrototypePage(form, teams),
                              createRepo    = (form: CreatePrototype) => buildDeployApiConnector.createPrototypeRepository(form),
+                           ).map(Right(_))
+                         case RepoType.Test =>
+                           createRepoAction(
+                             bindForm   = CreateTest.form,
+                             createPage = (form: Form[CreateTest], teams: Seq[TeamName]) => createTestPage(form, teams),
+                             createRepo = (form: CreateTest) => buildDeployApiConnector.createTestRepository(form),
                            ).map(Right(_))
                          case RepoType.Service =>
                            createRepoAction(
@@ -179,8 +175,6 @@ class CreateRepositoryController @Inject()(
                              createPage    = (form: Form[CreateService], teams: Seq[TeamName]) => createServicePage(form, teams),
                              createRepo    = (form: CreateService) => buildDeployApiConnector.createServiceRepository(form),
                            ).map(Right(_))
-//                         case _ =>
-//                           Future.successful(Left(Redirect(routes.CreateRepositoryController.createRepoLandingGet())))
                        )
        yield result
       ).merge
@@ -213,14 +207,6 @@ class CreateRepositoryController @Inject()(
       Redirect(routes.CreateRepositoryController.createRepoLandingGet())
     )
 
-  private def verifyGithubTeamExists(
-    selectedTeam: TeamName
-  )(using  HeaderCarrier): Future[Either[String, Unit]] =
-    teamsAndReposConnector.allTeams().map: gitTeams =>
-      if gitTeams.map(_.name).contains(selectedTeam)
-      then Right(())
-      else Left(s"'${selectedTeam.asString}' does not exist as a team on Github.")
-
   private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
     resources
       .map(_.resourceLocation.value.stripPrefix("teams/"))
@@ -228,7 +214,6 @@ class CreateRepositoryController @Inject()(
       .map(TeamName.apply)
       .toSeq
       .sorted
-
 end CreateRepositoryController
 
 object CreateRepositoryController:
@@ -237,9 +222,7 @@ object CreateRepositoryController:
   val repoTypeKey        = DataKey[RepoTypeOut]("repoType")
   val repoTypeOutFormats = Json.format[RepoTypeOut]
 
-  // Store subtype and if private to use on confirmation page
   case class RepoNameOut(repoName: String)
   val repoNameKey        = DataKey[RepoNameOut]("repoName")
   val repoNameOutFormats = Json.format[RepoNameOut]
-
 end CreateRepositoryController
