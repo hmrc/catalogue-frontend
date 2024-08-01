@@ -131,7 +131,7 @@ class BuildDeployApiConnector @Inject() (
                    status.asString
                  ))
     ).map(_.map(_ => ()))
-  
+
   def createServiceRepository(
     payload: CreateService
   )(using

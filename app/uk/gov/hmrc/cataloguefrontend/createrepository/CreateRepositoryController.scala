@@ -25,11 +25,9 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, 
 import play.api.libs.json.{Format, Json, Reads, Writes}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.AsyncRequestId
-import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
 import uk.gov.hmrc.cataloguefrontend.createrepository.view.html.{CreatePrototypePage, CreateServicePage, CreateTestPage, SelectRepoTypePage, CreateRepositoryConfirmationPage}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
@@ -51,8 +49,7 @@ class CreateRepositoryController @Inject()(
   createPrototypePage             : CreatePrototypePage,
   createTestPage                  : CreateTestPage,
   createRepositoryConfirmationPage: CreateRepositoryConfirmationPage,
-  buildDeployApiConnector         : BuildDeployApiConnector,
-  teamsAndReposConnector          : TeamsAndRepositoriesConnector
+  buildDeployApiConnector         : BuildDeployApiConnector
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -61,7 +58,7 @@ class CreateRepositoryController @Inject()(
 
   import CreateRepositoryController._
 
-  val sessionIdKey = "CreateRepoWizardController"
+  val sessionIdKey = "CreateRepositoryController"
 
   val cacheRepo: SessionCacheRepository = SessionCacheRepository(
     mongoComponent   = mongoComponent,
@@ -129,7 +126,7 @@ class CreateRepositoryController @Inject()(
   private def createRepoAction[T <: CreateRepo](
     bindForm  : Form[T],
     createPage: (Form[T], Seq[TeamName]) => Html,
-    createRepo: T => Future[Either[String, AsyncRequestId]],
+    createRepo: T => Future[Either[String, BuildDeployApiConnector.AsyncRequestId]],
   )(implicit request: AuthenticatedRequest[_, Set[Resource]]): Future[Result] =
     (for
       userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
@@ -180,11 +177,13 @@ class CreateRepositoryController @Inject()(
       ).merge
   }
 
+  // Step Three GET
   def createRepoConfirmation(): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       (for
         repoTypeOut <- getRepoTypeOut()
         repoNameOut <- getRepoNameOut()
+        _           <- EitherT.liftF(deleteFromSession(repoTypeKey)) // stops user accessing pages 2 and 3 after completion
        yield Ok(createRepositoryConfirmationPage(repoNameOut.repoName, repoTypeOut.repoType))
       ).valueOr(identity)
     }
@@ -194,6 +193,9 @@ class CreateRepositoryController @Inject()(
 
   private def putSession[A: Writes](dataKey: DataKey[A], data: A)(using Request[?]): Future[(String, String)] =
     cacheRepo.putSession(dataKey, data)
+
+  private def deleteFromSession[T](dataKey: DataKey[T])(implicit request: Request[?]): Future[Unit] =
+    cacheRepo.deleteFromSession(dataKey)
 
   private def getRepoTypeOut()(using Request[?]) =
     EitherT.fromOptionF[Future, Result, RepoTypeOut](
@@ -217,7 +219,6 @@ class CreateRepositoryController @Inject()(
 end CreateRepositoryController
 
 object CreateRepositoryController:
-
   case class RepoTypeOut(repoType: RepoType)
   val repoTypeKey        = DataKey[RepoTypeOut]("repoType")
   val repoTypeOutFormats = Json.format[RepoTypeOut]
