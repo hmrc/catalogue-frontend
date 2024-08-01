@@ -148,9 +148,6 @@ class BuildDeployApiConnector @Inject() (
 
     logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
 
-//    println(">>> " + body)
-//    Future.successful(Right(AsyncRequestId(Json.parse("""{"id": "Service"}"""))))
-
     executeRequest(
       endpoint = "create-service-repository",
       body     = body
@@ -173,9 +170,6 @@ class BuildDeployApiConnector @Inject() (
       val obfuscatedBody = body.as[JsObject] + ("password" -> JsString("**********************"))
       s"Calling the B&D Create Prototype Repository API with the following payload: $obfuscatedBody"
 
-//    println(">>> " + body)
-//    Future.successful(Right(AsyncRequestId(Json.parse("""{"id": "Prototype"}"""))))
-
     executeRequest(
       endpoint = "create-prototype-repository",
       body     = body
@@ -194,9 +188,6 @@ class BuildDeployApiConnector @Inject() (
         makePrivate    = payload.makePrivate,
         repositoryType = payload.testType,
       ))
-
-//    println(">>> " + body)
-//    Future.successful(Right(AsyncRequestId(Json.parse("""{"id": "Test"}"""))))
 
     logger.info(s"Calling the B&D Create Test Repository API with the following payload: ${body}")
 

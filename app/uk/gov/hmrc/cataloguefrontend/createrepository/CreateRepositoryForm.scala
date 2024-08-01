@@ -133,8 +133,8 @@ object CreatePrototype:
   private val passwordConstraint =
     mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
 
-  private val slackChannelCharacterValidation: String => Boolean =
-    str => str.matches("^#?[a-z0-9-_]*$")
+  private[createrepository] val slackChannelCharacterValidation: String => Boolean =
+    str => str.split(",").forall(_.matches("^#?[a-z0-9-_]*$"))
 
   private val slackChannelLengthValidation   : String => Boolean =
     str => str.isEmpty || !str.split(',').exists(elem => elem.length > 80)

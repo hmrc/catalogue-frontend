@@ -122,7 +122,7 @@ class CreateRepositoryController @Inject()(
                          case RepoType.Prototype => Ok(createPrototypePage(CreatePrototype.form, userTeams))
                          case RepoType.Test      => Ok(createTestPage(CreateTest.form, userTeams))
                          case RepoType.Service   => Ok(createServicePage(CreateService.form, userTeams))
-                         case _                  => Redirect(routes.CreateRepositoryController.createRepoLandingGet())
+                         //case _                  => Redirect(routes.CreateRepositoryController.createRepoLandingGet())
        yield result
       ).merge
     }
@@ -179,8 +179,8 @@ class CreateRepositoryController @Inject()(
                              createPage    = (form: Form[CreateService], teams: Seq[TeamName]) => createServicePage(form, teams),
                              createRepo    = (form: CreateService) => buildDeployApiConnector.createServiceRepository(form),
                            ).map(Right(_))
-                         case _ =>
-                           Future.successful(Left(Redirect(routes.CreateRepositoryController.createRepoLandingGet())))
+//                         case _ =>
+//                           Future.successful(Left(Redirect(routes.CreateRepositoryController.createRepoLandingGet())))
                        )
        yield result
       ).merge
