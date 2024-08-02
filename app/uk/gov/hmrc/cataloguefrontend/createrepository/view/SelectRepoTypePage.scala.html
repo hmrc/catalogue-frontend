@@ -1,0 +1,64 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.createrepository.RepoType
+
+@this()
+
+@(
+   form    : Form[RepoType]
+ )(implicit
+   messages: Messages,
+   request : RequestHeader
+)
+
+@standard_layout("Create a Repository", "repositories") {
+
+    <section class="section-wrapper">
+        <h1 class="page-heading mt-4">Create a Repository</h1>
+        <p>Please select a repository type to continue.</p>
+
+        @helper.form(
+            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createRepoLandingPost(),
+            Symbol("id")         -> "repoType",
+            Symbol("method")     -> "post",
+            Symbol("class")      -> "needs-validation",
+            Symbol("novalidate") -> ""
+        ) {
+            @csrfFormField
+
+            <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
+            <div class="form-group row mb-3">
+                <div id="repoType" class="col-md-6">
+                    <p class="mt-2">Repositories automatically include HMRC templating, depending on the type of microservice they support. Choose how you would like this repository to be set up.
+                    </p>
+                    <select class="form-select" id="selectRepoType" name="repoType">
+                        <option value="" @if(form.data.getOrElse("repoType", "").isEmpty) { selected="selected" } >Select a repository type</option>
+                        @RepoType.values.map { rt =>
+                         <option value="@{rt.asString}"
+                                 @if(form.data.getOrElse("repoType", "").equals(rt.asString)) { selected="selected" else ""}
+                         >@rt.asString</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button id="selectRepoTypeBtn" class="btn btn-success" type="submit">Select</button>
+            </div>
+       }
+    </section>
+
+}

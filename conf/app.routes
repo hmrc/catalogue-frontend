@@ -10,19 +10,11 @@ GET        /services                                    uk.gov.hmrc.cataloguefro
 GET        /libraries                                   uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allLibraries
 GET        /prototypes                                  uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allPrototypes
 
-GET        /create-service                              uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepositoryLanding()
-POST       /create-service                              uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepository()
-GET        /create-service/:repoName/confirmation       uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createServiceRepositoryConfirmation(repoName: ServiceName)
-
-GET        /create-prototype                            uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepositoryLanding()
-POST       /create-prototype                            uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepository()
-
-GET        /create-prototype/:repoName/confirmation     uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createPrototypeRepositoryConfirmation(repoName: String)
-
-GET        /create-test                                 uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createTestRepositoryLanding()
-POST       /create-test                                 uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createTestRepository()
-
-GET        /create-test/:repoName/confirmation          uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createTestRepositoryConfirmation(repoName: String)
+GET        /create-repo                                 uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoLandingGet()
+POST       /create-repo                                 uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoLandingPost()
+GET        /create-repo/2                               uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoGet()
+POST       /create-repo/2                               uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoPost()
+GET        /create-repo/3                               uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoConfirmation()
 
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: ServiceName)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: ServiceName)
