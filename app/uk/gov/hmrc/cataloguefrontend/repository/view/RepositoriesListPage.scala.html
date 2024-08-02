@@ -34,21 +34,19 @@
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
 @dsnTooltip = {
-    <div class="content-grow-wrapper">
-        <label class="fw-bold">
-            Digital Service
-            <a href="#"
-                tabindex="0"
-                aria-label="Digital Service"
-                data-bs-toggle="popover"
-                data-bs-trigger="focus"
-                data-bs-placement="left"
-                data-bs-html="true"
-                data-bs-content='Digital Service is defined in the <strong class="font-monospace">repository.yaml</strong>. You will need to add the <strong class="font-monospace">digital-service</strong> key to this file if it is missing. Changes can take a few minutes to appear in the MDTP catalogue.'>
-                <span class="glyphicon glyphicon-question-sign"/>
-            </a>
-        </label>
-    </div>
+    <span class="content-grow-wrapper fw-bold">
+        Digital Service
+        <a href="#"
+            tabindex="0"
+            aria-label="Digital Service"
+            data-bs-toggle="popover"
+            data-bs-trigger="focus"
+            data-bs-placement="left"
+            data-bs-html="true"
+            data-bs-content='Digital Service is defined in the <strong class="font-monospace">repository.yaml</strong>. You will need to add the <strong class="font-monospace">digital-service</strong> key to this file if it is missing. Changes can take a few minutes to appear in the MDTP catalogue.'>
+            <span class="glyphicon glyphicon-question-sign"/>
+        </a>
+    </span>
 }
 
 @standard_layout("Repositories", "repositories") {
