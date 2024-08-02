@@ -33,6 +33,24 @@
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
+@dsnTooltip = {
+    <div class="content-grow-wrapper">
+        <label class="fw-bold">
+            Digital Service
+            <a href="#"
+                tabindex="0"
+                aria-label="Digital Service"
+                data-bs-toggle="popover"
+                data-bs-trigger="focus"
+                data-bs-placement="left"
+                data-bs-html="true"
+                data-bs-content='Digital Service is defined in the <strong class="font-monospace">repository.yaml</strong>. You will need to add the <strong class="font-monospace">digital-service</strong> key to this file if it is missing. Changes can take a few minutes to appear in the MDTP catalogue.'>
+                <span class="glyphicon glyphicon-question-sign"/>
+            </a>
+        </label>
+    </div>
+}
+
 @standard_layout("Repositories", "repositories") {
     <h1 class="page-heading mt-4">
         Repositories
@@ -56,7 +74,7 @@
     <div id="service-list">
         <form id="repos-form" action="/repositories" method="get">
             <div id="repos-form-row" class="row">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <dl id="search_field">
                         <dt>
                             <label for="search" class="form-label">Name</label>
@@ -66,7 +84,7 @@
                         </dd>
                     </dl>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                 @select(
                     field                 = form("team"),
                     options               = teams.map(t => t.name.asString -> t.name.asString),
@@ -77,12 +95,12 @@
                     Symbol("class")       -> "form-select"
                 )
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                 @select(
                     field                 = form("digitalService"),
                     options               = serviceNames.map(dsn => dsn -> dsn),
                     Symbol("_default")    -> "All",
-                    Symbol("_label")      -> "Digital Service",
+                    Symbol("_label")      -> dsnTooltip,
                     Symbol("_labelClass") -> "form-label",
                     Symbol("id")          -> "service-filter",
                     Symbol("class")       -> "form-select"
