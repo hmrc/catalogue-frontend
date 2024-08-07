@@ -16,18 +16,22 @@
 
 @import uk.gov.hmrc.cataloguefrontend.EnvData
 @import uk.gov.hmrc.cataloguefrontend.connector.Link
+@import uk.gov.hmrc.cataloguefrontend.view.partials.html.VulnerabilityListPartial
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 
 @this(
-  dependenciesPartial: DependenciesPartial
+  dependenciesPartial     : DependenciesPartial,
+  vulnerabilityListPartial: VulnerabilityListPartial
 )
 
 @(
   serviceName: ServiceName,
   envDatas   : Map[SlugInfoFlag, EnvData]
 )(implicit
-  messages   : Messages
+  request : RequestHeader,
+  messages: Messages
 )
 
 
@@ -56,6 +60,7 @@
                         <span>
                             @renderShutterStatusBadge(optEnvData.fold(Seq.empty[uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState])(_.shutterStates))
                             @defining(optEnvData.toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)) { dependencies =>
+                                @renderVulnerabilityBadge(slugInfoFlag, optEnvData.flatMap(_.vulnerabilitiesCount))
                                 @renderActiveBobbyRuleViolationBadge(slugInfoFlag, dependencies)
                                 @renderPendingBobbyRuleViolationBadge(slugInfoFlag, dependencies)
                             }
@@ -72,6 +77,15 @@
   @for(slugInfoFlag <- SlugInfoFlag.values) {
     @defining(envDatas.get(slugInfoFlag)){ (optEnvData: Option[EnvData]) =>
       <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == lastEnvironmentWithDeployments) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
+
+        <div id="@{slugInfoFlag.asString}-vulnerabilities" class="card mb-3">
+          <div class="card-header">
+            <div class="h4 mb-0">Vulnerabilities</div>
+          </div>
+          <div class="card-body container">
+            @vulnerabilityListPartial(optEnvData.flatMap(_.maybeSummaries))
+          </div>
+        </div>
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
           <div id="@{slugInfoFlag.asString}-telemetry" class="card mb-3">
@@ -172,10 +186,21 @@
   }
 }
 
+@renderVulnerabilityBadge(slugInfoFlag: SlugInfoFlag, vulnerabilitiesCount: Option[TotalVulnerabilityCount]) = {
+  @if(vulnerabilitiesCount.isDefined) {
+    <span id="vulnerability-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-active-badge text-black"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          data-bs-title="Vulnerabilities">@{vulnerabilitiesCount.map(v => if v.actionRequired == 0 then None else v.actionRequired ).getOrElse(None)}</span>
+  } else {
+    <span id="vulnerability-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></span>
+  }
+}
+
 @renderActiveBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
   @if(dependencies.exists(_.activeBobbyRuleViolations.nonEmpty)) {
-    <span id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-active-badge"
-          data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("bobbyrules.active.badge")"></span>
+    <span id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-active-badge text-black"
+          data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("bobbyrules.active.badge")">@dependencies.map(_.activeBobbyRuleViolations.size).sum</span>
   } else {
     <span id="bobby-violation-active-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></span>
   }
@@ -183,8 +208,8 @@
 
 @renderPendingBobbyRuleViolationBadge(slugInfoFlag: SlugInfoFlag, dependencies: Seq[Dependency]) = {
   @if(dependencies.exists(_.pendingBobbyRuleViolations.nonEmpty)) {
-    <span id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-pending-badge"
-          data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("bobbyrules.pending.badge")"></span>
+    <span id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge bobby-violation-pending-badge text-black"
+          data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="@messages("bobbyrules.pending.badge")">@dependencies.map(_.pendingBobbyRuleViolations.size).sum</span>
   } else {
     <span id="bobby-violation-pending-badge-@{slugInfoFlag.asString}" class="environment-badge no-badge"></span>
   }
