@@ -34,7 +34,7 @@ import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, D
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ServiceConfigsService}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ConfigChange2, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
@@ -147,10 +147,8 @@ class DeployServiceControllerSpec
         .thenReturn(Future.successful(Some(someSlugInfo.copy(version = Version("0.2.0")))))
       when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockServiceConfigsService.configByKeyWithNextDeployment(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(someConfigByKeyWithNextDeployment))
-      when(mockServiceConfigsService.removedConfig(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(someRemoveConfig))
+      when(mockServiceConfigsService.configChangesNextDeployment(ServiceName(eqTo("some-service")), eqTo(Environment.QA), eqTo(Version("0.3.0")))(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(someConfigChanges))
       when(mockServiceConfigsService.configWarnings(
         ServiceName(eqTo("some-service")),
         eqTo(List(Environment.QA)),
@@ -189,7 +187,7 @@ class DeployServiceControllerSpec
       jsoupDocument.select("#version-environment-form").select("#service-name").attr("version") shouldBe ""
       jsoupDocument.select("#version-environment-form").select("#service-name").attr("environment") shouldBe ""
 
-      jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 2
+      jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 3
       jsoupDocument.select("#config-warnings-rows").first.children.size shouldBe 1
       jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
       jsoupDocument.select("#deployment-config-updates-rows").first.children.size shouldBe 1
@@ -295,13 +293,10 @@ class DeployServiceControllerSpec
   , dependencies  = Nil
   )
 
-  private val someConfigByKeyWithNextDeployment: Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] = Map(
-    KeyName("key1") -> Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> Seq((ConfigSourceValue("some-source", Some("some-url"), "some-value1") -> true)))
-  , KeyName("key2") -> Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> Seq((ConfigSourceValue("some-source", Some("some-url"), "some-value2") -> false)))
-  )
-
-  private val someRemoveConfig: Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] = Map(
-    KeyName("key3") -> Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> Seq((ConfigSourceValue("some-source", Some("some-url"), "some-value3") -> true)))
+  private val someConfigChanges: Map[KeyName, ConfigChange2] = Map(
+    KeyName("key1") -> ConfigChange2(from = None                                                        , to = Some(ConfigSourceValue("some-source", None, "some-value1")))
+  , KeyName("key2") -> ConfigChange2(from = Some(ConfigSourceValue("some-source", None, "some-value2a")), to = Some(ConfigSourceValue("some-source", None, "some-value2b")))
+  , KeyName("key3") -> ConfigChange2(from = Some(ConfigSourceValue("some-source", None, "some-value3")) , to = None)
   )
 
   private val someReleasesForService = WhatsRunningWhere(

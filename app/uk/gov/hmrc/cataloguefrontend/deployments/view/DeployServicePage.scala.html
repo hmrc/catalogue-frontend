@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.deployments.{DeployServiceForm, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ConfigChange2, ServiceConfigsService, routes => serviceConfigsRoutes }
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityDetails
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
@@ -31,7 +31,7 @@
 , releases      : Seq[WhatsRunningWhereVersion]
 , environments  : Seq[Environment]
 , evaluations   : Option[(
-                    Map[ServiceConfigsService.KeyName, (ServiceConfigsService.ConfigSourceValue, Boolean)]
+                    Map[ServiceConfigsService.KeyName, ConfigChange2]
                   , Seq[ServiceConfigsService.ConfigWarning]
                   , Option[Seq[VulnerabilitySummary]]
                   , (Option[ServiceJdkVersion], ServiceJdkVersion)
@@ -236,15 +236,29 @@
                     </tr>
                   </thead>
                   <tbody id="config-updates-rows">
-                    @for((key, (configSourceValue, isNew)) <- configUpdates.toList.sortBy(_._1.asString) ) {
+                    @for((key, ConfigChange2(from, to)) <- configUpdates.toList.sortBy(_._1.asString) ) {
                       <tr>
-                        @if(isNew) {
-                          <td><code>@key.asString</code></td>
-                          <td>@displayConfigSourceValue(form.get.serviceName, key, form.get.environment, configSourceValue)</td>
-                        } else {
-                          <td><del><code>@key.asString</code></del></td>
-                          <td><del>@displayConfigSourceValue(form.get.serviceName, key, form.get.environment, configSourceValue)</del></td>
-                        }
+                        <td>
+                          <code>
+                            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(form.get.serviceName, true, Some(key)).url" target="_blank">
+                              @if(from.nonEmpty && to.isEmpty) {
+                                <del>@key.asString</del>
+                              } else {
+                                @key.asString
+                              }
+                            </a>
+                          </code>
+                        </td>
+                        <td>
+                          <ul class="list-unstyled">
+                          @from.map { c =>
+                            <li>@displayConfigSourceValue(key, form.get.environment, c, isStriked = true)</ul>
+                          }
+                          @to.map { c =>
+                            <li>@displayConfigSourceValue(key, form.get.environment, c, isStriked = false)</ul>
+                          }
+                          </ul>
+                        </td>
                       </tr>
                     }
                   </tbody>
@@ -408,16 +422,20 @@
   </script>
 }
 
-@displayConfigSourceValue(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue) = {
-  <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(configKey)).url"
-    target="_blank"
+@displayConfigSourceValue(configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue, isStriked: Boolean) = {
+  <span
     data-bs-toggle="popover"
     data-bs-trigger="hover"
     data-bs-placement="bottom"
     data-bs-html="true"
-    data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
+    data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'
+  >
+    @if(isStriked) {
+      <del>@configSourceValue.displayString</del>
+    } else {
       @configSourceValue.displayString
-  </a>
+    }
+  </span>
 }
 
 @popoverConfigSourceValue(key: ServiceConfigsService.KeyName, sourceValue: ServiceConfigsService.ConfigSourceValue, env: Environment) = {

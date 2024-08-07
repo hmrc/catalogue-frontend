@@ -79,6 +79,18 @@ class ServiceConfigsConnector @Inject() (
       .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/${service.asString}?environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
       .execute[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]
 
+  def configChangesNextDeployment(
+    seviceName : ServiceName,
+    environment: Environment,
+    version    : Version
+  )(using
+    HeaderCarrier
+  ): Future[Map[KeyName, ConfigChange2]] =
+    given Reads[Map[KeyName, ConfigChange2]] = ConfigChanges.reads
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/service-configs/config-changes-next-deployment?serviceName=${seviceName.asString}&environment=${environment.asString}&version=${version.original}")
+      .execute[Map[KeyName, ConfigChange2]]
+
   def serviceRelationships(service: ServiceName)(using HeaderCarrier): Future[ServiceRelationships] =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/service-relationships/${service.asString}")
@@ -155,3 +167,26 @@ class ServiceConfigsConnector @Inject() (
       .execute[Seq[ConfigWarning]]
 
 end ServiceConfigsConnector
+
+import play.api.libs.functional.syntax._
+import play.api.libs.json.__
+
+// TODO either map directly to ConfigChange, or model with Map[KeyName, ConfigChange2] through out?
+case class ConfigChange2(
+  from      : Option[ServiceConfigsService.ConfigSourceValue],
+  to        : Option[ServiceConfigsService.ConfigSourceValue]
+)
+object ConfigChange2:
+  val reads: Reads[ConfigChange2] =
+    given Reads[ServiceConfigsService.ConfigSourceValue] = ServiceConfigsService.ConfigSourceValue.reads
+    ( (__ \ "from" ).readNullable[ServiceConfigsService.ConfigSourceValue]
+    ~ (__ \ "to"   ).readNullable[ServiceConfigsService.ConfigSourceValue]
+    )(ConfigChange2.apply)
+
+object ConfigChanges:
+  val reads: Reads[Map[ServiceConfigsService.KeyName, ConfigChange2]] =
+    given Reads[ConfigChange2] = ConfigChange2.reads
+    summon[Reads[Map[String, ConfigChange2]]]
+      .map:
+        _.map: (k, v) =>
+          (ServiceConfigsService.KeyName(k) -> v)

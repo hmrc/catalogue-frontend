@@ -62,23 +62,17 @@ class ServiceConfigsService @Inject()(
                   key -> (envMap + (e -> (values :+ ConfigSourceValue(cse.source, cse.sourceUrl, value))))
       .map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString)*)) // sort by keys
 
-  def removedConfig(
-    serviceName : ServiceName,
-    environments: Seq[Environment] = Nil,
-    version     : Option[Version]  = None
+  def configChangesNextDeployment(
+    serviceName: ServiceName,
+    environment: Environment,
+    version    : Version
   )(using
     HeaderCarrier
-  ): Future[Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]]] =
-    for
-      latestConfigByKey   <- configByKey(serviceName, environments, version, latest = true )
-      deployedConfigByKey <- configByKey(serviceName, environments, None   , latest = false)
-      configByKey         =  deployedConfigByKey.map: (k, m) =>
-                               k -> m.map: (e, vs) =>
-                                      latestConfigByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty).lastOption match
-                                        case Some(n) if vs.lastOption.exists(_.value != n.value) => e -> (vs.map(x => (x -> false)))
-                                        case None    if vs.lastOption.isDefined                  => e -> (vs.map(x => (x -> true)))
-                                        case _                                                   => e -> (vs.map(x => (x -> false)))
-    yield configByKey
+  ): Future[Map[KeyName, ConfigChange2]] =
+    serviceConfigsConnector
+      .configChangesNextDeployment(serviceName, environment, version)
+      .map:
+        _.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
 
   def configByKeyWithNextDeployment(
     serviceName : ServiceName,
