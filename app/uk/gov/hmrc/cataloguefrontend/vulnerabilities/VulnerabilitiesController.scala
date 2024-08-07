@@ -20,7 +20,7 @@ import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.{VulnerabilitiesForServicesPage, VulnerabilitiesListPage, VulnerabilitiesTimelinePage}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -28,7 +28,6 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 
 @Singleton
 class VulnerabilitiesController @Inject() (
@@ -70,23 +69,37 @@ class VulnerabilitiesController @Inject() (
     }
 
   def vulnerabilitiesForServices(
-    teamName: Option[TeamName] = None //TeamName is read from form, this param only exists for reverse routes
+    teamName: Option[TeamName] = None
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
       form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
+          formWithErrors =>
+            Future.successful(BadRequest(vulnerabilitiesForServicesPage(Map.empty, Seq.empty, formWithErrors))),
           validForm =>
-            for
-              teams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-              counts <- vulnerabilitiesConnector.vulnerabilityCounts(
-                          flag        = validForm.flag
-                        , serviceName = None // Use listJS filters
-                        , team        = validForm.team
-                        )
-            yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
+            for {
+              teams          <- teamsAndRepositoriesConnector.allTeams()
+              countByService <- Future.sequence(
+                                  validForm.environments.map { environment =>
+                                    vulnerabilitiesConnector.vulnerabilityCounts(
+                                      flag = environment,
+                                      serviceName = None,
+                                      team = validForm.team
+                                    ).map(counts => environment -> counts)
+                                  }
+                                ).map { environmentCounts =>
+                                  environmentCounts.flatMap { case (flag, counts) =>
+                                    counts.map(count => (count.service, flag, count))
+                                  }.groupMap(_._1) { case (_, flag, count) => (flag, count) }
+                                   .view.mapValues(_.toMap)
+                                   .toMap
+                                }
+            } yield {
+              val sortedTeams = teams.sortBy(_.name.asString.toLowerCase)
+              Ok(vulnerabilitiesForServicesPage(countByService, sortedTeams, form.fill(validForm)))
+            }
         )
     }
 
@@ -146,18 +159,23 @@ object VulnerabilitiesExplorerFilter:
     )
 
 case class VulnerabilitiesCountFilter(
-  flag   : SlugInfoFlag        = SlugInfoFlag.Latest,
-  service: Option[ServiceName] = None,
-  team   : Option[TeamName]    = None,
+  environments: Seq[SlugInfoFlag]   = SlugInfoFlag.Latest +: Environment.values.toSeq.filterNot(_ == Environment.Integration)
+                                        .map(e => SlugInfoFlag.ForEnvironment(e))
+, service     : Option[ServiceName] = None
+, team        : Option[TeamName]    = None
 )
 
 object VulnerabilitiesCountFilter:
   lazy val form: Form[VulnerabilitiesCountFilter] =
     Form(
       Forms.mapping(
-        "flag"    -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply),
-        "service" -> Forms.optional(Forms.of[ServiceName]),
-        "team"    -> Forms.optional(Forms.of[TeamName]),
+        "environments" -> Forms.default(
+                            Forms.seq(Forms.of[SlugInfoFlag])
+                          , SlugInfoFlag.Latest +: Environment.values.toSeq.filterNot(_ == Environment.Integration)
+                              .map(e => SlugInfoFlag.ForEnvironment(e))
+                          ),
+        "service"      -> Forms.optional(Forms.of[ServiceName]),
+        "team"         -> Forms.optional(Forms.of[TeamName]),
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 

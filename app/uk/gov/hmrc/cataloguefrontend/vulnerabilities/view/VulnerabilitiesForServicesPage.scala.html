@@ -16,12 +16,13 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, TotalVulnerabilityCount, VulnerabilitiesCountFilter}
+@import uk.gov.hmrc.cataloguefrontend.model.SlugInfoFlag
 @import views.html.helper.{FieldConstructor, select}
 
 @this()
 
 
-@(vulnerabilities: Seq[TotalVulnerabilityCount],
+@(vulnerabilities: Map[ServiceName, Map[SlugInfoFlag, TotalVulnerabilityCount]],
   teams          : Seq[GitHubTeam],
   form           : Form[VulnerabilitiesCountFilter]
 )(implicit
@@ -59,32 +60,63 @@
                         Symbol("class")       -> "form-select"
                     )
                 </div>
-                <div class="col-md-3">
-                    @select(
-                        field                 =  form("flag"),
-                        options               =  SlugInfoFlag.values.toSeq.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString),
-                        Symbol("_label")      -> "Flag",
-                        Symbol("_labelClass") -> "form-label",
-                        Symbol("id")          -> "flag-filter",
-                        Symbol("class")       -> "form-select"
-                    )
+                <div class="col-md-2" id="flag-filter">
+                    <dl>
+                        <dt><label>Environments</label></dt>
+                        <dd>
+                        @for(env <- Environment.values.toSeq.filterNot(_ == Environment.Integration)
+                                      .map(e => SlugInfoFlag.ForEnvironment(e)) :+ SlugInfoFlag.Latest){
+                            <div class="checkbox-group">
+                                <input name="environments[]" id="@{env.asString}-checkbox" type="checkbox" value="@env.asString" @if(form.get.environments.contains(env)) {checked} />
+                                <label class="form-check-label" for="@{env.asString}-checkbox">@env.displayString</label>
+                            </div>
+                        }
+                        </dd>
+                    </dl>
                 </div>
             </div>
         </form>
-        <table class="table table-striped sticky-header">
+
+        <table id="search-results" class="table table-sm table-sm-no-side-padding table-striped table-striped-columns-custom always-wrap sticky-header text-break">
             <thead>
-                <tr>
-                    <th class="col-6"><button class="sort no-border fw-bold" data-sort="service">Service</button></th>
-                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="action-required">Action Required</button></th>
-                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="investigation-ongoing">Investigation Ongoing</button></th>
-                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="no-action-required">No Action Required</button></th>
-                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="uncurated">Uncurated</button></th>
-                </tr>
+                <th class="rotate"><div><span>Service</span></div></th>
+                @for(env <- form.get.environments){
+                    <th class="rotate"><div><span>@env.displayString</span></div></th>
+                    <th class="rotate"><div><span><button class="sub-heading text-success no-border" data-sort="action-required">Action Required</button></span></div></th>
+                    <th class="rotate"><div><span><button class="sub-heading text-success no-border" data-sort="investigation-ongoing">Investigation Ongoing</button></span></div></th>
+                    <th class="rotate"><div><span><button class="sub-heading text-success no-border" data-sort="no-action-required">No Action Required</button></span></div></th>
+                    <th class="rotate"><div><span><button class="sub-heading text-success no-border" data-sort="uncurated">Uncurated</button></span></div></th>
+                }
             </thead>
-            <tbody class="list">
-                @vulnerabilities.map(vulnerabilitiesCountForService)
+            <tbody>
+                @vulnerabilities.map { serviceVulnerabilities =>
+                    <tr>
+                        <td>@serviceVulnerabilities._1.asString</td>
+                        @serviceVulnerabilities._2.map{ envVulnerabilities =>
+                            <td></td>
+                            <td class="text-center">@envVulnerabilities._2.actionRequired</td>
+                            <td class="text-center">@envVulnerabilities._2.noActionRequired</td>
+                            <td class="text-center">@envVulnerabilities._2.investigationOngoing</td>
+                            <td class="text-center">@envVulnerabilities._2.uncurated</td>
+                        }
+                    </tr>
+                }
             </tbody>
         </table>
+        @*        <table class="table table-striped sticky-header">*@
+@*            <thead>*@
+@*                <tr>*@
+@*                    <th class="col-6"><button class="sort no-border fw-bold" data-sort="service">Service</button></th>*@
+@*                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="action-required">Action Required</button></th>*@
+@*                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="investigation-ongoing">Investigation Ongoing</button></th>*@
+@*                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="no-action-required">No Action Required</button></th>*@
+@*                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="uncurated">Uncurated</button></th>*@
+@*                </tr>*@
+@*            </thead>*@
+@*            <tbody class="list">*@
+@*                @vulnerabilities.map(vulnerabilitiesCountForService)*@
+@*            </tbody>*@
+@*        </table>*@
     </div>
 }
 

@@ -33,10 +33,13 @@ class AuthController @Inject() (
 
   import AuthController._
 
-  def signIn(targetUrl: Option[RedirectUrl]) =
+  def signIn(targetUrl: Option[RedirectUrl]) = {
+
+    println(s"-----------PASS-->$targetUrl")
     auth.authenticatedAction(
       continueUrl = routes.AuthController.postSignIn(sanitize(targetUrl))
     )(Redirect(routes.AuthController.postSignIn(sanitize(targetUrl))))
+  }
 
   // endpoint exists to run retrievals and store the results in the session after logging in
   // (opposed to running retrievals on every page and make results available to standard_layout)
