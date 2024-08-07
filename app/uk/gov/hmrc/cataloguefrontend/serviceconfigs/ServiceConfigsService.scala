@@ -68,7 +68,7 @@ class ServiceConfigsService @Inject()(
     version    : Version
   )(using
     HeaderCarrier
-  ): Future[Map[KeyName, ConfigChange2]] =
+  ): Future[Map[KeyName, ConfigChange]] =
     serviceConfigsConnector
       .configChangesNextDeployment(serviceName, environment, version)
       .map:
@@ -235,7 +235,7 @@ class ServiceConfigsService @Inject()(
   def deploymentConfigChanges(
     service    : ServiceName,
     environment: Environment
-  )(using HeaderCarrier): Future[Seq[ConfigChange]] =
+  )(using HeaderCarrier): Future[Seq[DeploymentConfigChange]] =
     for
       appliedConfig  <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = true ).map(_.headOption)
       newConfig      <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = false).map(_.headOption)
@@ -261,23 +261,23 @@ class ServiceConfigsService @Inject()(
                         )
     yield (slots ++ instances ++ envVars ++ jvm).sortBy(_.k)
 
-  private def valChanges(key: String, appliedVal: Option[String], newVal: Option[String]): Seq[ConfigChange] =
+  private def valChanges(key: String, appliedVal: Option[String], newVal: Option[String]): Seq[DeploymentConfigChange] =
     (appliedVal, newVal) match
-      case (Some(appliedVal), Some(newVal)) if appliedVal != newVal => Seq(ConfigChange.ChangedConfig(key, appliedVal, newVal))
-      case (None            , Some(newVal))                         => Seq(ConfigChange.NewConfig(key, newVal))
-      case (Some(appliedVal), None        )                         => Seq(ConfigChange.DeletedConfig(key, appliedVal))
+      case (Some(appliedVal), Some(newVal)) if appliedVal != newVal => Seq(DeploymentConfigChange.ChangedConfig(key, appliedVal, newVal))
+      case (None            , Some(newVal))                         => Seq(DeploymentConfigChange.NewConfig(key, newVal))
+      case (Some(appliedVal), None        )                         => Seq(DeploymentConfigChange.DeletedConfig(key, appliedVal))
       case _                                                        => Seq.empty
 
-  private def mapChanges(keyPrefix: String, appliedConf: Map[String, String], newConf: Map[String, String]): Seq[ConfigChange] =
+  private def mapChanges(keyPrefix: String, appliedConf: Map[String, String], newConf: Map[String, String]): Seq[DeploymentConfigChange] =
     appliedConf.toSeq
       .collect:
         case (k, v) if newConf.get(k).isEmpty =>
-          ConfigChange.DeletedConfig(s"$keyPrefix.${k}", v)
+          DeploymentConfigChange.DeletedConfig(s"$keyPrefix.${k}", v)
       ++
         newConf.toSeq.flatMap: (k, v) =>
           appliedConf.get(k) match
-            case Some(appliedV) if appliedV != v => Seq(ConfigChange.ChangedConfig(s"$keyPrefix.${k}", appliedV, v))
-            case None                            => Seq(ConfigChange.NewConfig(s"$keyPrefix.${k}", v))
+            case Some(appliedV) if appliedV != v => Seq(DeploymentConfigChange.ChangedConfig(s"$keyPrefix.${k}", appliedV, v))
+            case None                            => Seq(DeploymentConfigChange.NewConfig(s"$keyPrefix.${k}", v))
             case _                               => Seq.empty
 end ServiceConfigsService
 
@@ -476,7 +476,7 @@ object ServiceConfigsService:
 
 end ServiceConfigsService
 
-enum ConfigChange(val k: String):
-  case NewConfig    (override val k: String, v: String)                       extends ConfigChange(k)
-  case DeletedConfig(override val k: String, previousV: String)               extends ConfigChange(k)
-  case ChangedConfig(override val k: String, previousV: String, newV: String) extends ConfigChange(k)
+enum DeploymentConfigChange(val k: String):
+  case NewConfig    (override val k: String, v: String)                       extends DeploymentConfigChange(k)
+  case DeletedConfig(override val k: String, previousV: String)               extends DeploymentConfigChange(k)
+  case ChangedConfig(override val k: String, previousV: String, newV: String) extends DeploymentConfigChange(k)

@@ -34,7 +34,7 @@ import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, D
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ConfigChange2, ServiceConfigsService}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, DeploymentConfigChange, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
@@ -293,10 +293,10 @@ class DeployServiceControllerSpec
   , dependencies  = Nil
   )
 
-  private val someConfigChanges: Map[KeyName, ConfigChange2] = Map(
-    KeyName("key1") -> ConfigChange2(from = None                                                        , to = Some(ConfigSourceValue("some-source", None, "some-value1")))
-  , KeyName("key2") -> ConfigChange2(from = Some(ConfigSourceValue("some-source", None, "some-value2a")), to = Some(ConfigSourceValue("some-source", None, "some-value2b")))
-  , KeyName("key3") -> ConfigChange2(from = Some(ConfigSourceValue("some-source", None, "some-value3")) , to = None)
+  private val someConfigChanges: Map[KeyName, ConfigChange] = Map(
+    KeyName("key1") -> ConfigChange(from = None                                                        , to = Some(ConfigSourceValue("some-source", None, "some-value1")))
+  , KeyName("key2") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value2a")), to = Some(ConfigSourceValue("some-source", None, "some-value2b")))
+  , KeyName("key3") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value3")) , to = None)
   )
 
   private val someReleasesForService = WhatsRunningWhere(
@@ -345,7 +345,7 @@ class DeployServiceControllerSpec
   )
 
   private val someDeploymentConfigChanges = Seq(
-    ConfigChange.ChangedConfig("k", "previousV", "newV")
+    DeploymentConfigChange.ChangedConfig("k", "previousV", "newV")
   )
 
   private trait Setup {
