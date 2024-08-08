@@ -25,147 +25,50 @@
   request    : RequestHeader
 )
 
-@standard_layout(postContent = graph) {
-
+@standard_layout() {
     <h1 class="page-heading mt-4">
-        Dependency Graph: @serviceName.asString - @scope.displayString
+        Dependency Graph: @serviceName.asString
     </h1>
 
-    <div class="row">
-        <ul class="nav nav-tabs mb-2">
-            @DependencyScope.values.map { value =>
-              @if(value == scope) {
-                <li class="nav-item">
-                    <a id="@scope.displayString-graph" class="nav-link active" href='?scope=@{
-                        value.asString
-                    }'>@value.displayString</a>
-                </li>
-              } else {
-                  <li class="nav-item">
-                      <a id="@scope.displayString-graph" class="nav-link" href='?scope=@{
-                          value.asString
-                      }'>@value.displayString</a>
-                  </li>
-              }
-            }
-        </ul>
-    </div>
-
-  <div class="row">
-      <div class="col-sm-12">
-          @if(dotData.isEmpty) {
-              <i>No graph data exists for this build</i>
-          }
-          <svg width=100% height=1080>
-              <g/>
-          </svg>
-      </div>
-  </div>
-}
-
-@graph = {
-    <!-- d3:3.5.17 -->
-    <script @CSPNonce.attr type="application/javascript" src="@routes.Assets.versioned("d3.min.js")"></script>
-    <!-- dagre-d3:0.4.16 -->
-    <script @CSPNonce.attr type="application/javascript" src="@routes.Assets.versioned("dagre-d3.min.js")"></script>
-   <!-- graphlib-dot.js:2.0.0 -->
-    <script @CSPNonce.attr type="application/javascript" src="@routes.Assets.versioned("graphlib-dot.min.js")"></script>
-
-    <style>
-            body {
-                margin: 0;
-                overflow: hidden;
-            }
-
-            .node {
-                white-space: nowrap;
-            }
-
-            .node rect,
-            .node circle,
-            .node ellipse {
-                color: blue;
-                stroke: #333;
-                fill: #fff;
-                stroke-width: 1.5px;
-            }
-
-            .cluster rect {
-                stroke: #333;
-                fill: #000;
-                fill-opacity: 0.1;
-                stroke-width: 1.5px;
-            }
-
-            .edgePath path.path {
-                stroke: #333;
-                stroke-width: 1.5px;
-                fill: none;
-            }
-            svg div{
-                font-weight: normal;
-                color: #333333;
-            }
-        svg b {
-            color #aaa;
+    <ul class="nav nav-tabs mb-2">
+        @DependencyScope.values.map { value =>
+            <li class="nav-item">
+                 <a id="@scope.displayString-graph" class="nav-link @if(value == scope) { active }" href='?scope=@{value.asString}'>
+                    @value.displayString
+                </a>
+            </li>
         }
-    </style>
+    </ul>
 
-    <style>
-            h1, h2 {
-                color: #333;
-            }
-    </style>
+    @if(dotData.isEmpty) {
+        <i>No graph data exists for this build</i>
+    } else if (!dotData.exists(_.contains("->"))) {
+        <i>Graph data does not contain any dependencies</i>
+    } else {
+        <textarea id="dotData" rows="10" style="width: 100%; display: none;">@dotData.getOrElse("")</textarea>
+        <div id="graph" tabindex="0" style="width: 100%; height: 100%;"></div>
 
-    <script @CSPNonce.attr>
-        const dotData = '@dotData.getOrElse("")'
+        <script @CSPNonce.attr type="application/javascript" src="@routes.Assets.versioned("viz-standalone-3.7.0-min.js")"></script>
+        <script @CSPNonce.attr type="application/javascript" src="@routes.Assets.versioned("svg-pan-zoom-3.6.2.min.js")"></script>
+        <script @CSPNonce.attr>
+            let dotData = document.getElementById('dotData');
+            let graph   = document.getElementById("graph");
 
-        function decodeData(data) {
-            // to make it render properly we need to replace the outer < of the label with " and add a labelType
-            return decodeURIComponent(data)
-                    .replaceAll('label=<', 'labelType="html" label="')
-                    .replaceAll('> style=', '" style=')
-        }
+            Viz.instance().then(function(viz) {
+                drawGraph();
+                dotData.addEventListener('input', function() {drawGraph(), false}); // unhide textarea to test
 
-        function initialize(data) {
-            // Set up zoom support
-            var svg = d3.select("svg"),
-                    inner = d3.select("svg g"),
-                    zoom = d3.behavior.zoom().on("zoom", function () {
-                        inner.attr("transform", "translate(" + d3.event.translate + ")" +
-                                "scale(" + d3.event.scale + ")");
-                    });
-            svg.attr("width", window.innerWidth);
-
-            svg.call(zoom);
-            // Create and configure the renderer
-            var render = dagreD3.render();
-
-            let offsetX = 20
-            let offsetY = 20
-            let initialScale = 0.75;
-
-            function tryDraw(inputGraph) {
-                let g;
-                {
-                    g = graphlibDot.read(inputGraph);
-                    g.graph().rankdir = "LR";
-                    d3.select("svg g").call(render, g);
-
-                    // Center the graph
-
-                    zoom.translate([offsetX, offsetY])
-                        .scale(initialScale)
-                        .event(svg);
-                    svg.attr('height', g.graph().height * initialScale + 40);
+                function drawGraph() {
+                    if (graph.hasChildNodes()) { graph.removeChild(graph.children[0]); }
+                    let graphSvg = viz.renderSVGElement(dotData.value);
+                    graphSvg.setAttribute("height", 1200);
+                    graphSvg.setAttribute("width", graph.offsetWidth);
+                    graphSvg.removeAttribute("style");
+                    graph.appendChild(graphSvg);
+                    svgPanZoom(graphSvg, { controlIconsEnabled: true });
+                    document.getElementById("svg-pan-zoom-controls").setAttribute('transform', 'translate(' + (graph.offsetWidth - 100) + ', 0)');
                 }
-            }
-            tryDraw(decodeData(data));
-        }
-
-        $(document).ready(e => {
-            initialize(dotData)
-        })
-
-    </script>
+            });
+        </script>
+    }
 }
