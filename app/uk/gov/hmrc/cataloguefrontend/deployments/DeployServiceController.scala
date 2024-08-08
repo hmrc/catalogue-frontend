@@ -164,25 +164,11 @@ class DeployServiceController @Inject()(
                                      serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                                    , BadRequest(deployServicePage(form.withGlobalError("Version not found. If this is a recent build, it may take a few minutes to be picked up"), hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
                                    )
-         confNew              <- EitherT
-                                   .right[Result](serviceConfigsService.configByKeyWithNextDeployment(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
-                                   .map:
-                                     _
-                                       .flatMap: (k, envData) =>
-                                         envData
-                                           .getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil)
-                                           .collect { case (x, true) if !x.isReferenceConf => x }
-                                           .map(v => (k -> v))
-         confRemoves          <- EitherT
-                                   .right[Result](serviceConfigsService.removedConfig(formObject.serviceName, Seq(formObject.environment), Some(formObject.version)))
-                                   .map:
-                                     _.flatMap: (k, envData) =>
-                                        envData
-                                          .getOrElse(ServiceConfigsService.ConfigEnvironment.ForEnvironment(formObject.environment), Nil)
-                                          .collect { case (x, true) if !x.isReferenceConf  => x }
-                                          .map(v => (k -> v))
-         confUpdates          =  (confNew.view.mapValues(x => (x, true)) ++ confRemoves.view.mapValues(x => (x, false))).toMap
-         confWarnings         <- EitherT
+         configChanges        <- EitherT
+                                   .right[Result](
+                                     serviceConfigsService.configChangesNextDeployment(formObject.serviceName, formObject.environment, formObject.version)
+                                   )
+         configWarnings       <- EitherT
                                    .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
          vulnerabilites       <- EitherT
                                    .right[Result](
@@ -204,7 +190,7 @@ class DeployServiceController @Inject()(
            latest,
            releases,
            environments,
-           Some((confUpdates, confWarnings, vulnerabilites, jvmChanges, deploymentConfigUpdates))
+           Some((configChanges, configWarnings, vulnerabilites, jvmChanges, deploymentConfigUpdates))
          ))
       ).merge
     }
