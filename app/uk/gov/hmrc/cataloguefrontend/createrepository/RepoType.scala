@@ -26,9 +26,8 @@ given Parser[RepoType] = Parser.parser(RepoType.values)
 
 enum RepoType(
   override val asString: String,
-  val displayString    : String
 ) extends FromString
   derives Ordering, Reads, Writes, FormFormat, QueryStringBindable:
-  case Service   extends RepoType(asString = "Service",   displayString = "service"  )
-  case Prototype extends RepoType(asString = "Prototype", displayString = "prototype")
-  case Test      extends RepoType(asString = "Test",      displayString = "test"     )
+  case Service   extends RepoType(asString = "Service"  )
+  case Prototype extends RepoType(asString = "Prototype")
+  case Test      extends RepoType(asString = "Test"     )

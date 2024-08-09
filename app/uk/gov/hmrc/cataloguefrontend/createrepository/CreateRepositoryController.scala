@@ -21,7 +21,7 @@ import cats.implicits.*
 import play.api.Logging
 import play.api.data.Form
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, RequestHeader, Result}
 import play.api.libs.json.{Format, Json, Reads, Writes}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -85,7 +85,7 @@ class CreateRepositoryController @Inject()(
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createRepoLandingGet()
     ): request =>
-      given Request[AnyContent] = request
+      given RequestHeader = request
       Ok(selectRepoTypePage(SelectRepoType.form))
 
   // Step One POST
@@ -122,9 +122,9 @@ class CreateRepositoryController @Inject()(
       ).merge
 
   private def createRepo[T <: CreateRepo](
-    bindForm  : Form[T],
-    createPage: (Form[T], Seq[TeamName]) => Html,
-    bndApi    : T => Future[Either[String, BuildDeployApiConnector.AsyncRequestId]],
+    bindForm        : Form[T],
+    createPage      : (Form[T], Seq[TeamName]) => Html,
+    bndApiCreateRepo: T => Future[Either[String, BuildDeployApiConnector.AsyncRequestId]],
   )(using request: AuthenticatedRequest[_, Set[Resource]]): Future[Result] =
     (for
       repoTypeOut   <- getRepoTypeOut()
@@ -135,12 +135,12 @@ class CreateRepositoryController @Inject()(
                          validForm      => EitherT.pure(validForm)
                        )
       _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
-      id            <- EitherT(bndApi(validForm))
+      id            <- EitherT(bndApiCreateRepo(validForm))
                          .leftMap: error =>
                            logger.info(s"CreateRepository request for ${validForm.repositoryName} failed with message: $error")
                            BadRequest(createPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
       _             =  logger.info(s"CreateRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-     yield Redirect(routes.CreateRepositoryController.createRepoConfirmation(repoTypeOut.repoType, validForm.repositoryName)).withSession(request.session)
+     yield Redirect(routes.CreateRepositoryController.createRepoConfirmation(repoTypeOut.repoType, validForm.repositoryName))
     ).merge
 
   // Step Two POST
@@ -155,21 +155,21 @@ class CreateRepositoryController @Inject()(
         result      <- EitherT(repoTypeOut.repoType match
                          case RepoType.Prototype =>
                            createRepo(
-                             bindForm   = CreatePrototype.form,
-                             createPage = (form: Form[CreatePrototype], teams: Seq[TeamName]) => createPrototypePage(form, teams),
-                             bndApi     = (form: CreatePrototype) => buildDeployApiConnector.createPrototypeRepository(form),
+                             bindForm         = CreatePrototype.form,
+                             createPage       = (form: Form[CreatePrototype], teams: Seq[TeamName]) => createPrototypePage(form, teams),
+                             bndApiCreateRepo = (form: CreatePrototype) => buildDeployApiConnector.createPrototypeRepository(form),
                            ).map(Right.apply)
                          case RepoType.Test =>
                            createRepo(
-                             bindForm   = CreateTest.form,
-                             createPage = (form: Form[CreateTest], teams: Seq[TeamName]) => createTestPage(form, teams),
-                             bndApi     = (form: CreateTest) => buildDeployApiConnector.createTestRepository(form),
+                             bindForm         = CreateTest.form,
+                             createPage       = (form: Form[CreateTest], teams: Seq[TeamName]) => createTestPage(form, teams),
+                             bndApiCreateRepo = (form: CreateTest) => buildDeployApiConnector.createTestRepository(form),
                            ).map(Right.apply)
                          case RepoType.Service =>
                            createRepo(
-                             bindForm   = CreateService.form,
-                             createPage = (form: Form[CreateService], teams: Seq[TeamName]) => createServicePage(form, teams),
-                             bndApi     = (form: CreateService) => buildDeployApiConnector.createServiceRepository(form),
+                             bindForm         = CreateService.form,
+                             createPage       = (form: Form[CreateService], teams: Seq[TeamName]) => createServicePage(form, teams),
+                             bndApiCreateRepo = (form: CreateService) => buildDeployApiConnector.createServiceRepository(form),
                            ).map(Right.apply)
                        )
         _           <- EitherT.liftF(deleteFromSession(repoTypeKey)) // stops user accessing page 2 on completion
