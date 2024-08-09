@@ -17,7 +17,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType",
       "uk.gov.hmrc.cataloguefrontend.binders.Binders._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl",
-      "uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus"
+      "uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus",
+      "uk.gov.hmrc.cataloguefrontend.createrepository.RepoType"
     ),
     TwirlKeys.templateImports ++= Seq(
       "uk.gov.hmrc.cataloguefrontend.model._",
