@@ -90,6 +90,7 @@
                         </p>
                     }
                     <select class="form-select" id="teamInput" name="teamName">
+                        <option value="" @if(form.data.getOrElse("teamName", "").isEmpty) { selected="selected" } >Select a team</option>
                         @teamNames.map { tn =>
                             <option value="@{tn.asString}"
                                     @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}

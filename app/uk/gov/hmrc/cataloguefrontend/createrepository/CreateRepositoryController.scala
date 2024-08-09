@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.createrepository
 
 import cats.data.EitherT
 import cats.implicits.*
-import play.api.Logger
+import play.api.Logging
 import play.api.data.Form
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
@@ -26,7 +26,7 @@ import play.api.libs.json.{Format, Json, Reads, Writes}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
-import uk.gov.hmrc.cataloguefrontend.createrepository.view.html.{CreatePrototypePage, CreateServicePage, CreateTestPage, SelectRepoTypePage, CreateRepositoryConfirmationPage}
+import uk.gov.hmrc.cataloguefrontend.createrepository.view.html.{CreatePrototypePage, CreateRepositoryConfirmationPage, CreateServicePage, CreateTestPage, SelectRepoTypePage}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
@@ -54,7 +54,8 @@ class CreateRepositoryController @Inject()(
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
     with CatalogueAuthBuilders
-    with I18nSupport:
+    with I18nSupport
+    with Logging:
 
   import CreateRepositoryController._
 
@@ -69,12 +70,9 @@ class CreateRepositoryController @Inject()(
   )
 
   given Format[RepoTypeOut] = repoTypeOutFormats
-  given Format[RepoNameOut] = repoNameOutFormats
 
   private def createRepositoryPermission(teamName: TeamName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_REPOSITORY"))
-
-  private val logger = Logger(getClass)
 
   private val createRepoRetrieval: Retrieval.SimpleRetrieval[Set[Resource]] =
     Retrieval.locations(
@@ -86,15 +84,16 @@ class CreateRepositoryController @Inject()(
   val createRepoLandingGet: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createRepoLandingGet()
-    ) { implicit request =>
+    ): request =>
+      given Request[AnyContent] = request
       Ok(selectRepoTypePage(SelectRepoType.form))
-    }
 
   // Step One POST
   val createRepoLandingPost: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createRepoLandingGet(),
-    ).async { implicit request =>
+    ).async: request =>
+      given Request[AnyContent] = request
       (for
         submittedForm <- EitherT.pure[Future, Result](SelectRepoType.form.bindFromRequest())
         repoType      <- submittedForm.fold[EitherT[Future, Result, RepoType]](
@@ -104,14 +103,14 @@ class CreateRepositoryController @Inject()(
         pageState     <- EitherT.liftF(putSession(repoTypeKey, RepoTypeOut(repoType)))
        yield Redirect(routes.CreateRepositoryController.createRepoGet()).withSession(request.session + pageState)
       ).merge
-    }
 
   // Step Two GET
   val createRepoGet: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createRepoGet(),
       retrieval   = createRepoRetrieval
-    ).async { implicit request =>
+    ).async: request =>
+      given Request[AnyContent] = request
       (for
         userTeams   <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
         repoTypeOut <- getRepoTypeOut()
@@ -121,14 +120,14 @@ class CreateRepositoryController @Inject()(
                          case RepoType.Service   => Ok(createServicePage(CreateService.form, userTeams))
        yield result
       ).merge
-    }
 
-  private def createRepoAction[T <: CreateRepo](
+  private def createRepo[T <: CreateRepo](
     bindForm  : Form[T],
     createPage: (Form[T], Seq[TeamName]) => Html,
-    createRepo: T => Future[Either[String, BuildDeployApiConnector.AsyncRequestId]],
-  )(implicit request: AuthenticatedRequest[_, Set[Resource]]): Future[Result] =
+    bndApi    : T => Future[Either[String, BuildDeployApiConnector.AsyncRequestId]],
+  )(using request: AuthenticatedRequest[_, Set[Resource]]): Future[Result] =
     (for
+      repoTypeOut   <- getRepoTypeOut()
       userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
       submittedForm =  bindForm.bindFromRequest()
       validForm     <- submittedForm.fold[EitherT[Future, Result, T]](
@@ -136,13 +135,12 @@ class CreateRepositoryController @Inject()(
                          validForm      => EitherT.pure(validForm)
                        )
       _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
-      id            <- EitherT(createRepo(validForm))
+      id            <- EitherT(bndApi(validForm))
                          .leftMap: error =>
                            logger.info(s"CreateRepository request for ${validForm.repositoryName} failed with message: $error")
                            BadRequest(createPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
       _             =  logger.info(s"CreateRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-      pageState     <- EitherT.liftF(putSession(repoNameKey, RepoNameOut(validForm.repositoryName)))
-     yield Redirect(routes.CreateRepositoryController.createRepoConfirmation()).withSession(request.session + pageState)
+     yield Redirect(routes.CreateRepositoryController.createRepoConfirmation(repoTypeOut.repoType, validForm.repositoryName)).withSession(request.session)
     ).merge
 
   // Step Two POST
@@ -150,43 +148,41 @@ class CreateRepositoryController @Inject()(
     auth.authenticatedAction(
     continueUrl = routes.CreateRepositoryController.createRepoGet(),
     retrieval   = createRepoRetrieval
-    ).async { implicit request =>
+    ).async: request =>
+      given AuthenticatedRequest[_, Set[Resource]] = request
       (for
         repoTypeOut <- getRepoTypeOut()
         result      <- EitherT(repoTypeOut.repoType match
                          case RepoType.Prototype =>
-                           createRepoAction(
-                             bindForm      = CreatePrototype.form,
-                             createPage    = (form: Form[CreatePrototype], teams: Seq[TeamName]) => createPrototypePage(form, teams),
-                             createRepo    = (form: CreatePrototype) => buildDeployApiConnector.createPrototypeRepository(form),
-                           ).map(Right(_))
+                           createRepo(
+                             bindForm   = CreatePrototype.form,
+                             createPage = (form: Form[CreatePrototype], teams: Seq[TeamName]) => createPrototypePage(form, teams),
+                             bndApi     = (form: CreatePrototype) => buildDeployApiConnector.createPrototypeRepository(form),
+                           ).map(Right.apply)
                          case RepoType.Test =>
-                           createRepoAction(
+                           createRepo(
                              bindForm   = CreateTest.form,
                              createPage = (form: Form[CreateTest], teams: Seq[TeamName]) => createTestPage(form, teams),
-                             createRepo = (form: CreateTest) => buildDeployApiConnector.createTestRepository(form),
-                           ).map(Right(_))
+                             bndApi     = (form: CreateTest) => buildDeployApiConnector.createTestRepository(form),
+                           ).map(Right.apply)
                          case RepoType.Service =>
-                           createRepoAction(
-                             bindForm      = CreateService.form,
-                             createPage    = (form: Form[CreateService], teams: Seq[TeamName]) => createServicePage(form, teams),
-                             createRepo    = (form: CreateService) => buildDeployApiConnector.createServiceRepository(form),
-                           ).map(Right(_))
+                           createRepo(
+                             bindForm   = CreateService.form,
+                             createPage = (form: Form[CreateService], teams: Seq[TeamName]) => createServicePage(form, teams),
+                             bndApi     = (form: CreateService) => buildDeployApiConnector.createServiceRepository(form),
+                           ).map(Right.apply)
                        )
+        _           <- EitherT.liftF(deleteFromSession(repoTypeKey)) // stops user accessing page 2 on completion
        yield result
       ).merge
-  }
 
   // Step Three GET
-  def createRepoConfirmation(): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      (for
-        repoTypeOut <- getRepoTypeOut()
-        repoNameOut <- getRepoNameOut()
-        _           <- EitherT.liftF(deleteFromSession(repoTypeKey)) // stops user accessing pages 2 and 3 after completion
-       yield Ok(createRepositoryConfirmationPage(repoNameOut.repoName, repoTypeOut.repoType))
-      ).valueOr(identity)
-    }
+  def createRepoConfirmation(repoType: RepoType, repoName: String): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.CreateRepositoryController.createRepoConfirmation(repoType, repoName)
+    ): request =>
+      given Request[AnyContent] = request
+      Ok(createRepositoryConfirmationPage(repoType, repoName))
 
   private def getFromSession[A: Reads](dataKey: DataKey[A])(using Request[?]): Future[Option[A]] =
     cacheRepo.getFromSession(dataKey)
@@ -203,12 +199,6 @@ class CreateRepositoryController @Inject()(
       Redirect(routes.CreateRepositoryController.createRepoLandingGet())
     )
 
-  private def getRepoNameOut()(using Request[?]) =
-    EitherT.fromOptionF[Future, Result, RepoNameOut](
-      getFromSession(repoNameKey),
-      Redirect(routes.CreateRepositoryController.createRepoLandingGet())
-    )
-
   private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
     resources
       .map(_.resourceLocation.value.stripPrefix("teams/"))
@@ -222,8 +212,4 @@ object CreateRepositoryController:
   case class RepoTypeOut(repoType: RepoType)
   val repoTypeKey        = DataKey[RepoTypeOut]("repoType")
   val repoTypeOutFormats = Json.format[RepoTypeOut]
-
-  case class RepoNameOut(repoName: String)
-  val repoNameKey        = DataKey[RepoNameOut]("repoName")
-  val repoNameOutFormats = Json.format[RepoNameOut]
 end CreateRepositoryController

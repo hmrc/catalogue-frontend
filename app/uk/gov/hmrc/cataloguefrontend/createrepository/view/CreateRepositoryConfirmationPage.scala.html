@@ -19,42 +19,43 @@
 
 @this()
 
-@(repositoryName: String,
-  repoType      : RepoType,
+@(
+  repoType: RepoType,
+  repoName: String
 )(implicit
   request: RequestHeader
 )
 
-@standard_layout(s"Creating $repoType repository: $repositoryName") {
+@standard_layout(s"Creating $repoType repository: $repoName") {
 
     <section class="section-wrapper">
-        <h1 class="page-heading">Creating @{repoType.asString.toLowerCase} repository: @repositoryName</h1>
+        <h1 class="page-heading">Creating @{repoType.displayString} repository: @repoName</h1>
 
-        <p>The @{repoType.asString.toLowerCase} repository @repositoryName is being added to the MDTP catalogue. This can take around 30 minutes to appear and for all catalogue features to be available.</p>
+        <p>The @{repoType.displayString} repository @repoName is being added to the MDTP catalogue. This can take around 30 minutes to appear and for all catalogue features to be available.</p>
     </section>
 
     <section class="section-wrapper">
         <h2 id="what-to-do-next">What to do next?</h2>
         <ul>
-            <li>Check the @{repoType.asString.toLowerCase} repository has been created in <a id="link-to-github-repo" href="https://github.com/hmrc/@repositoryName">GitHub</a> (this can take around 5 minutes)</li>
+            <li>Check the @{repoType.displayString} repository has been created in <a id="link-to-github-repo" href="https://github.com/hmrc/@repoName" target="_blank" rel="noreferrer noopener">GitHub<span class="glyphicon glyphicon-new-window"></span></a> (this can take around 5 minutes)</li>
             @repoType match {
                 case RepoType.Service => {
-                    <li>Follow the next steps in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/create-app-config.html">MDTP handbook</a> to finish creating your microservice</li>
-                    <li>Track your progress on the <a id="link-to-mdtp-handbook" href=@commRoutes.ServiceCommissioningStatusController.getCommissioningState(ServiceName(repositoryName)).url>commissioning state</a> page</li>
+                    <li>Follow the next steps in the <a id="link-to-mdtp-handbook" href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/create-app-config.html" target="_blank" rel="noreferrer noopener">MDTP handbook<span class="glyphicon glyphicon-new-window"></span></a> to finish creating your microservice</li>
+                    <li>Track your progress on the <a id="link-to-mdtp-handbook" href=@commRoutes.ServiceCommissioningStatusController.getCommissioningState(ServiceName(repoName)).url>commissioning state</a> page</li>
                 }
                 case RepoType.Prototype => {
-                     <li>Check the prototype has been deployed to <a id="link-to-heroku" href="https://dashboard.heroku.com/apps/@repositoryName">Heroku</a></li>
+                     <li>Check the prototype has been deployed to <a id="link-to-heroku" href="https://dashboard.heroku.com/apps/@repoName" target="_blank" rel="noreferrer noopener">Heroku<span class="glyphicon glyphicon-new-window"></span></a></li>
                      <li>Prototypes are turned off in Heroku throughout the weekend in order to save resources, if you need to access the prototype you will need to restart it:</li>
                      <ul>
                          <li>By navigating to your prototype in Heroku and clicking on the 'Restart prototype' button</li>
-                         <li>Alternatively, you can restart from the MDTP catalogue by navigating to the <a id="link-to-catalogue" href="/repositories/@repositoryName">repository</a> page and clicking the 'Start' button</li>
+                         <li>Alternatively, you can restart from the MDTP catalogue by navigating to the <a id="link-to-catalogue" href="/repositories/@repoName">repository</a> page and clicking the 'Start' button</li>
                      </ul>
                 }
                 case RepoType.Test => {
                     <li>You will need to add build config to run your test:</li>
                     <ul>
-                        <li>For acceptance/journey tests add your repository to <a id="link-to-build-jobs" href="https://github.com/hmrc/build-jobs/blob/main/DEFINING-JOBS.md">build jobs</a> to setup job builder and jenkins pipelines</li>
-                        <li>For performance tests add your repository to <a id="link-to-performance-jobs" href="https://github.com/hmrc/performance-test-jobs/blob/main/README.md">performance test jobs</a> to setup job builder</li>
+                        <li>For acceptance/journey tests add your repository to <a id="link-to-build-jobs" href="https://github.com/hmrc/build-jobs/blob/main/DEFINING-JOBS.md" target="_blank" rel="noreferrer noopener">build jobs<span class="glyphicon glyphicon-new-window"></span></a> to set up job builder and jenkins pipelines</li>
+                        <li>For performance tests add your repository to <a id="link-to-performance-jobs" href="https://github.com/hmrc/performance-test-jobs/blob/main/README.md" target="_blank" rel="noreferrer noopener">performance test jobs<span class="glyphicon glyphicon-new-window"></span></a> to set up job builder</li>
                     </ul>
                 }
             }
@@ -66,18 +67,18 @@
         <ul>
             @repoType match {
                 case RepoType.Service => {
-                    <li><a id="link-to-build-and-deploy" href="https://hmrcdigital.slack.com/messages/team-build-and-deploy">Team build and deploy slack</a> for help with Jenkins builds and deployments</li>
+                    <li><a id="link-to-build-and-deploy" href="https://hmrcdigital.slack.com/messages/team-build-and-deploy" target="_blank" rel="noreferrer noopener">Team build and deploy slack<span class="glyphicon glyphicon-new-window"></span></a> for help with Jenkins builds and deployments</li>
                 }
                 case RepoType.Prototype => {
-                    <li><a id="link-to-prototype-guide" href="https://confluence.tools.tax.service.gov.uk/display/PROT/Prototyping+User+Guide">Prototype user guide</a> for additional information around prototyping and Heroku </li>
-                    <li><a id="link-to-prototype-slack" href="https://hmrcdigital.slack.com/messages/community-prototype">Prototype community slack</a> for general discussions and troubleshooting prototypes</li>
+                    <li><a id="link-to-prototype-guide" href="https://confluence.tools.tax.service.gov.uk/display/PROT/Prototyping+User+Guide" target="_blank" rel="noreferrer noopener">Prototype user guide<span class="glyphicon glyphicon-new-window"></span></a> for additional information around prototyping and Heroku </li>
+                    <li><a id="link-to-prototype-slack" href="https://hmrcdigital.slack.com/messages/community-prototype" target="_blank" rel="noreferrer noopener">Prototype community slack<span class="glyphicon glyphicon-new-window"></span></a> for general discussions and troubleshooting prototypes</li>
                 }
                 case RepoType.Test => {
-                     <li><a id="link-to-community-testing" href="https://hmrcdigital.slack.com/messages/community-testing">Test community slack</a> for general discussions and troubleshooting test services </li>
-                     <li><a id="link-to-mdtp-guide" href="https://confluence.tools.tax.service.gov.uk/display/DTRG/MDTP+test+approach">MDTP test approach</a> for testing principles and strategy</li>
+                     <li><a id="link-to-community-testing" href="https://hmrcdigital.slack.com/messages/community-testing" target="_blank" rel="noreferrer noopener">Test community slack<span class="glyphicon glyphicon-new-window"></span></a> for general discussions and troubleshooting test services </li>
+                     <li><a id="link-to-mdtp-guide" href="https://confluence.tools.tax.service.gov.uk/display/DTRG/MDTP+test+approach" target="_blank" rel="noreferrer noopener">MDTP test approach<span class="glyphicon glyphicon-new-window"></span></a> for testing principles and strategy</li>
                 }
             }
-            <li><a id="link-to-platops" href="https://hmrcdigital.slack.com/messages/team-platops">Team platops slack</a> for general enquiries and technical guidance when creating microservices</li>
+            <li><a id="link-to-platops" href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">Team platops slack<span class="glyphicon glyphicon-new-window"></span></a> for general enquiries and technical guidance when creating microservices</li>
         </ul>
     </section>
 }
