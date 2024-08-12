@@ -23,7 +23,7 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Writes, __}
 import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkConstraint
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
-import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, Parser}
+import uk.gov.hmrc.cataloguefrontend.util.Parser
 
 object SelectRepoType {
   val form: Form[RepoType] =

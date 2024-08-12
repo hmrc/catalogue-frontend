@@ -18,15 +18,16 @@ package uk.gov.hmrc.cataloguefrontend.createrepository
 
 
 import play.api.libs.json.{Reads, Writes}
+import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.cataloguefrontend.util.FromStringEnum.*
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, Parser}
 
 given Parser[RepoType] = Parser.parser(RepoType.values)
 
 enum RepoType(
-  override val asString: String
+  override val asString: String,
 ) extends FromString
-  derives Ordering, Reads, Writes, FormFormat:
-  case Service   extends RepoType("Service")
-  case Prototype extends RepoType("Prototype")
-  case Test      extends RepoType("Test")
+  derives Ordering, Reads, Writes, FormFormat, QueryStringBindable:
+  case Service   extends RepoType(asString = "Service"  )
+  case Prototype extends RepoType(asString = "Prototype")
+  case Test      extends RepoType(asString = "Test"     )

@@ -14,7 +14,7 @@ GET        /create-repo                                 uk.gov.hmrc.cataloguefro
 POST       /create-repo                                 uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoLandingPost()
 GET        /create-repo/2                               uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoGet()
 POST       /create-repo/2                               uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoPost()
-GET        /create-repo/3                               uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoConfirmation()
+GET        /create-repo/3                               uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepositoryController.createRepoConfirmation(repoType: RepoType, repoName: String)
 
 GET        /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigsLanding(serviceName: ServiceName)
 POST       /create-app-configs                          uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsController.createAppConfigs(serviceName: ServiceName)
