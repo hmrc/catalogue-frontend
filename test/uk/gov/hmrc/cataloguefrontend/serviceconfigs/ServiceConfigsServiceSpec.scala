@@ -241,8 +241,8 @@ class ServiceConfigsServiceSpec
             )
           )))
         serviceConfigsService.deploymentConfigChanges(serviceName, environment).futureValue shouldBe Seq(
-          ConfigChange.ChangedConfig("instances", previousV = "2", newV = "4"),
-          ConfigChange.ChangedConfig("slots"    , previousV = "1", newV = "3")
+          DeploymentConfigChange.ChangedConfig("instances", previousV = "2", newV = "4"),
+          DeploymentConfigChange.ChangedConfig("slots"    , previousV = "1", newV = "3")
         )
       }
 
@@ -288,12 +288,12 @@ class ServiceConfigsServiceSpec
             )
           )))
         serviceConfigsService.deploymentConfigChanges(serviceName, environment).futureValue shouldBe Seq(
-          ConfigChange.ChangedConfig("environment.evk2", "evv2b", "evv2"),
-          ConfigChange.DeletedConfig("environment.evk3", "evv3"),
-          ConfigChange.NewConfig("environment.evk4", "evv4"),
-          ConfigChange.ChangedConfig("jvm.jk2", "jv2b", "jv2"),
-          ConfigChange.DeletedConfig("jvm.jk3", "jv3"),
-          ConfigChange.NewConfig("jvm.jk4", "jv4")
+          DeploymentConfigChange.ChangedConfig("environment.evk2", "evv2b", "evv2"),
+          DeploymentConfigChange.DeletedConfig("environment.evk3", "evv3"),
+          DeploymentConfigChange.NewConfig("environment.evk4", "evv4"),
+          DeploymentConfigChange.ChangedConfig("jvm.jk2", "jv2b", "jv2"),
+          DeploymentConfigChange.DeletedConfig("jvm.jk3", "jv3"),
+          DeploymentConfigChange.NewConfig("jvm.jk4", "jv4")
         )
       }
     }

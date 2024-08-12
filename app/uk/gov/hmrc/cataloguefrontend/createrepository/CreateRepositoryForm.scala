@@ -99,7 +99,7 @@ object CreateTest:
   private val testTypeAndNameConstraints = Seq(
     mkConstraint("constraints.conflictingFields1")(constraint = repoNameTestConstraint, error = "Repository name can only end in '-test' or '-tests'"),
   )
-  
+
   val form: Form[CreateTest] =
     Form(
       Forms.mapping(

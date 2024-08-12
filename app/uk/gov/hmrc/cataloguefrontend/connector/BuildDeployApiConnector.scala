@@ -221,13 +221,14 @@ class BuildDeployApiConnector @Inject() (
 
     given Writes[CreateAppConfigsRequest] = CreateAppConfigsRequest.writes
 
-    val body = Json.toJson(CreateAppConfigsRequest(
-      serviceName,
-      st,
-      requiresMongo,
-      appConfigEnvironments,
-      zone
-    ))
+    val body =
+      Json.toJson(CreateAppConfigsRequest(
+        microserviceName = serviceName,
+        microserviceType = st,
+        hasMongo         = requiresMongo,
+        environments     = appConfigEnvironments,
+        zone             = zone
+      ))
 
     logger.info(s"Calling the B&D Create App Configs API with the following payload: $body")
 
