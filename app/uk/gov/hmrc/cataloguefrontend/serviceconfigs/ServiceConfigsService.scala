@@ -120,9 +120,9 @@ class ServiceConfigsService @Inject()(
       ServiceRelationshipsEnriched(
         inbound.sortBy(_.service)
       , outbound.sortBy: a =>
-        ( !List(LifecycleStatus.Deprecated, LifecycleStatus.DecommissionInProgress).contains(a.lifecycleStatus)
-        , a.service
-        )
+          ( !a.lifecycleStatus.exists(List(LifecycleStatus.Deprecated, LifecycleStatus.DecommissionInProgress).contains)
+          , a.service
+          )
       )
 
   def configKeys(teamName: Option[TeamName] = None)(using HeaderCarrier): Future[Seq[String]] =

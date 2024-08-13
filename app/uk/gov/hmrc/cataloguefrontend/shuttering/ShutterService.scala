@@ -71,10 +71,10 @@ class ShutterService @Inject() (
   )(using
     HeaderCarrier
   ): Future[Option[Document]] =
-    (for {
-      template   <- OptionT(githubConnector.getGitHubProxyRaw("/shutter-api/HEAD/conf/default-outage-page.html.tmpl"))
-      outagePage <- OptionT(outagePage(serviceName))
-     } yield outagePage.renderTemplate(template, templatedMessage)
+    (for
+       template   <- OptionT(githubConnector.getGitHubProxyRaw("/shutter-api/HEAD/conf/default-outage-page.html.tmpl"))
+       outagePage <- OptionT(outagePage(serviceName))
+     yield outagePage.renderTemplate(template, templatedMessage)
     ).value
 
   def frontendRouteWarnings(
