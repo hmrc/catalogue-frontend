@@ -532,6 +532,7 @@ object JsonData {
       "group"              : "dg",
       "currentVersion"     : "dv",
       "bobbyRuleViolations": [],
+      "vulnerabilities"    : [],
       "scope"              : "compile"
     }]"""
 

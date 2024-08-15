@@ -15,18 +15,21 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{ routes => vulnerabilityRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, ImportedBy, VersionState}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope.It
+@import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope.Compile
 
-@(dependencies     : Seq[Dependency],
-  rootId           : String,
-  showOutOfDateOnly: Boolean        = false
+@(dependencies           : Seq[Dependency],
+  rootId                 : String,
+  showOutOfDateOnly      : Boolean          = false,
+  showVulnerabilityColumn: Boolean          = true
 )
 
 @for(
     dependency <- dependencies
                     .filter(d => d.importBy.isEmpty && (!showOutOfDateOnly || d.isOutOfDate || transitiveDependencies(d).exists(_.isOutOfDate)))
                     .distinctBy(d => d.group + d.name)
-                    .sortBy(d => d.scope.asString + d.group + d.name)
 ) {
     @dependencyRow(dependency)
     @for(transitiveDependency <- transitiveDependencies(dependency).filter(d => !showOutOfDateOnly || d.isOutOfDate).distinctBy(d => d.group + d.name)) {
@@ -54,13 +57,21 @@
               <span class="dep-group">@dependency.group:</span><span class="dep-name">@dependency.name</span>
             }
         </div>
-        <div id="@{dependency.name}-@{rootId}-current-version" class="col-3">@dependency.currentVersion.toString</div>
-        <div id="@{dependency.name}-@{rootId}-latestVersion-version" class="col-3">
+        <div id="@{dependency.name}-@{rootId}-current-version" class="@{if(showVulnerabilityColumn) "col-2" else "col-3"}">@dependency.currentVersion.toString</div>
+        <div id="@{dependency.name}-@{rootId}-latestVersion-version" class="@{if(showVulnerabilityColumn) "col-2" else "col-3"}">
             @dependency.latestVersion.map(lv => {
                 <span class="glyphicon medium-glyphicon glyphicon-arrow-right pe-2"></span>
                 <span>{lv.toString}</span>
             }).getOrElse("")
         </div>
+
+        @if(showVulnerabilityColumn){
+            <div id="@{dependency.name}-@{rootId}-vulnerabilities" class="col-2">
+                @for(vulnerabilityId <- dependency.vulnerabilityIds) {
+                    <div><a id="@{dependency.name}-@{rootId}-vulnerability-@vulnerabilityId" href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesList(Some(vulnerabilityId))">@vulnerabilityId</a></div>
+                }
+            </div>
+        }
         <div id="@{dependency.name}-@{rootId}-bobbyrule" class="col-2">
         @dependency.versionState match {
             case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{appRoutes.BobbyExplorerController.list(selector = Some(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}"))}">See rule</a> }
@@ -76,7 +87,7 @@
         case Some(VersionState.NewVersionAvailable )  => "text-secondary"
         case Some(_: VersionState.BobbyRuleViolated)  => "text-danger"
         case Some(_: VersionState.BobbyRulePending )  => "text-warning"
-        case _                                        => "text-success"
+        case _                                        => if(dependency.vulnerabilityIds.nonEmpty) "text-danger" else "text-success"
     }
 }
 
@@ -85,7 +96,7 @@
         case Some(VersionState.NewVersionAvailable )  => "link-secondary"
         case Some(_: VersionState.BobbyRuleViolated)  => "link-danger"
         case Some(_: VersionState.BobbyRulePending )  => "link-warning"
-        case _                                        => "link-success"
+        case _                                        => if(dependency.vulnerabilityIds.nonEmpty) "link-danger" else "link-success"
     }
 }
 
@@ -94,6 +105,10 @@
     case Some(VersionState.NewVersionAvailable )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-arrow-up" title="new version available"></span> }
     case Some(_: VersionState.BobbyRulePending )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-alert"    title="bobby rule pending"></span> }
     case Some(_: VersionState.BobbyRuleViolated)  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="bobby rule violated"></span> }
-    case _                                        => { }
+    case _                                        => {
+                                                         @if(dependency.vulnerabilityIds.nonEmpty) {
+                                                             <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove" title="has vulnerability"></span>
+                                                         }
+                                                     }
   }
 }
