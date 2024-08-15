@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,18 @@
 
 package uk.gov.hmrc.cataloguefrontend.createrepository
 
-import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
-import FromStringEnum._
+import play.api.libs.json.{Reads, Writes}
+import play.api.mvc.QueryStringBindable
+import uk.gov.hmrc.cataloguefrontend.util.FromStringEnum.*
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, Parser}
 
-given Parser[CreateTestRepositoryType] = Parser.parser(CreateTestRepositoryType.values)
+given Parser[RepoType] = Parser.parser(RepoType.values)
 
-enum CreateTestRepositoryType(
-  override val asString: String
+enum RepoType(
+  override val asString: String,
 ) extends FromString
-  derives Ordering, FormFormat:
-  case UITest          extends CreateTestRepositoryType("UI Journey Test" )
-  case APITest         extends CreateTestRepositoryType("API Test"        )
-  case PerformanceTest extends CreateTestRepositoryType("Performance Test")
+  derives Ordering, Reads, Writes, FormFormat, QueryStringBindable:
+  case Service   extends RepoType(asString = "Service"  )
+  case Prototype extends RepoType(asString = "Prototype")
+  case Test      extends RepoType(asString = "Test"     )

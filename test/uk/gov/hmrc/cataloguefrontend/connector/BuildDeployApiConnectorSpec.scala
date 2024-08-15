@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import play.api.Configuration
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeStatus, PrototypeDetails}
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.{AsyncRequestId, PrototypeDetails, PrototypeStatus}
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
-import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepoForm
+import uk.gov.hmrc.cataloguefrontend.createrepository.CreateService
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
@@ -222,11 +222,11 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
   "createARepository" should {
     "return the Async request id when the request is accepted by the B&D async api" in {
-      val payload = CreateServiceRepoForm(
+      val payload = CreateService(
         repositoryName = "test-repo",
         makePrivate    = true,
         teamName       = TeamName("team1"),
-        repoType       = "Empty"
+        serviceType    = "Empty"
       )
 
       val expectedBody =
@@ -234,7 +234,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
           "repositoryName"           : "${payload.repositoryName}",
           "makePrivate"              : ${payload.makePrivate},
           "teamName"                 : "${payload.teamName.asString}",
-          "repositoryType"           : "${payload.repoType}",
+          "repositoryType"           : "${payload.serviceType}",
           "slackNotificationChannels": ""
         }""".stripMargin
 
@@ -264,11 +264,11 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     }
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
-      val payload = CreateServiceRepoForm(
+      val payload = CreateService(
         repositoryName = "test-repo",
         makePrivate    = true,
         teamName       = TeamName("team1"),
-        repoType       = "Empty"
+        serviceType    = "Empty"
       )
 
       val expectedBody =
@@ -277,7 +277,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
           "repositoryName": "${payload.repositoryName}",
           "makePrivate"   : ${payload.makePrivate},
           "teamName"      : "${payload.teamName.asString}",
-          "repositoryType": "${payload.repoType}"
+          "repositoryType": "${payload.serviceType}"
         }""".stripMargin
 
       stubFor(
@@ -300,11 +300,11 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     //NOTE: Currently the B&D async API will return a BuildDeployResponse when the client inputs are invalid, as it does not do any JSON validation/input validation up front prior to calling the lambda.
     //This may however change in the future, so we are testing the desired future behaviour below.
     "return an error message when the B&D async api returns a 4XX code" in {
-        val payload = CreateServiceRepoForm(
+        val payload = CreateService(
           repositoryName = "test-repo",
           makePrivate    = true,
           teamName       = TeamName("team1"),
-          repoType       = "Empty"
+          serviceType    = "Empty"
         )
 
         val expectedBody =
@@ -312,7 +312,7 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
              "repositoryName"           : "${payload.repositoryName}",
              "makePrivate"              : ${payload.makePrivate},
              "teamName"                 : "${payload.teamName.asString}",
-             "repositoryType"           : "${payload.repoType}",
+             "repositoryType"           : "${payload.serviceType}",
              "slackNotificationChannels": ""
           }"""
 

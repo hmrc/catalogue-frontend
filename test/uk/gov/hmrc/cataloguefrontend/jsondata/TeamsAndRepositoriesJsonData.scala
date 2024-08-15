@@ -108,6 +108,16 @@ object TeamsAndRepositoriesJsonData {
        ]
      """"
 
+  val digitalServicesData =
+    s"""[
+          "Digital Service 1",
+          "Digital Service 2",
+          "Digital Service 3",
+          "Digital Service 4",
+          "Digital Service 5"
+        ]
+      """"
+
   val repositoriesTeamADataLibrary =
     s"""[
        {"name":"teamA-library","description": "", "teamNames":["teamA"], "owningTeams": ["teamA"], "createdDate":"$createdAt", "lastActiveDate":"$lastActiveAt", "repoType":"Library","language":"Scala", "isArchived":false, "defaultBranch":"main", "isDeprecated":false, "url": "http://git/repob"}

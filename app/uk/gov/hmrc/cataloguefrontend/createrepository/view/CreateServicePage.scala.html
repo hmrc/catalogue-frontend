@@ -14,27 +14,28 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.createrepository.CreateServiceRepositoryType
+@import uk.gov.hmrc.cataloguefrontend.createrepository.ServiceType
+@import uk.gov.hmrc.cataloguefrontend.createrepository.CreateService
 
 @this()
 
-@(form     : Form[?],
+@(form     : Form[CreateService],
   teamNames: Seq[TeamName]
  )(implicit
    messages: Messages,
    request : RequestHeader
 )
 
-@standard_layout("Create a Service Repository", "repositories") {
+@standard_layout("Create service repository", "repositories") {
 
     <section class="section-wrapper">
-        <h1 class="page-heading mt-4">Create A Service Repository</h1>
+        <h1 class="page-heading mt-4">Create a service repository</h1>
         <p>Use the below form to create a new repository. Make sure to follow the guidance for each field.</p>
 
         @partials.form_global_errors(form)
 
         @helper.form(
-            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createServiceRepository(),
+            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createRepoPost(),
             Symbol("id")         -> "createRepoForm",
             Symbol("method")     -> "post",
             Symbol("class")      -> "needs-validation",
@@ -89,6 +90,7 @@
                         </p>
                     }
                     <select class="form-select" id="teamInput" name="teamName">
+                        <option value="" @if(form.data.getOrElse("teamName", "").isEmpty) { selected="selected" } >Select a team</option>
                         @teamNames.map { tn =>
                             <option value="@{tn.asString}"
                                     @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}
@@ -99,20 +101,21 @@
             </div>
             <div class="form-group row mb-3">
                 <div id="repoType" class="col-md-6">
-                    <label class="fw-bold" for="typeInput">Type:</label>
+                    <label class="fw-bold" for="serviceTypeInput">Type:</label>
                     <p class="mt-2">Repositories automatically include HMRC templating, depending on the type of microservice they support. Choose how you would like this repository to be set up.
                     </p>
-                    <select class="form-select" id="typeInput" name="repoType">
-                        @CreateServiceRepositoryType.values.map { rt =>
-                         <option value="@{rt.asString}"
-                                 @if(form.data.getOrElse("repoType", "").equals(rt.asString)) { selected="selected" else ""}
-                         >@rt.asString</option>
+                    <select class="form-select" id="serviceTypeInput" name="serviceType">
+                        <option value="" @if(form.data.getOrElse("serviceType", "").isEmpty) { selected="selected" } >Select a service type</option>
+                        @ServiceType.values.map { st =>
+                         <option value="@{st.asString}"
+                                 @if(form.data.getOrElse("serviceType", "").equals(st.asString)) { selected="selected" else ""}
+                         >@st.asString</option>
                         }
                     </select>
                 </div>
             </div>
             <div>
-                <button id="create-repository-submission-button" class="btn btn-success" type="submit">Build</button>
+                <button id="createServiceSubmitBtn" class="btn btn-success" type="submit">Build</button>
             </div>
        }
     </section>

@@ -198,8 +198,8 @@ class CatalogueController @Inject() (
       latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName, true)
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes             <- routeRulesService.serviceRoutes(serviceName)
-      optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(ServiceName(repositoryName))
-      serviceCostEstimate       <- costEstimationService.estimateServiceCost(ServiceName(repositoryName))
+      optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(serviceName)
+      serviceCostEstimate       <- costEstimationService.estimateServiceCost(serviceName)
       commenterReport           <- prCommenterConnector.report(repositoryName)
       latestVulnerabilitiesCount<- vulnerabilitiesConnector
                                     .vulnerabilityCounts(flag = SlugInfoFlag.Latest, serviceName=Some(serviceName))

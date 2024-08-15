@@ -278,22 +278,22 @@ case class OutagePage(
     templatedElements
       .filter(_.elementId == "templatedMessage")
 
-  def contentPreview: String = {
+  def contentPreview: String =
     val document = Jsoup.parse(mainContent)
-    Try {
+    // side-effective Jsoup library
+    Try:
       val default = document.getElementById("templatedMessage").text
       document.getElementById("templatedMessage").attr("default", default)
-    }
 
     document.outerHtml
-  }
-    
+
   def renderTemplate(
     rawHtml         : String,
     templatedMessage: Option[String]
-  ): Document = {
+  ): Document =
     val html: Document = Jsoup.parse(rawHtml) //mutable
-    Try {
+    // side-effective Jsoup library
+    Try:
       serviceDisplayName.map:
         displayName =>
           val current = html.title()
@@ -306,10 +306,8 @@ case class OutagePage(
       templatedMessage.map:
         message =>
           html.getElementById("templatedMessage").text(message)
-    }
-    
+
     html
-  }
 
 object OutagePage:
   val reads: Reads[OutagePage] =

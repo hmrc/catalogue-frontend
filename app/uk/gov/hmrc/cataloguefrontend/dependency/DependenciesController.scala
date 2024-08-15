@@ -46,35 +46,34 @@ class DependenciesController @Inject() (
      with CatalogueAuthBuilders:
 
   def services(name: ServiceName): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      for
-        deployments         <- whatsRunningWhereService.releasesForService(name).map(_.versions)
-        serviceDependencies <- dependenciesService.search(name, deployments)
-      yield Ok(dependenciesPage(name, serviceDependencies.sortBy(_.version)(Ordering[Version].reverse)))
-    }
+    BasicAuthAction.async:
+      implicit request =>
+        for
+          deployments  <- whatsRunningWhereService.releasesForService(name).map(_.versions)
+          dependencies <- dependenciesService.search(name, deployments)
+        yield
+          Ok(dependenciesPage(name, dependencies.sortBy(_.version)(Ordering[Version].reverse)))
 
   def service(name: ServiceName, version: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      dependenciesService.getServiceDependencies(name, Version(version))
-        .map(maybeDeps => Ok(dependenciesPage(name, maybeDeps.toSeq)))
-    }
+    BasicAuthAction.async:
+      implicit request =>
+        dependenciesService
+          .getServiceDependencies(name, Version(version))
+          .map(oDeps => Ok(dependenciesPage(name, oDeps.toSeq)))
 
   def graphs(name: ServiceName, version: String, scope: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit  request =>
+    BasicAuthAction.async:
+      implicit request =>
       (for
-         scope        <- EitherT.fromEither[Future](Parser[DependencyScope].parse(scope))
-                           .leftMap(_ => BadRequest(s"Invalid scope $scope"))
-         dependencies <- EitherT.fromOptionF(
-                           dependenciesService.getServiceDependencies(name, Version(version)),
-                           NotFound(s"No dependency data available for $name:$version:$scope")
-                         )
+         scope <- EitherT
+                    .fromEither[Future](Parser[DependencyScope].parse(scope))
+                    .leftMap(_ => BadRequest(s"Invalid scope $scope"))
+         deps  <- EitherT.fromOptionF(
+                    dependenciesService.getServiceDependencies(name, Version(version))
+                  , NotFound(s"No dependency data available for $name:$version:$scope")
+                  )
        yield
-         Ok(dependencyGraphsPage(
-           name,
-           dependencies.dotFileForScope(scope).map(d => UriEncoding.encodePathSegment(d, "UTF-8")),
-           scope
-         ))
+         Ok(dependencyGraphsPage(name, deps.dotFileForScope(scope), scope))
       ).merge
-    }
 
 end DependenciesController

@@ -48,6 +48,10 @@
         @teamNamesPartial(repo.owningTeams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.repository(repo.name)}#owning-team")
     </td>
 
+    <td id="row@{i}_digital-service">
+        @repo.digitalServiceName.map{dsn => <div class="repo-service">@dsn</div>}
+    </td>
+
     <td class="repo-bp font-monospace text-center" id="row@{i}_branch-protection">
     @if(repo.branchProtection.exists(_.isProtected)) {
         <span class="glyphicon glyphicon-ok text-success"></span>

@@ -25,77 +25,102 @@ import uk.gov.hmrc.cataloguefrontend.createrepository.CreateRepoConstraints.mkCo
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.util.Parser
 
-case class CreateServiceRepoForm(
+object SelectRepoType {
+  val form: Form[RepoType] =
+    Form(
+      Forms.mapping(
+        "repoType" -> Forms.of[RepoType],
+      )(identity)(Some.apply)
+    )
+}
+
+trait CreateRepo {
+  val repositoryName: String
+  val teamName      : TeamName
+}
+
+case class CreateService (
   repositoryName: String,
   makePrivate   : Boolean,
   teamName      : TeamName,
-  repoType      : String
-)
+  serviceType   : String
+) extends CreateRepo
 
-object CreateServiceRepoForm:
-  val writes: Writes[CreateServiceRepoForm] =
+object CreateService:
+  val writes: Writes[CreateService] =
     ( (__ \ "repositoryName").write[String]
     ~ (__ \ "makePrivate"   ).write[Boolean]
     ~ (__ \ "teamName"      ).write[TeamName]
-    ~ (__ \ "repoType"      ).write[String]
+    ~ (__ \ "serviceType"   ).write[String]
     )(r => Tuple.fromProductTyped(r))
 
-  val conflictingFieldsValidation1 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("backend")  && crf.repositoryName.toLowerCase.contains("frontend"))
-  val conflictingFieldsValidation2 : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
-  val frontendValidation1          : CreateServiceRepoForm => Boolean = crf => !(crf.repoType.toLowerCase.contains("frontend")  && !crf.repositoryName.toLowerCase.contains("frontend"))
-  val frontendValidation2          : CreateServiceRepoForm => Boolean = crf => !(crf.repositoryName.toLowerCase.contains("frontend") && !crf.repoType.toLowerCase.contains("frontend"))
+  val conflictingFieldsValidation1 : CreateService => Boolean = crf => !(crf.serviceType.toLowerCase.contains("backend")  && crf.repositoryName.toLowerCase.contains("frontend"))
+  val conflictingFieldsValidation2 : CreateService => Boolean = crf => !(crf.serviceType.toLowerCase.contains("frontend")  && crf.repositoryName.toLowerCase.contains("backend"))
+  val frontendValidation1          : CreateService => Boolean = crf => !(crf.serviceType.toLowerCase.contains("frontend")  && !crf.repositoryName.toLowerCase.contains("frontend"))
+  val frontendValidation2          : CreateService => Boolean = crf => !(crf.repositoryName.toLowerCase.contains("frontend") && !crf.serviceType.toLowerCase.contains("frontend"))
 
-  private val repoTypeAndNameConstraints = Seq(
+  private val serviceTypeAndNameConstraints = Seq(
     mkConstraint("constraints.conflictingFields1")(constraint = conflictingFieldsValidation1, error = "You have chosen a backend repo type, but have included 'frontend' in your repo name. Change either the repo name or repo type"),
     mkConstraint("constraints.conflictingFields2")(constraint = conflictingFieldsValidation2, error = "You have chosen a frontend repo type, but have included 'backend' in your repo name. Change either the repo name or repo type"),
     mkConstraint("constraints.frontendCheck")(constraint = frontendValidation1, error = "Repositories with a frontend repo type require 'frontend' to be present in their repo name."),
     mkConstraint("constraints.frontendCheck")(constraint = frontendValidation2, error = "Repositories with 'frontend' in their repo name require a frontend repo type")
   )
 
-  val form: Form[CreateServiceRepoForm] =
+  val form: Form[CreateService] =
     Form(
       Forms.mapping(
         "repositoryName" -> Forms.nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> Forms.boolean,
         "teamName"       -> Forms.of[TeamName],
-        "repoType"       -> Forms.of[CreateServiceRepositoryType].transform(_.asString, s => Parser[CreateServiceRepositoryType].parse(s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
-      )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
-        .verifying(repoTypeAndNameConstraints*)
+        "serviceType"    -> Forms.of[ServiceType].transform(_.asString, s => Parser[ServiceType].parse(s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
+      )(CreateService.apply)(r => Some(Tuple.fromProductTyped(r)))
+        .verifying(serviceTypeAndNameConstraints*)
     )
+end CreateService
 
-end CreateServiceRepoForm
+case class CreateTest(
+  repositoryName: String,
+  makePrivate   : Boolean,
+  teamName      : TeamName,
+  testType      : String
+) extends CreateRepo
 
+object CreateTest:
+  val writes: Writes[CreateTest] =
+    ( (__ \ "repositoryName").write[String]
+    ~ (__ \ "makePrivate"   ).write[Boolean]
+    ~ (__ \ "teamName"      ).write[TeamName]
+    ~ (__ \ "testType"      ).write[String]
+    )(r => Tuple.fromProductTyped(r))
 
-object CreateTestRepoForm:
-  private[createrepository] val repoNameTestConstraint: CreateServiceRepoForm => Boolean =
+  private[createrepository] val repoNameTestConstraint: CreateTest => Boolean =
     crf => crf.repositoryName.toLowerCase.endsWith("-tests") || crf.repositoryName.toLowerCase.endsWith("-test")
 
-  private val repoTypeAndNameConstraints = Seq(
+  private val testTypeAndNameConstraints = Seq(
     mkConstraint("constraints.conflictingFields1")(constraint = repoNameTestConstraint, error = "Repository name can only end in '-test' or '-tests'"),
   )
 
-  // TODO should we really be reusing CreateServiceRepoForm?
-  val form: Form[CreateServiceRepoForm] =
+  val form: Form[CreateTest] =
     Form(
       Forms.mapping(
         "repositoryName" -> Forms.nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(47, None)*),
         "makePrivate"    -> Forms.boolean,
         "teamName"       -> Forms.of[TeamName],
-        "repoType"       -> Forms.of[CreateTestRepositoryType].transform(_.asString, s => Parser[CreateTestRepositoryType].parse(s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
-      )(CreateServiceRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
-        .verifying(repoTypeAndNameConstraints*)
+        "testType"       -> Forms.of[TestType].transform(_.asString, s => Parser[TestType].parse(s).getOrElse(sys.error(s"Invalid $s"))), // TODO review failure
+      )(CreateTest.apply)(r => Some(Tuple.fromProductTyped(r)))
+        .verifying(testTypeAndNameConstraints*)
     )
-end CreateTestRepoForm
+end CreateTest
 
-case class CreatePrototypeRepoForm(
+case class CreatePrototype(
   repositoryName: String,
   password      : String,
   teamName      : TeamName,
   slackChannels : String
-)
+) extends CreateRepo
 
-object CreatePrototypeRepoForm:
-  val writes: Writes[CreatePrototypeRepoForm] =
+object CreatePrototype:
+  val writes: Writes[CreatePrototype] =
     ( (__ \ "repositoryName").write[String]
     ~ (__ \ "password"      ).write[String]
     ~ (__ \ "teamName"      ).write[String].contramap[TeamName](_.asString)
@@ -108,8 +133,8 @@ object CreatePrototypeRepoForm:
   private val passwordConstraint =
     mkConstraint("constraints.passwordCharacterCheck")(constraint = passwordCharacterValidation, error = "Should only contain the following characters uppercase letters, lowercase letters, numbers, underscores")
 
-  private val slackChannelCharacterValidation: String => Boolean =
-    str => str.matches("^#?[a-z0-9-_]*$")
+  private[createrepository] val slackChannelCharacterValidation: String => Boolean =
+    str => str.split(",").forall(_.matches("^#?[a-z0-9-_]*$"))
 
   private val slackChannelLengthValidation   : String => Boolean =
     str => str.isEmpty || !str.split(',').exists(elem => elem.length > 80)
@@ -119,20 +144,18 @@ object CreatePrototypeRepoForm:
     mkConstraint("constraints.channelCharacterCheck")(constraint = slackChannelCharacterValidation, error = "Each slack channel name Should only contain the following characters lowercase letters, numbers, underscores, dashes, hash character (#)")
   )
 
-  val form: Form[CreatePrototypeRepoForm] =
+  val form: Form[CreatePrototype] =
     Form(
       Forms.mapping(
         "repositoryName"      -> Forms.nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(30, Some("-prototype"))*),
         "password"            -> Forms.nonEmptyText.verifying(passwordConstraint),
         "teamName"            -> Forms.of[TeamName],
         "slackChannels"       -> Forms.text.verifying(slackChannelConstraint*),
-      )(CreatePrototypeRepoForm.apply)(r => Some(Tuple.fromProductTyped(r)))
+      )(CreatePrototype.apply)(r => Some(Tuple.fromProductTyped(r)))
     )
-
-end CreatePrototypeRepoForm
+end CreatePrototype
 
 object CreateRepoConstraints:
-
   def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] =
     Constraint(constraintName): toBeValidated =>
       if constraint(toBeValidated) then Valid else Invalid(error)
@@ -153,3 +176,4 @@ object CreateRepoConstraints:
       mkConstraint("constraints.repoNameCaseCheck"      )(constraint = lowercaseValidation , error = "Repository name should only contain lowercase characters"),
       mkConstraint("constraints.repoNameSuffixCheck"    )(constraint = suffixValidation    , error = s"Repository name must end with ${if (suffix.nonEmpty) suffix.get else ""}")
     )
+end CreateRepoConstraints

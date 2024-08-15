@@ -17,18 +17,18 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
 import play.api.libs.ws.writeableOf_JsValue
 import play.api.mvc.PathBindable
 import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector._
+import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.*
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
-import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototypeRepoForm, CreateServiceRepoForm}
+import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototype, CreateService, CreateTest}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser}
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 
@@ -133,7 +133,7 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(_ => ()))
 
   def createServiceRepository(
-    payload: CreateServiceRepoForm
+    payload: CreateService
   )(using
     HeaderCarrier
   ): Future[Either[String, AsyncRequestId]] =
@@ -143,7 +143,7 @@ class BuildDeployApiConnector @Inject() (
       repositoryName = payload.repositoryName,
       teamName       = payload.teamName,
       makePrivate    = payload.makePrivate,
-      repositoryType = payload.repoType,
+      repositoryType = payload.serviceType,
     ))
 
     logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
@@ -154,7 +154,7 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(resp => AsyncRequestId(resp.details)))
 
   def createPrototypeRepository(
-    payload: CreatePrototypeRepoForm
+    payload: CreatePrototype
   )(using
     HeaderCarrier
   ): Future[Either[String, AsyncRequestId]] =
@@ -176,7 +176,7 @@ class BuildDeployApiConnector @Inject() (
     ).map(_.map(resp => AsyncRequestId(resp.details)))
 
   def createTestRepository(
-    payload: CreateServiceRepoForm
+    payload: CreateTest
   )(using
     HeaderCarrier
   ): Future[Either[String, AsyncRequestId]] =
@@ -186,7 +186,7 @@ class BuildDeployApiConnector @Inject() (
         repositoryName = payload.repositoryName,
         teamName       = payload.teamName,
         makePrivate    = payload.makePrivate,
-        repositoryType = payload.repoType,
+        repositoryType = payload.testType,
       ))
 
     logger.info(s"Calling the B&D Create Test Repository API with the following payload: ${body}")
@@ -221,13 +221,14 @@ class BuildDeployApiConnector @Inject() (
 
     given Writes[CreateAppConfigsRequest] = CreateAppConfigsRequest.writes
 
-    val body = Json.toJson(CreateAppConfigsRequest(
-      serviceName,
-      st,
-      requiresMongo,
-      appConfigEnvironments,
-      zone
-    ))
+    val body =
+      Json.toJson(CreateAppConfigsRequest(
+        microserviceName = serviceName,
+        microserviceType = st,
+        hasMongo         = requiresMongo,
+        environments     = appConfigEnvironments,
+        zone             = zone
+      ))
 
     logger.info(s"Calling the B&D Create App Configs API with the following payload: $body")
 
