@@ -17,16 +17,16 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import cats.data.{EitherT, OptionT}
-import cats.implicits._
+import cats.implicits.*
 import play.api.data.{Form, Forms}
 import play.api.i18n.I18nSupport
-import play.api.mvc._
+import play.api.mvc.*
 import play.api.{Configuration, Logger}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
-import uk.gov.hmrc.cataloguefrontend.connector._
+import uk.gov.hmrc.cataloguefrontend.connector.*
 import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
 import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, CostEstimationService, Zone}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
@@ -37,8 +37,8 @@ import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, Se
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhereService}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, VulnerabilitiesConnector, VulnerabilitySummary, CurationStatus}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
@@ -49,11 +49,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class EnvData(
-  version                : Version,
-  repoModules            : Option[RepositoryModules],
-  shutterStates          : Seq[ShutterState],
-  telemetryLinks         : Seq[Link],
-  nonPerformantQueryLinks: Seq[Link],
+  version                    : Version,
+  repoModules                : Option[RepositoryModules],
+  shutterStates              : Seq[ShutterState],
+  telemetryLinks             : Seq[Link],
+  nonPerformantQueryLinks    : Seq[Link],
+  actionReqVulnerabilityCount: Int
 )
 
 @Singleton
@@ -168,43 +169,54 @@ class CatalogueController @Inject() (
                                        deployedVersions.sorted.headOption match
                                          case Some(version) =>
                                            for
-                                             repoModules   <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
-                                             shutterStates <- ShutterType.values.toSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
-                                                                shutterService
-                                                                  .getShutterStates(shutterType, env, Some(serviceName))
-                                                                  .map(acc ++ _)
-                                             data          =  EnvData(
-                                                                version                 = version,
-                                                                repoModules             = repoModules.headOption,
-                                                                shutterStates           = shutterStates,
-                                                                telemetryLinks          = Seq(
-                                                                                            telemetryLinks.grafanaDashboard(env, serviceName),
-                                                                                            telemetryLinks.kibanaDashboard(env, serviceName)
-                                                                                          ),
-                                                                nonPerformantQueryLinks = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]()): databaseName =>
-                                                                                            telemetryLinks.kibanaNonPerformantQueries(env, serviceName, databaseName, nonPerformantQueries)
-                                                              )
+                                             repoModules           <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version, true)
+                                             shutterStates         <- ShutterType.values.toSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
+                                                                        shutterService
+                                                                          .getShutterStates(shutterType, env, Some(serviceName))
+                                                                          .map(acc ++ _)
+                                             vulnerabilitiesCounts <- vulnerabilitiesConnector
+                                                                        .vulnerabilityCounts(flag = SlugInfoFlag.ForEnvironment(env), serviceName=Some(serviceName))
+                                             data                  =  EnvData(
+                                                                        version                     = version,
+                                                                        repoModules                 = repoModules.headOption,
+                                                                        shutterStates               = shutterStates,
+                                                                        telemetryLinks              = Seq(
+                                                                                                        telemetryLinks.grafanaDashboard(env, serviceName),
+                                                                                                        telemetryLinks.kibanaDashboard(env, serviceName)
+                                                                                                      ),
+                                                                        nonPerformantQueryLinks     = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]()): databaseName =>
+                                                                                                        telemetryLinks.kibanaNonPerformantQueries(env, serviceName, databaseName, nonPerformantQueries),
+                                                                        actionReqVulnerabilityCount = vulnerabilitiesCounts.headOption match {
+                                                                                                        case Some(totalCount) => totalCount.actionRequired
+                                                                                                        case _                => 0
+                                                                                                      }
+                                                                      )
                                            yield Some((SlugInfoFlag.ForEnvironment(env): SlugInfoFlag) -> data)
                                          case None =>
                                            Future.successful(None)
                                      .map(_.collect { case Some(v) => v }.toMap)
-      latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
+      latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName, true)
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes             <- routeRulesService.serviceRoutes(serviceName)
-      optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(serviceName)
-      serviceCostEstimate       <- costEstimationService.estimateServiceCost(serviceName)
+      optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(ServiceName(repositoryName))
+      serviceCostEstimate       <- costEstimationService.estimateServiceCost(ServiceName(repositoryName))
       commenterReport           <- prCommenterConnector.report(repositoryName)
-      vulnerabilitiesCount      <- vulnerabilitiesConnector.deployedVulnerabilityCount(serviceName)
+      latestVulnerabilitiesCount<- vulnerabilitiesConnector
+                                    .vulnerabilityCounts(flag = SlugInfoFlag.Latest, serviceName=Some(serviceName))
       serviceRelationships      <- serviceConfigsService.serviceRelationships(serviceName)
       zone                      <- retrieveZone(serviceName)
       optLatestData             =  optLatestServiceInfo.map: latestServiceInfo =>
                                      SlugInfoFlag.Latest ->
                                        EnvData(
-                                         version                 = latestServiceInfo.version,
-                                         repoModules             = latestRepoModules,
-                                         shutterStates           = Seq.empty,
-                                         telemetryLinks          = Seq.empty,
-                                         nonPerformantQueryLinks = Seq.empty,
+                                         version                     = latestServiceInfo.version,
+                                         repoModules                 = latestRepoModules,
+                                         shutterStates               = Seq.empty,
+                                         telemetryLinks              = Seq.empty,
+                                         nonPerformantQueryLinks     = Seq.empty,
+                                         actionReqVulnerabilityCount = latestVulnerabilitiesCount.headOption match {
+                                                                         case Some(totalCount) => totalCount.actionRequired
+                                                                         case _                => 0
+                                                                       }
                                        )
       canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(repositoryName)
       lifecycle                 <- serviceCommissioningStatusConnector.getLifecycle(serviceName)
@@ -221,7 +233,6 @@ class CatalogueController @Inject() (
         serviceRoutes                = serviceRoutes,
         hasBranchProtectionAuth      = hasBranchProtectionAuth,
         commenterReport              = commenterReport,
-        distinctVulnerabilitiesCount = vulnerabilitiesCount.map(_.actionRequired),
         serviceRelationships         = serviceRelationships,
         canMarkForDecommissioning    = canMarkForDecommissioning,
         lifecycle                    = lifecycle,

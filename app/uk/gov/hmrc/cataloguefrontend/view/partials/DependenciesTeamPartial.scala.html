@@ -77,16 +77,16 @@
                                       </div>
                                   </div>
 
-                                  @partials.dependency_section(dependency.dependencies.libraryDependencies,    s"${teamName.asString}-libraries"  , showOutOfDateOnly = true)
-                                  @partials.dependency_section(dependency.dependencies.sbtPluginsDependencies, s"${teamName.asString}-sbt-plugins", showOutOfDateOnly = true)
-                                  @partials.dependency_section(dependency.dependencies.otherDependencies,      s"${teamName.asString}-other"      , showOutOfDateOnly = true)
+                                  @partials.dependency_section(dependency.dependencies.libraryDependencies,    s"${teamName.asString}-libraries"  , showOutOfDateOnly = true, showVulnerabilityColumn = false)
+                                  @partials.dependency_section(dependency.dependencies.sbtPluginsDependencies, s"${teamName.asString}-sbt-plugins", showOutOfDateOnly = true, showVulnerabilityColumn = false)
+                                  @partials.dependency_section(dependency.dependencies.otherDependencies,      s"${teamName.asString}-other"      , showOutOfDateOnly = true, showVulnerabilityColumn = false)
                               </div>
                           </div>
                         }
                     }
                 </div>
                 <div class="col-3">
-                    @partials.dependency_legend(showNewVersionAvailable = true)
+                    @partials.dependency_legend(showNewVersionAvailable = true, showVulnerabilitity = false)
                 </div>
             </div>
         }

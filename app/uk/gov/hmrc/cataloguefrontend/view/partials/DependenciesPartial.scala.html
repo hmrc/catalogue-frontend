@@ -39,24 +39,27 @@
                         <div class="col-4">
                             <p class="fw-bold">Libraries</p>
                         </div>
-                        <div class="col-3">
+                        <div class="col-2">
                             <p class="fw-bold">Current Version</p>
                         </div>
-                        <div class="col-3">
+                        <div class="col-2">
                             <p class="fw-bold">Latest Version</p>
+                        </div>
+                        <div class="col-2">
+                            <p class="fw-bold">Vulnerability</p>
                         </div>
                         <div class="col-2">
                             <p class="fw-bold">Violation</p>
                         </div>
                     </div>
-                    @partials.dependency_section(dependencies, rootId)
+                    @partials.dependency_section(dependencies, rootId, false)
                 } else {
                     <p class="card-text dependency-row">No dependencies available</p>
                 }
             </div>
             @if(dependencies.nonEmpty && showLegend) {
                 <div class="col-3">
-                    @partials.dependency_legend(showNewVersionAvailable = true)
+                    @partials.dependency_legend(showNewVersionAvailable = true, showVulnerabilitity = true)
                 </div>
             }
         </div>

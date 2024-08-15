@@ -24,7 +24,6 @@
 
 @(repositories: Seq[GitRepository],
   teams       : Seq[GitHubTeam],
-  serviceNames: Seq[String],
   form        : Form[?]
 )(implicit
   messages    : Messages,
@@ -33,27 +32,18 @@
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
-@dsnTooltip = {
-    <span class="content-grow-wrapper fw-bold">
-        Digital Service
-        <a href="#"
-            tabindex="0"
-            aria-label="Digital Service"
-            data-bs-toggle="popover"
-            data-bs-trigger="focus"
-            data-bs-placement="left"
-            data-bs-html="true"
-            data-bs-content='Digital Service is defined in the <strong class="font-monospace">repository.yaml</strong>. You will need to add the <strong class="font-monospace">digital-service</strong> key to this file if it is missing. Changes can take a few minutes to appear in the MDTP catalogue.'>
-            <span class="glyphicon glyphicon-question-sign"/>
-        </a>
-    </span>
-}
-
 @standard_layout("Repositories", "repositories") {
     <h1 class="page-heading mt-4">
         Repositories
-        <div class="btn float-end" role="group">
-            <a class="btn btn-success" href="@repoRoutes.CreateRepositoryController.createRepoLandingGet()">Create a Repository</a>
+        <div class="btn-group float-end" role="group">
+            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                Create
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createServiceRepositoryLanding()">Create a Service</a></li>
+                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createPrototypeRepositoryLanding()">Create a Prototype</a></li>
+                <li><a class="dropdown-item" href="@repoRoutes.CreateRepositoryController.createTestRepositoryLanding()">Create a Test Repository</a></li>
+            </ul>
         </div>
     </h1>
 
@@ -70,7 +60,7 @@
     <div id="service-list">
         <form id="repos-form" action="/repositories" method="get">
             <div id="repos-form-row" class="row">
-                <div class="col-md-4">
+                <div class="col-md-5">
                     <dl id="search_field">
                         <dt>
                             <label for="search" class="form-label">Name</label>
@@ -80,7 +70,7 @@
                         </dd>
                     </dl>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                 @select(
                     field                 = form("team"),
                     options               = teams.map(t => t.name.asString -> t.name.asString),
@@ -88,17 +78,6 @@
                     Symbol("_label")      -> "Team",
                     Symbol("_labelClass") -> "form-label",
                     Symbol("id")          -> "team-filter",
-                    Symbol("class")       -> "form-select"
-                )
-                </div>
-                <div class="col-md-2">
-                @select(
-                    field                 = form("digitalService"),
-                    options               = serviceNames.map(dsn => dsn -> dsn),
-                    Symbol("_default")    -> "All",
-                    Symbol("_label")      -> dsnTooltip,
-                    Symbol("_labelClass") -> "form-label",
-                    Symbol("id")          -> "service-filter",
                     Symbol("class")       -> "form-select"
                 )
                 </div>
@@ -138,9 +117,8 @@
                     <th class="col-lg-1"><button role="button" id="status" data-sort="repo-status" class="fw-bold sort no-border">Status</button></th>
                     <th class="col-lg-2"><button role="button" id="repoType" data-sort="repo-type" class="fw-bold sort no-border">Type</button></th>
                     <th class="col-lg-2"><button role="button" id="teamNames" data-sort="repo-team" class="fw-bold sort no-border">Team</button></th>
-                    <th class="col-lg-1"><button role="button" id="serviceName" data-sort="repo-service" class="fw-bold sort no-border">Digital Service</button></th>
                     <th class="col-lg-1"><button role="button" id="branchProtection" data-sort="repo-bp" class="fw-bold sort no-border">Branch Protection</button></th>
-                    <th class="col-lg-1"><button role="button" id="createdDate" data-sort="created" class="fw-bold sort no-border">First Active</button></th>
+                    <th class="col-lg-2"><button role="button" id="createdDate" data-sort="created" class="fw-bold sort no-border">First Active</button></th>
                     <th class="col-lg-1"><button role="button" id="lastActiveDate" data-sort="last-active" class="fw-bold sort no-border">Last Active</button></th>
                 </tr>
             </thead>
@@ -151,7 +129,7 @@
 <!-- listjs configuration -->
 <script @CSPNonce.attr>
   let options = {
-      valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-service', 'repo-bp', 'created', 'last-active' ],
+      valueNames: [ 'repo-name', 'repo-status', 'repo-type', 'repo-team', 'repo-bp', 'created', 'last-active' ],
       searchColumns: ['repo-name'],
       searchDelay: 350
   };
@@ -167,7 +145,7 @@
   serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
-  ["team-filter", "service-filter", "type-search", "show-archived"]
+  ["team-filter", "type-search", "show-archived"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("repos-form").submit();

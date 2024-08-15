@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.deployments.{DeployServiceForm, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, DeploymentConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityDetails
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
@@ -31,11 +31,11 @@
 , releases      : Seq[WhatsRunningWhereVersion]
 , environments  : Seq[Environment]
 , evaluations   : Option[(
-                    Map[ServiceConfigsService.KeyName, ConfigChange]
+                    Map[ServiceConfigsService.KeyName, (ServiceConfigsService.ConfigSourceValue, Boolean)]
                   , Seq[ServiceConfigsService.ConfigWarning]
                   , Option[Seq[VulnerabilitySummary]]
                   , (Option[ServiceJdkVersion], ServiceJdkVersion)
-                  , Seq[DeploymentConfigChange]
+                  , Seq[ConfigChange]
                   )]
 )(implicit
   messages      : Messages
@@ -194,27 +194,22 @@
                   </thead>
                   <tbody id="deployment-config-updates-rows">
                     @deploymentConfigUpdates.map {
-                      case DeploymentConfigChange.NewConfig(k, v) => {
+                      case ConfigChange.NewConfig(k, v) => {
                         <tr>
                           <td><code>@k</code></td>
                           <td>@v</td>
                         </tr>
                       }
-                      case DeploymentConfigChange.DeletedConfig(k, previousV) => {
+                      case ConfigChange.DeletedConfig(k, previousV) => {
                         <tr>
                           <td><del><code>@k</code></del></td>
                           <td><del>@previousV</del></td>
                         </tr>
                       }
-                      case DeploymentConfigChange.ChangedConfig(k, previousV, newV) => {
+                      case ConfigChange.ChangedConfig(k, previousV, newV) => {
                         <tr>
                           <td><code>@k</code></td>
-                          <td>
-                            <ul class="list-unstyled">
-                              <li><del>@previousV</del></li>
-                              <li>@newV</li>
-                            </ul>
-                          </td>
+                          <td><del>@previousV</del> @newV</td>
                         </tr>
                       }
                     }
@@ -241,29 +236,15 @@
                     </tr>
                   </thead>
                   <tbody id="config-updates-rows">
-                    @for((key, ConfigChange(from, to)) <- configUpdates.toList.sortBy(_._1.asString) ) {
+                    @for((key, (configSourceValue, isNew)) <- configUpdates.toList.sortBy(_._1.asString) ) {
                       <tr>
-                        <td>
-                          <code>
-                            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(form.get.serviceName, true, Some(key)).url" target="_blank">
-                              @if(from.nonEmpty && to.isEmpty) {
-                                <del>@key.asString</del>
-                              } else {
-                                @key.asString
-                              }
-                            </a>
-                          </code>
-                        </td>
-                        <td>
-                          <ul class="list-unstyled">
-                            @from.map { c =>
-                              <li>@displayConfigSourceValue(key, form.get.environment, c, isStriked = true)</li>
-                            }
-                            @to.map { c =>
-                              <li>@displayConfigSourceValue(key, form.get.environment, c, isStriked = false)</li>
-                            }
-                          </ul>
-                        </td>
+                        @if(isNew) {
+                          <td><code>@key.asString</code></td>
+                          <td>@displayConfigSourceValue(form.get.serviceName, key, form.get.environment, configSourceValue)</td>
+                        } else {
+                          <td><del><code>@key.asString</code></del></td>
+                          <td><del>@displayConfigSourceValue(form.get.serviceName, key, form.get.environment, configSourceValue)</del></td>
+                        }
                       </tr>
                     }
                   </tbody>
@@ -427,20 +408,16 @@
   </script>
 }
 
-@displayConfigSourceValue(configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue, isStriked: Boolean) = {
-  <span
+@displayConfigSourceValue(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue) = {
+  <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(configKey)).url"
+    target="_blank"
     data-bs-toggle="popover"
     data-bs-trigger="hover"
     data-bs-placement="bottom"
     data-bs-html="true"
-    data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'
-  >
-    @if(isStriked) {
-      <del>@configSourceValue.displayString</del>
-    } else {
+    data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'>
       @configSourceValue.displayString
-    }
-  </span>
+  </a>
 }
 
 @popoverConfigSourceValue(key: ServiceConfigsService.KeyName, sourceValue: ServiceConfigsService.ConfigSourceValue, env: Environment) = {

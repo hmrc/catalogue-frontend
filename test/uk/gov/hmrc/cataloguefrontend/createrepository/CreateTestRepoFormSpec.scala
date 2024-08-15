@@ -19,36 +19,36 @@ package uk.gov.hmrc.cataloguefrontend.createrepository
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 
-class CreateTestFormSpec extends UnitSpec {
+class CreateTestRepoFormSpec extends UnitSpec {
 
   "repoNameTestConstraint" when {
     "the repo name should end in 'test' or 'tests'" should {
       "return false" in {
-        CreateTest.repoNameTestConstraint(
-          CreateTest(
+        CreateTestRepoForm.repoNameTestConstraint(
+          CreateServiceRepoForm(
             repositoryName = "test-service",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            testType       = TestType.UITest.asString
+            repoType       = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe false
       }
       "return true" in {
-        CreateTest.repoNameTestConstraint(
-          CreateTest(
+        CreateTestRepoForm.repoNameTestConstraint(
+          CreateServiceRepoForm(
             repositoryName = "test-service-ui-tests",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            testType       = TestType.UITest.asString
+            repoType       = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe true
 
-        CreateTest.repoNameTestConstraint(
-          CreateTest(
+        CreateTestRepoForm.repoNameTestConstraint(
+          CreateServiceRepoForm(
             repositoryName = "test-service-ui-test",
             makePrivate = false,
             teamName = TeamName("test"),
-            testType = TestType.UITest.asString
+            repoType = CreateTestRepositoryType.UITest.asString
           )
         ) shouldBe true
       }

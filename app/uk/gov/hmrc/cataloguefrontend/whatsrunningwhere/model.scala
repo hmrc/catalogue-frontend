@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
+import org.apache.http.client.utils.URIBuilder
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, UserName, Version}
@@ -203,8 +204,9 @@ case class Pagination(
 
 object Pagination:
   def uriForPage(uri: String, page: Int): URI =
-    import sttp.model.Uri.UriContext
-    uri"$uri".addParam("page", page.toString).toJavaUri
+    URIBuilder(uri)
+      .setParameter("page", page.toString)
+      .build()
 
 case class DeploymentTimelineEvent(
   env          : Environment,
@@ -216,5 +218,5 @@ case class DeploymentTimelineEvent(
   displayStart : Option[Instant] = None, // set on the first/last event to the actual end date rather than the end of the chart
   displayEnd   : Option[Instant] = None,
   configChanged: Option[Boolean] = None,
-  configId     : Option[String]  = None
+  configId     : Option[String] = None,
 )

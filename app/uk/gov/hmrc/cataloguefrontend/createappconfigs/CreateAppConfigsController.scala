@@ -23,11 +23,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.createappconfigs.view.html.CreateAppConfigsPage
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, given}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.util.Parser
-import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
+import uk.gov.hmrc.cataloguefrontend.view.html.{CreateAppConfigsPage, error_404_template}
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -163,7 +162,7 @@ class CreateAppConfigsController @Inject()(
           _             <- EitherT.liftF(auth.authorised(Some(createAppConfigsPermission(serviceName))))
           optSlugInfo   <- EitherT.liftF(serviceDependenciesConnector.getSlugInfo(serviceName))
           requiresMongo <- optSlugInfo match
-                             case Some(slugInfo) => EitherT.rightT[Future, Result](slugInfo.dependencyDotCompile.exists(_.contains("mongo")))
+                             case Some(slugInfo) => EitherT.rightT[Future, Result](slugInfo.dependencyDotCompile.exists(_.contains("\"hmrc-mongo\"")))
                              case None           => EitherT.liftF[Future, Result, Boolean]:
                                                       gitHubProxyConnector.getGitHubProxyRaw(s"/$serviceName/main/project/AppDependencies.scala")
                                                         .map(_.exists(_.contains("mongo")))
