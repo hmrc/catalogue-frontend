@@ -40,7 +40,6 @@
   serviceRoutes                : ServiceRoutes,
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
-  distinctVulnerabilitiesCount : Option[Int],
   serviceRelationships         : ServiceConfigsService.ServiceRelationshipsEnriched,
   canMarkForDecommissioning    : MarkForDecommissioning.HasAuthorisation,
   lifecycle                    : Option[Lifecycle],
@@ -124,7 +123,7 @@
             </div>
 
             <div class="col-md-6 mb-3">
-                @partials.code(repositoryDetails, hasBranchProtectionAuth, commenterReport, distinctVulnerabilitiesCount)
+                @partials.code(repositoryDetails, hasBranchProtectionAuth, commenterReport)
             </div>
             <div class="col-md-6 mb-3">
                 @partials.service_relationships(serviceRelationships)

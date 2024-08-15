@@ -14,7 +14,10 @@
  * limitations under the License.
  *@
 
-@(showNewVersionAvailable: Boolean) @* currently always true *@
+@(
+  showNewVersionAvailable: Boolean
+, showVulnerabilitity: Boolean
+) @* currently always true *@
 
 <div id="legend" class="card">
   <div class="card-header">
@@ -38,8 +41,8 @@
       </li>
       <li>
         <span class="card-text text-danger">
-          <span class="glyphicon medium-glyphicon glyphicon-remove" title="bobby rule violation"></span>
-          Bobby rule violation
+          <span class="glyphicon medium-glyphicon glyphicon-remove" title="violation"></span>
+          @{if(showVulnerabilitity)("Violation (Bobby or Vulnerability)") else "Bobby rule violation"}
         </span>
       </li>
     </ul>

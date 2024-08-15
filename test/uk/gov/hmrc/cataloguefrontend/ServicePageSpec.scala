@@ -38,8 +38,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/frontend-route/service-1",    willRespondWith = (200, Some(JsonData.serviceConfigsServiceService1)))
     serviceEndpoint(GET, "/service-configs/frontend-route/service-name", willRespondWith = (200, Some(JsonData.serviceConfigsServiceService1)))
-    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=latest",willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=0.0.1", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=latest&includeVulnerabilities=true",willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=0.0.1&includeVulnerabilities=true", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/service-relationships/service-1",    willRespondWith = (200, Some(JsonData.serviceRelationships)))
     serviceEndpoint(GET, "/service-configs/service-relationships/service-name", willRespondWith = (200, Some(JsonData.serviceRelationships)))
     serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some("[]")))
@@ -48,6 +48,9 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/service-metrics/service-1/non-performant-queries", willRespondWith = (200, Some("""[{"service": "service-1", "environment": "qa", "queryTypes": ["Slow Running"]}]""")))
     serviceEndpoint(GET, "/service-metrics/service-1/collections", willRespondWith = (200, Some("""[{"database": "database-1", "service": "service-1", "sizeBytes": 1024, "date": "2023-11-06", "collection": "collection-1", "environment": "qa", "queryTypes": []}]""")))
     serviceEndpoint(GET, "/service-commissioning-status/services/service-1/lifecycleStatus", willRespondWith = (200, Some("""{ "lifecycleStatus" : "Active" }""")))
+    serviceEndpoint(GET, s"/vulnerabilities/api/reports/latest/counts?service=service-1", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, s"/vulnerabilities/api/reports/qa/counts?service=service-1", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, s"/vulnerabilities/api/reports/production/counts?service=service-1", willRespondWith = (200, Some("[]")))
     ShutterType.values.map: shutterType =>
       serviceEndpoint(GET, s"/shutter-api/qa/${shutterType.asString}/states?serviceName=service-1", willRespondWith = (200, Some("[]")))
       serviceEndpoint(GET, s"/shutter-api/production/${shutterType.asString}/states?serviceName=service-1", willRespondWith = (200, Some("[]")))
@@ -96,9 +99,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         serviceEndpoint(GET, s"/service-configs/services/repo-name?serviceName=$serviceName", willRespondWith = (200, Some("\"repo1\"")))
 
         serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData(repoName))))
-
-        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=0.0.1" , willRespondWith = (200, Some("[]")))
-        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some("[]")))
+        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=0.0.1&includeVulnerabilities=true" , willRespondWith = (200, Some("[]")))
+        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest&includeVulnerabilities=true", willRespondWith = (200, Some("[]")))
       }
     }
 
