@@ -29,7 +29,6 @@
   repo                          : GitRepository,
   hasBranchProtectionAuth       : EnableBranchProtection.HasAuthorisation,
   commenterReport               : Option[PrCommenterReport],
-  distinctVulnerabilitiesCount  : Option[Int]
 )(implicit
   request                       : RequestHeader
 )
@@ -59,18 +58,8 @@
             @if(repo.repoType == RepoType.Service) {
                 <li>
                     <a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesList(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${repo.name}\""), None)">
-                        Vulnerabilities (@distinctVulnerabilitiesCount.getOrElse(0))
+                        Vulnerabilities
                     </a>
-                    @distinctVulnerabilitiesCount.collect { case dvc if dvc > 0 =>
-                        <span class="glyphicon glyphicon-info-sign ms-1"
-                            title=""
-                            data-bs-toggle="popover"
-                            data-bs-trigger="hover"
-                            data-bs-placement="bottom"
-                            data-bs-html="true"
-                            data-bs-content='<div>This service contains @{dvc} unique @{if(dvc > 1) "vulnerabilities" else "vulnerability"} across all environments.</div><div>Please make sure these are addressed and released in the affected environments.</div>'
-                        ></span>
-                    }
                 </li>
                 <li><a id="link-to-@{repo.name}-commissioning" href="@ServiceCommissioningStatusController.getCommissioningState(serviceName.getOrElse(ServiceName(repo.name)))">Commissioning State</a></li>
             }

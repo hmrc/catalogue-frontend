@@ -127,7 +127,12 @@ case class TotalVulnerabilityCount(
 , noActionRequired    : Int
 , investigationOngoing: Int
 , uncurated           : Int
-)
+):
+  def vulnerabilitySum: Int =
+    actionRequired +
+    noActionRequired +
+    investigationOngoing +
+    uncurated
 
 object TotalVulnerabilityCount:
   val reads: Reads[TotalVulnerabilityCount] =

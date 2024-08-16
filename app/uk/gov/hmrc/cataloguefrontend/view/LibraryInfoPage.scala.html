@@ -69,7 +69,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    @partials.code(serviceName = None, library, hasBranchProtectionAuth, commenterReport, None)
+                    @partials.code(serviceName = None, library, hasBranchProtectionAuth, commenterReport)
                 </div>
 
                 <div class="col-md-6">
@@ -77,7 +77,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    @partials.dependency_legend(showNewVersionAvailable = true)
+                    @partials.dependency_legend(showNewVersionAvailable = true, showVulnerabilitity = false)
                 </div>
             </div>
 

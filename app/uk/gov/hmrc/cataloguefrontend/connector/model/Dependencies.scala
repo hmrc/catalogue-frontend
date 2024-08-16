@@ -82,6 +82,7 @@ case class Dependency(
   currentVersion     : Version,
   latestVersion      : Option[Version],
   bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty,
+  vulnerabilityIds   : Seq[String]             = Seq.empty,
   importBy           : Option[ImportedBy]      = None,
   scope              : DependencyScope
 ):
@@ -127,6 +128,7 @@ object Dependency:
     ~ (__ \ "currentVersion"     ).read[Version]
     ~ (__ \ "latestVersion"      ).readNullable[Version]
     ~ (__ \ "bobbyRuleViolations").read[Seq[BobbyRuleViolation]]
+    ~ (__ \ "vulnerabilities"    ).read[Seq[String]]
     ~ (__ \ "importBy"           ).readNullable[ImportedBy]
     ~ (__ \ "scope"              ).read[DependencyScope]
     )(Dependency.apply)

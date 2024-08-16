@@ -41,14 +41,14 @@ class DependencySectionSpec extends AnyWordSpec with Matchers {
 
   "dependency_section" should {
     "display the version suffix when present" in {
-      val res = dependency_section(Seq(dependency1), rootId).body
+      val res = dependency_section(Seq(dependency1), rootId, showVulnerabilityColumn = false).body
       res should include(s"""<div id="example-library-$rootId-current-version" class="col-3">1.2.3-play-25</div>""")
       res should include(s"""<div id="example-library-$rootId-latestVersion-version" class="col-3">""")
       res should include(s"""<span class="glyphicon medium-glyphicon glyphicon-arrow-right pe-2"></span><span>1.2.3-play-26</span>""")
     }
 
     "not display the version suffix when missing" in {
-      val res = dependency_section(Seq(dependency2), rootId).body
+      val res = dependency_section(Seq(dependency2), rootId, showVulnerabilityColumn = false).body
       res should include(s"""<div id="library4j-$rootId-current-version" class="col-3">4.0.1</div>""")
       res should include("""<span class="glyphicon medium-glyphicon glyphicon-arrow-right pe-2"></span><span>4.2.0</span>""")
     }
