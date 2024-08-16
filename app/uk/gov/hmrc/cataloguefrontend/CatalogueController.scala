@@ -169,13 +169,14 @@ class CatalogueController @Inject() (
                                        deployedVersions.sorted.headOption match
                                          case Some(version) =>
                                            for
-                                             repoModules           <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version, true)
+                                             repoModules           <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
                                              shutterStates         <- ShutterType.values.toSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
                                                                         shutterService
                                                                           .getShutterStates(shutterType, env, Some(serviceName))
                                                                           .map(acc ++ _)
-                                             vulnerabilitiesCounts <- vulnerabilitiesConnector
-                                                                        .vulnerabilityCounts(flag = SlugInfoFlag.ForEnvironment(env), serviceName=Some(serviceName))
+                                             vulnerabilitiesCount <- vulnerabilitiesConnector
+                                                                        .vulnerabilityCounts(flag = SlugInfoFlag.ForEnvironment(env), serviceName = Some(serviceName))
+                                                                        .map(_.headOption) // should only return one result for defined serviceName
                                              data                  =  EnvData(
                                                                         version                     = version,
                                                                         repoModules                 = repoModules.headOption,
@@ -186,16 +187,13 @@ class CatalogueController @Inject() (
                                                                                                       ),
                                                                         nonPerformantQueryLinks     = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]()): databaseName =>
                                                                                                         telemetryLinks.kibanaNonPerformantQueries(env, serviceName, databaseName, nonPerformantQueries),
-                                                                        actionReqVulnerabilityCount = vulnerabilitiesCounts.headOption match {
-                                                                                                        case Some(totalCount) => totalCount.actionRequired
-                                                                                                        case _                => 0
-                                                                                                      }
+                                                                        actionReqVulnerabilityCount = vulnerabilitiesCount.fold(0)(_.actionRequired)
                                                                       )
                                            yield Some((SlugInfoFlag.ForEnvironment(env): SlugInfoFlag) -> data)
                                          case None =>
                                            Future.successful(None)
                                      .map(_.collect { case Some(v) => v }.toMap)
-      latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName, true)
+      latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
       serviceRoutes             <- routeRulesService.serviceRoutes(serviceName)
       optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(serviceName)
@@ -203,6 +201,7 @@ class CatalogueController @Inject() (
       commenterReport           <- prCommenterConnector.report(repositoryName)
       latestVulnerabilitiesCount<- vulnerabilitiesConnector
                                     .vulnerabilityCounts(flag = SlugInfoFlag.Latest, serviceName=Some(serviceName))
+                                    .map(_.headOption)
       serviceRelationships      <- serviceConfigsService.serviceRelationships(serviceName)
       zone                      <- retrieveZone(serviceName)
       optLatestData             =  optLatestServiceInfo.map: latestServiceInfo =>
@@ -213,10 +212,7 @@ class CatalogueController @Inject() (
                                          shutterStates               = Seq.empty,
                                          telemetryLinks              = Seq.empty,
                                          nonPerformantQueryLinks     = Seq.empty,
-                                         actionReqVulnerabilityCount = latestVulnerabilitiesCount.headOption match {
-                                                                         case Some(totalCount) => totalCount.actionRequired
-                                                                         case _                => 0
-                                                                       }
+                                         actionReqVulnerabilityCount = latestVulnerabilitiesCount.fold(0)(_.actionRequired)
                                        )
       canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(repositoryName)
       lifecycle                 <- serviceCommissioningStatusConnector.getLifecycle(serviceName)

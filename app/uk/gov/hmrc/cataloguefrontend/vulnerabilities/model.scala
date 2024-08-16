@@ -128,7 +128,7 @@ case class TotalVulnerabilityCount(
 , investigationOngoing: Int
 , uncurated           : Int
 ):
-  def vulnerabilitySum(): Int =
+  def vulnerabilitySum: Int =
     actionRequired +
     noActionRequired +
     investigationOngoing +

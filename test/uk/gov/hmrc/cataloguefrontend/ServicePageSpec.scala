@@ -38,8 +38,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/frontend-route/service-1",    willRespondWith = (200, Some(JsonData.serviceConfigsServiceService1)))
     serviceEndpoint(GET, "/service-configs/frontend-route/service-name", willRespondWith = (200, Some(JsonData.serviceConfigsServiceService1)))
-    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=latest&includeVulnerabilities=true",willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=0.0.1&includeVulnerabilities=true", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=latest",willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/repositories/service-1/module-dependencies?version=0.0.1", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/service-relationships/service-1",    willRespondWith = (200, Some(JsonData.serviceRelationships)))
     serviceEndpoint(GET, "/service-configs/service-relationships/service-name", willRespondWith = (200, Some(JsonData.serviceRelationships)))
     serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some("[]")))
@@ -99,8 +99,8 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
         serviceEndpoint(GET, s"/service-configs/services/repo-name?serviceName=$serviceName", willRespondWith = (200, Some("\"repo1\"")))
 
         serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoryData(repoName))))
-        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=0.0.1&includeVulnerabilities=true" , willRespondWith = (200, Some("[]")))
-        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest&includeVulnerabilities=true", willRespondWith = (200, Some("[]")))
+        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=0.0.1" , willRespondWith = (200, Some("[]")))
+        serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some("[]")))
       }
     }
 

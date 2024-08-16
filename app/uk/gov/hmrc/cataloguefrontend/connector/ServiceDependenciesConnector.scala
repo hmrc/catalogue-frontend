@@ -137,17 +137,17 @@ class ServiceDependenciesConnector @Inject() (
       .get(url"$servicesDependenciesBaseUrl/api/repository-name?group=$group&artefact=$artefact&version=${version.toString}")
       .execute[Option[String]]
 
-  def getRepositoryModulesLatestVersion(repositoryName: String, includeVulnerabilities: Boolean = false)(using HeaderCarrier): Future[Option[RepositoryModules]] =
+  def getRepositoryModulesLatestVersion(repositoryName: String)(using HeaderCarrier): Future[Option[RepositoryModules]] =
     given Reads[RepositoryModules] = RepositoryModules.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=latest&includeVulnerabilities=$includeVulnerabilities")
+      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=latest")
       .execute[Seq[RepositoryModules]]
       .map(_.headOption)
 
-  def getRepositoryModules(repositoryName: String, version: Version, includeVulnerabilities: Boolean = false)(using HeaderCarrier): Future[Option[RepositoryModules]] =
+  def getRepositoryModules(repositoryName: String, version: Version)(using HeaderCarrier): Future[Option[RepositoryModules]] =
     given Reads[RepositoryModules] = RepositoryModules.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=${version.toString}&includeVulnerabilities=$includeVulnerabilities")
+      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=${version.toString}")
       .execute[Seq[RepositoryModules]]
       .map(_.headOption)
 
