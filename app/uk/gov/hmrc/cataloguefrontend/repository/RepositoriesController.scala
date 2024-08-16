@@ -42,11 +42,10 @@ class RepositoriesController @Inject() (
   with CatalogueAuthBuilders:
 
   def allRepositories(
-    name              : Option[String],
-    team              : Option[TeamName],
-    digitalServiceName: Option[String],
-    showArchived      : Option[Boolean],
-    repoTypeString    : Option[String]
+    name          : Option[String],
+    team          : Option[TeamName],
+    showArchived  : Option[Boolean],
+    repoTypeString: Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val allTeams =
@@ -65,23 +64,17 @@ class RepositoriesController @Inject() (
       val allRepositories =
         teamsAndRepositoriesConnector
           .allRepositories(
-            name               = None, // Use listjs filtering
-            team               = team.filterNot(_.asString.isEmpty),
-            digitalServiceName = digitalServiceName.filterNot(_.isEmpty),
-            archived           = if showArchived.contains(true) then None else Some(false),
-            repoType           = repoType,
-            serviceType        = serviceType
+            name        = None, // Use listjs filtering
+            team        = team.filterNot(_.asString.isEmpty),
+            archived    = if showArchived.contains(true) then None else Some(false),
+            repoType    = repoType,
+            serviceType = serviceType
           ).map(_.sortBy(_.name.toLowerCase))
 
-      val allDigitalServices =
-        teamsAndRepositoriesConnector
-          .allDigitalServices()
-
       for
-        teams           <- allTeams
-        repositories    <- allRepositories
-        digitalServices <- allDigitalServices
-      yield Ok(repositoriesListPage(repositories, teams, digitalServices, RepoListFilter.form.bindFromRequest()))
+        teams        <- allTeams
+        repositories <- allRepositories
+      yield Ok(repositoriesListPage(repositories, teams, RepoListFilter.form.bindFromRequest()))
     }
 
   def allServices: Action[AnyContent] =
@@ -101,24 +94,22 @@ class RepositoriesController @Inject() (
     }
 
 case class RepoListFilter(
-  name               : Option[String]   = None,
-  team               : Option[TeamName] = None,
-  digitalServiceName : Option[String]   = None,
-  repoType           : Option[String]   = None,
-  showArchived       : Option[Boolean]  = None
+  name         : Option[String]   = None,
+  team         : Option[TeamName] = None,
+  repoType     : Option[String]   = None,
+  showArchived : Option[Boolean]  = None
 ):
   def isEmpty: Boolean =
-    name.isEmpty && team.isEmpty && digitalServiceName.isEmpty && repoType.isEmpty
+    name.isEmpty && team.isEmpty && repoType.isEmpty
 
 object RepoListFilter {
   lazy val form =
     Form(
       Forms.mapping(
-        "name"           -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"           -> Forms.optional(Forms.of[TeamName]),
-        "digitalService" -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "repoType"       -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "showArchived"   -> Forms.optional(Forms.boolean)
+        "name"         -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "team"         -> Forms.optional(Forms.of[TeamName]),
+        "repoType"     -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "showArchived" -> Forms.optional(Forms.boolean)
       )(RepoListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 }

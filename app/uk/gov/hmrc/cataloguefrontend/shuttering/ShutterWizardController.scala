@@ -368,19 +368,20 @@ class ShutterWizardController @Inject() (
        yield Ok(html)
       ).merge
     }
-
+    
   def outagePagePreview(
-    serviceName: ServiceName,
-    templatedMessage: Option[String]
-  ) =
-    Action.async { implicit request =>
+      serviceName: ServiceName,
+      templatedMessage: Option[String]
+  ) = Action.async {
+    implicit request =>
       shutterService
         .outagePagePreview(serviceName, templatedMessage)
-        .map:
+        .map {
           case None       =>
             logger.warn(s"Unable to retrieve outage page preview for service: ${serviceName.asString}")
             NotFound(error_404_template())
           case Some(page) => Ok(Html(page.outerHtml))
+        }
     }
 
   val step2bPost =

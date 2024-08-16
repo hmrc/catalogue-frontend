@@ -79,18 +79,6 @@ class ServiceConfigsConnector @Inject() (
       .get(url"$serviceConfigsBaseUrl/service-configs/config-by-env/${service.asString}?environment=${environments.map(_.asString)}&version=${version.map(_.original)}&latest=$latest")
       .execute[Map[ConfigEnvironment, Seq[ConfigSourceEntries]]]
 
-  def configChangesNextDeployment(
-    seviceName : ServiceName,
-    environment: Environment,
-    version    : Version
-  )(using
-    HeaderCarrier
-  ): Future[Map[KeyName, ConfigChange]] =
-    given Reads[Map[KeyName, ConfigChange]] = ConfigChanges.reads
-    httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/config-changes-next-deployment?serviceName=${seviceName.asString}&environment=${environment.asString}&version=${version.original}")
-      .execute[Map[KeyName, ConfigChange]]
-
   def serviceRelationships(service: ServiceName)(using HeaderCarrier): Future[ServiceRelationships] =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/service-relationships/${service.asString}")
@@ -167,26 +155,3 @@ class ServiceConfigsConnector @Inject() (
       .execute[Seq[ConfigWarning]]
 
 end ServiceConfigsConnector
-
-import play.api.libs.functional.syntax._
-import play.api.libs.json.__
-
-case class ConfigChange(
-  from: Option[ServiceConfigsService.ConfigSourceValue]
-, to  : Option[ServiceConfigsService.ConfigSourceValue]
-)
-
-object ConfigChange:
-  val reads: Reads[ConfigChange] =
-    given Reads[ServiceConfigsService.ConfigSourceValue] = ServiceConfigsService.ConfigSourceValue.reads
-    ( (__ \ "from" ).readNullable[ServiceConfigsService.ConfigSourceValue]
-    ~ (__ \ "to"   ).readNullable[ServiceConfigsService.ConfigSourceValue]
-    )(ConfigChange.apply)
-
-object ConfigChanges:
-  val reads: Reads[Map[ServiceConfigsService.KeyName, ConfigChange]] =
-    given Reads[ConfigChange] = ConfigChange.reads
-    summon[Reads[Map[String, ConfigChange]]]
-      .map:
-        _.map: (k, v) =>
-          (ServiceConfigsService.KeyName(k) -> v)

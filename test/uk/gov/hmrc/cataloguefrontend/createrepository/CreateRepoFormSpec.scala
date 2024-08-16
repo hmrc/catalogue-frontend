@@ -20,7 +20,7 @@ import play.api.data.validation.Invalid
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 
-class CreateServiceFormSpec extends UnitSpec {
+class CreateRepoFormSpec extends UnitSpec {
 
   "repoNameWhiteSpaceValidation" when {
     "The repo name contains a space" should {
@@ -128,21 +128,20 @@ class CreateServiceFormSpec extends UnitSpec {
   "conflictingFieldsValidation1" when {
     "the repo type contains 'backend' and the repo name contains 'frontend'" should {
       "return false" in {
-        CreateService.conflictingFieldsValidation1(
-          CreateService(
+        CreateServiceRepoForm.conflictingFieldsValidation1(
+          CreateServiceRepoForm(
             repositoryName = "test-service-frontend",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.BackendMicroserviceWithMongodb.asString
-          )
+            repoType       = "Backend microservice - with mongodb")
         ) shouldBe false
 
-        CreateService.conflictingFieldsValidation1(
-          CreateService(
+        CreateServiceRepoForm.conflictingFieldsValidation1(
+          CreateServiceRepoForm(
             repositoryName = "test-service-frontend",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.BackendMicroservice.asString
+            repoType       = "Backend microservice"
           )
         ) shouldBe false
       }
@@ -150,12 +149,12 @@ class CreateServiceFormSpec extends UnitSpec {
 
     "the repo type contains 'backend', and the repo name does not contain frontend" should {
       "return true" in {
-        CreateService.conflictingFieldsValidation1(
-          CreateService(
+        CreateServiceRepoForm.conflictingFieldsValidation1(
+          CreateServiceRepoForm(
             repositoryName = "test-service",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.BackendMicroservice.asString
+            repoType       = "Backend microservice"
           )
         ) shouldBe true
       }
@@ -163,12 +162,12 @@ class CreateServiceFormSpec extends UnitSpec {
 
     "the repo type doesn't contain backend at all" should {
       "return true" in {
-        CreateService.conflictingFieldsValidation1(
-          CreateService(
+        CreateServiceRepoForm.conflictingFieldsValidation1(
+          CreateServiceRepoForm(
             repositoryName = "test-service",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.ApiMicroservice.asString
+            repoType       = "API microservice"
           )
         ) shouldBe true
       }
@@ -178,25 +177,24 @@ class CreateServiceFormSpec extends UnitSpec {
   "conflictingFieldsValidation2" when {
     "the repo type contains 'frontend' and the repo name contains 'backend'" should {
       "return false" in {
-        CreateService.conflictingFieldsValidation2(
-          CreateService(
+        CreateServiceRepoForm.conflictingFieldsValidation2(
+          CreateServiceRepoForm(
             repositoryName = "test-service-backend",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.FrontendMicroservice.asString
-          )
+            repoType       = "Frontend microservice")
         ) shouldBe false
       }
     }
 
     "the repo type contains 'frontend' and the repo name does not contain 'backend'" should {
       "return true" in {
-        CreateService.conflictingFieldsValidation2(
-          CreateService(
+        CreateServiceRepoForm.conflictingFieldsValidation2(
+          CreateServiceRepoForm(
             repositoryName = "test-service",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType       = ServiceType.FrontendMicroservice.asString
+            repoType       = "Frontend microservice"
           )
         ) shouldBe true
       }
@@ -204,12 +202,12 @@ class CreateServiceFormSpec extends UnitSpec {
 
     "the repo type doesn't contain frontend at all" should {
       "return true" in {
-        CreateService.conflictingFieldsValidation2(
-          CreateService(
+        CreateServiceRepoForm.conflictingFieldsValidation2(
+          CreateServiceRepoForm(
             repositoryName = "test-service",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.ApiMicroservice.asString
+            repoType       = "API microservice"
           )
         ) shouldBe true
       }
@@ -219,12 +217,12 @@ class CreateServiceFormSpec extends UnitSpec {
   "frontendValidation1" when {
     "the repo type contains 'frontend' and the repo name does not contain 'frontend'" should {
       "return false" in {
-        CreateService.frontendValidation1(
-          CreateService(
+        CreateServiceRepoForm.frontendValidation1(
+          CreateServiceRepoForm(
             repositoryName = "test-service",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.FrontendMicroservice.asString
+            repoType       = "Frontend microservice"
           )
         ) shouldBe false
       }
@@ -232,21 +230,21 @@ class CreateServiceFormSpec extends UnitSpec {
 
       "the repo type contains 'frontend' and the repo name contains 'frontend'" should {
         "return true" in {
-          CreateService.frontendValidation1(
-            CreateService(
+          CreateServiceRepoForm.frontendValidation1(
+            CreateServiceRepoForm(
               repositoryName = "test-service-frontend",
               makePrivate    = false,
               teamName       = TeamName("test"),
-              serviceType    = ServiceType.FrontendMicroservice.asString
+              repoType       = "Frontend microservice"
             )
           ) shouldBe true
 
-          CreateService.frontendValidation1(
-            CreateService(
+          CreateServiceRepoForm.frontendValidation1(
+            CreateServiceRepoForm(
               repositoryName = "test-service-FrOnTeNd",
               makePrivate    = false,
               teamName       = TeamName("test"),
-              serviceType    = ServiceType.FrontendMicroservice.asString
+              repoType       = "Frontend microservice"
             )
           ) shouldBe true
         }
@@ -254,12 +252,12 @@ class CreateServiceFormSpec extends UnitSpec {
 
       "the repo type doesn't contain frontend at all" should {
         "return true" in {
-          CreateService.frontendValidation1(
-            CreateService(
+          CreateServiceRepoForm.frontendValidation1(
+            CreateServiceRepoForm(
               repositoryName = "test-service",
               makePrivate    = false,
               teamName       = TeamName("test"),
-              serviceType    = ServiceType.ApiMicroservice.asString
+              repoType       = "API microservice"
             )
           ) shouldBe true
         }
@@ -269,12 +267,12 @@ class CreateServiceFormSpec extends UnitSpec {
   "frontendValidation2" when {
     "the repo name contains 'frontend' and the repo type is not frontend" should {
       "return false" in {
-        CreateService.frontendValidation2(
-          CreateService(
+        CreateServiceRepoForm.frontendValidation2(
+          CreateServiceRepoForm(
             repositoryName = "test-service-frontend",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.ApiMicroservice.asString
+            repoType       = "API microservice"
           )
         ) shouldBe false
       }
@@ -282,21 +280,21 @@ class CreateServiceFormSpec extends UnitSpec {
 
     "the repo name contains 'frontend' and the repo type is 'frontend'" should {
       "return true" in {
-        CreateService.frontendValidation2(
-          CreateService(
+        CreateServiceRepoForm.frontendValidation2(
+          CreateServiceRepoForm(
             repositoryName = "test-service-frontend",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.FrontendMicroserviceWithScaffold.asString
+            repoType       = "Frontend microservice - with scaffold"
           )
         ) shouldBe true
 
-        CreateService.frontendValidation2(
-          CreateService(
+        CreateServiceRepoForm.frontendValidation2(
+          CreateServiceRepoForm(
             repositoryName = "test-service-FrOnTeNd",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.FrontendMicroservice.asString
+            repoType       = "Frontend microservice"
           )
         ) shouldBe true
       }
@@ -304,12 +302,12 @@ class CreateServiceFormSpec extends UnitSpec {
 
     "the repo name doesn't contain frontend at all" should {
       "return true" in {
-        CreateService.frontendValidation2(
-          CreateService(
+        CreateServiceRepoForm.frontendValidation2(
+          CreateServiceRepoForm(
             repositoryName = "test-service",
             makePrivate    = false,
             teamName       = TeamName("test"),
-            serviceType    = ServiceType.FrontendMicroservice.asString
+            repoType       = "Frontend microservice"
           )
         ) shouldBe true
       }

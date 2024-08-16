@@ -85,7 +85,7 @@
                         data-bs-trigger="focus"
                         data-bs-placement="left"
                         data-bs-html="true"
-                        data-bs-content='Description is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml" class="font-monospace">repository.yaml</a>. You will need to add the <strong class="font-monospace">description</strong> key to this file if it is missing. Changes can take a few minutes to appear in the MDTP catalogue.'>
+                        data-bs-content='Description is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml">repository.yaml</a>. You will need to add the `description` key to this file if it is missing. Changes can take a few minutes to appear in the MDTP catalogue.'>
                             <span class="glyphicon glyphicon-question-sign"/>
                         </a>: </label>
                     @if(repositoryDetails.description.isEmpty) {None} else {@repositoryDetails.description}
@@ -98,24 +98,6 @@
                     </footer>
                 }
             </div>
-
-            @repositoryDetails.digitalServiceName.map { dsn =>
-                <div id="repository-digital-service-name" class="col-6">
-                    <div class="content-grow-wrapper">
-                        <label class="fw-bold">Digital Service <a href="#"
-                        tabindex="0"
-                        aria-label="Digital Service"
-                        data-bs-toggle="popover"
-                        data-bs-trigger="focus"
-                        data-bs-placement="left"
-                        data-bs-html="true"
-                        data-bs-content='Digital Service is defined by the <a href="@repositoryDetails.githubUrl/blob/main/repository.yaml" class="font-monospace">repository.yaml</a>. You will need to add the <strong class="font-monospace">digital-service</strong> key to this file if it is missing. Changes can take a few minutes to appear in the MDTP catalogue.'>
-                            <span class="glyphicon glyphicon-question-sign"/>
-                        </a>: </label>
-                        <a href="@uk.gov.hmrc.cataloguefrontend.repository.routes.RepositoriesController.allRepositories(digitalService = Some(dsn)).url">@dsn</a>
-                    </div>
-                </div>
-            }
 
             <div id="repository-visibility" class="col-6">
                 <label class="fw-bold">Repository Visibility: </label>

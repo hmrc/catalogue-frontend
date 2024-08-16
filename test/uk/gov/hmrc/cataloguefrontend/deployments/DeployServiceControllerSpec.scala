@@ -34,7 +34,7 @@ import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, D
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, DeploymentConfigChange, ServiceConfigsService}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
@@ -59,12 +59,11 @@ class DeployServiceControllerSpec
   "Deploy Service Page step1" should {
     "allow a service to be specified" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
-        name               = any
-      , team               = any
-      , digitalServiceName = any
-      , archived           = eqTo(Some(false))
-      , repoType           = eqTo(Some(RepoType.Service))
-      , serviceType        = any
+        name        = any
+      , team        = any
+      , archived    = eqTo(Some(false))
+      , repoType    = eqTo(Some(RepoType.Service))
+      , serviceType = any
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
@@ -81,12 +80,11 @@ class DeployServiceControllerSpec
 
     "allow a service to be provided" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
-        name               = any
-      , team               = any
-      , digitalServiceName = any
-      , archived           = eqTo(Some(false))
-      , repoType           = eqTo(Some(RepoType.Service))
-      , serviceType        = any
+        name        = any
+      , team        = any
+      , archived    = eqTo(Some(false))
+      , repoType    = eqTo(Some(RepoType.Service))
+      , serviceType = any
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
@@ -122,12 +120,11 @@ class DeployServiceControllerSpec
   "Deploy Service Page step2" should {
     "help evaluate deployment" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
-        name               = any
-      , team               = any
-      , digitalServiceName = any
-      , archived           = eqTo(Some(false))
-      , repoType           = eqTo(Some(RepoType.Service))
-      , serviceType        = any
+        name        = any
+      , team        = any
+      , archived    = eqTo(Some(false))
+      , repoType    = eqTo(Some(RepoType.Service))
+      , serviceType = any
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
@@ -147,8 +144,10 @@ class DeployServiceControllerSpec
         .thenReturn(Future.successful(Some(someSlugInfo.copy(version = Version("0.2.0")))))
       when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockServiceConfigsService.configChangesNextDeployment(ServiceName(eqTo("some-service")), eqTo(Environment.QA), eqTo(Version("0.3.0")))(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(someConfigChanges))
+      when(mockServiceConfigsService.configByKeyWithNextDeployment(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(someConfigByKeyWithNextDeployment))
+      when(mockServiceConfigsService.removedConfig(ServiceName(eqTo("some-service")), eqTo(Seq(Environment.QA)), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(someRemoveConfig))
       when(mockServiceConfigsService.configWarnings(
         ServiceName(eqTo("some-service")),
         eqTo(List(Environment.QA)),
@@ -187,7 +186,7 @@ class DeployServiceControllerSpec
       jsoupDocument.select("#version-environment-form").select("#service-name").attr("version") shouldBe ""
       jsoupDocument.select("#version-environment-form").select("#service-name").attr("environment") shouldBe ""
 
-      jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 3
+      jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 2
       jsoupDocument.select("#config-warnings-rows").first.children.size shouldBe 1
       jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
       jsoupDocument.select("#deployment-config-updates-rows").first.children.size shouldBe 1
@@ -198,12 +197,11 @@ class DeployServiceControllerSpec
   "Deploy Service Page step3" should {
     "deploy service" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
-        name               = any
-      , team               = any
-      , digitalServiceName = any
-      , archived           = eqTo(Some(false))
-      , repoType           = eqTo(Some(RepoType.Service))
-      , serviceType        = any
+        name        = any
+      , team        = any
+      , archived    = eqTo(Some(false))
+      , repoType    = eqTo(Some(RepoType.Service))
+      , serviceType = any
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(allServices))
       // This gets called twice
@@ -293,10 +291,13 @@ class DeployServiceControllerSpec
   , dependencies  = Nil
   )
 
-  private val someConfigChanges: Map[KeyName, ConfigChange] = Map(
-    KeyName("key1") -> ConfigChange(from = None                                                        , to = Some(ConfigSourceValue("some-source", None, "some-value1")))
-  , KeyName("key2") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value2a")), to = Some(ConfigSourceValue("some-source", None, "some-value2b")))
-  , KeyName("key3") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value3")) , to = None)
+  private val someConfigByKeyWithNextDeployment: Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] = Map(
+    KeyName("key1") -> Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> Seq((ConfigSourceValue("some-source", Some("some-url"), "some-value1") -> true)))
+  , KeyName("key2") -> Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> Seq((ConfigSourceValue("some-source", Some("some-url"), "some-value2") -> false)))
+  )
+
+  private val someRemoveConfig: Map[KeyName, Map[ConfigEnvironment, Seq[(ConfigSourceValue, Boolean)]]] = Map(
+    KeyName("key3") -> Map(ConfigEnvironment.ForEnvironment(Environment.QA) -> Seq((ConfigSourceValue("some-source", Some("some-url"), "some-value3") -> true)))
   )
 
   private val someReleasesForService = WhatsRunningWhere(
@@ -345,7 +346,7 @@ class DeployServiceControllerSpec
   )
 
   private val someDeploymentConfigChanges = Seq(
-    DeploymentConfigChange.ChangedConfig("k", "previousV", "newV")
+    ConfigChange.ChangedConfig("k", "previousV", "newV")
   )
 
   private trait Setup {
