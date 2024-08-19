@@ -169,7 +169,7 @@ class CatalogueController @Inject() (
                                        deployedVersions.sorted.headOption match
                                          case Some(version) =>
                                            for
-                                             repoModules           <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
+                                             repoModules           <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version, SlugInfoFlag.ForEnvironment(env))
                                              shutterStates         <- ShutterType.values.toSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
                                                                         shutterService
                                                                           .getShutterStates(shutterType, env, Some(serviceName))

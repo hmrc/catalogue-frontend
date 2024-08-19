@@ -140,14 +140,14 @@ class ServiceDependenciesConnector @Inject() (
   def getRepositoryModulesLatestVersion(repositoryName: String)(using HeaderCarrier): Future[Option[RepositoryModules]] =
     given Reads[RepositoryModules] = RepositoryModules.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=latest")
+      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=latest&flag=latest")
       .execute[Seq[RepositoryModules]]
       .map(_.headOption)
 
-  def getRepositoryModules(repositoryName: String, version: Version)(using HeaderCarrier): Future[Option[RepositoryModules]] =
+  def getRepositoryModules(repositoryName: String, version: Version, flag: SlugInfoFlag)(using HeaderCarrier): Future[Option[RepositoryModules]] =
     given Reads[RepositoryModules] = RepositoryModules.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=${version.toString}")
+      .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=${version.toString}&flag=${flag.asString}")
       .execute[Seq[RepositoryModules]]
       .map(_.headOption)
 
