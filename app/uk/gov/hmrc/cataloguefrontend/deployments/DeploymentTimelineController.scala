@@ -21,9 +21,10 @@ import play.api.mvc._
 
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.deployments.view.html.DeploymentTimelinePage
+import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeploymentTimelinePage, DeploymentTimelineSelectPage}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -38,7 +39,9 @@ class DeploymentTimelineController @Inject()(
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   serviceDependenciesConnector : ServiceDependenciesConnector,
   deploymentGraphService       : DeploymentGraphService,
+  serviceConfigsService        : ServiceConfigsService,
   deploymentTimelinePage       : DeploymentTimelinePage,
+  deploymentTimelineSelectPage : DeploymentTimelineSelectPage,
   override val mcc             : MessagesControllerComponents,
   override val auth            : FrontendAuthComponents
 )(using
@@ -47,28 +50,37 @@ class DeploymentTimelineController @Inject()(
      with CatalogueAuthBuilders:
 
   def graph(service: Option[ServiceName], to: LocalDate, from: LocalDate) =
-    BasicAuthAction.async { implicit request =>
-      val start  = to.atStartOfDayInstant
-      val end    = from.atEndOfDayInstant
+    BasicAuthAction.async:
+      implicit request =>
+        val start  = to.atStartOfDayInstant
+        val end    = from.atEndOfDayInstant
 
-      for
-        services     <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service))
-        serviceNames =  services.map(s => ServiceName(s.name))
-        data         <- service match
-                          case Some(service) if start.isBefore(end) =>
-                            deploymentGraphService.findEvents(service, start, end).map(_.filter(_.env != Environment.Integration)) // filter as only platform teams are interested in this env
-                          case _ =>
-                            Future.successful(Seq.empty[DeploymentTimelineEvent])
-        slugInfo     <- data
-                          .groupBy(_.version)
-                          .keys
-                          .toList
-                          .foldLeftM[Future, Seq[ServiceDependencies]](Seq.empty): (xs, v) =>
-                            service
-                              .fold(Future.successful(Option.empty[ServiceDependencies])): serviceName =>
-                                serviceDependenciesConnector.getSlugInfo(serviceName, Some(v))
-                              .map:
-                                xs ++ _.toSeq
-        view         =  deploymentTimelinePage(service, start, end, data, slugInfo, serviceNames)
-      yield Ok(view)
-    }
+        for
+          services     <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service))
+          serviceNames =  services.map(s => ServiceName(s.name))
+          events       <- service match
+                            case Some(service) if start.isBefore(end) =>
+                              deploymentGraphService.findEvents(service, start, end).map(_.filter(_.env != Environment.Integration)) // filter as only platform teams are interested in this env
+                            case _ =>
+                              Future.successful(Seq.empty[DeploymentTimelineEvent])
+          slugInfo     <- events
+                            .groupBy(_.version)
+                            .keys
+                            .toList
+                            .foldLeftM[Future, Seq[ServiceDependencies]](Seq.empty): (xs, v) =>
+                              service
+                                .fold(Future.successful(Option.empty[ServiceDependencies])): serviceName =>
+                                  serviceDependenciesConnector.getSlugInfo(serviceName, Some(v))
+                                .map:
+                                  xs ++ _.toSeq
+        yield Ok(deploymentTimelinePage(service, start, end, events, slugInfo, serviceNames))
+
+
+  // TODO add api to lookup deployment event by ID
+  def graphSelect(serviceName: ServiceName, deploymentId: String, fromDeploymentId: Option[String]) =
+    BasicAuthAction.async:
+      implicit request =>
+        for
+          configChanges <- serviceConfigsService.configChanges(deploymentId, fromDeploymentId)
+        yield
+          Ok(deploymentTimelineSelectPage(serviceName, configChanges))

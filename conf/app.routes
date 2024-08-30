@@ -126,6 +126,7 @@ GET        /leak-detection/repositories/:repository/:branch/exemptions     uk.go
 
 GET        /quicksearch                                                    uk.gov.hmrc.cataloguefrontend.search.SearchController.search(query: String, limit: Int ?= 20)
 GET        /deployment-timeline                                            uk.gov.hmrc.cataloguefrontend.deployments.DeploymentTimelineController.graph(service: Option[ServiceName] ?= None, start: java.time.LocalDate ?= java.time.LocalDate.now().minusDays(30), end: java.time.LocalDate ?= java.time.LocalDate.now())
+GET        /deployment-timeline-select/:serviceName                        uk.gov.hmrc.cataloguefrontend.deployments.DeploymentTimelineController.graphSelect(serviceName: ServiceName, deploymentId: String, fromDeploymentId: Option[String])
 
 +nocsrf
 POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()
