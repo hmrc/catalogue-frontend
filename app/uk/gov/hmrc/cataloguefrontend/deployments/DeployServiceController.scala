@@ -20,9 +20,9 @@ import cats.data.EitherT
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Writes
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import play.api.Configuration
+import play.api.{Logging, Configuration}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, DeployServiceStep4Page}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
@@ -37,6 +37,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 @Singleton
 class DeployServiceController @Inject()(
@@ -49,6 +50,7 @@ class DeployServiceController @Inject()(
 , teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
 , releasesConnector            : ReleasesConnector
 , vulnerabilitiesConnector     : VulnerabilitiesConnector
+, gitHubProxyConnector         : GitHubProxyConnector
 , serviceConfigsService        : ServiceConfigsService
 , telemetryLinks               : TelemetryLinks
 , deployServicePage            : DeployServicePage
@@ -57,7 +59,8 @@ class DeployServiceController @Inject()(
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders
-  with I18nSupport:
+  with I18nSupport
+  with Logging:
 
   private def predicate(serviceName: ServiceName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"services/${serviceName.asString}"), IAAction("DEPLOY_SERVICE"))
@@ -164,24 +167,27 @@ class DeployServiceController @Inject()(
                                      serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                                    , BadRequest(deployServicePage(form.withGlobalError("Version not found. If this is a recent build, it may take a few minutes to be picked up"), hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
                                    )
+         gitHubCompare        <- EitherT
+                                   .right[Result]:
+                                     gitHubProxyConnector
+                                       .compare(formObject.serviceName.asString, v1 = currentSlug.fold(Version("0.1.0"))(_.version), v2 = formObject.version)
+                                       .recover:
+                                         case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
+         jvmChanges           =  (currentSlug.map(_.java), slugToDeploy.java)
+         deploymentChanges    <- EitherT
+                                   .right[Result](serviceConfigsService.deploymentConfigChanges(formObject.serviceName, formObject.environment))
          configChanges        <- EitherT
-                                   .right[Result](
-                                     serviceConfigsService.configChangesNextDeployment(formObject.serviceName, formObject.environment, formObject.version)
-                                   )
+                                   .right[Result](serviceConfigsService.configChangesNextDeployment(formObject.serviceName, formObject.environment, formObject.version))
          configWarnings       <- EitherT
                                    .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
-         vulnerabilites       <- EitherT
-                                   .right[Result](
+         vulnerabilities      <- EitherT
+                                   .right[Result]:
                                      vulnerabilitiesConnector
                                        .vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired))
                                        .map:
                                          _.flatMap:
                                            case xs if xs.isEmpty && !releases.exists(_.version == formObject.version) => None
                                            case xs                                                                    => Some(xs)
-                                   )
-         jvmChanges            =  (currentSlug.map(_.java), slugToDeploy.java)
-         deploymentConfigUpdates <- EitherT
-                                      .right[Result](serviceConfigsService.deploymentConfigChanges(formObject.serviceName, formObject.environment))
        yield
          Ok(deployServicePage(
            form,
@@ -190,7 +196,7 @@ class DeployServiceController @Inject()(
            latest,
            releases,
            environments,
-           Some((configChanges, configWarnings, vulnerabilites, jvmChanges, deploymentConfigUpdates))
+           Some((gitHubCompare, jvmChanges, deploymentChanges, configChanges, configWarnings, vulnerabilities))
          ))
       ).merge
     }

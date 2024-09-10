@@ -28,7 +28,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, GitHubProxyConnector, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Kind, Vendor}
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, DeployServiceStep4Page}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
@@ -137,6 +137,9 @@ class DeployServiceControllerSpec
           Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))),
           Future.successful(true)
         )
+
+      when(mockGitHubProxyConnector.compare(eqTo("some-service"), eqTo(Version("0.2.0")), eqTo(Version("0.3.0")))(using any[HeaderCarrier]))
+        .thenReturn(Future.failed(RuntimeException("Some error calling github")): Future[GitHubProxyConnector.Compare] )
       when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
@@ -359,6 +362,7 @@ class DeployServiceControllerSpec
     val mockReleasesConnector             = mock[ReleasesConnector]
     val mockVulnerabilitiesConnector      = mock[VulnerabilitiesConnector]
     val mockServiceConfigsService         = mock[ServiceConfigsService]
+    val mockGitHubProxyConnector          = mock[GitHubProxyConnector]
     val underTest                         = DeployServiceController(
                                               auth                          = FrontendAuthComponentsStub(mockAuthStubBehaviour)
                                             , mcc                           = mcc
@@ -369,6 +373,7 @@ class DeployServiceControllerSpec
                                             , serviceCommissioningConnector = mockServiceCommissioningConnector
                                             , releasesConnector             = mockReleasesConnector
                                             , vulnerabilitiesConnector      = mockVulnerabilitiesConnector
+                                            , gitHubProxyConnector          = mockGitHubProxyConnector
                                             , serviceConfigsService         = mockServiceConfigsService
                                             , telemetryLinks                = TelemetryLinks(app.injector.instanceOf[Configuration])
                                             , deployServicePage             = app.injector.instanceOf[DeployServicePage]
