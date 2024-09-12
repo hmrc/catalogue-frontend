@@ -34,11 +34,11 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
     scalacOptions += "-Wconf:src=routes/.*:s",
     //scalacOptions += "-explain",
-    javaOptions += "-Xmx2G",
+    Compile / javaOptions += "-Xmx2G", // without `Compile` it breaks sbt start/runProd (Universal scope)
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "9.2.0"
+val bootstrapPlayVersion = "9.4.0"
 val hmrcMongoVersion     = "2.2.0"
 
 val compile = Seq(
