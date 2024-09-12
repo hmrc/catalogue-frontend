@@ -48,13 +48,16 @@ class UsersController @Inject()(
 
   def user(username: UserName): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
-      userManagementConnector.getUser(username)
-        .map:
-          case Some(user) =>
-            val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-            Ok(userInfoPage(user, umpProfileUrl))
-          case None =>
-            NotFound(error_404_template())
+      userManagementConnector.getUserDirect(username)
+        .flatMap: json =>
+          play.api.Logger(getClass).warn(s"Looked up user with user's token: $json")
+          userManagementConnector.getUser(username)
+            .map:
+              case Some(user) =>
+                val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
+                Ok(userInfoPage(user, umpProfileUrl))
+              case None =>
+                NotFound(error_404_template())
     }
 
   def allUsers(username: Option[UserName]): Action[AnyContent] =

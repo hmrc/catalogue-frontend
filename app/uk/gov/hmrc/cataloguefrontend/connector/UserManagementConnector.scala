@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.{Json, JsValue, Reads}
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, UmpTeam, User}
@@ -79,3 +79,20 @@ class UserManagementConnector @Inject()(
       .flatMap:
         case Right(res) => Future.successful(res)
         case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
+  private def getUmpToken()(using hc: HeaderCarrier): Future[String] =
+    val internalAuthBaseUrl = servicesConfig.baseUrl("internal-auth")
+    httpClientV2
+      .get(url"$internalAuthBaseUrl/internal-auth/ump/token")
+      .execute[String]
+
+  def getUserDirect(username: UserName)(using HeaderCarrier): Future[Option[JsValue]] =
+    getUmpToken()
+      .flatMap: umpToken =>
+        if username == UserName("test_401") then
+          Future.failed(uk.gov.hmrc.http.UpstreamErrorResponse("test", 401))
+        else
+          httpClientV2
+            .get(url"https://user-management-backend-production.tools.tax.service.gov.uk/v2/environments/users/${username.asString}")
+            .setHeader("Token" -> umpToken)
+            .execute[Option[JsValue]]
