@@ -17,7 +17,8 @@
 @import uk.gov.hmrc.cataloguefrontend.deployments.{DeploymentGraphService, TimelinePalette}
 @import uk.gov.hmrc.cataloguefrontend.routes.CatalogueController
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
-@import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+@import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, UserName}
+@import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
 
@@ -64,7 +65,7 @@
     <h1 class="page-heading mt-4">Deployment Timeline @service.map { s => <a id="link-to-service-info-page" href="@CatalogueController.service(s)">- @s.asString</a>}</h1>
     <form id="form" action="" method="get">
         <div class="form-group row">
-            <div class="col-md-6">
+            <div class="col-md-7">
               <dl>
                 <dt>
                   <label class="form-label" for="service-search" >Service</label>
@@ -96,7 +97,7 @@
                     </dd>
                 </dl>
             </div>
-            <div class="col-md-2" style="padding-top: 30px;">
+            <div class="col-md-1" style="padding-top: 30px;">
                 <button id="form-submit-button" type="submit" value="Submit" class="btn btn-success">Submit</button>
             </div>
         </div>
@@ -109,21 +110,25 @@
             <p class="red">No data in this date range.</p>
         }
     } else {
-        <textarea id="deploymentIds" style="width: 100%;display: none;">@events.map(_.deploymentId).mkString("\n")</textarea>
-        <div id="history-chart" style="height: 300px;"></div>
+        <textarea id="deploymentRows" style="width: 100%;display: none;">@events.map(e => s"${e.deploymentId},${e.version.original},${e.env.displayString},${e.userName},${e.displayStart.getOrElse(e.start).displayFormat},${e.displayEnd.getOrElse(e.end).displayFormat}").mkString("\n")</textarea>
+        <div id="history-chart" style="height: 260px;"></div>
         <div id="deploymentSpinner" style="display: none" class="text-center">
             <div class="spinner-border text-secondary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
-        <iframe id="deploymentIframe" style="display: none" src="" width="100%" scrolling="no" noresize frameborder="0" ></iframe>
+        <div id="deploymentInfo" style="display: none">
+            <div id="deploymentInfoHeading" class="text-center"></div>
+            <iframe id="deploymentInfoIframe" src="" width="100%" scrolling="no" noresize frameborder="0"></iframe>
+        </div>
 
         <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
         <script @CSPNonce.attr type="text/javascript">
             google.charts.load("current", {packages:["timeline"]});
             google.charts.setOnLoadCallback(drawChart);
 
-            const deploymentIds = document.getElementById('deploymentIds').value.split('\n');
+            const usersTemplateUrl = '@userRoutes.UsersController.user(UserName("PLACEHOLDER")).url';
+            const deploymentRows   = document.getElementById('deploymentRows').value.split('\n');
 
             function drawChart() {
                 let data = [
@@ -161,20 +166,31 @@
                 dataTable.addRows(data);
                 chart.draw(dataTable, options);
 
-                const deploymentIframe  = document.getElementById("deploymentIframe");
                 const deploymentSpinner = document.getElementById("deploymentSpinner");
+                const deploymentInfo    = document.getElementById("deploymentInfo");
+                const deploymentHeading = document.getElementById("deploymentInfoHeading");
+                const deploymentIframe  = document.getElementById("deploymentInfoIframe");
 
                 google.visualization.events.addListener(chart, 'select', function() {
-                    deploymentIframe.style.display = 'none';
+                    deploymentInfo.style.display = 'none';
 
-                    const segmentIndex     = chart.getSelection()[0].row;
-                    const deploymentId     = deploymentIds[segmentIndex];
-                    const fromDeploymentId = deploymentIds[segmentIndex - 1]; // TODO also needs to be in the same environment and not -1
+                    const segmentIndex      = chart.getSelection()[0].row;
+                    const deploymentRow     = deploymentRows[segmentIndex].split(",");
+                    const deploymentId      = deploymentRow[0];
+                    const deploymentVersion = deploymentRow[1];
+                    const deploymentEnv     = deploymentRow[2];
+                    const deploymentUser    = deploymentRow[3];
+                    const deploymentStart   = deploymentRow[4];
+                    const deploymentEnd     = deploymentRow[5];
+                    const fromDeploymentId  = deploymentRows[segmentIndex - 1][0]; // TODO also needs to be in the same environment and not -1
+
+                    deploymentHeading.innerHTML = `<code>${deploymentVersion}</code> was deployed in <strong>${deploymentEnv}</strong> by <a href="${usersTemplateUrl.replace("PLACEHOLDER", deploymentUser)}">${deploymentUser}</a> - ${deploymentStart} to ${deploymentEnd}`
 
                     if (deploymentId && deploymentId != fromDeploymentId) {
-                        const onSelectUrl      = fromDeploymentId && deploymentId.substring(0, deploymentId.lastIndexOf('-')) == fromDeploymentId.substring(0, fromDeploymentId.lastIndexOf('-')) ?
-                                                    `deployment-timeline-select/@service.fold("")(_.asString)?deploymentId=${deploymentId}&fromDeploymentId=${fromDeploymentId}`:
-                                                    `deployment-timeline-select/@service.fold("")(_.asString)?deploymentId=${deploymentId}`;
+                        const onSelectUrl =
+                            fromDeploymentId && deploymentId.substring(0, deploymentId.lastIndexOf('-')) == fromDeploymentId.substring(0, fromDeploymentId.lastIndexOf('-')) ?
+                                `deployment-timeline-select/@service.fold("")(_.asString)?deploymentId=${deploymentId}&fromDeploymentId=${fromDeploymentId}`:
+                                `deployment-timeline-select/@service.fold("")(_.asString)?deploymentId=${deploymentId}`;
 
                         deploymentSpinner.style.display = '';
                         deploymentIframe.setAttribute("src", onSelectUrl);
@@ -182,8 +198,12 @@
                         deploymentIframe.onload = function() {
                             const window = deploymentIframe.contentWindow;
                             deploymentSpinner.style.display = 'none';
-                            deploymentIframe.style.display = '';
-                            deploymentIframe.height = parseInt(window.getComputedStyle(window.document.documentElement).getPropertyValue("height"));
+                            deploymentInfo.style.display = '';
+                            // resize iframe on accordion expansion
+                            const ro = new ResizeObserver(function() {
+                                deploymentIframe.height = parseInt(window.getComputedStyle(window.document.documentElement).getPropertyValue("height"));
+                            });
+                            ro.observe(deploymentIframe.contentDocument.body);
                         }
                     }
                 });

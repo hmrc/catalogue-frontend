@@ -17,12 +17,13 @@
 package uk.gov.hmrc.cataloguefrontend.deployments
 
 import cats.implicits._
+import play.api.Logging
 import play.api.mvc._
 
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeploymentTimelinePage, DeploymentTimelineSelectPage}
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
@@ -33,21 +34,24 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 @Singleton
 class DeploymentTimelineController @Inject()(
-  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
-  serviceDependenciesConnector : ServiceDependenciesConnector,
-  deploymentGraphService       : DeploymentGraphService,
-  serviceConfigsService        : ServiceConfigsService,
-  deploymentTimelinePage       : DeploymentTimelinePage,
-  deploymentTimelineSelectPage : DeploymentTimelineSelectPage,
-  override val mcc             : MessagesControllerComponents,
-  override val auth            : FrontendAuthComponents
+  serviceDependenciesConnector : ServiceDependenciesConnector
+, teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+, gitHubProxyConnector         : GitHubProxyConnector
+, deploymentGraphService       : DeploymentGraphService
+, serviceConfigsService        : ServiceConfigsService
+, deploymentTimelinePage       : DeploymentTimelinePage
+, deploymentTimelineSelectPage : DeploymentTimelineSelectPage
+, override val mcc             : MessagesControllerComponents
+, override val auth            : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-     with CatalogueAuthBuilders:
+     with CatalogueAuthBuilders
+     with Logging:
 
   def graph(service: Option[ServiceName], to: LocalDate, from: LocalDate) =
     BasicAuthAction.async:
@@ -75,12 +79,21 @@ class DeploymentTimelineController @Inject()(
                                   xs ++ _.toSeq
         yield Ok(deploymentTimelinePage(service, start, end, events, slugInfo, serviceNames))
 
-
-  // TODO add api to lookup deployment event by ID
   def graphSelect(serviceName: ServiceName, deploymentId: String, fromDeploymentId: Option[String]) =
     BasicAuthAction.async:
       implicit request =>
         for
-          configChanges <- serviceConfigsService.configChanges(deploymentId, fromDeploymentId)
+          configChanges     <- serviceConfigsService.configChanges(deploymentId, fromDeploymentId)
+          previousVersion   =  configChanges.fromVersion.getOrElse(Version("0.1.0"))
+          deployedVersion   =  configChanges.toVersion
+          environment       =  configChanges.env.environment
+          deployedSlug      <- serviceDependenciesConnector.getSlugInfo(serviceName, Some(deployedVersion))
+          previousSlug      <- serviceDependenciesConnector.getSlugInfo(serviceName, Some(previousVersion))
+          gitHubCompare     <- gitHubProxyConnector
+                                  .compare(serviceName.asString, v1 = previousVersion, v2 = deployedVersion)
+                                  .recover:
+                                    case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
+          jvmChanges        =  (previousSlug.map(_.java), deployedSlug.get.java)
+          deploymentChanges <- serviceConfigsService.deploymentConfigChanges(serviceName, environment)
         yield
-          Ok(deploymentTimelineSelectPage(serviceName, configChanges))
+          Ok(deploymentTimelineSelectPage(serviceName, environment, Some(previousVersion), deployedVersion, gitHubCompare, jvmChanges, deploymentChanges, configChanges))

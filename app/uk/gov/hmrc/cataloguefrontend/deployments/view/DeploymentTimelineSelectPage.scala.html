@@ -14,106 +14,36 @@
  * limitations under the License.
  *@
 
-@import helper._
-@import uk.gov.hmrc.cataloguefrontend.model.ServiceName
-@import uk.gov.hmrc.cataloguefrontend.routes.CatalogueController
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
-@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
-@import java.time.Instant
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubProxyConnector
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, DeploymentConfigChange }
 
 @this()
 
 @(
-  serviceName  : ServiceName
-, configChanges: ConfigChanges
+  serviceName            : ServiceName
+, environment            : Environment
+, previousVersion        : Option[Version]
+, deployedVersion        : Version
+, oGitHubCompare         : Option[GitHubProxyConnector.Compare]
+, jvmChanges             : (Option[ServiceJdkVersion], ServiceJdkVersion)
+, deploymentConfigChanges: Seq[DeploymentConfigChange]
+, configChanges          : ConfigChanges
 )(implicit request: Request[_])
 
-
 @standard_layout("Deployment Timeline", active = "deployments", showNavBar = false) {
-  <h2>Config Changes</h2>
-
-  <ul class="list-unstyled" style="column-count: 1;">
-    <li>
-      <a href="@configChanges.base.githubUrl" target="_blank" rel="noreferrer noopener">
-        <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github base changes" />
-          app-config-base diff
-          <span class="glyphicon glyphicon-new-window"/>
-      </a>
-    </li>
-    <li>
-      <a href="@configChanges.common.githubUrl" target="_blank" rel="noreferrer noopener">
-        <img src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Common changes" />
-        app-config-common diff
-        <span class="glyphicon glyphicon-new-window"/>
-      </a>
-    </li>
-    <li>
-      <a href="@configChanges.env.githubUrl" target="_blank" rel="noreferrer noopener">
-        <img src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github base changes" />
-        app-config-@configChanges.env.environment.asString diff
-        <span class="glyphicon glyphicon-new-window"/>
-      </a>
-    </li>
-  </ul>
-
-  @if(configChanges.changes.isEmpty) {
-    No related config changes since last deployment
-  } else {
-    <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
-      <thead>
-        <tr>
-          <th>Key</th>
-          <th>Value</th>
-        </tr>
-      </thead>
-      <tbody id="config-updates-rows">
-        @for((key, ConfigChange(from, to)) <- configChanges.changes.toList.sortBy(_._1.asString) ) {
-          <tr>
-            <td>
-              <code>
-                <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(key)).url" target="_blank">
-                  @if(from.nonEmpty && to.isEmpty) {
-                    <del>@key.asString</del>
-                  } else {
-                    @key.asString
-                  }
-                </a>
-              </code>
-            </td>
-            <td>
-              <ul class="list-unstyled">
-                @from.map { c =>
-                  <li>@displayConfigSourceValue(key, configChanges.env.environment, c, isStriked = true)</li>
-                }
-                @to.map { c =>
-                  <li>@displayConfigSourceValue(key, configChanges.env.environment, c, isStriked = false)</li>
-                }
-              </ul>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  }
-}
-
-@displayConfigSourceValue(configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue, isStriked: Boolean) = {
-  <span
-    data-bs-toggle="popover"
-    data-bs-trigger="hover"
-    data-bs-placement="bottom"
-    data-bs-html="true"
-    data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'
-  >
-    @if(isStriked) {
-      <del>@configSourceValue.displayString</del>
-    } else {
-      @configSourceValue.displayString
-    }
-  </span>
-}
-
-@popoverConfigSourceValue(key: ServiceConfigsService.KeyName, sourceValue: ServiceConfigsService.ConfigSourceValue, env: Environment) = {
-  <div>@ServiceConfigsService.friendlySourceName(sourceValue.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(key))</div>
+  <div class="mt-3 mr-1">
+    @evaluationsPartial(
+      serviceName             = serviceName
+    , environment             = environment
+    , previousVersion         = previousVersion
+    , deployedVersion         = deployedVersion
+    , oGitHubCompare          = oGitHubCompare
+    , jvmChanges              = jvmChanges
+    , deploymentConfigChanges = deploymentConfigChanges
+    , configChanges           = configChanges
+    , showConfigWarnings      = false
+    , showVulnerabilities     = false
+    )
+  </div>
 }

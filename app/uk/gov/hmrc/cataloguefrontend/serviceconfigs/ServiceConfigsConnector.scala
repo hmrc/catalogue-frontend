@@ -96,11 +96,11 @@ class ServiceConfigsConnector @Inject() (
     version    : Version
   )(using
     HeaderCarrier
-  ): Future[Map[KeyName, ConfigChange]] =
-    given Reads[Map[KeyName, ConfigChange]] = ConfigChangeMap.reads
+  ): Future[ConfigChanges] =
+    given Reads[ConfigChanges] = ConfigChanges.reads
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/config-changes-next-deployment?serviceName=${seviceName.asString}&environment=${environment.asString}&version=${version.original}")
-      .execute[Map[KeyName, ConfigChange]]
+      .execute[ConfigChanges]
 
   def serviceRelationships(service: ServiceName)(using HeaderCarrier): Future[ServiceRelationships] =
     httpClientV2
@@ -195,10 +195,12 @@ object ConfigChange:
     )(ConfigChange.apply)
 
 case class ConfigChanges(
-  base   : ConfigChanges.BaseConfigChange
-, common : ConfigChanges.CommonConfigChange
-, env    : ConfigChanges.EnvironmentConfigChange
-, changes: Map[ServiceConfigsService.KeyName, ConfigChange]
+  base       : ConfigChanges.BaseConfigChange
+, common     : ConfigChanges.CommonConfigChange
+, env        : ConfigChanges.EnvironmentConfigChange
+, changes    : Map[ServiceConfigsService.KeyName, ConfigChange]
+, fromVersion: Option[Version]
+, toVersion  : Version
 )
 
 object ConfigChanges:
@@ -230,10 +232,12 @@ object ConfigChanges:
       ~ (__ \ "githubUrl"  ).read[String]
       )(EnvironmentConfigChange.apply)
 
-    ( (__ \ "base"   ).read[BaseConfigChange]
-    ~ (__ \ "common" ).read[CommonConfigChange]
-    ~ (__ \ "env"    ).read[EnvironmentConfigChange]
-    ~ (__ \ "changes").read[Map[ServiceConfigsService.KeyName, ConfigChange]](ConfigChangeMap.reads)
+    ( (__ \ "base"       ).read[BaseConfigChange]
+    ~ (__ \ "common"     ).read[CommonConfigChange]
+    ~ (__ \ "env"        ).read[EnvironmentConfigChange]
+    ~ (__ \ "changes"    ).read[Map[ServiceConfigsService.KeyName, ConfigChange]](ConfigChangeMap.reads)
+    ~ (__ \ "fromVersion").readNullable[Version](Version.format)
+    ~ (__ \ "toVersion"  ).read[Version](Version.format)
     )(ConfigChanges.apply)
 
 object ConfigChangeMap:
