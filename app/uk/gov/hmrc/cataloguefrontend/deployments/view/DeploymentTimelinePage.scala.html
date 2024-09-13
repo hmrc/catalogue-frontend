@@ -182,14 +182,14 @@
                     const deploymentUser    = deploymentRow[3];
                     const deploymentStart   = deploymentRow[4];
                     const deploymentEnd     = deploymentRow[5];
-                    const fromDeploymentId  = deploymentRows[segmentIndex - 1][0]; // TODO also needs to be in the same environment and not -1
+                    const fromDeployment    = deploymentRows[segmentIndex - 1];
 
                     deploymentHeading.innerHTML = `<code>${deploymentVersion}</code> was deployed in <strong>${deploymentEnv}</strong> by <a href="${usersTemplateUrl.replace("PLACEHOLDER", deploymentUser)}">${deploymentUser}</a> - ${deploymentStart} to ${deploymentEnd}`
 
-                    if (deploymentId && deploymentId != fromDeploymentId) {
+                    if (deploymentId) {
                         const onSelectUrl =
-                            fromDeploymentId && deploymentId.substring(0, deploymentId.lastIndexOf('-')) == fromDeploymentId.substring(0, fromDeploymentId.lastIndexOf('-')) ?
-                                `deployment-timeline-select/@service.fold("")(_.asString)?deploymentId=${deploymentId}&fromDeploymentId=${fromDeploymentId}`:
+                            fromDeployment && deploymentId.substring(0, deploymentId.lastIndexOf('-')) == fromDeployment[0].substring(0, fromDeployment[0].lastIndexOf('-')) ?
+                                `deployment-timeline-select/@service.fold("")(_.asString)?deploymentId=${deploymentId}&fromDeploymentId=${fromDeployment[0]}`:
                                 `deployment-timeline-select/@service.fold("")(_.asString)?deploymentId=${deploymentId}`;
 
                         deploymentSpinner.style.display = '';
