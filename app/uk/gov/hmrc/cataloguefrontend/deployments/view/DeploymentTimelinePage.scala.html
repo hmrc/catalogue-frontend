@@ -17,7 +17,8 @@
 @import uk.gov.hmrc.cataloguefrontend.deployments.{DeploymentGraphService, TimelinePalette}
 @import uk.gov.hmrc.cataloguefrontend.routes.CatalogueController
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
-@import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+@import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, UserName}
+@import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
 
@@ -61,85 +62,16 @@
             padding: 6px;
         }
     </style>
-    <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
-    <script @CSPNonce.attr type="text/javascript">
-        google.charts.load("current", {packages:["timeline"]});
-        google.charts.setOnLoadCallback(drawChart);
-
-        function drawChart() {
-
-            let data = [
-                @events.map { e =>
-                    ['@e.env',
-                    '@{e.version.toString}',
-                    makeToolTip(
-                        '@{e.version}',
-                        '@{e.userName}',
-                        '@{e.displayStart.getOrElse(e.start).displayFormat}',
-                        '@{e.displayEnd.getOrElse(e.end).displayFormat}',
-                        @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
-                        '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString}")}',
-                        '@previousJavaVersion(e.env, e.deploymentId, events, slugInfo)',
-                        '@{e.configChanged.getOrElse("undefined")}'
-                    ),
-                    '@colorForVersion(e.version.toString)',
-                    new Date(@{e.start.toEpochMilli}),
-                    new Date(@{e.end.toEpochMilli}),
-                ], }
-
-            ]
-
-            let options = {tooltip: { isHtml: true }, enableInteractivity: true};
-            let container = document.getElementById('history-chart');
-            if (container == null) return
-            let chart = new google.visualization.Timeline(container);
-            let dataTable = new google.visualization.DataTable();
-            dataTable.addColumn({ type: 'string', id: 'Position' });
-            dataTable.addColumn({ type: 'string', id: 'Name' });
-            dataTable.addColumn({ type: 'string', role: 'tooltip' });
-            dataTable.addColumn({ type: 'string', role: 'style'});
-            dataTable.addColumn({ type: 'date', id: 'Start' });
-            dataTable.addColumn({ type: 'date', id: 'End' });
-
-            dataTable.addRows(data);
-            chart.draw(dataTable, options);
-        }
-
-        function makeToolTip(ver, user, start, end, days, java, previousJava, configChanged) {
-            let javaVersionChange = (java !== previousJava) ? `Changed from ${previousJava} to ${java}` : `${java}`;
-            let configChangeRow = '';
-
-            if (configChanged !== "undefined") {
-                configChangeRow = `<tr><th class="text-dark">Config Changed</th><td>${configChanged === "true" ? 'Yes' : 'No'}</td></tr>`;
-            }
-
-            if (ver === "@DeploymentGraphService.notDeployedMessage") {
-                return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
-            }
-            return `<div class="timeline-tooltip" style="width:250px">
-                        <table class="table table-striped mb-0">
-                            <tr><th class="text-dark">${ver}</th><td>Deployed for ${days} days</td></tr>
-                            <tr><th class="text-dark">By</th><td>${user}</td></tr>
-                            <tr><th class="text-dark">From</th><td>${start} UTC</td></tr>
-                            <tr><th class="text-dark">To</th><td>${end} UTC</td></tr>
-                            <tr><th class="text-dark">Java</th><td>${javaVersionChange}</td></tr>
-                            ${configChangeRow}
-                        </table>
-                    </div>`
-        }
-    </script>
-
     <h1 class="page-heading mt-4">Deployment Timeline @service.map { s => <a id="link-to-service-info-page" href="@CatalogueController.service(s)">- @s.asString</a>}</h1>
     <form id="form" action="" method="get">
         <div class="form-group row">
-            <div class="col-md-6">
+            <div class="col-md-7">
               <dl>
                 <dt>
                   <label class="form-label" for="service-search" >Service</label>
                 </dt>
                 <dd class="position-relative">
-                  <input id="service-search" name="service" value="@service.fold("")(_.asString)" class="form-control" type="text" list="services" autocomplete="off">
+                  <input id="service-search" name="service" value="@service.fold("")(_.asString)" class="form-control" type="text" list="services" autocomplete="off" required="required">
                   <div id="service-matches" class="search-matches-dropdown d-none"></div>
                 </dd>
               </dl>
@@ -165,7 +97,7 @@
                     </dd>
                 </dl>
             </div>
-            <div class="col-md-2" style="padding-top: 30px;">
+            <div class="col-md-1" style="padding-top: 30px;">
                 <button id="form-submit-button" type="submit" value="Submit" class="btn btn-success">Submit</button>
             </div>
         </div>
@@ -174,12 +106,132 @@
     @if(events.isEmpty) {
         @if(start.equals(end) || start.isAfter(end)) {
             <p class="red">Start date must be before the End date.</p>
-        }
-        @if(!service.exists(services.contains)){
-            <p>No data in this date range.</p>
+        } else if (service.isDefined) {
+            <p class="red">No data in this date range.</p>
         }
     } else {
-        <div id="history-chart" style="height: 300px;"></div>
+        <textarea id="deploymentRows" style="width: 100%;display: none;">@events.map(e => s"${e.deploymentId},${e.version.original},${e.env.displayString},${e.userName},${e.displayStart.getOrElse(e.start).displayFormat},${e.displayEnd.getOrElse(e.end).displayFormat}").mkString("\n")</textarea>
+        <div id="history-chart" style="height: 260px;"></div>
+        <div id="deploymentSpinner" style="display: none" class="text-center">
+            <div class="spinner-border text-secondary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div id="deploymentInfo" style="display: none">
+            <div id="deploymentInfoHeading" class="text-center"></div>
+            <iframe id="deploymentInfoIframe" src="" width="100%" scrolling="no" noresize frameborder="0"></iframe>
+        </div>
+
+        <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script @CSPNonce.attr type="text/javascript">
+            google.charts.load("current", {packages:["timeline"]});
+            google.charts.setOnLoadCallback(drawChart);
+
+            const usersTemplateUrl = '@userRoutes.UsersController.user(UserName("PLACEHOLDER")).url';
+            const deploymentRows   = document.getElementById('deploymentRows').value.split('\n');
+
+            function drawChart() {
+                let data = [
+                    @events.map { e =>
+                        ['@e.env',
+                        '@{e.version.toString}',
+                        makeToolTip(
+                            '@{e.version}',
+                            '@{e.userName}',
+                            '@{e.displayStart.getOrElse(e.start).displayFormat}',
+                            '@{e.displayEnd.getOrElse(e.end).displayFormat}',
+                            @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
+                            '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString}")}',
+                            '@previousJavaVersion(e.env, e.deploymentId, events, slugInfo)',
+                            '@{e.configChanged.getOrElse("undefined")}'
+                        ),
+                        '@colorForVersion(e.version.toString)',
+                        new Date(@{e.start.toEpochMilli}),
+                        new Date(@{e.end.toEpochMilli}),
+                    ], }
+                ];
+
+                let options = {tooltip: { isHtml: true }, enableInteractivity: true};
+                let container = document.getElementById('history-chart');
+                if (container == null) return
+                let chart = new google.visualization.Timeline(container);
+                let dataTable = new google.visualization.DataTable();
+                dataTable.addColumn({ type: 'string', id: 'Environment' });
+                dataTable.addColumn({ type: 'string', id: 'Version' });
+                dataTable.addColumn({ type: 'string', role: 'tooltip' });
+                dataTable.addColumn({ type: 'string', role: 'style'});
+                dataTable.addColumn({ type: 'date', id: 'Start' });
+                dataTable.addColumn({ type: 'date', id: 'End' });
+
+                dataTable.addRows(data);
+                chart.draw(dataTable, options);
+
+                const deploymentSpinner = document.getElementById("deploymentSpinner");
+                const deploymentInfo    = document.getElementById("deploymentInfo");
+                const deploymentHeading = document.getElementById("deploymentInfoHeading");
+                const deploymentIframe  = document.getElementById("deploymentInfoIframe");
+
+                google.visualization.events.addListener(chart, 'select', function() {
+                    deploymentInfo.style.display = 'none';
+
+                    const segmentIndex      = chart.getSelection()[0].row;
+                    const deploymentRow     = deploymentRows[segmentIndex].split(",");
+                    const deploymentId      = deploymentRow[0];
+                    const deploymentVersion = deploymentRow[1];
+                    const deploymentEnv     = deploymentRow[2];
+                    const deploymentUser    = deploymentRow[3];
+                    const deploymentStart   = deploymentRow[4];
+                    const deploymentEnd     = deploymentRow[5];
+                    const fromDeploymentId  = deploymentRows[segmentIndex - 1][0]; // TODO also needs to be in the same environment and not -1
+
+                    deploymentHeading.innerHTML = `<code>${deploymentVersion}</code> was deployed in <strong>${deploymentEnv}</strong> by <a href="${usersTemplateUrl.replace("PLACEHOLDER", deploymentUser)}">${deploymentUser}</a> - ${deploymentStart} to ${deploymentEnd}`
+
+                    if (deploymentId && deploymentId != fromDeploymentId) {
+                        const onSelectUrl =
+                            fromDeploymentId && deploymentId.substring(0, deploymentId.lastIndexOf('-')) == fromDeploymentId.substring(0, fromDeploymentId.lastIndexOf('-')) ?
+                                `deployment-timeline-select/@service.fold("")(_.asString)?deploymentId=${deploymentId}&fromDeploymentId=${fromDeploymentId}`:
+                                `deployment-timeline-select/@service.fold("")(_.asString)?deploymentId=${deploymentId}`;
+
+                        deploymentSpinner.style.display = '';
+                        deploymentIframe.setAttribute("src", onSelectUrl);
+
+                        deploymentIframe.onload = function() {
+                            const window = deploymentIframe.contentWindow;
+                            deploymentSpinner.style.display = 'none';
+                            deploymentInfo.style.display = '';
+                            // resize iframe on accordion expansion
+                            const ro = new ResizeObserver(function() {
+                                deploymentIframe.height = parseInt(window.getComputedStyle(window.document.documentElement).getPropertyValue("height"));
+                            });
+                            ro.observe(deploymentIframe.contentDocument.body);
+                        }
+                    }
+                });
+            }
+
+            function makeToolTip(ver, user, start, end, days, java, previousJava, configChanged) {
+                let javaVersionChange = (java !== previousJava) ? `Changed from ${previousJava} to ${java}` : `${java}`;
+                let configChangeRow = '';
+
+                if (configChanged !== "undefined") {
+                    configChangeRow = `<tr><th class="text-dark">Config Changed</th><td>${configChanged === "true" ? 'Yes' : 'No'}</td></tr>`;
+                }
+
+                if (ver === "@DeploymentGraphService.notDeployedMessage") {
+                    return `<div class="timeline-tooltip">No deployment events found in this date range</div>`
+                }
+                return `<div class="timeline-tooltip" style="width:250px">
+                            <table class="table table-striped mb-0">
+                                <tr><th class="text-dark">${ver}</th><td>Deployed for ${days} days</td></tr>
+                                <tr><th class="text-dark">By</th><td>${user}</td></tr>
+                                <tr><th class="text-dark">From</th><td>${start} UTC</td></tr>
+                                <tr><th class="text-dark">To</th><td>${end} UTC</td></tr>
+                                <tr><th class="text-dark">Java</th><td>${javaVersionChange}</td></tr>
+                                ${configChangeRow}
+                            </table>
+                        </div>`
+            }
+        </script>
     }
 }
 

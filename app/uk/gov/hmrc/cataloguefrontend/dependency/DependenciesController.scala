@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.dependency
 
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import play.utils.UriEncoding
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, given}
 import uk.gov.hmrc.cataloguefrontend.dependency.view.html.{DependencyGraphsPage, DependenciesPage}

@@ -37,7 +37,7 @@ import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, Se
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, VulnerabilitiesConnector, VulnerabilitySummary, CurationStatus}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}

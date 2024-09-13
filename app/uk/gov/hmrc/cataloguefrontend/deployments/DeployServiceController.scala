@@ -181,13 +181,7 @@ class DeployServiceController @Inject()(
          configWarnings       <- EitherT
                                    .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
          vulnerabilities      <- EitherT
-                                   .right[Result]:
-                                     vulnerabilitiesConnector
-                                       .vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired))
-                                       .map:
-                                         _.flatMap:
-                                           case xs if xs.isEmpty && !releases.exists(_.version == formObject.version) => None
-                                           case xs                                                                    => Some(xs)
+                                   .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired)))
        yield
          Ok(deployServicePage(
            form,

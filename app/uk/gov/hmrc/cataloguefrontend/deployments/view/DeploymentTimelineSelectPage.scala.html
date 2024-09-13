@@ -1,0 +1,49 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubProxyConnector
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, DeploymentConfigChange }
+
+@this()
+
+@(
+  serviceName            : ServiceName
+, environment            : Environment
+, previousVersion        : Option[Version]
+, deployedVersion        : Version
+, oGitHubCompare         : Option[GitHubProxyConnector.Compare]
+, jvmChanges             : (Option[ServiceJdkVersion], ServiceJdkVersion)
+, deploymentConfigChanges: Seq[DeploymentConfigChange]
+, configChanges          : ConfigChanges
+)(implicit request: Request[_])
+
+@standard_layout("Deployment Timeline", active = "deployments", showNavBar = false) {
+  <div class="mt-3 mr-1">
+    @evaluationsPartial(
+      serviceName             = serviceName
+    , environment             = environment
+    , previousVersion         = previousVersion
+    , deployedVersion         = deployedVersion
+    , oGitHubCompare          = oGitHubCompare
+    , jvmChanges              = jvmChanges
+    , deploymentConfigChanges = deploymentConfigChanges
+    , configChanges           = configChanges
+    , showConfigWarnings      = false
+    , showVulnerabilities     = false
+    )
+  </div>
+}

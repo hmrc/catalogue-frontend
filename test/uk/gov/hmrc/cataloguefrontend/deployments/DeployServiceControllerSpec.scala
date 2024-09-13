@@ -34,7 +34,7 @@ import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, D
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, DeploymentConfigChange, ServiceConfigsService}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, DeploymentConfigChange, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
@@ -296,10 +296,17 @@ class DeployServiceControllerSpec
   , dependencies  = Nil
   )
 
-  private val someConfigChanges: Map[KeyName, ConfigChange] = Map(
-    KeyName("key1") -> ConfigChange(from = None                                                        , to = Some(ConfigSourceValue("some-source", None, "some-value1")))
-  , KeyName("key2") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value2a")), to = Some(ConfigSourceValue("some-source", None, "some-value2b")))
-  , KeyName("key3") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value3")) , to = None)
+  private val someConfigChanges = ConfigChanges(
+    base        = ConfigChanges.BaseConfigChange(                                     from = Some(ConfigChanges.CommitId("abcdef")), to = Some(ConfigChanges.CommitId("ghijkl")), githubUrl = "some-url")
+  , common      = ConfigChanges.CommonConfigChange(                                   from = Some(ConfigChanges.CommitId("abcdef")), to = Some(ConfigChanges.CommitId("ghijkl")), githubUrl = "some-url")
+  , env         = ConfigChanges.EnvironmentConfigChange(environment = Environment.QA, from = Some(ConfigChanges.CommitId("abcdef")), to = Some(ConfigChanges.CommitId("ghijkl")), githubUrl = "some-url")
+  , changes     = Map(
+                    KeyName("key1") -> ConfigChange(from = None                                                        , to = Some(ConfigSourceValue("some-source", None, "some-value1")))
+                  , KeyName("key2") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value2a")), to = Some(ConfigSourceValue("some-source", None, "some-value2b")))
+                  , KeyName("key3") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value3")) , to = None)
+                  )
+  , fromVersion = Some(Version("0.2.0"))
+  , toVersion   = Version("0.3.0")
   )
 
   private val someReleasesForService = WhatsRunningWhere(

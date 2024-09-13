@@ -1,0 +1,381 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubProxyConnector
+@import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, DeploymentConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityDetails
+
+@(
+  serviceName                : ServiceName
+, environment                : Environment
+, previousVersion            : Option[Version]
+, deployedVersion            : Version
+, oGitHubCompare             : Option[GitHubProxyConnector.Compare]
+, jvmChanges                 : (Option[ServiceJdkVersion], ServiceJdkVersion)
+, deploymentConfigChanges    : Seq[DeploymentConfigChange]
+, configChanges              : ConfigChanges
+, configWarnings             : Seq[ServiceConfigsService.ConfigWarning]        = Nil
+, oVulnerabilities           : Option[Seq[VulnerabilitySummary]]               = None
+, showConfigWarnings         : Boolean                                         = true
+, showVulnerabilities        : Boolean                                         = true
+)(implicit
+  request                    : RequestHeader
+)
+
+<div class="accordion mb-3" id="accordion">
+  <div class="accordion-item">
+    <div class="accordion-header" id="headingCommits">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCommits" aria-expanded="false" aria-controls="collapseCommits" @if(!oGitHubCompare.exists(_.totalCommits > 0)) {disabled}>
+        @oGitHubCompare match {
+          case None                 => {
+            Could not contact GitHub to compare versions
+          }
+          case Some(compare) => {
+            Commits between
+            <code class="p-1">@previousVersion.fold("0.1.0")(_.original)</code>
+            and
+            <code class="p-1">@deployedVersion</code>
+            @changesBadge(
+              if      (compare.aheadBy  > 0) 0 + compare.aheadBy
+              else if (compare.behindBy > 0) 0 - compare.behindBy
+              else                           0
+            )
+          }
+        }
+      </button>
+
+      <div id="collapseCommits" class="accordion-collapse collapse" aria-labelledby="headingCommits" data-bs-parent="#accordion">
+        <div class="accordion-body">
+          @oGitHubCompare.map { compare =>
+            <table class="table table-striped always-wrap sticky-header">
+              <thead>
+                <tr>
+                  <th>Author</th>
+                  <th>Date</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody id="github-compare-rows">
+                @compare.commits.zipWithIndex.map { case (commit, index) =>
+                  <tr class="@if(oGitHubCompare.fold(0)(_.behindBy) > 0) {text-decoration-line-through}">
+                    <td class="text-nowrap">@commit.author</td>
+                    <td class="text-nowrap">@commit.date</td>
+                    <td><a href="@commit.htmlUrl" target="_blank" rel="noreferrer noopener" alt="Link to commit @{index + 1}">@commit.message</a></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            <div class="text-center">
+              <a href="@compare.htmlUrl" target="_blank" rel="noreferrer noopener" alt="Link to Github compare">
+                <img alt="github badge" src="@routes.Assets.versioned("githubicon-green.svg")"/>
+                See more commits
+                <span alt="new window badge" class="glyphicon glyphicon-new-window"/>
+              </a>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="accordion-item">
+    <div class="accordion-header" id="headingJvmChanges">
+      @defining((jvmChanges._1, jvmChanges._2)) { case (oldJvm, newJvm) =>
+        @defining(oldJvm.map(_ != newJvm).getOrElse(true)){ isJvmChanged =>
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJvmChanges" aria-expanded="false" aria-controls="collapseJvmChanges" @if(!isJvmChanged) {disabled}>
+            JVM: @newJvm.version @newJvm.vendor.asString
+            @changesBadge(if (isJvmChanged) 1 else 0)
+          </button>
+        }
+
+        <div id="collapseJvmChanges" class="accordion-collapse collapse" aria-labelledby="headingJvmChanges" data-bs-parent="#accordion">
+          <div class="accordion-body">
+            <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+              <thead>
+                <tr>
+                  <th>Previously</th>
+                </tr>
+              </thead>
+              <tbody id="jvm-changes-rows">
+                <tr>
+                  @oldJvm match {
+                    case None => { <td>Not deployed</td> }
+                    case Some(current) => { <td>@current.version @current.vendor.asString</td> }
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <div class="accordion-header" id="headingDeploymentConfigUpdates">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDeploymentConfigUpdates" aria-expanded="false" aria-controls="collapseDeploymentConfigUpdates" @if(deploymentConfigChanges.isEmpty) {disabled} >
+        Deployment Config Updates
+        @changesBadge(deploymentConfigChanges.size)
+      </button>
+    </div>
+    <div id="collapseDeploymentConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingDeploymentConfigUpdates" data-bs-parent="#accordion">
+      <div class="accordion-body">
+        <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="deployment-config-updates-rows">
+            @deploymentConfigChanges.map {
+              case DeploymentConfigChange.NewConfig(k, v) => {
+                <tr>
+                  <td><code>@k</code></td>
+                  <td>@v</td>
+                </tr>
+              }
+              case DeploymentConfigChange.DeletedConfig(k, previousV) => {
+                <tr>
+                  <td><del><code>@k</code></del></td>
+                  <td><del>@previousV</del></td>
+                </tr>
+              }
+              case DeploymentConfigChange.ChangedConfig(k, previousV, newV) => {
+                <tr>
+                  <td><code>@k</code></td>
+                  <td>
+                    <ul class="list-unstyled">
+                      <li><del>@previousV</del></li>
+                      <li>@newV</li>
+                    </ul>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <div class="accordion-header" id="headingConfigUpdates">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(configChanges.changes.isEmpty) {disabled} >
+        Config Updates
+        @changesBadge(configChanges.changes.size)
+      </button>
+    </div>
+    <div id="collapseConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+      <div class="accordion-body">
+        <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="config-updates-rows">
+            @for((key, ConfigChange(from, to)) <- configChanges.changes.toList.sortBy(_._1.asString) ) {
+              <tr>
+                <td>
+                  <code>
+                    <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(key)).url" target="_blank">
+                      @if(from.nonEmpty && to.isEmpty) {
+                        <del>@key.asString</del>
+                      } else {
+                        @key.asString
+                      }
+                    </a>
+                  </code>
+                </td>
+                <td>
+                  <ul class="list-unstyled">
+                    @from.map { c =>
+                      <li>@displayConfigSourceValue(key, environment, c, isStriked = true)</li>
+                    }
+                    @to.map { c =>
+                      <li>@displayConfigSourceValue(key, environment, c, isStriked = false)</li>
+                    }
+                  </ul>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  @if(showConfigWarnings) {
+    <div class="accordion-item">
+      <div class="accordion-header" id="headingConfigWarnings">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigWarnings" aria-expanded="false" aria-controls="collapseConfigWarnings" @if(configWarnings.isEmpty) {disabled}>
+          Config Warnings
+          @changesBadge(configWarnings.size)
+        </button>
+      </div>
+      <div id="collapseConfigWarnings" class="accordion-collapse collapse" aria-labelledby="headingConfigWarnings" data-bs-parent="#accordion">
+        <div class="accordion-body">
+          <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Warning</th>
+              </tr>
+            </thead>
+            <tbody id="config-warnings-rows">
+              @for(x <- configWarnings) {
+                <tr>
+                  <td><code>@x.key.asString</code></td>
+                  <td>@displayConfigWarning(serviceName, x.key, x.environment, x)</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if(showVulnerabilities) {
+    <div class="accordion-item">
+      <div class="accordion-header" id="headingVulnerabilities">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVulnerabilities" aria-expanded="false" aria-controls="collapseVulnerabilities" @if(oVulnerabilities.getOrElse(Nil).isEmpty) {disabled}>
+          @if(oVulnerabilities.isEmpty) {
+            Vulnerabilities unknown - report not generated
+          } else {
+            Vulnerabilities with action required
+            @changesBadge(oVulnerabilities.getOrElse(Nil).size)
+          }
+        </button>
+      </div>
+      <div id="collapseVulnerabilities" class="accordion-collapse collapse" aria-labelledby="headingVulnerabilities" data-bs-parent="#accordion">
+        <div class="accordion-body">
+          <table class="table table-striped sticky-header text-break">
+            <thead>
+              <tr>
+                <th class="visually-hidden" style="width: 30px;">-</th>
+                <th class="col-2"><button class="sort no-border fw-bold" data-sort="vuln-id">Vulnerability ID</button></th>
+                <th class="col-3">Vulnerable Component</th>
+                <th class="">Assessment</th>
+                <th class="col-1 text-right" style="width: 90px;"><button class="sort no-border fw-bold" data-sort="score">Score</button></th>
+                <th class="visually-hidden">-</th>
+                <th class="visually-hidden">-</th>
+                <th class="visually-hidden">-</th>
+                <th class="visually-hidden">-</th>
+                <th class="visually-hidden">-</th>
+              </tr>
+            </thead>
+            <tbody id="vulnerabilities-rows" class="list">
+              @oVulnerabilities.getOrElse(Nil).map(vulnerabilitiesSummary)
+            </tbody>
+          </table>
+          <script @CSPNonce.attr>
+            document.querySelectorAll('[data-bs-toggle="collapse"]').forEach( function(el) {
+              let chevron = el.querySelector('.glyphicon');
+              let collapseId = el.getAttribute('data-bs-target');
+              let collapse = document.querySelector(collapseId);
+
+              collapse.addEventListener('hidden.bs.collapse', () => {
+                chevron.classList.remove('glyphicon-chevron-down');
+                chevron.classList.add('glyphicon-chevron-right');
+              });
+
+              collapse.addEventListener('show.bs.collapse', () => {
+                chevron.classList.remove('glyphicon-chevron-right');
+                chevron.classList.add('glyphicon-chevron-down');
+              });
+            });
+          </script>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+@displayConfigSourceValue(configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue, isStriked: Boolean) = {
+  <span
+    data-bs-toggle="popover"
+    data-bs-trigger="hover"
+    data-bs-placement="bottom"
+    data-bs-html="true"
+    data-bs-content='@popoverConfigSourceValue(configKey, configSourceValue, env)'
+  >
+    @if(isStriked) {
+      <del>@configSourceValue.displayString</del>
+    } else {
+      @configSourceValue.displayString
+    }
+  </span>
+}
+
+@popoverConfigSourceValue(key: ServiceConfigsService.KeyName, sourceValue: ServiceConfigsService.ConfigSourceValue, env: Environment) = {
+  <div>@ServiceConfigsService.friendlySourceName(sourceValue.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(key))</div>
+}
+
+@displayConfigWarning(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configWarning: ServiceConfigsService.ConfigWarning) = {
+  <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(configKey)).url"
+      target="_blank"
+      data-bs-toggle="popover"
+      data-bs-trigger="hover"
+      data-bs-placement="bottom"
+      data-bs-html="true"
+      data-bs-content='@popoverConfigWarning(configWarning, env)'>
+      @configWarning.warning
+  </a>
+}
+
+@popoverConfigWarning(warning: ServiceConfigsService.ConfigWarning, env: Environment) = {
+  <div>@ServiceConfigsService.friendlySourceName(warning.value.source, ServiceConfigsService.ConfigEnvironment.ForEnvironment(env), Some(warning.key))</div>
+  <strong>Value:</strong> @play.twirl.api.XmlFormat.escape(warning.value.displayString)
+}
+
+@vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
+  @defining(summary.distinctVulnerability.vulnerableComponentName.split("://")) { splitVulnerableComponent =>
+      <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">
+          <td><span class="glyphicon glyphicon-chevron-right"></span></td>
+          <td class="vuln-id">@summary.distinctVulnerability.id</td>
+          <td class="vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+          <td class="assessment">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+          <td class="score text-end">@summary.distinctVulnerability.score.getOrElse("")</td>
+          <td class="d-none"></td>
+          <td class="d-none"></td>
+          <td class="d-none"></td>
+          <td class="d-none"></td>
+          <td class="d-none"></td>
+      </tr>
+      <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
+          @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
+          <td class="vuln-id d-none">@summary.distinctVulnerability.id</td>
+          <td class="vulnerable-component-name d-none">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
+          <td class="assessment d-none">@summary.distinctVulnerability.assessment.getOrElse("")</td>
+          <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
+          <td colspan="5">
+              @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
+          </td>
+      </tr>
+  }
+}
+
+@changesBadge(changeCount: Int) = {
+  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill z-3  @if(changeCount == 0) {text-bg-secondary} else if(changeCount < 0) {text-bg-warning} else {text-bg-info}">
+  @changeCount
+  <span class="visually-hidden">Number of changes</span>
+}

@@ -62,17 +62,32 @@ class ServiceConfigsService @Inject()(
                   key -> (envMap + (e -> (values :+ ConfigSourceValue(cse.source, cse.sourceUrl, value))))
       .map(xs => scala.collection.immutable.ListMap(xs.toSeq.sortBy(_._1.asString)*)) // sort by keys
 
+  def configChanges(
+    deploymentId    : String
+  , fromDeploymentId: Option[String]
+  )(using
+    HeaderCarrier
+  ): Future[ConfigChanges] =
+    serviceConfigsConnector
+      .configChanges(deploymentId, fromDeploymentId)
+      .map: configChanges =>
+        configChanges.copy(
+          changes = configChanges.changes.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
+        )
+
   def configChangesNextDeployment(
     serviceName: ServiceName,
     environment: Environment,
     version    : Version
   )(using
     HeaderCarrier
-  ): Future[Map[KeyName, ConfigChange]] =
+  ): Future[ConfigChanges] =
     serviceConfigsConnector
       .configChangesNextDeployment(serviceName, environment, version)
-      .map:
-        _.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
+      .map: configChanges =>
+        configChanges.copy(
+          changes = configChanges.changes.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
+        )
 
   def configByKeyWithNextDeployment(
     serviceName : ServiceName,
