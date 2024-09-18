@@ -145,14 +145,23 @@
         @helper.form(
           action           =  appRoutes.DeployServiceController.step3()
         , Symbol("method") -> "POST"
+        , Symbol("id")     -> "deployServiceForm"
         ) {
           @csrfFormField
           <hr/>
           <input type="hidden" name="serviceName" value='@form("serviceName").value' />
           <input type="hidden" name="version" value='@form("version").value' />
           <input type="hidden" name="environment" value='@form("environment").value' />
-          <button id="deploy-btn" class="btn btn-success float-end" type="submit" @if(!hasPerm){disabled}>Deploy</button>
-          <br/><br/>
+            @if(form.get.environment == Environment.Production && !releases.exists(_.environment == Environment.Production)) {
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="firstDeploymentCheckbox">
+                <label class="form-check-label" for="firstDeploymentCheckbox">
+                  I have <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-a-microservice/create-a-pra-page.html" target="_blank" rel="noreferrer noopener">Change Approval Board (CAB)</a> approval to release this service into production.
+                </label>
+              </div>
+            }
+            <button id="deploy-btn" class="btn btn-success float-end" type="submit" @if(!hasPerm){disabled}>Deploy</button>
+            <br/><br/>
         }
       }
     </div>
@@ -169,6 +178,28 @@
       submitOnSelection: true,
       values           : [@for(service <- services) {'@service.asString',}],
       minSearch        : 1
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('deployServiceForm');
+      const deployButton = document.getElementById('deploy-btn');
+      const checkbox = document.getElementById('firstDeploymentCheckbox');
+
+      if (form && checkbox && deployButton) {
+        const initialButtonIsDisabled = deployButton.disabled;
+
+        deployButton.disabled = !!(!checkbox.checked || initialButtonIsDisabled);
+
+        checkbox.addEventListener('change', function () {
+          if (checkbox.checked) {
+            if (!initialButtonIsDisabled) {
+              deployButton.disabled = false;
+            }
+          } else {
+            deployButton.disabled = true;
+          }
+        });
+      }
     });
 
     @if(form("serviceName").value.isDefined) {
