@@ -32,7 +32,7 @@ import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, CostEstimationSer
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
-import uk.gov.hmrc.cataloguefrontend.service.{DefaultBranchesService, RouteRulesService}
+import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
@@ -43,7 +43,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.cataloguefrontend.view.html.{DefaultBranchListPage, IndexPage, LibraryInfoPage, PrototypeInfoPage, RepositoryInfoPage, ServiceInfoPage, TestRepoInfoPage, error_404_template}
+import uk.gov.hmrc.cataloguefrontend.view.html.{IndexPage, LibraryInfoPage, PrototypeInfoPage, RepositoryInfoPage, ServiceInfoPage, TestRepoInfoPage, error_404_template}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -69,7 +69,6 @@ class CatalogueController @Inject() (
   serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector,
   leakDetectionService               : LeakDetectionService,
   shutterService                     : ShutterService,
-  defaultBranchesService             : DefaultBranchesService,
   override val mcc                   : MessagesControllerComponents,
   whatsRunningWhereService           : WhatsRunningWhereService,
   prCommenterConnector               : PrCommenterConnector,
@@ -83,7 +82,6 @@ class CatalogueController @Inject() (
   prototypeInfoPage                  : PrototypeInfoPage,
   testRepoInfoPage                   : TestRepoInfoPage,
   repositoryInfoPage                 : RepositoryInfoPage,
-  defaultBranchListPage              : DefaultBranchListPage,
   serviceMetricsConnector            : ServiceMetricsConnector,
   serviceConfigsConnector            : ServiceConfigsConnector,
   override val auth                  : FrontendAuthComponents
@@ -448,31 +446,6 @@ class CatalogueController @Inject() (
           Redirect(routes.CatalogueController.repository(repoName.getOrElse(artefact)).copy(fragment = artefact))
     }
 
-  def allDefaultBranches(singleOwnership: Boolean, includeArchived: Boolean): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      teamsAndRepositoriesConnector.allRepositories().map: repositories =>
-        DefaultBranchesFilter.form
-          .bindFromRequest()
-          .fold(
-            formWithErrors =>
-              Ok(defaultBranchListPage(
-                repositories      = Seq.empty,
-                teamNames         = Seq.empty,
-                singleOwnership   = false,
-                includeArchived   = false,
-                formWithErrors
-              )),
-            query =>
-              Ok(defaultBranchListPage(
-                repositories    = defaultBranchesService.filterRepositories(repositories, query.name, query.defaultBranch, query.teamNames, singleOwnership, includeArchived),
-                teamNames       = defaultBranchesService.allTeams(repositories),
-                singleOwnership = singleOwnership,
-                includeArchived = includeArchived,
-                DefaultBranchesFilter.form.bindFromRequest()
-              ))
-          )
-    }
-
 end CatalogueController
 
 case class TeamFilter(
@@ -533,23 +506,3 @@ object ChangePrototypePassword:
         "password" -> Forms.nonEmptyText.verifying(passwordConstraint)
       )(PrototypePassword.apply)(f => Some(f.value))
     )
-
-case class DefaultBranchesFilter(
-   name           : Option[String]   = None,
-   teamNames      : Option[TeamName] = None,
-   defaultBranch  : Option[String]   = None
-) {
-  def isEmpty: Boolean =
-    name.isEmpty && teamNames.isEmpty && defaultBranch.isEmpty
-}
-
-object DefaultBranchesFilter {
-  lazy val form: Form[DefaultBranchesFilter] =
-    Form(
-      Forms.mapping(
-        "name"          -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "teamNames"     -> Forms.optional(Forms.of[TeamName]),
-        "defaultBranch" -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
-      )(DefaultBranchesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
-    )
-}
