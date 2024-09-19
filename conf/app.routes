@@ -50,8 +50,6 @@ POST       /prototype/:name/change-password             uk.gov.hmrc.cataloguefro
 POST       /prototype/:name/set-status/:status          uk.gov.hmrc.cataloguefrontend.CatalogueController.setPrototypeStatus(name: String, status: PrototypeStatus)
 GET        /dependency-repository                       uk.gov.hmrc.cataloguefrontend.CatalogueController.dependencyRepository(group, artefact, version)
 
-GET        /defaultbranch                               uk.gov.hmrc.cataloguefrontend.CatalogueController.allDefaultBranches(singleOwnership: Boolean ?= false, includeArchived: Boolean ?= false)
-
 GET        /assets/*file                                controllers.Assets.versioned(path="/public", file: Asset)
 GET        /                                            uk.gov.hmrc.cataloguefrontend.CatalogueController.index
 
