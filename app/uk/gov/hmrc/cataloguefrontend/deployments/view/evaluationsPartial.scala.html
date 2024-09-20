@@ -82,7 +82,11 @@
             <div class="text-center">
               <a href="@compare.htmlUrl" target="_blank" rel="noreferrer noopener" alt="Link to Github compare">
                 <img alt="github badge" src="@routes.Assets.versioned("githubicon-green.svg")"/>
-                See more commits
+                @if(compare.totalCommits > compare.commits.size) {
+                  See more commits
+                } else {
+                  See on GitHub
+                }
                 <span alt="new window badge" class="glyphicon glyphicon-new-window"/>
               </a>
             </div>
