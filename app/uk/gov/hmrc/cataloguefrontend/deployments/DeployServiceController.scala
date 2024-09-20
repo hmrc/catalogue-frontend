@@ -174,8 +174,6 @@ class DeployServiceController @Inject()(
                                        .recover:
                                          case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
          jvmChanges           =  (currentSlug.map(_.java), slugToDeploy.java)
-         deploymentChanges    <- EitherT
-                                   .right[Result](serviceConfigsService.deploymentConfigChanges(formObject.serviceName, formObject.environment))
          configChanges        <- EitherT
                                    .right[Result](serviceConfigsService.configChangesNextDeployment(formObject.serviceName, formObject.environment, formObject.version))
          configWarnings       <- EitherT
@@ -190,7 +188,7 @@ class DeployServiceController @Inject()(
            latest,
            releases,
            environments,
-           Some((gitHubCompare, jvmChanges, deploymentChanges, configChanges, configWarnings, vulnerabilities))
+           Some((gitHubCompare, jvmChanges, configChanges, configWarnings, vulnerabilities))
          ))
       ).merge
     }

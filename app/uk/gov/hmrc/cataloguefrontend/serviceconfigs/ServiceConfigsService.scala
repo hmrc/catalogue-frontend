@@ -67,13 +67,14 @@ class ServiceConfigsService @Inject()(
   , fromDeploymentId: Option[String]
   )(using
     HeaderCarrier
-  ): Future[ConfigChanges] =
+  ): Future[Option[ConfigChanges]] =
     serviceConfigsConnector
       .configChanges(deploymentId, fromDeploymentId)
-      .map: configChanges =>
-        configChanges.copy(
-          changes = configChanges.changes.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
-        )
+      .map: o =>
+        o.map: x =>
+          x.copy(
+           configChanges = x.configChanges.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
+          )
 
   def configChangesNextDeployment(
     serviceName: ServiceName,
@@ -84,9 +85,9 @@ class ServiceConfigsService @Inject()(
   ): Future[ConfigChanges] =
     serviceConfigsConnector
       .configChangesNextDeployment(serviceName, environment, version)
-      .map: configChanges =>
-        configChanges.copy(
-          changes = configChanges.changes.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
+      .map: x =>
+        x.copy(
+          configChanges = x.configChanges.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
         )
 
   def configByKeyWithNextDeployment(
@@ -245,55 +246,6 @@ class ServiceConfigsService @Inject()(
       .mapValues: xs =>
         sorted(xs.groupBy(_.key).view.mapValues(_.groupBy(_.environment)).toMap)(using Ordering.by(_.asString))
       .toMap
-
-
-  def deploymentConfigChanges(
-    service    : ServiceName,
-    environment: Environment
-  )(using HeaderCarrier): Future[Seq[DeploymentConfigChange]] =
-    for
-      appliedConfig  <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = true ).map(_.headOption)
-      newConfig      <- serviceConfigsConnector.deploymentConfig(service = Some(service), environment = Some(environment), applied = false).map(_.headOption)
-      slots          =  valChanges(
-                          "slots",
-                          appliedConfig.map(_.deploymentSize.slots.toString),
-                          newConfig.map(_.deploymentSize.slots.toString)
-                        )
-      instances      =  valChanges(
-                          "instances",
-                          appliedConfig.map(_.deploymentSize.instances.toString),
-                          newConfig.map(_.deploymentSize.instances.toString)
-                        )
-      envVars        =  mapChanges(
-                          "environment",
-                          appliedConfig.fold(Map.empty[String, String])(_.envVars),
-                          newConfig.fold(Map.empty[String, String])(_.envVars)
-                        )
-      jvm            =  mapChanges(
-                          "jvm",
-                          appliedConfig.fold(Map.empty[String, String])(_.jvm),
-                          newConfig.fold(Map.empty[String, String])(_.jvm)
-                        )
-    yield (slots ++ instances ++ envVars ++ jvm).sortBy(_.k)
-
-  private def valChanges(key: String, appliedVal: Option[String], newVal: Option[String]): Seq[DeploymentConfigChange] =
-    (appliedVal, newVal) match
-      case (Some(appliedVal), Some(newVal)) if appliedVal != newVal => Seq(DeploymentConfigChange.ChangedConfig(key, appliedVal, newVal))
-      case (None            , Some(newVal))                         => Seq(DeploymentConfigChange.NewConfig(key, newVal))
-      case (Some(appliedVal), None        )                         => Seq(DeploymentConfigChange.DeletedConfig(key, appliedVal))
-      case _                                                        => Seq.empty
-
-  private def mapChanges(keyPrefix: String, appliedConf: Map[String, String], newConf: Map[String, String]): Seq[DeploymentConfigChange] =
-    appliedConf.toSeq
-      .collect:
-        case (k, v) if newConf.get(k).isEmpty =>
-          DeploymentConfigChange.DeletedConfig(s"$keyPrefix.${k}", v)
-      ++
-        newConf.toSeq.flatMap: (k, v) =>
-          appliedConf.get(k) match
-            case Some(appliedV) if appliedV != v => Seq(DeploymentConfigChange.ChangedConfig(s"$keyPrefix.${k}", appliedV, v))
-            case None                            => Seq(DeploymentConfigChange.NewConfig(s"$keyPrefix.${k}", v))
-            case _                               => Seq.empty
 end ServiceConfigsService
 
 object ServiceConfigsService:
@@ -490,8 +442,3 @@ object ServiceConfigsService:
       )(ConfigWarning.apply)
 
 end ServiceConfigsService
-
-enum DeploymentConfigChange(val k: String):
-  case NewConfig    (override val k: String, v: String)                       extends DeploymentConfigChange(k)
-  case DeletedConfig(override val k: String, previousV: String)               extends DeploymentConfigChange(k)
-  case ChangedConfig(override val k: String, previousV: String, newV: String) extends DeploymentConfigChange(k)

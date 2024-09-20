@@ -114,16 +114,17 @@ object JsonCodecs:
     )(DeploymentHistory.apply)
 
   val deploymentTimelineEventReads: Reads[DeploymentTimelineEvent] =
-    ( (__ \ "environment"  ).read[Environment]
-    ~ (__ \ "version"      ).read[Version](Version.format)
-    ~ (__ \ "deploymentId" ).read[String]
-    ~ (__ \ "username"     ).read[String]
-    ~ (__ \ "start"        ).read[Instant]
-    ~ (__ \ "end"          ).read[Instant]
-    ~ (__ \ "displayStart" ).readNullable[Instant]
-    ~ (__ \ "displayEnd"   ).readNullable[Instant]
-    ~ (__ \ "configChanged").readNullable[Boolean]
-    ~ (__ \ "configId"     ).readNullable[String]
+    ( (__ \ "environment"            ).read[Environment]
+    ~ (__ \ "version"                ).read[Version](Version.format)
+    ~ (__ \ "deploymentId"           ).read[String]
+    ~ (__ \ "username"               ).read[String]
+    ~ (__ \ "start"                  ).read[Instant]
+    ~ (__ \ "end"                    ).read[Instant]
+    ~ (__ \ "displayStart"           ).readNullable[Instant]
+    ~ (__ \ "displayEnd"             ).readNullable[Instant]
+    ~ (__ \ "configChanged"          ).readNullable[Boolean]
+    ~ (__ \ "deploymentConfigChanged").readNullable[Boolean]
+    ~ (__ \ "configId"               ).readNullable[String]
     )(DeploymentTimelineEvent.apply)
 end JsonCodecs
 
@@ -207,14 +208,15 @@ object Pagination:
     uri"$uri".addParam("page", page.toString).toJavaUri
 
 case class DeploymentTimelineEvent(
-  env          : Environment,
-  version      : Version,
-  deploymentId : String,
-  userName     : String,
-  start        : Instant,
-  end          : Instant,
-  displayStart : Option[Instant] = None, // set on the first/last event to the actual end date rather than the end of the chart
-  displayEnd   : Option[Instant] = None,
-  configChanged: Option[Boolean] = None,
-  configId     : Option[String]  = None
+  env                    : Environment,
+  version                : Version,
+  deploymentId           : String,
+  userName               : String,
+  start                  : Instant,
+  end                    : Instant,
+  displayStart           : Option[Instant] = None, // set on the first/last event to the actual end date rather than the end of the chart
+  displayEnd             : Option[Instant] = None,
+  configChanged          : Option[Boolean] = None,
+  deploymentConfigChanged: Option[Boolean] = None,
+  configId               : Option[String]  = None
 )
