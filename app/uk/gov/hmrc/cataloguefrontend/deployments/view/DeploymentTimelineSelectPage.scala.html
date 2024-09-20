@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubProxyConnector
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, DeploymentConfigChange }
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ConfigChanges
 
 @this()
 
@@ -27,7 +27,6 @@
 , deployedVersion        : Version
 , oGitHubCompare         : Option[GitHubProxyConnector.Compare]
 , jvmChanges             : (Option[ServiceJdkVersion], ServiceJdkVersion)
-, deploymentConfigChanges: Seq[DeploymentConfigChange]
 , configChanges          : ConfigChanges
 )(implicit request: Request[_])
 
@@ -40,7 +39,6 @@
     , deployedVersion         = deployedVersion
     , oGitHubCompare          = oGitHubCompare
     , jvmChanges              = jvmChanges
-    , deploymentConfigChanges = deploymentConfigChanges
     , configChanges           = configChanges
     , showConfigWarnings      = false
     , showVulnerabilities     = false

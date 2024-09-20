@@ -61,13 +61,14 @@ class DeploymentGraphService @Inject() (
         .get(timelineEvent.deploymentId)
         .fold(timelineEvent): configEvent =>
           timelineEvent.copy(
-            configChanged = configEvent.configChanged,
-            configId = configEvent.configId
+            configChanged           = configEvent.configChanged,
+            deploymentConfigChanged = configEvent.deploymentConfigChanged,
+            configId                = configEvent.configId
           )
 
 object DeploymentGraphService:
 
-  val notDeployedMessage = "Not Deployed"
+  val notDeployedMessage = "Not Deployed" // Note this version also exists in releases-api for un-deployment events
 
   // generates a placeholder timeline event so that the timeline still shows the environment but with nothing deployed in it
   def noEventsPlaceholder(env: String, start: Instant, end: Instant): Seq[DeploymentTimelineEvent] =

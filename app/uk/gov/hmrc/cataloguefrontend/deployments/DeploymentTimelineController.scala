@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.deployments
 
+import cats.data.OptionT
 import cats.implicits._
 import play.api.Logging
 import play.api.mvc._
@@ -82,18 +83,19 @@ class DeploymentTimelineController @Inject()(
   def graphSelect(serviceName: ServiceName, deploymentId: String, fromDeploymentId: Option[String]) =
     BasicAuthAction.async:
       implicit request =>
-        for
-          configChanges     <- serviceConfigsService.configChanges(deploymentId, fromDeploymentId)
-          previousVersion   =  configChanges.fromVersion.getOrElse(Version("0.1.0"))
-          deployedVersion   =  configChanges.toVersion
+        (for
+          configChanges     <- OptionT(serviceConfigsService.configChanges(deploymentId, fromDeploymentId))
+          previousVersion   =  configChanges.app.from.getOrElse(Version("0.1.0"))
+          deployedVersion   =  configChanges.app.to
           environment       =  configChanges.env.environment
-          deployedSlug      <- serviceDependenciesConnector.getSlugInfo(serviceName, Some(deployedVersion))
-          previousSlug      <- serviceDependenciesConnector.getSlugInfo(serviceName, Some(previousVersion))
-          gitHubCompare     <- gitHubProxyConnector
-                                  .compare(serviceName.asString, v1 = previousVersion, v2 = deployedVersion)
-                                  .recover:
-                                    case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
-          jvmChanges        =  (previousSlug.map(_.java), deployedSlug.get.java)
-          deploymentChanges <- serviceConfigsService.deploymentConfigChanges(serviceName, environment)
+          deployedSlug      <- OptionT(serviceDependenciesConnector.getSlugInfo(serviceName, Some(deployedVersion)))
+          oPreviousSlug     <- OptionT.liftF(serviceDependenciesConnector.getSlugInfo(serviceName, Some(previousVersion)))
+          oGitHubCompare    <- OptionT.liftF:
+                                 gitHubProxyConnector
+                                   .compare(serviceName.asString, v1 = previousVersion, v2 = deployedVersion)
+                                   .recover:
+                                     case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
+          jvmChanges        =  (oPreviousSlug.map(_.java), deployedSlug.java)
         yield
-          Ok(deploymentTimelineSelectPage(serviceName, environment, Some(previousVersion), deployedVersion, gitHubCompare, jvmChanges, deploymentChanges, configChanges))
+          Ok(deploymentTimelineSelectPage(serviceName, environment, Some(previousVersion), deployedVersion, oGitHubCompare, jvmChanges, configChanges))
+        ).getOrElse(NotFound("Could not compare deployments - data not found or initial deployment"))

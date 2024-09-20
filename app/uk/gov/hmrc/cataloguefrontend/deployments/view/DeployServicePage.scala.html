@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubProxyConnector
 @import uk.gov.hmrc.cataloguefrontend.deployments.{DeployServiceForm, routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, DeploymentConfigChange, ServiceConfigsService}
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ServiceConfigsService}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 @import views.html.helper.{FieldConstructor, select}
@@ -33,7 +33,6 @@
 , evaluations  : Option[(
                    Option[GitHubProxyConnector.Compare]
                  , (Option[ServiceJdkVersion], ServiceJdkVersion)
-                 , Seq[DeploymentConfigChange]
                  , ConfigChanges
                  , Seq[ServiceConfigsService.ConfigWarning]
                  , Option[Seq[VulnerabilitySummary]]
@@ -119,7 +118,7 @@
       </div>
     </div>
     <div class="col-md-8">
-      @evaluations.map { case (oGitHubCompare, jvmChanges, deploymentConfigChanges, configChanges, configWarnings, oVulnerabilities) =>
+      @evaluations.map { case (oGitHubCompare, jvmChanges, configChanges, configWarnings, oVulnerabilities) =>
         <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
           You are about to deploy <strong>@form.get.serviceName.asString:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
           @if(releases.isEmpty || !releases.map(_.environment).contains(form.get.environment)) {
@@ -136,7 +135,6 @@
         , deployedVersion         = form.get.version
         , oGitHubCompare          =  oGitHubCompare
         , jvmChanges              = jvmChanges
-        , deploymentConfigChanges = deploymentConfigChanges
         , configChanges           = configChanges
         , configWarnings          = configWarnings
         , oVulnerabilities        = oVulnerabilities

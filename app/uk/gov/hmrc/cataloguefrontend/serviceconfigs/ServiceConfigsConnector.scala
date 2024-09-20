@@ -84,22 +84,22 @@ class ServiceConfigsConnector @Inject() (
   , fromDeploymentId: Option[String]
   )(using
     HeaderCarrier
-  ): Future[ConfigChanges] =
+  ): Future[Option[ConfigChanges]] =
     given Reads[ConfigChanges] = ConfigChanges.reads
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/config-changes?deploymentId=$deploymentId&fromDeploymentId=$fromDeploymentId")
-      .execute[ConfigChanges]
+      .execute[Option[ConfigChanges]]
 
   def configChangesNextDeployment(
-    seviceName : ServiceName,
-    environment: Environment,
-    version    : Version
+    serviceName : ServiceName,
+    environment : Environment,
+    version     : Version
   )(using
     HeaderCarrier
   ): Future[ConfigChanges] =
     given Reads[ConfigChanges] = ConfigChanges.reads
     httpClientV2
-      .get(url"$serviceConfigsBaseUrl/service-configs/config-changes-next-deployment?serviceName=${seviceName.asString}&environment=${environment.asString}&version=${version.original}")
+      .get(url"$serviceConfigsBaseUrl/service-configs/config-changes-next-deployment?serviceName=${serviceName.asString}&environment=${environment.asString}&version=${version.original}")
       .execute[ConfigChanges]
 
   def serviceRelationships(service: ServiceName)(using HeaderCarrier): Future[ServiceRelationships] =
@@ -195,21 +195,27 @@ object ConfigChange:
     )(ConfigChange.apply)
 
 case class ConfigChanges(
-  base       : ConfigChanges.BaseConfigChange
-, common     : ConfigChanges.CommonConfigChange
-, env        : ConfigChanges.EnvironmentConfigChange
-, changes    : Map[ServiceConfigsService.KeyName, ConfigChange]
-, fromVersion: Option[Version]
-, toVersion  : Version
+  app              : ConfigChanges.App
+, base             : ConfigChanges.BaseConfigChange
+, common           : ConfigChanges.CommonConfigChange
+, env              : ConfigChanges.EnvironmentConfigChange
+, configChanges    : Map[ServiceConfigsService.KeyName , ConfigChange]
+, deploymentChanges: Map[ServiceConfigsService.KeyName, ConfigChange]
 )
 
 object ConfigChanges:
+  case class App(from: Option[Version], to: Version)
   case class CommitId(asString: String) extends AnyVal
   case class BaseConfigChange(from: Option[CommitId], to: Option[CommitId], githubUrl: String)
   case class CommonConfigChange(from: Option[CommitId], to: Option[CommitId], githubUrl: String)
   case class EnvironmentConfigChange(environment: Environment, from: Option[CommitId], to: Option[CommitId], githubUrl: String)
 
   val reads: Reads[ConfigChanges] =
+    given Reads[App] =
+      ( (__ \ "from").readNullable[Version](Version.format)
+      ~ (__ \ "to"  ).read[Version](Version.format)
+      )(App.apply)
+
     given Reads[CommitId] =
       summon[Reads[String]].map(CommitId.apply)
 
@@ -232,12 +238,12 @@ object ConfigChanges:
       ~ (__ \ "githubUrl"  ).read[String]
       )(EnvironmentConfigChange.apply)
 
-    ( (__ \ "base"       ).read[BaseConfigChange]
-    ~ (__ \ "common"     ).read[CommonConfigChange]
-    ~ (__ \ "env"        ).read[EnvironmentConfigChange]
-    ~ (__ \ "changes"    ).read[Map[ServiceConfigsService.KeyName, ConfigChange]](ConfigChangeMap.reads)
-    ~ (__ \ "fromVersion").readNullable[Version](Version.format)
-    ~ (__ \ "toVersion"  ).read[Version](Version.format)
+    ( (__ \ "app"              ).read[App]
+    ~ (__ \ "base"             ).read[BaseConfigChange]
+    ~ (__ \ "common"           ).read[CommonConfigChange]
+    ~ (__ \ "env"              ).read[EnvironmentConfigChange]
+    ~ (__ \ "configChanges"    ).read[Map[ServiceConfigsService.KeyName, ConfigChange]](ConfigChangeMap.reads)
+    ~ (__ \ "deploymentChanges").read[Map[ServiceConfigsService.KeyName, ConfigChange]](ConfigChangeMap.reads)
     )(ConfigChanges.apply)
 
 object ConfigChangeMap:

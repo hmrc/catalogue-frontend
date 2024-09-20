@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubProxyConnector
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
-@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, DeploymentConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityDetails
 
@@ -27,7 +27,6 @@
 , deployedVersion            : Version
 , oGitHubCompare             : Option[GitHubProxyConnector.Compare]
 , jvmChanges                 : (Option[ServiceJdkVersion], ServiceJdkVersion)
-, deploymentConfigChanges    : Seq[DeploymentConfigChange]
 , configChanges              : ConfigChanges
 , configWarnings             : Seq[ServiceConfigsService.ConfigWarning]        = Nil
 , oVulnerabilities           : Option[Seq[VulnerabilitySummary]]               = None
@@ -129,9 +128,9 @@
 
   <div class="accordion-item">
     <div class="accordion-header" id="headingDeploymentConfigUpdates">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDeploymentConfigUpdates" aria-expanded="false" aria-controls="collapseDeploymentConfigUpdates" @if(deploymentConfigChanges.isEmpty) {disabled} >
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDeploymentConfigUpdates" aria-expanded="false" aria-controls="collapseDeploymentConfigUpdates" @if(configChanges.deploymentChanges.isEmpty) {disabled} >
         Deployment Config Updates
-        @changesBadge(deploymentConfigChanges.size)
+        @changesBadge(configChanges.deploymentChanges.size)
       </button>
     </div>
     <div id="collapseDeploymentConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingDeploymentConfigUpdates" data-bs-parent="#accordion">
@@ -144,30 +143,30 @@
             </tr>
           </thead>
           <tbody id="deployment-config-updates-rows">
-            @deploymentConfigChanges.map {
-              case DeploymentConfigChange.NewConfig(k, v) => {
-                <tr>
-                  <td><code>@k</code></td>
-                  <td>@v</td>
-                </tr>
-              }
-              case DeploymentConfigChange.DeletedConfig(k, previousV) => {
-                <tr>
-                  <td><del><code>@k</code></del></td>
-                  <td><del>@previousV</del></td>
-                </tr>
-              }
-              case DeploymentConfigChange.ChangedConfig(k, previousV, newV) => {
-                <tr>
-                  <td><code>@k</code></td>
-                  <td>
-                    <ul class="list-unstyled">
-                      <li><del>@previousV</del></li>
-                      <li>@newV</li>
-                    </ul>
-                  </td>
-                </tr>
-              }
+            @for((key, ConfigChange(from, to)) <- configChanges.deploymentChanges.toList.sortBy(_._1.asString) ) {
+              <tr>
+                <td>
+                  <code>
+                    <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true, Some(key)).url" target="_blank">
+                      @if(from.nonEmpty && to.isEmpty) {
+                        <del>@key.asString</del>
+                      } else {
+                        @key.asString
+                      }
+                    </a>
+                  </code>
+                </td>
+                <td>
+                  <ul class="list-unstyled">
+                    @from.map { c =>
+                      <li>@displayConfigSourceValue(key, environment, c, isStriked = true)</li>
+                    }
+                    @to.map { c =>
+                      <li>@displayConfigSourceValue(key, environment, c, isStriked = false)</li>
+                    }
+                  </ul>
+                </td>
+              </tr>
             }
           </tbody>
         </table>
@@ -177,9 +176,9 @@
 
   <div class="accordion-item">
     <div class="accordion-header" id="headingConfigUpdates">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(configChanges.changes.isEmpty) {disabled} >
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(configChanges.configChanges.isEmpty) {disabled} >
         Config Updates
-        @changesBadge(configChanges.changes.size)
+        @changesBadge(configChanges.configChanges.size)
       </button>
     </div>
     <div id="collapseConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
@@ -192,7 +191,7 @@
             </tr>
           </thead>
           <tbody id="config-updates-rows">
-            @for((key, ConfigChange(from, to)) <- configChanges.changes.toList.sortBy(_._1.asString) ) {
+            @for((key, ConfigChange(from, to)) <- configChanges.configChanges.toList.sortBy(_._1.asString) ) {
               <tr>
                 <td>
                   <code>
