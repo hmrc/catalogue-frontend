@@ -25,9 +25,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, 
 import play.api.libs.json.{Format, Json, Reads, Writes}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.createrepository.view.html.{CreatePrototypePage, CreateRepositoryConfirmationPage, CreateServicePage, CreateTestPage, SelectRepoTypePage}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
@@ -49,7 +50,8 @@ class CreateRepositoryController @Inject()(
   createPrototypePage             : CreatePrototypePage,
   createTestPage                  : CreateTestPage,
   createRepositoryConfirmationPage: CreateRepositoryConfirmationPage,
-  buildDeployApiConnector         : BuildDeployApiConnector
+  buildDeployApiConnector         : BuildDeployApiConnector,
+  teamsAndReposConnector          : TeamsAndRepositoriesConnector
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -135,6 +137,9 @@ class CreateRepositoryController @Inject()(
                          validForm      => EitherT.pure(validForm)
                        )
       _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
+      _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
+                         .leftMap: error =>
+                           BadRequest(createPage(submittedForm.withError("teamName", error), userTeams))
       id            <- EitherT(bndApiCreateRepo(validForm))
                          .leftMap: error =>
                            logger.info(s"CreateRepository request for ${validForm.repositoryName} failed with message: $error")
@@ -199,6 +204,11 @@ class CreateRepositoryController @Inject()(
       Redirect(routes.CreateRepositoryController.createRepoLandingGet())
     )
 
+  private def verifyGithubTeamExists(selectedTeam: TeamName)(using HeaderCarrier): Future[Either[String, Unit]] =
+    teamsAndReposConnector.allTeams().map: gitTeams =>
+      if gitTeams.map(_.name).contains(selectedTeam) then Right(())
+      else Left(s"'${selectedTeam.asString}' does not exist as a team on Github.")
+      
   private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
     resources
       .map(_.resourceLocation.value.stripPrefix("teams/"))
