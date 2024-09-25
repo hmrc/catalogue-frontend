@@ -208,8 +208,8 @@ class CreateRepositoryController @Inject()(
       .filterNot(_.contains("app_group_"))
       .map(TeamName.apply)
       .toSeq
-      .sorted
       .filter(ut => githubTeams.exists(_.name == ut))
+      .sorted
 end CreateRepositoryController
 
 object CreateRepositoryController:
