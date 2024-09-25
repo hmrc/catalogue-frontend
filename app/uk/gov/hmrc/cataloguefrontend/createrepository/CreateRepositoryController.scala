@@ -28,7 +28,6 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.createrepository.view.html.{CreatePrototypePage, CreateRepositoryConfirmationPage, CreateServicePage, CreateTestPage, SelectRepoTypePage}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
@@ -114,12 +113,14 @@ class CreateRepositoryController @Inject()(
     ).async: request =>
       given Request[AnyContent] = request
       (for
-        userTeams   <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
-        repoTypeOut <- getRepoTypeOut()
-        result      =  repoTypeOut.repoType match
-                         case RepoType.Prototype => Ok(createPrototypePage(CreatePrototype.form, userTeams.filterNot(_ == TeamName("Designers"))))
-                         case RepoType.Test      => Ok(createTestPage(CreateTest.form, userTeams))
-                         case RepoType.Service   => Ok(createServicePage(CreateService.form, userTeams))
+        userTeams         <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
+        githubTeams       <- EitherT.liftF(teamsAndReposConnector.allTeams())
+        filteredUserTeams =  userTeams.filter(ut => githubTeams.exists(_.name == ut))
+        repoTypeOut       <- getRepoTypeOut()
+        result            =  repoTypeOut.repoType match
+                               case RepoType.Prototype => Ok(createPrototypePage(CreatePrototype.form, filteredUserTeams.filterNot(_ == TeamName("Designers"))))
+                               case RepoType.Test      => Ok(createTestPage(CreateTest.form, filteredUserTeams))
+                               case RepoType.Service   => Ok(createServicePage(CreateService.form, filteredUserTeams))
        yield result
       ).merge
 
@@ -129,22 +130,21 @@ class CreateRepositoryController @Inject()(
     bndApiCreateRepo: T => Future[Either[String, BuildDeployApiConnector.AsyncRequestId]],
   )(using request: AuthenticatedRequest[_, Set[Resource]]): Future[Result] =
     (for
-      repoTypeOut   <- getRepoTypeOut()
-      userTeams     <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
-      submittedForm =  bindForm.bindFromRequest()
-      validForm     <- submittedForm.fold[EitherT[Future, Result, T]](
-                         formWithErrors => EitherT.leftT(BadRequest(createPage(formWithErrors, userTeams))),
-                         validForm      => EitherT.pure(validForm)
-                       )
-      _             <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
-      _             <- EitherT(verifyGithubTeamExists(validForm.teamName))
-                         .leftMap: error =>
-                           BadRequest(createPage(submittedForm.withError("teamName", error), userTeams))
-      id            <- EitherT(bndApiCreateRepo(validForm))
-                         .leftMap: error =>
-                           logger.info(s"CreateRepository request for ${validForm.repositoryName} failed with message: $error")
-                           BadRequest(createPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userTeams))
-      _             =  logger.info(s"CreateRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
+      repoTypeOut       <- getRepoTypeOut()
+      userTeams         <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval))
+      githubTeams       <- EitherT.liftF(teamsAndReposConnector.allTeams())
+      filteredUserTeams =  userTeams.filter(ut => githubTeams.exists(_.name == ut))
+      submittedForm     =  bindForm.bindFromRequest()
+      validForm         <- submittedForm.fold[EitherT[Future, Result, T]](
+                             formWithErrors => EitherT.leftT(BadRequest(createPage(formWithErrors, filteredUserTeams))),
+                             validForm      => EitherT.pure(validForm)
+                           )
+      _                 <- EitherT.liftF(auth.authorised(Some(createRepositoryPermission(validForm.teamName))))
+      id                <- EitherT(bndApiCreateRepo(validForm))
+                             .leftMap: error =>
+                               logger.info(s"CreateRepository request for ${validForm.repositoryName} failed with message: $error")
+                               BadRequest(createPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), filteredUserTeams))
+      _                 =  logger.info(s"CreateRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
      yield Redirect(routes.CreateRepositoryController.createRepoConfirmation(repoTypeOut.repoType, validForm.repositoryName))
     ).merge
 
@@ -203,11 +203,6 @@ class CreateRepositoryController @Inject()(
       getFromSession(repoTypeKey),
       Redirect(routes.CreateRepositoryController.createRepoLandingGet())
     )
-
-  private def verifyGithubTeamExists(selectedTeam: TeamName)(using HeaderCarrier): Future[Either[String, Unit]] =
-    teamsAndReposConnector.allTeams().map: gitTeams =>
-      if gitTeams.map(_.name).contains(selectedTeam) then Right(())
-      else Left(s"'${selectedTeam.asString}' does not exist as a team on Github.")
       
   private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
     resources
