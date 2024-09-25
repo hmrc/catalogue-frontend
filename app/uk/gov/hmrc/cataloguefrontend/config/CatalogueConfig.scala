@@ -16,11 +16,15 @@
 
 package uk.gov.hmrc.cataloguefrontend.config
 
+import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class CatalogueConfig @Inject() (servicesConfig: ServicesConfig):
+class CatalogueConfig @Inject() (configuration: Configuration, servicesConfig: ServicesConfig):
   def killSwitchLink(shutterType: String): String =
     servicesConfig.getString(s"killswitch.jenkins-job.$shutterType")
+
+  val showCreateUserJourney: Boolean =
+    configuration.get[Boolean]("feature.show-create-user-journey")

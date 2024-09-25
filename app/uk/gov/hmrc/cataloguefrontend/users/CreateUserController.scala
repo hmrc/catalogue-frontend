@@ -20,12 +20,14 @@ import cats.data.EitherT
 import play.api.Logger
 import play.api.data.{Form, Forms}
 import play.api.data.validation.{Constraint, Constraints, Invalid, Valid}
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{CreateUserPage, CreateUserRequestSentPage}
-import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
+import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
@@ -35,6 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class CreateUserController @Inject()(
   override val auth        : FrontendAuthComponents,
   override val mcc         : MessagesControllerComponents,
+  config                   : CatalogueConfig,
   createUserPage           : CreateUserPage,
   createUserRequestSentPage: CreateUserRequestSentPage,
   userManagementConnector  : UserManagementConnector
@@ -59,7 +62,10 @@ class CreateUserController @Inject()(
       continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
     ).apply { implicit request =>
-      Ok(createUserPage(CreateUserForm.form, cleanseUserTeams(request.retrieval), Organisation.values.toSeq, isServiceAccount))
+      if config.showCreateUserJourney then
+        Ok(createUserPage(CreateUserForm.form, cleanseUserTeams(request.retrieval), Organisation.values.toSeq, isServiceAccount))
+      else
+        NotFound(error_404_template())
     }
 
   def createUser(isServiceAccount: Boolean): Action[AnyContent] =

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.createuser
 
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -25,6 +25,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
+import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.test.FakeApplicationBuilder
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
@@ -32,7 +33,7 @@ import uk.gov.hmrc.cataloguefrontend.users.{CreateUserController, CreateUserRequ
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{CreateUserPage, CreateUserRequestSentPage}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.internalauth.client.*
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -195,14 +196,18 @@ class CreateUserControllerSpec
 
     val mockCUPView      : CreateUserPage                = app.injector.instanceOf[CreateUserPage]
     val mockCURSPView    : CreateUserRequestSentPage     = app.injector.instanceOf[CreateUserRequestSentPage]
+    val mockConfig       : CatalogueConfig               = mock[CatalogueConfig]
     val mockUMConnector  : UserManagementConnector       = mock[UserManagementConnector]
     val authStubBehaviour: StubBehaviour                 = mock[StubBehaviour]
     val authComponent    : FrontendAuthComponents        = FrontendAuthComponentsStub(authStubBehaviour)
 
+    when(mockConfig.showCreateUserJourney).thenReturn(true)
+    
     val controller =
       CreateUserController(
         auth                      = authComponent,
         mcc                       = mcc,
+        config                    = mockConfig,
         createUserPage            = mockCUPView,
         createUserRequestSentPage = mockCURSPView,
         userManagementConnector   = mockUMConnector
