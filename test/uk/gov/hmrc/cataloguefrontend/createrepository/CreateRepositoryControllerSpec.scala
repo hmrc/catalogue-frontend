@@ -115,9 +115,9 @@ class CreateRepositoryControllerSpec
       status(result) shouldBe OK
       contentAsString(result) should include("Creating service repository: test-repo")
 
-    "return a BadRequest for repository creation when the team doesn't exist on Github" in new Setup:
+    "render the repository creation page with correctly filtered teams on GET request" in new Setup:
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
-        .thenReturn(Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/TestTeam")))))
+        .thenReturn(Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/TestTeam")), Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/TestTeam2")))))
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
@@ -129,17 +129,17 @@ class CreateRepositoryControllerSpec
         .thenReturn(Future.successful(()))
 
       when(mockTeamsAndReposConnector.allTeams()(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq.empty))
+        .thenReturn(Future.successful(Seq(GitHubTeam(TeamName("TestTeam"), None, Seq.empty))))
 
-      val fakeRequest: FakeRequest[AnyContent] = FakeRequest(POST, "/create-repo/2")
-        .withFormUrlEncodedBody("teamName" -> "TestTeam", "repositoryName" -> "repo-test", "makePrivate" -> "false", "testType" -> "UI Journey Test")
-        .withSession(SessionKeys.authToken -> "Token token")
+      val fakeRequest: FakeRequest[AnyContent] =
+        FakeRequest().withSession(SessionKeys.authToken -> "Token token")
 
       val result: Future[Result] =
-        controller.createRepoPost()(fakeRequest)
+        controller.createRepoGet()(fakeRequest)
 
-      status(result) shouldBe BAD_REQUEST
-      contentAsString(result) should include("does not exist as a team on Github.")
+      status(result) shouldBe OK
+      contentAsString(result) should include("""option value="TestTeam"""")
+      contentAsString(result) should not include("""option value="TestTeam2"""")
 
     "return a BadRequest when repository creation fails" in new Setup:
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
