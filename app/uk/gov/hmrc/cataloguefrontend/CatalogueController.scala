@@ -198,7 +198,7 @@ class CatalogueController @Inject() (
       serviceCostEstimate       <- costEstimationService.estimateServiceCost(serviceName)
       commenterReport           <- prCommenterConnector.report(repositoryName)
       latestVulnerabilitiesCount<- vulnerabilitiesConnector
-                                    .vulnerabilityCounts(flag = SlugInfoFlag.Latest, serviceName=Some(serviceName))
+                                    .vulnerabilityCounts(flag = SlugInfoFlag.Latest, serviceName = Some(serviceName))
                                     .map(_.headOption)
       serviceRelationships      <- serviceConfigsService.serviceRelationships(serviceName)
       zone                      <- retrieveZone(serviceName)

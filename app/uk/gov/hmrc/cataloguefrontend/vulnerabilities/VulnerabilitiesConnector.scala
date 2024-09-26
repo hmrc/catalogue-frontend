@@ -61,7 +61,7 @@ class VulnerabilitiesConnector @Inject() (
   ): Future[Seq[TotalVulnerabilityCount]] =
     given Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
     httpClientV2
-      .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=${serviceName.map(_.asString)}&team=${team.map(_.asString)}")
+      .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=${serviceName.map(s => s"\"${s.asString}\"")}&team=${team.map(_.asString)}")
       .execute[Seq[TotalVulnerabilityCount]]
 
   def deployedVulnerabilityCount(
@@ -90,7 +90,7 @@ class VulnerabilitiesConnector @Inject() (
     val toInstant   = to.atEndOfDayInstant
 
     httpClientV2
-      .get(url"$url/vulnerabilities/api/reports/timeline?service=${serviceName.map(_.asString)}&team=${team.map(_.asString)}&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
+      .get(url"$url/vulnerabilities/api/reports/timeline?service=${serviceName.map(s => s"\"${s.asString}\"")}&team=${team.map(_.asString)}&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
       .execute[Seq[VulnerabilitiesTimelineCount]]
 
 end VulnerabilitiesConnector

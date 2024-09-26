@@ -237,13 +237,13 @@
 <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
 
 <script @CSPNonce.attr>
-        autoCompleteInit({
-          formId       : "form",
-          inputSearchId: "service-search",
-          matchesDivId : "service-matches",
-          allowPartial : false,
-          ignoreCase   : true,
-          values       : [@for(service <- services) {'@service.asString',}],
-          minSearch    : 1
-        });
+    autoCompleteInit({
+      formId       : "form",
+      inputSearchId: "service-search",
+      matchesDivId : "service-matches",
+      allowPartial : false,
+      ignoreCase   : true,
+      values       : [@for(service <- services) {'@service.asString',}],
+      minSearch    : 1
+    });
 </script>
