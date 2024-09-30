@@ -35,6 +35,10 @@ class LeakDetectionService @Inject() (
   def resolutionUrl: String =
     configuration
       .get[String]("leakDetection.resolution.url")
+    
+  def removeSensitiveInfoUrl: String =
+    configuration
+      .get[String]("leakDetection.removeSensitiveInfo.url")
 
   def urlIfLeaksFound(repoName: String)(using HeaderCarrier): Future[Option[String]] =
     repositoriesWithLeaks().map: reposWithLeaks =>
