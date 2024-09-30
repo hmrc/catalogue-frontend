@@ -19,14 +19,15 @@
 
 @this()
 
-@(report           : LeakDetectionReport,
-  exemptions       : Map[String, Int],
-  unresolvedLeaks  : Seq[LeakDetectionLeaksByRule],
-  warnings         : Seq[LeakDetectionWarning],
-  leakResolutionUrl: String,
-  isAuthorised     : Boolean
+@(report                : LeakDetectionReport,
+  exemptions            : Map[String, Int],
+  unresolvedLeaks       : Seq[LeakDetectionLeaksByRule],
+  warnings              : Seq[LeakDetectionWarning],
+  leakResolutionUrl     : String,
+  removeSensitiveInfoUrl: String,
+  isAuthorised          : Boolean
 )(implicit
-  request          : RequestHeader
+  request               : RequestHeader
 )
 
 @standard_layout(s"Leak detection report", active = "health") {
@@ -96,7 +97,7 @@
         <h3 class="fw-bold">Unresolved leaks</h3>
         @if(isAuthorised) {
             <div class="alert alert-warning">
-                Please click <a href="@leakResolutionUrl">here</a> to find out how to resolve the leaks
+                Please click <a href="@leakResolutionUrl">here</a> to find out how to resolve the leaks. Further information on how to remove sensitive information from GitHub can be found <a href="@removeSensitiveInfoUrl">here</a>.
             </div>
             @LeakDetectionLeaks(unresolvedLeaks, "Violations")
         } else {
