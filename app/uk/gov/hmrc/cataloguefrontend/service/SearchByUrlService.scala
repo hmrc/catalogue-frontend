@@ -38,9 +38,10 @@ class SearchByUrlService @Inject() (
   )(using HeaderCarrier): Future[Seq[FrontendRoutes]] =
     if isValidSearchTerm(term)
     then
-      searchByUrlConnector
-        .search(takeUrlPath(term.get))
-        .map(_.filter(_.environment == environment))
+      searchByUrlConnector.search(takeUrlPath(term.get)).map: searchResults =>
+        searchResults
+          .filter(_.environment == environment)
+          .map(r => r.copy(routes = r.routes.filterNot(_.isDevhub)))
     else
       Future.successful(Nil)
 
@@ -81,7 +82,8 @@ object SearchByUrlService:
   case class FrontendRoute(
     frontendPath        : String,
     ruleConfigurationUrl: String = "",
-    isRegex             : Boolean = false
+    isRegex             : Boolean = false,
+    isDevhub            : Boolean = false,
   )
 
   case class FrontendRoutes(

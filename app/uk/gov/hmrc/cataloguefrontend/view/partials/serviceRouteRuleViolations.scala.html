@@ -30,17 +30,15 @@
                   <th class="col-lg-10">Route Rule</th>
               </tr>
               <tbody>
-              @for(environmentRoute <- serviceRoutes.inconsistentRoutes) {
-                  @for(route <- environmentRoute.routes) {
+              @for(route <- serviceRoutes.inconsistentRoutes) {
                       <tr>
                           <td>
-                              <a target="_blank" rel="noreferrer noopener" href="@route.ruleConfigurationUrl" title="Route Rule Configuration">@environmentRoute.environment <span class="glyphicon glyphicon-new-window"/></a>
+                              <a target="_blank" rel="noreferrer noopener" href="@route.ruleConfigurationUrl" title="Route Rule Configuration">@route.environment <span class="glyphicon glyphicon-new-window"/></a>
                           </td>
                           <td>
-                          @route.frontendPath
+                          @route.path
                           </td>
                       </tr>
-                  }
               }
               </tbody>
           </table>

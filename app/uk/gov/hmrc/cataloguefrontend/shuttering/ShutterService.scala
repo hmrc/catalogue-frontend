@@ -17,7 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import cats.data.OptionT
-import cats.implicits._
+import cats.implicits.*
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
@@ -26,6 +27,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 import org.jsoup.nodes.Document
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType
 
 @Singleton
 class ShutterService @Inject() (
@@ -110,11 +112,9 @@ class ShutterService @Inject() (
     HeaderCarrier
   ): Future[Option[String]] =
     for
-      baseRoutes      <- routeRulesConnector.frontendRoutes(serviceName)
-    yield
-      for
-        envRoute      <- baseRoutes.find(_.environment == env).map(_.routes)
-        frontendRoute <- envRoute.find(_.isRegex == false)
-      yield ShutterLinkUtils.mkLink(env, frontendRoute.frontendPath)
+      frontendRoutes <- routeRulesConnector.routes(serviceName, Some(RouteType.Frontend), Some(env))
+      shutterRoute   =  frontendRoutes.find(_.isRegex == false)
+    yield shutterRoute.map: r =>
+      ShutterLinkUtils.mkLink(env, r.path)
 
 end ShutterService

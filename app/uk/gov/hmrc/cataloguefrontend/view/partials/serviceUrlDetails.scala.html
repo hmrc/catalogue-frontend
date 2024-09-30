@@ -14,34 +14,94 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.EnvironmentRoute
+@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.Route
+@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType
 
-@(environmentRoute: EnvironmentRoute,
-  isAdmin         : Boolean
-)
-
-@defining(environmentRoute.routes.size > 4) { collapsable =>
-    <div id="service-urls-section" class="card">
-        <div class="card-header">
-            <div class="h4 mb-0">@if(isAdmin) { Admin } Frontend Routing Configuration</div>
-        </div>
-        <div class="content-grow @if(collapsable){ content-grow-gradient }">
-            <div class="card-body content-grow-wrapper">
-                <div class="row gy-3">
-                    <ul id="production-urls" class="list-unstyled">
-                        @for((route, index) <- (environmentRoute.routes) .zipWithIndex) {
-                            <li id="route-rule-@index">
-                                <a target="_blank" rel="noreferrer noopener" title="@route.frontendPath" href="@route.ruleConfigurationUrl">@route.frontendPath<span class="glyphicon glyphicon-new-window"/></a>
-                            </li>
-                        }
-                </div>
-            </div>
-        </div>
-        @if(collapsable) {
-            <footer class="text-center">
-                <a id="see-all-expand-link" href="#" title="See all" class="content-grow-expand-link glyphicon glyphicon-chevron-down">
-                </a>
-            </footer>
-        }
+@(routes: Seq[Route])
+<div id="service-urls-section" class="card">
+    <div class="card-header">
+        <div class="h4 mb-0">Routing Configuration</div>
     </div>
-}
+    <div class="card-body">
+        <div class="row">
+            @routes.groupBy(_.routeType).map { (rt, routes) =>
+                @if(routes.nonEmpty) {
+                  <div class="col-3">
+                      <div id="legend" class="card">
+                          <div class="card-body">
+                              <label class="card-title fw-bold">@{rt.displayString}</label>
+                              <ul class="list-unstyled mb-0">
+                                  @routes.map { route =>
+                                    @if(rt == RouteType.ApiContext) {
+                                        <li>@route.path</li>
+                                    } else {
+                                        <li>
+                                            <a target="_blank" rel="noreferrer noopener" title="@route.path" href="@route.ruleConfigurationUrl">
+                                            @route.path
+                                            <span class="glyphicon glyphicon-new-window"></span>
+                                            </a>
+                                        </li>
+                                    }
+                                  }
+                              </ul>
+                          </div>
+                      </div>
+                  </div>
+                }
+            }
+@*            @if(routes.exists(_.routeType == RouteType.AdminFrontend)) {*@
+@*            <div class="col-3">*@
+@*                <div id="legend" class="card">*@
+@*                    <div class="card-body">*@
+@*                        <label class="card-title fw-bold">Admin Frontend</label>*@
+@*                        <ul class="list-unstyled mb-0">*@
+@*                            @routes.filter(_.routeType == RouteType.AdminFrontend).map { route =>*@
+@*                            <li>*@
+@*                                <a target="_blank" rel="noreferrer noopener" title="@route.path" href="@route.ruleConfigurationUrl">*@
+@*                                    @route.path*@
+@*                                    <span class="glyphicon glyphicon-new-window"></span>*@
+@*                                </a>*@
+@*                            </li>*@
+@*                            }*@
+@*                        </ul>*@
+@*                    </div>*@
+@*                </div>*@
+@*            </div>*@
+@*            }*@
+@*            @if(routes.exists(_.routeType == RouteType.Devhub)) {*@
+@*            <div class="col-3">*@
+@*                <div id="legend" class="card">*@
+@*                    <div class="card-body">*@
+@*                        <label class="card-title fw-bold">Devhub</label>*@
+@*                        <ul class="list-unstyled mb-0">*@
+@*                        @routes.filter(_.routeType == RouteType.Devhub).map { route =>*@
+@*                            <li>*@
+@*                                <a target="_blank" rel="noreferrer noopener" title="@route.path" href="@route.ruleConfigurationUrl">*@
+@*                                    @route.path*@
+@*                                    <span class="glyphicon glyphicon-new-window"></span>*@
+@*                                </a>*@
+@*                            </li>*@
+@*                        }*@
+@*                        </ul>*@
+@*                    </div>*@
+@*                </div>*@
+@*            </div>*@
+@*            }*@
+@*            @if(routes.exists(_.routeType == RouteType.ApiContext)) {*@
+@*            <div class="col-3">*@
+@*                <div id="legend" class="card">*@
+@*                    <div class="card-body">*@
+@*                        <label class="card-title fw-bold">API Context</label>*@
+@*                        <ul class="list-unstyled mb-0">*@
+@*                        @routes.filter(_.routeType == RouteType.ApiContext).map { route =>*@
+@*                            <li>@route.path</li>*@
+@*                        }*@
+@*                        </ul>*@
+@*                    </div>*@
+@*                </div>*@
+@*            </div>*@
+@*            }*@
+        </div>
+    </div>
+</div>
+

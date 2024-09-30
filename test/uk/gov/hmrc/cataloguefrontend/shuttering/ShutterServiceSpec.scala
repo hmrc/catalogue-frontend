@@ -21,6 +21,8 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType.Frontend
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -110,6 +112,25 @@ class ShutterServiceSpec
     }
   }
 
+  "lookupShutterRoute" should {
+    "return a frontend route that is not regex" in {
+      val boot = Boot.init
+      given HeaderCarrier = HeaderCarrier()
+
+      val serviceName = ServiceName("service1")
+      val env         = Environment.Production
+
+      when(boot.mockRouteRulesConnector.routes(serviceName, Some(RouteType.Frontend), Some(env)))
+        .thenReturn(Future.successful(Seq(
+          Route("/path1", Some(""), isRegex = false, RouteType.Frontend, Environment.Production),
+          Route("/path2", Some(""), isRegex = true , RouteType.Frontend, Environment.Production)
+        )))
+
+      val shutterRoute = boot.shutterService.lookupShutterRoute(serviceName, env)
+      shutterRoute.futureValue shouldBe Some("https://www.tax.service.gov.uk/path1/platops-shutter-testing")
+    }
+  }
+
   def mkOutagePage(serviceName: ServiceName, warnings: List[OutagePageWarning]): OutagePage =
     OutagePage(
         serviceName        = serviceName
@@ -120,15 +141,15 @@ class ShutterServiceSpec
       , templatedElements  = List.empty
       )
 
-  case class Boot(shutterService: ShutterService, mockShutterConnector: ShutterConnector)
+  case class Boot(shutterService: ShutterService, mockShutterConnector: ShutterConnector, mockRouteRulesConnector: RouteRulesConnector)
 
   object Boot {
     def init: Boot =
       val mockShutterConnector       = mock[ShutterConnector]
       val mockShutterGroupsConnector = mock[ShutterGroupsConnector]
-      val routeRulesConnector        = mock[RouteRulesConnector]
+      val mockRouteRulesConnector    = mock[RouteRulesConnector]
       val mockGithubProxyConnector   = mock[GitHubProxyConnector]
-      val shutterService             = ShutterService(mockShutterConnector, mockShutterGroupsConnector, routeRulesConnector, mockGithubProxyConnector)
-      Boot(shutterService, mockShutterConnector)
+      val shutterService             = ShutterService(mockShutterConnector, mockShutterGroupsConnector, mockRouteRulesConnector, mockGithubProxyConnector)
+      Boot(shutterService, mockShutterConnector, mockRouteRulesConnector)
   }
 }

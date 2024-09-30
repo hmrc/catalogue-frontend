@@ -42,6 +42,7 @@ class SearchByUrlConnector @Inject() (
     ( (__ \ "frontendPath"        ).read[String]
     ~ (__ \ "ruleConfigurationUrl").readWithDefault[String]("")
     ~ (__ \ "isRegex"             ).readWithDefault[Boolean](false)
+    ~ (__ \ "isDevhub"            ).readWithDefault[Boolean](false)
     )(FrontendRoute.apply)
 
   private given Reads[FrontendRoutes] =

@@ -19,6 +19,8 @@
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate}
 @import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
+@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.Route
+@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 @import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
@@ -37,6 +39,7 @@
   repositoryCreationDate       : Instant,
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
+  allRoutes                    : Seq[Route],
   serviceRoutes                : ServiceRoutes,
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
@@ -44,7 +47,7 @@
   canMarkForDecommissioning    : MarkForDecommissioning.HasAuthorisation,
   lifecycle                    : Option[Lifecycle],
   testJobMap                   : Map[String, Seq[JenkinsJob]],
-  isGuest                      : Boolean
+  isGuest                      : Boolean,
 )(implicit
   messages                     : Messages,
   request                      : RequestHeader,
@@ -93,18 +96,10 @@
             </div>
         </div>
 
-        @serviceRoutes.environmentRoutes.find(er => er.environment == Environment.Production && !er.isAdmin).map { envRoute =>
+        @if(allRoutes.nonEmpty) {
             <div class="row mb-3">
                 <div class="col-md-12">
-                    @partials.serviceUrlDetails(envRoute, isAdmin = false)
-                </div>
-            </div>
-        }
-
-        @serviceRoutes.environmentRoutes.find(er => er.environment == Environment.Production && er.isAdmin).map { envRoute =>
-            <div class="row mb-3">
-                <div class="col-md-12">
-                    @partials.serviceUrlDetails(envRoute, isAdmin = true)
+                    @partials.serviceUrlDetails(allRoutes)
                 </div>
             </div>
         }
