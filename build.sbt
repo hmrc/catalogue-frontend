@@ -8,7 +8,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     majorVersion := 5,
-    scalaVersion := "3.3.3",
+    scalaVersion := "3.3.4",
     playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
     RoutesKeys.routesImport ++= Seq(
@@ -31,8 +31,9 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     ),
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress unused-imports in twirl and routes files
-    scalacOptions += "-Wconf:cat=unused-imports&src=html/.*:s",
+    scalacOptions += "-Wconf:msg=unused import&src=html/.*:s",
     scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions += "-Wconf:msg=Flag.*repeatedly:s",
     //scalacOptions += "-explain",
     javaOptions += "-Xmx2G",
     pipelineStages := Seq(digest)
