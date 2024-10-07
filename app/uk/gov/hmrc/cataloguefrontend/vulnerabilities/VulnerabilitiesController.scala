@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.{VulnerabilitiesForServicesPage, VulnerabilitiesListPage, VulnerabilitiesTimelinePage}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -100,26 +100,26 @@ class VulnerabilitiesController @Inject() (
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       import VulnerabilitiesTimelineFilter.form
-
-      form
-        .bindFromRequest()
-        .fold(
-          formWithErrors => Future.successful(BadRequest(vulnerabilitiesTimelinePage(teams = Seq.empty, result = Seq.empty, formWithErrors))),
-          validForm      =>
-            for
-              sortedTeams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-              teamNames    =  sortedTeams.map(_.name.asString)
-              counts       <- vulnerabilitiesConnector.timelineCounts(
-                                serviceName    = validForm.service,
-                                team           = validForm.team,
-                                vulnerability  = validForm.vulnerability,
-                                curationStatus = validForm.curationStatus,
-                                from           = validForm.from,
-                                to             = validForm.to
-                              )
-              sortedCounts =  counts.sortBy(_.weekBeginning)
-            yield Ok(vulnerabilitiesTimelinePage(teams = teamNames, result = sortedCounts, form.fill(validForm)))
-        )
+      for
+        teams    <- teamsAndRepositoriesConnector.allTeams().map(_.map(_.name))
+        services <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service)).map(_.map(s => ServiceName(s.name)))
+        res      <- form.bindFromRequest()
+                      .fold(
+                        formWithErrors =>
+                          Future.successful(BadRequest(vulnerabilitiesTimelinePage(teams = teams, services = services, result = Seq.empty, formWithErrors))),
+                        validForm      =>
+                          for
+                            counts <- vulnerabilitiesConnector.timelineCounts(
+                                        serviceName    = validForm.service,
+                                        team           = validForm.team,
+                                        vulnerability  = validForm.vulnerability,
+                                        curationStatus = validForm.curationStatus,
+                                        from           = validForm.from,
+                                        to             = validForm.to
+                                      ).map(_.sortBy(_.weekBeginning))
+                          yield Ok(vulnerabilitiesTimelinePage(teams = teams, services = services, result = counts, form.fill(validForm)))
+                      )
+      yield res
     }
 
 end VulnerabilitiesController

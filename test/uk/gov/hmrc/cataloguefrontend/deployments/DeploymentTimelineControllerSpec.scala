@@ -23,8 +23,9 @@ import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.cataloguefrontend.connector._
-import uk.gov.hmrc.cataloguefrontend.deployments.view.html.DeploymentTimelinePage
+import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeploymentTimelinePage, DeploymentTimelineSelectPage}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.DeploymentTimelineEvent
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
@@ -46,22 +47,25 @@ class DeploymentTimelineControllerSpec
 
     given mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
-    lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
     lazy val mockedServiceDependenciesConnector  = mock[ServiceDependenciesConnector]
+    lazy val mockedTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
+    lazy val mockedGitHubProxyConnector          = mock[GitHubProxyConnector]
     lazy val authStubBehaviour                   = mock[StubBehaviour]
     lazy val mockedDeploymentGraphService        = mock[DeploymentGraphService]
+    lazy val mockedServiceConfigsService         = mock[ServiceConfigsService]
     lazy val authComponent                       = FrontendAuthComponentsStub(authStubBehaviour)
-    lazy val page                                = DeploymentTimelinePage()
 
-    lazy val controller =
-      DeploymentTimelineController(
-        mockedTeamsAndRepositoriesConnector,
-        mockedServiceDependenciesConnector,
-        mockedDeploymentGraphService,
-        page,
-        mcc,
-        authComponent
-      )
+    lazy val controller = DeploymentTimelineController(
+      serviceDependenciesConnector  = mockedServiceDependenciesConnector
+    , teamsAndRepositoriesConnector = mockedTeamsAndRepositoriesConnector
+    , gitHubProxyConnector          = mockedGitHubProxyConnector
+    , deploymentGraphService        = mockedDeploymentGraphService
+    , serviceConfigsService         = mockedServiceConfigsService
+    , deploymentTimelinePage        = DeploymentTimelinePage()
+    , deploymentTimelineSelectPage  = DeploymentTimelineSelectPage()
+    , mcc                           = mcc
+    , auth                          = authComponent
+    )
   }
 
   "DeploymentTimeline" should {
@@ -81,7 +85,7 @@ class DeploymentTimelineControllerSpec
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq.empty))
       when(mockedDeploymentGraphService.findEvents(service = any, start = any, end = any)(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq(DeploymentTimelineEvent(Environment.Integration, Version(1, 0, 0, ""), "deploymentId", "ua", Instant.now(), Instant.now()))))
+        .thenReturn(Future.successful(Seq(DeploymentTimelineEvent(Environment.QA, Version(1, 0, 0, ""), "deploymentId", "ua", Instant.now(), Instant.now()))))
       when(mockedServiceDependenciesConnector.getSlugInfo(any, any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(None))
 

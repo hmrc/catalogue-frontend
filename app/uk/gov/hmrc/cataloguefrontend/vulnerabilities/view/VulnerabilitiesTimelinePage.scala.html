@@ -19,7 +19,8 @@
 
 @this()
 
-@(teams   : Seq[String],
+@(teams   : Seq[TeamName],
+  services: Seq[ServiceName],
   result  : Seq[VulnerabilitiesTimelineCount],
   form    : Form[?]
 )(implicit
@@ -134,19 +135,20 @@
                 </dl>
             </div>
             <div class="col-md-4">
-                <dl>
-                    <dt>
-                        <label for="service-search" class="form-label">Service:</label>
-                    </dt>
-                    <dd>
-                        <input class="form-control" id="service-search" type="search" name="service" value='@form("service").value'>
-                    </dd>
-                </dl>
+              <dl>
+                <dt>
+                  <label class="form-label" for="service-search" >Service</label>
+                </dt>
+                <dd class="position-relative">
+                  <input id="service-search" name="service" value="@form("service").value" class="form-control" type="text" list="services" autocomplete="off">
+                  <div id="service-matches" class="search-matches-dropdown d-none"></div>
+                </dd>
+              </dl>
             </div>
             <div class="col-md-4">
                 @select(
                     field                 =  form("team"),
-                    options               =  teams.map(t => t -> t),
+                    options               =  teams.map(t => t.asString -> t.asString),
                     Symbol("_default")    -> "All",
                     Symbol("_label")      -> "Team:",
                     Symbol("_labelClass") -> "form-label",
@@ -219,4 +221,17 @@
         document.getElementById("form").submit();
       });
     });
+</script>
+
+<script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+<script @CSPNonce.attr>
+  autoCompleteInit({
+    formId       : "form",
+    inputSearchId: "service-search",
+    matchesDivId : "service-matches",
+    allowPartial : false,
+    ignoreCase   : true,
+    values       : [@for(service <- services) {'@service.asString',}],
+    minSearch    : 1
+  });
 </script>

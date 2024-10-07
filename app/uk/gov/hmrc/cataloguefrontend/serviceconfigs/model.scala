@@ -86,21 +86,23 @@ enum GroupBy(
 given Parser[ServiceType] = Parser.parser(ServiceType.values)
 
 case class DeploymentConfigEvent(
-  serviceName  : ServiceName,
-  environment  : Environment,
-  deploymentId : String,
-  configChanged: Option[Boolean],
-  configId     : Option[String],
-  lastUpdated  : Instant
+  serviceName            : ServiceName,
+  environment            : Environment,
+  deploymentId           : String,
+  configChanged          : Option[Boolean],
+  deploymentConfigChanged: Option[Boolean],
+  configId               : Option[String],
+  lastUpdated            : Instant
 )
 
 object DeploymentConfigEvent {
   val reads: Reads[DeploymentConfigEvent] =
-    ( (__ \ "serviceName"  ).read[ServiceName]
-    ~ (__ \ "environment"  ).read[Environment]
-    ~ (__ \ "deploymentId" ).read[String]
-    ~ (__ \ "configChanged").readNullable[Boolean]
-    ~ (__ \ "configId"     ).readNullable[String]
-    ~ (__ \ "lastUpdated"  ).read[Instant]
+    ( (__ \ "serviceName"            ).read[ServiceName]
+    ~ (__ \ "environment"            ).read[Environment]
+    ~ (__ \ "deploymentId"           ).read[String]
+    ~ (__ \ "configChanged"          ).readNullable[Boolean]
+    ~ (__ \ "deploymentConfigChanged").readNullable[Boolean]
+    ~ (__ \ "configId"               ).readNullable[String]
+    ~ (__ \ "lastUpdated"            ).read[Instant]
     )(DeploymentConfigEvent.apply)
 }

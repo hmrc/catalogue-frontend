@@ -28,13 +28,13 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, GitHubProxyConnector, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{Kind, Vendor}
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, DeployServiceStep4Page}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, DeploymentConfigChange, ServiceConfigsService}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
@@ -137,6 +137,9 @@ class DeployServiceControllerSpec
           Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))),
           Future.successful(true)
         )
+
+      when(mockGitHubProxyConnector.compare(eqTo("some-service"), eqTo(Version("0.2.0")), eqTo(Version("0.3.0")))(using any[HeaderCarrier]))
+        .thenReturn(Future.failed(RuntimeException("Some error calling github")): Future[GitHubProxyConnector.Compare] )
       when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(someSlugInfo)))
       when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
@@ -164,11 +167,6 @@ class DeployServiceControllerSpec
         curationStatus = eqTo(Some(CurationStatus.ActionRequired))
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
-      when(mockServiceConfigsService.deploymentConfigChanges(
-        ServiceName(eqTo("some-service")),
-        eqTo(Environment.QA)
-      )(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(someDeploymentConfigChanges))
 
       val futResult = underTest.step2()(
         FakeRequest()
@@ -293,10 +291,19 @@ class DeployServiceControllerSpec
   , dependencies  = Nil
   )
 
-  private val someConfigChanges: Map[KeyName, ConfigChange] = Map(
-    KeyName("key1") -> ConfigChange(from = None                                                        , to = Some(ConfigSourceValue("some-source", None, "some-value1")))
-  , KeyName("key2") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value2a")), to = Some(ConfigSourceValue("some-source", None, "some-value2b")))
-  , KeyName("key3") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value3")) , to = None)
+  private val someConfigChanges = ConfigChanges(
+    app               = ConfigChanges.App(from = Some(Version("0.2.0")), to = Version("0.3.0"))
+  , base              = ConfigChanges.BaseConfigChange(                                     from = Some(ConfigChanges.CommitId("abcdef")), to = Some(ConfigChanges.CommitId("ghijkl")), githubUrl = "some-url")
+  , common            = ConfigChanges.CommonConfigChange(                                   from = Some(ConfigChanges.CommitId("abcdef")), to = Some(ConfigChanges.CommitId("ghijkl")), githubUrl = "some-url")
+  , env               = ConfigChanges.EnvironmentConfigChange(environment = Environment.QA, from = Some(ConfigChanges.CommitId("abcdef")), to = Some(ConfigChanges.CommitId("ghijkl")), githubUrl = "some-url")
+  , configChanges     = Map(
+                          KeyName("key1") -> ConfigChange(from = None                                                        , to = Some(ConfigSourceValue("some-source", None, "some-value1")))
+                        , KeyName("key2") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value2a")), to = Some(ConfigSourceValue("some-source", None, "some-value2b")))
+                        , KeyName("key3") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "some-value3")) , to = None)
+                        )
+  , deploymentChanges = Map(
+                          KeyName("instances") -> ConfigChange(from = Some(ConfigSourceValue("some-source", None, "1")), to = Some(ConfigSourceValue("some-source", None, "2")))
+                        )
   )
 
   private val someReleasesForService = WhatsRunningWhere(
@@ -344,10 +351,6 @@ class DeployServiceControllerSpec
   , teams                 = Seq("some-team")
   )
 
-  private val someDeploymentConfigChanges = Seq(
-    DeploymentConfigChange.ChangedConfig("k", "previousV", "newV")
-  )
-
   private trait Setup {
     given mcc: MessagesControllerComponents = app.injector.instanceOf[MessagesControllerComponents]
 
@@ -359,6 +362,7 @@ class DeployServiceControllerSpec
     val mockReleasesConnector             = mock[ReleasesConnector]
     val mockVulnerabilitiesConnector      = mock[VulnerabilitiesConnector]
     val mockServiceConfigsService         = mock[ServiceConfigsService]
+    val mockGitHubProxyConnector          = mock[GitHubProxyConnector]
     val underTest                         = DeployServiceController(
                                               auth                          = FrontendAuthComponentsStub(mockAuthStubBehaviour)
                                             , mcc                           = mcc
@@ -369,6 +373,7 @@ class DeployServiceControllerSpec
                                             , serviceCommissioningConnector = mockServiceCommissioningConnector
                                             , releasesConnector             = mockReleasesConnector
                                             , vulnerabilitiesConnector      = mockVulnerabilitiesConnector
+                                            , gitHubProxyConnector          = mockGitHubProxyConnector
                                             , serviceConfigsService         = mockServiceConfigsService
                                             , telemetryLinks                = TelemetryLinks(app.injector.instanceOf[Configuration])
                                             , deployServicePage             = app.injector.instanceOf[DeployServicePage]

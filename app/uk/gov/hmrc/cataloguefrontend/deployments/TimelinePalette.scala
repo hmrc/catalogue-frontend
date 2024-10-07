@@ -79,7 +79,6 @@ object TimelinePalette:
     "#f0b302",
     "#d9ac0b",
     "#e75e98",
-    "#7a6ab7",
     "#8f924a",
     "#b365a4",
     "#419ce6",

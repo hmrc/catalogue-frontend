@@ -25,8 +25,10 @@ import play.api.Configuration
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.cataloguefrontend.model.Version
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import java.time.Instant
 
 class GitHubProxyConnectorSpec
   extends AnyWordSpec
@@ -34,11 +36,11 @@ class GitHubProxyConnectorSpec
      with OptionValues
      with WireMockSupport
      with HttpClientV2Support
-     with ScalaFutures {
+     with ScalaFutures:
 
   private lazy val gitHubProxyConnector =
     GitHubProxyConnector(
-      httpClientV2   = httpClientV2,
+      httpClientV2 = httpClientV2,
       ServicesConfig(Configuration(
         "microservice.services.platops-github-proxy.port" -> wireMockPort,
         "microservice.services.platops-github-proxy.host" -> wireMockHost
@@ -47,56 +49,85 @@ class GitHubProxyConnectorSpec
 
   given HeaderCarrier = HeaderCarrier()
 
-  "getGitHubProxyRaw" should {
+  "getGitHubProxyRaw" should:
+    "return response body as a String for a valid repo" in:
+      val rawRepositoryContent = "Raw Repository Content"
 
-    val rawRepositoryContent = "Raw Repository Content"
-
-    "return response body as a String for a valid repo" in {
-      stubFor(
+      stubFor:
         get(urlEqualTo("/platops-github-proxy/github-raw/foo"))
-          .willReturn(
-            aResponse()
-              .withStatus(200)
-              .withBody(rawRepositoryContent)
-          )
-      )
+          .willReturn(aResponse().withStatus(200).withBody(rawRepositoryContent))
 
-      val response = gitHubProxyConnector
+      gitHubProxyConnector
         .getGitHubProxyRaw("/foo")
         .futureValue
-        .value
+        .value shouldBe rawRepositoryContent
 
-      response shouldBe rawRepositoryContent
-    }
-
-    "return None when repo Not Found" in {
-      stubFor(
+    "return None when repo Not Found" in:
+      stubFor:
         get(urlEqualTo("/platops-github-proxy/github-raw/foo-non-existing"))
-          .willReturn(aResponse().withStatus(404)))
+          .willReturn(aResponse().withStatus(404))
 
-      val response = gitHubProxyConnector
+      gitHubProxyConnector
         .getGitHubProxyRaw("/foo-non-existing")
-        .futureValue
+        .futureValue shouldBe None
 
-      response shouldBe None
-    }
-
-    "return a failed future with exception message when a bad request occurs" in {
-
+    "return a failed future with exception message when a bad request occurs" in:
       val responseBody = "Error Response"
 
-      stubFor(
+      stubFor:
         get(urlEqualTo("/platops-github-proxy/github-raw/foo"))
           .willReturn(aResponse().withStatus(500).withBody(responseBody))
-      )
 
-      val exception = gitHubProxyConnector
-        .getGitHubProxyRaw("/foo")
-        .failed
-        .futureValue
+      val exception =
+        gitHubProxyConnector
+          .getGitHubProxyRaw("/foo")
+          .failed
+          .futureValue
 
       exception shouldBe a[RuntimeException]
       exception.getMessage should include(responseBody)
-    }
-  }
-}
+
+  "compare" should:
+    val commits =
+      GitHubProxyConnector.Commit(
+        author   = "Shnick"
+      , date    =  Instant.parse("2023-11-29T19:48:59Z")
+      , message = "BDOG-2800 fix play 30 test"
+      , htmlUrl = "https://github.com/hmrc/platops-example-frontend-microservice/commit/da8d2710545e39c44994f0b4621b118d22ae91d2"
+      ) ::
+      GitHubProxyConnector.Commit(
+        author  = "Shnick"
+      , date    = Instant.parse("2023-11-30T09:35:46Z")
+      , message = "Merge pull request #30 from hmrc/BDOG-2800\n\nBDOG-2800 fix play 30 test"
+      , htmlUrl = "https://github.com/hmrc/platops-example-frontend-microservice/commit/99ee4985b7d2b8a12cad3de850fd5c044085c9f4"
+      ) :: Nil
+
+    "compare v2.358.0...v2.359.0" in:
+      stubFor:
+        get(urlEqualTo("/platops-github-proxy/github-rest/platops-example-frontend-microservice/compare/v2.358.0...v2.359.0"))
+          .willReturn(aResponse().withStatus(200).withBodyFile("github-compare.json"))
+
+      gitHubProxyConnector
+        .compare("platops-example-frontend-microservice", Version("2.358.0"), Version("2.359.0"))
+        .futureValue shouldBe Some(GitHubProxyConnector.Compare(
+          aheadBy      = 2
+        , behindBy     = 0
+        , totalCommits = 2
+        , commits      = commits
+        , htmlUrl      = "https://github.com/hmrc/platops-example-frontend-microservice/compare/v2.358.0...v2.359.0"
+        ))
+
+    "compare v2.359.0...v2.358.0 - by swapping versions and manipulating commit counts" in:
+      stubFor:
+        get(urlEqualTo("/platops-github-proxy/github-rest/platops-example-frontend-microservice/compare/v2.358.0...v2.359.0"))
+          .willReturn(aResponse().withStatus(200).withBodyFile("github-compare.json"))
+
+      gitHubProxyConnector
+        .compare("platops-example-frontend-microservice", Version("2.359.0"), Version("2.358.0"))
+        .futureValue shouldBe Some(GitHubProxyConnector.Compare(
+          aheadBy      = 0
+        , behindBy     = 2
+        , totalCommits = 2
+        , commits      = commits
+        , htmlUrl      = "https://github.com/hmrc/platops-example-frontend-microservice/compare/v2.358.0...v2.359.0"
+        ))

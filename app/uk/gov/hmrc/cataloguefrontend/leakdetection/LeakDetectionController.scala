@@ -104,12 +104,13 @@ class LeakDetectionController @Inject()(
       )
       .async { implicit request =>
         for
-          isAuthorised <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository, "READ")))
-          report       <- leakDetectionService.report(repository, branch)
-          leaks        <- leakDetectionService.reportLeaks(report.id)
-          warnings     <- leakDetectionService.reportWarnings(report.id)
-          resolutionUrl = leakDetectionService.resolutionUrl
-        yield Ok(leaksPage(report, report.exclusions, leaks, warnings, resolutionUrl, isAuthorised))
+          isAuthorised          <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository, "READ")))
+          report                <- leakDetectionService.report(repository, branch)
+          leaks                 <- leakDetectionService.reportLeaks(report.id)
+          warnings              <- leakDetectionService.reportWarnings(report.id)
+          resolutionUrl          = leakDetectionService.resolutionUrl
+          removeSensitiveInfoUrl = leakDetectionService.removeSensitiveInfoUrl
+        yield Ok(leaksPage(report, report.exclusions, leaks, warnings, resolutionUrl, removeSensitiveInfoUrl, isAuthorised))
       }
 
   def reportExemptions(repository: String, branch: String): Action[AnyContent] =
