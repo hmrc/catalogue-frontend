@@ -66,45 +66,6 @@ class RouteRulesConnector @Inject() (
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
 
-//  // Used by ShutterService, replace with query param for Frontend Routes only
-//  def frontendRoutes(service: ServiceName)(using HeaderCarrier): Future[Seq[EnvironmentRoute]] =
-//    val url = url"$baseUrl/service-configs/frontend-route/${service.asString}"
-//    given Reads[EnvironmentRoute] = EnvironmentRoute.reads
-//    httpClientV2
-//      .get(url)
-//      .execute[Seq[EnvironmentRoute]]
-//      .recover:
-//        case NonFatal(ex) =>
-//          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-//          Seq.empty
-
-//  def adminFrontendRoutes(service: ServiceName)(using HeaderCarrier): Future[Seq[EnvironmentRoute]] =
-//    val url = url"$baseUrl/service-configs/admin-frontend-route/${service.asString}"
-//    given Reads[AdminFrontendRoute] = AdminFrontendRoute.reads
-//    httpClientV2
-//      .get(url)
-//      .execute[Seq[AdminFrontendRoute]]
-//      .map:
-//        _
-//          .flatMap: raw =>
-//            raw.allow.keys.map: env =>
-//              EnvironmentRoute(
-//                environment = env
-//              , routes      = Seq(Route(
-//                                frontendPath         = raw.route
-//                              , ruleConfigurationUrl = raw.location
-//                              , isRegex              = false
-//                              ))
-//              )
-//          .groupBy(_.environment)
-//          .toSeq
-//          .map: (k, v) =>
-//            EnvironmentRoute(k, v.flatMap(_.routes.sortBy(_.ruleConfigurationUrl)), isAdmin = true)
-//      .recover:
-//        case NonFatal(ex) =>
-//          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-//          Seq.empty
-
 object RouteRulesConnector:
   import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser}
   import FromStringEnum._

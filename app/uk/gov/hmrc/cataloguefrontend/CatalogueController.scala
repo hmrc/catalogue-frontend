@@ -210,7 +210,7 @@ class CatalogueController @Inject() (
                                          environment          = api.environment
                                        )
       allRoutes                 =  (routes ++ apiRoutes).filter(_.environment == Environment.Production)
-      inconsistentRoutesCheck   =  routeRulesService.serviceRoutes(routes)
+      inconsistentRoutes        =  routeRulesService.serviceRoutes(routes)
       optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(serviceName)
       serviceCostEstimate       <- costEstimationService.estimateServiceCost(serviceName)
       commenterReport           <- prCommenterConnector.report(repositoryName)
@@ -242,14 +242,14 @@ class CatalogueController @Inject() (
         envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
         linkToLeakDetection          = urlIfLeaksFound,
         allRoutes                    = allRoutes,
-        serviceRoutes                = inconsistentRoutesCheck,
+        serviceRoutes                = inconsistentRoutes,
         hasBranchProtectionAuth      = hasBranchProtectionAuth,
         commenterReport              = commenterReport,
         serviceRelationships         = serviceRelationships,
         canMarkForDecommissioning    = canMarkForDecommissioning,
         lifecycle                    = lifecycle,
         testJobMap                   = testJobMap,
-        isGuest                      = isGuest,
+        isGuest                      = isGuest
       ))
 
   def library(name: String): Action[AnyContent] =
