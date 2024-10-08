@@ -49,58 +49,6 @@
                   </div>
                 }
             }
-@*            @if(routes.exists(_.routeType == RouteType.AdminFrontend)) {*@
-@*            <div class="col-3">*@
-@*                <div id="legend" class="card">*@
-@*                    <div class="card-body">*@
-@*                        <label class="card-title fw-bold">Admin Frontend</label>*@
-@*                        <ul class="list-unstyled mb-0">*@
-@*                            @routes.filter(_.routeType == RouteType.AdminFrontend).map { route =>*@
-@*                            <li>*@
-@*                                <a target="_blank" rel="noreferrer noopener" title="@route.path" href="@route.ruleConfigurationUrl">*@
-@*                                    @route.path*@
-@*                                    <span class="glyphicon glyphicon-new-window"></span>*@
-@*                                </a>*@
-@*                            </li>*@
-@*                            }*@
-@*                        </ul>*@
-@*                    </div>*@
-@*                </div>*@
-@*            </div>*@
-@*            }*@
-@*            @if(routes.exists(_.routeType == RouteType.Devhub)) {*@
-@*            <div class="col-3">*@
-@*                <div id="legend" class="card">*@
-@*                    <div class="card-body">*@
-@*                        <label class="card-title fw-bold">Devhub</label>*@
-@*                        <ul class="list-unstyled mb-0">*@
-@*                        @routes.filter(_.routeType == RouteType.Devhub).map { route =>*@
-@*                            <li>*@
-@*                                <a target="_blank" rel="noreferrer noopener" title="@route.path" href="@route.ruleConfigurationUrl">*@
-@*                                    @route.path*@
-@*                                    <span class="glyphicon glyphicon-new-window"></span>*@
-@*                                </a>*@
-@*                            </li>*@
-@*                        }*@
-@*                        </ul>*@
-@*                    </div>*@
-@*                </div>*@
-@*            </div>*@
-@*            }*@
-@*            @if(routes.exists(_.routeType == RouteType.ApiContext)) {*@
-@*            <div class="col-3">*@
-@*                <div id="legend" class="card">*@
-@*                    <div class="card-body">*@
-@*                        <label class="card-title fw-bold">API Context</label>*@
-@*                        <ul class="list-unstyled mb-0">*@
-@*                        @routes.filter(_.routeType == RouteType.ApiContext).map { route =>*@
-@*                            <li>@route.path</li>*@
-@*                        }*@
-@*                        </ul>*@
-@*                    </div>*@
-@*                </div>*@
-@*            </div>*@
-@*            }*@
         </div>
     </div>
 </div>

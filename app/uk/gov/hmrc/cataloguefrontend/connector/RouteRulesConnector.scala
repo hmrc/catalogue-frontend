@@ -47,7 +47,7 @@ class RouteRulesConnector @Inject() (
   )(using 
     HeaderCarrier
   ): Future[Seq[Route]] =
-    val url = url"$baseUrl/service-configs/routes/${service.asString}"
+    val url = url"$baseUrl/service-configs/routes/${service.asString}?routeType=${routeType.map(_.asString)}&environment=${environment.map(_.asString)}"
     given Reads[Route] = Route.reads
     httpClientV2
       .get(url)

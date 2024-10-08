@@ -197,9 +197,9 @@ class CatalogueController @Inject() (
                                      .map(_.collect { case Some(v) => v }.toMap)
       latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
-      routes                    <- routesRulesConnector.routes(serviceName)
+      prodRoutes                <- routesRulesConnector.routes(serviceName, None, Some(Environment.Production))
       prodApiServices           <- releasesConnector.apiServices(Environment.Production)
-      apiRoutes                 =  prodApiServices.collect:
+      prodApiRoutes             =  prodApiServices.collect:
                                      case api if api.serviceName == serviceName =>
                                        Route(
                                          path                 = api.context,
@@ -207,8 +207,9 @@ class CatalogueController @Inject() (
                                          routeType            = RouteType.ApiContext,
                                          environment          = api.environment
                                        )
-      allRoutes                 =  (routes ++ apiRoutes).filter(_.environment == Environment.Production)
-      inconsistentRoutes        =  routeRulesService.serviceRoutes(routes)
+      allProdRoutes             =  prodRoutes ++ prodApiRoutes
+      allRoutes                 <- routesRulesConnector.routes(serviceName)
+      inconsistentRoutes        =  routeRulesService.serviceRoutes(allRoutes)
       optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(serviceName)
       serviceCostEstimate       <- costEstimationService.estimateServiceCost(serviceName)
       commenterReport           <- prCommenterConnector.report(repositoryName)
@@ -239,7 +240,7 @@ class CatalogueController @Inject() (
         repositoryCreationDate       = repositoryDetails.createdDate,
         envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
         linkToLeakDetection          = urlIfLeaksFound,
-        allRoutes                    = allRoutes,
+        prodRoutes                   = allProdRoutes,
         serviceRoutes                = inconsistentRoutes,
         hasBranchProtectionAuth      = hasBranchProtectionAuth,
         commenterReport              = commenterReport,

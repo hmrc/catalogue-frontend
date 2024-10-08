@@ -39,7 +39,7 @@
   repositoryCreationDate       : Instant,
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
-  allRoutes                    : Seq[Route],
+  prodRoutes                   : Seq[Route],
   serviceRoutes                : ServiceRoutes,
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
@@ -96,10 +96,10 @@
             </div>
         </div>
 
-        @if(allRoutes.nonEmpty) {
+        @if(prodRoutes.nonEmpty) {
             <div class="row mb-3">
                 <div class="col-md-12">
-                    @partials.serviceUrlDetails(allRoutes)
+                    @partials.serviceUrlDetails(prodRoutes)
                 </div>
             </div>
         }
