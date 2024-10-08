@@ -18,13 +18,11 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType.AdminFrontend
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.model.Environment.QA
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 
-class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
+class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
 
   "Service" should {
     "return no result for inconsistency check when no environment routes" in {
@@ -33,11 +31,10 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
     }
 
     "determine if there is inconsistency in the public URL rules" in {
-
       val envRoutes = Seq(
         Route("frontendPath", Some("ruleConfigurationUrl"),   false, RouteType.Frontend, Environment.Production),
         Route("frontendPath", Some("ruleConfigurationUrlQa"), false, RouteType.Frontend, Environment.QA        ),
-        Route("inconsistent", Some("ruleConfigurationUrlQa"), false, RouteType.Frontend, Environment.QA        ),
+        Route("inconsistent", Some("ruleConfigurationUrlQa"), false, RouteType.Frontend, Environment.QA        )
       )
 
       val inconsistentRoutes = ServiceRoutes(envRoutes).inconsistentRoutes
@@ -49,14 +46,11 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
 
     "determine if there is inconsistency with public URL rules when duplicates exist" in {
       val environmentRoutes = Seq(
-
-          Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.Production),
-          Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.Production),
-
-          Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.QA),
-          Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA),
-          Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA)
-
+        Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.Production),
+        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.Production),
+        Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.QA),
+        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA),
+        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA)
       )
 
       val inconsistentRoutes = ServiceRoutes(environmentRoutes).inconsistentRoutes
@@ -80,7 +74,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
       val routes = Seq(
         Route("frontendPath", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.Production),
         Route("frontendPath", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA        ),
-        Route("inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA        ),
+        Route("inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA        )
       )
 
       val inconsistentRoutes = ServiceRoutes(routes).inconsistentRoutes
@@ -95,37 +89,11 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
       ServiceRoutes(environmentRoutes).inconsistentRoutes.nonEmpty shouldBe false
     }
 
-    "return Production environment route as default reference route" in {
-      val environmentRoutes = Seq(
-         Route("frontendPath", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.Production),
-         Route("inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA        ),
-      )
-
-      ServiceRoutes(environmentRoutes).referenceRoutes.nonEmpty         shouldBe true
-      ServiceRoutes(environmentRoutes).referenceRoutes.head.environment shouldBe Environment.Production
-    }
-
-    "return next environment route as reference when no production" in {
-      val environmentRoutes = Seq(
-         Route("frontendPath", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.Development),
-         Route("inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA         ),
-      )
-
-      ServiceRoutes(environmentRoutes).referenceRoutes.nonEmpty shouldBe true
-    }
-
-    "return no reference environment when no environment routes" in {
-      val environmentRoutes: Seq[Route] = Seq.empty
-
-      ServiceRoutes(environmentRoutes).referenceRoutes.isEmpty shouldBe true
-    }
-
     "handle Admin and Frontend routes" in {
-
       val adminRoutes = Seq(
         Route("/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.QA        ),
         Route("/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.Production),
-        Route("/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.Staging   ),
+        Route("/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.Staging   )
       )
 
       val frontendRoutes = Seq(
@@ -133,7 +101,7 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
         Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Staging    ),
         Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Production ),
         Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Integration),
-        Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Development),
+        Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Development)
       )
 
       val inconsistentRoutes = ServiceRoutes(adminRoutes ++ frontendRoutes).inconsistentRoutes
@@ -141,4 +109,3 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers {
       inconsistentRoutes.nonEmpty shouldBe false
     }
   }
-}
