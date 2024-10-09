@@ -14,11 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
+@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.Route
 
-@(serviceRoutes: ServiceRoutes)
+@(inconsistentRoutes: Seq[Route])
 
-@if(serviceRoutes.hasInconsistentRoutes) {
+@if(inconsistentRoutes.nonEmpty) {
   <div id="routing-rule-violations" class="card">
       <div class="card-header">
           <div id="SRRV" class="h4 mb-0 text-danger">Inconsistent Route Rules</div>
@@ -30,17 +30,15 @@
                   <th class="col-lg-10">Route Rule</th>
               </tr>
               <tbody>
-              @for(environmentRoute <- serviceRoutes.inconsistentRoutes) {
-                  @for(route <- environmentRoute.routes) {
+              @for(route <- inconsistentRoutes) {
                       <tr>
                           <td>
-                              <a target="_blank" rel="noreferrer noopener" href="@route.ruleConfigurationUrl" title="Route Rule Configuration">@environmentRoute.environment <span class="glyphicon glyphicon-new-window"/></a>
+                              <a target="_blank" rel="noreferrer noopener" href="@route.ruleConfigurationUrl" title="Route Rule Configuration">@route.environment <span class="glyphicon glyphicon-new-window"/></a>
                           </td>
                           <td>
-                          @route.frontendPath
+                          @route.path
                           </td>
                       </tr>
-                  }
               }
               </tbody>
           </table>

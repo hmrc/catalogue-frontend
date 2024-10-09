@@ -17,7 +17,8 @@
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import play.api.Logger
-import play.api.libs.json.Reads
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atEndOfDayInstant, atStartOfDayInstant}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -128,5 +129,25 @@ class ReleasesConnector @Inject() (
           logger.warn(s"Received 404 from API for timeline of service ${service.asString}")
           Map.empty[String, Seq[DeploymentTimelineEvent]]
       }
+  
+  private given Reads[ReleasesConnector.ApiService] = ReleasesConnector.apiServiceReads
+
+  def apiServices(environment: Environment)(using HeaderCarrier): Future[Seq[ReleasesConnector.ApiService]] =
+    httpClientV2
+      .get(url"$serviceUrl/releases-api/apis/${environment.asString}")
+      .execute[Seq[ReleasesConnector.ApiService]]
 
 end ReleasesConnector
+
+object ReleasesConnector:
+  final case class ApiService(
+    serviceName: ServiceName
+  , context    : String
+  , environment: Environment
+  )
+
+  private val apiServiceReads: Reads[ApiService] =
+    ( (__ \ "serviceName").read[ServiceName]
+    ~ (__ \ "context"    ).read[String]
+    ~ (__ \ "environment").read[Environment]
+    )(ApiService.apply _)

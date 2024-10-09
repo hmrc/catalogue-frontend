@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -36,9 +36,9 @@ class RouteRulesConnectorSpec
      with ScalaFutures
      with IntegrationPatience
      with WireMockSupport
-     with HttpClientV2Support {
+     with HttpClientV2Support:
 
-  private trait Setup {
+  private trait Setup:
     val servicesConfig = mock[ServicesConfig]
     when(servicesConfig.baseUrl("service-configs"))
       .thenReturn(wireMockUrl)
@@ -46,36 +46,38 @@ class RouteRulesConnectorSpec
     given HeaderCarrier    = HeaderCarrier()
     given ExecutionContext = ExecutionContext.global
     val connector = RouteRulesConnector(httpClientV2, servicesConfig)
-  }
+  end Setup
 
-  "RouteRulesConnector.serviceRoutes" should {
-    "return service routes" in new Setup {
+  "RouteRulesConnector.serviceRoutes" should:
+    "return service routes" in new Setup:
       stubFor(
-        get(urlPathEqualTo("/service-configs/frontend-route/service1"))
-          .willReturn(aResponse().withBody("""[
-            { "environment": "production",
-              "routes": [
-                {"frontendPath": "fp", "ruleConfigurationUrl": "rcu", "isRegex": false}
-              ]
-            }
-          ]"""))
+        get(urlPathEqualTo("/service-configs/routes/service1"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                """[
+                    {"path": "fp","ruleConfigurationUrl": "rcu","isRegex": false,"routeType": "frontend","environment": "production"}
+                   ,{"path": "fp","ruleConfigurationUrl": "rcu","isRegex": false,"routeType": "adminfrontend","environment": "production"}
+                   ]"""
+              )
+          )
       )
 
-      import RouteRulesConnector.{EnvironmentRoute, Route}
-      connector.frontendRoutes(ServiceName("service1")).futureValue shouldBe Seq(
-        EnvironmentRoute(
-          environment = Environment.Production
-        , routes      = Route(
-                          frontendPath         = "fp"
-                        , ruleConfigurationUrl = "rcu"
-                        , isRegex              = false
-                        ) :: Nil
-        , isAdmin = false
-      ))
+      import RouteRulesConnector.{Route, RouteType}
+      import uk.gov.hmrc.cataloguefrontend.model.Environment
 
-      wireMockServer.verify(
-        getRequestedFor(urlPathEqualTo("/service-configs/frontend-route/service1"))
+      connector.routes(ServiceName("service1")).futureValue shouldBe Seq(
+        Route(
+          path                 = "fp",
+          ruleConfigurationUrl = Some("rcu"),
+          routeType            = RouteType.Frontend,
+          environment          = Environment.Production
+        ),
+        Route(
+          path                 = "fp",
+          ruleConfigurationUrl = Some("rcu"),
+          routeType            = RouteType.AdminFrontend,
+          environment          = Environment.Production
+        )
       )
-    }
-  }
-}
+end RouteRulesConnectorSpec

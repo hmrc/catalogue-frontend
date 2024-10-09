@@ -27,6 +27,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.connector.*
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
 import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
 import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, CostEstimationService, Zone}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
@@ -37,8 +38,8 @@ import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, Se
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterState, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereService}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
@@ -63,8 +64,8 @@ class CatalogueController @Inject() (
   teamsAndRepositoriesConnector      : TeamsAndRepositoriesConnector,
   serviceConfigsService              : ServiceConfigsService,
   costEstimationService              : CostEstimationService,
-  costEstimateConfig                 : CostEstimateConfig,
   routeRulesService                  : RouteRulesService,
+  costEstimateConfig                 : CostEstimateConfig,
   serviceDependenciesConnector       : ServiceDependenciesConnector,
   serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector,
   leakDetectionService               : LeakDetectionService,
@@ -84,6 +85,8 @@ class CatalogueController @Inject() (
   repositoryInfoPage                 : RepositoryInfoPage,
   serviceMetricsConnector            : ServiceMetricsConnector,
   serviceConfigsConnector            : ServiceConfigsConnector,
+  releasesConnector                  : ReleasesConnector,
+  routesRulesConnector               : RouteRulesConnector,
   override val auth                  : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
@@ -193,7 +196,18 @@ class CatalogueController @Inject() (
                                      .map(_.collect { case Some(v) => v }.toMap)
       latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
-      serviceRoutes             <- routeRulesService.serviceRoutes(serviceName)
+      routes                    <- routesRulesConnector.routes(serviceName)
+      prodApiRoutes             <- releasesConnector.apiServices(Environment.Production).map: apiService =>
+                                     apiService.collect:
+                                       case api if api.serviceName == serviceName =>
+                                         Route(
+                                           path                 = api.context,
+                                           ruleConfigurationUrl = None,
+                                           routeType            = RouteType.ApiContext,
+                                           environment          = api.environment
+                                         )
+      allProdRoutes             =  routes.filter(_.environment == Environment.Production) ++ prodApiRoutes
+      inconsistentRoutes        =  routeRulesService.inconsistentRoutes(routes)
       optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(serviceName)
       serviceCostEstimate       <- costEstimationService.estimateServiceCost(serviceName)
       commenterReport           <- prCommenterConnector.report(repositoryName)
@@ -224,7 +238,8 @@ class CatalogueController @Inject() (
         repositoryCreationDate       = repositoryDetails.createdDate,
         envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
         linkToLeakDetection          = urlIfLeaksFound,
-        serviceRoutes                = serviceRoutes,
+        prodRoutes                   = allProdRoutes,
+        inconsistentRoutes           = inconsistentRoutes,
         hasBranchProtectionAuth      = hasBranchProtectionAuth,
         commenterReport              = commenterReport,
         serviceRelationships         = serviceRelationships,

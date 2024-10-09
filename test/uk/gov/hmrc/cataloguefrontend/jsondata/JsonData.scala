@@ -247,39 +247,29 @@ object JsonData {
     "[]"
 
   val serviceConfigsServiceService1 =
-    """[
-        {
-          "environment": "qa",
-          "routes": [
-            {
-              "frontendPath": "/test/qa/ccc",
-              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
-              "isRegex": false
-            }
-          ]
-        },
-        {
-          "environment": "production",
-          "routes": [
-            {
-              "frontendPath": "/test/prod/ccc",
-              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
-              "isRegex": false
-            }
-          ]
-        },
-        {
-          "environment": "development",
-          "routes": [
-            {
-              "frontendPath": "/test/dev/ccc",
-              "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
-              "isRegex": false
-            }
-          ]
-        }
-      ]
-    """
+  """[
+      {
+        "path": "/test/qa/ccc",
+        "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
+        "isRegex": false,
+        "routeType": "frontend",
+        "environment": "qa"
+      },
+      {
+        "path": "/test/prod/ccc",
+        "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
+        "isRegex": false,
+        "routeType": "frontend",
+        "environment": "production"
+      },
+      {
+        "path": "/test/dev/ccc",
+        "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
+        "isRegex": false,
+        "routeType": "frontend",
+        "environment": "development"
+      }
+     ]"""
 
   val deploymentConfigsService1 = """[{"name": "test", "instances": 1, "slots": 1, "environment": "production", "zone": "protected"}]"""
 
@@ -605,4 +595,16 @@ object JsonData {
       |  "outboundServices": ["service-c", "service-d"]
       |}
       |""".stripMargin
+
+  val releasesApiContext: String =
+    """[
+      |  {
+      |    "serviceName": "service1",
+      |    "context": "misc/service1",
+      |    "version": "4.167.0",
+      |    "environment": "production",
+      |    "deploymentId": "edge-deployment-123",
+      |    "awaitingApproval": false
+      |  }
+      |]""".stripMargin
 }

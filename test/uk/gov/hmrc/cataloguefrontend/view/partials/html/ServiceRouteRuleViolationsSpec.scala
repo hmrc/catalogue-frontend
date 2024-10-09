@@ -18,42 +18,35 @@ package uk.gov.hmrc.cataloguefrontend.view.partials.html
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{EnvironmentRoute, Route}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
+import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
 
 class ServiceRouteRuleViolationsSpec extends AnyWordSpec with Matchers {
+  
+  private val routeRuleService = RouteRulesService()
 
-  val misMatchedServiceRoutes = ServiceRoutes(Seq(
-    EnvironmentRoute(
-      environment = Environment.Development,
-      routes      = Seq(Route("TestUrl0", "ruleConfigurationUrl0"))
-    ),
-    EnvironmentRoute(
-      environment = Environment.Production,
-      routes      = Seq(Route("TestUrl1", "ruleConfigurationUrl1"))
-    )
-  ))
+  val misMatchedRoutes = Seq(
+    Route("TestUrl0", Some("ruleConfigurationUrl0"), false, RouteType.Frontend, Environment.Development),
+    Route("TestUrl1", Some("ruleConfigurationUrl1"), false, RouteType.Frontend, Environment.Production )
+  )
+    
 
-  val matchingServiceRoutes = ServiceRoutes(Seq(
-    EnvironmentRoute(
-      environment = Environment.Development,
-      routes      = Seq(Route("TestUrl0", "ruleConfigurationUrl0"))
-    ),
-    EnvironmentRoute(
-      environment = Environment.Production,
-      routes      = Seq(Route("TestUrl0", "ruleConfigurationUrl1"))
-    )
-  ))
+  val matchingRoutes = Seq(
+    Route("TestUrl0", Some("ruleConfigurationUrl0"), false, RouteType.Frontend, Environment.Development),
+    Route("TestUrl0", Some("ruleConfigurationUrl1"), false, RouteType.Frontend, Environment.Production )
+  )
 
   "ServiceRouteRuleViolations" should {
     "display when there are URLs not matching" in {
-      val result = serviceRouteRuleViolations(misMatchedServiceRoutes).body
+      val inconsistentRoutes = routeRuleService.inconsistentRoutes(misMatchedRoutes)
+      val result             = serviceRouteRuleViolations(inconsistentRoutes).body
       result should include ("id=\"routing-rule-violations\"")
     }
 
-    "do not display when there are URLs are matching" in {
-      val result = serviceRouteRuleViolations(matchingServiceRoutes).body
+    "do not display when there are URLs matching" in {
+      val inconsistentRoutes = routeRuleService.inconsistentRoutes(matchingRoutes)
+      val result             = serviceRouteRuleViolations(inconsistentRoutes).body
       result should not include ("id=\"routing-rule-violations\"")
     }
   }

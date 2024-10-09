@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate}
-@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
+@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 @import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
@@ -37,7 +37,8 @@
   repositoryCreationDate       : Instant,
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
-  serviceRoutes                : ServiceRoutes,
+  prodRoutes                   : Seq[Route],
+  inconsistentRoutes           : Seq[Route],
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
   serviceRelationships         : ServiceConfigsService.ServiceRelationshipsEnriched,
@@ -93,26 +94,18 @@
             </div>
         </div>
 
-        @serviceRoutes.environmentRoutes.find(er => er.environment == Environment.Production && !er.isAdmin).map { envRoute =>
+        @if(prodRoutes.nonEmpty) {
             <div class="row mb-3">
                 <div class="col-md-12">
-                    @partials.serviceUrlDetails(envRoute, isAdmin = false)
+                    @partials.serviceUrlDetails(prodRoutes)
                 </div>
             </div>
         }
 
-        @serviceRoutes.environmentRoutes.find(er => er.environment == Environment.Production && er.isAdmin).map { envRoute =>
+        @if(inconsistentRoutes.nonEmpty) {
             <div class="row mb-3">
                 <div class="col-md-12">
-                    @partials.serviceUrlDetails(envRoute, isAdmin = true)
-                </div>
-            </div>
-        }
-
-        @if(serviceRoutes.hasInconsistentRoutes) {
-            <div class="row mb-3">
-                <div class="col-md-12">
-                    @partials.serviceRouteRuleViolations(serviceRoutes)
+                    @partials.serviceRouteRuleViolations(inconsistentRoutes)
                 </div>
             </div>
         }
