@@ -31,7 +31,6 @@ import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, Route
 import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
 import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, CostEstimationService, Zone}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
 import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService
@@ -197,19 +196,18 @@ class CatalogueController @Inject() (
                                      .map(_.collect { case Some(v) => v }.toMap)
       latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
-      prodRoutes                <- routesRulesConnector.routes(serviceName, None, Some(Environment.Production))
-      prodApiServices           <- releasesConnector.apiServices(Environment.Production)
-      prodApiRoutes             =  prodApiServices.collect:
-                                     case api if api.serviceName == serviceName =>
-                                       Route(
-                                         path                 = api.context,
-                                         ruleConfigurationUrl = None,
-                                         routeType            = RouteType.ApiContext,
-                                         environment          = api.environment
-                                       )
-      allProdRoutes             =  prodRoutes ++ prodApiRoutes
-      allRoutes                 <- routesRulesConnector.routes(serviceName)
-      inconsistentRoutes        =  routeRulesService.serviceRoutes(allRoutes)
+      routes                    <- routesRulesConnector.routes(serviceName)
+      prodApiRoutes             <- releasesConnector.apiServices(Environment.Production).map: apiService =>
+                                     apiService.collect:
+                                       case api if api.serviceName == serviceName =>
+                                         Route(
+                                           path                 = api.context,
+                                           ruleConfigurationUrl = None,
+                                           routeType            = RouteType.ApiContext,
+                                           environment          = api.environment
+                                         )
+      allProdRoutes             =  routes.filter(_.environment == Environment.Production) ++ prodApiRoutes
+      inconsistentRoutes        =  routeRulesService.inconsistentRoutes(routes)
       optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(serviceName)
       serviceCostEstimate       <- costEstimationService.estimateServiceCost(serviceName)
       commenterReport           <- prCommenterConnector.report(repositoryName)
@@ -241,7 +239,7 @@ class CatalogueController @Inject() (
         envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
         linkToLeakDetection          = urlIfLeaksFound,
         prodRoutes                   = allProdRoutes,
-        serviceRoutes                = inconsistentRoutes,
+        inconsistentRoutes           = inconsistentRoutes,
         hasBranchProtectionAuth      = hasBranchProtectionAuth,
         commenterReport              = commenterReport,
         serviceRelationships         = serviceRelationships,

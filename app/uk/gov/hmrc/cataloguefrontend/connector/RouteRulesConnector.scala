@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logger
 import play.api.libs.functional.syntax.*
-import play.api.libs.json.{JsResult, Reads, __}
+import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2

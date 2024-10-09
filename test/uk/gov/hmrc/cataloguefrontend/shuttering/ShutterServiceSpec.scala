@@ -22,7 +22,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType.Frontend
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.http.HeaderCarrier

@@ -18,9 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate}
-@import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
-@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.Route
-@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType
+@import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 @import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
@@ -40,7 +38,7 @@
   envDatas                     : Map[SlugInfoFlag, EnvData],
   linkToLeakDetection          : Option[String],
   prodRoutes                   : Seq[Route],
-  serviceRoutes                : ServiceRoutes,
+  inconsistentRoutes           : Seq[Route],
   hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
   commenterReport              : Option[PrCommenterReport],
   serviceRelationships         : ServiceConfigsService.ServiceRelationshipsEnriched,
@@ -104,10 +102,10 @@
             </div>
         }
 
-        @if(serviceRoutes.hasInconsistentRoutes) {
+        @if(inconsistentRoutes.nonEmpty) {
             <div class="row mb-3">
                 <div class="col-md-12">
-                    @partials.serviceRouteRuleViolations(serviceRoutes)
+                    @partials.serviceRouteRuleViolations(inconsistentRoutes)
                 </div>
             </div>
         }

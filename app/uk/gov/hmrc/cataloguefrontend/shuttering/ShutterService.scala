@@ -21,13 +21,13 @@ import cats.implicits.*
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 import org.jsoup.nodes.Document
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType
 
 @Singleton
 class ShutterService @Inject() (

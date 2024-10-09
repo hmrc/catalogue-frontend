@@ -20,24 +20,25 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.service.RouteRulesService.ServiceRoutes
 
 class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
 
+  private val routeRulesService = RouteRulesService()
+
   "Service" should {
     "return no result for inconsistency check when no environment routes" in {
-      val inconsistentRoutes = ServiceRoutes(Nil).inconsistentRoutes
+      val inconsistentRoutes = Seq.empty[Route]
       inconsistentRoutes.nonEmpty shouldBe false
     }
 
     "determine if there is inconsistency in the public URL rules" in {
-      val envRoutes = Seq(
+      val routes = Seq(
         Route("frontendPath", Some("ruleConfigurationUrl"),   false, RouteType.Frontend, Environment.Production),
         Route("frontendPath", Some("ruleConfigurationUrlQa"), false, RouteType.Frontend, Environment.QA        ),
         Route("inconsistent", Some("ruleConfigurationUrlQa"), false, RouteType.Frontend, Environment.QA        )
       )
 
-      val inconsistentRoutes = ServiceRoutes(envRoutes).inconsistentRoutes
+      val inconsistentRoutes = routeRulesService.inconsistentRoutes(routes)
       inconsistentRoutes.nonEmpty         shouldBe true
       inconsistentRoutes.head.environment shouldBe Environment.QA
       inconsistentRoutes.length           shouldBe 1
@@ -45,29 +46,30 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
     }
 
     "determine if there is inconsistency with public URL rules when duplicates exist" in {
-      val environmentRoutes = Seq(
+      val routes = Seq(
         Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.Production),
         Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.Production),
-        Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.QA),
-        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA),
-        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA)
+        Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.QA        ),
+        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA        ),
+        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA        )
       )
 
-      val inconsistentRoutes = ServiceRoutes(environmentRoutes).inconsistentRoutes
+      val inconsistentRoutes = routeRulesService.inconsistentRoutes(routes)
       inconsistentRoutes.nonEmpty         shouldBe true
       inconsistentRoutes.head.environment shouldBe Environment.QA
     }
 
     "determine if there is consistency with public URL rules" in {
-      val environmentRoutes = Seq(
+      val routes = Seq(
           Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.Production),
           Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.Production),
-
           Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.QA        ),
           Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA        )
       )
 
-      ServiceRoutes(environmentRoutes).inconsistentRoutes.nonEmpty shouldBe false
+      val inconsistentRoutes = routeRulesService.inconsistentRoutes(routes)
+
+      inconsistentRoutes.nonEmpty shouldBe false
     }
 
     "determine if there is inconsistency in the URL paths" in {
@@ -77,16 +79,18 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
         Route("inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA        )
       )
 
-      val inconsistentRoutes = ServiceRoutes(routes).inconsistentRoutes
+      val inconsistentRoutes = routeRulesService.inconsistentRoutes(routes)
       inconsistentRoutes shouldBe Seq(
         Route("inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA)
       )
     }
 
     "be consistent when no routes" in {
-      val environmentRoutes = Seq.empty[Route]
+      val routes = Seq.empty[Route]
+      
+      val inconsistentRoutes = routeRulesService.inconsistentRoutes(routes)
 
-      ServiceRoutes(environmentRoutes).inconsistentRoutes.nonEmpty shouldBe false
+      inconsistentRoutes.nonEmpty shouldBe false
     }
 
     "handle Admin and Frontend routes" in {
@@ -103,8 +107,8 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
         Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Integration),
         Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Development)
       )
-
-      val inconsistentRoutes = ServiceRoutes(adminRoutes ++ frontendRoutes).inconsistentRoutes
+      
+      val inconsistentRoutes = routeRulesService.inconsistentRoutes(adminRoutes ++ frontendRoutes)
       // we only show additional routes in lower envs, not missing routes (currently..)
       inconsistentRoutes.nonEmpty shouldBe false
     }

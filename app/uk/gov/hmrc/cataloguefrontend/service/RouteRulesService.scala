@@ -16,53 +16,29 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Singleton
 import uk.gov.hmrc.cataloguefrontend.model.Environment
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
 import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
-import uk.gov.hmrc.http.HeaderCarrier
-
-import scala.concurrent.ExecutionContext
 
 @Singleton
-class RouteRulesService @Inject()(
-)(using ExecutionContext):
+class RouteRulesService:
 
-  import RouteRulesService._
-
-  // TODO replace with
-  // def inconsistentRoutes(routes: Seq[Route])(using HeaderCarrier): Seq[Route] =
-
-  def serviceRoutes(routes: Seq[Route])(using HeaderCarrier): ServiceRoutes =
-    // exclude new Devhub route type for now
-    ServiceRoutes(routes.filterNot(_.routeType == RouteType.Devhub))
-
-
-object RouteRulesService:
-  case class ServiceRoutes(
-    routes: Seq[Route]
-  ):
-
-    private val referenceRoutes: Seq[Route] =
+  def inconsistentRoutes(routes: Seq[Route]): Seq[Route] =
+    val referenceRoutes: Seq[Route] =
       for
         referenceEnv <- routes.map(_.environment).sorted.reverse.headOption.toSeq
         routes       <- routes.filter(_.environment == referenceEnv)
       yield routes
 
-    val inconsistentRoutes =
-      routes.groupBy(_.environment)
-        .collect:
-          case (_, envRoutes) =>
-            val differentPaths =
-              envRoutes
-                .map(_.path)
-                .diff(referenceRoutes.map(_.path))
-            envRoutes.filter: r =>
-              differentPaths.contains(r.path)
-        .flatten
-        .toSeq
-
-    val hasInconsistentRoutes: Boolean =
-      inconsistentRoutes.nonEmpty
-
+    routes
+      .filterNot(_.routeType == RouteType.Devhub) // exclude new Devhub route type for now
+      .groupBy(_.environment)
+      .collect:
+        case (_, envRoutes) =>
+          val differentPaths = envRoutes.map(_.path).diff(referenceRoutes.map(_.path))
+          envRoutes.filter: r =>
+            differentPaths.contains(r.path)
+      .flatten
+      .toSeq
+  
 end RouteRulesService
