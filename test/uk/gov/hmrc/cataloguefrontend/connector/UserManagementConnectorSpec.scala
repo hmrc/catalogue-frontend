@@ -26,6 +26,7 @@ import uk.gov.hmrc.cataloguefrontend.users._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -262,7 +263,8 @@ class UserManagementConnectorSpec
         jira             = true,
         confluence       = true,
         googleApps       = true,
-        environments     = true
+        environments     = true,
+        bitwarden        = true
       )
 
     val actualUserRequest =
@@ -282,10 +284,10 @@ class UserManagementConnectorSpec
         |    "confluence": true,
         |    "googleApps": true,
         |    "environments": true,
+        |    "bitwarden": true,
         |    "ldap": true
         |  },
-        |  "username": "joe.bloggs",
-        |  "displayName": "Joe Bloggs",
+        |  "userDisplayName": "Joe Bloggs",
         |  "isExistingLDAPUser": false
         |}
         |""".stripMargin
@@ -307,24 +309,25 @@ class UserManagementConnectorSpec
         |    "confluence": true,
         |    "googleApps": true,
         |    "environments": true,
+        |    "bitwarden": true,
         |    "ldap": true
         |  },
-        |  "username": "service_joe.bloggs",
-        |  "displayName": "service_joe bloggs",
+        |  "userDisplayName": "service_joe bloggs",
         |  "isExistingLDAPUser": false
         |}
         |""".stripMargin
 
-    "return Unit when UMP response is 200 for human user" in {
+    "return JSON when UMP response is 200 for human user" in {
       stubFor(
         post(urlPathEqualTo(s"/user-management/create-user"))
           .willReturn(
             aResponse()
               .withStatus(200)
+              .withBody("""{"status": "OK"}""")
           )
       )
 
-      connector.createUser(createUserRequest).futureValue shouldBe ()
+      connector.createUser(createUserRequest).futureValue shouldBe Json.parse("""{"status": "OK"}""")
 
       verify(
         postRequestedFor(urlPathEqualTo("/user-management/create-user"))
@@ -332,16 +335,17 @@ class UserManagementConnectorSpec
       )
     }
 
-    "return Unit when UMP response is 200 for non human user" in {
+    "return JSON when UMP response is 200 for non human user" in {
       stubFor(
         post(urlPathEqualTo("/user-management/create-user"))
           .willReturn(
             aResponse()
               .withStatus(200)
+              .withBody("""{"status": "OK"}""")
           )
       )
 
-      connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue shouldBe ()
+      connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue shouldBe Json.parse("""{"status": "OK"}""")
 
       verify(
         postRequestedFor(urlPathEqualTo("/user-management/create-user"))

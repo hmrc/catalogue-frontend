@@ -129,7 +129,8 @@ case class CreateUserRequest(
   jira              : Boolean,
   confluence        : Boolean,
   googleApps        : Boolean,
-  environments      : Boolean
+  environments      : Boolean,
+  bitwarden         : Boolean
 )
 
 
@@ -150,14 +151,14 @@ object CreateUserRequest:
       ~ (__ \ "access" \ "confluence"   ).write[Boolean]
       ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
       ~ (__ \ "access" \ "environments" ).write[Boolean]
+      ~ (__ \ "access" \ "bitwarden"    ).write[Boolean]
       )(r => Tuple.fromProductTyped(r))
     ): (req, json) =>
       val givenName   = if req.isServiceAccount then s"service_${req.givenName}"     else req.givenName
       val displayName = if req.isServiceAccount then s"$givenName ${req.familyName}" else s"${givenName.capitalize} ${req.familyName.capitalize}"
       json ++ Json.obj(
         "givenName"          -> givenName,
-        "username"           -> s"$givenName.${req.familyName}",
-        "displayName"        -> displayName,
+        "userDisplayName"    -> displayName,
         "isExistingLDAPUser" -> false,
         "access"             -> ((json \ "access").as[JsObject] ++ Json.obj("ldap" -> true))
       )

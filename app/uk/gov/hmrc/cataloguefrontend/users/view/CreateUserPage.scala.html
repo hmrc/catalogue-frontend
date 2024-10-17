@@ -176,13 +176,19 @@
               </div>
             </div>
           </div>
+
           <div class="row">
             <div class="col-md-6 mb-2">
               <div class="form-check form-check-inline">
                 <label class="form-check-label" for="googleApps">G Suite (GMail, Calendar, Hangout, Drive etc)</label>
                 <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="googleAppsCheckbox" name="googleApps" value=true @form.data.get("googleApps").map{ _ => checked }>
               </div>
-
+            </div>
+            <div class="col-md-6 mb-2">
+              <div class="form-check form-check-inline">
+                <label class="form-check-label" for="bitwardenCheckbox">BitWarden</label>
+                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="bitwardenCheckbox" name="bitwarden" value=true @form.data.get("bitwarden").map{ _ => checked }>
+              </div>
             </div>
             <div class="col-md-6 mb-2">
               <button id="selectAllButton" class="btn btn-success btn-sm">Select All</button>

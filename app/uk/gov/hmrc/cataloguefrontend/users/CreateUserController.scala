@@ -124,7 +124,8 @@ object CreateUserForm:
         "jira"             -> Forms.boolean,
         "confluence"       -> Forms.boolean,
         "googleApps"       -> Forms.boolean,
-        "environments"     -> Forms.boolean
+        "environments"     -> Forms.boolean,
+        "bitwarden"        -> Forms.boolean
       )(CreateUserRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
