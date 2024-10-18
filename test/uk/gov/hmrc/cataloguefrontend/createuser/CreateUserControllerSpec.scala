@@ -22,6 +22,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.libs.json.Json
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
@@ -228,7 +229,8 @@ class CreateUserControllerSpec
         jira             = true,
         confluence       = true,
         googleApps       = true,
-        environments     = true
+        environments     = true,
+        bitwarden        = true
       )
   }
 }

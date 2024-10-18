@@ -26,6 +26,7 @@ import uk.gov.hmrc.cataloguefrontend.users._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -262,7 +263,8 @@ class UserManagementConnectorSpec
         jira             = true,
         confluence       = true,
         googleApps       = true,
-        environments     = true
+        environments     = true,
+        bitwarden        = true
       )
 
     val actualUserRequest =
@@ -282,10 +284,10 @@ class UserManagementConnectorSpec
         |    "confluence": true,
         |    "googleApps": true,
         |    "environments": true,
+        |    "bitwarden": true,
         |    "ldap": true
         |  },
-        |  "username": "joe.bloggs",
-        |  "displayName": "Joe Bloggs",
+        |  "userDisplayName": "Joe Bloggs",
         |  "isExistingLDAPUser": false
         |}
         |""".stripMargin
@@ -307,10 +309,10 @@ class UserManagementConnectorSpec
         |    "confluence": true,
         |    "googleApps": true,
         |    "environments": true,
+        |    "bitwarden": true,
         |    "ldap": true
         |  },
-        |  "username": "service_joe.bloggs",
-        |  "displayName": "service_joe bloggs",
+        |  "userDisplayName": "service_joe bloggs",
         |  "isExistingLDAPUser": false
         |}
         |""".stripMargin
@@ -332,7 +334,7 @@ class UserManagementConnectorSpec
       )
     }
 
-    "return Unit when UMP response is 200 for non human user" in {
+    "return JSON when UMP response is 200 for non human user" in {
       stubFor(
         post(urlPathEqualTo("/user-management/create-user"))
           .willReturn(
