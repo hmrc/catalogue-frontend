@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
-import play.api.libs.json.{JsValue, Json, Reads}
+import play.api.libs.json.{Json, Reads}
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, UmpTeam, User}
@@ -70,12 +70,12 @@ class UserManagementConnector @Inject()(
       .get(url"$baseUrl/user-management/users/${username.asString}")
       .execute[Option[User]]
 
-  def createUser(userRequest: CreateUserRequest)(using HeaderCarrier): Future[JsValue] =
+  def createUser(userRequest: CreateUserRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/create-user"
     httpClientV2
       .post(url)
       .withBody(Json.toJson(userRequest)(CreateUserRequest.writes))
-      .execute[Either[UpstreamErrorResponse, JsValue]]
+      .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
         case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))

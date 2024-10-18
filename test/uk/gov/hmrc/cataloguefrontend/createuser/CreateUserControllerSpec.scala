@@ -141,7 +141,7 @@ class CreateUserControllerSpec
         .thenReturn(Future.unit)
 
       when(mockUMConnector.createUser(any[CreateUserRequest])(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Json.parse("""{"status": "OK"}""")))
+        .thenReturn(Future.unit)
 
       val result = controller
         .createUser(isServiceAccount = false)(
@@ -170,7 +170,7 @@ class CreateUserControllerSpec
         .thenReturn(Future.unit)
 
       when(mockUMConnector.createUser(any[CreateUserRequest])(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Json.parse("""{"status": "OK"}""")))
+        .thenReturn(Future.unit)
 
       val result = controller
         .createUser(isServiceAccount = true)(

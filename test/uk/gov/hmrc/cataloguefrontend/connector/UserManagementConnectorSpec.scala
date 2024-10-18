@@ -317,17 +317,16 @@ class UserManagementConnectorSpec
         |}
         |""".stripMargin
 
-    "return JSON when UMP response is 200 for human user" in {
+    "return Unit when UMP response is 200 for human user" in {
       stubFor(
         post(urlPathEqualTo(s"/user-management/create-user"))
           .willReturn(
             aResponse()
               .withStatus(200)
-              .withBody("""{"status": "OK"}""")
           )
       )
 
-      connector.createUser(createUserRequest).futureValue shouldBe Json.parse("""{"status": "OK"}""")
+      connector.createUser(createUserRequest).futureValue shouldBe ()
 
       verify(
         postRequestedFor(urlPathEqualTo("/user-management/create-user"))
@@ -341,11 +340,10 @@ class UserManagementConnectorSpec
           .willReturn(
             aResponse()
               .withStatus(200)
-              .withBody("""{"status": "OK"}""")
           )
       )
 
-      connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue shouldBe Json.parse("""{"status": "OK"}""")
+      connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue shouldBe ()
 
       verify(
         postRequestedFor(urlPathEqualTo("/user-management/create-user"))
