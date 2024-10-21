@@ -112,7 +112,7 @@ class ShutterService @Inject() (
     HeaderCarrier
   ): Future[Option[String]] =
     for
-      frontendRoutes <- routeRulesConnector.routes(serviceName, Some(RouteType.Frontend), Some(env))
+      frontendRoutes <- routeRulesConnector.routes(Some(serviceName), Some(RouteType.Frontend), Some(env))
       shutterRoute   =  frontendRoutes.find(_.isRegex == false)
     yield shutterRoute.map: r =>
       ShutterLinkUtils.mkLink(env, r.path)

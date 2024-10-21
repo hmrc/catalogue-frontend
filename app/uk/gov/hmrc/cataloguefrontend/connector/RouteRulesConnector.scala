@@ -40,27 +40,29 @@ class RouteRulesConnector @Inject() (
 
   private val baseUrl: String = servicesConfig.baseUrl("service-configs")
 
+  private given Reads[Route] = Route.reads
+
   def routes(
-    service    : ServiceName
+    service    : Option[ServiceName] = None
   , routeType  : Option[RouteType]   = None
   , environment: Option[Environment] = None
   )(using 
     HeaderCarrier
   ): Future[Seq[Route]] =
-    val url = url"$baseUrl/service-configs/routes/${service.asString}?routeType=${routeType.map(_.asString)}&environment=${environment.map(_.asString)}"
-    given Reads[Route] = Route.reads
+
+    val queryParams: Map[String, String] =
+      Map(
+        "serviceName" -> service.map(_.asString),
+        "routeType"   -> routeType.map(_.asString),
+        "environment" -> environment.map(_.asString)
+      ).collect:
+        case (paramName, Some(paramValue)) => paramName -> paramValue
+    
+    val url = url"$baseUrl/service-configs/routes?$queryParams"
+
     httpClientV2
       .get(url)
       .execute[Seq[Route]]
-      .recover:
-        case NonFatal(ex) =>
-          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          Seq.empty
-
-  def frontendServices()(using HeaderCarrier): Future[Seq[String]] =
-    val url = url"$baseUrl/service-configs/frontend-services"
-    httpClientV2.get(url)
-      .execute[Seq[String]]
       .recover:
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
@@ -83,7 +85,8 @@ object RouteRulesConnector:
     case ApiContext    extends RouteType(asString = "apicontext"   , displayString = "Api Context"   )
 
   case class Route(
-    path                : String
+    serviceName         : ServiceName
+  , path                : String
   , ruleConfigurationUrl: Option[String]
   , isRegex             : Boolean = false
   , routeType           : RouteType
@@ -92,7 +95,8 @@ object RouteRulesConnector:
 
   object Route:
     val reads: Reads[Route] =
-      ( (__ \ "path"                ).read[String]
+      ( (__ \ "serviceName"         ).read[ServiceName]
+      ~ (__ \ "path"                ).read[String]
       ~ (__ \ "ruleConfigurationUrl").readNullable[String]
       ~ (__ \ "isRegex"             ).readWithDefault[Boolean](false)
       ~ (__ \ "routeType"           ).read[RouteType]

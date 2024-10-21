@@ -116,16 +116,16 @@ class ShutterServiceSpec
       val boot = Boot.init
       given HeaderCarrier = HeaderCarrier()
 
-      val serviceName = ServiceName("service1")
-      val env         = Environment.Production
+      val service = ServiceName("service1")
+      val env     = Environment.Production
 
-      when(boot.mockRouteRulesConnector.routes(serviceName, Some(RouteType.Frontend), Some(env)))
+      when(boot.mockRouteRulesConnector.routes(Some(service), Some(RouteType.Frontend), Some(env)))
         .thenReturn(Future.successful(Seq(
-          Route("/path1", Some(""), isRegex = false, RouteType.Frontend, Environment.Production),
-          Route("/path2", Some(""), isRegex = true , RouteType.Frontend, Environment.Production)
+          Route(service, "/path1", Some(""), isRegex = false, RouteType.Frontend, Environment.Production),
+          Route(service, "/path2", Some(""), isRegex = true , RouteType.Frontend, Environment.Production)
         )))
 
-      val shutterRoute = boot.shutterService.lookupShutterRoute(serviceName, env)
+      val shutterRoute = boot.shutterService.lookupShutterRoute(service, env)
       shutterRoute.futureValue shouldBe Some("https://www.tax.service.gov.uk/path1/platops-shutter-testing")
     }
   }

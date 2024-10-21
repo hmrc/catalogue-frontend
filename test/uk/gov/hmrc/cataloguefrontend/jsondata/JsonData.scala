@@ -249,6 +249,7 @@ object JsonData {
   val serviceConfigsServiceService1 =
   """[
       {
+        "serviceName": "service-1",
         "path": "/test/qa/ccc",
         "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
         "isRegex": false,
@@ -256,6 +257,7 @@ object JsonData {
         "environment": "qa"
       },
       {
+        "serviceName": "service-1",
         "path": "/test/prod/ccc",
         "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
         "isRegex": false,
@@ -263,6 +265,7 @@ object JsonData {
         "environment": "production"
       },
       {
+        "serviceName": "service-1",
         "path": "/test/dev/ccc",
         "ruleConfigurationUrl": "https://github.com/hmrc/mdtp-frontend-routes/blob/main/production/frontend-proxy-application-rules.conf#L29",
         "isRegex": false,

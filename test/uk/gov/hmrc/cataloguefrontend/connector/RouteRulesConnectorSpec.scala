@@ -26,8 +26,11 @@ import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import RouteRulesConnector.{Route, RouteType}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 import scala.concurrent.ExecutionContext
+
 
 class RouteRulesConnectorSpec
   extends AnyWordSpec
@@ -39,45 +42,83 @@ class RouteRulesConnectorSpec
      with HttpClientV2Support:
 
   private trait Setup:
-    val servicesConfig = mock[ServicesConfig]
+    val servicesConfig     = mock[ServicesConfig]
+
     when(servicesConfig.baseUrl("service-configs"))
       .thenReturn(wireMockUrl)
 
     given HeaderCarrier    = HeaderCarrier()
     given ExecutionContext = ExecutionContext.global
-    val connector = RouteRulesConnector(httpClientV2, servicesConfig)
+    val connector          = RouteRulesConnector(httpClientV2, servicesConfig)
   end Setup
 
-  "RouteRulesConnector.serviceRoutes" should:
-    "return service routes" in new Setup:
+  "RouteRulesConnector.routes" should:
+    "return a services routes" in new Setup:
+
+      val serviceName = ServiceName("service-1")
+
       stubFor(
-        get(urlPathEqualTo("/service-configs/routes/service1"))
+        get(urlEqualTo(s"/service-configs/routes?serviceName=${serviceName.asString}"))
           .willReturn(
             aResponse()
               .withBody(
                 """[
-                    {"path": "fp","ruleConfigurationUrl": "rcu","isRegex": false,"routeType": "frontend","environment": "production"}
-                   ,{"path": "fp","ruleConfigurationUrl": "rcu","isRegex": false,"routeType": "adminfrontend","environment": "production"}
+                    {"serviceName": "service-1","path": "fp","ruleConfigurationUrl": "rcu","isRegex": false,"routeType": "frontend","environment": "production"}
+                   ,{"serviceName": "service-1","path": "fp","ruleConfigurationUrl": "rcu","isRegex": false,"routeType": "adminfrontend","environment": "production"}
                    ]"""
               )
           )
       )
 
-      import RouteRulesConnector.{Route, RouteType}
-      import uk.gov.hmrc.cataloguefrontend.model.Environment
-
-      connector.routes(ServiceName("service1")).futureValue shouldBe Seq(
+      connector.routes(service = Some(serviceName)).futureValue shouldBe Seq(
         Route(
+          serviceName          = serviceName,
           path                 = "fp",
           ruleConfigurationUrl = Some("rcu"),
           routeType            = RouteType.Frontend,
           environment          = Environment.Production
         ),
         Route(
+          serviceName          = serviceName,
           path                 = "fp",
           ruleConfigurationUrl = Some("rcu"),
           routeType            = RouteType.AdminFrontend,
           environment          = Environment.Production
         )
       )
+
+    "return all frontend service routes" in new Setup:
+
+      val frontend = RouteType.Frontend
+
+      stubFor(
+        get(urlEqualTo(s"/service-configs/routes?routeType=${frontend.asString}"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                """[
+                    {"serviceName": "service-1","path": "fp","ruleConfigurationUrl": "rcu","isRegex": false,"routeType": "frontend","environment": "production"}
+                   ,{"serviceName": "service-2","path": "fp","ruleConfigurationUrl": "rcu","isRegex": false,"routeType": "frontend","environment": "production"}
+                   ]"""
+              )
+          )
+      )
+
+      connector.routes(routeType = Some(frontend)).futureValue shouldBe Seq(
+        Route(
+          serviceName          = ServiceName("service-1"),
+          path                 = "fp",
+          ruleConfigurationUrl = Some("rcu"),
+          routeType            = frontend,
+          environment          = Environment.Production
+        ),
+        Route(
+          serviceName          = ServiceName("service-2"),
+          path                 = "fp",
+          ruleConfigurationUrl = Some("rcu"),
+          routeType            = frontend,
+          environment          = Environment.Production
+        )
+      )
+
 end RouteRulesConnectorSpec
