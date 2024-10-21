@@ -81,10 +81,9 @@
                 <div class="h4 mb-0">Telemetry</div>
             </div>
             <div class="card-body container">
-                <ul class="list-unstyled mb-0 row row-cols-4">
+                <ul class="list-unstyled" style="column-count: 4;">
                   @optEnvData.collect { case envData if envData.telemetryLinks.nonEmpty =>
                     @renderTelemetryLinks(envData.telemetryLinks, slugInfoFlag.asString)
-                    @renderTelemetryLinks(envData.nonPerformantQueryLinks, slugInfoFlag.asString)
                   }.getOrElse{
                     <li class="list-item">
                       Not deployed
@@ -210,17 +209,13 @@
 }
 
 @renderTelemetryLinks(links: Seq[Link], slugInfoFlag: String) = {
-  <li class="list-item col">
-    <div class="row">
     @for(link <- links) {
-      <a id="link-to-@{link.id}-@{slugInfoFlag}" href="@{link.url}" target="_blank" rel="noreferrer noopener">
-          @link.cls.map{c =>
-            <span class="@c"></span>
-          }
-          @{link.displayName}
-          <span class="glyphicon glyphicon-new-window"></span>
-      </a>
+      <li class="list-item">
+        <a id="link-to-@{link.id}-@{slugInfoFlag}" href="@{link.url}" target="_blank" rel="noreferrer noopener">
+            @link.cls.map { c => <span class="@c"></span> }
+            @{link.displayName}
+            <span class="glyphicon glyphicon-new-window"></span>
+        </a>
+      </li>
     }
-    </div>
-  </li>
 }

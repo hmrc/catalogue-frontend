@@ -54,7 +54,6 @@ case class EnvData(
   repoModules                : Option[RepositoryModules],
   shutterStates              : Seq[ShutterState],
   telemetryLinks             : Seq[Link],
-  nonPerformantQueryLinks    : Seq[Link],
   actionReqVulnerabilityCount: Int
 )
 
@@ -155,13 +154,8 @@ class CatalogueController @Inject() (
                                      teamsAndRepositoriesConnector
                                        .lookupLatestJenkinsJobs(r)
                                        .map(x => xs ++ Map(r -> x.filter(_.jobType == BuildJobType.Job)))
-      database                  <- serviceMetricsConnector.getCollections(serviceName).map(_.headOption.map(_.database))
-      nonPerformantQueries      <-
-                                   if database.isDefined
-                                   then
-                                     serviceMetricsConnector.nonPerformantQueriesForService(serviceName)
-                                   else
-                                     Future.successful(Seq.empty)
+      // database                  <- serviceMetricsConnector.getCollections(serviceName).map(_.headOption.map(_.database))
+      logMetrics                <- serviceMetricsConnector.logMetrics(serviceName)
       envDatas                  <- Environment.values.toSeq
                                      .traverse: env =>
                                        val deployedVersions = deployments.filter(_.environment == env).map(_.version)
@@ -179,16 +173,14 @@ class CatalogueController @Inject() (
                                                                         .vulnerabilityCounts(flag = SlugInfoFlag.ForEnvironment(env), serviceName = Some(serviceName))
                                                                         .map(_.headOption) // should only return one result for defined serviceName
                                              data                  =  EnvData(
-                                                                        version                     = version,
-                                                                        repoModules                 = repoModules.headOption,
-                                                                        shutterStates               = shutterStates,
-                                                                        telemetryLinks              = Seq(
-                                                                                                        telemetryLinks.grafanaDashboard(env, serviceName),
-                                                                                                        telemetryLinks.kibanaDashboard(env, serviceName)
-                                                                                                      ),
-                                                                        nonPerformantQueryLinks     = database.fold(Seq[uk.gov.hmrc.cataloguefrontend.connector.Link]()): databaseName =>
-                                                                                                        telemetryLinks.kibanaNonPerformantQueries(env, serviceName, databaseName, nonPerformantQueries),
-                                                                        actionReqVulnerabilityCount = vulnerabilitiesCount.fold(0)(_.actionRequired)
+                                                                        version                     = version
+                                                                      , repoModules                 = repoModules.headOption
+                                                                      , shutterStates               = shutterStates
+                                                                      , telemetryLinks              = Seq(
+                                                                                                        telemetryLinks.grafanaDashboard(env, serviceName)
+                                                                                                      , telemetryLinks.kibanaDashboard(env, serviceName)
+                                                                                                      ) ++ logMetrics.flatMap(telemetryLinks.kibanaLink(env, _))
+                                                                      , actionReqVulnerabilityCount = vulnerabilitiesCount.fold(0)(_.actionRequired)
                                                                       )
                                            yield Some((SlugInfoFlag.ForEnvironment(env): SlugInfoFlag) -> data)
                                          case None =>
@@ -223,7 +215,6 @@ class CatalogueController @Inject() (
                                          repoModules                 = latestRepoModules,
                                          shutterStates               = Seq.empty,
                                          telemetryLinks              = Seq.empty,
-                                         nonPerformantQueryLinks     = Seq.empty,
                                          actionReqVulnerabilityCount = latestVulnerabilitiesCount.fold(0)(_.actionRequired)
                                        )
       canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(repositoryName)

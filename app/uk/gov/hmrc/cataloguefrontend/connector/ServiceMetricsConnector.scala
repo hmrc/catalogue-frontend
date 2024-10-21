@@ -41,11 +41,11 @@ class ServiceMetricsConnector @Inject() (
   private val serviceMetricsBaseUrl: String =
     servicesConfig.baseUrl("service-metrics")
 
-  def nonPerformantQueriesForService(service: ServiceName)(using HeaderCarrier): Future[Seq[NonPerformantQueries]] =
-    given Reads[NonPerformantQueries] = NonPerformantQueries.reads
+  def logMetrics(service: ServiceName)(using HeaderCarrier): Future[Seq[LogMetric]] =
+    given Reads[LogMetric] = LogMetric.reads
     httpClientV2
-      .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/non-performant-queries")
-      .execute[Seq[NonPerformantQueries]]
+      .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/log-metrics")
+      .execute[Seq[LogMetric]]
 
   def getCollections(service: ServiceName)(using HeaderCarrier): Future[Seq[MongoCollectionSize]] =
     given Reads[MongoCollectionSize] = MongoCollectionSize.reads
@@ -54,18 +54,28 @@ class ServiceMetricsConnector @Inject() (
       .execute[Seq[MongoCollectionSize]]
 
 object ServiceMetricsConnector:
-  case class NonPerformantQueries(
-    service    : ServiceName,
-    environment: Environment,
-    queryTypes : Seq[String],
+  case class LogMetric(
+    id          : String
+  , displayName : String
+  , environments: Map[Environment, EnvironmentResult]
   )
 
-  object NonPerformantQueries:
-    val reads: Reads[NonPerformantQueries] =
-      ( (__ \ "service"    ).read[ServiceName]
-      ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "queryTypes" ).read[Seq[String]]
-      )(NonPerformantQueries.apply)
+  case class EnvironmentResult(
+    kibanaLink: String
+  , count     : Int
+  )
+
+  object LogMetric:
+    val reads: Reads[LogMetric] =
+      given Reads[EnvironmentResult] =
+        ( (__ \ "kibanaLink").read[String]
+        ~ (__ \ "count"     ).read[Int]
+        )(EnvironmentResult.apply)
+
+      ( (__ \ "id"          ).read[String]
+      ~ (__ \ "displayName" ).read[String]
+      ~ (__ \ "environments").read[Map[Environment, EnvironmentResult]]
+      )(apply)
 
   case class MongoCollectionSize(
     database   : String,
