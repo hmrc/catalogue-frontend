@@ -19,13 +19,14 @@
 @import uk.gov.hmrc.cataloguefrontend.users.{User, UsersListFilter, routes => userRoutes}
 @import uk.gov.hmrc.cataloguefrontend.users.UsersController.maxRows
 @import views.html.helper.{FieldConstructor, select}
+@import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 
-@this()
+@this(config : CatalogueConfig)
 
 @(isTeamAdmin: Boolean,
   users      : Seq[User],
   teams      : Seq[GitHubTeam],
-  form       : Form[UsersListFilter],
+  form       : Form[UsersListFilter]
 )(implicit
   messages   : Messages,
   request    : RequestHeader
@@ -33,17 +34,19 @@
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
 @standard_layout("Users", active = "explore") {
-  @if(isTeamAdmin){
+  @if(isTeamAdmin && config.showCreateUserJourney){
     <h1 class="page-heading mt-4">Users
-      <div class="btn-group float-end" role="group">
-        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-          Create
-        </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="@userRoutes.CreateUserController.createUser(isServiceAccount = false)">Create a User</a></li>
-          <li><a class="dropdown-item" href="@userRoutes.CreateUserController.createUser(isServiceAccount = true)">Create a Service User</a></li>
-        </ul>
-      </div>
+        <div class="btn-group float-end" role="group">
+          <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            Create
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="@userRoutes.CreateUserController.createUser(isServiceAccount = false)">
+              Create a User</a></li>
+            <li><a class="dropdown-item" href="@userRoutes.CreateUserController.createUser(isServiceAccount = true)">
+              Create a Service User</a></li>
+          </ul>
+        </div>
     </h1>
   } else {
     <h1 class="page-heading mt-4">Users</h1>
