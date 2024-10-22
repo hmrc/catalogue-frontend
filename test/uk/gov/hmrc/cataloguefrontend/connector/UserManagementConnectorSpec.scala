@@ -26,7 +26,6 @@ import uk.gov.hmrc.cataloguefrontend.users._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

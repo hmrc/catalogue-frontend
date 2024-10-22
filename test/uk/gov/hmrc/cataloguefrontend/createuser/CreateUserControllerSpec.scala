@@ -22,7 +22,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.libs.json.Json
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{POST, contentAsString, defaultAwaitTimeout, redirectLocation, status}
@@ -202,13 +201,10 @@ class CreateUserControllerSpec
     val authStubBehaviour: StubBehaviour                 = mock[StubBehaviour]
     val authComponent    : FrontendAuthComponents        = FrontendAuthComponentsStub(authStubBehaviour)
 
-    when(mockConfig.showCreateUserJourney).thenReturn(true)
-    
     val controller =
       CreateUserController(
         auth                      = authComponent,
         mcc                       = mcc,
-        config                    = mockConfig,
         createUserPage            = mockCUPView,
         createUserRequestSentPage = mockCURSPView,
         userManagementConnector   = mockUMConnector
