@@ -24,7 +24,6 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -41,47 +40,32 @@ class ServiceMetricsConnector @Inject() (
   private val serviceMetricsBaseUrl: String =
     servicesConfig.baseUrl("service-metrics")
 
-  def nonPerformantQueriesForService(service: ServiceName)(using HeaderCarrier): Future[Seq[NonPerformantQueries]] =
-    given Reads[NonPerformantQueries] = NonPerformantQueries.reads
+  def logMetrics(service: ServiceName)(using HeaderCarrier): Future[Seq[LogMetric]] =
+    given Reads[LogMetric] = LogMetric.reads
     httpClientV2
-      .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/non-performant-queries")
-      .execute[Seq[NonPerformantQueries]]
-
-  def getCollections(service: ServiceName)(using HeaderCarrier): Future[Seq[MongoCollectionSize]] =
-    given Reads[MongoCollectionSize] = MongoCollectionSize.reads
-    httpClientV2
-      .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/collections")
-      .execute[Seq[MongoCollectionSize]]
+      .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/log-metrics")
+      .execute[Seq[LogMetric]]
 
 object ServiceMetricsConnector:
-  case class NonPerformantQueries(
-    service    : ServiceName,
-    environment: Environment,
-    queryTypes : Seq[String],
+  case class LogMetric(
+    id          : String
+  , displayName : String
+  , environments: Map[Environment, EnvironmentResult]
   )
 
-  object NonPerformantQueries:
-    val reads: Reads[NonPerformantQueries] =
-      ( (__ \ "service"    ).read[ServiceName]
-      ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "queryTypes" ).read[Seq[String]]
-      )(NonPerformantQueries.apply)
-
-  case class MongoCollectionSize(
-    database   : String,
-    collection : String,
-    sizeBytes  : BigDecimal,
-    date       : LocalDate,
-    environment: Environment,
-    service    : Option[String],
+  case class EnvironmentResult(
+    kibanaLink: String
+  , count     : Int
   )
 
-  object MongoCollectionSize:
-    val reads: Reads[MongoCollectionSize] =
-      ( (__ \ "database"   ).read[String]
-      ~ (__ \ "collection" ).read[String]
-      ~ (__ \ "sizeBytes"  ).read[BigDecimal]
-      ~ (__ \ "date"       ).read[LocalDate]
-      ~ (__ \ "environment").read[Environment]
-      ~ (__ \ "service"    ).readNullable[String]
+  object LogMetric:
+    val reads: Reads[LogMetric] =
+      given Reads[EnvironmentResult] =
+        ( (__ \ "kibanaLink").read[String]
+        ~ (__ \ "count"     ).read[Int]
+        )(EnvironmentResult.apply)
+
+      ( (__ \ "id"          ).read[String]
+      ~ (__ \ "displayName" ).read[String]
+      ~ (__ \ "environments").read[Map[Environment, EnvironmentResult]]
       )(apply)
