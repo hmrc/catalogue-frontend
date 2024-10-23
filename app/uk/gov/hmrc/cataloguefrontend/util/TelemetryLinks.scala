@@ -29,7 +29,6 @@ class TelemetryLinks @Inject()(configuration: Configuration):
   private val grafanaDashboardTemplate           = configuration.get[String]("telemetry.templates.metrics")
   private val kibanaDashboardTemplate            = configuration.get[String]("telemetry.templates.logs.dashBoard")
   private val kibanaDeploymentLogsTemplate       = configuration.get[String]("telemetry.templates.logs.deploymentLogs")
-  private val telemetryLogsDiscoverLinkTemplates = configuration.get[Map[String, String]]("telemetry.templates.logs.discover")
 
   // Same as https://github.com/hmrc/grafana-dashboards/blob/main/src/main/scala/uk/gov/hmrc/grafanadashboards/domain/dashboard/DashboardBuilder.scala#L49-L57
   private def toDashBoardUid(name: String): String =
@@ -70,25 +69,16 @@ class TelemetryLinks @Inject()(configuration: Configuration):
                       .replace(s"$${service}", UrlUtils.encodePathParam(serviceName.asString))
     )
 
-  def kibanaNonPerformantQueries(
-    env                     : Environment,
-    serviceName             : ServiceName,
-    databaseName            : String,
-    nonPerformantQueries    : Seq[ServiceMetricsConnector.NonPerformantQueries] = Seq.empty
-  ): Seq[Link] =
-    telemetryLogsDiscoverLinkTemplates.toSeq.map: (name, linkTemplate) =>
-      Link(
-        name        = name,
-        displayName = s"$name Queries",
-        url         = linkTemplate
-                        .replace(s"$${env}"    , UrlUtils.encodePathParam(env.asString))
-                        .replace(s"$${service}", UrlUtils.encodePathParam(databaseName)),
-        cls         = nonPerformantQueries.collectFirst:
-                        case npq if npq.service == serviceName
-                                 && npq.queryTypes.exists(_.contains(name))
-                                 && npq.environment == env =>
-                          "glyphicon glyphicon-exclamation-sign text-danger"
-      )
-
+  def kibanaLink(env: Environment, logMetric: ServiceMetricsConnector.LogMetric): Option[Link] =
+    logMetric
+      .environments
+      .get(env)
+      .map: res =>
+        Link(
+          name        = logMetric.id
+        , displayName = logMetric.displayName
+        , url         = res.kibanaLink
+        , cls         = Option.when(res.count > 0)("glyphicon glyphicon-exclamation-sign text-danger")
+        )
 
 end TelemetryLinks
