@@ -54,7 +54,7 @@ class SearchByUrlConnector @Inject() (
   private val baseUrl = servicesConfig.baseUrl("service-configs")
 
   def search(term: String)(using HeaderCarrier): Future[Seq[FrontendRoutes]] =
-    val url = url"$baseUrl/service-configs/frontend-route/search?frontendPath=$term"
+    val url = url"$baseUrl/service-configs/frontend-routes/search?frontendPath=$term"
     httpClientV2
       .get(url)
       .execute[Seq[FrontendRoutes]]
