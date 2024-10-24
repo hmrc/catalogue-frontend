@@ -27,7 +27,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus
 import uk.gov.hmrc.cataloguefrontend.connector.*
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.{Route, RouteType}
 import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
 import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, CostEstimationService, Zone}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
@@ -85,7 +85,7 @@ class CatalogueController @Inject() (
   serviceMetricsConnector            : ServiceMetricsConnector,
   serviceConfigsConnector            : ServiceConfigsConnector,
   releasesConnector                  : ReleasesConnector,
-  routesRulesConnector               : RouteRulesConnector,
+  routesRulesConnector               : RouteConfigurationConnector,
   override val auth                  : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
@@ -187,11 +187,12 @@ class CatalogueController @Inject() (
                                      .map(_.collect { case Some(v) => v }.toMap)
       latestRepoModules         <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repositoryName)
       urlIfLeaksFound           <- leakDetectionService.urlIfLeaksFound(repositoryName)
-      routes                    <- routesRulesConnector.routes(serviceName)
+      routes                    <- routesRulesConnector.routes(service = Some(serviceName))
       prodApiRoutes             <- releasesConnector.apiServices(Environment.Production).map: apiService =>
                                      apiService.collect:
                                        case api if api.serviceName == serviceName =>
                                          Route(
+                                           serviceName          = api.serviceName,
                                            path                 = api.context,
                                            ruleConfigurationUrl = None,
                                            routeType            = RouteType.ApiContext,

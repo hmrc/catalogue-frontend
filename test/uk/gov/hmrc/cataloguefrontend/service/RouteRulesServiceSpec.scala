@@ -18,12 +18,13 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.{Route, RouteType}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 
 class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
 
   private val routeRulesService = RouteRulesService()
+  private val service           = ServiceName("service-1")
 
   "Service" should {
     "return no result for inconsistency check when no environment routes" in {
@@ -33,9 +34,9 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
 
     "determine if there is inconsistency in the public URL rules" in {
       val routes = Seq(
-        Route("frontendPath", Some("ruleConfigurationUrl"),   false, RouteType.Frontend, Environment.Production),
-        Route("frontendPath", Some("ruleConfigurationUrlQa"), false, RouteType.Frontend, Environment.QA        ),
-        Route("inconsistent", Some("ruleConfigurationUrlQa"), false, RouteType.Frontend, Environment.QA        )
+        Route(service, "frontendPath", Some("ruleConfigurationUrl"),   false, RouteType.Frontend, Environment.Production),
+        Route(service, "frontendPath", Some("ruleConfigurationUrlQa"), false, RouteType.Frontend, Environment.QA        ),
+        Route(service, "inconsistent", Some("ruleConfigurationUrlQa"), false, RouteType.Frontend, Environment.QA        )
       )
 
       val inconsistentRoutes = routeRulesService.inconsistentRoutes(routes)
@@ -47,11 +48,11 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
 
     "determine if there is inconsistency with public URL rules when duplicates exist" in {
       val routes = Seq(
-        Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.Production),
-        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.Production),
-        Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.QA        ),
-        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA        ),
-        Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA        )
+        Route(service, "frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.Production),
+        Route(service, "frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.Production),
+        Route(service, "frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.QA        ),
+        Route(service, "frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA        ),
+        Route(service, "frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA        )
       )
 
       val inconsistentRoutes = routeRulesService.inconsistentRoutes(routes)
@@ -61,10 +62,10 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
 
     "determine if there is consistency with public URL rules" in {
       val routes = Seq(
-          Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.Production),
-          Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.Production),
-          Route("frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.QA        ),
-          Route("frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA        )
+          Route(service, "frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.Production),
+          Route(service, "frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.Production),
+          Route(service, "frontendPathOne", Some("ruleConfigurationUrlOne"), false, RouteType.Frontend, Environment.QA        ),
+          Route(service, "frontendPathTwo", Some("ruleConfigurationUrlTwo"), false, RouteType.Frontend, Environment.QA        )
       )
 
       val inconsistentRoutes = routeRulesService.inconsistentRoutes(routes)
@@ -74,14 +75,14 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
 
     "determine if there is inconsistency in the URL paths" in {
       val routes = Seq(
-        Route("frontendPath", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.Production),
-        Route("frontendPath", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA        ),
-        Route("inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA        )
+        Route(service, "frontendPath", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.Production),
+        Route(service, "frontendPath", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA        ),
+        Route(service, "inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA        )
       )
 
       val inconsistentRoutes = routeRulesService.inconsistentRoutes(routes)
       inconsistentRoutes shouldBe Seq(
-        Route("inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA)
+        Route(service, "inconsistent", Some("ruleConfigurationUrl"), false, RouteType.Frontend, Environment.QA)
       )
     }
 
@@ -95,17 +96,17 @@ class RouteRulesServiceSpec extends AnyWordSpec with Matchers:
 
     "handle Admin and Frontend routes" in {
       val adminRoutes = Seq(
-        Route("/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.QA        ),
-        Route("/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.Production),
-        Route("/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.Staging   )
+        Route(service, "/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.QA        ),
+        Route(service, "/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.Production),
+        Route(service, "/fh/admin-page", Some(""), false, RouteType.AdminFrontend, Environment.Staging   )
       )
 
       val frontendRoutes = Seq(
-        Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.QA         ),
-        Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Staging    ),
-        Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Production ),
-        Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Integration),
-        Route("/fhdds", Some(""), false, RouteType.Frontend, Environment.Development)
+        Route(service, "/fhdds", Some(""), false, RouteType.Frontend, Environment.QA         ),
+        Route(service, "/fhdds", Some(""), false, RouteType.Frontend, Environment.Staging    ),
+        Route(service, "/fhdds", Some(""), false, RouteType.Frontend, Environment.Production ),
+        Route(service, "/fhdds", Some(""), false, RouteType.Frontend, Environment.Integration),
+        Route(service, "/fhdds", Some(""), false, RouteType.Frontend, Environment.Development)
       )
       
       val inconsistentRoutes = routeRulesService.inconsistentRoutes(adminRoutes ++ frontendRoutes)
