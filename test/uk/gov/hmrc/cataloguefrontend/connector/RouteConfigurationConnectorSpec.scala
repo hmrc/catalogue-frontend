@@ -26,13 +26,13 @@ import uk.gov.hmrc.cataloguefrontend.model.ServiceName
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import RouteRulesConnector.{Route, RouteType}
+import RouteConfigurationConnector.{Route, RouteType}
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 import scala.concurrent.ExecutionContext
 
 
-class RouteRulesConnectorSpec
+class RouteConfigurationConnectorSpec
   extends AnyWordSpec
      with MockitoSugar
      with Matchers
@@ -49,7 +49,7 @@ class RouteRulesConnectorSpec
 
     given HeaderCarrier    = HeaderCarrier()
     given ExecutionContext = ExecutionContext.global
-    val connector          = RouteRulesConnector(httpClientV2, servicesConfig)
+    val connector          = RouteConfigurationConnector(httpClientV2, servicesConfig)
   end Setup
 
   "RouteRulesConnector.routes" should:
@@ -121,4 +121,63 @@ class RouteRulesConnectorSpec
         )
       )
 
-end RouteRulesConnectorSpec
+  "RouteConfigurationConnector.searchFrontendPath" should :
+    "return production frontend routes containing the path search term" in new Setup:
+
+      val searchTerm = "/foo"
+
+      stubFor(
+        get(urlEqualTo(s"/service-configs/frontend-routes/search?frontendPath=$searchTerm&environment=${Environment.Production.asString}"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                """[
+                  {
+                    "serviceName": "service-1",
+                    "path": "/foo",
+                    "ruleConfigurationUrl": "https://github.com/hmrc/.../service-1.conf#L184",
+                    "isRegex": false,
+                    "routeType": "frontend",
+                    "environment": "production"
+                  },
+                  {
+                    "serviceName": "service-1",
+                    "path": "/foo/bar",
+                    "ruleConfigurationUrl": "https://github.com/hmrc/.../service-1.conf#L184",
+                    "isRegex": false,
+                    "routeType": "frontend",
+                    "environment": "production"
+                  },
+                  {
+                    "serviceName": "service-1",
+                    "path": "^/foo/bar\\-.*$",
+                    "ruleConfigurationUrl": "https://github.com/hmrc/.../service-1.conf#L184",
+                    "isRegex": true,
+                    "routeType": "frontend",
+                    "environment": "production"
+                  }
+                ]"""
+              )
+          )
+      )
+
+      connector.searchFrontendPath(searchTerm, Some(Environment.Production)).futureValue shouldBe Seq(
+        Route(ServiceName("service-1"), "/foo"           , Some("https://github.com/hmrc/.../service-1.conf#L184"), false, RouteType.Frontend,  Environment.Production),
+        Route(ServiceName("service-1"), "/foo/bar"       , Some("https://github.com/hmrc/.../service-1.conf#L184"), false, RouteType.Frontend,  Environment.Production),
+        Route(ServiceName("service-1"), "^/foo/bar\\-.*$", Some("https://github.com/hmrc/.../service-1.conf#L184"), true , RouteType.Frontend,  Environment.Production)
+      )
+
+    "return no frontend routes when there is no matching search term" in new Setup:
+      val searchTerm = "/foo"
+
+      stubFor(
+        get(urlEqualTo(s"/service-configs/frontend-routes/search?frontendPath=$searchTerm"))
+          .willReturn(
+            aResponse()
+              .withBody("""[]""")
+          )
+      )
+
+      connector.searchFrontendPath(searchTerm, None).futureValue shouldBe Seq.empty[Route]
+
+end RouteConfigurationConnectorSpec

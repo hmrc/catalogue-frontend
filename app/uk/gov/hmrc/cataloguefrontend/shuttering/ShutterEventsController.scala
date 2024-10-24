@@ -21,8 +21,8 @@ import play.api.Logger
 import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.RouteType
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.cataloguefrontend.shuttering.view.html.ShutterEventsPage
@@ -34,10 +34,10 @@ import scala.util.control.NonFatal
 
 @Singleton
 class ShutterEventsController @Inject() (
-  override val mcc : MessagesControllerComponents,
-  connector        : ShutterConnector,
-  routeRulesConnector :RouteRulesConnector,
-  override val auth: FrontendAuthComponents
+  override val mcc   : MessagesControllerComponents,
+  connector          : ShutterConnector,
+  routeRulesConnector: RouteConfigurationConnector,
+  override val auth  : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)

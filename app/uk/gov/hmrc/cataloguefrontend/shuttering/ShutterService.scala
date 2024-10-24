@@ -20,8 +20,8 @@ import cats.data.OptionT
 import cats.implicits.*
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.RouteType
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteConfigurationConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.RouteType
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
@@ -33,7 +33,7 @@ import org.jsoup.nodes.Document
 class ShutterService @Inject() (
   shutterConnector      : ShutterConnector,
   shutterGroupsConnector: ShutterGroupsConnector,
-  routeRulesConnector   : RouteRulesConnector,
+  routeRulesConnector   : RouteConfigurationConnector,
   githubConnector       : GitHubProxyConnector
 )(using
   ExecutionContext

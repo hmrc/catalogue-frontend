@@ -28,8 +28,8 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.{Route, RouteType}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterCause.UserCreated
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
@@ -59,7 +59,7 @@ class ShutterEventsControllerSpec
 
     val connector           = mock[ShutterConnector]
     val authStubBehaviour   = mock[StubBehaviour]
-    val routeRulesConnector = mock[RouteRulesConnector]
+    val routeRulesConnector = mock[RouteConfigurationConnector]
     val authComponent       = FrontendAuthComponentsStub(authStubBehaviour)
     val underTest           = ShutterEventsController(mcc, connector, routeRulesConnector, authComponent)
 

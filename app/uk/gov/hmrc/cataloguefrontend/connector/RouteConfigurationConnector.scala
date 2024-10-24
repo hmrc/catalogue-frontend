@@ -29,12 +29,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class RouteRulesConnector @Inject() (
+class RouteConfigurationConnector @Inject()(
   httpClientV2  : HttpClientV2,
   servicesConfig: ServicesConfig
 )(using ExecutionContext):
   import HttpReads.Implicits._
-  import RouteRulesConnector._
+  import RouteConfigurationConnector._
 
   private val logger = Logger(getClass)
 
@@ -46,7 +46,7 @@ class RouteRulesConnector @Inject() (
     service    : Option[ServiceName] = None
   , routeType  : Option[RouteType]   = None
   , environment: Option[Environment] = None
-  )(using 
+  )(using
     HeaderCarrier
   ): Future[Seq[Route]] =
 
@@ -57,7 +57,7 @@ class RouteRulesConnector @Inject() (
         "environment" -> environment.map(_.asString)
       ).collect:
         case (paramName, Some(paramValue)) => paramName -> paramValue
-    
+
     val url = url"$baseUrl/service-configs/routes?$queryParams"
 
     httpClientV2
@@ -67,8 +67,23 @@ class RouteRulesConnector @Inject() (
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty
+  
+  def searchFrontendPath(
+    term       : String
+  , environment: Option[Environment]
+  )(using 
+    HeaderCarrier
+  ): Future[Seq[Route]] =
+    val url = url"$baseUrl/service-configs/frontend-routes/search?frontendPath=$term&environment=${environment.map(_.asString)}"
+    httpClientV2
+      .get(url)
+      .execute[Seq[Route]]
+      .recover:
+        case NonFatal(ex) =>
+          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
+          Seq.empty
 
-object RouteRulesConnector:
+object RouteConfigurationConnector:
   import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser}
   import FromStringEnum._
 
@@ -102,4 +117,4 @@ object RouteRulesConnector:
       ~ (__ \ "routeType"           ).read[RouteType]
       ~ (__ \ "environment"         ).read[Environment]
       )(Route.apply)
-end RouteRulesConnector
+end RouteConfigurationConnector

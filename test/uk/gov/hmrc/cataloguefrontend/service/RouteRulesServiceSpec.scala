@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.service
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.{Route, RouteType}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 
 class RouteRulesServiceSpec extends AnyWordSpec with Matchers:

@@ -21,8 +21,8 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
-import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.{Route, RouteType}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteConfigurationConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -140,13 +140,13 @@ class ShutterServiceSpec
       , templatedElements  = List.empty
       )
 
-  case class Boot(shutterService: ShutterService, mockShutterConnector: ShutterConnector, mockRouteRulesConnector: RouteRulesConnector)
+  case class Boot(shutterService: ShutterService, mockShutterConnector: ShutterConnector, mockRouteRulesConnector: RouteConfigurationConnector)
 
   object Boot {
     def init: Boot =
       val mockShutterConnector       = mock[ShutterConnector]
       val mockShutterGroupsConnector = mock[ShutterGroupsConnector]
-      val mockRouteRulesConnector    = mock[RouteRulesConnector]
+      val mockRouteRulesConnector    = mock[RouteConfigurationConnector]
       val mockGithubProxyConnector   = mock[GitHubProxyConnector]
       val shutterService             = ShutterService(mockShutterConnector, mockShutterGroupsConnector, mockRouteRulesConnector, mockGithubProxyConnector)
       Boot(shutterService, mockShutterConnector, mockRouteRulesConnector)
