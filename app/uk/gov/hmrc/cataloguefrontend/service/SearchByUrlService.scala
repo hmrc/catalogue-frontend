@@ -16,32 +16,30 @@
 
 package uk.gov.hmrc.cataloguefrontend.service
 
-import java.net.{URI, URISyntaxException}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.Route
 
-import javax.inject._
-import uk.gov.hmrc.cataloguefrontend.connector.SearchByUrlConnector
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import java.net.{URI, URISyntaxException}
+import javax.inject.*
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SearchByUrlService @Inject() (
-  searchByUrlConnector: SearchByUrlConnector
+  routeConfigurationConnector: RouteConfigurationConnector
 )(using ec: ExecutionContext):
 
-  import SearchByUrlService._
-
-  def search(
-    term       : Option[String],
-    environment: Environment   = Environment.Production
-  )(using HeaderCarrier): Future[Seq[FrontendRoutes]] =
+  def searchFrontendPath(
+    term       : Option[String]
+  , environment: Option[Environment] = Some(Environment.Production)
+  )(using 
+    HeaderCarrier
+  ): Future[Seq[Route]] =
     if isValidSearchTerm(term)
     then
-      searchByUrlConnector.search(takeUrlPath(term.get)).map: searchResults =>
-        searchResults
-          .filter(_.environment == environment)
-          .map(r => r.copy(routes = r.routes.filterNot(_.isDevhub)))
+      routeConfigurationConnector.searchFrontendPath(takeUrlPath(term.get), environment)
     else
       Future.successful(Nil)
 
@@ -77,17 +75,3 @@ class SearchByUrlService @Inject() (
       url.getPath.trim
 
 end SearchByUrlService
-
-object SearchByUrlService:
-  case class FrontendRoute(
-    frontendPath        : String,
-    ruleConfigurationUrl: String = "",
-    isRegex             : Boolean = false,
-    isDevhub            : Boolean = false,
-  )
-
-  case class FrontendRoutes(
-    service    : ServiceName,
-    environment: Environment,
-    routes     : Seq[FrontendRoute]
-  )

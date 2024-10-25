@@ -15,14 +15,15 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService.FrontendRoutes
+@import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.Route
 
 @this()
 
-@(form            : Form[?],
-  searchResults   : Seq[FrontendRoutes]
+
+@(form     : Form[?],
+  routes   : Seq[Route]
 )(implicit
-  request         : RequestHeader
+  request  : RequestHeader
 )
 
 @standard_layout("Service Search", active = "explore") {
@@ -72,7 +73,7 @@
                 </div>
             </form>
 
-            @if(searchResults.nonEmpty) {
+            @if(routes.nonEmpty) {
                 <table id="search-results" class="table table-striped">
                     <thead>
                         <tr>
@@ -81,26 +82,24 @@
                         </tr>
                     </thead>
                     <tbody class="list">
-                    @for(result <- searchResults) {
-                        @for(route <- result.routes) {
-                            <tr>
-                                <td>
-                                    <a id="link-to-@{result.service.asString}" href="@appRoutes.CatalogueController.service(result.service)">@result.service.asString</a>
-                                </td>
-                                <td>
-                                    @if(route.isRegex) {
-                                        @route.frontendPath
-                                    } else {
-                                        <a href="https://www.tax.service.gov.uk@route.frontendPath" target="_blank" rel="noreferrer noopener">@route.frontendPath <span class="glyphicon glyphicon-new-window"/></a>
-                                    }
-                                </td>
-                            </tr>
-                        }
+                    @for(route <- routes) {
+                        <tr>
+                            <td>
+                                <a id="link-to-@{route.serviceName.asString}" href="@appRoutes.CatalogueController.service(route.serviceName)">@{route.serviceName.asString}</a>
+                            </td>
+                            <td>
+                                @if(route.isRegex) {
+                                    @route.path
+                                } else {
+                                    <a href="https://www.tax.service.gov.uk@route.path" target="_blank" rel="noreferrer noopener">@route.path <span class="glyphicon glyphicon-new-window"/></a>
+                                }
+                            </td>
+                        </tr>
                     }
                     </tbody>
                 </table>
             }
-            @if(searchResults.isEmpty && form("name").value.nonEmpty) {
+            @if(routes.isEmpty && form("name").value.nonEmpty) {
                 <p id="search-results-empty">This search did not return any results.</p>
             }
         </div>

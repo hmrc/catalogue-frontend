@@ -18,7 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -27,7 +28,8 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.{Route, RouteType}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterCause.UserCreated
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
@@ -57,15 +59,15 @@ class ShutterEventsControllerSpec
 
     val connector           = mock[ShutterConnector]
     val authStubBehaviour   = mock[StubBehaviour]
-    val routeRulesConnector = mock[RouteRulesConnector]
+    val routeRulesConnector = mock[RouteConfigurationConnector]
     val authComponent       = FrontendAuthComponentsStub(authStubBehaviour)
     val underTest           = ShutterEventsController(mcc, connector, routeRulesConnector, authComponent)
 
     when(authStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
       .thenReturn(Future.unit)
 
-    when(routeRulesConnector.frontendServices()(using any[HeaderCarrier]))
-      .thenReturn(Future.successful(Seq.empty[String]))
+    when(routeRulesConnector.routes(eqTo(None), eqTo(Some(RouteType.Frontend)), eqTo(None))(using any[HeaderCarrier]))
+      .thenReturn(Future.successful(Seq.empty[Route]))
 
     def stubConnectorSuccess(forFilter: ShutterEventsFilter, returnEvents: Seq[ShutterStateChangeEvent] = Seq.empty): Unit =
       when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(using any[HeaderCarrier]))

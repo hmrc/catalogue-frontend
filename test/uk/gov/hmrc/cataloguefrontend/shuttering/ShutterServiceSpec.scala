@@ -21,8 +21,8 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.cataloguefrontend.connector.RouteRulesConnector.{Route, RouteType}
-import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteRulesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.{Route, RouteType}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteConfigurationConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, UserName}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -116,16 +116,16 @@ class ShutterServiceSpec
       val boot = Boot.init
       given HeaderCarrier = HeaderCarrier()
 
-      val serviceName = ServiceName("service1")
-      val env         = Environment.Production
+      val service = ServiceName("service1")
+      val env     = Environment.Production
 
-      when(boot.mockRouteRulesConnector.routes(serviceName, Some(RouteType.Frontend), Some(env)))
+      when(boot.mockRouteRulesConnector.routes(Some(service), Some(RouteType.Frontend), Some(env)))
         .thenReturn(Future.successful(Seq(
-          Route("/path1", Some(""), isRegex = false, RouteType.Frontend, Environment.Production),
-          Route("/path2", Some(""), isRegex = true , RouteType.Frontend, Environment.Production)
+          Route(service, "/path1", Some(""), isRegex = false, RouteType.Frontend, Environment.Production),
+          Route(service, "/path2", Some(""), isRegex = true , RouteType.Frontend, Environment.Production)
         )))
 
-      val shutterRoute = boot.shutterService.lookupShutterRoute(serviceName, env)
+      val shutterRoute = boot.shutterService.lookupShutterRoute(service, env)
       shutterRoute.futureValue shouldBe Some("https://www.tax.service.gov.uk/path1/platops-shutter-testing")
     }
   }
@@ -140,13 +140,13 @@ class ShutterServiceSpec
       , templatedElements  = List.empty
       )
 
-  case class Boot(shutterService: ShutterService, mockShutterConnector: ShutterConnector, mockRouteRulesConnector: RouteRulesConnector)
+  case class Boot(shutterService: ShutterService, mockShutterConnector: ShutterConnector, mockRouteRulesConnector: RouteConfigurationConnector)
 
   object Boot {
     def init: Boot =
       val mockShutterConnector       = mock[ShutterConnector]
       val mockShutterGroupsConnector = mock[ShutterGroupsConnector]
-      val mockRouteRulesConnector    = mock[RouteRulesConnector]
+      val mockRouteRulesConnector    = mock[RouteConfigurationConnector]
       val mockGithubProxyConnector   = mock[GitHubProxyConnector]
       val shutterService             = ShutterService(mockShutterConnector, mockShutterGroupsConnector, mockRouteRulesConnector, mockGithubProxyConnector)
       Boot(shutterService, mockShutterConnector, mockRouteRulesConnector)
