@@ -70,7 +70,7 @@ class RouteConfigurationConnector @Inject()(
   
   def searchFrontendPath(
     term       : String
-  , environment: Option[Environment]
+  , environment: Option[Environment] = None
   )(using 
     HeaderCarrier
   ): Future[Seq[Route]] =

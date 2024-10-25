@@ -62,7 +62,7 @@ class ShutterEventsController @Inject() (
       val form   = ShutterEventsForm.fromFilter(filter)
 
       for
-        frontendRoutes <- routeRulesConnector.routes(None, Some(RouteType.Frontend), None)
+        frontendRoutes <- routeRulesConnector.routes(service = None, routeType = Some(RouteType.Frontend), environment = None)
         services       =  frontendRoutes.map(_.serviceName.asString).distinct
         events         <- connector
                             .shutterEventsByTimestampDesc(filterFor(env, None /* Use listjs filtering */), limit, offset)

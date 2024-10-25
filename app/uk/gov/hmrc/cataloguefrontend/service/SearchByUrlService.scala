@@ -31,10 +31,15 @@ class SearchByUrlService @Inject() (
   routeConfigurationConnector: RouteConfigurationConnector
 )(using ec: ExecutionContext):
 
-  def searchProdFrontendPath(term: Option[String])(using HeaderCarrier): Future[Seq[Route]] =
+  def searchFrontendPath(
+    term       : Option[String]
+  , environment: Option[Environment] = Some(Environment.Production)
+  )(using 
+    HeaderCarrier
+  ): Future[Seq[Route]] =
     if isValidSearchTerm(term)
     then
-      routeConfigurationConnector.searchFrontendPath(takeUrlPath(term.get), Some(Environment.Production))
+      routeConfigurationConnector.searchFrontendPath(takeUrlPath(term.get), environment)
     else
       Future.successful(Nil)
 

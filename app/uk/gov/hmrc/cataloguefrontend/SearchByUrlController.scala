@@ -50,7 +50,7 @@ class SearchByUrlController @Inject() (
         .fold(
           formWithErrors => Future.successful(Ok(searchByUrlPage(formWithErrors, Nil))),
           query          => searchByUrlService
-                              .searchProdFrontendPath(query.name)
+                              .searchFrontendPath(query.name)
                               .map: results =>
                                 Ok(searchByUrlPage(UrlSearchFilter.form.bindFromRequest(), results))
         )
