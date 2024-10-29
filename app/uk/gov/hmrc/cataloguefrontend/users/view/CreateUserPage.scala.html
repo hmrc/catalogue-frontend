@@ -120,7 +120,7 @@
               There are currently no teams that you have permissions to create a user for. Ensure you are signed in to the MDTP Catalogue using your LDAP credentials (as opposed to using the guest sign-in process). If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
             </div>
           } else {
-            <p class="mt-2">You will only be able to onboard users onto teams that you are a member of. If the team you wish to create a user for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+            <p class="mt-2">You will only be able to onboard users onto teams that you are a member of. If the team you wish to create a user for is not in the list above, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
           }
         </div>
       </div>
@@ -143,50 +143,51 @@
       </div>
       <div class="form-group row mb-4">
         <div class="col-md-6">
-          <label class="fw-bold">Tooling Access: </label>
+          <label class="fw-bold mb-2">Tooling Access: </label>
 
           <div class="row">
-            <div class="col-md-6 mb-2">
+            <div class="col-md-7 mb-2">
               <div class="form-check form-check-inline">
-                <label class="form-check-label" for="vpnCheckbox">VPN</label>
+                <label class="form-check-label" for="vpnCheckbox"><strong>VPN</strong> <i>(Not needed for HMRC-managed STRIDE devices)</i></label>
                 <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="vpnCheckbox" name="vpn" value=true @form.data.get("vpn").map{ _ => checked }>
               </div>
             </div>
 
-            <div class="col-md-6 mb-2">
+            <div class="col-md-5 mb-2">
               <div class="form-check form-check-inline">
-                <label class="form-check-label" for="jiraCheckbox">Jira</label>
+                <label class="form-check-label" for="jiraCheckbox"><strong>Jira</strong></label>
                 <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="jiraCheckbox" name="jira" value=true @form.data.get("jira").map{ _ => checked }>
               </div>
             </div>
           </div>
 
           <div class="row">
-            <div class="col-md-6 mb-2">
+            <div class="col-md-7 mb-2">
               <div class="form-check form-check-inline">
-                <label class="form-check-label" for="confluenceCheckbox">Confluence</label>
-                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="confluenceCheckbox" name="confluence" value=true @form.data.get("confluence").map{ _ => checked }>
+                <label class="form-check-label" for="environmentsCheckbox"><strong>Developer Tools</strong> <i>(Kibana, Grafana, Jenkins)</i></label>
+                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="environmentsCheckbox" name="environments" value=true @form.data.get("environments").map{ _ => checked }>
               </div>
             </div>
 
-            <div class="col-md-6 mb-2">
+            <div class="col-md-5 mb-2">
               <div class="form-check form-check-inline">
-                <label class="form-check-label" for="environmentsCheckbox">Developer Tools (Kibana, Grafana, Jenkins)</label>
-                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="environmentsCheckbox" name="environments" value=true @form.data.get("environments").map{ _ => checked }>
+                <label class="form-check-label" for="confluenceCheckbox"><strong>Confluence</strong></label>
+                <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="confluenceCheckbox" name="confluence" value=true @form.data.get("confluence").map{ _ => checked }>
               </div>
             </div>
           </div>
 
           <div class="row">
-            <div class="col-md-6 mb-2">
+            <div class="col-md-7 mb-2">
               <div class="form-check form-check-inline">
-                <label class="form-check-label" for="googleApps">G Suite (GMail, Calendar, Hangout, Drive etc)</label>
+                <label class="form-check-label" for="googleApps"><strong>G Suite</strong> <i>(GMail, Calendar, Hangouts, Drive etc)</i></label>
                 <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="googleAppsCheckbox" name="googleApps" value=true @form.data.get("googleApps").map{ _ => checked }>
               </div>
             </div>
-            <div class="col-md-6 mb-2">
+
+            <div class="col-md-5 mb-2">
               <div class="form-check form-check-inline">
-                <label class="form-check-label" for="bitwardenCheckbox">BitWarden</label>
+                <label class="form-check-label" for="bitwardenCheckbox"><strong>BitWarden</strong> <i>(Password Manager)</i></label>
                 <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="bitwardenCheckbox" name="bitwarden" value=true @form.data.get("bitwarden").map{ _ => checked }>
               </div>
             </div>
@@ -194,6 +195,20 @@
               <button id="selectAllButton" class="btn btn-success btn-sm">Select All</button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div id="googleAppsAlert" class="alert alert-warning d-flex align-items-center col-md-6 d-none" role="alert">
+        <span class="glyphicon glyphicon-warning-sign"></span>
+        <div class="ms-3">
+        Note that once Google access has been granted, the user MUST enable two-factor authentication (2FA) in their Google account, otherwise most Google functionality will be blocked.
+        </div>
+      </div>
+
+      <div id="bitwardenAlert" class="alert alert-warning d-flex align-items-center col-md-6 d-none" role="alert">
+        <span class="glyphicon glyphicon-warning-sign"></span>
+        <div class="ms-3">
+          Only MDTP accounts should be granted Bitwarden access
         </div>
       </div>
 
@@ -212,9 +227,8 @@
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to create a new user?
-                <p></p>
-                Please check that the details are correct.
+              <p>Are you sure you want to create a new user?</p>
+              <p class="mb-0">Please check that the details are correct.</p>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -231,6 +245,18 @@
     document.addEventListener('DOMContentLoaded', function () {
       const selectAllButton = document.getElementById('selectAllButton');
       const groupCheckboxes = document.querySelectorAll('.toolingAccessCheckbox');
+
+      function toggleAlert(checkboxId, alertId) {
+        const checkbox = document.getElementById(checkboxId);
+        const alertBox = document.getElementById(alertId);
+
+        checkbox.addEventListener('change', function() {
+          alertBox.classList.toggle('d-none', !checkbox.checked);
+        });
+      }
+
+      toggleAlert('bitwardenCheckbox', 'bitwardenAlert');
+      toggleAlert('googleAppsCheckbox', 'googleAppsAlert');
 
       // Update button text based on checkbox states
       function updateButtonText() {
