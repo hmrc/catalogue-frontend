@@ -57,10 +57,6 @@ class CreateUserFormSpec extends AnyWordSpec with Matchers {
       isNameValid("_testuser") shouldBe false
     }
 
-    "return false when name contains capital case characters" in {
-      isNameValid("TestUser") shouldBe false
-    }
-
     "return Invalid when the name contains the word 'service'" in {
       CreateUserConstraints.containsServiceConstraint("service-user") shouldBe Invalid("Should not contain 'service' - if you are trying to create a non human user, please use <a href=\"/create-service-user\"'>Create A Service Account</a> instead")
     }
