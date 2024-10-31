@@ -60,8 +60,11 @@ class CreateUserController @Inject()(
       continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
     ).async { implicit request =>
-      cleanseUserTeams(request.retrieval).map: teams =>
-        Ok(createUserPage(CreateUserForm.form, teams, Organisation.values.toSeq, isServiceAccount))
+      for
+        teams <- if request.retrieval.contains(Resource.from("catalogue-frontend", "teams/*")) then {
+                   userManagementConnector.getAllTeams().map(_.map(_.teamName))
+                 } else Future.successful(cleanseUserTeams(request.retrieval))
+      yield Ok(createUserPage(CreateUserForm.form, teams, Organisation.values.toSeq, isServiceAccount))
     }
 
   def createUser(isServiceAccount: Boolean): Action[AnyContent] =
@@ -70,7 +73,12 @@ class CreateUserController @Inject()(
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
     ).async { implicit request =>
       (for
-         teams <- EitherT.liftF(cleanseUserTeams(request.retrieval))
+         teams <- EitherT.liftF(
+                    if request.retrieval.contains(Resource.from("catalogue-frontend", "teams/*")) then
+                      userManagementConnector.getAllTeams().map(_.map(_.teamName))
+                    else
+                      Future.successful(cleanseUserTeams(request.retrieval))
+                  )
          form  <- EitherT.fromEither[Future](CreateUserForm.form.bindFromRequest().fold(
                     formWithErrors => {
                       Left(
@@ -95,16 +103,11 @@ class CreateUserController @Inject()(
       ).merge
     }
 
-  private def cleanseUserTeams(resources: Set[Resource])(using HeaderCarrier ): Future[Seq[TeamName]] =
-    if resources.contains(Resource(ResourceType("catalogue-frontend"),ResourceLocation("teams/*"))) then
-      userManagementConnector.getAllTeams().map(_.map(_.teamName))
-    else
-      Future.successful(
+  private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
         resources.map(_.resourceLocation.value.stripPrefix("teams/"))
           .map(TeamName.apply)
           .toSeq
           .sorted
-      )
 
 end CreateUserController
 
