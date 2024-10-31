@@ -403,3 +403,21 @@ svg > g:last-child > g.google-visualization-tooltip { pointer-events: none }
     --bs-popover-body-padding-x: 0.5rem;
     --bs-popover-body-padding-y: 0.5rem;
 }
+
+.layered-icon {
+    position: relative;
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    line-height: 0;
+}
+
+.layered-icon i {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.layered-icon i:first-child {
+    position: relative; /* Keeps the first icon in document flow to define height */
+}
