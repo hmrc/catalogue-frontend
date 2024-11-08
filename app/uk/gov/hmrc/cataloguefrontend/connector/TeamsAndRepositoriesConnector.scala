@@ -113,6 +113,7 @@ enum BuildJobType(
 ) extends FromString
   derives Ordering, Reads:
   case Job         extends BuildJobType("job"         )
+  case Test        extends BuildJobType("test"        )
   case Pipeline    extends BuildJobType("pipeline"    )
   case PullRequest extends BuildJobType("pull-request")
 
