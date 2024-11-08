@@ -153,7 +153,7 @@ class CatalogueController @Inject() (
       testJobMap                <- testRepos.foldLeftM[Future, Map[String, Seq[JenkinsJob]]](Map.empty): (xs, r) =>
                                      teamsAndRepositoriesConnector
                                        .lookupLatestJenkinsJobs(r)
-                                       .map(x => xs ++ Map(r -> x.filter(_.jobType == BuildJobType.Job)))
+                                       .map(x => xs ++ Map(r -> x.filter(_.jobType == BuildJobType.Test)))
       logMetrics                <- serviceMetricsConnector.logMetrics(serviceName)
       envDatas                  <- Environment.values.toSeq
                                      .traverse: env =>
