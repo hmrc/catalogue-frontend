@@ -205,7 +205,10 @@ case class Pagination(
 object Pagination:
   def uriForPage(uri: String, page: Int): URI =
     import sttp.model.Uri.UriContext
-    uri"$uri".addParam("page", page.toString).toJavaUri
+    val u = uri"$uri"
+    u.withParams(u.paramsMap ++ Map("page" -> page.toString)).toJavaUri // ensures existing page param is replaced
+
+
 
 case class DeploymentTimelineEvent(
   env                    : Environment,
