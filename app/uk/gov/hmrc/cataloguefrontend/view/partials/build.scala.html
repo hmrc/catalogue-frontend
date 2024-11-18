@@ -49,7 +49,31 @@
                 @if(ciLink.latestBuild.nonEmpty) {
                     @if(repo.repoType == RepoType.Test) {
                         <td>
-                        @{ciLink.latestBuild.get.description}
+                            @for(buildData <- ciLink.latestBuild) {
+                                <ul class="list-unstyled mb-0">
+                                    @for(result <- buildData.testJobResults) {
+                                        @defining {
+                                            <div class="layered-icon" title="test-results-need-review">
+                                                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                                <i class="bi bi-exclamation-triangle text-dark"></i>
+                                            </div>
+                                        } { layeredIcon =>
+                                            <li>
+                                                @if(buildData.testJobHelper(result.accessibilityViolations) > 0) {
+                                                    @layeredIcon
+                                                }
+                                                Accessibility violations: @result.accessibilityViolations
+                                            </li>
+                                            <li>
+                                                @if(buildData.testJobHelper(Some(result.securityAlerts)) > 0) {
+                                                    @layeredIcon
+                                                }
+                                                Security alerts: @result.securityAlerts
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            }
                         </td>
                     }
                     @defining({

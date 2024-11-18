@@ -89,21 +89,35 @@ object Link:
     ~ (__ \ "cls"        ).readNullable[String]
     )(apply)
 
-case class BuildData(
-  number     : Int,
-  url        : String,
-  timestamp  : Instant,
-  result     : Option[String],
-  description: Option[String]
+case class TestJobResults(
+  securityAlerts         : String,
+  accessibilityViolations: Option[String]
 )
+object TestJobResults:
+  val reads: Reads[TestJobResults] =
+    ( (__ \ "securityAlerts"         ).read[String]
+    ~ (__ \ "accessibilityViolations").readNullable[String]
+    )(TestJobResults.apply _)
+    
+case class BuildData(
+  number        : Int,
+  url           : String,
+  timestamp     : Instant,
+  result        : Option[String],
+  description   : Option[String],
+  testJobResults: Option[TestJobResults] = None
+):
+  def testJobHelper(result: Option[String]): Int =
+    result.flatMap(_.toIntOption).getOrElse(0)
 
 object BuildData:
   val reads: Reads[BuildData] =
-    ( (__ \ "number"     ).read[Int]
-    ~ (__ \ "url"        ).read[String]
-    ~ (__ \ "timestamp"  ).read[Instant]
-    ~ (__ \ "result"     ).readNullable[String]
-    ~ (__ \ "description").readNullable[String]
+    ( (__ \ "number"        ).read[Int]
+    ~ (__ \ "url"           ).read[String]
+    ~ (__ \ "timestamp"     ).read[Instant]
+    ~ (__ \ "result"        ).readNullable[String]
+    ~ (__ \ "description"   ).readNullable[String]
+    ~ (__ \ "testJobResults").readNullable[TestJobResults](TestJobResults.reads)
   )(apply)
 
 given Parser[BuildJobType] = Parser.parser(BuildJobType.values)

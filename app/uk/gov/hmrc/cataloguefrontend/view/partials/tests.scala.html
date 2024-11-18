@@ -32,6 +32,7 @@
                     <tr>
                         <th>Test Repository</th>
                         <th>Test Job</th>
+                        <th>Description</th>
                         <th>Latest Result</th>
                         <th>Last Run</th>
                     </tr>
@@ -47,8 +48,35 @@
                                 <td>
                                     <a id="link-to-job-@{firstJob.name}" href="@{firstJob.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{firstJob.name}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
+                                <td>
+                                    @for(buildData <- firstJob.latestBuild) {
+                                        <ul class="list-unstyled mb-0">
+                                            @for(result <- buildData.testJobResults) {
+                                                @defining {
+                                                    <div class="layered-icon" title="test-results-need-review">
+                                                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                                        <i class="bi bi-exclamation-triangle text-dark"></i>
+                                                    </div>
+                                                } { layeredIcon =>
+                                                    <li>
+                                                        @if(buildData.testJobHelper(result.accessibilityViolations) > 0) {
+                                                            @layeredIcon
+                                                        }
+                                                        Accessibility violations: @result.accessibilityViolations
+                                                    </li>
+                                                    <li>
+                                                        @if(buildData.testJobHelper(Some(result.securityAlerts)) > 0) {
+                                                            @layeredIcon
+                                                        }
+                                                        Security alerts: @result.securityAlerts
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    }
+                                </td>
                                 @defining(firstJob.latestBuild) {
-                                    case Some(BuildData(_, _, timestamp, result, _)) => {
+                                    case Some(BuildData(_, _, timestamp, result, _, _)) => {
                                         @defining({
                                             result match {
                                                 case Some("SUCCESS")  => "text-bg-success"
@@ -80,8 +108,35 @@
                                 <td>
                                     <a id="link-to-job-@{job.name}" href="@{job.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{job.name}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
+                                <td>
+                                    @for(buildData <- job.latestBuild) {
+                                        <ul class="list-unstyled mb-0">
+                                            @for(result <- buildData.testJobResults) {
+                                                @defining {
+                                                    <div class="layered-icon" title="test-results-need-review">
+                                                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                                        <i class="bi bi-exclamation-triangle text-dark"></i>
+                                                    </div>
+                                                } { layeredIcon =>
+                                                    <li>
+                                                        @if(buildData.testJobHelper(result.accessibilityViolations) > 0) {
+                                                            @layeredIcon
+                                                        }
+                                                        Accessibility violations: @result.accessibilityViolations
+                                                    </li>
+                                                    <li>
+                                                        @if(buildData.testJobHelper(Some(result.securityAlerts)) > 0) {
+                                                            @layeredIcon
+                                                        }
+                                                        Security alerts: @result.securityAlerts
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    }
+                                </td>
                                 @defining(job.latestBuild) {
-                                    case Some(BuildData(_, _, timestamp, result, _)) => {
+                                    case Some(BuildData(_, _, timestamp, result, _, _)) => {
                                         @defining({
                                             result match {
                                                 case Some("SUCCESS")  => "text-bg-success"
