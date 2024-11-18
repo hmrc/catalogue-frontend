@@ -16,12 +16,12 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.connector.model.{JdkUsageByEnv, Vendor}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{JdkUsageByEnv, Vendor, Kind}
 
 @this()
 
 @(envdata         : Seq[JdkUsageByEnv],
-  jdks            : Seq[(Version, Vendor)],
+  jdks            : Seq[(Version, Vendor, Kind)],
   teams           : Seq[GitHubTeam],
   selectedTeamName: Option[TeamName]
 )(implicit
@@ -61,8 +61,11 @@
         <thead>
             <tr>
                 <th>Environment</th>
-                @for((version, vendor) <- jdks) {
-                    <th><img src="@routes.Assets.versioned(vendor.imgPath)" width="68px" alt="@vendor.asString"/>@version</th>
+                @for((version, vendor) <- jdks.map(j => (j._1, j._2)).distinct) {
+                    <th title="@{jdks.filter(j => j._1 == version && j._2 == vendor).map(_._3).mkString(" and ")}">
+                        <img src="@routes.Assets.versioned(vendor.imgPath)" width="68px" alt="@vendor.asString"/>
+                        @version
+                    </th>
                 }
             </tr>
 
@@ -72,7 +75,9 @@
         @for(d <- envdata) {
           <tr>
               <td><a href="@appRoutes.JdkVersionController.findLatestVersions(d.env.asString, selectedTeamName)">@d.env.displayString</a></td>
-              @for(jdk <- jdks) { <td>@{d.usage.getOrElse(jdk, 0)}</td>}
+              @for((version, vendor) <- jdks.map(j => (j._1, j._2)).distinct) {
+                  <td>@{d.usage.getOrElse((version, vendor, Kind.JRE), 0) + d.usage.getOrElse((version, vendor, Kind.JDK), 0)}</td>
+              }
           </tr>
         }
         </tbody>
@@ -102,11 +107,11 @@
         }
 
         function drawStackedChart(stack) {
-
             let data = new google.visualization.DataTable();
             data.addColumn('string', 'Environment');
-            @for((version, vendor) <- jdks) {
-                data.addColumn('number','@version @vendor.asString');
+
+            @for((version, vendor, kind) <- jdks) {
+            data.addColumn('number','@version @vendor.asString (@kind)');
             }
 
             data.addRows([
