@@ -37,7 +37,7 @@ object JdkVersion:
 
 case class JdkUsageByEnv(
   env  : SlugInfoFlag,
-  usage: Map[(Version, Vendor), Int]
+  usage: Map[(Version, Vendor, Kind), Int]
 )
 
 enum Vendor(val asString: String, val imgPath: String):

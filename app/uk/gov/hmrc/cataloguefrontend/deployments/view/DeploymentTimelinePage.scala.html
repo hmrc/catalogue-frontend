@@ -49,10 +49,10 @@
     val currentIndex = eventsForEnv.indexWhere(e => e.deploymentId == id)
     if (currentIndex > 0) {
         val previousVersion = eventsForEnv(currentIndex - 1).version
-        slugInfo.find(_.version == previousVersion).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString}")
+        slugInfo.find(_.version == previousVersion).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString} (${x.java.kind.asString})")
     } else {
         val currentVersion = eventsForEnv(currentIndex).version
-        slugInfo.find(_.version == currentVersion).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString}")
+        slugInfo.find(_.version == currentVersion).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString} (${x.java.kind.asString})")
     }
 }
 
@@ -142,7 +142,7 @@
                             '@{e.displayStart.getOrElse(e.start).displayFormat}',
                             '@{e.displayEnd.getOrElse(e.end).displayFormat}',
                             @{java.time.Duration.between(e.displayStart.getOrElse(e.start), e.displayEnd.getOrElse(e.end)).toDays},
-                            '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString}")}',
+                            '@{slugInfo.find(_.version == e.version).fold("unknown")(x => s"${x.java.version} ${x.java.vendor.asString} (${x.java.kind.asString})")}',
                             '@previousJavaVersion(e.env, e.deploymentId, events, slugInfo)',
                             '@{e.deploymentConfigChanged.getOrElse("")}',
                             '@{e.configChanged.getOrElse("")}',

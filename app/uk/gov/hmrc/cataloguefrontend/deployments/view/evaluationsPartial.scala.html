@@ -102,7 +102,7 @@
       @defining((jvmChanges._1, jvmChanges._2)) { case (oldJvm, newJvm) =>
         @defining(oldJvm.map(_ != newJvm).getOrElse(true)){ isJvmChanged =>
           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJvmChanges" aria-expanded="false" aria-controls="collapseJvmChanges" @if(!isJvmChanged) {disabled}>
-            JVM: @newJvm.version @newJvm.vendor.asString
+            JVM: @newJvm.version @newJvm.vendor.asString (@newJvm.kind.asString)
             @changesBadge(if (isJvmChanged) 1 else 0)
           </button>
         }
