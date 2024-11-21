@@ -59,16 +59,16 @@
                                                     </div>
                                                 } { layeredIcon =>
                                                     <li>
-                                                        @if(buildData.testJobHelper(result.accessibilityViolations) > 0) {
-                                                            @layeredIcon
+                                                        @result.numAccessibilityViolations.map { num =>
+                                                            @if(num > 0) { @layeredIcon }
+                                                            Accessibility violations: @num
                                                         }
-                                                        Accessibility violations: @result.accessibilityViolations
                                                     </li>
                                                     <li>
-                                                        @if(buildData.testJobHelper(Some(result.securityAlerts)) > 0) {
-                                                            @layeredIcon
+                                                        @result.numSecurityAlerts.map { num =>
+                                                            @if(num > 0) { @layeredIcon }
+                                                            Security alerts: @num
                                                         }
-                                                        Security alerts: @result.securityAlerts
                                                     </li>
                                                 }
                                             }
@@ -119,16 +119,16 @@
                                                     </div>
                                                 } { layeredIcon =>
                                                     <li>
-                                                        @if(buildData.testJobHelper(result.accessibilityViolations) > 0) {
-                                                            @layeredIcon
+                                                        @result.numAccessibilityViolations.map { num =>
+                                                            @if(num > 0) { @layeredIcon }
+                                                            Accessibility violations: @num
                                                         }
-                                                        Accessibility violations: @result.accessibilityViolations
                                                     </li>
                                                     <li>
-                                                        @if(buildData.testJobHelper(Some(result.securityAlerts)) > 0) {
-                                                            @layeredIcon
+                                                        @result.numSecurityAlerts.map { num =>
+                                                            @if(num > 0) { @layeredIcon }
+                                                            Security alerts: @num
                                                         }
-                                                        Security alerts: @result.securityAlerts
                                                     </li>
                                                 }
                                             }

@@ -90,13 +90,14 @@ object Link:
     )(apply)
 
 case class TestJobResults(
-  securityAlerts         : String,
-  accessibilityViolations: Option[String]
+  numAccessibilityViolations: Option[Int],
+  numSecurityAlerts         : Option[Int]
 )
+
 object TestJobResults:
   val reads: Reads[TestJobResults] =
-    ( (__ \ "securityAlerts"         ).read[String]
-    ~ (__ \ "accessibilityViolations").readNullable[String]
+    ( (__ \ "numAccessibilityViolations").readNullable[Int]
+    ~ (__ \ "numSecurityAlerts"         ).readNullable[Int]
     )(TestJobResults.apply _)
     
 case class BuildData(
