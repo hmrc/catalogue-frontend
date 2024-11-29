@@ -32,11 +32,11 @@ class CatalogueErrorHandler @Inject()(
   override val ec: ExecutionContext
 ) extends FrontendErrorHandler:
 
-  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(using request: RequestHeader): Future[Html] =
+  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(using RequestHeader): Future[Html] =
     Future.successful(error_template(pageTitle, heading, message))
 
-  override def notFoundTemplate(using request: RequestHeader): Future[Html] =
+  override def notFoundTemplate(using RequestHeader): Future[Html] =
     Future.successful(error_404_template())
 
-  def forbiddenTemplate(using request: RequestHeader): Html =
+  def forbiddenTemplate(using RequestHeader): Html =
     error_403_template()

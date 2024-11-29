@@ -1,7 +1,5 @@
-import play.core.PlayVersion
-import play.sbt.PlayImport.PlayKeys.playDefaultPort
+import play.sbt.PlayImport.PlayKeys
 import play.sbt.routes.RoutesKeys
-import uk.gov.hmrc.versioning.SbtGitVersioning
 
 lazy val microservice = Project("catalogue-frontend", file("."))
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
@@ -9,7 +7,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .settings(
     majorVersion := 5,
     scalaVersion := "3.3.4",
-    playDefaultPort := 9017,
+    PlayKeys.playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
     RoutesKeys.routesImport ++= Seq(
       "uk.gov.hmrc.cataloguefrontend.model._",
@@ -35,12 +33,12 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     scalacOptions += "-Wconf:src=routes/.*:s",
     scalacOptions += "-Wconf:msg=Flag.*repeatedly:s",
     //scalacOptions += "-explain",
-    javaOptions += "-Xmx2G",
+    Compile / javaOptions += "-Xmx2G", // without `Compile` it breaks sbt start/runProd (Universal scope)
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "9.2.0"
-val hmrcMongoVersion     = "2.2.0"
+val bootstrapPlayVersion = "9.5.0"
+val hmrcMongoVersion     = "2.3.0"
 
 val compile = Seq(
   caffeine,
@@ -48,7 +46,7 @@ val compile = Seq(
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-30"           % hmrcMongoVersion,
   "uk.gov.hmrc"               %% "internal-auth-client-play-30" % "3.0.0",
   "org.typelevel"             %% "cats-core"                    % "2.12.0",
-  "org.yaml"                  %  "snakeyaml"                    % "2.2",
+  "org.yaml"                  %  "snakeyaml"                    % "2.3",
   "org.planet42"              %% "laika-core"                   % "0.19.5",
   "org.jsoup"                 %  "jsoup"                        % "1.17.2"
 )

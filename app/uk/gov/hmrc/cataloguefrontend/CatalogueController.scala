@@ -219,7 +219,7 @@ class CatalogueController @Inject() (
                                        )
       canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(repositoryName)
       lifecycle                 <- serviceCommissioningStatusConnector.getLifecycle(serviceName)
-      isGuest                   = request.session.get(AuthController.SESSION_USERNAME).exists(_.startsWith("guest-"))
+      isGuest                   =  request.session.get(AuthController.SESSION_USERNAME).exists(_.startsWith("guest-"))
     yield
       Ok(serviceInfoPage(
         serviceName                  = serviceName,
