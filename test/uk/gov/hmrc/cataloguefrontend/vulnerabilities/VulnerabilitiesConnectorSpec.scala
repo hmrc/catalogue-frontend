@@ -21,8 +21,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus.ActionRequired
+import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, Version}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -101,7 +100,7 @@ class VulnerabilitiesConnectorSpec
           distinctVulnerability = DistinctVulnerability(
                                     vulnerableComponentName    = "deb://ubuntu/xenial:test",
                                     vulnerableComponentVersion = "1.2.5.4-1",
-                                    vulnerableComponents       = Seq(VulnerableComponent("deb://ubuntu/xenial:test", "1.2.5.4-1")),
+                                    vulnerableComponents       = Seq(VulnerableComponent("deb://ubuntu/xenial:test", Version("1.2.5.4-1"))),
                                     id                         = "CVE-123",
                                     score                      = Some(10.0),
                                     description                = "testing",
@@ -110,7 +109,7 @@ class VulnerabilitiesConnectorSpec
                                     publishedDate              = Instant.parse("2019-08-20T10:53:37.00Z"),
                                     firstDetected              = Some(Instant.parse("2019-08-20T10:53:37.00Z")),
                                     assessment                 = Some("Serious"),
-                                    curationStatus             = Some(ActionRequired),
+                                    curationStatus             = Some(CurationStatus.ActionRequired),
                                     ticket                     = Some("ticket1")
                                   ),
           occurrences           = Seq(VulnerabilityOccurrence(

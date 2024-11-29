@@ -24,17 +24,17 @@ import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class SearchByUrlService @Inject() (
   routeConfigurationConnector: RouteConfigurationConnector
-)(using ec: ExecutionContext):
+):
 
   def searchFrontendPath(
     term       : Option[String]
   , environment: Option[Environment] = Some(Environment.Production)
-  )(using 
+  )(using
     HeaderCarrier
   ): Future[Seq[Route]] =
     if isValidSearchTerm(term)
@@ -48,7 +48,7 @@ class SearchByUrlService @Inject() (
     then
       false
     else
-      try {
+      try
         val url = URI(term.get)
 
         Option(url.getPath).getOrElse("").nonEmpty
@@ -57,9 +57,8 @@ class SearchByUrlService @Inject() (
                && Option(url.getPath).getOrElse("").contains("tax.service.gov.uk")
                && url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim.nonEmpty
              )
-      } catch {
+      catch
         case e: URISyntaxException => false
-      }
 
   private def takeUrlPath(term: String): String =
     val url = URI(term)
@@ -70,7 +69,7 @@ class SearchByUrlService @Inject() (
     else if Option(url.getHost).getOrElse("").trim.isEmpty
          && Option(url.getPath).getOrElse("").contains("tax.service.gov.uk")
     then
-        url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim
+      url.getPath.substring(url.getPath.indexOf(".gov.uk") + 7).trim
     else
       url.getPath.trim
 

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, Reads, __}
+import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version, VersionRange}
 
 import java.time.Instant
@@ -25,14 +25,8 @@ import scala.collection.Seq
 
 case class VulnerableComponent(
   component: String,
-  version: String
+  version  : Version
 ):
-//  Note two edge cases which would otherwise break the dependency explorer links are handled below:
-//  1. A vulnerable version may have another `.` after the patch version.
-//  2. An artefact may have a trailing `_someVersionNumber`.
-  def cleansedVersion: String =
-    version.split("\\.").take(3).mkString(".")
-
   def group: String =
     component.stripPrefix("gav://").split(":")(0)
 
@@ -40,20 +34,19 @@ case class VulnerableComponent(
     component.stripPrefix("gav://").split(":")(1).split("_")(0)
 
   def versionRange: VersionRange =
-    val v = Version(cleansedVersion)
-    VersionRange(s"[${v.major}.${v.minor}.${v.patch}]")
+    VersionRange(s"[${version.major}.${version.minor}.${version.patch}]")
 
   def componentWithoutPrefix: Option[String] =
     component.split("://").lift(1)
 
 end VulnerableComponent
 
-object VulnerableComponent {
-  val format: Format[VulnerableComponent] =
-    ( (__ \ "component").format[String]
-    ~ (__ \ "version"  ).format[String]
-    )(apply, vc => Tuple.fromProductTyped(vc))
-}
+object VulnerableComponent:
+  val reads: Reads[VulnerableComponent] =
+    given Reads[Version] = Version.format
+    ( (__ \ "component").read[String]
+    ~ (__ \ "version"  ).read[Version]
+    )(apply)
 
 case class DistinctVulnerability(
     vulnerableComponentName   : String,
@@ -74,7 +67,7 @@ case class DistinctVulnerability(
 object DistinctVulnerability {
 
   val reads: Reads[DistinctVulnerability] =
-    given Format[VulnerableComponent] = VulnerableComponent.format
+    given Reads[VulnerableComponent] = VulnerableComponent.reads
     ( (__ \ "vulnerableComponentName"   ).read[String]
     ~ (__ \ "vulnerableComponentVersion").read[String]
     ~ (__ \ "vulnerableComponents"      ).read[Seq[VulnerableComponent]]
@@ -94,7 +87,7 @@ object DistinctVulnerability {
 case class VulnerabilityOccurrence(
   service            : ServiceName,
   serviceVersion     : String,
-  componentPathInSlug: String,
+  componentPathInSlug: String
 )
 
 object VulnerabilityOccurrence {
