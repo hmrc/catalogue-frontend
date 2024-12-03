@@ -54,6 +54,7 @@ case class DistinctVulnerability(
     vulnerableComponents      : Seq[VulnerableComponent],
     id                        : String,
     score                     : Option[Double],
+    summary                   : String,
     description               : String,
     fixedVersions             : Option[Seq[String]],
     references                : Seq[String],
@@ -73,6 +74,7 @@ object DistinctVulnerability {
     ~ (__ \ "vulnerableComponents"      ).read[Seq[VulnerableComponent]]
     ~ (__ \ "id"                        ).read[String]
     ~ (__ \ "score"                     ).readNullable[Double]
+    ~ (__ \ "summary"                   ).read[String]
     ~ (__ \ "description"               ).read[String]
     ~ (__ \ "fixedVersions"             ).readNullable[Seq[String]]
     ~ (__ \ "references"                ).read[Seq[String]]
