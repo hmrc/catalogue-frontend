@@ -338,6 +338,7 @@ class DeployServiceControllerSpec
                             , vulnerableComponents       = Nil
                             , id                         = "some-id"
                             , score                      = None
+                            , summary                    = "summary"
                             , description                = "some-description"
                             , fixedVersions              = None
                             , references                 = Seq("some-reference")
