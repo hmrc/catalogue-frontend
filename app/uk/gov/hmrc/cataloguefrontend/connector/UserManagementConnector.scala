@@ -17,10 +17,10 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.*
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, UmpTeam, User}
+import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, EditUserAccessRequest, UmpTeam, User, UserAccess}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -70,6 +70,25 @@ class UserManagementConnector @Inject()(
       .get(url"$baseUrl/user-management/users/${username.asString}")
       .execute[Option[User]]
 
+  def getUserAccess(username: UserName)(using HeaderCarrier): Future[UserAccess] =
+    given Reads[UserAccess] = UserAccess.format
+    httpClientV2
+      .get(url"$baseUrl/user-management/users/${username.asString}/access")
+      .execute[Option[UserAccess]]
+      .map:
+        case Some(userAccess) => userAccess
+        case None => UserAccess.empty
+
+  def editUserAccess(userRequest: EditUserAccessRequest)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/edit-user-access"
+    httpClientV2
+      .post(url)
+      .withBody(Json.toJson(userRequest)(EditUserAccessRequest.writes))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(res) => Future.successful(res)
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        
   def createUser(userRequest: CreateUserRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/create-user"
     httpClientV2

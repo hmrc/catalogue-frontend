@@ -15,11 +15,16 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.users.User
+@import uk.gov.hmrc.cataloguefrontend.users.UserAccess
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
+@import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
+@import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 
-@this()
+@this(config : CatalogueConfig)
 
-@(user         : User,
+@(isTeamAdmin  : Boolean,
+  userTooling  : Either[String, UserAccess],
+  user         : User,
   umpProfileUrl: String
 )(implicit
   request      : RequestHeader
@@ -31,7 +36,7 @@
   <section class="section-wrapper">
       <div class="row">
           <div class="col-md-4">
-              <div class="card">
+              <div class="card mb-4">
                   <div class="card-header">
                       <div class="h4 mb-0">Details</div>
                   </div>
@@ -71,7 +76,7 @@
           </div>
 
           <div class="col-md-8">
-              <div class="card">
+              <div class="card mb-4">
                 <div class="card-header">
                   <div class="h4 mb-0">Teams</div>
                 </div>
@@ -95,5 +100,84 @@
               </div>
           </div>
       </div>
+      @userTooling match {
+          case Left(errorMessage) => {
+              <div class="row mb-3">
+                  <div class="col-md-4">
+                      <div class="card mb-4">
+                          <div class="card-header">
+                              <div class="h4 mb-0">Tooling</div>
+                          </div>
+
+                          <div class="card-body">
+                              <div class="layered-icon">
+                                  <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                  <i class="bi bi-exclamation-triangle text-dark"></i>
+                              </div>
+                              @errorMessage
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          }
+          case Right(userAccess) => {
+              <div class="row mb-3">
+                  <div class="col-md-4">
+                      <div class="card mb-4">
+                          <div class="card-header">
+                              <div class="h4 mb-0">Tooling</div>
+                          </div>
+
+                          <div class="card-body">
+                              @if(isTeamAdmin && config.showCreateUserJourney) {
+                                  <div class="btn-group float-end" role="group">
+                                      <a class="btn btn-success" href="@userRoutes.EditUserController.editUserLanding(user.username, user.organisation)">Edit</a>
+                                  </div>
+                              }
+                          <ul class="list-unstyled">
+                              <li>
+                                  <span class="glyphicon glyphicon-@{
+                                      if(userAccess.vpn) "ok text-success" else "minus text-secondary"
+                                  } me-2"></span>
+                                  <strong>VPN</strong>
+                              </li>
+                              <li>
+                                  <span class="glyphicon glyphicon-@{
+                                      if(userAccess.jira) "ok text-success" else "minus text-secondary"
+                                  } me-2"></span>
+                                  <strong>Jira</strong>
+                              </li>
+                              <li>
+                                  <span class="glyphicon glyphicon-@{
+                                      if(userAccess.confluence) "ok text-success" else "minus text-secondary"
+                                  } me-2"></span>
+                                  <strong>Confluence</strong>
+                              </li>
+                              <li>
+                                  <span class="glyphicon glyphicon-@{
+                                      if(userAccess.devTools) "ok text-success" else "minus text-secondary"
+                                  } me-2"></span>
+                                  <strong>Developer Tools</strong> <i>(Kibana, Grafana, Jenkins)</i>
+                              </li>
+                              <li>
+                                  <span class="glyphicon glyphicon-@{
+                                      if(userAccess.googleApps) "ok text-success" else "minus text-secondary"
+                                  } me-2"></span>
+                                  <strong>Google Workspace</strong> <i>(Gmail, Calendar, Hangouts, Drive etc)</i>
+                              </li>
+                              <li>
+                                  <abbr style="text-decoration: none;
+                                      border-bottom: none;" title="Unable to determine if BitWarden access has been granted">
+                                      <span class="glyphicon glyphicon-question-sign me-2"></span>
+                                  </abbr>
+                                  <strong>Bitwarden</strong>
+                              </li>
+                          </ul>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          }
+      }
   </section>
 }

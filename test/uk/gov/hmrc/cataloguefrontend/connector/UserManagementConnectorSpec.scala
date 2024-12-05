@@ -34,7 +34,7 @@ class UserManagementConnectorSpec
      with Matchers
      with ScalaFutures
      with WireMockSupport
-     with HttpClientV2Support {
+     with HttpClientV2Support:
 
   given HeaderCarrier = HeaderCarrier()
 
@@ -245,7 +245,97 @@ class UserManagementConnectorSpec
     }
   }
 
-  "createUser" should {
+  "getUserAccess" should {
+    "return userAccess when found" in {
+      val username = UserName("joe.bloggs")
+
+      stubFor(
+        get(urlPathEqualTo(s"/user-management/users/${username.asString}/access"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                """{
+                  "vpn": true,
+                  "jira": false,
+                  "confluence": false,
+                  "googleApps": true,
+                  "devTools": true
+                }""".stripMargin)
+          )
+      )
+
+      connector.getUserAccess(username).futureValue shouldBe
+        UserAccess(
+          vpn              = true,
+          jira             = false,
+          confluence       = false,
+          googleApps       = true,
+          devTools         = true
+        )
+    }
+
+    "return empty UserAccess when not found" in {
+      val username = UserName("non.existent")
+
+      stubFor(
+        get(urlPathEqualTo(s"/user-management/users/$username/access"))
+          .willReturn(
+            aResponse()
+              .withStatus(404)
+          )
+      )
+
+      connector.getUserAccess(username).futureValue shouldBe UserAccess.empty
+    }
+  }
+
+  "editUserAccess" should:
+
+    val editUserAccessRequest =
+      EditUserAccessRequest(
+        username = "joe.bloggs",
+        organisation = "MDTP",
+        vpn = false,
+        jira = false,
+        confluence = true,
+        googleApps = true,
+        environments = true,
+        bitwarden = true
+      )
+
+    val actualEditUserAccessRequest =
+      """{
+        |  "username": "joe.bloggs",
+        |  "organisation": "MDTP",
+        |  "access": {
+        |    "vpn": false,
+        |    "jira": false,
+        |    "confluence": true,
+        |    "googleApps": true,
+        |    "environments": true,
+        |    "bitwarden": true
+        |  },
+        |  "isExistingLDAPUser": true
+        |}
+        |""".stripMargin
+    
+    "return Unit when UMP response is 200 for human user" in:
+      stubFor(
+        post(urlPathEqualTo(s"/user-management/edit-user-access"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.editUserAccess(editUserAccessRequest).futureValue shouldBe()
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/edit-user-access"))
+          .withRequestBody(equalToJson(actualEditUserAccessRequest))
+      )
+  
+  "createUser" should:
 
     val createUserRequest =
       CreateUserRequest(
@@ -316,7 +406,7 @@ class UserManagementConnectorSpec
         |}
         |""".stripMargin
 
-    "return Unit when UMP response is 200 for human user" in {
+    "return Unit when UMP response is 200 for human user" in:
       stubFor(
         post(urlPathEqualTo(s"/user-management/create-user"))
           .willReturn(
@@ -331,9 +421,8 @@ class UserManagementConnectorSpec
         postRequestedFor(urlPathEqualTo("/user-management/create-user"))
           .withRequestBody(equalToJson(actualUserRequest))
       )
-    }
 
-    "return JSON when UMP response is 200 for non human user" in {
+    "return JSON when UMP response is 200 for non human user" in:
       stubFor(
         post(urlPathEqualTo("/user-management/create-user"))
           .willReturn(
@@ -348,9 +437,8 @@ class UserManagementConnectorSpec
         postRequestedFor(urlPathEqualTo("/user-management/create-user"))
           .withRequestBody(equalToJson(actualNonHumanUserRequest))
       )
-    }
 
-    "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in {
+    "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in:
       stubFor(
         post(urlPathEqualTo(s"user-management/create-service-user"))
           .willReturn(
@@ -362,6 +450,3 @@ class UserManagementConnectorSpec
       an[RuntimeException] shouldBe thrownBy {
         connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue
       }
-    }
-  }
-}
