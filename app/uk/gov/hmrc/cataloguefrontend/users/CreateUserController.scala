@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.users
 
 import cats.data.EitherT
-import play.api.Logger
+import play.api.Logging
 import play.api.data.validation.{Constraint, Constraints, Invalid, Valid}
 import play.api.data.{Form, Forms}
 import play.api.mvc.*
@@ -42,9 +42,8 @@ class CreateUserController @Inject()(
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
   with CatalogueAuthBuilders
-  with play.api.i18n.I18nSupport:
-
-  private val logger = Logger(getClass)
+  with play.api.i18n.I18nSupport
+  with Logging:
 
   private def createUserPermission(teamName: TeamName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_USER"))

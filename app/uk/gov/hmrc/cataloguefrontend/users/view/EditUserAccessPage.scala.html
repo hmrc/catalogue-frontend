@@ -1,0 +1,271 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.users.Organisation
+@import uk.gov.hmrc.cataloguefrontend.users.UserAccess
+
+@this()
+
+@(form            : Form[?],
+  username        : UserName,
+  organisation    : Option[String],
+  existingAccess  : UserAccess
+)(implicit
+  request         : RequestHeader,
+  messagesProvider: MessagesProvider
+)
+
+@standard_layout("Edit a User", "edit a user") {
+
+  <section class="section-wrapper">
+
+    <h1 class="page-heading mt-4">Edit A User</h1>
+
+    <p>If the user is facing issues accessing one of the tools below and has already been granted access,
+       please do not re-add the tool, instead contact <a href="https://hmrcdigital.slack.com/archives/C0HUAN03S">#team-ddcops</a> to investigate.</p>
+
+    @helper.form(
+      action                = uk.gov.hmrc.cataloguefrontend.users.routes.EditUserController.editUserAccess(username, organisation),
+      Symbol("id")         -> "editUserAccessForm",
+      Symbol("method")     -> "post",
+      Symbol("class")      -> "needs-validation",
+      Symbol("novalidate") -> ""
+    ) {
+    @csrfFormField
+
+      <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
+
+      <div class="form-group row mb-4">
+        <div class="col-md-6">
+          <input type="hidden" name="username" value="@username.asString">
+          <label class="fw-bold">Username:</label>
+          <p>@username.asString</p>
+        </div>
+      </div>
+
+      <div class="form-group row mb-4">
+        <div class="col-md-6">
+          <label class="fw-bold">Organisation:</label>
+          @organisation match {
+            case Some(org) => {
+              <p>@org</p>
+              <input type="hidden" name="organisation" value="@org">
+            }
+            case None => {
+              <select class="form-select" id="organisationInput" name="organisation" required>
+                <option value="" disabled selected>Select an organisation</option>
+                @Organisation.values.toSeq.map { org =>
+                  <option value="@{org.asString}" @if(form.data.getOrElse("organisation", "").equals(org.asString)) {selected="selected"}>
+                    @org.asString
+                  </option>
+                }
+              </select>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="form-group row mb-4">
+        <div class="col-md-6">
+          <label class="fw-bold mb-2">Tooling Access: </label>
+          <div class="mb-2">
+            @if(form.hasGlobalErrors) {<div class="text-danger mb-2">@form.globalError.map(_.message)</div>}
+            <div class="form-check form-check-inline">
+              <input class="form-check-input toolingAccessCheckbox @if(form.hasGlobalErrors && !existingAccess.vpn) { is-invalid }" type="checkbox" id="vpnCheckbox" name="vpn" value=true @if(existingAccess.vpn) { checked disabled } else { @form.data.get("vpn").map{ _ => checked } }>
+              <label class="form-check-label" for="vpnCheckbox"><strong>VPN</strong> <i>(Not needed for HMRC-managed STRIDE devices)</i></label>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input toolingAccessCheckbox @if(form.hasGlobalErrors && !existingAccess.jira) { is-invalid }" type="checkbox" id="jiraCheckbox" name="jira" value=true @if(existingAccess.jira) { checked disabled } else { @form.data.get("jira").map{ _ => checked } }>
+              <label class="form-check-label" for="jiraCheckbox"><strong>Jira</strong></label>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input toolingAccessCheckbox @if(form.hasGlobalErrors && !existingAccess.confluence) { is-invalid }" type="checkbox" id="confluenceCheckbox" name="confluence" value=true @if(existingAccess.confluence) { checked disabled } else { @form.data.get("confluence").map{ _ => checked } }>
+              <label class="form-check-label" for="confluenceCheckbox"><strong>Confluence</strong></label>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input toolingAccessCheckbox @if(form.hasGlobalErrors  && !existingAccess.devTools) { is-invalid }" type="checkbox" id="environmentsCheckbox" name="environments" value=true @if(existingAccess.devTools) { checked disabled } else { @form.data.get("environments").map{ _ => checked } }>
+              <label class="form-check-label" for="environmentsCheckbox"><strong>Developer Tools</strong> <i>(Kibana, Grafana, Jenkins)</i></label>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input toolingAccessCheckbox @if(form.hasGlobalErrors && !existingAccess.googleApps) { is-invalid }" type="checkbox" id="googleAppsCheckbox" name="googleApps" value=true @if(existingAccess.googleApps) { checked disabled } else { @form.data.get("googleApps").map{ _ => checked } }>
+              <label class="form-check-label" for="googleApps"><strong>Google Workspace</strong> <i>(Gmail, Calendar, Hangouts, Drive etc)</i></label>
+            </div>
+          </div>
+
+          <div id="googleAppsAlert" class="border-dark-subtle border-start ms-4 mb-2 d-none" role="alert">
+            <div class="ms-3">
+              Note that once Google access has been granted, the user MUST enable two-factor authentication (2FA) in their Google account, otherwise most Google functionality will be blocked.
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input toolingAccessCheckbox @if(form.hasGlobalErrors) { is-invalid }" type="checkbox" id="bitwardenCheckbox" name="bitwarden" value=true @form.data.get("bitwarden").map{ _ => checked }>
+              <label class="form-check-label" for="bitwardenCheckbox"><strong>Bitwarden</strong> <i>(Password Manager)</i></label>
+            </div>
+          </div>
+
+          <div id="bitwardenAlert" class="border-dark-subtle border-start ms-4 mb-2 d-none" role="alert">
+            <div class="ms-3">
+              <div class="layered-icon">
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                <i class="bi bi-exclamation-triangle text-dark"></i>
+              </div>
+              Note that existing BitWarden access can not currently be determined, please ensure the user does not already have BitWarden access before requesting.
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <button id="selectAllButton" class="btn btn-success btn-sm">Select All</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+          Update
+        </button>
+      </div>
+
+        <!-- Modal -->
+      <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="staticBackdropLabel">Edit User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+              <p>Are you sure you want to edit this user?</p>
+              <p class="mb-0">Please check that the details are correct.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-success">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </section>
+
+  <script @CSPNonce.attr>
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const selectAllButton = document.getElementById('selectAllButton');
+      const groupCheckboxes = document.querySelectorAll('.toolingAccessCheckbox');
+      const googleAppsAlert = document.getElementById('googleAppsAlert');
+      const bitwardenAlert = document.getElementById('bitwardenAlert');
+      const organisationInput = document.getElementById('organisationInput');
+      const devToolsCheckbox = document.getElementById('environmentsCheckbox');
+      const googleAppsCheckbox = document.getElementById('googleAppsCheckbox');
+      const bitwardenCheckbox= document.getElementById('bitwardenCheckbox');
+
+      function disableAndUntick(checkbox, shouldDisable, alert = null, permanent = false) {
+        if (shouldDisable || permanent) {
+          checkbox.checked = permanent;
+          checkbox.disabled = true;
+          if (alert) alert.classList.add('d-none');
+        } else {
+          checkbox.disabled = false;
+        }
+      }
+
+      function updateToolingAccessVisibility() {
+        let selectedOrganisation;
+
+        if (organisationInput) {
+          selectedOrganisation = organisationInput.value;
+        } else {
+          const hiddenOrganisationInput = document.querySelector('input[name="organisation"]');
+          selectedOrganisation = hiddenOrganisationInput ? hiddenOrganisationInput.value : null;
+        }
+
+        disableAndUntick(devToolsCheckbox, selectedOrganisation === 'Other', null, @existingAccess.devTools);
+        disableAndUntick(googleAppsCheckbox, selectedOrganisation === 'Other', googleAppsAlert, @existingAccess.googleApps);
+        disableAndUntick(bitwardenCheckbox, selectedOrganisation === 'VOA' || selectedOrganisation === 'Other', bitwardenAlert);
+
+        updateButtonText();
+      }
+
+      function toggleAlert(checkboxId, alertId) {
+        const checkbox = document.getElementById(checkboxId);
+        const alertBox = document.getElementById(alertId);
+
+        checkbox.addEventListener('change', function() {
+          alertBox.classList.toggle('d-none', !checkbox.checked);
+        });
+      }
+
+      // Update button text based on checkbox states
+      function updateButtonText() {
+        const allChecked = Array.from(groupCheckboxes).every(c => c.checked || c.disabled);
+        selectAllButton.innerHTML = allChecked ? 'Deselect All' : 'Select All';
+      }
+
+      selectAllButton.addEventListener('click', function (event) {
+        event.preventDefault();
+
+        const isChecked = Array.from(groupCheckboxes).some(c => !c.checked && !c.disabled);
+
+        groupCheckboxes.forEach(function (checkbox) {
+          if (!checkbox.disabled) checkbox.checked = isChecked;
+        });
+
+        googleAppsAlert.classList.toggle('d-none', !googleAppsCheckbox.checked || @existingAccess.googleApps);
+        bitwardenAlert.classList.toggle('d-none', !bitwardenCheckbox.checked);
+        updateButtonText();
+      });
+
+      selectAllButton.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+        }
+      });
+
+      groupCheckboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('click', function () {
+          // Update the button text if any of the group checkboxes are unchecked
+          updateButtonText();
+        });
+      });
+
+      // Initial page load
+      if (organisationInput) {
+        organisationInput.addEventListener('change', function() {
+          updateToolingAccessVisibility();
+        });
+      }
+
+      toggleAlert('googleAppsCheckbox', 'googleAppsAlert');
+      toggleAlert('bitwardenCheckbox', 'bitwardenAlert');
+      updateToolingAccessVisibility();
+    });
+  </script>
+}
