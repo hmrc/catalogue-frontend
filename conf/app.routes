@@ -135,6 +135,6 @@ GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefr
 
 GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.allUsers(username: Option[UserName] ?= None)
 GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: UserName)
-GET        /users/edit-user-access/:username             uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserLanding(username: UserName, organisation: Option[String] ?= None)
-POST       /users/edit-user-access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserAccess(username: UserName, organisation: Option[String] ?= None)
-GET        /users/edit-user-access/2                     uk.gov.hmrc.cataloguefrontend.users.EditUserController.requestSent(username: UserName)
+GET        /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserLanding(username: UserName, organisation: Option[String] ?= None)
+POST       /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserAccess(username: UserName, organisation: Option[String] ?= None)
+GET        /users/edit-user/access/2                     uk.gov.hmrc.cataloguefrontend.users.EditUserController.requestSent(username: UserName)
