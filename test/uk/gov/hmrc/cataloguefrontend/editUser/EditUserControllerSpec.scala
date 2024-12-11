@@ -52,7 +52,7 @@ class EditUserControllerSpec
   "EditUserController.editUserLanding" should:
     "have the correct url setup" in:
       uk.gov.hmrc.cataloguefrontend.users.routes.EditUserController.editUserLanding(UserName("joe.bloggs"), None)
-        .url shouldBe "/users/edit-user-access/joe.bloggs"
+        .url shouldBe "/users/edit-user/access?username=joe.bloggs"
 
   "EditUserController.editUserLanding" should:
 
