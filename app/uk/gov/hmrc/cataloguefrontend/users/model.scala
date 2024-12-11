@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.users
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{JsObject, Json, OWrites, Reads, Writes, __}
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.util.FromString
 
@@ -109,6 +109,38 @@ object User:
     ~ ( __ \ "teamNames"     ).read[Seq[TeamName]]
     )(User.apply)
 
+case class UserAccess(
+  vpn: Boolean,
+  jira: Boolean,
+  confluence: Boolean,
+  devTools: Boolean,
+  googleApps: Boolean
+)
+
+object UserAccess:
+  def empty: UserAccess =
+    UserAccess(vpn = false, jira = false, confluence = false, devTools = false, googleApps = false)
+  
+  val reads: Reads[UserAccess] =
+    ( (__ \ "vpn"       ).read[Boolean]
+    ~ (__ \ "jira"      ).read[Boolean]
+    ~ (__ \ "confluence").read[Boolean]
+    ~ (__ \ "devTools"  ).read[Boolean]
+    ~ (__ \ "googleApps").read[Boolean]
+    )(UserAccess.apply _)
+
+  val writes: Writes[UserAccess] =
+    (userAccess: UserAccess) => Json.obj(
+      "vpn"        -> userAccess.vpn,
+      "jira"       -> userAccess.jira,
+      "confluence" -> userAccess.confluence,
+      "devTools"   -> userAccess.devTools,
+      "googleApps" -> userAccess.googleApps
+    )
+
+  val format: Format[UserAccess] =
+    Format(reads, writes)
+
 enum Organisation(val asString: String) extends FromString:
   case Mdtp  extends Organisation("MDTP" )
   case Voa   extends Organisation("VOA"  )
@@ -161,4 +193,32 @@ object CreateUserRequest:
         "userDisplayName"    -> displayName,
         "isExistingLDAPUser" -> false,
         "access"             -> ((json \ "access").as[JsObject] ++ Json.obj("ldap" -> true))
+      )
+
+case class EditUserAccessRequest(
+  username          : String,
+  organisation      : String,
+  vpn               : Boolean,
+  jira              : Boolean,
+  confluence        : Boolean,
+  googleApps        : Boolean,
+  environments      : Boolean,
+  bitwarden         : Boolean
+)
+
+object EditUserAccessRequest:
+  val writes: Writes[EditUserAccessRequest] =
+    OWrites.transform[EditUserAccessRequest](
+      ( (__ \ "username"                ).write[String]
+      ~ (__ \ "organisation"            ).write[String]
+      ~ (__ \ "access" \ "vpn"          ).write[Boolean]
+      ~ (__ \ "access" \ "jira"         ).write[Boolean]
+      ~ (__ \ "access" \ "confluence"   ).write[Boolean]
+      ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
+      ~ (__ \ "access" \ "environments" ).write[Boolean]
+      ~ (__ \ "access" \ "bitwarden"    ).write[Boolean]
+      )(r => Tuple.fromProductTyped(r))
+    ): (req, json) =>
+      json ++ Json.obj(
+        "isExistingLDAPUser" -> true
       )

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.users
 
 import cats.data.EitherT
+import play.api.Logging
 import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -25,7 +26,8 @@ import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, TeamsAndRepositories
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{UserInfoPage, UserListPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, ResourceType, Retrieval}
+import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Resource, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
@@ -44,21 +46,45 @@ class UsersController @Inject()(
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders
-     with play.api.i18n.I18nSupport:
+     with play.api.i18n.I18nSupport
+     with Logging:
 
   def user(username: UserName): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      userManagementConnector.getUser(username)
-        .map:
+    BasicAuthAction.async:
+      implicit request =>
+      (for
+        retrieval   <- EitherT.liftF(
+                         auth.verify(Retrieval.locations(
+                           resourceType = Some(ResourceType("catalogue-frontend")),
+                           action = Some(IAAction("CREATE_USER"))
+                         ))
+                       )
+        userTooling <- EitherT.liftF[Future, Result, Either[String, UserAccess]](userManagementConnector.getUserAccess(username)
+                         .map(userAccess => Right(userAccess))
+                         .recover:
+                            case e: UpstreamErrorResponse =>
+                              logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
+                                s"Error: ${e.message}.")
+                              Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
+                        )
+        userOpt     <- EitherT.liftF[Future, Result, Option[User]](userManagementConnector.getUser(username))
+      yield
+        userOpt match
           case Some(user) =>
             val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-            Ok(userInfoPage(user, umpProfileUrl))
+            Ok(userInfoPage(isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl))
           case None =>
             NotFound(error_404_template())
-    }
+        ).merge
+
+  private def isAdminForUser(retrieval: Option[Set[Resource]], user: User): Boolean =
+    val teams = retrieval.fold(Set.empty[TeamName])(_.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply))
+    teams.contains(TeamName("*")) || teams.exists(user.teamNames.contains) // Global admin or admin for user's team
+
 
   def allUsers(username: Option[UserName]): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async:
+      implicit request =>
       (for
          retrieval   <- EitherT.liftF(
                           auth.verify(Retrieval.locations(
@@ -80,7 +106,6 @@ class UsersController @Inject()(
        yield
          Ok(userListPage(isTeamAdmin, users, teams, UsersListFilter.form.fill(form.copy(username = username))))
     ).merge
-  }
 
 end UsersController
 
