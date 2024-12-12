@@ -62,7 +62,7 @@ class SearchIndex @Inject()(
     AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
 
   private val hardcodedLinks = List(
-    SearchTerm("explorer", "dependency",                   dependencyRoutes.DependencyExplorerController.landing.url,                              1.0f, Set("depex")),
+    SearchTerm("explorer", "dependency",                   dependencyRoutes.DependencyExplorerController.landing.url,                             1.0f, Set("depex")),
     SearchTerm("explorer", "bobby",                        catalogueRoutes.BobbyExplorerController.list().url,                                    1.0f),
     SearchTerm("explorer", "jdk",                          catalogueRoutes.JdkVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
     SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f, Set("lds")),
@@ -74,11 +74,11 @@ class SearchIndex @Inject()(
     SearchTerm("page",     "shutter-events",               shutterRoutes.ShutterEventsController.shutterEvents.url,                               1.0f),
     SearchTerm("page",     "teams",                        teamRoutes.TeamsController.allTeams().url,                                             1.0f),
     SearchTerm("page",     "repositories",                 reposRoutes.RepositoriesController.allRepositories().url,                              1.0f),
-    SearchTerm("page",     "users",                        userRoutes.UsersController.allUsers().url,                                             1.0f),
+    SearchTerm("page",     "users",                        userRoutes.UsersController.users.url,                                                  1.0f),
     SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,                         1.0f),
     SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,                     1.0f),
     SearchTerm("page",     "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,              1.0f),
-    SearchTerm("page",     "create repository",            createRepoRoutes.CreateRepositoryController.createRepoLandingGet().url,             1.0f),
+    SearchTerm("page",     "create repository",            createRepoRoutes.CreateRepositoryController.createRepoLandingGet().url,                1.0f),
     SearchTerm("page",     "deploy service",               deployRoutes.DeployServiceController.step1(None).url,                                  1.0f),
     SearchTerm("page",     "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f)
   )
@@ -86,25 +86,29 @@ class SearchIndex @Inject()(
   def updateIndexes(): Future[Unit] =
     given HeaderCarrier = HeaderCarrier()
     for
-      repos         <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
-      teams         <- teamsAndRepositoriesConnector.allTeams()
-      teamPageLinks =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
-                                               SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases().url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))
-      repoLinks     =  repos.flatMap(r => List(SearchTerm(r.repoType.asString,    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
-                                               SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
-                                               SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
-      serviceLinks  =  repos.filter(_.repoType == RepoType.Service)
-                            .flatMap(r => List(SearchTerm("deploy",              r.name, deployRoutes.DeployServiceController.step1(Some(ServiceName(r.name))).url),
-                                               SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(r.name)).url ),
-                                               SearchTerm("timeline",            r.name, deployRoutes.DeploymentTimelineController.graph(Some(ServiceName(r.name))).url),
-                                               SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(ServiceName(r.name)).url)
-                                          )
-                                    )
-      comments      <- prCommenterConnector.search(None, None, None)
-      commentLinks  =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
-      users         <- userManagementConnector.getAllUsers(None)
-      userLinks     =  users.map(u => SearchTerm("users", u.username.asString, userRoutes.UsersController.user(u.username).url, 0.5f))
-      allLinks      =  hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
+      repos          <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
+      teams          <- teamsAndRepositoriesConnector.allTeams()
+      teamPageLinks  =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
+                                                SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases().url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))
+      repoLinks      =  repos.flatMap(r => List(SearchTerm(r.repoType.asString,    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
+                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
+                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
+      serviceLinks   =  repos.filter(_.repoType == RepoType.Service)
+                             .flatMap(r => List(SearchTerm("deploy",              r.name, deployRoutes.DeployServiceController.step1(Some(ServiceName(r.name))).url),
+                                                SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(r.name)).url ),
+                                                SearchTerm("timeline",            r.name, deployRoutes.DeploymentTimelineController.graph(Some(ServiceName(r.name))).url),
+                                                SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(ServiceName(r.name)).url)
+                                           )
+                                     )
+      comments       <- prCommenterConnector.search(None, None, None)
+      commentLinks   =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
+      users          <- userManagementConnector.getAllUsers(None)
+      userLinks      =  users.map(u => SearchTerm("users", u.username.asString, userRoutes.UsersController.user(u.username).url, 0.5f))
+      teamAdminLinks =  teams.flatMap: t =>
+                          users.filter(u => u.teamNames.contains(t.name) && u.role.asString.contains("admin"))
+                            .map: u =>
+                              SearchTerm("team admin", u.username.asString, userRoutes.UsersController.user(u.username).url, 0.6f, hints = Set(t.name.asString))
+      allLinks       =  hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks ++ teamAdminLinks
     yield cachedIndex.set(optimizeIndex(allLinks))
 
   def search(query: Seq[String]): Seq[SearchTerm] =

@@ -31,7 +31,7 @@ function search(q) {
     debounceTimer = setTimeout(() => {
         let oReq = new XMLHttpRequest();
         oReq.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
+            if (this.readyState === 4 /*DONE*/ && this.status === 200) {
                 matches.innerHTML = oReq.responseText;
                 selectedItem = 0
                 highlight(0)
