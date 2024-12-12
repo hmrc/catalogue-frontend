@@ -33,73 +33,75 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class EditUserController @Inject()(
-  override val auth        : FrontendAuthComponents,
-  override val mcc         : MessagesControllerComponents,
-  editUserAccessPage       : EditUserAccessPage,
-  editUserRequestSentPage  : EditUserRequestSentPage,
-  userManagementConnector  : UserManagementConnector
+  override val auth      : FrontendAuthComponents,
+  override val mcc       : MessagesControllerComponents,
+  editUserAccessPage     : EditUserAccessPage,
+  editUserRequestSentPage: EditUserRequestSentPage,
+  userManagementConnector: UserManagementConnector
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-  with CatalogueAuthBuilders
-  with Logging
-  with play.api.i18n.I18nSupport:
+     with CatalogueAuthBuilders
+     with Logging
+     with play.api.i18n.I18nSupport:
 
   private def editUserPermission(teamNames: Seq[TeamName]): Predicate =
     Predicate.or(
       (teamNames.map: teamName =>
-        Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_USER"))): _*
+        Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_USER"))
+      ): _*
     )
 
   def requestSent(username: UserName): Action[AnyContent] =
-    Action:
-      implicit request =>
-        Ok(editUserRequestSentPage(username))
+    Action: request =>
+      given RequestHeader = request
+      Ok(editUserRequestSentPage(username))
 
   def editUserLanding(username: UserName, organisation: Option[String]): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.EditUserController.editUserLanding(username),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
-    ).async:
-      implicit request =>
+    ).async: request =>
+      given RequestHeader = request
       userManagementConnector.getUserAccess(username).map: existingAccess =>
-          Ok(editUserAccessPage(EditUserAccessForm.form, username, organisation, existingAccess))
+        Ok(editUserAccessPage(EditUserAccessForm.form, username, organisation, existingAccess))
 
   def editUserAccess(username: UserName, organisation: Option[String]): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.EditUserController.editUserLanding(username, organisation),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
-    ).async:
-      implicit request =>
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       (for
         existingTooling <- EitherT.liftF(userManagementConnector.getUserAccess(username))
         userOpt         <- EitherT.liftF[Future, Result, Option[User]](userManagementConnector.getUser(username))
         teams           =  userOpt.fold(Seq.empty)(_.teamNames)
-        form            <- EitherT.fromEither[Future](EditUserAccessForm.form.bindFromRequest().fold(
-                              formWithErrors => {
-                                Left(
-                                  BadRequest(
-                                    editUserAccessPage(
-                                      form             = formWithErrors,
-                                      username         = username,
-                                      organisation     = organisation,
-                                      existingAccess   = existingTooling
-                                    )
-                                  )
-                                )
-                              },
-                              validForm => Right(validForm)
-                            ))
+        form            <- EitherT.fromEither[Future]:
+                             EditUserAccessForm.form.bindFromRequest()
+                               .fold(
+                                 formWithErrors =>
+                                   Left(
+                                     BadRequest(
+                                       editUserAccessPage(
+                                         form             = formWithErrors,
+                                         username         = username,
+                                         organisation     = organisation,
+                                         existingAccess   = existingTooling
+                                       )
+                                     )
+                                   ),
+                                 validForm => Right(validForm)
+                               )
         changesToSubmit =  EditUserAccessRequest(
-                              username     = form.username,
-                              organisation = form.organisation,
-                              vpn          = form.vpn && !existingTooling.vpn,
-                              jira         = form.jira && !existingTooling.jira,
-                              confluence   = form.confluence && !existingTooling.confluence,
-                              googleApps   = form.googleApps && !existingTooling.googleApps,
-                              environments = form.environments && !existingTooling.devTools,
-                              bitwarden    = form.bitwarden
-                            )
+                             username     = form.username,
+                             organisation = form.organisation,
+                             vpn          = form.vpn && !existingTooling.vpn,
+                             jira         = form.jira && !existingTooling.jira,
+                             confluence   = form.confluence && !existingTooling.confluence,
+                             googleApps   = form.googleApps && !existingTooling.googleApps,
+                             environments = form.environments && !existingTooling.devTools,
+                             bitwarden    = form.bitwarden
+                           )
         _               <- EitherT.liftF(auth.authorised(Some(editUserPermission(teams))))
         res             <- EitherT.right[Result](userManagementConnector.editUserAccess(changesToSubmit))
         _               =  logger.info(s"user management result: $res:")
@@ -110,19 +112,18 @@ end EditUserController
 
 object EditUserAccessForm:
   val form: Form[EditUserAccessRequest] =
-    Form(
+    Form:
       Forms.mapping(
-          "username"     -> Forms.nonEmptyText,
-          "organisation" -> Forms.nonEmptyText,
-          "vpn"          -> Forms.boolean,
-          "jira"         -> Forms.boolean,
-          "confluence"   -> Forms.boolean,
-          "googleApps"   -> Forms.boolean,
-          "environments" -> Forms.boolean,
-          "bitwarden"    -> Forms.boolean
-        )(EditUserAccessRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
+        "username"     -> Forms.nonEmptyText,
+        "organisation" -> Forms.nonEmptyText,
+        "vpn"          -> Forms.boolean,
+        "jira"         -> Forms.boolean,
+        "confluence"   -> Forms.boolean,
+        "googleApps"   -> Forms.boolean,
+        "environments" -> Forms.boolean,
+        "bitwarden"    -> Forms.boolean
+      )(EditUserAccessRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying(EditUserConstraints.accessHasChanged)
-    )
 
 object EditUserConstraints:
   def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] =
@@ -131,17 +132,18 @@ object EditUserConstraints:
 
   //we only want to send any new access and having the checkboxes disabled returns the value as false
   private val hasChanges: EditUserAccessRequest => Boolean =
-    access => Seq(
-      access.vpn,
-      access.jira,
-      access.confluence,
-      access.googleApps,
-      access.environments,
-      access.bitwarden
-    ).contains(true)
+    access =>
+      Seq(
+        access.vpn,
+        access.jira,
+        access.confluence,
+        access.googleApps,
+        access.environments,
+        access.bitwarden
+      ).contains(true)
 
   val accessHasChanged: Constraint[EditUserAccessRequest] =
     mkConstraint("constraints.accessHasChangedCheck")(
       constraint = hasChanges,
-      error = "At least one new tooling access must be requested"
+      error      = "At least one new tooling access must be requested"
     )

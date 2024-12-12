@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import cats.implicits._
-import play.api.mvc.MessagesControllerComponents
+import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, given}
@@ -44,23 +44,23 @@ class JdkVersionController @Inject() (
      with CatalogueAuthBuilders:
 
   def findLatestVersions(flag: String, teamName: Option[TeamName]) =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       for
         teams            <- teamsAndRepositoriesConnector.allTeams()
         selectedFlag     =  Parser[SlugInfoFlag].parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeamName =  teamName.flatMap(n => teams.find(_.name == n)).map(_.name)
         jdkVersions      <- dependenciesService.getJdkVersions(selectedFlag, selectedTeamName)
       yield Ok(jdkVersionPage(jdkVersions.sortBy(j => (j.version, j.serviceName)), SlugInfoFlag.values.toSeq, teams, selectedFlag, selectedTeamName))
-    }
 
   def compareAllEnvironments(teamName: Option[TeamName]) =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       for
         teams            <- teamsAndRepositoriesConnector.allTeams()
         selectedTeamName =  teamName.flatMap(n => teams.find(_.name == n)).map(_.name)
         envs             <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getJdkCountsForEnv(env, selectedTeamName))
         jdks             =  envs.flatMap(_.usage.keys).distinct.sortBy(_._1)
       yield Ok(jdkAcrossEnvironmentsPage(envs, jdks, teams, selectedTeamName))
-    }
 
 end JdkVersionController

@@ -39,7 +39,7 @@ class BrowserSideAuditingController @Inject()(
 
   /** This endpoint exists for implicit auditing */
   def sendAudit(): Action[JsValue] =
-    BasicAuthAction(parse.tolerantJson) { implicit request =>
+    BasicAuthAction(parse.tolerantJson): request =>
       val target = (request.body \ "target").asOpt[String]
       val referrer = request.headers.get(REFERER)
 
@@ -47,4 +47,3 @@ class BrowserSideAuditingController @Inject()(
       then logger.warn(s"HTML element for the link to $target from $referrer, has no id attribute")
 
       NoContent
-    }

@@ -28,7 +28,6 @@
   messages   : Messages,
   request    : RequestHeader
 )
-@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
 @standard_layout("Users", active = "users") {
   @if(canCreateUsers){
@@ -107,7 +106,7 @@
             clearResults(query);
         }
     });
-    
+
     function userSearch(query) {
         clearTimeout(userDebounceTimer);
         userDebounceTimer = setTimeout(() => {
@@ -163,4 +162,3 @@
     // Stop screen shifting when the rows update
     document.documentElement.style.overflowY = "scroll";
 </script>
-

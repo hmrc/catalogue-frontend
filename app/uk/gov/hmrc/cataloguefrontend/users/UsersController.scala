@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, RequestHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
@@ -49,57 +49,57 @@ class UsersController @Inject()(
      with Logging:
 
   def user(username: UserName): Action[AnyContent] =
-    BasicAuthAction.async:
-      implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       (for
-        retrieval   <- EitherT.liftF(
+        retrieval   <- EitherT.liftF:
                          auth.verify(Retrieval.locations(
                            resourceType = Some(ResourceType("catalogue-frontend")),
-                           action = Some(IAAction("CREATE_USER"))
+                           action       = Some(IAAction("CREATE_USER"))
                          ))
-                       )
-        userTooling <- EitherT.liftF[Future, Result, Either[String, UserAccess]](userManagementConnector.getUserAccess(username)
-                         .map(userAccess => Right(userAccess))
-                         .recover:
-                            case e: UpstreamErrorResponse =>
-                              logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
-                                s"Error: ${e.message}.")
-                              Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
-                        )
-        userOpt     <- EitherT.liftF[Future, Result, Option[User]](userManagementConnector.getUser(username))
-      yield
+        userTooling <- EitherT.liftF[Future, Result, Either[String, UserAccess]]:
+                         userManagementConnector.getUserAccess(username)
+                           .map(userAccess => Right(userAccess))
+                           .recover:
+                              case e: UpstreamErrorResponse =>
+                                logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
+                                  s"Error: ${e.message}.")
+                                Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
+        userOpt     <- EitherT.liftF[Future, Result, Option[User]]:
+                         userManagementConnector.getUser(username)
+       yield
         userOpt match
           case Some(user) =>
             val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
             Ok(userInfoPage(isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl))
           case None =>
             NotFound(error_404_template())
-        ).merge
+      ).merge
 
   private def isAdminForUser(retrieval: Option[Set[Resource]], user: User): Boolean =
     val teams = retrieval.fold(Set.empty[TeamName])(_.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply))
     teams.contains(TeamName("*")) || teams.exists(user.teamNames.contains) // Global admin or admin for user's team
 
   val users: Action[AnyContent] =
-    BasicAuthAction.async:
-      implicit request =>
-        for
-          retrieval   <- auth.verify(
-                           Retrieval.locations(
-                             resourceType = Some(ResourceType("catalogue-frontend")),
-                             action = Some(IAAction("CREATE_USER"))
-                           )
-                         )
-          canCreateUsers =  retrieval.exists(_.nonEmpty)
-        yield Ok(userListPage(canCreateUsers))
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      for
+        retrieval      <- auth.verify:
+                            Retrieval.locations(
+                              resourceType = Some(ResourceType("catalogue-frontend")),
+                              action       = Some(IAAction("CREATE_USER"))
+                            )
+        canCreateUsers =  retrieval.exists(_.nonEmpty)
+      yield Ok(userListPage(canCreateUsers))
 
   def userSearch(query: String): Action[AnyContent] =
-    BasicAuthAction.async:
-      implicit request =>
-          userManagementConnector.searchUsers(
-            query
-              .split("\\s+") // query is space-delimited
-              .toIndexedSeq
-          ).map(matches => Ok(userSearchResults(matches)))
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      userManagementConnector
+        .searchUsers:
+          query
+            .split("\\s+") // query is space-delimited
+            .toIndexedSeq
+        .map(matches => Ok(userSearchResults(matches)))
 
 end UsersController

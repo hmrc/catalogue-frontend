@@ -81,9 +81,7 @@ class UserManagementConnector @Inject()(
     httpClientV2
       .get(url"$baseUrl/user-management/users/${username.asString}/access")
       .execute[Option[UserAccess]]
-      .map:
-        case Some(userAccess) => userAccess
-        case None => UserAccess.empty
+      .map(_.getOrElse(UserAccess.empty))
 
   def editUserAccess(userRequest: EditUserAccessRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/edit-user-access"
@@ -93,8 +91,8 @@ class UserManagementConnector @Inject()(
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
-        
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
   def createUser(userRequest: CreateUserRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/create-user"
     httpClientV2

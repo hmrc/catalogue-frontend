@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend
 
 import cats.implicits._
-import play.api.mvc.MessagesControllerComponents
+import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, given}
@@ -44,23 +44,23 @@ class SbtVersionController @Inject()(
      with CatalogueAuthBuilders:
 
   def findLatestVersions(flag: String, teamName: Option[TeamName]) =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       for
         teams        <- teamsAndRepositoriesConnector.allTeams()
         selectedFlag =  Parser[SlugInfoFlag].parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
         sbtVersions  <- dependenciesService.getSbtVersions(selectedFlag, selectedTeam.map(_.name))
       yield Ok(sbtVersionPage(sbtVersions.sortBy(s => (s.version, s.serviceName)), SlugInfoFlag.values.toSeq, teams, selectedFlag, selectedTeam))
-    }
 
   def compareAllEnvironments(teamName: Option[TeamName]) =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       for
         teams        <- teamsAndRepositoriesConnector.allTeams()
         selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
         envs         <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getSbtCountsForEnv(env, selectedTeam.map(_.name)))
         sbts         =  envs.flatMap(_.usage.keys).distinct.sorted
       yield Ok(sbtAcrossEnvironmentsPage(envs, sbts, teams, selectedTeam))
-    }
 
 end SbtVersionController
