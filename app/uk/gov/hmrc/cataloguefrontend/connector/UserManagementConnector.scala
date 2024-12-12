@@ -64,6 +64,12 @@ class UserManagementConnector @Inject()(
           logger.warn(s"Unexpected response from user-management $url - ${e.getMessage}", e)
           Seq.empty[User]
 
+  def searchUsers(query: String)(using HeaderCarrier): Future[Seq[User]] =
+    given Reads[User] = User.reads
+    httpClientV2
+      .get(url"$baseUrl/user-management/users-search?query=$query")
+      .execute[Seq[User]]
+
   def getUser(username: UserName)(using HeaderCarrier): Future[Option[User]] =
     given Reads[User] = User.reads
     httpClientV2

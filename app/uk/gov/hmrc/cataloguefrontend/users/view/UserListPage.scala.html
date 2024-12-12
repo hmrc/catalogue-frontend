@@ -16,17 +16,14 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
-@import uk.gov.hmrc.cataloguefrontend.users.{User, UsersListFilter, routes => userRoutes}
-@import uk.gov.hmrc.cataloguefrontend.users.UsersController.maxRows
+@import uk.gov.hmrc.cataloguefrontend.users.{User, routes => userRoutes}
 @import views.html.helper.{FieldConstructor, select}
 @import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 
 @this(config : CatalogueConfig)
 
-@(isTeamAdmin: Boolean,
-  users      : Seq[User],
-  teams      : Seq[GitHubTeam],
-  form       : Form[UsersListFilter]
+@(
+  isTeamAdmin: Boolean
 )(implicit
   messages   : Messages,
   request    : RequestHeader
@@ -53,40 +50,21 @@
   }
 
   <div id="users-list">
-    <form id="form" action="/users" method="get">
-      <div id="users-form-row" class="form-group row">
+      <div id="users-search-input" class="form-group row">
         <div class="col-md-6">
           <dl id="search_field">
             <dt>
-              <label for="search" class="form-label">Username or GitHub</label>
+              <label for="search" class="form-label">Search</label>
             </dt>
             <dd>
-              <input class="search form-control" type="search" id="username-search" name="username" value="@form("username").value" autofocus>
+              <input class="form-control" type="text" id="user-search" name="user" placeholder="Search using up to 3 terms..." autofocus>
             </dd>
           </dl>
-
-        </div>
-        <div class="col-md-6">
-        @select(
-          field                  = form("team"),
-          options                = teams.map(t => t.name.asString -> t.name.asString),
-          Symbol("_default")    -> "All",
-          Symbol("_label")      -> "Team",
-          Symbol("_labelClass") -> "form-label",
-          Symbol("id")          -> "team-filter",
-          Symbol("class")       -> "form-select"
-        )
         </div>
       </div>
-    </form>
 
     <table class="table table-striped sticky-header" id="users-table">
       <thead id="user-table-headings">
-        <tr>
-          <td colspan="6" class="text-center">
-            <span id="maximum-records">Only displaying @maxRows records - please refine your search</span>
-          </td>
-        </tr>
         <tr>
           <th class="col-lg-2"><button role="button" id="username"   data-sort="username"    class="sort no-border fw-bold">Username   </button></th>
           <th class="col-lg-2"><button role="button" id="givenName"  data-sort="given-name"  class="sort no-border fw-bold">Given Name </button></th>
@@ -96,99 +74,94 @@
           <th class="col-lg-3"><button class="no-border fw-bold">Teams</button></th>
         </tr>
       </thead>
-
-      <tbody class="list">
-        @users.zipWithIndex.map{ case(user, i) =>
-        <tr id="row@i">
-          <td class="username" id="row@{i}_name">
-            <a class="ldap-username" href="@userRoutes.UsersController.user(user.username)">@user.username.asString</a>
-          </td>
-
-
-          <td class="given-name" id="row@{i}_teams">
-            @user.givenName
-          </td>
-
-          <td class="family-name" id="row@{i}_teams">
-            @user.familyName
-          </td>
-
-          <td class="github" id="row@{i}_name">
-            @user.githubUsername match {
-              case Some(username) => {
-                  <a class="github-username" href="https://github.com/@username" target="_blank" rel="noreferrer noopener">
-                    @username
-                    <span class="glyphicon glyphicon-new-window"/>
-                  </a>
-              }
-              case None => {}
-            }
-          </td>
-
-          <td class="role" id="row@{i}_teams">
-            @user.role.displayName
-          </td>
-
-          <td class="" id="row@{i}_teams">
-            @user.teamNames.map { team =>
-              <div>
-                <a href="@teamRoutes.TeamsController.team(team)">@team.asString</a>
-              </div>
-            }
-          </td>
-        </tr>
-        }
+      <tbody id="user-search-matches" class="list">
+          <!-- user search results js -->
       </tbody>
     </table>
-    <div id="no-users-found">
-      <span class="position-absolute start-50 translate-middle" style="color: #6f777b;">No Users Found</span>
+    <div id="search-message">
+      <span class="position-absolute start-50 translate-middle" style="color: #6f777b;"></span>
     </div>
   </div>
 }
-<!-- listjs configuration -->
-<script @CSPNonce.attr>
-  function toggleMessage() {
-    const emptyRows = 2;
-    const rows = document.getElementById('users-table').rows.length;
-    const noUsersFound = document.getElementById('no-users-found');
-    const maxRecords = document.querySelector('#maximum-records');
-
-    if (noUsersFound) {
-      noUsersFound.style.display = rows === emptyRows ? 'block' : 'none';
-    }
-
-    if (maxRecords) {
-      maxRecords.style.display = rows >= @maxRows + emptyRows ? 'block' : 'none';
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', toggleMessage);
-
-  const options = {
-    valueNames: ['username', 'given-name', 'family-name', 'github', 'github-username', 'ldap-username', 'role'],
-    searchColumns: ['ldap-username', 'github-username'],
-    searchDelay: 350,
-    page: @maxRows,
-  };
-
-  const usersList = new List('users-list', options)
-  usersList.on('searchComplete', toggleMessage);
-
-  const searchBox = document.getElementById('username-search');
-  searchBox.addEventListener('change', () => usersList.search(searchBox.value));
-  searchBox.focus();
-
-  const queryParams = new URLSearchParams(window.location.search);
-  const usernameParam = queryParams.get('username');
-  if (usernameParam) {
-    searchBox.value = usernameParam;
-    usersList.search(usernameParam);
-  }
-</script>
-
 
 <script @CSPNonce.attr>
-  document.getElementById('team-filter').addEventListener('change', function () {
-  document.getElementById('form').submit();
-  });
+
+    const options = {
+        valueNames: ['username', 'given-name', 'family-name', 'github', 'github-username', 'ldap-username', 'role'],
+        searchColumns: ['ldap-username', 'github-username'],
+        searchDelay: 350,
+    };
+
+    const userInput           = document.getElementById("user-search");
+    const userMatches         = document.getElementById("user-search-matches");
+    const searchMessage       = document.getElementById("search-message");
+    const userMinSearchLength = 3;
+    let   userDebounceTimer;
+    let   usersList;
+
+    userInput.addEventListener('input', (e) => {
+        const query = e.target.value;
+        if (query.length >= userMinSearchLength) {
+            userSearch(query);
+        } else {
+            clearResults(query);
+        }
+    });
+
+    function userSearch(query) {
+        clearTimeout(userDebounceTimer);
+        userDebounceTimer = setTimeout(() => {
+            fetch(`/users-search?query=${encodeURIComponent(query)}`)
+                .then(res => res.text())
+                .then(response => {
+                    userMatches.innerHTML = response;
+                    toggleMessage(query, userMatches.rows.length);
+                    initListJs(userMatches.rows.length);
+                });
+        }, 350);
+    }
+
+    function clearResults(query) {
+        clearTimeout(userDebounceTimer);
+        userDebounceTimer = setTimeout(() => {
+            userMatches.innerHTML = "";
+            toggleMessage(query, 0);
+            initListJs(userMatches.rows.length);
+        }, 350);
+    }
+
+    function toggleMessage(query, numRows) {
+        if (query.length < userMinSearchLength)  {
+            searchMessage.style.display = 'block';
+            searchMessage.querySelector('span').textContent = 'Type to start searching';
+        } else if (query.trim().split(/\s+/).length > 3) {
+            searchMessage.style.display = 'block';
+            searchMessage.querySelector('span').textContent = 'Too many search terms - maximum of 3';
+            // Clears the results when more than 3 search terms
+            userMatches.innerHTML = "";
+        } else if (numRows === 0) {
+            searchMessage.style.display = 'block';
+            searchMessage.querySelector('span').textContent = 'No matches found';
+        } else {
+            searchMessage.style.display = 'none';
+        }
+    }
+
+    function initListJs(numRows) {
+        if (numRows === 0) {
+            if (usersList) {
+                usersList.clear();
+                usersList = null;
+            }
+        } else {
+             // Create the list if it doesn't exist else reindex it with rendered html
+             usersList ? usersList.reIndex() : (usersList = new List('users-list', options));
+        }
+    }
+
+    // Update search message on page load
+    window.onload = () => toggleMessage("", 0);
+    // Stop screen shifting when the rows update
+    document.documentElement.style.overflowY = "scroll";
 </script>
+
