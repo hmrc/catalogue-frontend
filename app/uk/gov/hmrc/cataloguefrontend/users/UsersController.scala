@@ -24,7 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{UserInfoPage, UserListPage, UserSearchResults}
-import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
+import uk.gov.hmrc.cataloguefrontend.view.html.{error_404_template, error_template}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Resource, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -96,8 +96,10 @@ class UsersController @Inject()(
   def userSearch(query: String): Action[AnyContent] =
     BasicAuthAction.async:
       implicit request =>
-        for
-          matches <- userManagementConnector.searchUsers(query)
-        yield Ok(userSearchResults(matches))
+          userManagementConnector.searchUsers(
+            query
+              .split("\\s+") // query is space-delimited
+              .toIndexedSeq
+          ).map(matches => Ok(userSearchResults(matches)))
 
 end UsersController

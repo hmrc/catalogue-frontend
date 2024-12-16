@@ -100,14 +100,14 @@
     let   usersList;
 
     userInput.addEventListener('input', (e) => {
-        const query = e.target.value;
+        const query = e.target.value.trim();
         if (query.length >= userMinSearchLength) {
             userSearch(query);
         } else {
             clearResults(query);
         }
     });
-
+    
     function userSearch(query) {
         clearTimeout(userDebounceTimer);
         userDebounceTimer = setTimeout(() => {
@@ -134,10 +134,9 @@
         if (query.length < userMinSearchLength)  {
             searchMessage.style.display = 'block';
             searchMessage.querySelector('span').textContent = 'Type to start searching';
-        } else if (query.trim().split(/\s+/).length > 3) {
+        } else if (query.trim().split(/\s+/).length > 3) {  // Clears the results when more than 3 search terms
             searchMessage.style.display = 'block';
             searchMessage.querySelector('span').textContent = 'Too many search terms - maximum of 3';
-            // Clears the results when more than 3 search terms
             userMatches.innerHTML = "";
         } else if (numRows === 0) {
             searchMessage.style.display = 'block';
