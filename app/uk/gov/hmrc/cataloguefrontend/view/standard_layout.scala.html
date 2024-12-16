@@ -26,6 +26,7 @@
 @import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 @import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
+@import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 
 @(title      : String  = "Home",
   active     : String  = "",
@@ -111,39 +112,37 @@
                         MDTP
                     </a>
                     <ul id="main-menu-bar" class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item dropdown d-flex align-items-center">
+                            <a id="users-link" class="nav-link @if(active == "users") {active}" href="@userRoutes.UsersController.users">Users</a>
+                            @if(request.session.get(AuthController.IS_TEAM_ADMIN).contains("true")){
+                                <a id="users-dropdown" class="nav-link dropdown-toggle ps-0 @if(active == "users") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"></a>
+                            }
+                            <ul id="users-menu" class="dropdown-menu">
+                                <li><a id="link-to-create-user" class="dropdown-item" href="@userRoutes.CreateUserController.createUserLanding(false)">Create User</a></li>
+                                <li><a id="link-to-create-service-user" class="dropdown-item" href="@userRoutes.CreateUserController.createUserLanding(true)">Create Service User</a></li>
+                            </ul>
+                        </li>
                         <li class="nav-item">
                             <a id="link-to-teams" class="nav-link @if(active == "teams") {active}" href="@uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.allTeams()">Teams</a>
                         </li>
                         <li class="nav-item">
                             <a id="link-to-repositories" class="nav-link @if(active == "repositories") {active}" href="@reposRoutes.RepositoriesController.allRepositories()">Repositories</a>
                         </li>
-                        <li class="nav-item">
-                            <a id="link-to-whats-running-where" class="nav-link @if(active == "whats-running-where") {active}" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">What's Running Where</a>
-                        </li>
-                        @* TODO remove once date has elapsed *@
-                        @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2024-03-01T00:00:00Z"))) { isNew =>
-                            <li class="nav-item dropdown">
-                                <a id="deployments-dropdown" class="nav-link dropdown-toggle @if(active == "deployments") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <li class="nav-item dropdown">
+                            <a id="deployments-dropdown" class="nav-link dropdown-toggle @if(active == "deployments") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Deployments
-                                @if(isNew) {
-                                    <span style="color: violet;">
-                                        *
-                                        <span class="visually-hidden">new pages in dropdown</span>
-                                    </span>
-                                }
                             </a>
                             <ul id="deployments-menu" class="dropdown-menu">
                                 <li>
                                     <a id="link-to-deploy-service" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeployServiceController.step1(None)">
                                         Deploy Service
-                                        @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
                                     </a>
                                 </li>
                                 <li><a id="link-to-events" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentEventsController.deploymentEvents(Environment.Production)">Events</a></li>
                                 <li><a id="link-to-deployment-timeline" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.deployments.routes.DeploymentTimelineController.graph()">Timeline</a></li>
+                                <li><a id="link-to-whats-running-where" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes.WhatsRunningWhereController.releases()">What's Running Where</a></li>
                             </ul>
                         </li>
-                        }
                         <li class="nav-item dropdown">
                             <a id="shuttering-dropdown" class="nav-link dropdown-toggle @if(active == "shuttering") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Shuttering
@@ -200,16 +199,14 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a id="link-to-users-list-page" class="dropdown-item" href="@userRoutes.UsersController.users">
-                                        Users
-                                    </a>
-                                </li>
-                                <li>
                                     <a id="link-to-cost-explorer-page" class="dropdown-item" href="@costRoutes.CostController.costExplorer()">
                                         Cost Explorer
                                     </a>
                                 </li>
                             </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a id="link-to-docs" class="nav-link" href="https://docs.tax.service.gov.uk/mdtp-handbook/">Docs</a>
                         </li>
                     </ul>
 

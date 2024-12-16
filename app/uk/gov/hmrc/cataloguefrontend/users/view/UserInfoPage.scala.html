@@ -30,7 +30,7 @@
   request      : RequestHeader
 )
 
-@standard_layout(user.username.asString) {
+@standard_layout(user.username.asString, active = "users") {
   <h1 class="page-heading mt-4">@user.username.asString</h1>
 
   <section class="section-wrapper">
