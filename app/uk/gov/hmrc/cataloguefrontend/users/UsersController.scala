@@ -18,14 +18,13 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users.view.html.{UserInfoPage, UserListPage}
-import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
+import uk.gov.hmrc.cataloguefrontend.users.view.html.{UserInfoPage, UserListPage, UserSearchResults}
+import uk.gov.hmrc.cataloguefrontend.view.html.{error_404_template, error_template}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Resource, ResourceType, Retrieval}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -35,13 +34,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UsersController @Inject()(
-  userManagementConnector      : UserManagementConnector
-, teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
-, userInfoPage                 : UserInfoPage
-, userListPage                 : UserListPage
-, umpConfig                    : UserManagementPortalConfig
-, override val mcc             : MessagesControllerComponents
-, override val auth            : FrontendAuthComponents
+  userManagementConnector: UserManagementConnector
+, userInfoPage           : UserInfoPage
+, userListPage           : UserListPage
+, userSearchResults      : UserSearchResults
+, umpConfig              : UserManagementPortalConfig
+, override val mcc       : MessagesControllerComponents
+, override val auth      : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -81,47 +80,26 @@ class UsersController @Inject()(
     val teams = retrieval.fold(Set.empty[TeamName])(_.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply))
     teams.contains(TeamName("*")) || teams.exists(user.teamNames.contains) // Global admin or admin for user's team
 
-
-  def allUsers(username: Option[UserName]): Action[AnyContent] =
+  val users: Action[AnyContent] =
     BasicAuthAction.async:
       implicit request =>
-      (for
-         retrieval   <- EitherT.liftF(
-                          auth.verify(Retrieval.locations(
-                            resourceType = Some(ResourceType("catalogue-frontend")),
-                            action       = Some(IAAction("CREATE_USER"))
-                          ))
-                        )
-         isTeamAdmin =  retrieval.exists(_.nonEmpty)
-         form        <- EitherT.fromEither[Future](UsersListFilter.form.bindFromRequest().fold(
-                          formWithErrors => Left(
-                            BadRequest(
-                              userListPage(isTeamAdmin, Seq.empty, Seq.empty, formWithErrors)
-                            )
-                          ),
-                          validForm => Right(validForm)
-                        ))
-         users       <- EitherT.liftF[Future, Result, Seq[User]](userManagementConnector.getAllUsers(team = form.team))
-         teams       <- EitherT.liftF[Future, Result, Seq[GitHubTeam]](teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase)))
-       yield
-         Ok(userListPage(isTeamAdmin, users, teams, UsersListFilter.form.fill(form.copy(username = username))))
-    ).merge
+        for
+          retrieval   <- auth.verify(
+                           Retrieval.locations(
+                             resourceType = Some(ResourceType("catalogue-frontend")),
+                             action = Some(IAAction("CREATE_USER"))
+                           )
+                         )
+          isTeamAdmin =  retrieval.exists(_.nonEmpty)
+        yield Ok(userListPage(isTeamAdmin))
+
+  def userSearch(query: String): Action[AnyContent] =
+    BasicAuthAction.async:
+      implicit request =>
+          userManagementConnector.searchUsers(
+            query
+              .split("\\s+") // query is space-delimited
+              .toIndexedSeq
+          ).map(matches => Ok(userSearchResults(matches)))
 
 end UsersController
-
-object UsersController:
-  val maxRows = 500
-
-case class UsersListFilter(
-  team    : Option[TeamName] = None,
-  username: Option[UserName] = None
-)
-
-object UsersListFilter:
-  lazy val form: Form[UsersListFilter] =
-    Form(
-      Forms.mapping(
-        "team"     -> Forms.optional(Forms.of[TeamName]),
-        "username" -> Forms.optional(Forms.of[UserName])
-      )(UsersListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
-    )
