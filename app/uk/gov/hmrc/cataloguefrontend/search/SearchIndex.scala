@@ -104,10 +104,11 @@ class SearchIndex @Inject()(
       commentLinks   =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
       users          <- userManagementConnector.getAllUsers(None)
       userLinks      =  users.map(u => SearchTerm("users", u.username.asString, userRoutes.UsersController.user(u.username).url, 0.5f))
-      teamAdminLinks =  teams.flatMap: t =>
+      teamAdmins     =  teams.flatMap: t =>
                           users.filter(u => u.teamNames.contains(t.name) && u.role.asString.contains("admin"))
-                            .map: u =>
-                              SearchTerm("team admin", u.username.asString, userRoutes.UsersController.user(u.username).url, 0.6f, hints = Set(t.name.asString))
+                               .map(_.username -> t.name.asString)
+      teamAdminLinks =  teamAdmins.groupBy(_._1).map: (username, entries) =>
+                          SearchTerm("team admin", username.asString, userRoutes.UsersController.user(username).url, 0.4f, hints = entries.map(_._2).toSet)
       allLinks       =  hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks ++ teamAdminLinks
     yield cachedIndex.set(optimizeIndex(allLinks))
 
