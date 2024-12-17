@@ -23,6 +23,6 @@
 <table style="width:100%">
  <tbody class="catalogue-search-matches-body">
   @if(matches.isEmpty) {<tr><td>No matches found</td></tr>}
-  @matches.zipWithIndex.map { case (m, i) => <tr><td><a id="search-item-@i" href="@{m.link}">@{highlight(m.name)}</a></td> <td><strong class="search-item-type">@{m.linkType.toLowerCase}</strong> </td></tr> }
+  @matches.zipWithIndex.map { case (m, i) => <tr><td><a id="search-item-@i" href="@{m.link}" @if(m.openInNewWindow) {target="_blank" rel="noreferrer noopener"}>@{highlight(m.name)}</a></td> <td><strong class="search-item-type">@{m.linkType.toLowerCase}</strong> </td></tr> }
  </tbody>
 </table>

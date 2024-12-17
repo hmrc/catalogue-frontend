@@ -17,23 +17,24 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 
-import uk.gov.hmrc.cataloguefrontend.{routes => catalogueRoutes}
+import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.routes as catalogueRoutes
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, UserManagementConnector}
-import uk.gov.hmrc.cataloguefrontend.createrepository.{routes => createRepoRoutes}
-import uk.gov.hmrc.cataloguefrontend.dependency.{routes => dependencyRoutes}
-import uk.gov.hmrc.cataloguefrontend.deployments.{routes => deployRoutes}
-import uk.gov.hmrc.cataloguefrontend.healthindicators.{routes => healthRoutes}
-import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakRoutes}
+import uk.gov.hmrc.cataloguefrontend.createrepository.routes as createRepoRoutes
+import uk.gov.hmrc.cataloguefrontend.dependency.routes as dependencyRoutes
+import uk.gov.hmrc.cataloguefrontend.deployments.routes as deployRoutes
+import uk.gov.hmrc.cataloguefrontend.healthindicators.routes as healthRoutes
+import uk.gov.hmrc.cataloguefrontend.leakdetection.routes as leakRoutes
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes => prcommenterRoutes}
-import uk.gov.hmrc.cataloguefrontend.repository.{routes => reposRoutes}
+import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes as prcommenterRoutes}
+import uk.gov.hmrc.cataloguefrontend.repository.routes as reposRoutes
 import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.{normalizeTerm, optimizeIndex}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => commissioningRoutes}
-import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes => shutterRoutes}
-import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
-import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => wrwRoutes}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.routes as serviceConfigsRoutes
+import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes as commissioningRoutes
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes as shutterRoutes}
+import uk.gov.hmrc.cataloguefrontend.teams.routes as teamRoutes
+import uk.gov.hmrc.cataloguefrontend.users.routes as userRoutes
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes as wrwRoutes
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
@@ -42,17 +43,19 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SearchTerm(
-  linkType: String,
-  name    : String,
-  link    : String,
-  weight  : Float       = 0.5f,
-  hints   : Set[String] = Set.empty
+  linkType       : String,
+  name           : String,
+  link           : String,
+  weight         : Float       = 0.5f,
+  hints          : Set[String] = Set.empty,
+  openInNewWindow: Boolean = false
 ):
   lazy val terms: Set[String] =
     Set(name, linkType).union(hints).map(normalizeTerm)
 
 @Singleton
 class SearchIndex @Inject()(
+  config                       : Configuration,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   prCommenterConnector         : PrCommenterConnector,
   userManagementConnector      : UserManagementConnector
@@ -66,7 +69,7 @@ class SearchIndex @Inject()(
     SearchTerm("explorer", "bobby",                        catalogueRoutes.BobbyExplorerController.list().url,                                    1.0f),
     SearchTerm("explorer", "jdk",                          catalogueRoutes.JdkVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
     SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f, Set("lds")),
-    SearchTerm("page",     "whatsrunningwhere",            wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
+    SearchTerm("page",     "whats running where (wrw)",    wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
     SearchTerm("page",     "deployment",                   deployRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,  1.0f),
     SearchTerm("page",     "shutter-overview",             shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url,           1.0f),
     SearchTerm("page",     "shutter-api",                  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,                1.0f),
@@ -80,7 +83,9 @@ class SearchIndex @Inject()(
     SearchTerm("page",     "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,              1.0f),
     SearchTerm("page",     "create repository",            createRepoRoutes.CreateRepositoryController.createRepoLandingGet().url,                1.0f),
     SearchTerm("page",     "deploy service",               deployRoutes.DeployServiceController.step1(None).url,                                  1.0f),
-    SearchTerm("page",     "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f)
+    SearchTerm("page",     "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f),
+    SearchTerm("docs",     "mdtp-handbook",                config.get[String]("docs.handbookUrl"),                                                1.0f, openInNewWindow = true),
+    SearchTerm("docs",     "blog posts",                   config.get[String]("confluence.allBlogsUrl"),                                          1.0f, openInNewWindow = true)
   )
 
   def updateIndexes(): Future[Unit] =
