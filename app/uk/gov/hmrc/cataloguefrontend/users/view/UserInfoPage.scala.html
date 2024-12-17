@@ -20,9 +20,9 @@
 @import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
 @import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 
-@this(config : CatalogueConfig)
+@this()
 
-@(isTeamAdmin  : Boolean,
+@(canCreateUsers  : Boolean,
   userTooling  : Either[String, UserAccess],
   user         : User,
   umpProfileUrl: String
@@ -129,7 +129,7 @@
                           </div>
 
                           <div class="card-body">
-                              @if(isTeamAdmin && config.showCreateUserJourney) {
+                              @if(canCreateUsers) {
                                   <div class="btn-group float-end" role="group">
                                       <a class="btn btn-success" href="@userRoutes.EditUserController.editUserLanding(user.username, user.organisation)">Edit</a>
                                   </div>

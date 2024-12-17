@@ -20,10 +20,10 @@
 @import views.html.helper.{FieldConstructor, select}
 @import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 
-@this(config : CatalogueConfig)
+@this()
 
 @(
-  isTeamAdmin: Boolean
+  canCreateUsers: Boolean
 )(implicit
   messages   : Messages,
   request    : RequestHeader
@@ -31,7 +31,7 @@
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
 @standard_layout("Users", active = "users") {
-  @if(isTeamAdmin && config.showCreateUserJourney){
+  @if(canCreateUsers){
     <h1 class="page-heading mt-4">Users
         <div class="btn-group float-end" role="group">
           <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">

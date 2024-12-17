@@ -18,10 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.auth
 
 import play.api.mvc.{AnyContent, Call, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.routes as appRoutes
-import uk.gov.hmrc.internalauth.client.{AuthenticatedRequest, FrontendAuthComponents, IAAction, ResourceType, Retrieval}
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl.*
 import uk.gov.hmrc.play.bootstrap.binders.{OnlyRelative, RedirectUrl}
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -32,7 +32,7 @@ class AuthController @Inject() (
   mcc : MessagesControllerComponents
 )(using ExecutionContext) extends FrontendController(mcc):
 
-  import AuthController._
+  import AuthController.*
 
   def signIn(targetUrl: Option[RedirectUrl]) =
     auth.authenticatedAction(
@@ -44,22 +44,20 @@ class AuthController @Inject() (
   def postSignIn(targetUrl: Option[RedirectUrl]) =
     auth.authenticatedAction(
       continueUrl = routes.AuthController.signIn(sanitize(targetUrl)),
-      retrieval   = Retrieval.username
-    ).async { implicit (request: AuthenticatedRequest[AnyContent, Retrieval.Username]) =>
-      auth.verify(
-        Retrieval.locations(
-          resourceType = Some(ResourceType("catalogue-frontend")),
-          action = Some(IAAction("CREATE_USER"))
-        )
-      ).map: retrieval =>
+      retrieval = Retrieval.username ~ Retrieval.locations(
+        resourceType = Some(ResourceType("catalogue-frontend")),
+        action = Some(IAAction("CREATE_USER"))
+      )
+    ) { implicit request: AuthenticatedRequest[AnyContent, Retrieval.Username ~ Set[Resource]] =>
+      val usernameRetrieval ~ createUserResource = request.retrieval
+      val canCreateUsers = createUserResource.nonEmpty.toString
         Redirect(
           targetUrl.flatMap(_.getEither(OnlyRelative).toOption)
             .fold(appRoutes.CatalogueController.index.url)(_.url)
+        ).addingToSession(
+          AuthController.SESSION_USERNAME -> usernameRetrieval.value,
+          AuthController.CAN_CREATE_USERS -> canCreateUsers
         )
-          .addingToSession(
-            AuthController.SESSION_USERNAME -> request.retrieval.value,
-            AuthController.IS_TEAM_ADMIN -> retrieval.exists(_.nonEmpty).toString
-          )
     }
 
   val signOut =
@@ -71,7 +69,7 @@ end AuthController
 
 object AuthController:
   val SESSION_USERNAME = "username"
-  val IS_TEAM_ADMIN = "isTeamAdmin"
+  val CAN_CREATE_USERS = "canCreateUsers"
 
     // to avoid cyclical urls
   private[cataloguefrontend] def sanitize(targetUrl: Option[RedirectUrl]): Option[RedirectUrl] =
