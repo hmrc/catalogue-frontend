@@ -24,11 +24,12 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n.MessagesApi
-import play.api.mvc._
+import play.api.mvc.*
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.SessionKeys
-import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
-import uk.gov.hmrc.internalauth.client.Retrieval
+import uk.gov.hmrc.cataloguefrontend.routes as appRoutes
+import uk.gov.hmrc.internalauth.client.syntax.toProductOps
+import uk.gov.hmrc.internalauth.client.{IAAction, Resource, ResourceLocation, ResourceType, Retrieval}
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 
@@ -94,9 +95,9 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username
+          Retrieval.username ~ createUserRetrieval
         )
-      ).thenReturn(Future.successful(Retrieval.Username("user.name")))
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource]))
 
       val result = controller.postSignIn(targetUrl = None)(request)
 
@@ -105,15 +106,49 @@ class AuthControllerSpec
       Helpers.session(result).apply(AuthController.SESSION_USERNAME) shouldBe "user.name"
     }
 
+    "put canCreateUsers into session as true if user is a team admin" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
+
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.username ~ createUserRetrieval
+        )
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*")))))
+
+      val result = controller.postSignIn(targetUrl = None)(request)
+
+      redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
+
+      Helpers.session(result).apply(AuthController.CAN_CREATE_USERS) shouldBe "true"
+    }
+
+    "put canCreateUsers into session as false if user is not a team admin" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
+
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.username ~ createUserRetrieval
+        )
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource]))
+
+      val result = controller.postSignIn(targetUrl = None)(request)
+
+      redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
+
+      Helpers.session(result).apply(AuthController.CAN_CREATE_USERS) shouldBe "false"
+    }
+
     "redirect to requested page" in new Setup {
       val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
 
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username
+          Retrieval.username ~ createUserRetrieval
         )
-      ).thenReturn(Future.successful(Retrieval.Username("user.name")))
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource]))
 
       val result = controller.postSignIn(targetUrl = Some(RedirectUrl("/my-url")))(request)
 
@@ -128,9 +163,9 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username
+          Retrieval.username ~ createUserRetrieval
         )
-      ).thenReturn(Future.successful(Retrieval.Username("user.name")))
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource]))
 
       val result = controller.postSignIn(targetUrl = Some(RedirectUrl("http://other-site/my-url")))(request)
 
@@ -157,5 +192,10 @@ class AuthControllerSpec
                               FrontendAuthComponentsStub(authStubBehaviour)
                             }
     val controller        = AuthController(authComponent, mcc)
+    
+    val createUserRetrieval = Retrieval.locations(
+      resourceType = Some(ResourceType("catalogue-frontend")),
+      action = Some(IAAction("CREATE_USER"))
+    )
   }
 }
