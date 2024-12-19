@@ -64,16 +64,6 @@ class VulnerabilitiesConnector @Inject() (
       .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=${serviceName.map(s => s"\"${s.asString}\"")}&team=${team.map(_.asString)}")
       .execute[Seq[TotalVulnerabilityCount]]
 
-  def deployedVulnerabilityCount(
-    serviceName: ServiceName
-  )(using
-    HeaderCarrier
-  ): Future[Option[TotalVulnerabilityCount]] =
-    given Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
-    httpClientV2
-      .get(url"$url/vulnerabilities/api/services/${serviceName.asString}/deployed-report-count")
-      .execute[Option[TotalVulnerabilityCount]]
-
   def timelineCounts(
     serviceName   : Option[ServiceName]
   , team          : Option[TeamName]

@@ -125,33 +125,6 @@ class VulnerabilitiesConnectorSpec
     }
   }
 
-  "deployedVulnerabilityCount" should {
-    "return a count of distinct vulnerabilities for the given service" in {
-      stubFor(
-        get(urlMatching("/vulnerabilities/api/services/service1/deployed-report-count"))
-          .willReturn(aResponse().withBody(
-            """{
-              "service": "service1",
-              "actionRequired": 5,
-              "noActionRequired": 4,
-              "investigationOngoing": 3,
-              "uncurated": 2
-            }"""
-          ))
-      )
-
-      vulnerabilitiesConnector.deployedVulnerabilityCount(ServiceName("service1")).futureValue shouldBe Some(
-        TotalVulnerabilityCount(
-          service              = ServiceName("service1"),
-          actionRequired       = 5,
-          noActionRequired     = 4,
-          investigationOngoing = 3,
-          uncurated            = 2
-        )
-      )
-    }
-  }
-
   "vulnerabilitiesCounts" should {
     "return a sequence of TotalVulnerabilityCounts" in {
       stubFor(
