@@ -18,8 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import play.api.data.{Form, Forms}
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
@@ -43,7 +42,8 @@ class PlatformInitiativesController @Inject()
      with CatalogueAuthBuilders:
 
   def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       val boundForm = PlatformInitiativesFilter.form.bindFromRequest()
       boundForm.fold(
         formWithErrors =>
@@ -68,7 +68,6 @@ class PlatformInitiativesController @Inject()
             boundForm
           ))
       )
-  }
 
 end PlatformInitiativesController
 

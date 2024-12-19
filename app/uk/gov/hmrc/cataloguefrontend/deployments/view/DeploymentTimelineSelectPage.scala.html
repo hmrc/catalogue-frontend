@@ -28,7 +28,7 @@
 , oGitHubCompare         : Option[GitHubProxyConnector.Compare]
 , jvmChanges             : (Option[ServiceJdkVersion], ServiceJdkVersion)
 , configChanges          : ConfigChanges
-)(implicit request: Request[_])
+)(implicit request: RequestHeader)
 
 @standard_layout("Deployment Timeline", active = "deployments", showNavBar = false) {
   <div class="mt-3 mr-1">

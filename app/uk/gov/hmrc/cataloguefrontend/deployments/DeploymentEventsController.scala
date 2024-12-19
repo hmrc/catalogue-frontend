@@ -47,7 +47,8 @@ class DeploymentEventsController @Inject()(
   import DeploymentEventsController._
 
   def deploymentEvents(env: Environment = Production): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       form
         .bindFromRequest()
         .fold(
@@ -75,7 +76,6 @@ class DeploymentEventsController @Inject()(
               )
             )
         )
-    }
 
 end DeploymentEventsController
 

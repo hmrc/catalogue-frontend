@@ -20,7 +20,6 @@ import cats.data.OptionT
 import cats.implicits._
 import play.api.Logging
 import play.api.mvc._
-
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeploymentTimelinePage, DeploymentTimelineSelectPage}
@@ -55,47 +54,47 @@ class DeploymentTimelineController @Inject()(
      with Logging:
 
   def graph(service: Option[ServiceName], to: LocalDate, from: LocalDate) =
-    BasicAuthAction.async:
-      implicit request =>
-        val start  = to.atStartOfDayInstant
-        val end    = from.atEndOfDayInstant
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      val start  = to.atStartOfDayInstant
+      val end    = from.atEndOfDayInstant
 
-        for
-          services     <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service))
-          serviceNames =  services.map(s => ServiceName(s.name))
-          events       <- service match
-                            case Some(service) if start.isBefore(end) =>
-                              deploymentGraphService.findEvents(service, start, end).map(_.filter(_.env != Environment.Integration)) // filter as only platform teams are interested in this env
-                            case _ =>
-                              Future.successful(Seq.empty[DeploymentTimelineEvent])
-          slugInfo     <- events
-                            .groupBy(_.version)
-                            .keys
-                            .toList
-                            .foldLeftM[Future, Seq[ServiceDependencies]](Seq.empty): (xs, v) =>
-                              service
-                                .fold(Future.successful(Option.empty[ServiceDependencies])): serviceName =>
-                                  serviceDependenciesConnector.getSlugInfo(serviceName, Some(v))
-                                .map:
-                                  xs ++ _.toSeq
-        yield Ok(deploymentTimelinePage(service, start, end, events, slugInfo, serviceNames))
+      for
+        services     <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service))
+        serviceNames =  services.map(s => ServiceName(s.name))
+        events       <- service match
+                          case Some(service) if start.isBefore(end) =>
+                            deploymentGraphService.findEvents(service, start, end).map(_.filter(_.env != Environment.Integration)) // filter as only platform teams are interested in this env
+                          case _ =>
+                            Future.successful(Seq.empty[DeploymentTimelineEvent])
+        slugInfo     <- events
+                          .groupBy(_.version)
+                          .keys
+                          .toList
+                          .foldLeftM[Future, Seq[ServiceDependencies]](Seq.empty): (xs, v) =>
+                            service
+                              .fold(Future.successful(Option.empty[ServiceDependencies])): serviceName =>
+                                serviceDependenciesConnector.getSlugInfo(serviceName, Some(v))
+                              .map:
+                                xs ++ _.toSeq
+      yield Ok(deploymentTimelinePage(service, start, end, events, slugInfo, serviceNames))
 
   def graphSelect(serviceName: ServiceName, deploymentId: String, fromDeploymentId: Option[String]) =
-    BasicAuthAction.async:
-      implicit request =>
-        (for
-          configChanges     <- OptionT(serviceConfigsService.configChanges(deploymentId, fromDeploymentId))
-          previousVersion   =  configChanges.app.from.getOrElse(Version("0.1.0"))
-          deployedVersion   =  configChanges.app.to
-          environment       =  configChanges.env.environment
-          deployedSlug      <- OptionT(serviceDependenciesConnector.getSlugInfo(serviceName, Some(deployedVersion)))
-          oPreviousSlug     <- OptionT.liftF(serviceDependenciesConnector.getSlugInfo(serviceName, Some(previousVersion)))
-          oGitHubCompare    <- OptionT.liftF:
-                                 gitHubProxyConnector
-                                   .compare(serviceName.asString, v1 = previousVersion, v2 = deployedVersion)
-                                   .recover:
-                                     case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
-          jvmChanges        =  (oPreviousSlug.map(_.java), deployedSlug.java)
-        yield
-          Ok(deploymentTimelineSelectPage(serviceName, environment, Some(previousVersion), deployedVersion, oGitHubCompare, jvmChanges, configChanges))
-        ).getOrElse(NotFound("Could not compare deployments - data not found or initial deployment"))
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      (for
+         configChanges     <- OptionT(serviceConfigsService.configChanges(deploymentId, fromDeploymentId))
+         previousVersion   =  configChanges.app.from.getOrElse(Version("0.1.0"))
+         deployedVersion   =  configChanges.app.to
+         environment       =  configChanges.env.environment
+         deployedSlug      <- OptionT(serviceDependenciesConnector.getSlugInfo(serviceName, Some(deployedVersion)))
+         oPreviousSlug     <- OptionT.liftF(serviceDependenciesConnector.getSlugInfo(serviceName, Some(previousVersion)))
+         oGitHubCompare    <- OptionT.liftF:
+                                gitHubProxyConnector
+                                  .compare(serviceName.asString, v1 = previousVersion, v2 = deployedVersion)
+                                  .recover:
+                                    case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
+         jvmChanges        =  (oPreviousSlug.map(_.java), deployedSlug.java)
+       yield
+         Ok(deploymentTimelineSelectPage(serviceName, environment, Some(previousVersion), deployedVersion, oGitHubCompare, jvmChanges, configChanges))
+      ).getOrElse(NotFound("Could not compare deployments - data not found or initial deployment"))

@@ -85,20 +85,17 @@ class RepositoriesController @Inject() (
     }
 
   def allServices: Action[AnyContent] =
-    Action {
-      Redirect(
-        repositoryRoutes.RepositoriesController.allRepositories(repoType = Some(RepoType.Service.asString)))
-    }
+    Action:
+      Redirect:
+        repositoryRoutes.RepositoriesController.allRepositories(repoType = Some(RepoType.Service.asString))
 
   def allLibraries: Action[AnyContent] =
-    Action {
+    Action:
       Redirect(repositoryRoutes.RepositoriesController.allRepositories(repoType = Some(RepoType.Library.asString)))
-    }
 
   def allPrototypes: Action[AnyContent] =
-    Action {
+    Action:
       Redirect(repositoryRoutes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
-    }
 
 case class RepoListFilter(
   name               : Option[String]   = None,
