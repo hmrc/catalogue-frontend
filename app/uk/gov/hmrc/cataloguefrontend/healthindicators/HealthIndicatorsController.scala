@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.healthindicators
 
 import play.api.data.{Form, Forms}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsFilter.form
@@ -42,7 +42,8 @@ class HealthIndicatorsController @Inject() (
      with CatalogueAuthBuilders:
 
   def breakdownForRepo(name: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       for
         indicator <- healthIndicatorsConnector.getIndicator(name)
         history   <- healthIndicatorsConnector.getHistoricIndicators(name)
@@ -50,10 +51,10 @@ class HealthIndicatorsController @Inject() (
       yield indicator match
         case Some(indicator) => Ok(HealthIndicatorsPage(indicator, history, average.map(_.averageScore)))
         case None            => NotFound(error_404_template())
-    }
 
   def indicatorsForRepoType(): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       form
         .bindFromRequest()
         .fold(
@@ -68,7 +69,7 @@ class HealthIndicatorsController @Inject() (
               indicators          =  indicatorsWithTeams.filter(t => validForm.team.fold(true)(t.owningTeams.contains))
             yield Ok(HealthIndicatorsLeaderBoard(indicators, RepoType.values.toSeq, teams.sortBy(_.name), form.fill(validForm)))
         )
-    }
+
 end HealthIndicatorsController
 
 object HealthIndicatorsController:

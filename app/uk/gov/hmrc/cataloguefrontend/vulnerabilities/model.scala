@@ -27,21 +27,24 @@ case class VulnerableComponent(
   component: String,
   version  : Version
 ):
-  def group: String =
-    component.stripPrefix("gav://").split(":")(0)
+  import VulnerableComponent._
 
-  def artefact: String =
-    component.stripPrefix("gav://").split(":")(1).split("_")(0)
+  val gav: Option[(String, String)] =
+    component match
+      case gavRegex(grp, aft, sv) => Some((grp, aft))
+      case _                      => None
 
   def versionRange: VersionRange =
     VersionRange(s"[${version.major}.${version.minor}.${version.patch}]")
 
-  def componentWithoutPrefix: Option[String] =
-    component.split("://").lift(1)
+  def componentWithoutPrefix: String =
+    component.split("://").lift(1).getOrElse(component)
 
 end VulnerableComponent
 
 object VulnerableComponent:
+  private val gavRegex = raw"gav:\/\/(.*):(.*?)(?:_(\d+(?:\.\d+))?)?".r // format is  gav://group:artefact with optional scala version
+
   val reads: Reads[VulnerableComponent] =
     given Reads[Version] = Version.format
     ( (__ \ "component").read[String]
@@ -49,23 +52,32 @@ object VulnerableComponent:
     )(apply)
 
 case class DistinctVulnerability(
-    vulnerableComponentName   : String,
-    vulnerableComponentVersion: String,
-    vulnerableComponents      : Seq[VulnerableComponent],
-    id                        : String,
-    score                     : Option[Double],
-    summary                   : String,
-    description               : String,
-    fixedVersions             : Option[Seq[String]],
-    references                : Seq[String],
-    publishedDate             : Instant,
-    firstDetected             : Option[Instant],
-    assessment                : Option[String],
-    curationStatus            : Option[CurationStatus],
-    ticket                    : Option[String]
-)
+  vulnerableComponentName   : String,
+  vulnerableComponentVersion: String,
+  vulnerableComponents      : Seq[VulnerableComponent],
+  id                        : String,
+  score                     : Option[Double],
+  summary                   : String,
+  description               : String,
+  fixedVersions             : Option[Seq[String]],
+  references                : Seq[String],
+  publishedDate             : Instant,
+  firstDetected             : Option[Instant],
+  assessment                : Option[String],
+  curationStatus            : Option[CurationStatus],
+  ticket                    : Option[String]
+):
+  import DistinctVulnerability._
+
+  val (dependencyType, component) =
+    vulnerableComponentName match
+      case componentRegex(tpe, cmpt) => (Some(tpe), cmpt)
+      case _                         => (None     , vulnerableComponentName)
+
 
 object DistinctVulnerability {
+
+  private val componentRegex = raw"(.*):\/\/(.*)".r
 
   val reads: Reads[DistinctVulnerability] =
     given Reads[VulnerableComponent] = VulnerableComponent.reads

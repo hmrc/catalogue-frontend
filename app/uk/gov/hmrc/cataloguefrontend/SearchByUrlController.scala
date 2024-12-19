@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import javax.inject.{Inject, Singleton}
 import play.api.data.{Form, Forms}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.service.SearchByUrlService
 import uk.gov.hmrc.cataloguefrontend.view.html.SearchByUrlPage
@@ -39,12 +39,13 @@ class SearchByUrlController @Inject() (
      with CatalogueAuthBuilders:
 
   def searchLanding: Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       Future.successful(Ok(searchByUrlPage(UrlSearchFilter.form, Nil)))
-    }
 
   def searchUrl =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given Request[AnyContent] = request
       UrlSearchFilter.form
         .bindFromRequest()
         .fold(
@@ -54,17 +55,16 @@ class SearchByUrlController @Inject() (
                               .map: results =>
                                 Ok(searchByUrlPage(UrlSearchFilter.form.bindFromRequest(), results))
         )
-    }
 
   case class UrlSearchFilter(name: Option[String] = None):
     def isEmpty: Boolean =
       name.isEmpty
 
   object UrlSearchFilter:
-    lazy val form = Form(
-      Forms.mapping(
-        "name" -> Forms.optional(Forms.text).transform[Option[String]](x => if x.exists(_.trim.isEmpty) then None else x, identity)
-      )(UrlSearchFilter.apply)(f => Some(f.name))
-    )
+    lazy val form =
+      Form:
+        Forms.mapping(
+          "name" -> Forms.optional(Forms.text).transform[Option[String]](x => if x.exists(_.trim.isEmpty) then None else x, identity)
+        )(UrlSearchFilter.apply)(f => Some(f.name))
 
 end SearchByUrlController

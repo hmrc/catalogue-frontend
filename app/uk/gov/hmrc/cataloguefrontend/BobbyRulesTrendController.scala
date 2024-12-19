@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend
 
 import cats.data.EitherT
 import cats.instances.future._
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, VersionRange}
@@ -45,7 +45,8 @@ class BobbyRulesTrendController @Inject() (
      with CatalogueAuthBuilders {
 
   val landing: Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       for
         allRules <- configConnector.bobbyRules().map(_.libraries)
       yield Ok(
@@ -56,14 +57,14 @@ class BobbyRulesTrendController @Inject() (
           data  = None
         )
       )
-    }
 
   def display(
     rules: Seq[String],
     from : LocalDate,
     to   : LocalDate,
   ): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       for
         allRules <- configConnector.bobbyRules()
                       .map(_.libraries)
@@ -112,7 +113,6 @@ class BobbyRulesTrendController @Inject() (
                      ).merge
                  )
       yield res
-    }
 
   case class SearchForm(
     rules: Seq[String],

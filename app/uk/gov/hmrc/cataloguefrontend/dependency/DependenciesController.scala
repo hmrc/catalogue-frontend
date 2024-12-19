@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.dependency
 
 import cats.data.EitherT
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.model.{DependencyScope, given}
 import uk.gov.hmrc.cataloguefrontend.dependency.view.html.{DependencyGraphsPage, DependenciesPage}
@@ -45,24 +45,24 @@ class DependenciesController @Inject() (
      with CatalogueAuthBuilders:
 
   def services(name: ServiceName): Action[AnyContent] =
-    BasicAuthAction.async:
-      implicit request =>
-        for
-          deployments  <- whatsRunningWhereService.releasesForService(name).map(_.versions)
-          dependencies <- dependenciesService.search(name, deployments)
-        yield
-          Ok(dependenciesPage(name, dependencies.sortBy(_.version)(Ordering[Version].reverse)))
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      for
+        deployments  <- whatsRunningWhereService.releasesForService(name).map(_.versions)
+        dependencies <- dependenciesService.search(name, deployments)
+      yield
+        Ok(dependenciesPage(name, dependencies.sortBy(_.version)(Ordering[Version].reverse)))
 
   def service(name: ServiceName, version: String): Action[AnyContent] =
-    BasicAuthAction.async:
-      implicit request =>
-        dependenciesService
-          .getServiceDependencies(name, Version(version))
-          .map(oDeps => Ok(dependenciesPage(name, oDeps.toSeq)))
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      dependenciesService
+        .getServiceDependencies(name, Version(version))
+        .map(oDeps => Ok(dependenciesPage(name, oDeps.toSeq)))
 
   def graphs(name: ServiceName, version: String, scope: String): Action[AnyContent] =
-    BasicAuthAction.async:
-      implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       (for
          scope <- EitherT
                     .fromEither[Future](Parser[DependencyScope].parse(scope))

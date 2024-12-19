@@ -95,22 +95,23 @@ class CatalogueController @Inject() (
 
   private val logger = Logger(getClass)
 
-  private def notFound(using request: Request[?]) =
+  private def notFound(using request: RequestHeader) =
     NotFound(error_404_template())
 
   val index: Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       confluenceConnector
         .getBlogs()
         .map(blogs => Ok(indexPage(blogs, config.get[String]("confluence.allBlogsUrl"))))
-    }
 
   /** Renders the service page by either the repository name, or the artefact name (if configured).
     * This is where it differs from accessing through the generic `/repositories/name` endpoint, which only
     * considers the name of the repository.
     */
   def service(serviceName: ServiceName): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       def buildServicePageFromItsArtefactName(serviceName: ServiceName, hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation): Future[Result] =
         serviceConfigsConnector.repoNameForService(serviceName).flatMap:
           case Some(repoName) => buildServicePageFromRepoName(repoName, hasBranchProtectionAuth).getOrElse(notFound)
@@ -128,9 +129,8 @@ class CatalogueController @Inject() (
         result                  <- buildServicePageFromRepoName(serviceName.asString, hasBranchProtectionAuth)
                                     .getOrElseF(buildServicePageFromItsArtefactName(serviceName, hasBranchProtectionAuth))
       yield result
-    }
 
-  private def retrieveZone(serviceName: ServiceName)(using request: Request[?]): Future[Option[Zone]] =
+  private def retrieveZone(serviceName: ServiceName)(using hc: HeaderCarrier): Future[Option[Zone]] =
     serviceConfigsService.deploymentConfig(serviceName = Some(serviceName))
       .map: deploymentConfigs =>
         val zones = deploymentConfigs.map(_.zone).distinct
@@ -143,7 +143,7 @@ class CatalogueController @Inject() (
     repositoryDetails      : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
   )(using
-    request : Request[?]
+    request : RequestHeader
   ): Future[Result] =
     for
       deployments               <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
@@ -247,7 +247,8 @@ class CatalogueController @Inject() (
     Action(Redirect(routes.CatalogueController.repository(name)))
 
   def repository(name: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       for
         hasBranchProtectionAuth <- hasEnableBranchProtectionAuthorisation(name)
         result                  <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(name))
@@ -259,18 +260,17 @@ class CatalogueController @Inject() (
                                          case RepoType.Test      => renderTest(repoDetails, hasBranchProtectionAuth)
                                          case RepoType.Other     => renderOther(repoDetails, hasBranchProtectionAuth)
       yield result
-    }
 
   def enableBranchProtection(repoName: String) =
     auth
       .authorizedAction(
         continueUrl = routes.CatalogueController.repository(repoName),
         predicate = EnableBranchProtection.permission(repoName))
-      .async { implicit request =>
+      .async: request =>
+        given RequestHeader = request
         teamsAndRepositoriesConnector
           .enableBranchProtection(repoName)
           .map(_ => Redirect(routes.CatalogueController.repository(repoName)))
-      }
 
   private def hasEnableBranchProtectionAuthorisation(repoName: String)(
     using HeaderCarrier
@@ -285,11 +285,11 @@ class CatalogueController @Inject() (
         continueUrl = routes.CatalogueController.repository(serviceName.asString),
         predicate   = MarkForDecommissioning.permission(serviceName.asString),
         retrieval   = Retrieval.username
-    ).async { implicit request =>
+    ).async: request =>
+      given RequestHeader = request
       serviceCommissioningStatusConnector
         .setLifecycleStatus(serviceName, LifecycleStatus.DecommissionInProgress, username = request.retrieval.value)
         .map(_ => Redirect(routes.CatalogueController.repository(serviceName.asString)))
-    }
 
   private def hasMarkForDecommissioningAuthorisation(repoName: String)(
     using HeaderCarrier
@@ -303,46 +303,46 @@ class CatalogueController @Inject() (
       .authorizedAction(
         continueUrl = routes.CatalogueController.repository(repoName),
         predicate   = ChangePrototypePassword.permission(repoName),
-      ).async { implicit request =>
+      ).async: request =>
+        given Request[AnyContent] = request
         (for
-          hasBranchProtectionAuth <- EitherT.liftF[Future, Result, EnableBranchProtection.HasAuthorisation](hasEnableBranchProtectionAuthorisation(repoName))
-          repoDetails             <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
-          newPassword             <- ChangePrototypePassword
+           hasBranchProtectionAuth <- EitherT.liftF[Future, Result, EnableBranchProtection.HasAuthorisation](hasEnableBranchProtectionAuthorisation(repoName))
+           repoDetails             <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
+           newPassword             <- ChangePrototypePassword
                                         .form()
                                         .bindFromRequest()
                                         .fold[EitherT[Future, Result, ChangePrototypePassword.PrototypePassword]](
                                           formWithErrors => EitherT.left(renderPrototype(repoDetails, hasBranchProtectionAuth, formWithErrors).map(BadRequest(_))),
                                           password => EitherT.rightT(password)
                                         )
-          user                    =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
-          _                       =  logger.info(s"User $user has triggered a password reset for prototype: $repoName")
-          response                <- EitherT(buildDeployApiConnector.changePrototypePassword(repoName, newPassword))
+           user                    =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
+           _                       =  logger.info(s"User $user has triggered a password reset for prototype: $repoName")
+           response                <- EitherT(buildDeployApiConnector.changePrototypePassword(repoName, newPassword))
                                         .leftSemiflatMap(errorMsg => renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form().withGlobalError(errorMsg) , None).map(BadRequest(_)))
-          result                  <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form() , Some(response)))
-        yield Ok(result)
+           result                  <- EitherT.liftF[Future, Result, Html](renderPrototype(repoDetails, hasBranchProtectionAuth, ChangePrototypePassword.form() , Some(response)))
+         yield Ok(result)
         ).merge
-      }
 
   def setPrototypeStatus(repoName: String, status: PrototypeStatus): Action[AnyContent] =
     auth
       .authorizedAction(
         continueUrl = routes.CatalogueController.repository(repoName),
         predicate   = ChangePrototypePassword.permission(repoName)
-      ).async { implicit request =>
-      (for
-         repoDetails   <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
-         user          =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
-         _             =  logger.info(s"Setting prototype $repoName to status ${status.displayString}, triggered by User: $user")
-         prototypeName = repoDetails.prototypeName.getOrElse(repoName)
-         _             <- EitherT.liftF[Future, Result, Unit]:
-                            buildDeployApiConnector.setPrototypeStatus(prototypeName, status)
-                              .map:
-                                 _
-                                   .leftMap(err => logger.warn(s"Failed to set $prototypeName to ${status.displayString}: $err"))
-                                   .merge
-       yield Redirect(routes.CatalogueController.repository(repoName))
-      ).merge
-    }
+      ).async: request =>
+        given RequestHeader = request
+        (for
+           repoDetails   <- EitherT.fromOptionF[Future, Result, GitRepository](teamsAndRepositoriesConnector.repositoryDetails(repoName), notFound)
+           user          =  request.session.get(AuthController.SESSION_USERNAME).getOrElse("Unknown")
+           _             =  logger.info(s"Setting prototype $repoName to status ${status.displayString}, triggered by User: $user")
+           prototypeName = repoDetails.prototypeName.getOrElse(repoName)
+           _             <- EitherT.liftF[Future, Result, Unit]:
+                              buildDeployApiConnector.setPrototypeStatus(prototypeName, status)
+                                .map:
+                                   _
+                                     .leftMap(err => logger.warn(s"Failed to set $prototypeName to ${status.displayString}: $err"))
+                                     .merge
+         yield Redirect(routes.CatalogueController.repository(repoName))
+        ).merge
 
   private def hasChangePrototypePasswordAuthorisation(repoName: String)(
     using HeaderCarrier
@@ -352,18 +352,18 @@ class CatalogueController @Inject() (
       .map(r => ChangePrototypePassword.HasAuthorisation(r.getOrElse(false)))
 
   def renderLibrary(
-    repoDetails: GitRepository,
+    repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(using request: Request[?]): Future[Result] =
-    ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
-      serviceDependenciesConnector.getRepositoryModulesAllVersions(repoDetails.name),
-      leakDetectionService.urlIfLeaksFound(repoDetails.name),
-      prCommenterConnector.report(repoDetails.name)
-    ).mapN { ( jenkinsJobs,
-               repoModulesAllVersions,
-               urlIfLeaksFound,
-               commenterReport
-             ) =>
+  )(using request: RequestHeader): Future[Result] =
+    ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name)
+    , serviceDependenciesConnector.getRepositoryModulesAllVersions(repoDetails.name)
+    , leakDetectionService.urlIfLeaksFound(repoDetails.name)
+    , prCommenterConnector.report(repoDetails.name)
+    ).mapN: ( jenkinsJobs
+            , repoModulesAllVersions
+            , urlIfLeaksFound
+            , commenterReport
+            ) =>
       Ok(libraryInfoPage(
         repoDetails.copy(jenkinsJobs = jenkinsJobs),
         repoModulesAllVersions.sorted(Ordering.by((_: RepositoryModules).version).reverse),
@@ -371,14 +371,13 @@ class CatalogueController @Inject() (
         hasBranchProtectionAuth,
         commenterReport
       ))
-    }
 
   private def renderPrototype(
     repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
     form                   : Form[?]        = ChangePrototypePassword.form(),
     successMessage         : Option[String] = None
-  )(using request: Request[?]): Future[Html] =
+  )(using request: RequestHeader): Future[Html] =
     for
       urlIfLeaksFound       <- leakDetectionService.urlIfLeaksFound(repoDetails.name)
       commenterReport       <- prCommenterConnector.report(repoDetails.name)
@@ -398,9 +397,9 @@ class CatalogueController @Inject() (
       )
 
   private def renderTest(
-    repoDetails: GitRepository,
+    repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(using request: Request[?]): Future[Result] =
+  )(using request: RequestHeader): Future[Result] =
     for
       jenkinsJobs       <- teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name)
       repoModules       <- serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name)
@@ -419,22 +418,22 @@ class CatalogueController @Inject() (
   private def renderOther(
     repoDetails            : GitRepository,
     hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation
-  )(using request: Request[?]): Future[Result] =
-    ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name),
-      serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name),
-      leakDetectionService.urlIfLeaksFound(repoDetails.name),
-      prCommenterConnector.report(repoDetails.name)
-    ).mapN { ( jenkinsJobs,
-               repoModules,
-               urlIfLeaksFound,
-               commenterReport
-             ) =>
+  )(using request: RequestHeader): Future[Result] =
+    ( teamsAndRepositoriesConnector.lookupLatestJenkinsJobs(repoDetails.name)
+    , serviceDependenciesConnector.getRepositoryModulesLatestVersion(repoDetails.name)
+    , leakDetectionService.urlIfLeaksFound(repoDetails.name)
+    , prCommenterConnector.report(repoDetails.name)
+    ).mapN: ( jenkinsJobs
+            , repoModules
+            , urlIfLeaksFound
+            , commenterReport
+            ) =>
       Ok(
         repositoryInfoPage(
           repoDetails.copy(
-            teamNames  = { val (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
-                           owners.sorted ++ writers.sorted
-                         },
+            teamNames   = { val (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
+                            owners.sorted ++ writers.sorted
+                          },
             jenkinsJobs = jenkinsJobs
           ),
           repoModules,
@@ -443,14 +442,13 @@ class CatalogueController @Inject() (
           commenterReport
         )
       )
-    }
 
   def dependencyRepository(group: String, artefact: String, version: String): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       serviceDependenciesConnector.getRepositoryName(group, artefact, Version(version))
         .map: repoName =>
           Redirect(routes.CatalogueController.repository(repoName.getOrElse(artefact)).copy(fragment = artefact))
-    }
 
 end CatalogueController
 
@@ -507,8 +505,7 @@ object ChangePrototypePassword:
       else Invalid("Should only contain uppercase letters, lowercase letters, numbers, underscores")
 
   def form(): Form[PrototypePassword] =
-    Form(
+    Form:
       Forms.mapping(
         "password" -> Forms.nonEmptyText.verifying(passwordConstraint)
       )(PrototypePassword.apply)(f => Some(f.value))
-    )

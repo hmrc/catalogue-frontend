@@ -53,7 +53,8 @@ class DependencyExplorerController @Inject() (
 
 
   def landing: Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       for
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         groupArtefacts <- dependenciesService.getGroupArtefacts()
@@ -80,7 +81,6 @@ class DependencyExplorerController @Inject() (
           repoTypes      = RepoType.values.toSeq.filterNot(_ == RepoType.Prototype)
         )
       )
-    }
 
   def search(
     group       : String,
@@ -92,7 +92,8 @@ class DependencyExplorerController @Inject() (
     `repoType[]`: Option[Seq[String]],
     asCsv       : Boolean
   ): Action[AnyContent] =
-    BasicAuthAction.async(implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       for
         teams          <- trConnector.allTeams().map(_.map(_.name).sorted)
         flags          =  SlugInfoFlag.values.toSeq
@@ -184,7 +185,6 @@ class DependencyExplorerController @Inject() (
             )
         }
       yield res
-    )
 
   /** @param versionRange replaces versionOp and version, supporting Maven version range */
   case class SearchForm(

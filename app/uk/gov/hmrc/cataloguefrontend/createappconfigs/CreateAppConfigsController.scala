@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.createappconfigs
 import cats.data.EitherT
 import play.api.data.{Form, Forms}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, RequestHeader, Result}
 import play.api.{Configuration, Logger}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector._
@@ -81,7 +81,8 @@ class CreateAppConfigsController @Inject()(
     auth.authenticatedAction(
       continueUrl = routes.CreateAppConfigsController.createAppConfigsLanding(serviceName),
       retrieval   = Retrieval.hasPredicate(createAppConfigsPermission(serviceName))
-    ) .async { implicit request =>
+    ) .async: request =>
+      given RequestHeader = request
       (
         for
           repo          <- EitherT.fromOptionF[Future, Result, GitRepository](
@@ -121,13 +122,13 @@ class CreateAppConfigsController @Inject()(
             )
           )
       ).merge
-    }
 
   def createAppConfigs(serviceName: ServiceName): Action[AnyContent] =
     auth.authorizedAction(
       predicate   = createAppConfigsPermission(serviceName),
       continueUrl = routes.CreateAppConfigsController.createAppConfigsLanding(serviceName)
-    ).async { implicit request =>
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Unit] = request
       (
         for
           repo          <- EitherT.fromOptionF[Future, Result, GitRepository](
@@ -135,9 +136,8 @@ class CreateAppConfigsController @Inject()(
                              NotFound(error_404_template())
                            )
           serviceType   <- EitherT.fromOption[Future](repo.serviceType, InternalServerError("No Service Type"))
-          configChecks  <- EitherT.liftF[Future, Result, List[Check]](
+          configChecks  <- EitherT.liftF[Future, Result, List[Check]]:
                              serviceCommissioningStatusConnector.commissioningStatus(serviceName)
-                           )
           baseConfig    =  checkAppConfigBaseExists(configChecks)
           envConfigs    =  checkAppConfigEnvExists(configChecks)
           isApi         =  serviceType == ServiceType.Backend && repo.tags.getOrElse(Set.empty[Tag]).contains(Tag.Api)
@@ -186,7 +186,6 @@ class CreateAppConfigsController @Inject()(
         yield
           Redirect(uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController.getCommissioningState(serviceName))
      ).merge
-    }
 
 end CreateAppConfigsController
 

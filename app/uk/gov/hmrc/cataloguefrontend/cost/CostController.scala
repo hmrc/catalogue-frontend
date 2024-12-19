@@ -59,7 +59,7 @@ class CostController @Inject() (
         val slotsAndInstances =
           Environment.values.flatMap: env =>
             Seq(
-              s"slots.{${env.asString}}" -> configList.find(_.environment == env).map(_.deploymentSize.slots.toString).getOrElse(""),
+              s"slots.{${env.asString}}"     -> configList.find(_.environment == env).map(_.deploymentSize.slots    .toString).getOrElse(""),
               s"instances.{${env.asString}}" -> configList.find(_.environment == env).map(_.deploymentSize.instances.toString).getOrElse("")
             )
 
@@ -70,7 +70,8 @@ class CostController @Inject() (
     team : Option[TeamName] = None,
     asCSV: Boolean          = false
   ): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       for
         teams           <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
         configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.asString.trim.isEmpty))
@@ -84,18 +85,18 @@ class CostController @Inject() (
 
           Result(
             header = ResponseHeader(200, Map("Content-Disposition" -> s"inline; filename=\"cost-explorer-${Instant.now()}.csv\"")),
-            body = HttpEntity.Streamed(source, None, Some("text/csv"))
+            body   = HttpEntity.Streamed(source, None, Some("text/csv"))
           )
         else
           Ok(costExplorerPage(groupedConfigs, teams, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
-      }
 
   def costEstimation(serviceName: ServiceName): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       (for
          repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString))
          if repositoryDetails.repoType == RepoType.Service
-         serviceCostEstimation              <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
+         serviceCostEstimation       <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
          historicEstimatedCostCharts <- OptionT.liftF(costEstimationService.historicEstimatedCostChartsForService(serviceName))
        yield
          Ok(costEstimationPage(
@@ -106,7 +107,6 @@ class CostController @Inject() (
            historicEstimatedCostCharts
          ))
       ).getOrElse(NotFound(error_404_template()))
-    }
 
 
 case class RepoListFilter(
@@ -115,8 +115,7 @@ case class RepoListFilter(
 
 object RepoListFilter:
   val form: Form[RepoListFilter] =
-    Form(
+    Form:
       Forms.mapping(
         "team" -> Forms.optional(Forms.of[TeamName])
       )(RepoListFilter.apply)(r => Some(r.team))
-    )

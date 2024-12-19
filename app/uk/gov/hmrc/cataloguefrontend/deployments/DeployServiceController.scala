@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.deployments
 import cats.data.EitherT
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Writes
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
 import play.api.{Logging, Configuration}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
@@ -82,7 +82,8 @@ class DeployServiceController @Inject()(
     auth.authenticatedAction(
       continueUrl = routes.DeployServiceController.step1(serviceName),
       retrieval   = servicesRetrieval
-    ).async { implicit request =>
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       (for
         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
@@ -121,14 +122,14 @@ class DeployServiceController @Inject()(
        yield
          Ok(deployServicePage(form, hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
       ).merge
-    }
 
   // Display service info - config warnings, vulnerabilities, etc
   def step2(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.DeployServiceController.step1(None)
     , retrieval   = servicesRetrieval
-    ).async { implicit request =>
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       (for
          allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
          accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
@@ -191,14 +192,14 @@ class DeployServiceController @Inject()(
            Some((gitHubCompare, jvmChanges, configChanges, configWarnings, vulnerabilities))
          ))
       ).merge
-    }
 
   // Deploy service and redirects (to avoid redeploying on refresh)
   def step3(): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.DeployServiceController.step1(None)
     , retrieval   = Retrieval.username ~ servicesRetrieval
-    ).async { implicit request =>
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Retrieval.Username ~ Set[Resource]] = request
       val username ~ locations = request.retrieval
       (for
          allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
@@ -237,7 +238,6 @@ class DeployServiceController @Inject()(
         , queueUrl    = RedirectUrl(queueUrl)
         ))
       ).merge
-    }
 
   private val redirectUrlPolicy =
     AbsoluteWithHostnameFromAllowlist:
@@ -252,7 +252,8 @@ class DeployServiceController @Inject()(
     queueUrl   : RedirectUrl,
     buildUrl   : Option[RedirectUrl]
   ): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given Request[AnyContent] = request
       (for
          qUrl <- EitherT.fromEither[Future](queueUrl.getEither[RedirectUrlPolicy.Id](redirectUrlPolicy))
                         .leftMap(_ => BadRequest("Invalid queueUrl"))
@@ -276,7 +277,6 @@ class DeployServiceController @Inject()(
                  )
        yield res
       ).merge
-    }
 
   def step4sse(queueUrl: RedirectUrl, buildUrl: Option[RedirectUrl]): Action[AnyContent] =
     import scala.concurrent.duration._

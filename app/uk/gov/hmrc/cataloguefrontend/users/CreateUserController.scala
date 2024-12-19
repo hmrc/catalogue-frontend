@@ -41,71 +41,72 @@ class CreateUserController @Inject()(
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
-  with CatalogueAuthBuilders
-  with play.api.i18n.I18nSupport
-  with Logging:
+     with CatalogueAuthBuilders
+     with play.api.i18n.I18nSupport
+     with Logging:
 
   private def createUserPermission(teamName: TeamName): Predicate =
     Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_USER"))
 
   def requestSent(isServiceAccount: Boolean, givenName: String, familyName: String): Action[AnyContent] =
-    Action { implicit request =>
+    Action: request =>
+      given RequestHeader = request
       Ok(createUserRequestSentPage(isServiceAccount, givenName, familyName))
-    }
 
   def createUserLanding(isServiceAccount: Boolean): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
-    ).async { implicit request =>
+    ).async: request =>
+      given RequestHeader = request
       for
-        teams <- if request.retrieval.contains(Resource.from("catalogue-frontend", "teams/*")) then {
+        teams <-
+                 if request.retrieval.contains(Resource.from("catalogue-frontend", "teams/*")) then
                    userManagementConnector.getAllTeams().map(_.map(_.teamName))
-                 } else Future.successful(cleanseUserTeams(request.retrieval))
+                 else
+                   Future.successful(cleanseUserTeams(request.retrieval))
       yield Ok(createUserPage(CreateUserForm.form, teams, Organisation.values.toSeq, isServiceAccount))
-    }
 
   def createUser(isServiceAccount: Boolean): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateUserController.createUserLanding(isServiceAccount),
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
-    ).async { implicit request =>
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       (for
-         teams <- EitherT.liftF(
+         teams <- EitherT.liftF:
                     if request.retrieval.contains(Resource.from("catalogue-frontend", "teams/*")) then
                       userManagementConnector.getAllTeams().map(_.map(_.teamName))
                     else
                       Future.successful(cleanseUserTeams(request.retrieval))
-                  )
-         form  <- EitherT.fromEither[Future](CreateUserForm.form.bindFromRequest().fold(
-                    formWithErrors => {
-                      Left(
-                        BadRequest(
-                          createUserPage(
-                            form             = formWithErrors,
-                            teamNames        = teams,
-                            organisations    = Organisation.values.toSeq,
-                            isServiceAccount = isServiceAccount
-                          )
-                        )
+         form  <- EitherT.fromEither[Future]:
+                    CreateUserForm.form.bindFromRequest()
+                      .fold(
+                        formWithErrors =>
+                          Left(
+                            BadRequest(
+                              createUserPage(
+                                form             = formWithErrors,
+                                teamNames        = teams,
+                                organisations    = Organisation.values.toSeq,
+                                isServiceAccount = isServiceAccount
+                              )
+                            )
+                          ),
+                        validForm => Right(validForm)
                       )
-                    },
-                    validForm => Right(validForm)
-                  ))
          _     <- EitherT.liftF(auth.authorised(Some(createUserPermission(form.team))))
-         res   <- EitherT.right[Result](userManagementConnector.createUser(
-                    form.copy(isServiceAccount = isServiceAccount)
-                  ))
+         res   <- EitherT.right[Result]:
+                    userManagementConnector.createUser(form.copy(isServiceAccount = isServiceAccount))
          _     =  logger.info(s"user management result: $res:")
-       yield Redirect(uk.gov.hmrc.cataloguefrontend.users.routes.CreateUserController.requestSent(isServiceAccount, form.givenName, form.familyName))
+       yield Redirect(routes.CreateUserController.requestSent(isServiceAccount, form.givenName, form.familyName))
       ).merge
-    }
 
   private def cleanseUserTeams(resources: Set[Resource]): Seq[TeamName] =
-        resources.map(_.resourceLocation.value.stripPrefix("teams/"))
-          .map(TeamName.apply)
-          .toSeq
-          .sorted
+    resources.map(_.resourceLocation.value.stripPrefix("teams/"))
+      .map(TeamName.apply)
+      .toSeq
+      .sorted
 
 end CreateUserController
 
@@ -139,9 +140,9 @@ object CreateUserConstraints:
 
 
   def nameConstraints(fieldName: String): Seq[Constraint[String]] =
-    val nameLengthValidation : String => Boolean = str => str.length >= 2 && str.length <= 30
-    val whiteSpaceValidation : String => Boolean = str => !str.matches(".*\\s.*")
-    val underscoreValidation : String => Boolean = str => !str.contains("_")
+    val nameLengthValidation: String => Boolean = str => str.length >= 2 && str.length <= 30
+    val whiteSpaceValidation: String => Boolean = str => !str.matches(".*\\s.*")
+    val underscoreValidation: String => Boolean = str => !str.contains("_")
 
     Seq(
       mkConstraint(s"constraints.${fieldName}LengthCheck"    )(constraint = nameLengthValidation,  error = "Should be between 2 and 30 characters long")
