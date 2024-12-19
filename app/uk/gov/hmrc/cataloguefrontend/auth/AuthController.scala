@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.auth
 
-import play.api.mvc.{AnyContent, Call, MessagesControllerComponents}
+import play.api.mvc.{AnyContent, Call, MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.routes as appRoutes
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl.*
@@ -44,11 +44,13 @@ class AuthController @Inject() (
   def postSignIn(targetUrl: Option[RedirectUrl]) =
     auth.authenticatedAction(
       continueUrl = routes.AuthController.signIn(sanitize(targetUrl)),
-      retrieval = Retrieval.username ~ Retrieval.locations(
-        resourceType = Some(ResourceType("catalogue-frontend")),
-        action = Some(IAAction("CREATE_USER"))
-      )
-    ) { implicit request: AuthenticatedRequest[AnyContent, Retrieval.Username ~ Set[Resource]] =>
+      retrieval   = Retrieval.username
+                  ~ Retrieval.locations(
+                      resourceType = Some(ResourceType("catalogue-frontend")),
+                      action       = Some(IAAction("CREATE_USER"))
+                    )
+    ): (request: AuthenticatedRequest[AnyContent, Retrieval.Username ~ Set[Resource]]) =>
+      given RequestHeader = request
       val usernameRetrieval ~ createUserResource = request.retrieval
       val canCreateUsers = createUserResource.nonEmpty.toString
         Redirect(
@@ -58,12 +60,10 @@ class AuthController @Inject() (
           AuthController.SESSION_USERNAME -> usernameRetrieval.value,
           AuthController.CAN_CREATE_USERS -> canCreateUsers
         )
-    }
 
   val signOut =
-    Action(
+    Action:
       Redirect(appRoutes.CatalogueController.index).withNewSession
-    )
 
 end AuthController
 
@@ -80,8 +80,8 @@ object AuthController:
     targetUrl.filter(ru => !avoid.exists(a => ru.unsafeValue.startsWith(a.url)))
 
   def continueUrl(targetUrl: Call): Call =
-    routes.AuthController.postSignIn(sanitize(
-      Some(targetUrl.url)
-        .filterNot(_ == "/") // RedirectUrl does not support "/". Without a RedirectUrl target Url will come here anyway.
-        .map(RedirectUrl.apply)
-    ))
+    routes.AuthController.postSignIn:
+      sanitize:
+        Some(targetUrl.url)
+          .filterNot(_ == "/") // RedirectUrl does not support "/". Without a RedirectUrl target Url will come here anyway.
+          .map(RedirectUrl.apply)

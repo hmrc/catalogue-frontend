@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.service.BobbyService
@@ -26,6 +24,7 @@ import uk.gov.hmrc.cataloguefrontend.view.html.BobbyExplorerPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class BobbyExplorerController @Inject() (
@@ -40,10 +39,10 @@ class BobbyExplorerController @Inject() (
      with CatalogueAuthBuilders:
 
   def list(selector: Option[String]): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       for
         rules    <- bobbyService.getRules()
         counts   <- serviceDeps.getBobbyRuleViolations()
         response =  Ok(page(rules, counts))
       yield response
-    }
