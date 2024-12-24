@@ -46,7 +46,7 @@
                                     <a id="link-to-@{testRepo}" href="@catalogueRoutes.CatalogueController.repository(testRepo)">@testRepo</a>
                                 </td>
                                 <td>
-                                    <a id="link-to-job-@{firstJob.name}" href="@{firstJob.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{firstJob.name}<span class="glyphicon glyphicon-new-window"/></a>
+                                    <a id="link-to-job-@{firstJob.jobName}" href="@{firstJob.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{firstJob.jobName}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
                                 <td>
                                     @for(buildData <- firstJob.latestBuild) {
@@ -106,7 +106,7 @@
                         @for(job <- jobs.tail) {
                             <tr>
                                 <td>
-                                    <a id="link-to-job-@{job.name}" href="@{job.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{job.name}<span class="glyphicon glyphicon-new-window"/></a>
+                                    <a id="link-to-job-@{job.jobName}" href="@{job.jenkinsURL}" target="_blank" rel="noreferrer noopener">@{job.jobName}<span class="glyphicon glyphicon-new-window"/></a>
                                 </td>
                                 <td>
                                     @for(buildData <- job.latestBuild) {

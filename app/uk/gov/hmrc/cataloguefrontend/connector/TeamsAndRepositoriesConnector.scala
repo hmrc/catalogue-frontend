@@ -99,7 +99,7 @@ object TestJobResults:
     ( (__ \ "numAccessibilityViolations").readNullable[Int]
     ~ (__ \ "numSecurityAlerts"         ).readNullable[Int]
     )(TestJobResults.apply _)
-    
+
 case class BuildData(
   number        : Int,
   url           : String,
@@ -107,9 +107,7 @@ case class BuildData(
   result        : Option[String],
   description   : Option[String],
   testJobResults: Option[TestJobResults] = None
-):
-  def testJobHelper(result: Option[String]): Int =
-    result.flatMap(_.toIntOption).getOrElse(0)
+)
 
 object BuildData:
   val reads: Reads[BuildData] =
@@ -133,17 +131,30 @@ enum BuildJobType(
   case PullRequest extends BuildJobType("pull-request")
 
 case class JenkinsJob(
-  name       : String,
+  repoName   : String,
+  jobName    : String,
   jenkinsURL : String,
   jobType    : BuildJobType,
+  testType   : Option[TestType],
   latestBuild: Option[BuildData]
 )
 
+given Parser[TestType] = Parser.parser(TestType.values)
+
+enum TestType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads:
+  case Acceptance  extends TestType("Acceptance")
+  case Performance extends TestType("Performance")
+
 object JenkinsJob:
   val reads: Reads[JenkinsJob] =
-    ( (__ \ "jobName"    ).read        [String]
+    ( (__ \ "repoName"   ).read        [String]
+    ~ (__ \ "jobName"    ).read        [String]
     ~ (__ \ "jenkinsURL" ).read        [String]
     ~ (__ \ "jobType"    ).read        [BuildJobType]
+    ~ (__ \ "testType"   ).readNullable[TestType]
     ~ (__ \ "latestBuild").readNullable[BuildData   ](BuildData.reads)
   )(apply)
 
@@ -255,6 +266,17 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   private given Reads[GitHubTeam]    = GitHubTeam.reads
   private given Reads[GitRepository] = GitRepository.reads // v2 model
+
+  def findTestJobs(
+    teamName      : Option[TeamName],
+    digitalService: Option[String]
+  )(using HeaderCarrier): Future[Seq[JenkinsJob]] =
+    given Reads[JenkinsJob] =
+      JenkinsJob.reads
+
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/test-jobs?teamName=${teamName.map(_.asString)}&digitalService=$digitalService")
+      .execute[Seq[JenkinsJob]]
 
   def lookupLatestJenkinsJobs(service: String)(using HeaderCarrier): Future[Seq[JenkinsJob]] =
     given Reads[Seq[JenkinsJob]] =

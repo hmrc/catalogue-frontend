@@ -140,3 +140,5 @@ GET        /users/:username                              uk.gov.hmrc.cataloguefr
 GET        /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserLanding(username: UserName, organisation: Option[String] ?= None)
 POST       /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserAccess(username: UserName, organisation: Option[String] ?= None)
 GET        /users/edit-user/access/2                     uk.gov.hmrc.cataloguefrontend.users.EditUserController.requestSent(username: UserName)
+
+GET        /tests                                        uk.gov.hmrc.cataloguefrontend.test.TestJobController.allTests(teamName: Option[TeamName], digitalService: Option[String])

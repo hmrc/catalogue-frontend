@@ -40,8 +40,8 @@ class PrCommenterController @Inject() (
      with CatalogueAuthBuilders:
 
   case class Filter(
-    team       : Option[String],
-    repo       : Option[TeamName],
+    repo       : Option[String],
+    team       : Option[TeamName],
     commentType: Option[String]
   )
 
