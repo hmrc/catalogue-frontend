@@ -21,7 +21,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesR
 import play.api.data.{Form, Forms}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, SlugInfoFlag, TeamName}
 import uk.gov.hmrc.cataloguefrontend.test.view.html.TestJobListPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -39,14 +39,16 @@ class TestJobController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  // TODO type for DigitalService
-  def allTests(teamName: Option[TeamName], digitalService: Option[String]): Action[AnyContent] =
+  def allTests(teamName: Option[TeamName], digitalService: Option[DigitalService]): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
       for
         teams           <- teamsAndRepositoriesConnector.allTeams()
         digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
-        testJobs        <- teamsAndRepositoriesConnector.findTestJobs(teamName.filter(_.asString.nonEmpty), digitalService.filter(_.nonEmpty))
+        testJobs        <- teamsAndRepositoriesConnector.findTestJobs(
+                             teamName.filter(_.asString.nonEmpty),
+                             digitalService.filter(_.asString.nonEmpty)
+                           )
       yield
         Ok(TestJobListPage(
           form.bindFromRequest(),
@@ -57,14 +59,14 @@ class TestJobController @Inject()(
 
   case class Filter(
     team          : Option[TeamName],
-    digitalService: Option[String]
+    digitalService: Option[DigitalService]
   )
 
   lazy val form: Form[Filter] =
     Form(
       Forms.mapping(
         "teamName"       -> Forms.optional(Forms.of[TeamName]),
-        "digitalService" -> Forms.optional(Forms.text)
+        "digitalService" -> Forms.optional(Forms.of[DigitalService])
       )(Filter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 

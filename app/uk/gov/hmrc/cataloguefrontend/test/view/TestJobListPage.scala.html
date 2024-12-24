@@ -24,7 +24,7 @@
 @(form           : Form[?],
   testJobs       : Seq[JenkinsJob],
   teams          : Seq[GitHubTeam],
-  digitalServices: Seq[String]
+  digitalServices: Seq[DigitalService]
 )(implicit
   messages       : Messages,
   request        : RequestHeader
@@ -54,7 +54,7 @@
           <div class="col-md-3">
           @select(
             field                 =  form("digitalService"),
-            options               =  digitalServices.map(ds => ds -> ds),
+            options               =  digitalServices.map(ds => ds.asString -> ds.asString),
             Symbol("_default")    ->  "All",
             Symbol("_label")      -> "Digital Service",
             Symbol("_labelClass") -> "form-label",
