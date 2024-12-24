@@ -32,11 +32,13 @@ object JsonData {
     """{
       "jobs": [
         {
+           "repoName": "service1",
            "jobName": "service-1-pipeline",
            "jobType": "pipeline",
            "jenkinsURL": "http://jenkins/service-1/"
         },
         {
+           "repoName": "service1",
            "jobName": "service-1",
            "jobType": "job",
            "jenkinsURL": "http://jenkins/service-1/"

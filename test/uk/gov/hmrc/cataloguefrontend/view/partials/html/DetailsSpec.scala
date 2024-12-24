@@ -19,8 +19,9 @@ package uk.gov.hmrc.cataloguefrontend.view.partials.html
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.cost.Zone
 import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceType}
+import uk.gov.hmrc.cataloguefrontend.cost.Zone
+import uk.gov.hmrc.cataloguefrontend.model.DigitalService
 
 import java.time.Instant
 
@@ -43,7 +44,7 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     serviceType    = Option(ServiceType.Backend),
   )
 
-  val repoWithDigitalServiceGrouping = repo.copy(digitalServiceName = Some("Digital Service Name"))
+  val repoWithDigitalServiceGrouping = repo.copy(digitalServiceName = Some(DigitalService("Digital Service Name")))
 
   private val request = FakeRequest()
 

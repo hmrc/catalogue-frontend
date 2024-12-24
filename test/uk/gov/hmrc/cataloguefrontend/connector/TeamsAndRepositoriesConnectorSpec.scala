@@ -25,10 +25,9 @@ import org.scalatest.{BeforeAndAfterEach, EitherValues, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.cataloguefrontend.model.TeamName
 
 class TeamsAndRepositoriesConnectorSpec
   extends AnyWordSpec
@@ -40,7 +39,7 @@ class TeamsAndRepositoriesConnectorSpec
      with WireMockSupport
      with TypeCheckedTripleEquals
      with OptionValues
-     with EitherValues {
+     with EitherValues:
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
@@ -55,21 +54,55 @@ class TeamsAndRepositoriesConnectorSpec
 
   given HeaderCarrier = HeaderCarrier()
 
-  "lookupLatestJenkinsJobs" should {
-    "return a Link if exists" in {
+  "findTestJobs" should:
+    "return test jobs" in:
+      stubFor(
+        get(urlEqualTo("/api/test-jobs?teamName=team"))
+          .willReturn(aResponse().withBody("""
+            [{
+              "repoName"  : "serviceA",
+              "jobName"   : "serviceAJob",
+              "jenkinsURL": "http.jenkins/serviceAJob",
+              "jobType"   : "test",
+              "testType"  : "acceptance"
+            }, {
+              "repoName"  : "serviceB",
+              "jobName"   : "serviceBJob",
+              "jenkinsURL": "http.jenkins/serviceBJob",
+              "jobType"   : "test",
+              "testType"  : "performance"
+            }]
+          """)
+        )
+      )
+
+      val response = teamsAndRepositoriesConnector
+        .findTestJobs(teamName = Some(TeamName("team")), digitalService = None)
+        .futureValue
+
+      response shouldBe Seq(
+        JenkinsJob(repoName = "serviceA", jobName = "serviceAJob" , jenkinsURL = "http.jenkins/serviceAJob", jobType = BuildJobType.Test, testType = Some(TestType.Acceptance ), latestBuild = None),
+        JenkinsJob(repoName = "serviceB", jobName = "serviceBJob" , jenkinsURL = "http.jenkins/serviceBJob", jobType = BuildJobType.Test, testType = Some(TestType.Performance), latestBuild = None)
+      )
+
+  "lookupLatestJenkinsJobs" should:
+    "return a Link if exists" in:
       stubFor(
         get(urlEqualTo("/api/v2/repositories/serviceA/jenkins-jobs"))
           .willReturn(aResponse().withBody("""
             {
               "jobs": [{
+                "repoName"  : "serviceA",
                 "jobName"   : "serviceA",
                 "jenkinsURL": "http.jenkins/serviceA",
                 "jobType"   : "job"
               }, {
+                "repoName"  : "serviceA",
                 "jobName"   : "serviceA-pr-builder",
                 "jenkinsURL": "http.jenkins/serviceA-pr-builder",
                 "jobType"   : "pull-request"
               }, {
+                "repoName"  : "serviceA",
                 "jobName"   : "serviceA-pipeline",
                 "jenkinsURL": "http.jenkins/serviceA-pipeline",
                 "jobType"   : "pipeline"
@@ -80,14 +113,11 @@ class TeamsAndRepositoriesConnectorSpec
       )
 
       val response = teamsAndRepositoriesConnector
-        .lookupLatestJenkinsJobs("serviceA")(using HeaderCarrierConverter.fromRequest(FakeRequest()))
+        .lookupLatestJenkinsJobs("serviceA")
         .futureValue
 
       response shouldBe Seq(
-        JenkinsJob(name = "serviceA",             jenkinsURL = "http.jenkins/serviceA",            jobType = BuildJobType.Job,         latestBuild = None),
-        JenkinsJob(name = "serviceA-pr-builder",  jenkinsURL = "http.jenkins/serviceA-pr-builder", jobType = BuildJobType.PullRequest, latestBuild = None),
-        JenkinsJob(name = "serviceA-pipeline",    jenkinsURL = "http.jenkins/serviceA-pipeline",   jobType = BuildJobType.Pipeline,    latestBuild = None),
+        JenkinsJob(repoName = "serviceA", jobName = "serviceA"           , jenkinsURL = "http.jenkins/serviceA"           , jobType = BuildJobType.Job        , testType = None, latestBuild = None),
+        JenkinsJob(repoName = "serviceA", jobName = "serviceA-pr-builder", jenkinsURL = "http.jenkins/serviceA-pr-builder", jobType = BuildJobType.PullRequest, testType = None, latestBuild = None),
+        JenkinsJob(repoName = "serviceA", jobName = "serviceA-pipeline"  , jenkinsURL = "http.jenkins/serviceA-pipeline"  , jobType = BuildJobType.Pipeline   , testType = None, latestBuild = None)
       )
-    }
-  }
-}
