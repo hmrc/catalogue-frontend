@@ -28,7 +28,6 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.routes as leakRoutes
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes as prcommenterRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.routes as reposRoutes
-import uk.gov.hmrc.cataloguefrontend.search.SearchIndex.{normalizeTerm, optimizeIndex}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.routes as serviceConfigsRoutes
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes as commissioningRoutes
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes as shutterRoutes}
@@ -48,10 +47,10 @@ case class SearchTerm(
   link           : String,
   weight         : Float       = 0.5f,
   hints          : Set[String] = Set.empty,
-  openInNewWindow: Boolean = false
+  openInNewWindow: Boolean     = false
 ):
   lazy val terms: Set[String] =
-    Set(name, linkType).union(hints).map(normalizeTerm)
+    Set(name, linkType).union(hints).map(SearchIndex.normalizeTerm)
 
 @Singleton
 class SearchIndex @Inject()(
@@ -60,6 +59,8 @@ class SearchIndex @Inject()(
   prCommenterConnector         : PrCommenterConnector,
   userManagementConnector      : UserManagementConnector
 )(using ExecutionContext):
+
+  import SearchIndex.*
 
   private[search] val cachedIndex =
     AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
@@ -95,7 +96,7 @@ class SearchIndex @Inject()(
       teams          <- teamsAndRepositoriesConnector.allTeams()
       teamPageLinks  =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
                                                 SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases().url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))
-      repoLinks      =  repos.flatMap(r => List(SearchTerm(r.repoType.asString,    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
+      repoLinks      =  repos.flatMap(r => List(SearchTerm(repoTypeString(r.repoType),    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
                                                 SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                 SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks   =  repos.filter(_.repoType == RepoType.Service)
@@ -121,6 +122,11 @@ object SearchIndex:
 
   def normalizeTerm(term: String): String =
     term.toLowerCase.replaceAll(" -_", "")
+
+  private[search] def repoTypeString(repoType: RepoType): String =
+    repoType match
+      case RepoType.Other => "Repository"
+      case _              => repoType.asString
 
   private[search] def search(
     query: Seq[String],
