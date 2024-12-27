@@ -80,6 +80,7 @@
         <th class="col-lg-4">
           <button role="button" class="fw-bold sort no-border" data-sort="last-run">Last run</button>
         </th>
+        <th class="visually-hidden"></td>
         <th class="col-lg-1">
           <button role="button" class="fw-bold sort no-border" data-sort="result">Result</button>
         </th>
@@ -103,8 +104,11 @@
           <td class="test-type" id="row@{i}_test_type">
             @testJob.testType.fold("")(_.asString)
           </td>
-          <td class="last-run" id="row@{i}_last_run">
+          <td class="font-monospace" id="row@{i}_last_run">
             @testJob.latestBuild.fold("")(_.timestamp.displayFormat)
+          </td>
+          <td class="last-run visually-hidden" id="row@{i}_last_run_epochsecond">
+            @testJob.latestBuild.fold("")(_.timestamp.getEpochSecond)
           </td>
           <td class="result" id="row@{i}_result">
             @defining(testJob.latestBuild.flatMap(_.result).getOrElse("NOT BUILT")){ result =>
@@ -118,10 +122,10 @@
               }
             }
           </td>
-          <td class="accessibility" id="row@{i}_accessibility">
+          <td class="accessibility text-end pe-5" id="row@{i}_accessibility">
             @testJob.latestBuild.flatMap(_.testJobResults).fold("")(_.numAccessibilityViolations)
           </td>
-          <td class="security" id="row@{i}_security">
+          <td class="security text-end pe-5" id="row@{i}_security">
             @testJob.latestBuild.flatMap(_.testJobResults).fold("")(_.numSecurityAlerts)
           </td>
         </tr>
