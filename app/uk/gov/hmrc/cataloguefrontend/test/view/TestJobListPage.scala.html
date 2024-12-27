@@ -1,0 +1,149 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, JenkinsJob}
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
+@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+@import views.html.helper.{FieldConstructor, select}
+
+
+@(form           : Form[?],
+  testJobs       : Seq[JenkinsJob],
+  teams          : Seq[GitHubTeam],
+  digitalServices: Seq[DigitalService]
+)(implicit
+  messages       : Messages,
+  request        : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Test results", active = "explore") {
+  <h1 class="page-heading mt-4">Test Results</h1>
+
+  <div id="test-job-list">
+    <div class="row">
+      <form id="form" method="get">
+        <div class="row">
+          <div class="col-md-3">
+            @select(
+              field                 =  form("teamName"),
+              options               =  teams.map(t => t.name.asString -> t.name.asString),
+              Symbol("_default")    ->  "All",
+              Symbol("_label")      -> "Team",
+              Symbol("_labelClass") -> "form-label",
+              Symbol("id")          -> "teamName-dropdown",
+              Symbol("class")       -> "form-select"
+            )
+          </div>
+          <div class="col-md-3">
+          @select(
+            field                 =  form("digitalService"),
+            options               =  digitalServices.map(ds => ds.asString -> ds.asString),
+            Symbol("_default")    ->  "All",
+            Symbol("_label")      -> "Digital Service",
+            Symbol("_labelClass") -> "form-label",
+            Symbol("id")          -> "digitalService-dropdown",
+            Symbol("class")       -> "form-select"
+          )
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <table class="table table-striped sticky-header" id="service-list">
+    <thead>
+      <tr>
+        <th class="col-lg-4">
+          <button role="button" class="fw-bold sort no-border" data-sort="repo-name">Test Repository</button>
+        </th>
+        <th class="col-lg-4">
+          <button role="button" class="fw-bold sort no-border" data-sort="job-name">Test Job</button>
+        </th>
+        <th class="col-lg-1">
+          <button role="button" class="fw-bold sort no-border" data-sort="test-type">Test Type</button>
+        </th>
+        <th class="col-lg-4">
+          <button role="button" class="fw-bold sort no-border" data-sort="last-run">Last run</button>
+        </th>
+        <th class="col-lg-1">
+          <button role="button" class="fw-bold sort no-border" data-sort="result">Result</button>
+        </th>
+        <th class="col-lg-1">
+          <button role="button" class="fw-bold sort no-border" data-sort="accessibility">Accessibility Violations</button>
+        </th>
+        <th class="col-lg-1">
+            <button role="button" class="fw-bold sort no-border" data-sort="security">Security Alerts</button>
+          </th>
+      </tr>
+    </thead>
+    <tbody class="list">
+      @testJobs.zipWithIndex.map { case (testJob, i) =>
+        <tr class="" id="row@i">
+          <td class="repo-name" id="row@{i}_repo_name">
+            <a href="@appRoutes.CatalogueController.repository(testJob.repoName)">@testJob.repoName</a>
+          </td>
+          <td class="job-name" id="row@{i}_job_name">
+            <a href="@testJob.jenkinsURL" target="_blank" rel="noreferrer noopener">@testJob.jobName<span class="glyphicon glyphicon-new-window"/></a>
+          </td>
+          <td class="test-type" id="row@{i}_test_type">
+            @testJob.testType.fold("")(_.asString)
+          </td>
+          <td class="last-run" id="row@{i}_last_run">
+            @testJob.latestBuild.fold("")(_.timestamp.displayFormat)
+          </td>
+          <td class="result" id="row@{i}_result">
+            @defining(testJob.latestBuild.flatMap(_.result).getOrElse("NOT BUILT")){ result =>
+              @defining(result match {
+                case "SUCCESS"  => "text-bg-success"
+                case "FAILURE"  => "text-bg-danger"
+                case "UNSTABLE" => "text-bg-warning"
+                case _          => "text-bg-secondary"
+              }) { badgeColour =>
+                <span class="badge fs-6 @badgeColour">@result</span>
+              }
+            }
+          </td>
+          <td class="accessibility" id="row@{i}_accessibility">
+            @testJob.latestBuild.flatMap(_.testJobResults).fold("")(_.numAccessibilityViolations)
+          </td>
+          <td class="security" id="row@{i}_security">
+            @testJob.latestBuild.flatMap(_.testJobResults).fold("")(_.numSecurityAlerts)
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+<!-- listjs configuration -->
+<script @CSPNonce.attr>
+  let options = {
+      valueNames: [ 'repo-name', 'job-name', 'test-type', 'last-run', 'result', 'accessibility', 'security' ]
+  };
+
+  let serviceList = new List('test-job-list', options);
+</script>
+
+<script @CSPNonce.attr>
+  ["teamName-dropdown", "digitalService-dropdown"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+</script>

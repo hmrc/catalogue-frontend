@@ -26,9 +26,6 @@ class ViewMessages @Inject()(configuration: Configuration):
       improving. In case of the latter, let us know in
       <a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"/></a>"""
 
-  def noRepoOfTypeForDigitalService(item: String) =
-    s"""This digital service doesn't have any $item repositories assigned to it. The <a href=\" / \">home</a> page provides the necessary instructions to make it appear. Reach out in #team-platops on Slack for inquiries."""
-
   val informationalText: String =
     configuration.get[String](s"info-panel-text")
 

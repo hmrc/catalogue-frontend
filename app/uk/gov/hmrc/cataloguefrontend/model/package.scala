@@ -65,6 +65,10 @@ package object model:
 
   object ServiceName extends StringAnyValUtils(ServiceName.apply, _.asString)
 
+  case class DigitalService(asString: String) extends AnyVal
+
+  object DigitalService extends StringAnyValUtils(DigitalService.apply, _.asString)
+
   case class Version(
     major   : Int,
     minor   : Int,

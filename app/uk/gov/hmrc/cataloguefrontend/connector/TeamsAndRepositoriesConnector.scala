@@ -23,7 +23,7 @@ import play.api.libs.ws.writeableOf_JsValue
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.cataloguefrontend.config.Constant
 import uk.gov.hmrc.cataloguefrontend.cost.Zone
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser, FormFormat}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -99,7 +99,7 @@ object TestJobResults:
     ( (__ \ "numAccessibilityViolations").readNullable[Int]
     ~ (__ \ "numSecurityAlerts"         ).readNullable[Int]
     )(TestJobResults.apply _)
-    
+
 case class BuildData(
   number        : Int,
   url           : String,
@@ -107,9 +107,7 @@ case class BuildData(
   result        : Option[String],
   description   : Option[String],
   testJobResults: Option[TestJobResults] = None
-):
-  def testJobHelper(result: Option[String]): Int =
-    result.flatMap(_.toIntOption).getOrElse(0)
+)
 
 object BuildData:
   val reads: Reads[BuildData] =
@@ -133,17 +131,30 @@ enum BuildJobType(
   case PullRequest extends BuildJobType("pull-request")
 
 case class JenkinsJob(
-  name       : String,
+  repoName   : String,
+  jobName    : String,
   jenkinsURL : String,
   jobType    : BuildJobType,
+  testType   : Option[TestType],
   latestBuild: Option[BuildData]
 )
 
+given Parser[TestType] = Parser.parser(TestType.values)
+
+enum TestType(
+  override val asString: String
+) extends FromString
+  derives Ordering, Reads:
+  case Acceptance  extends TestType("Acceptance")
+  case Performance extends TestType("Performance")
+
 object JenkinsJob:
   val reads: Reads[JenkinsJob] =
-    ( (__ \ "jobName"    ).read        [String]
+    ( (__ \ "repoName"   ).read        [String]
+    ~ (__ \ "jobName"    ).read        [String]
     ~ (__ \ "jenkinsURL" ).read        [String]
     ~ (__ \ "jobType"    ).read        [BuildJobType]
+    ~ (__ \ "testType"   ).readNullable[TestType]
     ~ (__ \ "latestBuild").readNullable[BuildData   ](BuildData.reads)
   )(apply)
 
@@ -158,7 +169,7 @@ case class GitRepository(
   repoType            : RepoType                 = RepoType.Other,
   serviceType         : Option[ServiceType]      = None,
   tags                : Option[Set[Tag]]         = None,
-  digitalServiceName  : Option[String]           = None,
+  digitalServiceName  : Option[DigitalService]   = None,
   owningTeams         : Seq[TeamName]            = Seq.empty,
   language            : Option[String],
   isArchived          : Boolean,
@@ -196,7 +207,7 @@ object GitRepository:
     ~ (__ \ "repoType"            ).read[RepoType]
     ~ (__ \ "serviceType"         ).readNullable[ServiceType]
     ~ (__ \ "tags"                ).readNullable[Set[Tag]]
-    ~ (__ \ "digitalServiceName"  ).readNullable[String]
+    ~ (__ \ "digitalServiceName"  ).readNullable[DigitalService]
     ~ (__ \ "owningTeams"         ).readWithDefault[Seq[TeamName]](Seq.empty)
     ~ (__ \ "language"            ).readNullable[String]
     ~ (__ \ "isArchived"          ).readWithDefault[Boolean](false)
@@ -256,6 +267,17 @@ class TeamsAndRepositoriesConnector @Inject()(
   private given Reads[GitHubTeam]    = GitHubTeam.reads
   private given Reads[GitRepository] = GitRepository.reads // v2 model
 
+  def findTestJobs(
+    teamName      : Option[TeamName],
+    digitalService: Option[DigitalService]
+  )(using HeaderCarrier): Future[Seq[JenkinsJob]] =
+    given Reads[JenkinsJob] =
+      JenkinsJob.reads
+
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/test-jobs?teamName=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}")
+      .execute[Seq[JenkinsJob]]
+
   def lookupLatestJenkinsJobs(service: String)(using HeaderCarrier): Future[Seq[JenkinsJob]] =
     given Reads[Seq[JenkinsJob]] =
       Reads.at(__ \ "jobs")(Reads.seq(JenkinsJob.reads))
@@ -297,10 +319,10 @@ class TeamsAndRepositoriesConnector @Inject()(
       .get(url"$teamsAndServicesBaseUrl/api/v2/teams")
       .execute[Seq[GitHubTeam]]
 
-  def allDigitalServices()(using HeaderCarrier): Future[Seq[String]] =
+  def allDigitalServices()(using HeaderCarrier): Future[Seq[DigitalService]] =
     httpClientV2
       .get(url"$teamsAndServicesBaseUrl/api/v2/digital-services")
-      .execute[Seq[String]]
+      .execute[Seq[DigitalService]]
 
   def repositoriesForTeam(
     teamName       : TeamName,
@@ -317,15 +339,15 @@ class TeamsAndRepositoriesConnector @Inject()(
           Nil
 
   def allRepositories(
-     name              : Option[String]      = None,
-     team              : Option[TeamName]    = None,
-     digitalServiceName: Option[String]      = None,
-     archived          : Option[Boolean]     = None,
-     repoType          : Option[RepoType]    = None,
-     serviceType       : Option[ServiceType] = None
+     name              : Option[String]         = None,
+     team              : Option[TeamName]       = None,
+     digitalServiceName: Option[DigitalService] = None,
+     archived          : Option[Boolean]        = None,
+     repoType          : Option[RepoType]       = None,
+     serviceType       : Option[ServiceType]    = None
    )(using HeaderCarrier): Future[Seq[GitRepository]] =
     httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&digitalServiceName=$digitalServiceName&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
+      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&digitalServiceName=${digitalServiceName.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[Seq[GitRepository]]
       .map(_.sortBy(_.name))
 

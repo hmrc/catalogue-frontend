@@ -20,7 +20,7 @@ import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceType, TeamsAndRepositoriesConnector, given}
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.cataloguefrontend.repository.{routes => repositoryRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.view.html.RepositoriesListPage
 import uk.gov.hmrc.cataloguefrontend.util.Parser
@@ -44,7 +44,7 @@ class RepositoriesController @Inject() (
   def allRepositories(
     name              : Option[String],
     team              : Option[TeamName],
-    digitalServiceName: Option[String],
+    digitalServiceName: Option[DigitalService],
     showArchived      : Option[Boolean],
     repoTypeString    : Option[String]
   ): Action[AnyContent] =
@@ -67,7 +67,7 @@ class RepositoriesController @Inject() (
           .allRepositories(
             name               = None, // Use listjs filtering
             team               = team.filterNot(_.asString.isEmpty),
-            digitalServiceName = digitalServiceName.filterNot(_.isEmpty),
+            digitalServiceName = digitalServiceName.filterNot(_.asString.isEmpty),
             archived           = if showArchived.contains(true) then None else Some(false),
             repoType           = repoType,
             serviceType        = serviceType
@@ -98,11 +98,11 @@ class RepositoriesController @Inject() (
       Redirect(repositoryRoutes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
 
 case class RepoListFilter(
-  name               : Option[String]   = None,
-  team               : Option[TeamName] = None,
-  digitalServiceName : Option[String]   = None,
-  repoType           : Option[String]   = None,
-  showArchived       : Option[Boolean]  = None
+  name               : Option[String]         = None,
+  team               : Option[TeamName]       = None,
+  digitalServiceName : Option[DigitalService] = None,
+  repoType           : Option[String]         = None,
+  showArchived       : Option[Boolean]        = None
 ):
   def isEmpty: Boolean =
     name.isEmpty && team.isEmpty && digitalServiceName.isEmpty && repoType.isEmpty
@@ -113,7 +113,7 @@ object RepoListFilter {
       Forms.mapping(
         "name"           -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
         "team"           -> Forms.optional(Forms.of[TeamName]),
-        "digitalService" -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
+        "digitalService" -> Forms.optional(Forms.of[DigitalService]).transform(_.filter(_.asString.trim.nonEmpty), identity),
         "repoType"       -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
         "showArchived"   -> Forms.optional(Forms.boolean)
       )(RepoListFilter.apply)(f => Some(Tuple.fromProductTyped(f)))

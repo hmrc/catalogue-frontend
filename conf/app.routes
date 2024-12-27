@@ -4,7 +4,7 @@ GET        /teams                                       uk.gov.hmrc.cataloguefro
 GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.teams.TeamsController.team(teamName: TeamName)
 GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.teams.TeamsController.outOfDateTeamDependencies(teamName: TeamName)
 
-GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[TeamName] ?= None, digitalService: Option[String] ?= None, showArchived: Option[Boolean] ?= None, repoType: Option[String] ?= None)
+GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, showArchived: Option[Boolean] ?= None, repoType: Option[String] ?= None)
 
 GET        /services                                    uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allServices
 GET        /libraries                                   uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allLibraries
@@ -140,3 +140,5 @@ GET        /users/:username                              uk.gov.hmrc.cataloguefr
 GET        /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserLanding(username: UserName, organisation: Option[String] ?= None)
 POST       /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserAccess(username: UserName, organisation: Option[String] ?= None)
 GET        /users/edit-user/access/2                     uk.gov.hmrc.cataloguefrontend.users.EditUserController.requestSent(username: UserName)
+
+GET        /tests                                        uk.gov.hmrc.cataloguefrontend.test.TestJobController.allTests(teamName: Option[TeamName], digitalService: Option[DigitalService])

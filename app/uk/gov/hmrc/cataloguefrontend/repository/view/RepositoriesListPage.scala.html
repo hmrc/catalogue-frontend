@@ -22,13 +22,13 @@
   repoSearchResultsPage: partials.RepoSearchResultsPage
 )
 
-@(repositories: Seq[GitRepository],
-  teams       : Seq[GitHubTeam],
-  serviceNames: Seq[String],
-  form        : Form[?]
+@(repositories       : Seq[GitRepository],
+  teams              : Seq[GitHubTeam],
+  digitalServiceNames: Seq[DigitalService],
+  form               : Form[?]
 )(implicit
-  messages    : Messages,
-  request     : RequestHeader
+  messages           : Messages,
+  request            : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
@@ -68,7 +68,7 @@
     }
 
     <div id="service-list">
-        <form id="repos-form" action="/repositories" method="get">
+        <form id="repos-form" method="get">
             <div id="repos-form-row" class="row">
                 <div class="col-md-4">
                     <dl id="search_field">
@@ -94,7 +94,7 @@
                 <div class="col-md-2">
                 @select(
                     field                 = form("digitalService"),
-                    options               = serviceNames.map(dsn => dsn -> dsn),
+                    options               = digitalServiceNames.map(dsn => dsn.asString -> dsn.asString),
                     Symbol("_default")    -> "All",
                     Symbol("_label")      -> dsnTooltip,
                     Symbol("_labelClass") -> "form-label",
@@ -134,14 +134,14 @@
         <table class="table table-striped sticky-header">
             <thead id="repo-table-headings">
                 <tr>
-                    <th class="col-lg-3"><button role="button" id="name" data-sort="repo-name" class="fw-bold sort no-border">Name</button></th>
-                    <th class="col-lg-1"><button role="button" id="status" data-sort="repo-status" class="fw-bold sort no-border">Status</button></th>
-                    <th class="col-lg-2"><button role="button" id="repoType" data-sort="repo-type" class="fw-bold sort no-border">Type</button></th>
-                    <th class="col-lg-2"><button role="button" id="teamNames" data-sort="repo-team" class="fw-bold sort no-border">Team</button></th>
-                    <th class="col-lg-1"><button role="button" id="serviceName" data-sort="repo-service" class="fw-bold sort no-border">Digital Service</button></th>
-                    <th class="col-lg-1"><button role="button" id="branchProtection" data-sort="repo-bp" class="fw-bold sort no-border">Branch Protection</button></th>
-                    <th class="col-lg-1"><button role="button" id="createdDate" data-sort="created" class="fw-bold sort no-border">First Active</button></th>
-                    <th class="col-lg-1"><button role="button" id="lastActiveDate" data-sort="last-active" class="fw-bold sort no-border">Last Active</button></th>
+                    <th class="col-lg-3"><button role="button" id="name"             data-sort="repo-name"    class="fw-bold sort no-border">Name</button></th>
+                    <th class="col-lg-1"><button role="button" id="status"           data-sort="repo-status"  class="fw-bold sort no-border">Status</button></th>
+                    <th class="col-lg-2"><button role="button" id="repoType"         data-sort="repo-type"    class="fw-bold sort no-border">Type</button></th>
+                    <th class="col-lg-2"><button role="button" id="teamNames"        data-sort="repo-team"    class="fw-bold sort no-border">Team</button></th>
+                    <th class="col-lg-1"><button role="button" id="serviceName"      data-sort="repo-service" class="fw-bold sort no-border">Digital Service</button></th>
+                    <th class="col-lg-1"><button role="button" id="branchProtection" data-sort="repo-bp"      class="fw-bold sort no-border">Branch Protection</button></th>
+                    <th class="col-lg-1"><button role="button" id="createdDate"      data-sort="created"      class="fw-bold sort no-border">First Active</button></th>
+                    <th class="col-lg-1"><button role="button" id="lastActiveDate"   data-sort="last-active"  class="fw-bold sort no-border">Last Active</button></th>
                 </tr>
             </thead>
             @repoSearchResultsPage(repositories)
