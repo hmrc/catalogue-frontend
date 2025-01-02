@@ -165,7 +165,7 @@ class CreateAppConfigsController @Inject()(
           requiresMongo <- optSlugInfo match
                              case Some(slugInfo) => EitherT.rightT[Future, Result](slugInfo.dependencyDotCompile.exists(_.contains("mongo")))
                              case None           => EitherT.liftF[Future, Result, Boolean]:
-                                                      gitHubProxyConnector.getGitHubProxyRaw(s"/$serviceName/main/project/AppDependencies.scala")
+                                                      gitHubProxyConnector.getGitHubProxyRaw(s"/${serviceName.asString}/main/project/AppDependencies.scala")
                                                         .map(_.exists(_.contains("mongo")))
           id            <- EitherT(buildDeployApiConnector.createAppConfigs(form, serviceName, serviceType, requiresMongo, isApi))
                              .leftMap: errMsg =>
