@@ -20,7 +20,7 @@ import cats.implicits._
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
@@ -54,7 +54,8 @@ class ShutterOverviewController @Inject() (
     )
 
   def allStatesForEnv(shutterType: ShutterType, env: Environment): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       for
         envAndCurrentStates <- Environment.values.toSeq.traverse: env =>
                                  shutterService
@@ -64,17 +65,17 @@ class ShutterOverviewController @Inject() (
                                        logger.error(s"Could not retrieve currentState: ${ex.getMessage}", ex)
                                        Seq.empty
                                    .map(ws => (env, ws))
-        hasGlobalPerm  <-  auth
-                            .verify:
-                              Retrieval.hasPredicate(Predicate.Permission(Resource.from("shutter-api", "mdtp"), IAAction("SHUTTER")))
-                            .map(_.exists(_ == true))
-        killSwitchLink =  if hasGlobalPerm && shutterType != Rate then Some(catalogueConfig.killSwitchLink(shutterType.asString)) else None
-        page           =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
+        hasGlobalPerm       <- auth
+                                 .verify:
+                                   Retrieval.hasPredicate(Predicate.Permission(Resource.from("shutter-api", "mdtp"), IAAction("SHUTTER")))
+                                 .map(_.exists(_ == true))
+        killSwitchLink      =  if hasGlobalPerm && shutterType != Rate then Some(catalogueConfig.killSwitchLink(shutterType.asString)) else None
+        page                =  shutterOverviewPage(envAndCurrentStates.toMap, shutterType, env, killSwitchLink)
       yield Ok(page)
-    }
 
   def frontendRouteWarnings(env: Environment, serviceName: ServiceName): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       for
         envsAndWarnings <- Environment.values.toSeq.traverse: env =>
                              shutterService
@@ -86,6 +87,5 @@ class ShutterOverviewController @Inject() (
                                .map(ws => (env, ws))
         page            = frontendRouteWarningPage(envsAndWarnings.toMap, env, serviceName)
       yield Ok(page)
-    }
 
 end ShutterOverviewController
