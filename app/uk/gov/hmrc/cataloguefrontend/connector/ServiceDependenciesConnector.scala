@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, SlugVersionInfo}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -125,6 +125,17 @@ class ServiceDependenciesConnector @Inject() (
       .get(url"$servicesDependenciesBaseUrl/api/bobbyViolations")
       .execute[BobbyRulesSummary]
       .map(_.summary)
+
+  def bobbyReports(
+    teamName      : Option[TeamName]
+  , digitalService: Option[DigitalService]
+  , repoType      : Option[RepoType]
+  , flag          : SlugInfoFlag
+  )(using HeaderCarrier): Future[Seq[BobbyReport]] =
+    given Reads[BobbyReport] = BobbyReport.reads
+    httpClientV2
+      .get(url"$servicesDependenciesBaseUrl/api/bobbyReports?team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&repoType=${repoType.map(_.asString)}&flag=${flag.asString}")
+      .execute[Seq[BobbyReport]]
 
   def getHistoricBobbyRuleViolations(query: List[String], from: LocalDate, to: LocalDate)(using HeaderCarrier): Future[HistoricBobbyRulesSummary] =
     given Reads[HistoricBobbyRulesSummary] = HistoricBobbyRulesSummary.reads

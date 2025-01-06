@@ -67,8 +67,6 @@ GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefro
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.dependency.DependencyExplorerController.landing
 GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.dependency.DependencyExplorerController.search(group: String ?= "", artefact: String ?= "", versionRange: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None, `scope[]`: Option[Seq[String]] ?= None, `repoType[]`: Option[Seq[String]] ?= None, asCsv: Boolean ?= false)
 
-GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
-
 GET        /jdkexplorer/environment                     uk.gov.hmrc.cataloguefrontend.JdkVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None)
 GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JdkVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None)
 
@@ -83,7 +81,9 @@ GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefro
 
 GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.cost.CostController.costExplorer(team: Option[TeamName] ?= None, asCSV: Boolean ?= false)
 
-GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.BobbyExplorerController.list(selector: Option[String] ?= None)
+GET        /bobby-reports                               uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.bobbyReports(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, flag: Option[String] ?= None)
+GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.list(selector: Option[String] ?= None)
+GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.bobby.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
 GET        /pr-commenter/recommendations                uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterController.recommendations(name: Option[String] ?= None, teamName: Option[TeamName] ?= None, commentType: Option[String] ?= None)
 

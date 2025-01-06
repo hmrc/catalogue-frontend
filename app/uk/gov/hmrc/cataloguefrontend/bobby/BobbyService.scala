@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.service
+package uk.gov.hmrc.cataloguefrontend.bobby
 
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRule, BobbyRuleSet}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
@@ -33,8 +33,6 @@ class BobbyService @Inject() (
 )(using ExecutionContext):
 
   def getRules()(using HeaderCarrier): Future[BobbyRulesView] =
-    val today = LocalDate.now(clock)
-
     def ordering(dateAscending: Boolean) =
       Ordering.by: (br: BobbyRule) =>
         ( br.from.atStartOfDayInstant.toEpochMilli.pipe(x => if dateAscending then x else -x)
@@ -42,6 +40,7 @@ class BobbyService @Inject() (
         , br.artefact
         )
 
+    val today = LocalDate.now(clock)
     serviceConfigsConnector
       .bobbyRules()
       .map: ruleset =>
@@ -55,7 +54,6 @@ class BobbyService @Inject() (
                        BobbyRuleSet(activeLibraries.sorted, activePlugins.sorted)
                      }
         )
-
   end getRules
 
 end BobbyService

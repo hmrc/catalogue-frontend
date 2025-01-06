@@ -20,6 +20,7 @@ package uk.gov.hmrc.cataloguefrontend.search
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.routes as catalogueRoutes
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.bobby.routes as bobbyRoutes
 import uk.gov.hmrc.cataloguefrontend.createrepository.routes as createRepoRoutes
 import uk.gov.hmrc.cataloguefrontend.dependency.routes as dependencyRoutes
 import uk.gov.hmrc.cataloguefrontend.deployments.routes as deployRoutes
@@ -67,7 +68,7 @@ class SearchIndex @Inject()(
 
   private val hardcodedLinks = List(
     SearchTerm("explorer", "dependency",                   dependencyRoutes.DependencyExplorerController.landing.url,                             1.0f, Set("depex")),
-    SearchTerm("explorer", "bobby",                        catalogueRoutes.BobbyExplorerController.list().url,                                    1.0f),
+    SearchTerm("explorer", "bobby",                        bobbyRoutes.BobbyExplorerController.list().url,                                        1.0f),
     SearchTerm("explorer", "jdk",                          catalogueRoutes.JdkVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
     SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f, Set("lds")),
     SearchTerm("page",     "whats running where (wrw)",    wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
