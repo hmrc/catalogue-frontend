@@ -49,7 +49,7 @@
     </td>
 
     <td id="row@{i}_digital-service">
-        @repo.digitalServiceName.map{dsn => <div class="repo-service">@dsn</div>}
+        @repo.digitalServiceName.map{dsn => <div class="repo-service">@dsn.asString</div>}
     </td>
 
     <td class="repo-bp font-monospace text-center" id="row@{i}_branch-protection">
