@@ -27,9 +27,11 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.service.ServiceDependencies
 import uk.gov.hmrc.http.HeaderCarrier
+
+import java.time.{Instant, LocalDate}
 
 class ServiceDependenciesConnectorSpec
   extends AnyWordSpec
@@ -55,8 +57,8 @@ class ServiceDependenciesConnectorSpec
 
   given HeaderCarrier = HeaderCarrier()
 
-  "getJdkVersions" should {
-    "returns JDK versions with vendor" in {
+  "getJdkVersions" should:
+    "returns JDK versions with vendor" in:
       stubFor(
         get(urlEqualTo(s"/api/jdkVersions?flag=${SlugInfoFlag.ForEnvironment(Environment.Production).asString}"))
           .willReturn(
@@ -81,11 +83,9 @@ class ServiceDependenciesConnectorSpec
       response(1).version     shouldBe Version("1.8.0_191")
       response(1).vendor      shouldBe Vendor.OpenJDK
       response(1).kind        shouldBe Kind.JRE
-    }
-  }
 
-  "JSON Reader" should {
-    "read json with java section" in {
+  "JSON Reader" should:
+    "read json with java section" in:
       given Reads[ServiceDependencies] = ServiceDependencies.reads
 
       val json = """{
@@ -132,6 +132,59 @@ class ServiceDependenciesConnectorSpec
       res.java.version         shouldBe "1.8.0_191"
       res.java.vendor.asString shouldBe "OpenJDK"
       res.java.kind.asString   shouldBe "JDK"
-    }
-  }
+
+  "bobbyReports" should:
+    "return bobby reports for a given search" in:
+      stubFor:
+        get(urlEqualTo("/api/bobbyReports?team=some-team&digitalService=some-digital-service&repoType=Service&flag=latest"))
+          .willReturn(aResponse().withBody("""
+            [{
+              "repoName"   : "some-repo",
+              "repoVersion": "1.165.0",
+              "repoType"   : "Service",
+              "violations" : [{
+                "depGroup"   : "uk.gov.hmrc",
+                "depArtefact": "some-library",
+                "depVersion" : "4.0.0",
+                "depScopes"  : ["compile","test"],
+                "range"      : "[0.0.0,)",
+                "reason"     : "Deprecated Library",
+                "from"       : "2025-09-30",
+                "exempt"     : false
+              }],
+              "lastUpdated" : "2025-01-03T17:37:47.338Z",
+              "latest"      : true,
+              "production"  : true,
+              "qa"          : true,
+              "staging"     : true,
+              "development" : true,
+              "externaltest": false,
+              "integration" : false
+            }]
+          """))
+
+      serviceDependenciesConnector
+        .bobbyReports(
+          teamName = Some(TeamName("some-team"))
+        , digitalService = Some(DigitalService("some-digital-service"))
+        , repoType = Some(RepoType.Service)
+        , flag = SlugInfoFlag.Latest)
+        .futureValue shouldBe Seq(
+        BobbyReport(
+          repoName    = "some-repo"
+        , repoVersion = Version("1.165.0")
+        , repoType    = RepoType.Service
+        , violations  = Seq(BobbyReport.Violation(
+                          depGroup    = "uk.gov.hmrc"
+                        , depArtefact = "some-library"
+                        , depVersion  = Version("4.0.0")
+                        , depScopes   = Set(DependencyScope.Compile, DependencyScope.Test)
+                        , range       = VersionRange("[0.0.0,)")
+                        , reason      = "Deprecated Library"
+                        , from        = LocalDate.parse("2025-09-30")
+                        , exempt      = false
+                        ))
+        , lastUpdated = Instant.parse("2025-01-03T17:37:47.338Z")
+        )
+      )
 }

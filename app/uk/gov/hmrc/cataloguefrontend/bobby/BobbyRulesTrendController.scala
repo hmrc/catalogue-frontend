@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend
+package uk.gov.hmrc.cataloguefrontend.bobby
 
 import cats.data.EitherT
 import cats.instances.future._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
+import uk.gov.hmrc.cataloguefrontend.bobby.view.html.BobbyRulesTrendPage
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
-import uk.gov.hmrc.cataloguefrontend.view.html.BobbyRulesTrendPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -134,7 +134,7 @@ class BobbyRulesTrendController @Inject() (
 
 object BobbyRulesTrendController:
   def display(group: String, artefact: String, versionRange: VersionRange): String =
-    uk.gov.hmrc.cataloguefrontend.routes.BobbyRulesTrendController.display(
+    uk.gov.hmrc.cataloguefrontend.bobby.routes.BobbyRulesTrendController.display(
       `rules[]` = Seq(s"$group:$artefact:${versionRange.range}")
     ).toString
 

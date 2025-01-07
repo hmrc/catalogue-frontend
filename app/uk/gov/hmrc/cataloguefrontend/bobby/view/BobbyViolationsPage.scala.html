@@ -1,0 +1,211 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.bobby.BobbyReportFilter
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyReport
+@import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
+@import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+@import views.html.helper.{FieldConstructor, select}
+
+@this(
+  teamNamesPartial: partials.TeamNamesPartial
+)
+
+@(form           : Form[BobbyReportFilter]
+, teams          : Seq[GitHubTeam]
+, digitalServices: Seq[DigitalService]
+, results        : Option[Seq[BobbyReport]]
+, now            : java.time.LocalDate = java.time.LocalDate.now()
+)(implicit
+  messages       : Messages
+, request        : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Bobby violations", active = "health") {
+  <h1 id="search-service-header" class="page-heading mt-4">Bobby Violations</h1>
+
+  <div id="bobbby-violations-list">
+    <form id="form" method="get">
+      <div class="row">
+        <div class="col-md-2">
+          <dl id="search_field">
+            <dt><label for="search" class="form-label">Repository Name</label></dt>
+            <dd><input class="search form-control" id="search" type="search" name="repoName" value='@form("repoName").value' autofocus></dd>
+          </dl>
+        </div>
+        <div class="col-md-2">
+          @select(
+            field                 =  form("repoType")
+          , options               =  RepoType.values.filterNot(_ == RepoType.Prototype).map(ds => ds.asString -> ds.asString)
+          , Symbol("_default")    -> "All"
+          , Symbol("_label")      -> "Repository Type"
+          , Symbol("_labelClass") -> "form-label"
+          , Symbol("id")          -> "select-repo-type"
+          , Symbol("class")       -> "form-select"
+          )
+        </div>
+        <div class="col-md-2">
+          @select(
+            field                 =  form("team")
+          , options               =  teams.map(t => t.name.asString -> t.name.asString)
+          , Symbol("_default")    -> "All"
+          , Symbol("_label")      -> "Team"
+          , Symbol("_labelClass") -> "form-label"
+          , Symbol("id")          -> "select-team"
+          , Symbol("class")       -> "form-select"
+          )
+        </div>
+        <div class="col-md-2">
+          @select(
+            field                 =  form("digitalService")
+          , options               =  digitalServices.map(ds => ds.asString -> ds.asString)
+          , Symbol("_default")    -> "All"
+          , Symbol("_label")      -> "Digital Service"
+          , Symbol("_labelClass") -> "form-label"
+          , Symbol("id")          -> "select-digital-service"
+          , Symbol("class")       -> "form-select"
+          )
+        </div>
+        <div class="col-md-2">
+          @select(
+            field                 =  form("flag")
+          , options               =  SlugInfoFlag.values.toSeq.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString)
+          , Symbol("_label")      -> "Environment"
+          , Symbol("_labelClass") -> "form-label"
+          , Symbol("id")          -> "select-environment"
+          , Symbol("class")       -> "form-select"
+          )
+        </div>
+        <div class="col-md-2">
+          @select(
+            field                 =  form("isActive")
+          , options               =  Seq("true" -> "Active", "false" -> "Upcoming")
+          , Symbol("_default")    ->  "All"
+          , Symbol("_label")      -> "Status"
+          , Symbol("_labelClass") -> "form-label"
+          , Symbol("id")          -> "select-bobby-status"
+          , Symbol("class")       -> "form-select"
+          )
+        </div>
+      </div>
+    </form>
+
+    @defining(
+      results
+        .getOrElse(Seq.empty[BobbyReport])
+        .flatMap: x =>
+          x.violations.collect:
+            case v
+              if !v.exempt
+              && ( form.get.isActive.fold(true):
+                    case true  => now.isAfter(v.from)
+                    case false => now.isBefore(v.from) || now.isEqual(v.from)
+                 ) => (x.repoName, x.repoVersion, x.repoType, v)
+    ) {
+      case Nil => {
+        <p id="search-results-empty" class="pt-2">This search did not return any results.</p>
+        <ul class="list"/>
+      }
+      case items => {
+        <table id="search-results" class="table table-striped sticky-header" style="border-collapse: separate; border-spacing: 0;">
+          <thead>
+            <tr>
+              <th colspan="3" class="text-center">Repository</th>
+              <th style="width:10px; border: none;"></th>
+              <th colspan="6" class="text-center">Bobby Rule</th>
+            </tr>
+            <tr>
+              <th><button class="sort no-border fw-bold" data-sort="col-repo-name">Name</button></th>
+              <th>Version</th>
+              <th><button class="sort no-border fw-bold" data-sort="col-repo-type">Type</button></th>
+              <th></th>
+              <th><button class="sort no-border fw-bold" data-sort="col-dependency">Dependency</button></th>
+              <th class="text-center" colspan="3">Banned Versions</th>
+              <th class="col-4">Reason</th>
+              <th><button class="sort no-border fw-bold text-nowrap" data-sort="col-active-from">Active From</button></th>
+            </tr>
+          </thead>
+          <tbody class="list">
+            @for((repoName,  repoVersion, repoType, violation) <- items) {
+              <tr>
+                <td class="col-repo-name">
+                  <a aria-label="Link to page info for @{repoName}" id="link-to-info-page-for-@{repoName}" href=@{if(repoType == RepoType.Service) appRoutes.CatalogueController.service(ServiceName(repoName)) else appRoutes.CatalogueController.repository(repoName) }>@repoName</a>
+                </td>
+                <td>@repoVersion</td>
+                <td class="col-repo-type">@repoType</td>
+                <td></td>
+                <td class="col-dependency">@violation.depGroup:@violation.depArtefact:@violation.depVersion<br/>@violation.depScopes.mkString(", ")</td>
+                  @defining(violation.range.rangeDescr) {
+                    case Some((lbDescr, upDescr)) => {
+                      <td class="bobby-range" style="white-space: nowrap; padding-right: 0; text-align: right">
+                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@violation.range.range">@lbDescr</span>
+                      </td>
+                      <td class="bobby-range">
+                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@violation.range.range">x</span>
+                      </td>
+                      <td class="bobby-range" style="white-space: nowrap; padding-left: 0; text-align: left">
+                        <span data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="@violation.range.range">@upDescr</span>
+                      </td>
+                    }
+                    case None => {
+                      <td colspan="3">@violation.range.range</td>
+                    }
+                  }
+                <td>
+                  @MarkdownLoader.markdownFromString(violation.reason) match {
+                    case Right(s) => { @Html(s) }
+                    case Left(_) => { @violation.reason }
+                  }
+                </td>
+                <td class="col-active-from"><span class="@if(now.isAfter(violation.from)) { badge fs-6 text-bg-danger }">@violation.from</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+  </div>
+}
+
+<script @CSPNonce.attr>
+  ['select-team', 'select-digital-service', 'select-repo-type', 'select-environment', 'select-bobby-status']
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+
+  @if(results.exists(_.nonEmpty)) {
+    let options = {
+      valueNames: ['col-repo-name', 'col-repo-type', 'col-dependency', 'col-active-from'],
+      searchColumns: ['col-repo-name'],
+      searchDelay: 350
+    };
+
+    let pageListJs = new List('bobbby-violations-list', options);
+    let searchBox = document.getElementById('search');
+    // set autofocus cursor to right of text in search box
+    let length = searchBox.value.length;
+    searchBox.focus();
+    searchBox.setSelectionRange(length, length);
+    // re-search the list upon page load.
+    pageListJs.search(searchBox.value);
+  }
+</script>

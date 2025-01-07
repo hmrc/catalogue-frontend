@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.service
+package uk.gov.hmrc.cataloguefrontend.bobby
 
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
