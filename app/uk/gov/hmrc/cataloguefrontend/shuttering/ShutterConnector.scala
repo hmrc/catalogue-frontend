@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{Json, JsValue, JsNull, JsString, Reads, Writes}
 import play.api.libs.ws.writeableOf_JsValue
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterConnector.ShutterEventsFilter
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -45,15 +45,17 @@ class ShutterConnector @Inject() (
     * Retrieves the current shutter states for all services in given environment
     */
   def shutterStates(
-    st         : ShutterType,
-    env        : Environment,
-    serviceName: Option[ServiceName] = None
+    st            : ShutterType,
+    env           : Environment,
+    teamName      : Option[TeamName],
+    digitalService: Option[DigitalService],
+    serviceName   : Option[ServiceName]
   )(using
     HeaderCarrier
   ): Future[Seq[ShutterState]] =
     given Reads[ShutterState] = ShutterState.reads
     httpClientV2
-      .get(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states?serviceName=${serviceName.map(_.asString)}")
+      .get(url"$baseUrl/shutter-api/${env.asString}/${st.asString}/states?serviceName=${serviceName.map(_.asString)}&teamName=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}")
       .execute[Seq[ShutterState]]
 
   /**

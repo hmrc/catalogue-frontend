@@ -16,17 +16,25 @@
 
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{routes, ShutterCause, ShutterStateChangeEvent, ShutterState, ShutterStatusValue, ShutterType}
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+@import views.html.helper.{FieldConstructor, select}
 
 @this()
 
-@(shutterStates : Map[Environment, Seq[(ShutterState, Option[ShutterStateChangeEvent])]]
-, shutterType   : ShutterType
-, selectedEnv   : Environment
-, killSwitchLink: Option[String]
+@(form                  : Form[?]
+, shutterStates         : Map[Environment, Seq[(ShutterState, Option[ShutterStateChangeEvent])]]
+, shutterType           : ShutterType
+, selectedEnv           : Environment
+, selectedTeamName      : Option[TeamName]
+, selectedDigitalService: Option[DigitalService]
+, killSwitchLink        : Option[String]
+, teams                 : Seq[TeamName]
+, digitalServices       : Seq[DigitalService]
 )(implicit
   request       : RequestHeader
 , messages      : Messages
 )
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
 @standard_layout(s"Shutter Overview - ${shutterType.asString.capitalize}", active = "shuttering") {
 
@@ -40,6 +48,33 @@
     }
 
     <section id="shutter-overview">
+
+      <div class="row">
+        <form id="form" method="get">
+          <div class="row">
+            <div class="col-md-3">
+              @select(
+                field                 =  form("teamName"),
+                options               =  teams.map(t => t.asString -> t.asString),
+                Symbol("_default")    ->  "All",
+                Symbol("_label")      -> "Team",
+                Symbol("_labelClass") -> "form-label",
+                Symbol("id")          -> "teamName-dropdown",
+                Symbol("class")       -> "form-select"
+              )
+            </div>
+            <div class="col-md-3">
+            @select(
+              field                 =  form("digitalService"),
+              options               =  digitalServices.map(ds => ds.asString -> ds.asString),
+              Symbol("_default")    ->  "All",
+              Symbol("_label")      -> "Digital Service",
+              Symbol("_labelClass") -> "form-label",
+              Symbol("id")          -> "digitalService-dropdown",
+              Symbol("class")       -> "form-select"
+            )
+          </div>
+        </form>
 
         <div class="row mb-3">
             <div class="col-12 position-relative">
@@ -75,7 +110,7 @@
                   </tr>
                 </thead>
                 <tbody class="list">
-                  @shutterRows(shutterStates.get(selectedEnv).getOrElse(Seq.empty))
+                  @shutterRows(shutterStates.getOrElse(selectedEnv, Seq.empty))
                 </tbody>
             </table>
         </div>
@@ -83,33 +118,42 @@
 
   <script @CSPNonce.attr>
     function filterUnshuttered() {
-        let checkBox = document.getElementById("shuttered-only");
-        let unshutteredServices = document.querySelectorAll("tr.unshuttered");
+      let checkBox = document.getElementById("shuttered-only");
+      let unshutteredServices = document.querySelectorAll("tr.unshuttered");
 
-        if (checkBox.checked === true) {
-            unshutteredServices.forEach(function(element) {
-                  element.classList.add("d-none");
-            });
-        } else {
-            unshutteredServices.forEach(function(element) {
-                element.classList.remove("d-none");
-            });
-        }
+      if (checkBox.checked === true) {
+        unshutteredServices.forEach(function(element) {
+          element.classList.add("d-none");
+        });
+      } else {
+        unshutteredServices.forEach(function(element) {
+          element.classList.remove("d-none");
+        });
+      }
     }
 
     document.getElementById("shuttered-only").addEventListener("change", function() {
-        filterUnshuttered();
+      filterUnshuttered();
     });
 
-    let options = { valueNames: [ 'shutter-service', @if(shutterType != ShutterType.Frontend) { 'shutter-context' }, 'shutter-state', 'shutter-user', 'shutter-date' ] };
-    let serviceList = new List('service-list', options);
+    ["teamName-dropdown", "digitalService-dropdown"]
+      .forEach(function(id) {
+        document.getElementById(id).addEventListener("change", function() {
+          document.getElementById("form").submit();
+        });
+      });
+
+    @if(shutterStates.getOrElse(selectedEnv, Seq.empty).nonEmpty) {
+      let options = { valueNames: [ 'shutter-service', @if(shutterType != ShutterType.Frontend) { 'shutter-context', } 'shutter-state', 'shutter-user', 'shutter-date' ] };
+      let serviceList = new List('service-list', options);
+    }
   </script>
 }
 
 @envOption(env: Environment) = {
   @defining(env == selectedEnv) { active =>
     <li id="tab-@env.asString" class="nav-item">
-        <a class="nav-link @if(active) {active}" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env)">
+        <a class="nav-link @if(active) {active}" href="@uk.gov.hmrc.cataloguefrontend.shuttering.routes.ShutterOverviewController.allStatesForEnv(shutterType, env, selectedTeamName, selectedDigitalService)">
             @env.displayString (@shutteredCount(env) / @serviceCount(env))
         </a>
     </li>
@@ -117,11 +161,11 @@
 }
 
 @serviceCount(env: Environment) = {
-  @shutterStates.get(env).getOrElse(Seq.empty).size
+  @shutterStates.getOrElse(env, Seq.empty).size
 }
 
 @shutteredCount(env: Environment) = {
-  @shutterStates.get(env).getOrElse(Seq.empty).filter(_._1.status.value == ShutterStatusValue.Shuttered).size
+  @shutterStates.getOrElse(env, Seq.empty).filter(_._1.status.value == ShutterStatusValue.Shuttered).size
 }
 
 @shutterRows(states: Seq[(ShutterState, Option[ShutterStateChangeEvent])]) = {

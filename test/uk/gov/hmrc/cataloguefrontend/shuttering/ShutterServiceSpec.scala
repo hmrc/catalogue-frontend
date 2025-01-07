@@ -97,12 +97,12 @@ class ShutterServiceSpec
       val boot = Boot.init
       given HeaderCarrier = HeaderCarrier()
 
-      when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production))
+      when(boot.mockShutterConnector.shutterStates(ShutterType.Frontend, Environment.Production, teamName = None, digitalService = None, serviceName = None))
         .thenReturn(Future.successful(mockShutterStates))
       when(boot.mockShutterConnector.latestShutterEvents(ShutterType.Frontend, Environment.Production))
         .thenReturn(Future.successful(mockEvents))
 
-      val states = boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production).futureValue
+      val states = boot.shutterService.findCurrentStates(ShutterType.Frontend, Environment.Production, teamName = None, digitalService = None).futureValue
       states.map(_._1.status) shouldBe Seq(
         ShutterStatus.Shuttered(reason = None, outageMessage = None, outageMessageWelsh = None, useDefaultOutagePage = false)
       , ShutterStatus.Shuttered(reason = None, outageMessage = None, outageMessageWelsh = None, useDefaultOutagePage = false)
