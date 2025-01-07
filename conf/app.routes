@@ -81,7 +81,7 @@ GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefro
 
 GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.cost.CostController.costExplorer(team: Option[TeamName] ?= None, asCSV: Boolean ?= false)
 
-GET        /bobby-reports                               uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.bobbyReports(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, flag: Option[String] ?= None)
+GET        /bobby-violations                            uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.bobbyViolations(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, flag: Option[String] ?= None)
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.list(selector: Option[String] ?= None)
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.bobby.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 

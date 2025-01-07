@@ -22,7 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesR
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.bobby.view.html.{BobbyExplorerPage, BobbyReportsPage}
+import uk.gov.hmrc.cataloguefrontend.bobby.view.html.{BobbyExplorerPage, BobbyViolationsPage}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, SlugInfoFlag, TeamName}
 
@@ -30,19 +30,19 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class BobbyExplorerController @Inject() (
-  teamsAndReposConnector : TeamsAndRepositoriesConnector
-, serviceDeps            : ServiceDependenciesConnector
-, bobbyService           : BobbyService
-, bobbyReportsPage       : BobbyReportsPage
-, bobbyExplorerPage      : BobbyExplorerPage
-, override val mcc       : MessagesControllerComponents
-, override val auth      : FrontendAuthComponents
+  teamsAndReposConnector: TeamsAndRepositoriesConnector
+, serviceDeps           : ServiceDependenciesConnector
+, bobbyService          : BobbyService
+, bobbyViolationsPage   : BobbyViolationsPage
+, bobbyExplorerPage     : BobbyExplorerPage
+, override val mcc      : MessagesControllerComponents
+, override val auth     : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  def bobbyReports(team: Option[TeamName], digitalService: Option[DigitalService], flag: Option[String]): Action[AnyContent] =
+  def bobbyViolations(team: Option[TeamName], digitalService: Option[DigitalService], flag: Option[String]): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
       ( for
@@ -50,13 +50,13 @@ class BobbyExplorerController @Inject() (
           digitalServices <- EitherT.right[Result](teamsAndReposConnector.allDigitalServices())
           form            =  BobbyReportFilter.form.bindFromRequest()
           filter          <- EitherT.fromEither[Future](form.fold(
-                              formErrors => Left(BadRequest(bobbyReportsPage(form, teams, digitalServices, results = None)))
+                              formErrors => Left(BadRequest(bobbyViolationsPage(form, teams, digitalServices, results = None)))
                             , formObject => Right(formObject)
                              ))
           results         <- EitherT.right[Result]:
                               serviceDeps.bobbyReports(filter.team, filter.digitalService, filter.repoType, filter.flag)
         yield
-          Ok(bobbyReportsPage(form, teams, digitalServices, results = Some(results)))
+          Ok(bobbyViolationsPage(form, teams, digitalServices, results = Some(results)))
       ).merge
 
   def list(selector: Option[String]): Action[AnyContent] =
@@ -73,7 +73,6 @@ case class BobbyReportFilter(
 , repoType      : Option[RepoType]       = None
 , flag          : SlugInfoFlag           = SlugInfoFlag.Latest
 , isActive      : Option[Boolean]        = None
-, exempt        : Boolean                = false
 )
 
 object BobbyReportFilter:
@@ -85,6 +84,5 @@ object BobbyReportFilter:
       , "repoType"       -> Forms.optional(Forms.of[RepoType])
       , "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply)
       , "isActive"       -> Forms.optional(Forms.boolean)
-      , "exempt"         -> Forms.boolean
       )(BobbyReportFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

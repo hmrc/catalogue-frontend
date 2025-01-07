@@ -38,10 +38,10 @@
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
-@standard_layout("Bobby Reports", active = "health") {
-  <h1 id="search-service-header" class="page-heading mt-4">Bobby Reports</h1>
+@standard_layout("Bobby violations", active = "health") {
+  <h1 id="search-service-header" class="page-heading mt-4">Bobby Violations</h1>
 
-  <div id="bobbby-reports-list">
+  <div id="bobbby-violations-list">
     <form id="form" method="get">
       <div class="row">
         <div class="col-md-2">
@@ -93,7 +93,7 @@
           , Symbol("class")       -> "form-select"
           )
         </div>
-        <div class="col-md-1">
+        <div class="col-md-2">
           @select(
             field                 =  form("isActive")
           , options               =  Seq("true" -> "Active", "false" -> "Upcoming")
@@ -104,12 +104,6 @@
           , Symbol("class")       -> "form-select"
           )
         </div>
-        <div class="col-md-1 col-form-label" style="margin-top: 35px;">
-          <div class="form-check form-switch">
-            <input aria-label="Exempt" class="form-check-input" name="exempt" type="checkbox" role="switch" id="input-exempt" value=true @if(form.get.exempt) {checked}>
-            <label class="form-check-label" for="github-only">Exempt</label>
-          </div>
-        </div>
       </div>
     </form>
 
@@ -119,7 +113,7 @@
         .flatMap: x =>
           x.violations.collect:
             case v
-              if v.exempt == form.get.exempt
+              if !v.exempt
               && ( form.get.isActive.fold(true):
                     case true  => now.isAfter(v.from)
                     case false => now.isBefore(v.from) || now.isEqual(v.from)
@@ -130,7 +124,6 @@
         <ul class="list"/>
       }
       case items => {
-        <p class="mt-3">Found @items.size results</p>
         <table id="search-results" class="table table-striped sticky-header" style="border-collapse: separate; border-spacing: 0;">
           <thead>
             <tr>
@@ -192,7 +185,7 @@
 }
 
 <script @CSPNonce.attr>
-  ['select-team', 'select-digital-service', 'select-repo-type', 'select-environment', 'select-bobby-status', 'input-exempt']
+  ['select-team', 'select-digital-service', 'select-repo-type', 'select-environment', 'select-bobby-status']
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("form").submit();
@@ -206,7 +199,7 @@
       searchDelay: 350
     };
 
-    let pageListJs = new List('bobbby-reports-list', options);
+    let pageListJs = new List('bobbby-violations-list', options);
     let searchBox = document.getElementById('search');
     // set autofocus cursor to right of text in search box
     let length = searchBox.value.length;
