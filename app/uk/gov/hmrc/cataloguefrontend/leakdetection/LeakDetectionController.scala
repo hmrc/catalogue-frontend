@@ -52,10 +52,11 @@ class LeakDetectionController @Inject()(
       leakDetectionService.ruleSummaries().map(s => Ok(rulesPage(s)))
 
   def repoSummaries(
-    includeWarnings  : Boolean,
-    includeExemptions: Boolean,
-    includeViolations: Boolean,
-    includeNonIssues : Boolean
+    team             : Option[TeamName]
+  , includeWarnings  : Boolean
+  , includeExemptions: Boolean
+  , includeViolations: Boolean
+  , includeNonIssues : Boolean
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given Request[AnyContent] = request

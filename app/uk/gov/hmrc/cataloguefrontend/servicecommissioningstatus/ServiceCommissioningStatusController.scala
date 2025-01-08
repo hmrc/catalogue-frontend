@@ -72,7 +72,7 @@ class ServiceCommissioningStatusController @Inject() (
     }
 
   //Params exist so they can be provided for deep linking
-  def searchResults(teamName: Option[TeamName]): Action[AnyContent] =
+  def searchResults(teamName: Option[TeamName], hasWarning: Option[Boolean]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchCommissioning
         .searchForm

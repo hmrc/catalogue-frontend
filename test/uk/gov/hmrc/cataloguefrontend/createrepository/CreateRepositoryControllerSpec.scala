@@ -128,7 +128,7 @@ class CreateRepositoryControllerSpec
       when(mockCacheRepo.deleteFromSession[RepoTypeOut](any())(any()))
         .thenReturn(Future.successful(()))
 
-      when(mockTeamsAndReposConnector.allTeams()(using any[HeaderCarrier]))
+      when(mockTeamsAndReposConnector.allTeams(any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(GitHubTeam(TeamName("TestTeam"), None, Seq.empty))))
 
       val fakeRequest: FakeRequest[AnyContent] =
@@ -154,7 +154,7 @@ class CreateRepositoryControllerSpec
       when(mockCacheRepo.deleteFromSession[RepoTypeOut](any())(any()))
         .thenReturn(Future.successful(()))
 
-      when(mockTeamsAndReposConnector.allTeams()(using any[HeaderCarrier]))
+      when(mockTeamsAndReposConnector.allTeams(any())(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq(GitHubTeam(TeamName("TestTeam"), None, Seq.empty))))
 
       when(mockBuildDeployApiConnector.createTestRepository(any())(using any[HeaderCarrier]))
@@ -175,16 +175,16 @@ class CreateRepositoryControllerSpec
 
     val mockBuildDeployApiConnector: BuildDeployApiConnector =
       mock[BuildDeployApiConnector]
-      
+
     val mockTeamsAndReposConnector: TeamsAndRepositoriesConnector =
       mock[TeamsAndRepositoriesConnector]
-      
+
     val mockCacheRepo: SessionCacheRepository =
       mock[SessionCacheRepository]
-      
+
     val authStubBehaviour: StubBehaviour =
       mock[StubBehaviour]
-      
+
     val authComponent: FrontendAuthComponents =
       FrontendAuthComponentsStub(authStubBehaviour)
 

@@ -1,0 +1,56 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionRepositorySummary, routes => leakDetectionRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{CachedServiceCheck, routes => serviceCommissioningStatusRoutes}
+@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{PlatformInitiative, routes => platforminitiativesRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => vulnerabilityRoutes}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterComment, routes => prcommenterRoutes}
+
+@(
+  teamName  : Option[TeamName]
+, openPrsUrl: Option[String]
+)(implicit
+  request: RequestHeader
+)
+
+<div class="card">
+  <div class="card-header">
+    <div class="h4 mb-0">Explore</div>
+  </div>
+  <div class="card-body">
+      <ul class="list-unstyled">
+        @teamName.map { x =>
+          <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(x)">Outdated Dependencies</a></li>
+        }
+        @openPrsUrl.map { url =>
+          <li>
+            <a id="link-to-github-open-prs" href="@url" target="_blank" rel="noreferrer noopener">
+              Open
+              <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
+              PRs<span class="glyphicon glyphicon-new-window"/>
+            </a>
+          </li>
+        }
+        <li><a id="link-to-pr-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(teamName = teamName)">PR-Commenter recommendations</a></li>
+        <li><a href="/jdkexplorer">JDK Explorer</a></li>
+        <li><a href="/sbtexplorer">SBT Explorer</a></li>
+        <li><a href="/cost-explorer">Cost Explorer</a></li>
+        <li><a href="/whats-runing-where">Whats Running Where</a></li>
+    </ul>
+  </div>
+</div>

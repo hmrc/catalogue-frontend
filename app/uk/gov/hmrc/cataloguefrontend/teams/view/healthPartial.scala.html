@@ -1,0 +1,182 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.JenkinsJob
+@import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyReport
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
+@import uk.gov.hmrc.cataloguefrontend.bobby.{routes => bobbyRoutes}
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionRepositorySummary, routes => leakDetectionRoutes}
+@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{PlatformInitiative, routes => platforminitiativesRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{CachedServiceCheck, routes => serviceCommissioningStatusRoutes}
+@import uk.gov.hmrc.cataloguefrontend.test.{routes => testJobRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => vulnerabilityRoutes}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhere, Profile, ProfileType, routes => whatsRunningWhereRoutes}
+
+@(
+  teamName              : Option[TeamName]
+, leaks                 : Seq[LeakDetectionRepositorySummary]
+, productionBobbyReports: Seq[BobbyReport]
+, latestBobbyReports    : Seq[BobbyReport]
+, platformInitiatives   : Seq[PlatformInitiative]
+, vulnerabilities       : Seq[TotalVulnerabilityCount]
+, commissioningChecks   : Seq[CachedServiceCheck]
+, whatsRunningWhere     : Seq[WhatsRunningWhere]
+, testJobs              : Seq[JenkinsJob]
+, now                   : java.time.LocalDate = java.time.LocalDate.now()
+)(implicit
+  request: RequestHeader
+)
+
+<div class="card">
+  <div class="card-header">
+    <div class="h4 mb-0">Health</div>
+  </div>
+  <div class="card-body">
+    <table style="width: 100%;">
+      <tbody>
+        <tr>
+          @defining(leaks.map(_.unresolvedCount).sum) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+          }
+          <td style="width: 100%;"><a class="ms-2" href="@leakDetectionRoutes.LeakDetectionController.repoSummaries(team = teamName, includeWarnings = false, includeExemptions = false, includeViolations = true)">Leaks</a></td>
+        </tr>
+        <tr>
+          @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString), isActive = Some(true))">Bobby Errors - Production</a></td>
+        </tr>
+        <tr>
+          @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(true))">Bobby Errors - Latest</a></td>
+        </tr>
+        <tr>
+          @defining(vulnerabilities.map(_.actionRequired).sum) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName)"> Service Vulnerabilities</a></td>
+        </tr>
+        <tr>
+          <td colspan="2"><hr/></td>
+        </tr>
+        <tr>
+          @defining(-1) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { shutter-badge }">@count</span></td>
+          }
+          <td><a class="ms-2" href="">Shuttered Frontend</a></td>
+        </tr>
+        <tr>
+          @defining(-1) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { shutter-badge }">@count</span></td>
+          }
+          <td><a class="ms-2" href="">Shuttered Api</a></td>
+        </tr>
+        <tr>
+          <td colspan="2"><hr/></td>
+        </tr>
+        <tr>
+          @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString), isActive = Some(false))">Bobby Warnings - Production</a></td>
+        </tr>
+        <tr>
+          @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(false))">Bobby Warnings - Latest</a></td>
+        </tr>
+        <tr>
+          @defining(platformInitiatives.filter(_.progress.percent < 100).size) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@platforminitiativesRoutes.PlatformInitiativesController.platformInitiatives(team = teamName)">Platform Initiatives</a></td>
+        </tr>
+        <tr>
+          @defining(commissioningChecks.filter(_.warnings).size) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName, warningFilter = Some(true))">Service Commissioning State Warnings</a></td>
+        </tr>
+        <tr>
+            @defining(
+              whatsRunningWhere.map { wrw =>
+                ( wrw.versions.maxBy(_.version)
+                , wrw.versions.find(_.environment == Environment.Production)
+                ) match {
+                  case (v1, Some(v2))
+                    if v2.version.patch > 0
+                    || v2.version.major <  v1.version.major
+                    || v2.version.minor <= v1.version.minor - 1
+                         => { 1 }
+                  case _ => { 0 }
+                }
+              }
+          ) { counts =>
+            <td><span class="badge rounded-pill @if(counts.sum == 0) { text-bg-secondary } else { text-bg-warning }">@counts.sum</span></td>
+          }
+          @* TODO whatsRunningWhere should use standard Catalogue form params and reverse routes *@
+          <td><a class="ms-2" href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases()?profile_name=@teamName.fold("")(_.asString)&profile_type=team">Outdated or Hotfixed Production Deployments</a></td>
+        </tr>
+        <tr>
+          <td colspan="2"><hr/></td>
+        </tr>
+        <tr>
+          @defining(testJobs.flatMap(_.latestBuild).filter(_.result == Some("FAILURE")).size) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Test Failures</a></td>
+        </tr>
+        <tr>
+          @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numAccessibilityViolations).sum) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Accessibility Issues</a></td>
+
+        </tr>
+        <tr>
+          @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numSecurityAlerts).sum) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+          }
+          <td><a class="ms-2" href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Security Alerts</a></td>
+        </tr>
+        <tr>
+          <td colspan="2"><hr/></td>
+        </tr>
+        <tr>
+          @defining(-1) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+          }
+          <td><a class="ms-2" href="">Slow Running Queries</a></td>
+        </tr>
+        <tr>
+          @defining(-1) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+          }
+          <td><a class="ms-2" href="">Non Indexed Queries</a></td>
+        </tr>
+        <tr>
+          @defining(-1) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+          }
+          <td><a class="ms-2" href="">Container Kills</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

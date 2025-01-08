@@ -1,0 +1,75 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
+@import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
+
+@(
+  repos       : Seq[GitRepository]
+, viewMessages: ViewMessages
+)(implicit
+  request: RequestHeader
+)
+
+<div class="row mb-3">
+  @defining(repos.groupBy(_.repoType)) { repoMap =>
+    @showRepositories(repoMap, RepoType.Service  , "Services"    )
+    @showRepositories(repoMap, RepoType.Library  , "Libraries"   )
+    @showRepositories(repoMap, RepoType.Prototype, "Prototypes"  )
+    @showRepositories(repoMap, RepoType.Test     , "Tests"       )
+    @showRepositories(repoMap, RepoType.Other    , "Repositories")
+  }
+</div>
+
+@showRepositories(repoMap: Map[RepoType, Seq[GitRepository]], repoType: RepoType, headerName: String) = {
+  <div class="col">
+    <div class="card">
+      <div class="card-header">
+        <div class="h4 mb-0">@headerName</div>
+      </div>
+      <div class="card-body">
+        @if(repoMap.get(repoType).isEmpty) {
+          <p class="card-text">@Html(viewMessages.noRepoOfTypeForTeam(repoType.asString))</p>
+        } else {
+          <ul class="list-unstyled">
+            @defining(repoMap(repoType).partition(_.isShared)) { case (shared, nonShared) =>
+              @repoListFor(nonShared)
+              @if(shared.nonEmpty){
+                <li class="fw-bold mt-2">Shared</li>
+                @repoListFor(shared)
+              }
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@repoListFor(filteredRepos: Seq[GitRepository]) = {
+  @for(repo <- filteredRepos.sortBy(_.name.toLowerCase)) {
+    <li id="@repo.name" class="mb-2">
+      <div>
+        <a class="@if(repo.isDeprecated){fst-italic}"
+          href="@appRoutes.CatalogueController.repository(repo.name)">
+          @repo.name
+          @if(repo.isDeprecated){ <span class="badge rounded-pill text-bg-secondary fst-normal">deprecated</span> }
+        </a>
+      </div>
+    </li>
+  }
+}

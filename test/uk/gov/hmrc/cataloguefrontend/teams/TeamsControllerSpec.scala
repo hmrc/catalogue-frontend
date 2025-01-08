@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 
-class TeamServicesSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
+class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
   def asDocument(html: String): Document = Jsoup.parse(html)
 

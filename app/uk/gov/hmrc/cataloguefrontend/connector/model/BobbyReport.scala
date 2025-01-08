@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Json, Reads, __}
+import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.{VersionRange, Version}
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType
 

@@ -45,9 +45,9 @@ class PrCommenterConnector @Inject()(
       .execute[Option[PrCommenterReport]]
 
   def search(
-    name       : Option[String],
-    teamName   : Option[TeamName],
-    commentType: Option[String]
+    name       : Option[String]   = None,
+    teamName   : Option[TeamName] = None,
+    commentType: Option[String]   = None
   )(using
     HeaderCarrier
   ): Future[Seq[PrCommenterReport]] =

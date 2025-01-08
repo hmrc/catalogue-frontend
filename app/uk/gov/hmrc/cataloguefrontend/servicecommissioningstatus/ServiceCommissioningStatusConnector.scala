@@ -50,9 +50,9 @@ class ServiceCommissioningStatusConnector @Inject() (
       .map(_.flatMap(identity))
 
   def cachedCommissioningStatus(
-    teamName       : Option[TeamName],
-    serviceType    : Option[ServiceType],
-    lifecycleStatus: Seq[LifecycleStatus]
+    teamName       : Option[TeamName]     = None,
+    serviceType    : Option[ServiceType]  = None,
+    lifecycleStatus: Seq[LifecycleStatus] = Nil
   )(using
     HeaderCarrier
   ): Future[List[CachedServiceCheck]] =
