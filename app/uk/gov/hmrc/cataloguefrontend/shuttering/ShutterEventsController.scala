@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.shuttering
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.data.{Form, Forms}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector
 import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.RouteType
@@ -47,9 +47,8 @@ class ShutterEventsController @Inject() (
   private val logger = Logger(getClass)
 
   val shutterEvents: Action[AnyContent] =
-    Action {
+    Action:
       Redirect(routes.ShutterEventsController.shutterEventsList(Environment.Production))
-    }
 
   def shutterEventsList(
     env        : Environment,
@@ -57,7 +56,8 @@ class ShutterEventsController @Inject() (
     limit      : Option[Int],
     offset     : Option[Int]
   ): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
       val filter = filterFor(env, serviceName)
       val form   = ShutterEventsForm.fromFilter(filter)
 
@@ -72,7 +72,6 @@ class ShutterEventsController @Inject() (
                                 Seq.empty
         page           =  ShutterEventsPage(services, events, form, Environment.values.toSeq)
       yield Ok(page)
-    }
 
   private def filterFor(env: Environment, serviceNameOpt: Option[ServiceName]): ShutterEventsFilter =
     ShutterEventsFilter(env, serviceNameOpt.filter(_.asString.trim.nonEmpty))
@@ -86,12 +85,11 @@ private case class ShutterEventsForm(
 
 private object ShutterEventsForm:
   lazy val form =
-    Form(
+    Form:
       Forms.mapping(
         "environment" -> Forms.of[Environment]
       , "serviceName" -> Forms.optional(Forms.of[ServiceName])
       )(ShutterEventsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
-    )
 
   def fromFilter(filter: ShutterEventsFilter): Form[ShutterEventsForm] =
     form.fill(ShutterEventsForm(filter.environment, filter.serviceName))

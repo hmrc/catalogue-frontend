@@ -22,7 +22,7 @@ import cats.implicits.*
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RouteConfigurationConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.RouteType
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 import uk.gov.hmrc.internalauth.client.AuthenticatedRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -46,7 +46,7 @@ class ShutterService @Inject() (
   )(using
     HeaderCarrier
   ): Future[Seq[ShutterState]] =
-    shutterConnector.shutterStates(st, env, serviceName)
+    shutterConnector.shutterStates(st, env, teamName = None, digitalService = None, serviceName)
 
   def updateShutterStatus(
     serviceName: ServiceName,
@@ -88,13 +88,15 @@ class ShutterService @Inject() (
     shutterConnector.frontendRouteWarnings(env, serviceName)
 
   def findCurrentStates(
-    st : ShutterType,
-    env: Environment
+    st            : ShutterType,
+    env           : Environment,
+    teamName      : Option[TeamName],
+    digitalService: Option[DigitalService]
   )(using
     HeaderCarrier
   ): Future[Seq[(ShutterState, Option[ShutterStateChangeEvent])]] =
     for
-      states <- shutterConnector.shutterStates(st, env)
+      states <- shutterConnector.shutterStates(st, env, teamName, digitalService, serviceName = None)
       events <- shutterConnector.latestShutterEvents(st, env)
     yield
        states

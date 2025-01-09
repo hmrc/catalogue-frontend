@@ -87,8 +87,8 @@ GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefro
 
 GET        /pr-commenter/recommendations                uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterController.recommendations(name: Option[String] ?= None, teamName: Option[TeamName] ?= None, commentType: Option[String] ?= None)
 
-GET        /shuttering-overview/:shutterType            uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStates(shutterType: ShutterType)
-GET        /shuttering-overview/:shutterType/:env       uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStatesForEnv(shutterType: ShutterType, env: Environment)
+GET        /shuttering-overview/:shutterType            uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStates(shutterType: ShutterType, teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
+GET        /shuttering-overview/:shutterType/:env       uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.allStatesForEnv(shutterType: ShutterType, env: Environment, teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 GET        /frontend-route-warnings/:env/:serviceName   uk.gov.hmrc.cataloguefrontend.shuttering.ShutterOverviewController.frontendRouteWarnings(env: Environment, serviceName: ServiceName)
 
 GET        /shuttering/1                                uk.gov.hmrc.cataloguefrontend.shuttering.ShutterWizardController.step1Get(serviceName: Option[ServiceName], context: Option[String])
