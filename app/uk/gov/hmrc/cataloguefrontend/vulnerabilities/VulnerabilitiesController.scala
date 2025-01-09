@@ -44,6 +44,13 @@ class VulnerabilitiesController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
+  /**
+    * @param vulnerability for reverse routing
+    * @param curationStatus for reverse routing
+    * @param service for reverse routing
+    * @param team for reverse routing
+    * @param flag for reverse routing
+    */
   def vulnerabilitiesList(
     vulnerability : Option[String],
     curationStatus: Option[String],
@@ -90,6 +97,14 @@ class VulnerabilitiesController @Inject() (
         )
     }
 
+  /**
+    * @param service for reverse routing
+    * @param team for reverse routing
+    * @param vulnerability for reverse routing
+    * @param curationStatus for reverse routing
+    * @param from for reverse routing
+    * @param from for reverse routing
+    */
   def vulnerabilitiesTimeline(
     service       : Option[ServiceName],
     team          : Option[TeamName],

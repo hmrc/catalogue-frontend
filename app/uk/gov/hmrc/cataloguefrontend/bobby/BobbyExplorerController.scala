@@ -42,6 +42,12 @@ class BobbyExplorerController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
+  /**
+    * @param teamName for reverse routing
+    * @param digitalService for reverse routing
+    * @param flag for reverse routing
+    * @param isActive for reverse routing
+    */
   def bobbyViolations(teamName: Option[TeamName], digitalService: Option[DigitalService], flag: Option[String], isActive: Option[Boolean]): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
@@ -59,6 +65,9 @@ class BobbyExplorerController @Inject() (
           Ok(bobbyViolationsPage(form, teams, digitalServices, results = Some(results)))
       ).merge
 
+  /**
+    * @param selector for reverse routing
+    */
   def list(selector: Option[String]): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given RequestHeader = request

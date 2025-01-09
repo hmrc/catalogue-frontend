@@ -58,6 +58,11 @@ class BobbyRulesTrendController @Inject() (
         )
       )
 
+  /**
+    * @param rules for reverse routing
+    * @param from for reverse routing
+    * @param to for reverse routing
+    */
   def display(
     rules: Seq[String],
     from : LocalDate,

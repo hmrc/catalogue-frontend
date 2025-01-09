@@ -51,6 +51,9 @@ class LeakDetectionController @Inject()(
       given RequestHeader = request
       leakDetectionService.ruleSummaries().map(s => Ok(rulesPage(s)))
 
+  /**
+    * @param team for reverse routing
+    */
   def repoSummaries(
     team             : Option[TeamName]
   , includeWarnings  : Boolean
