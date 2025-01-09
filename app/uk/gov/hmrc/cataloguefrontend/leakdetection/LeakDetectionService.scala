@@ -35,14 +35,14 @@ class LeakDetectionService @Inject() (
   def resolutionUrl: String =
     configuration
       .get[String]("leakDetection.resolution.url")
-    
+
   def removeSensitiveInfoUrl: String =
     configuration
       .get[String]("leakDetection.removeSensitiveInfo.url")
 
   def urlIfLeaksFound(repoName: String)(using HeaderCarrier): Future[Option[String]] =
     repositoriesWithLeaks().map: reposWithLeaks =>
-      if hasLeaks(reposWithLeaks)(repoName)
+      if   reposWithLeaks.exists(_.name == repoName)
       then Some(appRoutes.LeakDetectionController.branchSummaries(repoName).url)
       else None
 
@@ -53,9 +53,6 @@ class LeakDetectionService @Inject() (
     if ldsIntegrationEnabled
     then leakDetectionConnector.repositoriesWithLeaks()
     else Future.successful(Nil)
-
-  def hasLeaks(reposWithLeaks: Seq[RepositoryWithLeaks])(repoName: String): Boolean =
-    reposWithLeaks.exists(_.name == repoName)
 
   def ruleSummaries()(using HeaderCarrier): Future[Seq[LeakDetectionRulesWithCounts]] =
     leakDetectionConnector
@@ -75,8 +72,8 @@ class LeakDetectionService @Inject() (
           .sortBy(_.unresolvedCount).reverse
 
   def repoSummaries(
-    ruleId           : Option[String],
-    team             : Option[TeamName],
+    ruleId           : Option[String]   = None,
+    team             : Option[TeamName] = None,
     includeWarnings  : Boolean,
     includeExemptions: Boolean,
     includeViolations: Boolean,

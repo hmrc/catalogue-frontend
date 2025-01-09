@@ -42,7 +42,13 @@ class BobbyExplorerController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  def bobbyViolations(team: Option[TeamName], digitalService: Option[DigitalService], flag: Option[String]): Action[AnyContent] =
+  /**
+    * @param teamName for reverse routing
+    * @param digitalService for reverse routing
+    * @param flag for reverse routing
+    * @param isActive for reverse routing
+    */
+  def bobbyViolations(teamName: Option[TeamName], digitalService: Option[DigitalService], flag: Option[String], isActive: Option[Boolean]): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
       ( for
@@ -54,11 +60,14 @@ class BobbyExplorerController @Inject() (
                             , formObject => Right(formObject)
                              ))
           results         <- EitherT.right[Result]:
-                              serviceDeps.bobbyReports(filter.team, filter.digitalService, filter.repoType, filter.flag)
+                              serviceDeps.bobbyReports(filter.teamName, filter.digitalService, filter.repoType, filter.flag)
         yield
           Ok(bobbyViolationsPage(form, teams, digitalServices, results = Some(results)))
       ).merge
 
+  /**
+    * @param selector for reverse routing
+    */
   def list(selector: Option[String]): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given RequestHeader = request
@@ -68,7 +77,7 @@ class BobbyExplorerController @Inject() (
       yield Ok(bobbyExplorerPage(rules, counts))
 
 case class BobbyReportFilter(
-  team          : Option[TeamName]       = None
+  teamName      : Option[TeamName]       = None
 , digitalService: Option[DigitalService] = None
 , repoType      : Option[RepoType]       = None
 , flag          : SlugInfoFlag           = SlugInfoFlag.Latest
@@ -79,7 +88,7 @@ object BobbyReportFilter:
   lazy val form: Form[BobbyReportFilter] =
     Form(
       Forms.mapping(
-        "team"           -> Forms.optional(Forms.of[TeamName])
+        "teamName"       -> Forms.optional(Forms.of[TeamName])
       , "digitalService" -> Forms.optional(Forms.of[DigitalService])
       , "repoType"       -> Forms.optional(Forms.of[RepoType])
       , "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply)

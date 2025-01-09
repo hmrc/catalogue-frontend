@@ -71,8 +71,11 @@ class ServiceCommissioningStatusController @Inject() (
       yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
     }
 
-  //Params exist so they can be provided for deep linking
-  def searchResults(teamName: Option[TeamName]): Action[AnyContent] =
+  /**
+    * @param teamName for reverse routing
+    * @param hasWarning for reverse routing
+    */
+  def searchResults(teamName: Option[TeamName], hasWarning: Option[Boolean]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchCommissioning
         .searchForm

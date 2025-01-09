@@ -22,9 +22,7 @@
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
 @import views.html.helper.{FieldConstructor, select}
 
-@this(
-  teamNamesPartial: partials.TeamNamesPartial
-)
+@this()
 
 @(form           : Form[BobbyReportFilter]
 , teams          : Seq[GitHubTeam]
@@ -53,7 +51,7 @@
         <div class="col-md-2">
           @select(
             field                 =  form("repoType")
-          , options               =  RepoType.values.filterNot(_ == RepoType.Prototype).map(ds => ds.asString -> ds.asString)
+          , options               =  RepoType.values.filterNot(_ == RepoType.Prototype).map(ds => ds.asString -> ds.asString).toSeq
           , Symbol("_default")    -> "All"
           , Symbol("_label")      -> "Repository Type"
           , Symbol("_labelClass") -> "form-label"
@@ -63,12 +61,12 @@
         </div>
         <div class="col-md-2">
           @select(
-            field                 =  form("team")
+            field                 =  form("teamName")
           , options               =  teams.map(t => t.name.asString -> t.name.asString)
           , Symbol("_default")    -> "All"
           , Symbol("_label")      -> "Team"
           , Symbol("_labelClass") -> "form-label"
-          , Symbol("id")          -> "select-team"
+          , Symbol("id")          -> "select-team-name"
           , Symbol("class")       -> "form-select"
           )
         </div>
@@ -185,7 +183,7 @@
 }
 
 <script @CSPNonce.attr>
-  ['select-team', 'select-digital-service', 'select-repo-type', 'select-environment', 'select-bobby-status']
+  ['select-team-name', 'select-digital-service', 'select-repo-type', 'select-environment', 'select-bobby-status']
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("form").submit();

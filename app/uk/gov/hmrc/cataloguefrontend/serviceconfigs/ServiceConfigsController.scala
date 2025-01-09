@@ -49,6 +49,9 @@ class ServiceConfigsController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
+  /**
+    * @param selector for reverse routing
+    */
   def configExplorer(serviceName: ServiceName, showWarnings: Boolean, selector: Option[KeyName]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for
@@ -67,8 +70,11 @@ class ServiceConfigsController @Inject()(
       yield Ok(searchConfigPage(SearchConfig.form.fill(SearchConfig.SearchConfigForm()), allTeams, configKeys))
     }
 
+  /**
+    * @param configKey for dependencyExplorer reverse routing
+    */
   def searchResults(
-    configKey: Option[String] // For dependencyExplorer reverse route
+    configKey: Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchConfig

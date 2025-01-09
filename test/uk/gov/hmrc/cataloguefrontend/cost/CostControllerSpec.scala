@@ -57,7 +57,7 @@ class CostControllerSpec
     when(mockAuthStubBehaviour.stubAuth(None, Retrieval.EmptyRetrieval))
       .thenReturn(Future.unit)
 
-    when(mockTeamsAndRepositoriesConnector.allTeams()(using any[HeaderCarrier]))
+    when(mockTeamsAndRepositoriesConnector.allTeams(any)(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Seq.empty))
 
     when(mockServiceConfigConnector.deploymentConfig(any, any, any, any)(using any[HeaderCarrier]))

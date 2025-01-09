@@ -41,6 +41,9 @@ class PlatformInitiativesController @Inject()
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
+  /**
+    * @param team for reverse routing
+    */
   def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request

@@ -127,9 +127,9 @@ class ServiceDependenciesConnector @Inject() (
       .map(_.summary)
 
   def bobbyReports(
-    teamName      : Option[TeamName]
-  , digitalService: Option[DigitalService]
-  , repoType      : Option[RepoType]
+    teamName      : Option[TeamName]       = None
+  , digitalService: Option[DigitalService] = None
+  , repoType      : Option[RepoType]       = None
   , flag          : SlugInfoFlag
   )(using HeaderCarrier): Future[Seq[BobbyReport]] =
     given Reads[BobbyReport] = BobbyReport.reads

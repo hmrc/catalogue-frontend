@@ -268,8 +268,8 @@ class TeamsAndRepositoriesConnector @Inject()(
   private given Reads[GitRepository] = GitRepository.reads // v2 model
 
   def findTestJobs(
-    teamName      : Option[TeamName],
-    digitalService: Option[DigitalService]
+    teamName      : Option[TeamName]       = None,
+    digitalService: Option[DigitalService] = None
   )(using HeaderCarrier): Future[Seq[JenkinsJob]] =
     given Reads[JenkinsJob] =
       JenkinsJob.reads
@@ -314,9 +314,9 @@ class TeamsAndRepositoriesConnector @Inject()(
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty[String]
 
-  def allTeams()(using HeaderCarrier): Future[Seq[GitHubTeam]] =
-    httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/v2/teams")
+  def allTeams(teamName: Option[TeamName] = None)(using HeaderCarrier): Future[Seq[GitHubTeam]] =
+     httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/v2/teams?name=${teamName.map(_.asString)}")
       .execute[Seq[GitHubTeam]]
 
   def allDigitalServices()(using HeaderCarrier): Future[Seq[DigitalService]] =

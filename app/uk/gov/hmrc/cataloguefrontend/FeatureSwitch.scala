@@ -32,3 +32,6 @@ object CatalogueFrontendSwitches:
 
   def showTestRepoRelationships: FeatureSwitch =
     FeatureSwitch.forName("show-test-repo-relationships")
+
+  def showNewTeamPage: FeatureSwitch =
+    FeatureSwitch.forName("show-new-team-page")

@@ -40,7 +40,7 @@ GET        /service/:name/costs                         uk.gov.hmrc.cataloguefro
 
 GET        /service/:name/commissioning-state           uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.getCommissioningState(name: ServiceName)
 GET        /commissioning-state/search                  uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchLanding()
-GET        /commissioning-state/search/results          uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchResults(team: Option[TeamName] ?= None)
+GET        /commissioning-state/search/results          uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusController.searchResults(team: Option[TeamName] ?= None, warningFilter: Option[Boolean] ?= None)
 
 
 GET        /library/:name                               uk.gov.hmrc.cataloguefrontend.CatalogueController.library(name)
@@ -81,7 +81,7 @@ GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefro
 
 GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.cost.CostController.costExplorer(team: Option[TeamName] ?= None, asCSV: Boolean ?= false)
 
-GET        /bobby-violations                            uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.bobbyViolations(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, flag: Option[String] ?= None)
+GET        /bobby-violations                            uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.bobbyViolations(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, flag: Option[String] ?= None, isActive: Option[Boolean] ?= None)
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.list(selector: Option[String] ?= None)
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.bobby.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
@@ -116,7 +116,7 @@ GET        /platform-initiatives                        uk.gov.hmrc.cataloguefro
 
 GET        /leak-detection                                                 uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.ruleSummaries
 GET        /leak-detection/drafts                                          uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.draftReports
-GET        /leak-detection/repositories                                    uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.repoSummaries(includeWarnings: Boolean ?= false, includeExemptions: Boolean ?= false, includeViolations: Boolean ?= false, includeNonIssues: Boolean ?= false)
+GET        /leak-detection/repositories                                    uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.repoSummaries(team: Option[TeamName] ?= None, includeWarnings: Boolean ?= false, includeExemptions: Boolean ?= false, includeViolations: Boolean ?= false, includeNonIssues: Boolean ?= false)
 GET        /leak-detection/repositories/:repository                        uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.branchSummaries(repository: String, includeNonIssues: Boolean ?= false)
 GET        /leak-detection/repositories/:repository/:branch                uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.report(repository: String, branch: String)
 POST       /leak-detection/repositories/:repository/:branch                uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.rescan(repository: String, branch: String)
@@ -141,4 +141,4 @@ GET        /users/edit-user/access                       uk.gov.hmrc.cataloguefr
 POST       /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserAccess(username: UserName, organisation: Option[String] ?= None)
 GET        /users/edit-user/access/2                     uk.gov.hmrc.cataloguefrontend.users.EditUserController.requestSent(username: UserName)
 
-GET        /tests                                        uk.gov.hmrc.cataloguefrontend.test.TestJobController.allTests(teamName: Option[TeamName], digitalService: Option[DigitalService])
+GET        /tests                                        uk.gov.hmrc.cataloguefrontend.test.TestJobController.allTests(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
