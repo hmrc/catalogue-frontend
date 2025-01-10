@@ -147,6 +147,7 @@ enum TestType(
   derives Ordering, Reads:
   case Acceptance  extends TestType("Acceptance")
   case Performance extends TestType("Performance")
+  case Contract    extends TestType("Contract")
 
 object JenkinsJob:
   val reads: Reads[JenkinsJob] =
