@@ -41,6 +41,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
     serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/teamA/dependencies", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/CATO/dependencies", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/open-pull-requests", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/v2/repositories?archived=true", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/api/teams/teamA/slug-dependencies?flag=production", willRespondWith = (200, Some("{}")))
     serviceEndpoint(GET, "/api/teams/CATO/slug-dependencies?flag=production", willRespondWith = (200, Some("{}")))

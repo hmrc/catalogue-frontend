@@ -24,18 +24,21 @@
 @import uk.gov.hmrc.cataloguefrontend.test.{routes => testJobRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => vulnerabilityRoutes}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhere, Profile, ProfileType, routes => whatsRunningWhereRoutes}
+@import java.net.URL
 
 @(
-  teamName              : Option[TeamName]
-, leaks                 : Seq[LeakDetectionRepositorySummary]
-, productionBobbyReports: Seq[BobbyReport]
-, latestBobbyReports    : Seq[BobbyReport]
-, platformInitiatives   : Seq[PlatformInitiative]
-, vulnerabilities       : Seq[TotalVulnerabilityCount]
-, commissioningChecks   : Seq[CachedServiceCheck]
-, whatsRunningWhere     : Seq[WhatsRunningWhere]
-, testJobs              : Seq[JenkinsJob]
-, now                   : java.time.LocalDate = java.time.LocalDate.now()
+  teamName                  : Option[TeamName]
+, leaks                     : Seq[LeakDetectionRepositorySummary]
+, productionBobbyReports    : Seq[BobbyReport]
+, latestBobbyReports        : Seq[BobbyReport]
+, platformInitiatives       : Seq[PlatformInitiative]
+, vulnerabilities           : Seq[TotalVulnerabilityCount]
+, openPrsRaisedByTeamMembers: (Int, URL)
+, openPrsForReposOwnedByTeam: (Int, URL)
+, commissioningChecks       : Seq[CachedServiceCheck]
+, whatsRunningWhere         : Seq[WhatsRunningWhere]
+, testJobs                  : Seq[JenkinsJob]
+, now                       : java.time.LocalDate = java.time.LocalDate.now()
 )(implicit
   request: RequestHeader
 )
@@ -133,6 +136,33 @@
           @* TODO whatsRunningWhere should use standard Catalogue form params and reverse routes *@
           <td><a class="ms-2" href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases()?profile_name=@teamName.fold("")(_.asString)&profile_type=team">Outdated or Hotfixed Production Deployments</a></td>
         </tr>
+        @defining(openPrsRaisedByTeamMembers) { (count, link) =>
+          @if(count > 0) {
+            <tr>
+              <td><span class="badge rounded-pill text-bg-info">@count</span></td>
+              <td><a class="ms-2"  id="link-to-github-open-prs-by-team-members" href=@link target="_blank" rel="noreferrer noopener">
+                Open
+                <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
+                PRs raised by team members<span class="glyphicon glyphicon-new-window"/>
+              </a>
+              </td>
+            </tr>
+          }
+        }
+        @defining(openPrsForReposOwnedByTeam) { (count, link) =>
+          @if(count > 0) {
+            <tr>
+              <td><span class="badge rounded-pill text-bg-info">@count</span></td>
+
+              <td><a class="ms-2"  id="link-to-github-open-prs-for-owned-repos" href=@link target="_blank" rel="noreferrer noopener">
+                Open
+                <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
+                PRs for owned repositories<span class="glyphicon glyphicon-new-window"/>
+              </a>
+              </td>
+            </tr>
+          }
+        }
         <tr>
           <td colspan="2"><hr/></td>
         </tr>

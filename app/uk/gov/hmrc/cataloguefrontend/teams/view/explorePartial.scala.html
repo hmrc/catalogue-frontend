@@ -20,10 +20,10 @@
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{PlatformInitiative, routes => platforminitiativesRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => vulnerabilityRoutes}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterComment, routes => prcommenterRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.OpenPullRequest
 
 @(
   teamName  : Option[TeamName]
-, openPrsUrl: Option[String]
 )(implicit
   request: RequestHeader
 )
@@ -36,15 +36,6 @@
       <ul class="list-unstyled">
         @teamName.map { x =>
           <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(x)">Outdated Dependencies</a></li>
-        }
-        @openPrsUrl.map { url =>
-          <li>
-            <a id="link-to-github-open-prs" href="@url" target="_blank" rel="noreferrer noopener">
-              Open
-              <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
-              PRs<span class="glyphicon glyphicon-new-window"/>
-            </a>
-          </li>
         }
         <li><a id="link-to-pr-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(teamName = teamName)">PR-Commenter recommendations</a></li>
         <li><a href="/jdkexplorer">JDK Explorer</a></li>

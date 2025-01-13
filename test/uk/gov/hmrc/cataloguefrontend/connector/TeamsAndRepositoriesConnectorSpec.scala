@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
@@ -28,6 +28,8 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
+
+import java.time.Instant
 
 class TeamsAndRepositoriesConnectorSpec
   extends AnyWordSpec
@@ -120,4 +122,78 @@ class TeamsAndRepositoriesConnectorSpec
         JenkinsJob(repoName = "serviceA", jobName = "serviceA"           , jenkinsURL = "http.jenkins/serviceA"           , jobType = BuildJobType.Job        , testType = None, latestBuild = None),
         JenkinsJob(repoName = "serviceA", jobName = "serviceA-pr-builder", jenkinsURL = "http.jenkins/serviceA-pr-builder", jobType = BuildJobType.PullRequest, testType = None, latestBuild = None),
         JenkinsJob(repoName = "serviceA", jobName = "serviceA-pipeline"  , jenkinsURL = "http.jenkins/serviceA-pipeline"  , jobType = BuildJobType.Pipeline   , testType = None, latestBuild = None)
+      )
+
+  "openPullRequestsForReposOwnedByTeam" should :
+    "return all open pull requests for repositories owned by a team" in :
+      val now = Instant.now()
+
+      stubFor(
+        get(urlEqualTo("/api/open-pull-requests?reposOwnedByTeam=teamA"))
+          .willReturn(aResponse().withBody(
+            s"""
+            [
+            {
+                "repoName" : "service-a",
+                "title" : "pr title 1",
+                "url" : "https://github.com/hmrc/service-a/pull/1",
+                "author" : "author1",
+                "createdAt" : "$now"
+            },
+            {
+                "repoName" : "service-b",
+                "title" : "pr title 2",
+                "url" : "https://github.com/hmrc/service-b/pull/1",
+                "author" : "author2",
+                "createdAt" : "$now"
+            }
+            ]
+          """)
+          )
+      )
+
+      val response = teamsAndRepositoriesConnector
+        .openPullRequestsForReposOwnedByTeam(TeamName("teamA"))
+        .futureValue
+
+      response shouldBe Seq(
+        OpenPullRequest("service-a", "pr title 1", "https://github.com/hmrc/service-a/pull/1", "author1", now),
+        OpenPullRequest("service-b", "pr title 2", "https://github.com/hmrc/service-b/pull/1", "author2", now),
+      )
+
+  "openPullRequestsRaisedByMembersOfTeam" should :
+    "return all open pull requests raised by members of a team" in :
+      val now = Instant.now()
+
+      stubFor(
+        get(urlEqualTo("/api/open-pull-requests?raisedByMembersOfTeam=teamA"))
+          .willReturn(aResponse().withBody(
+            s"""
+            [
+            {
+                "repoName" : "service-a",
+                "title" : "pr title 1",
+                "url" : "https://github.com/hmrc/service-a/pull/1",
+                "author" : "author1",
+                "createdAt" : "$now"
+            },
+            {
+                "repoName" : "service-b",
+                "title" : "pr title 2",
+                "url" : "https://github.com/hmrc/service-b/pull/1",
+                "author" : "author2",
+                "createdAt" : "$now"
+            }
+            ]
+          """)
+          )
+      )
+
+      val response = teamsAndRepositoriesConnector
+        .openPullRequestsRaisedByMembersOfTeam(TeamName("teamA"))
+        .futureValue
+
+      response shouldBe Seq(
+        OpenPullRequest("service-a", "pr title 1", "https://github.com/hmrc/service-a/pull/1", "author1", now),
+        OpenPullRequest("service-b", "pr title 2", "https://github.com/hmrc/service-b/pull/1", "author2", now),
       )
