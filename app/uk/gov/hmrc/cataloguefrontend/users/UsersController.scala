@@ -23,7 +23,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users.view.html.{UserInfoPage, UserListPage, UserSearchResults}
+import uk.gov.hmrc.cataloguefrontend.users.view.html.{UserInfoPage, UserListPage, UserSearchResults, VpnRequestSentPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Resource, ResourceType, Retrieval}
@@ -31,6 +31,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 @Singleton
 class UsersController @Inject()(
@@ -38,6 +39,7 @@ class UsersController @Inject()(
 , userInfoPage           : UserInfoPage
 , userListPage           : UserListPage
 , userSearchResults      : UserSearchResults
+, vpnRequestSentPage     : VpnRequestSentPage
 , umpConfig              : UserManagementPortalConfig
 , override val mcc       : MessagesControllerComponents
 , override val auth      : FrontendAuthComponents
@@ -79,6 +81,31 @@ class UsersController @Inject()(
   private def isAdminForUser(retrieval: Option[Set[Resource]], user: User): Boolean =
     val teams = retrieval.fold(Set.empty[TeamName])(_.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply))
     teams.contains(TeamName("*")) || teams.exists(user.teamNames.contains) // Global admin or admin for user's team
+
+  val requestNewVpnCert: Action[AnyContent] =
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      auth.verify(Retrieval.locations(
+        resourceType = Some(ResourceType("catalogue-frontend")),
+        action       = Some(IAAction("CREATE_USER"))
+      )).flatMap: retrieval =>
+        request.body.asFormUrlEncoded.flatMap(_.get("username").flatMap(_.headOption)).map(UserName.apply)
+          .fold(
+            Future.failed(RuntimeException("Could not request a new vpn certificate as hidden username form field was empty"))
+          ): username =>
+            userManagementConnector.getUser(username).flatMap:
+              case Some(user) =>
+                if(isAdminForUser(retrieval, user)) then
+                  userManagementConnector.requestNewVpnCert(username)
+                    .map(ticketOpt => Created(vpnRequestSentPage(user, ticketOpt)))
+                    .recover:
+                      case NonFatal(e) =>
+                        logger.error(s"Error requesting new VPN certificate: ${e.getMessage}", e)
+                        Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting VPN Certificate. Contact #team-platops")
+                else
+                  Future.successful(Redirect(routes.UsersController.user(username)).flashing("error" -> "Permission denied"))
+              case _          =>
+                Future.successful(Redirect(routes.UsersController.user(username)).flashing("error" -> "Unable to find user"))
 
   val users: Action[AnyContent] =
     BasicAuthAction.async: request =>
