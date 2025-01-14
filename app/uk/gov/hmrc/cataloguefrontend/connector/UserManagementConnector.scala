@@ -104,7 +104,7 @@ class UserManagementConnector @Inject()(
         case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def requestNewVpnCert(username: UserName)(using HeaderCarrier): Future[Option[String]] =
-    val url: URL = url"$baseUrl/user-management/users/$username/vpn"
+    val url: URL = url"$baseUrl/user-management/users/${username.asString}/vpn"
     httpClientV2
       .post(url)
       .execute[Either[UpstreamErrorResponse, JsValue]]
