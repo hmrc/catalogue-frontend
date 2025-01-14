@@ -166,7 +166,7 @@ class CatalogueController @Inject() (
                                              repoModules           <- serviceDependenciesConnector.getRepositoryModules(repositoryName, version)
                                              shutterStates         <- ShutterType.values.toSeq.foldLeftM[Future, Seq[ShutterState]](Seq.empty): (acc, shutterType) =>
                                                                         shutterService
-                                                                          .getShutterStates(shutterType, env, Some(serviceName))
+                                                                          .getShutterStates(shutterType, env, serviceName = Some(serviceName))
                                                                           .map(acc ++ _)
                                              vulnerabilitiesCount <- vulnerabilitiesConnector
                                                                         .vulnerabilityCounts(flag = SlugInfoFlag.ForEnvironment(env), serviceName = Some(serviceName))

@@ -23,7 +23,7 @@
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{CachedServiceCheck, routes => serviceCommissioningStatusRoutes}
 @import uk.gov.hmrc.cataloguefrontend.test.{routes => testJobRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => vulnerabilityRoutes}
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhere, Profile, ProfileType, routes => whatsRunningWhereRoutes}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhere, routes => whatsRunningWhereRoutes}
 @import java.net.URL
 
 @(
@@ -48,46 +48,31 @@
     <div class="h4 mb-0">Health</div>
   </div>
   <div class="card-body">
-    <table style="width: 100%;">
+    <table style="width:100%;border-collapse:separate;border-spacing:2px 0px;">
       <tbody>
         <tr>
           @defining(leaks.map(_.unresolvedCount).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td style="width: 100%;"><a class="ms-2" href="@leakDetectionRoutes.LeakDetectionController.repoSummaries(team = teamName, includeWarnings = false, includeExemptions = false, includeViolations = true)">Leaks</a></td>
+          <td style="width: 100%;"><a href="@leakDetectionRoutes.LeakDetectionController.repoSummaries(team = teamName, includeWarnings = false, includeExemptions = false, includeViolations = true)">Leaks</a></td>
         </tr>
         <tr>
           @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a class="ms-2" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString), isActive = Some(true))">Bobby Errors - Production</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString), isActive = Some(true))">Bobby Errors - Production</a></td>
         </tr>
         <tr>
           @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a class="ms-2" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(true))">Bobby Errors - Latest</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(true))">Bobby Errors - Latest</a></td>
         </tr>
         <tr>
           @defining(vulnerabilities.map(_.actionRequired).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a class="ms-2" href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName)"> Service Vulnerabilities</a></td>
-        </tr>
-        <tr>
-          <td colspan="2"><hr/></td>
-        </tr>
-        <tr>
-          @defining(-1) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { shutter-badge }">@count</span></td>
-          }
-          <td><a class="ms-2" href="">Shuttered Frontend</a></td>
-        </tr>
-        <tr>
-          @defining(-1) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { shutter-badge }">@count</span></td>
-          }
-          <td><a class="ms-2" href="">Shuttered Api</a></td>
+          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName)"> Service Vulnerabilities</a></td>
         </tr>
         <tr>
           <td colspan="2"><hr/></td>
@@ -96,25 +81,25 @@
           @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a class="ms-2" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString), isActive = Some(false))">Bobby Warnings - Production</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString), isActive = Some(false))">Bobby Warnings - Production</a></td>
         </tr>
         <tr>
           @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a class="ms-2" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(false))">Bobby Warnings - Latest</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(false))">Bobby Warnings - Latest</a></td>
         </tr>
         <tr>
           @defining(platformInitiatives.filter(_.progress.percent < 100).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a class="ms-2" href="@platforminitiativesRoutes.PlatformInitiativesController.platformInitiatives(team = teamName)">Platform Initiatives</a></td>
+          <td><a href="@platforminitiativesRoutes.PlatformInitiativesController.platformInitiatives(team = teamName)">Platform Initiatives</a></td>
         </tr>
         <tr>
           @defining(commissioningChecks.filter(_.warnings).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a class="ms-2" href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName, warningFilter = Some(true))">Service Commissioning State Warnings</a></td>
+          <td><a href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName, warningFilter = Some(true))">Service Commissioning State Warnings</a></td>
         </tr>
         <tr>
             @defining(
@@ -134,17 +119,18 @@
             <td><span class="badge rounded-pill @if(counts.sum == 0) { text-bg-secondary } else { text-bg-warning }">@counts.sum</span></td>
           }
           @* TODO whatsRunningWhere should use standard Catalogue form params and reverse routes *@
-          <td><a class="ms-2" href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases()?profile_name=@teamName.fold("")(_.asString)&profile_type=team">Outdated or Hotfixed Production Deployments</a></td>
+          <td><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases()?profile_name=@teamName.fold("")(_.asString)&profile_type=team">Outdated or Hotfixed Production Deployments</a></td>
         </tr>
         @defining(openPrsRaisedByTeamMembers) { (count, link) =>
           @if(count > 0) {
             <tr>
               <td><span class="badge rounded-pill text-bg-info">@count</span></td>
-              <td><a class="ms-2"  id="link-to-github-open-prs-by-team-members" href=@link target="_blank" rel="noreferrer noopener">
-                Open
-                <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
-                PRs raised by team members<span class="glyphicon glyphicon-new-window"/>
-              </a>
+              <td>
+                <a href=@link target="_blank" rel="noreferrer noopener">
+                  Open
+                  <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
+                  PRs raised by team members<span class="glyphicon glyphicon-new-window"/>
+                </a>
               </td>
             </tr>
           }
@@ -153,12 +139,12 @@
           @if(count > 0) {
             <tr>
               <td><span class="badge rounded-pill text-bg-info">@count</span></td>
-
-              <td><a class="ms-2"  id="link-to-github-open-prs-for-owned-repos" href=@link target="_blank" rel="noreferrer noopener">
-                Open
-                <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
-                PRs for owned repositories<span class="glyphicon glyphicon-new-window"/>
-              </a>
+              <td>
+                <a href=@link target="_blank" rel="noreferrer noopener">
+                  Open
+                  <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
+                  PRs for owned repositories<span class="glyphicon glyphicon-new-window"/>
+                </a>
               </td>
             </tr>
           }
@@ -170,20 +156,19 @@
           @defining(testJobs.flatMap(_.latestBuild).filter(_.result == Some("FAILURE")).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a class="ms-2" href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Test Failures</a></td>
+          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Test Failures</a></td>
         </tr>
         <tr>
           @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numAccessibilityViolations).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a class="ms-2" href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Accessibility Issues</a></td>
-
+          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Accessibility Issues</a></td>
         </tr>
         <tr>
           @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numSecurityAlerts).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a class="ms-2" href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Security Alerts</a></td>
+          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Security Alerts</a></td>
         </tr>
         <tr>
           <td colspan="2"><hr/></td>
@@ -192,19 +177,19 @@
           @defining(-1) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a class="ms-2" href="">Slow Running Queries</a></td>
+          <td><a href="">Slow Running Queries</a></td>
         </tr>
         <tr>
           @defining(-1) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a class="ms-2" href="">Non Indexed Queries</a></td>
+          <td><a href="">Non Indexed Queries</a></td>
         </tr>
         <tr>
           @defining(-1) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a class="ms-2" href="">Container Kills</a></td>
+          <td><a href="">Container Kills</a></td>
         </tr>
       </tbody>
     </table>
