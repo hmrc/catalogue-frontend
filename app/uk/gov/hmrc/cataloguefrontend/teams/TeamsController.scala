@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName}
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConnector
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
+import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.teams.view.html.{TeamInfoOldPage, TeamInfoPage, TeamsListPage}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Profile, ProfileName, ProfileType, ReleasesConnector}
@@ -46,6 +47,7 @@ class TeamsController @Inject()(
 , vulnerabilitiesConnector           : VulnerabilitiesConnector
 , releasesConnector                  : ReleasesConnector
 , leakDetectionService               : LeakDetectionService
+, shutterService                     : ShutterService
 , umpConfig                          : UserManagementPortalConfig
 , teamInfoPage                       : TeamInfoPage
 , teamInfoOldPage                    : TeamInfoOldPage
@@ -74,6 +76,9 @@ class TeamsController @Inject()(
                      , leakDetectionService.repoSummaries(team = Some(teamName), includeWarnings = false, includeExemptions = false, includeViolations = true, includeNonIssues = false)
                      , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.ForEnvironment(Environment.Production))
                      , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.Latest)
+                     , ( shutterService.getShutterStates(ShutterType.Frontend, Environment.Production, Some(teamName), None)
+                       , shutterService.getShutterStates(ShutterType.Api     , Environment.Production, Some(teamName), None)
+                       ).tupled.map(x => x._1 ++ x._2)
                      , platformInitiativesConnector.getInitiatives(team = Some(teamName))
                      , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest, team = Some(teamName))
                      , serviceCommissioningStatusConnector.cachedCommissioningStatus(teamName = Some(teamName))

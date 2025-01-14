@@ -14,16 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionRepositorySummary, routes => leakDetectionRoutes}
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{CachedServiceCheck, routes => serviceCommissioningStatusRoutes}
-@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{PlatformInitiative, routes => platforminitiativesRoutes}
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => vulnerabilityRoutes}
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.cost.{routes => costRoutes}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterComment, routes => prcommenterRoutes}
-@import uk.gov.hmrc.cataloguefrontend.connector.OpenPullRequest
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => whatsRunningWhereRoutes}
 
 @(
-  teamName  : Option[TeamName]
+  teamName: Option[TeamName]
 )(implicit
   request: RequestHeader
 )
@@ -33,15 +31,16 @@
     <div class="h4 mb-0">Explore</div>
   </div>
   <div class="card-body">
-      <ul class="list-unstyled">
-        @teamName.map { x =>
-          <li><a id="link-to-outdated-dependencies" href="@teamRoutes.TeamsController.outOfDateTeamDependencies(x)">Outdated Dependencies</a></li>
-        }
-        <li><a id="link-to-pr-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(teamName = teamName)">PR-Commenter recommendations</a></li>
-        <li><a href="/jdkexplorer">JDK Explorer</a></li>
-        <li><a href="/sbtexplorer">SBT Explorer</a></li>
-        <li><a href="/cost-explorer">Cost Explorer</a></li>
-        <li><a href="/whats-runing-where">Whats Running Where</a></li>
+    <ul class="list-unstyled">
+      @teamName.map { x =>
+        <li><a href="@teamRoutes.TeamsController.outOfDateTeamDependencies(x)">Outdated Dependencies</a></li>
+      }
+      <li><a href="@prcommenterRoutes.PrCommenterController.recommendations(teamName = teamName)">PR-Commenter recommendations</a></li>
+      <li><a href="@appRoutes.JdkVersionController.compareAllEnvironments(teamName = teamName)">JDK Explorer</a></li>
+      <li><a href="@appRoutes.SbtVersionController.compareAllEnvironments(teamName = teamName)">SBT Explorer</a></li>
+      <li><a href="@costRoutes.CostController.costExplorer(team = teamName)">Cost Explorer</a></li>
+      @* TODO whatsRunningWhere should use standard Catalogue form params and reverse routes *@
+      <li><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases()?profile_name=@teamName.fold("")(_.asString)&profile_type=team">What's Running Where</a></li>
     </ul>
   </div>
 </div>

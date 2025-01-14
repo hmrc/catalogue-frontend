@@ -40,13 +40,15 @@ class ShutterService @Inject() (
 ):
 
   def getShutterStates(
-    st         : ShutterType,
-    env        : Environment,
-    serviceName: Option[ServiceName] = None
+    st            : ShutterType
+  , env           : Environment
+  , teamName      : Option[TeamName]       = None
+  , digitalService: Option[DigitalService] = None
+  , serviceName   : Option[ServiceName]    = None
   )(using
     HeaderCarrier
   ): Future[Seq[ShutterState]] =
-    shutterConnector.shutterStates(st, env, teamName = None, digitalService = None, serviceName)
+    shutterConnector.shutterStates(st, env, teamName, digitalService, serviceName)
 
   def updateShutterStatus(
     serviceName: ServiceName,
