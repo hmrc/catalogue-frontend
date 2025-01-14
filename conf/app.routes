@@ -136,6 +136,7 @@ GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefr
 GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.users
 GET        /users-search                                 uk.gov.hmrc.cataloguefrontend.users.UsersController.userSearch(query: String)
 GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: UserName)
+POST       /users/new-vpn-cert                           uk.gov.hmrc.cataloguefrontend.users.UsersController.requestNewVpnCert
 
 GET        /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserLanding(username: UserName, organisation: Option[String] ?= None)
 POST       /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserAccess(username: UserName, organisation: Option[String] ?= None)

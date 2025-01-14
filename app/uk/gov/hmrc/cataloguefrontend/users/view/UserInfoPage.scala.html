@@ -31,6 +31,13 @@
 )
 
 @standard_layout(user.username.asString, active = "users") {
+  @request.flash.get("error").map { msg =>
+    <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+        @msg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  }
+
   <h1 class="page-heading mt-4">@user.username.asString</h1>
 
   <section class="section-wrapper">
@@ -124,60 +131,93 @@
               <div class="row mb-3">
                   <div class="col-md-4">
                       <div class="card mb-4">
-                          <div class="card-header">
+                          <div class="card-header d-flex justify-content-between align-items-center">
                               <div class="h4 mb-0">Tooling</div>
-                          </div>
-
-                          <div class="card-body">
                               @if(canCreateUsers) {
-                                  <div class="btn-group float-end" role="group">
+                                  <div>
                                       <a class="btn btn-success" href="@userRoutes.EditUserController.editUserLanding(user.username, user.organisation)">Edit</a>
                                   </div>
                               }
-                          <ul class="list-unstyled">
-                              <li>
-                                  <span class="glyphicon glyphicon-@{
-                                      if(userAccess.vpn) "ok text-success" else "minus text-secondary"
-                                  } me-2"></span>
-                                  <strong>VPN</strong>
-                              </li>
-                              <li>
-                                  <span class="glyphicon glyphicon-@{
-                                      if(userAccess.jira) "ok text-success" else "minus text-secondary"
-                                  } me-2"></span>
-                                  <strong>Jira</strong>
-                              </li>
-                              <li>
-                                  <span class="glyphicon glyphicon-@{
-                                      if(userAccess.confluence) "ok text-success" else "minus text-secondary"
-                                  } me-2"></span>
-                                  <strong>Confluence</strong>
-                              </li>
-                              <li>
-                                  <span class="glyphicon glyphicon-@{
-                                      if(userAccess.devTools) "ok text-success" else "minus text-secondary"
-                                  } me-2"></span>
-                                  <strong>Developer Tools</strong> <i>(Kibana, Grafana, Jenkins)</i>
-                              </li>
-                              <li>
-                                  <span class="glyphicon glyphicon-@{
-                                      if(userAccess.googleApps) "ok text-success" else "minus text-secondary"
-                                  } me-2"></span>
-                                  <strong>Google Workspace</strong> <i>(Gmail, Calendar, Hangouts, Drive etc)</i>
-                              </li>
-                              <li>
-                                  <abbr style="text-decoration: none;
-                                      border-bottom: none;" title="Unable to determine if BitWarden access has been granted">
-                                      <span class="glyphicon glyphicon-question-sign me-2"></span>
-                                  </abbr>
-                                  <strong>Bitwarden</strong>
-                              </li>
-                          </ul>
                           </div>
+                        
+                          <div class="card-body">
+                              <ul class="list-unstyled">
+                                  <li>
+                                      <span class="glyphicon glyphicon-@{
+                                          if(userAccess.vpn) "ok text-success" else "minus text-secondary"
+                                      } me-2"></span>
+                                      <strong>VPN</strong>
+                                  </li>
+                                  <li>
+                                      <span class="glyphicon glyphicon-@{
+                                          if(userAccess.jira) "ok text-success" else "minus text-secondary"
+                                      } me-2"></span>
+                                      <strong>Jira</strong>
+                                  </li>
+                                  <li>
+                                      <span class="glyphicon glyphicon-@{
+                                          if(userAccess.confluence) "ok text-success" else "minus text-secondary"
+                                      } me-2"></span>
+                                      <strong>Confluence</strong>
+                                  </li>
+                                  <li>
+                                      <span class="glyphicon glyphicon-@{
+                                          if(userAccess.devTools) "ok text-success" else "minus text-secondary"
+                                      } me-2"></span>
+                                      <strong>Developer Tools</strong> <i>(Kibana, Grafana, Jenkins)</i>
+                                  </li>
+                                  <li>
+                                      <span class="glyphicon glyphicon-@{
+                                          if(userAccess.googleApps) "ok text-success" else "minus text-secondary"
+                                      } me-2"></span>
+                                      <strong>Google Workspace</strong> <i>(Gmail, Calendar, Hangouts, Drive etc)</i>
+                                  </li>
+                                  <li>
+                                      <abbr style="text-decoration: none;
+                                          border-bottom: none;" title="Unable to determine if BitWarden access has been granted">
+                                          <span class="glyphicon glyphicon-question-sign me-2"></span>
+                                      </abbr>
+                                      <strong>Bitwarden</strong>
+                                  </li>
+                              </ul>
+                          </div>
+                          @if(canCreateUsers) {
+                            <div class="card-footer">
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#vpnModal">
+                                        Request VPN Certificate
+                                    </button>
+                                </div>
+                            </div>
+                          }
                       </div>
                   </div>
               </div>
           }
       }
   </section>
+
+  <div class="modal fade" id="vpnModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="vpnModalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="vpnModalTitle">Request New VPN Certificate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are about to request a new VPN certificate for @user.username.asString.</p>
+                <p>If you continue you will invalidate @{user.username.asString}'s existing certificate.</p>
+                <p>To proceed click 'Submit' and a new certificate will be sent to @user.primaryEmail shortly.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <form id="vpn-form" method="post" action="@userRoutes.UsersController.requestNewVpnCert">
+                    @csrfFormField
+                    <input name="username" type="hidden" value="@user.username.asString">
+                    <button id="vpn-submit" class="btn btn-success" type="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+  </div>
 }
