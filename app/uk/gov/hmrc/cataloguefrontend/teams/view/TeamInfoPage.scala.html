@@ -26,6 +26,7 @@
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.CachedServiceCheck
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
+@import java.net.URL
 
 @this(
 viewMessages: ViewMessages
@@ -37,7 +38,8 @@ viewMessages: ViewMessages
 , results       : ( Option[String]
                   , Seq[GitRepository]
                   , UmpTeam
-                  , Option[String]
+                  , (Int, URL) // Open PRs raised by the team
+                  , (Int, URL) // Open PRs for repos owned by the team
                   , Seq[LeakDetectionRepositorySummary]
                   , Seq[BobbyReport] // Production
                   , Seq[BobbyReport] // Latest
@@ -53,7 +55,7 @@ viewMessages: ViewMessages
 
 @standard_layout(teamName.asString, active = "teams") {
   <h1 class="page-heading mt-4">@teamName.asString</h1>
-  @defining(results) { case (gitHubUrl, repos, umpTeam, openPrsUrl, leaks, latestBobbyReports, productionBobbyReports, platformInitiatives, vulnerabilities, commissioningChecks, whatsRunningWhere, testJobs) =>
+  @defining(results) { case (gitHubUrl, repos, umpTeam, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, leaks, latestBobbyReports, productionBobbyReports, platformInitiatives, vulnerabilities, commissioningChecks, whatsRunningWhere, testJobs) =>
     <section class="section-wrapper">
       <div class="row mb-3">
         <div class="col-md-4">
@@ -152,10 +154,10 @@ viewMessages: ViewMessages
             </div>
           </div>
           <div class="col md-4">
-            @healthPartial(teamName = Some(teamName), leaks, latestBobbyReports, productionBobbyReports, platformInitiatives, vulnerabilities, commissioningChecks, whatsRunningWhere, testJobs)
+            @healthPartial(teamName = Some(teamName), leaks, latestBobbyReports, productionBobbyReports, platformInitiatives, vulnerabilities, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, commissioningChecks, whatsRunningWhere, testJobs)
           </div>
           <div class="col md-4">
-            @explorePartial(teamName = Some(teamName), openPrsUrl)
+            @explorePartial(teamName = Some(teamName))
           </div>
         </div>
         @repositoriesPartial(repos, viewMessages)

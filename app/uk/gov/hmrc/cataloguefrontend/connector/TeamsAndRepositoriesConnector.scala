@@ -253,6 +253,23 @@ object GitHubTeam:
     ~ (__ \ "repos"         ).read[Seq[String]]
     )(apply)
 
+case class OpenPullRequest(
+  repoName : String,
+  title    : String,
+  url      : String,
+  author   : String,
+  createdAt: Instant
+)
+
+object OpenPullRequest:
+  val reads: Reads[OpenPullRequest] =
+    ( (__ \ "repoName" ).read[String]
+    ~ (__ \ "title"    ).read[String]
+    ~ (__ \ "url"      ).read[String]
+    ~ (__ \ "author"   ).read[String]
+    ~ (__ \ "createdAt").read[Instant]
+    )(apply)
+
 @Singleton
 class TeamsAndRepositoriesConnector @Inject()(
   httpClientV2  : HttpClientV2,
@@ -267,6 +284,7 @@ class TeamsAndRepositoriesConnector @Inject()(
 
   private given Reads[GitHubTeam]    = GitHubTeam.reads
   private given Reads[GitRepository] = GitRepository.reads // v2 model
+  private given Reads[OpenPullRequest] = OpenPullRequest.reads
 
   def findTestJobs(
     teamName      : Option[TeamName]       = None,
@@ -314,6 +332,16 @@ class TeamsAndRepositoriesConnector @Inject()(
         case NonFatal(ex) =>
           logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
           Seq.empty[String]
+
+  def openPullRequestsForReposOwnedByTeam(teamName: TeamName)(using HeaderCarrier): Future[Seq[OpenPullRequest]] =
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/open-pull-requests?reposOwnedByTeam=${teamName.asString}")
+      .execute[Seq[OpenPullRequest]]
+
+  def openPullRequestsRaisedByMembersOfTeam(teamName: TeamName)(using HeaderCarrier): Future[Seq[OpenPullRequest]] =
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/open-pull-requests?raisedByMembersOfTeam=${teamName.asString}")
+      .execute[Seq[OpenPullRequest]]
 
   def allTeams(teamName: Option[TeamName] = None)(using HeaderCarrier): Future[Seq[GitHubTeam]] =
      httpClientV2

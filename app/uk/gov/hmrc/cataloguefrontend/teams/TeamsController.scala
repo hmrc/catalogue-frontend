@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.cataloguefrontend.teams
 
-import cats.implicits._
+import cats.implicits.*
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, SlugInfoFlag, TeamName, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName}
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConnector
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
-import uk.gov.hmrc.cataloguefrontend.teams.view.html.{TeamInfoPage, TeamInfoOldPage, TeamsListPage}
+import uk.gov.hmrc.cataloguefrontend.teams.view.html.{TeamInfoOldPage, TeamInfoPage, TeamsListPage}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Profile, ProfileName, ProfileType, ReleasesConnector}
 import uk.gov.hmrc.cataloguefrontend.view.html.OutOfDateTeamDependenciesPage
+import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -64,10 +65,12 @@ class TeamsController @Inject()(
           results <- ( teamsAndRepositoriesConnector.allTeams(Some(teamName)).map(_.headOption.map(_.githubUrl))
                      , teamsAndRepositoriesConnector.allRepositories(team = Some(teamName), archived = Some(false))
                      , userManagementConnector.getTeam(teamName)
-                     , userManagementConnector.getAllUsers(team = Some(teamName))
-                        .map(_.flatMap(_.githubUsername))
-                        .map: authors =>
-                          Option.when(authors.nonEmpty)(s"https://github.com/search?q=org%3Ahmrc+is%3Apr+is%3Aopen+${authors.map(a => s"author%3A$a").mkString("+")}&type=pullrequests")
+                     , teamsAndRepositoriesConnector.openPullRequestsRaisedByMembersOfTeam(teamName).map: openPrs =>
+                        val githubUrl = s"https://github.com/search?q=org:hmrc+is:pr+is:open+${openPrs.map(_.author).distinct.map { a => s"author:$a" }.mkString("+")}&type=pullrequests"
+                        (openPrs.size, url"$githubUrl")
+                     , teamsAndRepositoriesConnector.openPullRequestsForReposOwnedByTeam(teamName).map: openPrs =>
+                        val githubUrl = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r"}.mkString("+")}+is:pr+is:open&type=pullrequests"
+                        (openPrs.size, url"$githubUrl")
                      , leakDetectionService.repoSummaries(team = Some(teamName), includeWarnings = false, includeExemptions = false, includeViolations = true, includeNonIssues = false)
                      , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.ForEnvironment(Environment.Production))
                      , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.Latest)
