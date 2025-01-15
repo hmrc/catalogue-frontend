@@ -20,7 +20,7 @@ import play.api.Logging
 import play.api.libs.json.*
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, EditUserAccessRequest, UmpTeam, User, UserAccess}
+import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, EditUserAccessRequest, ResetLdapPassword, UmpTeam, User, UserAccess}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -107,6 +107,16 @@ class UserManagementConnector @Inject()(
     val url: URL = url"$baseUrl/user-management/users/${username.asString}/vpn"
     httpClientV2
       .post(url)
+      .execute[Either[UpstreamErrorResponse, JsValue]]
+      .flatMap:
+        case Right(json) => Future.successful((json \ "ticket_number").validate[String].asOpt)
+        case Left(err)   => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
+  def resetLdapPassword(resetLdapPassword: ResetLdapPassword)(using HeaderCarrier): Future[Option[String]] =
+    val url: URL = url"$baseUrl/user-management/reset-ldap-password"
+    httpClientV2
+      .post(url)
+      .withBody(Json.toJson(resetLdapPassword)(ResetLdapPassword.writes))
       .execute[Either[UpstreamErrorResponse, JsValue]]
       .flatMap:
         case Right(json) => Future.successful((json \ "ticket_number").validate[String].asOpt)

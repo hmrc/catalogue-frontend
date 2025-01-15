@@ -16,17 +16,19 @@
 
 package uk.gov.hmrc.cataloguefrontend.users
 
-import cats.data.EitherT
 import play.api.Logging
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, RequestHeader, Result}
+import play.api.data.validation.Constraints
+import play.api.data.{Form, Forms}
+import play.api.mvc.*
+import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users.view.html.{UserInfoPage, UserListPage, UserSearchResults, VpnRequestSentPage}
+import uk.gov.hmrc.cataloguefrontend.users.view.html.{LdapResetRequestSentPage, UserInfoPage, UserListPage, UserSearchResults, VpnRequestSentPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
-import uk.gov.hmrc.http.UpstreamErrorResponse
-import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Resource, ResourceType, Retrieval}
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
@@ -35,14 +37,15 @@ import scala.util.control.NonFatal
 
 @Singleton
 class UsersController @Inject()(
-  userManagementConnector: UserManagementConnector
-, userInfoPage           : UserInfoPage
-, userListPage           : UserListPage
-, userSearchResults      : UserSearchResults
-, vpnRequestSentPage     : VpnRequestSentPage
-, umpConfig              : UserManagementPortalConfig
-, override val mcc       : MessagesControllerComponents
-, override val auth      : FrontendAuthComponents
+  userManagementConnector : UserManagementConnector
+, userInfoPage            : UserInfoPage
+, userListPage            : UserListPage
+, userSearchResults       : UserSearchResults
+, vpnRequestSentPage      : VpnRequestSentPage
+, ldapResetRequestSentPage: LdapResetRequestSentPage
+, umpConfig               : UserManagementPortalConfig
+, override val mcc        : MessagesControllerComponents
+, override val auth       : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
@@ -50,33 +53,55 @@ class UsersController @Inject()(
      with play.api.i18n.I18nSupport
      with Logging:
 
+  private def showUserInfoPage(
+    username: UserName,
+    retrieval: Option[Set[Resource]],
+    resultType: Html => Result,
+    form: Form[_]
+  )(using HeaderCarrier, RequestHeader): Future[Result] =
+    for
+      userOpt     <- userManagementConnector.getUser(username)
+      userTooling <- userManagementConnector.getUserAccess(username).map(Right(_)).recover:
+                       case e: UpstreamErrorResponse =>
+                         logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
+                           s"Error: ${e.message}.")
+                         Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
+    yield
+      userOpt match
+        case Some(user) =>
+          val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
+          resultType(userInfoPage(form, isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl))
+        case None =>
+          NotFound(error_404_template())
+
   def user(username: UserName): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given RequestHeader = request
-      (for
-        retrieval   <- EitherT.liftF:
-                         auth.verify(Retrieval.locations(
-                           resourceType = Some(ResourceType("catalogue-frontend")),
-                           action       = Some(IAAction("CREATE_USER"))
-                         ))
-        userTooling <- EitherT.liftF[Future, Result, Either[String, UserAccess]]:
-                         userManagementConnector.getUserAccess(username)
-                           .map(userAccess => Right(userAccess))
-                           .recover:
-                              case e: UpstreamErrorResponse =>
-                                logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
-                                  s"Error: ${e.message}.")
-                                Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
-        userOpt     <- EitherT.liftF[Future, Result, Option[User]]:
-                         userManagementConnector.getUser(username)
-       yield
-        userOpt match
-          case Some(user) =>
-            val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-            Ok(userInfoPage(isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl))
-          case None =>
-            NotFound(error_404_template())
-      ).merge
+      for
+        retrieval <- auth.verify(Retrieval.locations(
+                       resourceType = Some(ResourceType("catalogue-frontend")),
+                       action       = Some(IAAction("CREATE_USER"))
+                     ))
+        result    <- showUserInfoPage(username, retrieval, Ok(_), LdapResetForm.form)
+      yield result
+
+  def requestLdapReset(username: UserName): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.UsersController.user(username),
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
+    ).async: request =>
+        given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+        LdapResetForm.form.bindFromRequest().fold(
+          formWithErrors =>
+            showUserInfoPage(username, Some(request.retrieval), BadRequest(_), formWithErrors)
+          , formData =>
+            userManagementConnector.resetLdapPassword(formData).map: ticketOpt =>
+              Ok(ldapResetRequestSentPage(username, ticketOpt))
+            .recover:
+              case NonFatal(e) =>
+                logger.error(s"Error requesting LDAP password reset: ${e.getMessage}", e)
+                Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting LDAP password reset. Contact #team-platops")
+        )
 
   private def isAdminForUser(retrieval: Option[Set[Resource]], user: User): Boolean =
     val teams = retrieval.fold(Set.empty[TeamName])(_.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply))
@@ -130,3 +155,12 @@ class UsersController @Inject()(
         .map(matches => Ok(userSearchResults(matches)))
 
 end UsersController
+
+object LdapResetForm:
+  val form: Form[ResetLdapPassword] =
+    Form(
+      Forms.mapping(
+        "username" -> Forms.nonEmptyText,
+        "email"    -> Forms.text.verifying(Constraints.emailAddress(errorMessage = "Please provide a valid email address."))
+      )(ResetLdapPassword.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )

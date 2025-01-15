@@ -1,0 +1,46 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.users.{routes => usersRoutes}
+
+@this()
+
+@(username: UserName,
+  ticketOpt: Option[String]
+)(implicit
+  request : RequestHeader
+)
+
+@standard_layout("Reset User LDAP password", active = "users") {
+
+    <section class="section-wrapper">
+        <h1 class="page-heading mt-4">Request Sent</h1>
+
+        <p>You have requested an LDAP password reset for @username.asString</p>
+
+        @ticketOpt match {
+            case Some(ticket) => {
+                <p>To review the progression of this request and check the users details are correct, please view the <a target="_blank" href="https://jira.tools.tax.service.gov.uk/browse/@ticket">@ticket</a> Jira ticket.</p>
+            }
+            case _ => {
+                <p>To review the progression of this request and check the users details are correct, please view the <a target="_blank" href="https://jira.tools.tax.service.gov.uk/projects/ACRS/issues/ACRS">ACRS Jira Board</a>.</p>
+            }
+        }
+
+        <a href="@usersRoutes.UsersController.users" class="btn btn-secondary" role="button">Back to Users Page</a>
+
+    </section>
+}

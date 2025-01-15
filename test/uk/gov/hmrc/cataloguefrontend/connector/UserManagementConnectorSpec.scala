@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.connector
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users._
+import uk.gov.hmrc.cataloguefrontend.users.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -450,3 +450,36 @@ class UserManagementConnectorSpec
       an[RuntimeException] shouldBe thrownBy {
         connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue
       }
+
+    "restLdapPassword" should:
+      val resetLdapPassword =
+        ResetLdapPassword("joe.bloggs", "tes@email.com")
+        
+      "return JSON with a ticket ID when UMP response is 200" in :
+        stubFor(
+          post(urlPathEqualTo("/user-management/reset-ldap-password"))
+            .willReturn(
+              aResponse()
+                .withStatus(200)
+                .withBody("""{"ticket_number": "some-unique-ticket-id"}""")
+            )
+        )
+
+        connector.resetLdapPassword(resetLdapPassword).futureValue shouldBe Some("some-unique-ticket-id")
+
+        verify(
+          postRequestedFor(urlPathEqualTo("/user-management/reset-ldap-password"))
+        )
+
+      "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
+        stubFor(
+          post(urlPathEqualTo(s"user-management/reset-ldap-password"))
+            .willReturn(
+              aResponse()
+                .withStatus(500)
+            )
+        )
+
+        an[RuntimeException] shouldBe thrownBy {
+          connector.resetLdapPassword(resetLdapPassword).futureValue
+        }

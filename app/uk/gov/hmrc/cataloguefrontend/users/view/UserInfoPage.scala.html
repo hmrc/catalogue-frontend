@@ -22,12 +22,13 @@
 
 @this()
 
-@(canCreateUsers  : Boolean,
-  userTooling  : Either[String, UserAccess],
-  user         : User,
-  umpProfileUrl: String
+@(ldapForm      : Form[?],
+  canCreateUsers: Boolean,
+  userTooling   : Either[String, UserAccess],
+  user          : User,
+  umpProfileUrl : String
 )(implicit
-  request      : RequestHeader
+  request       : RequestHeader
 )
 
 @standard_layout(user.username.asString, active = "users") {
@@ -139,7 +140,7 @@
                                   </div>
                               }
                           </div>
-                        
+
                           <div class="card-body">
                               <ul class="list-unstyled">
                                   <li>
@@ -182,13 +183,20 @@
                               </ul>
                           </div>
                           @if(canCreateUsers) {
-                            <div class="card-footer">
-                                <div class="d-flex justify-content-between">
-                                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#vpnModal">
-                                        Request VPN Certificate
-                                    </button>
-                                </div>
-                            </div>
+                              <div class="card-footer">
+                                  <div class="d-flex justify-content-between gap-3">
+                                      <button type="button" class="btn btn-success flex-grow-1" style="visibility: hidden;"> @*Placeholder for Add To Github Team Button *@>
+                                          Add to GitHub Team
+                                      </button>
+                                      <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#vpnModal">
+                                          Request VPN Certificate
+                                      </button>
+                                      <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#ldapModal">
+                                          Reset LDAP Password
+                                      </button>
+                                  </div>
+
+                              </div>
                           }
                       </div>
                   </div>
@@ -220,4 +228,44 @@
         </div>
     </div>
   </div>
+
+  <div class="modal fade" id="ldapModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="vpnModalTitle" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="vpnModalTitle">Initial reset of user LDAP password</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form id="ldap-form" method="post" action="@userRoutes.UsersController.requestLdapReset(user.username)">
+                  @csrfFormField
+                  <div class="modal-body">
+                      <p>You are about to request a reset for a user LDAP / VPN password for <strong>@user.username.asString</strong>. On ACRS approval, it will be set to a temporary password and this will be emailed to the address below.</p>
+                      <p>The ACRS ticket has a 24-hour window for approval. Once the email has been sent, if the password is not changed by the user within 3 hours it will be automatically reset to a random password.</p>
+                      <input name="username" type="hidden" value="@user.username.asString">
+                      <div class="mb-3">
+                          <label for="emailInput" class="form-label">Secondary Email Address</label>
+                          <input class="form-control @if(ldapForm.hasErrors) {is-invalid}" type="text" id="emailInput" name="email" value="@ldapForm("email").value.getOrElse("")">
+                          @ldapForm.error("email").map { error =>
+                              <div class="invalid-feedback">@error.message</div>
+                          }
+                      </div>
+                      <p>For security reasons, this should NOT be the user's normal email address where VPN certificates would be sent and should not contain a '+' character.</p>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button class="btn btn-success" type="submit">Submit</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+
+  @if(ldapForm.hasErrors) {
+      <script @CSPNonce.attr>
+              document.addEventListener('DOMContentLoaded', function () {
+                  var modal = new bootstrap.Modal(document.getElementById('ldapModal'));
+                  modal.show();
+              });
+      </script>
+  }
 }
