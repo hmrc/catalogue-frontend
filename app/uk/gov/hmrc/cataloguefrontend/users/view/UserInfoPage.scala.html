@@ -188,9 +188,15 @@
                                       <button type="button" class="btn btn-success flex-grow-1" style="visibility: hidden;"> @*Placeholder for Add To Github Team Button *@>
                                           Add to GitHub Team
                                       </button>
-                                      <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#vpnModal">
-                                          Request VPN Certificate
-                                      </button>
+                                      @if(userAccess.vpn) {
+                                        <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#vpnModal">
+                                            Request VPN Certificate
+                                        </button>
+                                      } else {
+                                        <button type="button" class="btn btn-success flex-grow-1" style="visibility: hidden;"> @*Hide the button and disable functionality as to not impact the layout of the other buttons *@
+                                            Request VPN Certificate
+                                        </button>
+                                      }
                                       <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#ldapModal">
                                           Reset LDAP Password
                                       </button>
