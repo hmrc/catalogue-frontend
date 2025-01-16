@@ -48,7 +48,7 @@ class EditUserController @Inject()(
   private def editUserPermission(teamNames: Seq[TeamName]): Predicate =
     Predicate.or(
       (teamNames.map: teamName =>
-        Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("CREATE_USER"))
+        Predicate.Permission(Resource.from("catalogue-frontend", s"teams/${teamName.asString}"), IAAction("EDIT_USER"))
       ): _*
     )
 
@@ -60,7 +60,7 @@ class EditUserController @Inject()(
   def editUserLanding(username: UserName, organisation: Option[String]): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.EditUserController.editUserLanding(username),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("EDIT_USER")))
     ).async: request =>
       given RequestHeader = request
       userManagementConnector.getUserAccess(username).map: existingAccess =>
@@ -69,7 +69,7 @@ class EditUserController @Inject()(
   def editUserAccess(username: UserName, organisation: Option[String]): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.EditUserController.editUserLanding(username, organisation),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("EDIT_USER")))
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       (for
