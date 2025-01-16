@@ -222,3 +222,14 @@ object EditUserAccessRequest:
       json ++ Json.obj(
         "isExistingLDAPUser" -> true
       )
+
+case class ResetLdapPassword(
+  username: String,
+  email: String
+)
+
+object ResetLdapPassword:
+  val writes: Writes[ResetLdapPassword] =
+    ( (__ \ "username").write[String]
+    ~ (__ \ "email_address").write[String]
+    )(r => Tuple.fromProductTyped(r))
