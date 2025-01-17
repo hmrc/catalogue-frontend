@@ -80,7 +80,7 @@ class UsersController @Inject()(
       for
         retrieval <- auth.verify(Retrieval.locations(
                        resourceType = Some(ResourceType("catalogue-frontend")),
-                       action       = Some(IAAction("CREATE_USER"))
+                       action       = Some(IAAction("EDIT_USER"))
                      ))
         result    <- showUserInfoPage(username, retrieval, Ok(_), LdapResetForm.form)
       yield result
@@ -88,7 +88,7 @@ class UsersController @Inject()(
   def requestLdapReset(username: UserName): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.UsersController.user(username),
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("CREATE_USER")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("EDIT_USER")))
     ).async: request =>
         given AuthenticatedRequest[AnyContent, Set[Resource]] = request
         LdapResetForm.form.bindFromRequest().fold(
@@ -112,7 +112,7 @@ class UsersController @Inject()(
       given RequestHeader = request
       auth.verify(Retrieval.locations(
         resourceType = Some(ResourceType("catalogue-frontend")),
-        action       = Some(IAAction("CREATE_USER"))
+        action       = Some(IAAction("EDIT_USER"))
       )).flatMap: retrieval =>
         request.body.asFormUrlEncoded.flatMap(_.get("username").flatMap(_.headOption)).map(UserName.apply)
           .fold(

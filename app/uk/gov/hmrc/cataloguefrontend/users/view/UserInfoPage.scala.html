@@ -23,7 +23,7 @@
 @this()
 
 @(ldapForm      : Form[?],
-  canCreateUsers: Boolean,
+  canEditUsers: Boolean,
   userTooling   : Either[String, UserAccess],
   user          : User,
   umpProfileUrl : String
@@ -134,7 +134,7 @@
                       <div class="card mb-4">
                           <div class="card-header d-flex justify-content-between align-items-center">
                               <div class="h4 mb-0">Tooling</div>
-                              @if(canCreateUsers) {
+                              @if(canEditUsers) {
                                   <div>
                                       <a class="btn btn-success" href="@userRoutes.EditUserController.editUserLanding(user.username, user.organisation)">Edit</a>
                                   </div>
@@ -182,7 +182,7 @@
                                   </li>
                               </ul>
                           </div>
-                          @if(canCreateUsers) {
+                          @if(canEditUsers) {
                               <div class="card-footer">
                                   <div class="d-flex justify-content-between gap-3">
                                       <button type="button" class="btn btn-success flex-grow-1" style="visibility: hidden;"> @*Placeholder for Add To Github Team Button *@>
