@@ -40,21 +40,21 @@ class CreateUserFormSpec extends AnyWordSpec with Matchers {
       isNameValid(name)        shouldBe true
     }
 
-    "return false when there is white space in the name" in {
-      isNameValid("test user")  shouldBe false
-      isNameValid(" testuser")  shouldBe false
-      isNameValid("testuser ")  shouldBe false
-      isNameValid("testuser  ") shouldBe false
+    "return true when there is white space in the name" in {
+      isNameValid("test user")  shouldBe true
+      isNameValid(" testuser")  shouldBe true
+      isNameValid("testuser ")  shouldBe true
+      isNameValid("testuser  ") shouldBe true
     }
 
     "return true when no white space in the name" in {
       isNameValid("testuser") shouldBe true
     }
 
-    "return false when name contains an underscore" in {
-      isNameValid("test_user") shouldBe false
-      isNameValid("testuser_") shouldBe false
-      isNameValid("_testuser") shouldBe false
+    "return true when name contains an underscore" in {
+      isNameValid("test_user") shouldBe true
+      isNameValid("testuser_") shouldBe true
+      isNameValid("_testuser") shouldBe true
     }
 
     "return Invalid when the name contains the word 'service'" in {

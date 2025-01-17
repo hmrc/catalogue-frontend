@@ -141,13 +141,9 @@ object CreateUserConstraints:
 
   def nameConstraints(fieldName: String): Seq[Constraint[String]] =
     val nameLengthValidation: String => Boolean = str => str.length >= 2 && str.length <= 30
-    val whiteSpaceValidation: String => Boolean = str => !str.matches(".*\\s.*")
-    val underscoreValidation: String => Boolean = str => !str.contains("_")
 
     Seq(
       mkConstraint(s"constraints.${fieldName}LengthCheck"    )(constraint = nameLengthValidation,  error = "Should be between 2 and 30 characters long")
-    , mkConstraint(s"constraints.${fieldName}WhitespaceCheck")(constraint = whiteSpaceValidation,  error = "Cannot contain whitespace")
-    , mkConstraint(s"constraints.${fieldName}UnderscoreCheck")(constraint = underscoreValidation,  error = "Cannot contain underscores")
     )
 
   private val containsServiceValidation: String => Boolean =
