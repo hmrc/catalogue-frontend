@@ -60,6 +60,14 @@
             </dd>
           </dl>
         </div>
+        @if(canCreateUsers && CatalogueFrontendSwitches.showIncludeDeletedUsers.isEnabled) {
+          <div class="col-md-2 col-form-label" style="margin-top: 35px;">
+            <div class="form-check form-switch">
+                <input aria-label="Include deleted users" class="form-check-input" type="checkbox" role="switch" id="include-deleted">
+                <label class="form-check-label" for="include-deleted">Include Deleted Users</label>
+            </div>
+          </div>
+        }
       </div>
 
     <table class="table table-striped sticky-header" id="users-table">
@@ -86,31 +94,36 @@
 <script @CSPNonce.attr>
 
     const options = {
-        valueNames: ['username', 'given-name', 'family-name', 'github', 'github-username', 'ldap-username', 'role'],
-        searchColumns: ['ldap-username', 'github-username'],
+        valueNames: ['username', 'given-name', 'family-name', 'github', 'role'],
         searchDelay: 350,
     };
 
-    const userInput           = document.getElementById("user-search");
-    const userMatches         = document.getElementById("user-search-matches");
-    const searchMessage       = document.getElementById("search-message");
-    const userMinSearchLength = 3;
+    const userInput            = document.getElementById("user-search");
+    const userMatches          = document.getElementById("user-search-matches");
+    const searchMessage        = document.getElementById("search-message");
+    const includeDeletedToggle = document.getElementById("include-deleted");
+    const userMinSearchLength  = 3;
     let   userDebounceTimer;
     let   usersList;
 
     userInput.addEventListener('input', (e) => {
         const query = e.target.value.trim();
+        let includeDeleted = includeDeletedToggle?.checked ?? false;
         if (query.length >= userMinSearchLength) {
-            userSearch(query);
+            userSearch(query, includeDeleted);
         } else {
             clearResults(query);
         }
     });
 
-    function userSearch(query) {
+    includeDeletedToggle?.addEventListener('change', () => {
+        userInput.dispatchEvent(new Event('input')); // re trigger the search
+    });
+
+    function userSearch(query, includeDeleted) {
         clearTimeout(userDebounceTimer);
         userDebounceTimer = setTimeout(() => {
-            fetch(`/users-search?query=${encodeURIComponent(query)}`)
+            fetch(`/users-search?query=${encodeURIComponent(query)}&includeDeleted=${includeDeleted}`)
                 .then(res => res.text())
                 .then(response => {
                     userMatches.innerHTML = response;

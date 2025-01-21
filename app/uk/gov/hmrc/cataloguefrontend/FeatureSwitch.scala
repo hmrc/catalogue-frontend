@@ -35,3 +35,6 @@ object CatalogueFrontendSwitches:
 
   def showNewTeamPage: FeatureSwitch =
     FeatureSwitch.forName("show-new-team-page")
+
+  def showIncludeDeletedUsers: FeatureSwitch =
+    FeatureSwitch.forName("show-include-deleted-users")

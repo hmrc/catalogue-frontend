@@ -25,7 +25,12 @@
 @matches.zipWithIndex.map { case(user, i) =>
     <tr id="row@i">
       <td class="username" id="row@{i}_name">
-        <a class="ldap-username" href="@userRoutes.UsersController.user(user.username)">@user.username.asString</a>
+        @if(user.isDeleted) {
+          @user.username.asString
+          <span class="badge rounded-pill text-bg-secondary">deleted</span>
+        } else {
+          <a href="@userRoutes.UsersController.user(user.username)">@user.username.asString</a>
+        }
       </td>
       <td class="given-name" id="row@{i}_teams">
         @user.givenName
@@ -36,7 +41,7 @@
       <td class="github" id="row@{i}_name">
         @user.githubUsername match {
           case Some(username) => {
-              <a class="github-username" href="https://github.com/@username" target="_blank" rel="noreferrer noopener">
+              <a href="https://github.com/@username" target="_blank" rel="noreferrer noopener">
                 @username
                 <span class="glyphicon glyphicon-new-window"/>
               </a>

@@ -144,14 +144,12 @@ class UsersController @Inject()(
         canCreateUsers =  retrieval.exists(_.nonEmpty)
       yield Ok(userListPage(canCreateUsers))
 
-  def userSearch(query: String): Action[AnyContent] =
+  def userSearch(query: String, includeDeleted: Boolean): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given RequestHeader = request
+      val searchTerms = query.split("\\s+").toIndexedSeq // query is space-delimited
       userManagementConnector
-        .searchUsers:
-          query
-            .split("\\s+") // query is space-delimited
-            .toIndexedSeq
+        .searchUsers(searchTerms, includeDeleted)
         .map(matches => Ok(userSearchResults(matches)))
 
 end UsersController

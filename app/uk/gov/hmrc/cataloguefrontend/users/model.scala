@@ -92,7 +92,8 @@ case class User(
   githubUsername: Option[String],
   phoneNumber   : Option[String],
   role          : Role,
-  teamNames     : Seq[TeamName]
+  teamNames     : Seq[TeamName],
+  isDeleted     : Boolean
 )
 
 object User:
@@ -107,6 +108,7 @@ object User:
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
     ~ ( __ \ "role"          ).read[Role](Role.reads)
     ~ ( __ \ "teamNames"     ).read[Seq[TeamName]]
+    ~ ( __ \ "isDeleted"     ).readWithDefault[Boolean](false)
     )(User.apply)
 
 case class UserAccess(
