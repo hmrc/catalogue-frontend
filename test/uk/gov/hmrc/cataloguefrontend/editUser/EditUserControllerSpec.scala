@@ -144,14 +144,15 @@ class EditUserControllerSpec
 
     val user: User =
       User(
-        givenName = Some("joe"),
-        familyName = "bloggs",
-        organisation = Some(Organisation.Mdtp.asString),
-        displayName = Some("test123"),
-        primaryEmail = "test.user@email.gov.uk",
-        username = UserName("joe.bloggs"),
+        givenName      = Some("joe"),
+        familyName     = "bloggs",
+        organisation   = Some(Organisation.Mdtp.asString),
+        displayName    = Some("test123"),
+        primaryEmail   = "test.user@email.gov.uk",
+        username       = UserName("joe.bloggs"),
         githubUsername = Some("joe.bloggs"),
-        phoneNumber = None,
-        role = Role("user"),
-        teamNames = Seq(TeamName("TestTeam"))
+        phoneNumber    = None,
+        role           = Role("user"),
+        teamNames      = Seq(TeamName("TestTeam")),
+        isDeleted      = false
       )

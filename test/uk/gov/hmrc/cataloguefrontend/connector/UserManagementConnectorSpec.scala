@@ -103,7 +103,8 @@ class UserManagementConnectorSpec
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam")),
+            isDeleted      = false
           )
         )
     }
@@ -158,7 +159,8 @@ class UserManagementConnectorSpec
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam")),
+            isDeleted      = false
           ),
           User(
             displayName    = Some("Jane Doe"),
@@ -170,7 +172,8 @@ class UserManagementConnectorSpec
             githubUsername = None,
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam")),
+            isDeleted      = false
           )
         )
     }
@@ -208,7 +211,8 @@ class UserManagementConnectorSpec
                 "role" : "user",
                 "teamNames" : [
                     "TestTeam"
-                ]
+                ],
+                "isDeleted": false
               }""".stripMargin)
           )
       )
@@ -225,7 +229,8 @@ class UserManagementConnectorSpec
             githubUsername = Some("joebloggs-github"),
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
-            teamNames      = Seq(TeamName("TestTeam"))
+            teamNames      = Seq(TeamName("TestTeam")),
+            isDeleted      = false
           )
         )
     }
