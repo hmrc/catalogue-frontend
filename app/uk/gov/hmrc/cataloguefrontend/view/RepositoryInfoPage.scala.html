@@ -39,12 +39,10 @@
     <div>
       <h1 class="page-heading mt-4">
         Repository: @repository.name
-        @{
-            if(repository.isArchived) {
-                <span>Archived</span>
-            } else if(repository.isDeprecated) {
-                <span>Deprecated</span>
-            }
+        @if(repository.isArchived) {
+            <span class="badge rounded-pill text-bg-secondary">Archived</span>
+        } else if(repository.isDeprecated) {
+            <span class="badge rounded-pill text-bg-secondary">Deprecated</span>
         }
       </h1>
     </div>

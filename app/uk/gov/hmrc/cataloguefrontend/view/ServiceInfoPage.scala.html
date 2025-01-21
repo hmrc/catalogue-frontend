@@ -56,13 +56,11 @@
         <div>
             <h1 id="service-header" class="page-heading mt-4 position-relative">
               Service: @serviceName.asString
-                @{
-                    if(repositoryDetails.isArchived) {
-                        <span>Archived</span>
-                    } else if(repositoryDetails.isDeprecated) {
-                        <span>Deprecated</span>
-                    }
-                }
+              @if(repositoryDetails.isArchived) {
+                <span class="badge rounded-pill text-bg-secondary">Archived</span>
+              } else if(repositoryDetails.isDeprecated) {
+                <span class="badge rounded-pill text-bg-secondary">Deprecated</span>
+              }
             </h1>
         </div>
 

@@ -111,9 +111,7 @@ th {
 
 .page-heading span {
     display: inline-block;
-    border: 1px solid var(--bs-heading-color);
-    border-radius: 2px;
-    padding: 4px;
+    border: none;
     font-size: 22px;
     margin-left: 15px;
     font-weight: lighter;
