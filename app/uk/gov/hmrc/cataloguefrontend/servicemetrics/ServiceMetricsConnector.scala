@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cataloguefrontend.connector
+package uk.gov.hmrc.cataloguefrontend.servicemetrics
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
+import play.api.libs.json.*
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
@@ -34,38 +32,24 @@ class ServiceMetricsConnector @Inject() (
 )(using
   ec: ExecutionContext
 ):
-  import ServiceMetricsConnector._
   import HttpReads.Implicits._
 
   private val serviceMetricsBaseUrl: String =
     servicesConfig.baseUrl("service-metrics")
 
+  def metrics(
+    teamName      : Option[TeamName]
+  , digitalService: Option[DigitalService]
+  , metricType    : Option[LogMetricId]
+  , environment   : Option[Environment]
+  )(using HeaderCarrier): Future[Seq[ServiceMetric]] =
+    given Reads[ServiceMetric] = ServiceMetric.reads
+    httpClientV2
+      .get(url"$serviceMetricsBaseUrl/service-metrics/metrics?&team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&metricType=${metricType.map(_.asString)}&environment=${environment.map(_.asString)}")
+      .execute[Seq[ServiceMetric]]
+  
   def logMetrics(service: ServiceName)(using HeaderCarrier): Future[Seq[LogMetric]] =
     given Reads[LogMetric] = LogMetric.reads
     httpClientV2
       .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/log-metrics")
       .execute[Seq[LogMetric]]
-
-object ServiceMetricsConnector:
-  case class LogMetric(
-    id          : String
-  , displayName : String
-  , environments: Map[Environment, EnvironmentResult]
-  )
-
-  case class EnvironmentResult(
-    kibanaLink: String
-  , count     : Int
-  )
-
-  object LogMetric:
-    val reads: Reads[LogMetric] =
-      given Reads[EnvironmentResult] =
-        ( (__ \ "kibanaLink").read[String]
-        ~ (__ \ "count"     ).read[Int]
-        )(EnvironmentResult.apply)
-
-      ( (__ \ "id"          ).read[String]
-      ~ (__ \ "displayName" ).read[String]
-      ~ (__ \ "environments").read[Map[Environment, EnvironmentResult]]
-      )(apply)
