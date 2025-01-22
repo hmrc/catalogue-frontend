@@ -1,0 +1,165 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.{LogMetricId, ServiceMetric}
+@import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsFilter
+@import views.html.helper.{FieldConstructor, select}
+
+@this(
+    teamNamesPartial: partials.TeamNamesPartial
+)
+
+@(form           : Form[ServiceMetricsFilter]
+, results        : Seq[ServiceMetric]
+, teams          : Seq[GitHubTeam]
+, digitalServices: Seq[DigitalService]
+
+)(implicit
+  messages: Messages
+, request : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Service Metrics", "service metrics") {
+    <h1 class="page-heading mt-4">Service Metrics</h1>
+
+    @if(form.hasErrors) {
+        <div class="alert alert-danger" role="alert">
+            <ul class="list">
+            @form.errors.map { error =>
+                <li class="alert-danger"> @Messages(error.message, error.args*)</li>
+            }
+            </ul>
+        </div>
+    }
+
+    <div id="service-metrics-list">
+        <form id="form" method="get">
+            <div class="row">
+                <div class="col-md-2">
+                    <dl id="search_field">
+                        <dt><label for="search" class="form-label">Name</label></dt>
+                        <dd><input class="search form-control" id="search" type="search" name="name" value='@form("name").value' autofocus></dd>
+                    </dl>
+                </div>
+                <div class="col-md-2">
+                @select(
+                    field                 = form("team"),
+                    options               = teams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Team",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "select-team",
+                    Symbol("class")       -> "form-select"
+                )
+                </div>
+                <div class="col-md-2">
+                @select(
+                  field                 =  form("digitalService")
+                , options               =  digitalServices.map(ds => ds.asString -> ds.asString)
+                , Symbol("_default")    -> "All"
+                , Symbol("_label")      -> "Digital Service"
+                , Symbol("_labelClass") -> "form-label"
+                , Symbol("id")          -> "select-digital-service"
+                , Symbol("class")       -> "form-select"
+                )
+                </div>
+                <div class="col-md-2">
+                @select(
+                    field                 =  form("metricType"),
+                    options               =  LogMetricId.values.map(id => id.asString -> id.displayString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Type",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "select-metric-type",
+                    Symbol("class")       -> "form-select"
+                )
+                </div>
+                <div class="col-md-2">
+                @select(
+                    field                 =  form("environment"),
+                    options               =  Environment.values.toSeq.filterNot(_ == Environment.Integration).map(env => env.asString -> env.displayString),
+                    Symbol("_label")      -> "Environment",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "select-environment",
+                    Symbol("class")       -> "form-select"
+                )
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-striped sticky-header">
+            <thead id="repo-table-headings">
+                <tr>
+                    <th><button role="button" data-sort="col-service-name" class="fw-bold sort no-border">Name</button></th>
+                    <th><button role="button" data-sort="col-metric-type"  class="fw-bold sort no-border">Type</button></th>
+                    <th><button role="button" data-sort="col-log-count"    class="fw-bold sort no-border">Log Count</button></th>
+                    <th><button role="button" data-sort="col-team"         class="fw-bold sort no-border">Team</button></th>
+                </tr>
+            </thead>
+            <tbody class="list">
+              @for(serviceMetric <- results) {
+                <tr>
+                  <td class="col-service-name">
+                    <a aria-label="Link to page info for @{serviceMetric.service}" id="link-to-info-page-for-@{serviceMetric.service}" href="@appRoutes.CatalogueController.service(ServiceName(serviceMetric.service))">@serviceMetric.service</a>
+                  </td>
+                  <td class="col-metric-type">
+                    @serviceMetric.id.displayString
+                  </td>
+                  <td style="padding-left: 50px">
+                       <a aria-label="Link to kibana logs for @{serviceMetric.service}" id="link-to-kibana-logs-for-@{serviceMetric.service}" target="_blank" rel="noreferrer noopener" href="@serviceMetric.kibanaLink">@serviceMetric.logCount</a>
+                  </td>
+                    <td>
+                        @teamNamesPartial(serviceMetric.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(ServiceName(serviceMetric.service))}#owning-team")
+                    </td>
+                </tr>
+              }
+          </tbody>
+
+        </table>
+    </div>
+}
+<!-- listjs configuration -->
+<script @CSPNonce.attr>
+  ['select-metric-type', 'select-digital-service', 'select-team', 'select-environment']
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+
+  @if(results.nonEmpty) {
+    let options = {
+      valueNames: ['col-service-name', 'col-metric-type', 'col-log-count', 'col-team'],
+      searchColumns: ['col-service-name'],
+      searchDelay: 350
+    };
+
+    let pageListJs = new List('service-metrics-list', options);
+    let searchBox = document.getElementById('search');
+    // set autofocus cursor to right of text in search box
+    let length = searchBox.value.length;
+    searchBox.focus();
+    searchBox.setSelectionRange(length, length);
+    // re-search the list upon page load.
+    pageListJs.search(searchBox.value);
+  }
+</script>
+

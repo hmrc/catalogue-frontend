@@ -18,7 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
-import uk.gov.hmrc.cataloguefrontend.connector.{Link, ServiceMetricsConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.Link
+import uk.gov.hmrc.cataloguefrontend.servicemetrics.LogMetric
 
 import java.security.MessageDigest
 import javax.inject.{Inject, Singleton}
@@ -69,7 +70,7 @@ class TelemetryLinks @Inject()(configuration: Configuration):
                       .replace(s"$${service}", UrlUtils.encodePathParam(serviceName.asString))
     )
 
-  def kibanaLink(env: Environment, logMetric: ServiceMetricsConnector.LogMetric): Option[Link] =
+  def kibanaLink(env: Environment, logMetric: LogMetric): Option[Link] =
     logMetric
       .environments
       .get(env)
