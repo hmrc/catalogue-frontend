@@ -35,8 +35,8 @@
     <td class="" id="row@{i}_repostatus">
         @if(repo.isArchived) {
             <span class="repo-status badge rounded-pill text-bg-secondary">archived</span>
-        } else {
-            @if(repo.isDeprecated) { <span class="repo-status badge rounded-pill text-bg-secondary">deprecated</span> }
+        } else if(repo.isDeprecated) {
+            <span class="repo-status badge rounded-pill text-bg-secondary">deprecated</span>
         }
     </td>
 

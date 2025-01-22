@@ -50,12 +50,10 @@
                               <div class="col-12">
                                   <h6 class="fw-bold mb-3">
                                     <a href="@appRoutes.CatalogueController.repository(dependency.dependencies.repositoryName).url" title="Link to Service Page">@dependency.dependencies.repositoryName</a>
-                                    @{
-                                        if(dependency.repo.isArchived) {
-                                            <span class="badge rounded-pill text-bg-secondary">archived</span>
-                                        } else if(dependency.repo.isDeprecated) {
-                                            <span class="badge rounded-pill text-bg-secondary">deprecated</span>
-                                        }
+                                    @if(dependency.repo.isArchived) {
+                                        <span class="badge rounded-pill text-bg-secondary">archived</span>
+                                    } else if(dependency.repo.isDeprecated) {
+                                        <span class="badge rounded-pill text-bg-secondary">deprecated</span>
                                     }
                                   </h6>
 
