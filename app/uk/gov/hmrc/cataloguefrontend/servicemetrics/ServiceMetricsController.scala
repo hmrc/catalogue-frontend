@@ -70,7 +70,7 @@ enum LogMetricId(
   val displayString    : String
 ) extends FromString
   derives Reads, FormFormat:
-  case ContainerKill    extends LogMetricId(asString = "container-kill"    , displayString = "Container Kill"    )
+  case ContainerKills   extends LogMetricId(asString = "container-kills"   , displayString = "Container Kills"   )
   case NonIndexedQuery  extends LogMetricId(asString = "non-indexed-query" , displayString = "Non-indexed Query" )
   case SlowRunningQuery extends LogMetricId(asString = "slow-running-query", displayString = "Slow Running Query")
 
