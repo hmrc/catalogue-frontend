@@ -47,7 +47,6 @@ case class ServiceMetric(
   service    : String
 , id         : LogMetricId
 , environment: Environment
-, teams      : Seq[TeamName]
 , kibanaLink : String
 , logCount   : Int
 )
@@ -57,7 +56,6 @@ object ServiceMetric:
     ( (__ \ "service"     ).read[String]
     ~ (__ \ "id"          ).read[LogMetricId]
     ~ (__ \ "environment" ).read[Environment]
-    ~ (__ \ "teams"       ).read[Seq[TeamName]]
     ~ (__ \ "kibanaLink"  ).read[String]
     ~ (__ \ "logCount"    ).read[Int]
     )(apply)

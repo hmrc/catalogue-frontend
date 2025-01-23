@@ -53,7 +53,7 @@
     <div id="service-metrics-list">
         <form id="form" method="get">
             <div class="row">
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <dl id="search_field">
                         <dt><label for="search" class="form-label">Name</label></dt>
                         <dd><input class="search form-control" id="search" type="search" name="name" value='@form("name").value' autofocus></dd>
@@ -108,31 +108,26 @@
         <table class="table table-striped sticky-header">
             <thead id="repo-table-headings">
                 <tr>
-                    <th><button role="button" data-sort="col-service-name" class="fw-bold sort no-border">Name</button></th>
-                    <th><button role="button" data-sort="col-metric-type"  class="fw-bold sort no-border">Type</button></th>
-                    <th><button role="button" data-sort="col-log-count"    class="fw-bold sort no-border">Log Count</button></th>
-                    <th><button role="button" data-sort="col-team"         class="fw-bold sort no-border">Team</button></th>
+                    <th class="col-lg-6"><button role="button" data-sort="col-service-name" class="fw-bold sort no-border">Name</button></th>
+                    <th class="col-lg-4"><button role="button" data-sort="col-metric-type"  class="fw-bold sort no-border">Type</button></th>
+                    <th class="col-lg-2"><button role="button" data-sort="col-occurrences"  class="fw-bold sort no-border">Occurrences (Last 7 days)</button></th>
                 </tr>
             </thead>
             <tbody class="list">
               @for(serviceMetric <- results) {
                 <tr>
                   <td class="col-service-name">
-                    <a aria-label="Link to page info for @{serviceMetric.service}" id="link-to-info-page-for-@{serviceMetric.service}" href="@appRoutes.CatalogueController.service(ServiceName(serviceMetric.service))">@serviceMetric.service</a>
+                      <a aria-label="Link to page info for @{serviceMetric.service}" id="link-to-info-page-for-@{serviceMetric.service}" href="@appRoutes.CatalogueController.service(ServiceName(serviceMetric.service))">@serviceMetric.service</a>
                   </td>
                   <td class="col-metric-type">
-                    @serviceMetric.id.displayString
+                      @serviceMetric.id.displayString
                   </td>
-                  <td style="padding-left: 50px">
-                       <a aria-label="Link to kibana logs for @{serviceMetric.service}" id="link-to-kibana-logs-for-@{serviceMetric.service}" target="_blank" rel="noreferrer noopener" href="@serviceMetric.kibanaLink">@serviceMetric.logCount</a>
+                  <td class="text-center">
+                      <a class="col-occurrences" aria-label="Link to kibana logs for @{serviceMetric.service}" id="link-to-kibana-logs-for-@{serviceMetric.service}" href="@serviceMetric.kibanaLink" target="_blank" rel="noreferrer noopener">@serviceMetric.logCount</a>
                   </td>
-                    <td>
-                        @teamNamesPartial(serviceMetric.teams, s"${uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(ServiceName(serviceMetric.service))}#owning-team")
-                    </td>
                 </tr>
               }
           </tbody>
-
         </table>
     </div>
 }
@@ -147,7 +142,7 @@
 
   @if(results.nonEmpty) {
     let options = {
-      valueNames: ['col-service-name', 'col-metric-type', 'col-log-count', 'col-team'],
+      valueNames: ['col-service-name', 'col-metric-type', 'col-occurrences'],
       searchColumns: ['col-service-name'],
       searchDelay: 350
     };

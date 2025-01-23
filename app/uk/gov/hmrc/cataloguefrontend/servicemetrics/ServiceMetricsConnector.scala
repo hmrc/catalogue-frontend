@@ -16,19 +16,24 @@
 
 package uk.gov.hmrc.cataloguefrontend.servicemetrics
 
+import play.api.Configuration
 import play.api.libs.json.*
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.{Duration, MILLISECONDS}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ServiceMetricsConnector @Inject() (
-  httpClientV2  : HttpClientV2,
-  servicesConfig: ServicesConfig
+  httpClientV2  : HttpClientV2
+, servicesConfig: ServicesConfig
+, configuration : Configuration
 )(using
   ec: ExecutionContext
 ):
@@ -36,6 +41,9 @@ class ServiceMetricsConnector @Inject() (
 
   private val serviceMetricsBaseUrl: String =
     servicesConfig.baseUrl("service-metrics")
+
+  private val logDuration: Duration =
+    configuration.get[Duration]("service-metrics.logDuration")
 
   def metrics(
     teamName      : Option[TeamName]
@@ -45,7 +53,7 @@ class ServiceMetricsConnector @Inject() (
   )(using HeaderCarrier): Future[Seq[ServiceMetric]] =
     given Reads[ServiceMetric] = ServiceMetric.reads
     httpClientV2
-      .get(url"$serviceMetricsBaseUrl/service-metrics/log-metrics?&team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&metricType=${metricType.map(_.asString)}&environment=${environment.map(_.asString)}")
+      .get(url"$serviceMetricsBaseUrl/service-metrics/log-metrics?&team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&metricType=${metricType.map(_.asString)}&environment=${environment.map(_.asString)}&from=${Instant.now().minus(logDuration.toMillis, ChronoUnit.MILLIS)}&to=${Instant.now()}")
       .execute[Seq[ServiceMetric]]
   
   def logMetrics(service: ServiceName)(using HeaderCarrier): Future[Seq[LogMetric]] =
