@@ -339,7 +339,40 @@ class UserManagementConnectorSpec
         postRequestedFor(urlPathEqualTo("/user-management/edit-user-access"))
           .withRequestBody(equalToJson(actualEditUserAccessRequest))
       )
-  
+
+  "editUserDetails" should :
+
+    val editUserDetailsRequest =
+      EditUserDetailsRequest(
+        username = "joe.bloggs",
+        attribute = UserAttribute.DisplayName,
+        value = "Joe Bloggs"
+      )
+
+    val actualEditUserDetailsRequest =
+      """{
+        |  "username" : "joe.bloggs",
+        |  "attribute" : "displayName",
+        |  "value" : "Joe Bloggs"
+        |}
+        |""".stripMargin
+
+    "return Unit when UMP response is 200" in :
+      stubFor(
+        put(urlPathEqualTo(s"/user-management/edit-user-details"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.editUserDetails(editUserDetailsRequest).futureValue shouldBe()
+
+      verify(
+        putRequestedFor(urlPathEqualTo("/user-management/edit-user-details"))
+          .withRequestBody(equalToJson(actualEditUserDetailsRequest))
+      )
+
   "createUser" should:
 
     val createUserRequest =

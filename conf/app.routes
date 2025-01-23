@@ -138,6 +138,7 @@ GET        /users-search                                 uk.gov.hmrc.cataloguefr
 GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: UserName)
 POST       /users/new-vpn-cert                           uk.gov.hmrc.cataloguefrontend.users.UsersController.requestNewVpnCert
 
+POST       /users/edit-user-details                      uk.gov.hmrc.cataloguefrontend.users.UsersController.updateUserDetails(username: UserName)
 GET        /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserLanding(username: UserName, organisation: Option[String] ?= None)
 POST       /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserAccess(username: UserName, organisation: Option[String] ?= None)
 GET        /users/edit-user/access/2                     uk.gov.hmrc.cataloguefrontend.users.EditUserController.requestSent(username: UserName)
