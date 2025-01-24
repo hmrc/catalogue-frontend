@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName}
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConnector
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
+import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsConnector
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.teams.view.html.{TeamInfoOldPage, TeamInfoPage, TeamsListPage}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
@@ -44,6 +45,7 @@ class TeamsController @Inject()(
 , platformInitiativesConnector       : PlatformInitiativesConnector
 , serviceDependenciesConnector       : ServiceDependenciesConnector
 , serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector
+, serviceMetricsConnector            : ServiceMetricsConnector
 , vulnerabilitiesConnector           : VulnerabilitiesConnector
 , releasesConnector                  : ReleasesConnector
 , leakDetectionService               : LeakDetectionService
@@ -82,6 +84,7 @@ class TeamsController @Inject()(
                      , platformInitiativesConnector.getInitiatives(team = Some(teamName))
                      , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest, team = Some(teamName))
                      , serviceCommissioningStatusConnector.cachedCommissioningStatus(teamName = Some(teamName))
+                     , serviceMetricsConnector.metrics(Some(Environment.Production), Some(teamName))
                      , releasesConnector.releases(Some(Profile(ProfileType.Team, ProfileName(teamName.asString))))
                      , teamsAndRepositoriesConnector.findTestJobs(Some(teamName))
                      ).tupled
