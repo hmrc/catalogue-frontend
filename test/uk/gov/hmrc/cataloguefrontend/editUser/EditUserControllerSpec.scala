@@ -154,5 +154,6 @@ class EditUserControllerSpec
         phoneNumber    = None,
         role           = Role("user"),
         teamNames      = Seq(TeamName("TestTeam")),
-        isDeleted      = false
+        isDeleted      = false,
+        isNonHuman     = false
       )
