@@ -170,7 +170,7 @@ th {
     -webkit-transition: height .5s;
     transition: height .5s;
     overflow: hidden;
-    height:120px; /* If you change this, change the corresponding smallHeight value in catalogue-frontend.css too */
+    height: 120px;
 }
 
 .content-grow-expand-link {

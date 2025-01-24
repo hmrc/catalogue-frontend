@@ -76,7 +76,7 @@
 
             <div id="repository-description" class="col-12">
 
-                <div class="@if(repositoryDetails.descriptionAboveLimit) {content-grow  content-grow-gradient}">
+                <div @if(repositoryDetails.descriptionAboveLimit) {class="content-grow content-grow-gradient" style="height:120px;"}>
                     <div class="content-grow-wrapper">
                         <label class="fw-bold">Description <a href="#"
                         tabindex="0"
