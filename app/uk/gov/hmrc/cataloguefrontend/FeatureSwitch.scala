@@ -38,3 +38,6 @@ object CatalogueFrontendSwitches:
 
   def showIncludeDeletedUsers: FeatureSwitch =
     FeatureSwitch.forName("show-include-deleted-users")
+
+  def showIncludeNonHumanUsers: FeatureSwitch =
+    FeatureSwitch.forName("show-include-non-human-users")

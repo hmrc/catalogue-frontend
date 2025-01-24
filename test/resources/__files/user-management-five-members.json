@@ -4,27 +4,32 @@
     {
       "username": "k.s",
       "displayName": "K S",
-      "role": "user"
+      "role": "user",
+      "isNonHuman": false
     },
     {
       "username": "mx.p",
       "displayName": "Mx P",
-      "role": "user"
+      "role": "user",
+      "isNonHuman": false
     },
     {
       "username": "ma.b",
       "displayName": "Ma B",
-      "role": "user"
+      "role": "user",
+      "isNonHuman": false
     },
     {
       "username": "m.q",
       "displayName": "M Q",
-      "role": "user"
+      "role": "user",
+      "isNonHuman": false
     },
     {
       "username": "s.m",
       "displayName": "S M",
-      "role": "user"
+      "role": "user",
+      "isNonHuman": false
     }
   ]
 }

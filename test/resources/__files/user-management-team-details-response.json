@@ -8,12 +8,14 @@
     {
       "username": "a.b",
       "displayName": "A B",
-      "role": "user"
+      "role": "user",
+      "isNonHuman": false
     },
     {
       "username": "c.d",
       "displayName": "C D",
-      "role": "user"
+      "role": "user",
+      "isNonHuman": false
     }
   ]
 }

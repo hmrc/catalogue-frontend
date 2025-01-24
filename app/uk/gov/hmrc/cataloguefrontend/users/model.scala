@@ -36,6 +36,7 @@ case class Member(
   username   : UserName
 , displayName: Option[String]
 , role       : Role
+, isNonHuman : Boolean
 )
 
 object Member:
@@ -43,6 +44,7 @@ object Member:
     ( (__ \ "username"   ).read[UserName]
     ~ (__ \ "displayName").readNullable[String]
     ~ (__ \ "role"       ).read[Role](Role.reads)
+    ~ (__ \ "isNonHuman" ).read[Boolean]
     )(Member.apply)
 
 case class SlackInfo(url: String):
@@ -93,7 +95,8 @@ case class User(
   phoneNumber   : Option[String],
   role          : Role,
   teamNames     : Seq[TeamName],
-  isDeleted     : Boolean
+  isDeleted     : Boolean,
+  isNonHuman    : Boolean
 )
 
 object User:
@@ -108,7 +111,8 @@ object User:
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
     ~ ( __ \ "role"          ).read[Role](Role.reads)
     ~ ( __ \ "teamNames"     ).read[Seq[TeamName]]
-    ~ ( __ \ "isDeleted"     ).readWithDefault[Boolean](false)
+    ~ ( __ \ "isDeleted"     ).read[Boolean]
+    ~ ( __ \ "isNonHuman"    ).read[Boolean]
     )(User.apply)
 
 case class UserAccess(

@@ -85,7 +85,9 @@ class UserManagementConnectorSpec
                   "role" : "user",
                   "teamNames" : [
                        "TestTeam"
-                  ]
+                  ],
+                  "isDeleted": false,
+                  "isNonHuman": false
                 }
               ]""")
           )
@@ -104,7 +106,8 @@ class UserManagementConnectorSpec
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
             teamNames      = Seq(TeamName("TestTeam")),
-            isDeleted      = false
+            isDeleted      = false,
+            isNonHuman     = false
           )
         )
     }
@@ -127,7 +130,9 @@ class UserManagementConnectorSpec
                    "role" : "user",
                    "teamNames" : [
                         "TestTeam"
-                   ]
+                   ],
+                   "isDeleted": false,
+                   "isNonHuman": false
                 },
                 {
                    "displayName" : "Jane Doe",
@@ -141,7 +146,9 @@ class UserManagementConnectorSpec
                    "role" : "user",
                    "teamNames" : [
                         "TestTeam"
-                   ]
+                   ],
+                   "isDeleted": false,
+                   "isNonHuman": false
                 }
               ]""".stripMargin)
           )
@@ -160,7 +167,8 @@ class UserManagementConnectorSpec
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
             teamNames      = Seq(TeamName("TestTeam")),
-            isDeleted      = false
+            isDeleted      = false,
+            isNonHuman     = false
           ),
           User(
             displayName    = Some("Jane Doe"),
@@ -173,7 +181,8 @@ class UserManagementConnectorSpec
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
             teamNames      = Seq(TeamName("TestTeam")),
-            isDeleted      = false
+            isDeleted      = false,
+            isNonHuman     = false
           )
         )
     }
@@ -212,7 +221,8 @@ class UserManagementConnectorSpec
                 "teamNames" : [
                     "TestTeam"
                 ],
-                "isDeleted": false
+                "isDeleted": false,
+                "isNonHuman": false
               }""".stripMargin)
           )
       )
@@ -230,7 +240,8 @@ class UserManagementConnectorSpec
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
             teamNames      = Seq(TeamName("TestTeam")),
-            isDeleted      = false
+            isDeleted      = false,
+            isNonHuman     = false
           )
         )
     }
@@ -239,7 +250,7 @@ class UserManagementConnectorSpec
       val username = UserName("non.existent")
 
       stubFor(
-        get(urlPathEqualTo(s"/user-management/users/$username"))
+        get(urlPathEqualTo(s"/user-management/users/${username.asString}"))
           .willReturn(
             aResponse()
               .withStatus(404)
@@ -283,7 +294,7 @@ class UserManagementConnectorSpec
       val username = UserName("non.existent")
 
       stubFor(
-        get(urlPathEqualTo(s"/user-management/users/$username/access"))
+        get(urlPathEqualTo(s"/user-management/users/${username.asString}/access"))
           .willReturn(
             aResponse()
               .withStatus(404)
@@ -445,7 +456,7 @@ class UserManagementConnectorSpec
 
     "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in:
       stubFor(
-        post(urlPathEqualTo(s"user-management/create-service-user"))
+        post(urlPathEqualTo("/user-management/create-service-user"))
           .willReturn(
             aResponse()
               .withStatus(500)
@@ -478,7 +489,7 @@ class UserManagementConnectorSpec
 
       "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
         stubFor(
-          post(urlPathEqualTo(s"user-management/reset-ldap-password"))
+          post(urlPathEqualTo("/user-management/reset-ldap-password"))
             .willReturn(
               aResponse()
                 .withStatus(500)

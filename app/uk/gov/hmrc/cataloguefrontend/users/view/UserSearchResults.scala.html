@@ -25,6 +25,7 @@
 @matches.zipWithIndex.map { case(user, i) =>
     <tr id="row@i">
       <td class="username" id="row@{i}_name">
+        @if(user.isNonHuman) { <i class="bi bi-robot"></i> }
         @if(user.isDeleted) {
           @user.username.asString
           <span class="badge rounded-pill text-bg-secondary">deleted</span>
