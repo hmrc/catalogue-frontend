@@ -20,7 +20,7 @@ import play.api.Logging
 import play.api.libs.json.*
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, EditUserAccessRequest, ResetLdapPassword, UmpTeam, User, UserAccess}
+import uk.gov.hmrc.cataloguefrontend.users.{CreateUserRequest, EditUserAccessRequest, ResetLdapPassword, UmpTeam, User, UserAccess, EditUserDetailsRequest}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -102,6 +102,16 @@ class UserManagementConnector @Inject()(
       .flatMap:
         case Right(res) => Future.successful(res)
         case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
+  def editUserDetails(editUserDetails: EditUserDetailsRequest)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/edit-user-details"
+    httpClientV2
+      .put(url)
+      .withBody(Json.toJson(editUserDetails)(EditUserDetailsRequest.writes))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(res) => Future.successful(res)
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def requestNewVpnCert(username: UserName)(using HeaderCarrier): Future[Option[String]] =
     val url: URL = url"$baseUrl/user-management/users/${username.asString}/vpn"

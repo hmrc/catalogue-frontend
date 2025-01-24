@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.users
 
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
+import play.api.libs.json.*
+import play.api.libs.functional.syntax.*
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.util.FromString
 
@@ -235,3 +235,25 @@ object ResetLdapPassword:
     ( (__ \ "username").write[String]
     ~ (__ \ "email_address").write[String]
     )(r => Tuple.fromProductTyped(r))
+
+enum UserAttribute(val name: String, val description: String):
+  case DisplayName  extends UserAttribute("displayName" , "name"        )
+  case Github       extends UserAttribute("github"      , "GitHub ID"   )
+  case Organisation extends UserAttribute("organisation", "organisation")
+  case PhoneNumber  extends UserAttribute("phoneNumber" , "phone number")
+
+object UserAttribute:
+  def fromString(value: String): Option[UserAttribute] =
+    UserAttribute.values.find(_.name == value)
+  
+  val writes: Writes[UserAttribute] =
+    Writes { attr => JsString(attr.name) }
+
+case class EditUserDetailsRequest(username: String, attribute: UserAttribute, value: String)
+
+object EditUserDetailsRequest:
+  val writes: Writes[EditUserDetailsRequest] =
+    ( (__ \ "username" ).write[String]
+    ~ (__ \ "attribute").write[UserAttribute](UserAttribute.writes)
+    ~ (__ \ "value"    ).write[String]
+    )(e => Tuple.fromProductTyped(e))

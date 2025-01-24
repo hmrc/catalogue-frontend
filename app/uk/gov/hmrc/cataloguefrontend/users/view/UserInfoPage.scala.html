@@ -14,21 +14,22 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.users.User
-@import uk.gov.hmrc.cataloguefrontend.users.UserAccess
+@import uk.gov.hmrc.cataloguefrontend.users.{User, UserAccess, ResetLdapPassword, EditUserDetailsRequest}
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
 @import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
 @import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
+@import uk.gov.hmrc.cataloguefrontend.auth.AuthController
 
 @this()
 
-@(ldapForm      : Form[?],
-  canEditUsers: Boolean,
-  userTooling   : Either[String, UserAccess],
-  user          : User,
-  umpProfileUrl : String
+@(ldapForm       : Form[ResetLdapPassword],
+  userDetailsForm: Form[EditUserDetailsRequest],
+  canEditUsers   : Boolean,
+  userTooling    : Either[String, UserAccess],
+  user           : User,
+  umpProfileUrl  : String
 )(implicit
-  request       : RequestHeader
+  request        : RequestHeader
 )
 
 @standard_layout(user.username.asString, active = "users") {
@@ -38,6 +39,12 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   }
+  @request.flash.get("success").map { msg =>
+      <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+          @msg
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+  }
 
   <h1 class="page-heading mt-4">@user.username.asString</h1>
 
@@ -45,30 +52,165 @@
       <div class="row">
           <div class="col-md-4">
               <div class="card mb-4">
-                  <div class="card-header">
+                  <div class="card-header d-flex justify-content-between align-items-center">
                       <div class="h4 mb-0">Details</div>
                   </div>
 
                   <div class="card-body">
                       <ul id="user-details" class="list-unstyled">
-                          <li id="user-name">
-                              <label class="fw-bold">Name:</label>
-                              @user.displayName.getOrElse("")
+                          <li id="user-name" class="d-flex justify-content-between align-items-center border-bottom border-light-subtle pb-2 mb-2">
+                            <div id="user-name-content" class="d-flex justify-content-between align-items-center w-100">
+                              <div>
+                                <label class="fw-bold">Name:</label>
+                                @user.displayName.getOrElse("")
+                              </div>
+                              @if(canEditUsers) {<a href="#" id="edit-user-name-link" class="text-decoration-none">Edit</a>}
+                            </div>
+                              <div id="user-name-form-container" class="d-none w-100">
+                                  <form id="user-name-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
+                                      @csrfFormField
+                                      <input type="hidden" name="username" value="@user.username.asString">
+                                      <input type="hidden" name="attribute" value="displayName">
+                                      <div class="flex-grow-1">
+                                          <fieldset class="form-field-group mb-0">
+                                              <div class="d-flex align-items-center">
+                                                  <label id="field-user-name-label" for="field-user-name" class="fw-bold">Name:</label>
+                                                  <input type="text" id="field-user-name"
+                                                  class="form-control ms-2 me-2 @if(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("displayName")) {is-invalid}"
+                                                  name="displayName" value="@userDetailsForm.data.getOrElse("displayName", user.displayName.getOrElse(""))">
+                                                  <div class="ms-auto d-flex gap-2">
+                                                      <button id="save-user-name-button" class="btn btn-success btn-sm" type="submit">Save</button>
+                                                      <button id="cancel-save-user-name-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
+                                                  </div>
+                                              </div>
+                                              @if(userDetailsForm("attribute").value.contains("displayName")) {
+                                                  @userDetailsForm.errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
+                                              }
+                                          </fieldset>
+                                      </div>
+                                  </form>
+                              </div>
                           </li>
-                          <li id="user-email">
+                          <li id="user-email" class="border-bottom border-light-subtle pb-2 mb-2">
                               <label class="fw-bold">Email:</label>
                               @user.primaryEmail
                           </li>
-                          <li id="user-phone">
-                              <label class="fw-bold">Phone:</label>
-                              @user.phoneNumber.getOrElse("")
+                          <li id="user-phone" class="d-flex justify-content-between align-items-center border-bottom border-light-subtle pb-2 mb-2">
+                              <div id="phone-content" class="d-flex justify-content-between align-items-center w-100">
+                                  <div>
+                                      <label class="fw-bold">Phone:</label>
+                                      @user.phoneNumber.getOrElse("")
+                                  </div>
+                                  @if(canEditUsers || request.session.get(AuthController.SESSION_USERNAME).fold(false)(_ == user.username.asString)) {
+                                      <a href="#" id="edit-phone-link" class="text-decoration-none">Edit</a>
+                                  }
+                              </div>
+                              <div id="phone-form-container" class="d-none w-100">
+                                  <form id="phone-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
+                                      @csrfFormField
+                                      <input type="hidden" name="username" value="@user.username.asString">
+                                      <input type="hidden" name="attribute" value="phoneNumber">
+                                      <div class="flex-grow-1">
+                                          <fieldset class="form-field-group mb-0">
+                                              <div class="mb-2">Please use a / character to separate multiple numbers</div>
+                                              <div class="d-flex align-items-center">
+                                                  <label id="field-phone-label" for="field-phone" class="fw-bold">Phone:</label>
+                                                  <input type="text" id="field-phone"
+                                                  class="form-control ms-2 me-2 @if(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("phoneNumber")) {is-invalid}"
+                                                  name="phoneNumber" value="@userDetailsForm.data.getOrElse("phoneNumber", user.phoneNumber.getOrElse(""))">
+                                                  <div class="ms-auto d-flex gap-2">
+                                                      <button id="save-phone-button" class="btn btn-success btn-sm" type="submit">Save</button>
+                                                      <button id="cancel-save-phone-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
+                                                  </div>
+                                              </div>
+                                              @if(userDetailsForm("attribute").value.contains("phoneNumber")) {
+                                                  @userDetailsForm.errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
+                                              }
+                                          </fieldset>
+                                      </div>
+                                  </form>
+                              </div>
                           </li>
-                          <li id="user-github">
-                              <label class="fw-bold">Github:</label>
-                              @user.githubUsername match {
-                                case Some(url) => {<a href="https://github.com/@user.githubUsername" target="_blank" rel="noreferrer noopener">@user.githubUsername<span class="glyphicon glyphicon-new-window"/></a>}
-                                case None      => {}
+                          <li id="user-github" class="d-flex justify-content-between align-items-center border-bottom border-light-subtle pb-2 mb-2">
+                            <div id="user-github-content" class="d-flex justify-content-between align-items-center w-100">
+                              <div>
+                                <label class="fw-bold">GitHub:</label>
+                                @user.githubUsername match {
+                                  case Some(url) => {<a href="https://github.com/@user.githubUsername" target="_blank" rel="noreferrer noopener">@user.githubUsername<span class="glyphicon glyphicon-new-window"/></a>}
+                                  case None      => {}
+                                }
+                              </div>
+                              @if(canEditUsers || request.session.get(AuthController.SESSION_USERNAME).fold(false)(_ == user.username.asString)) {
+                                  <a href="#" id="edit-user-github-link" class="text-decoration-none">Edit</a>
                               }
+                            </div>
+                            <div id="user-github-form-container" class="d-none w-100">
+                                <form id="user-github-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
+                                    @csrfFormField
+                                    <input type="hidden" name="username" value="@user.username.asString">
+                                    <input type="hidden" name="attribute" value="github">
+                                    <div class="flex-grow-1">
+                                        <fieldset class="form-field-group mb-0">
+                                            <div class="mb-2">
+                                                For access to HMRC GitHub code repositories, provide the user's personal GitHub account username. Before saving, click below to check that the URL matches the GitHub profile of the user:
+                                            </div>
+                                            <div class="mb-2">
+                                                <a id="github-link" href="https://github.com/@{user.githubUsername}" target="_blank" rel="noreferrer noopener">
+                                                    https://github.com/@{user.githubUsername}<span class="glyphicon glyphicon-new-window"/>
+                                                </a>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <label id="field-user-github-label" for="field-user-github" class="fw-bold">GitHub:</label>
+                                                <input type="text" id="field-user-github"
+                                                class="form-control ms-2 me-2 @if(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("github")) {is-invalid}"
+                                                name="github" value="@userDetailsForm.data.getOrElse("github", user.githubUsername.getOrElse(""))">
+                                                <div class="ms-auto d-flex gap-2">
+                                                    <button id="save-user-github-button" class="btn btn-success btn-sm" type="submit">Save</button>
+                                                    <button id="cancel-save-user-github-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
+                                                </div>
+                                            </div>
+                                            @if(userDetailsForm("attribute").value.contains("github")) {
+                                                @userDetailsForm.errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
+                                            }
+                                        </fieldset>
+                                    </div>
+                                </form>
+                            </div>
+                          </li>
+                          <li id="organisation" class="d-flex justify-content-between align-items-center border-bottom border-light-subtle pb-2 mb-2">
+                              <div id="organisation-content" class="d-flex justify-content-between align-items-center w-100">
+                                  <div>
+                                      <label class="fw-bold">Org:</label>
+                                      @user.organisation.getOrElse("")
+                                  </div>
+                                  @if(canEditUsers) {<a href="#" id="edit-organisation-link" class="text-decoration-none">Edit</a>}
+                              </div>
+                              <div id="organisation-form-container" class="d-none w-100">
+                                  <form id="organisation-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
+                                      @csrfFormField
+                                      <input type="hidden" name="username" value="@user.username.asString">
+                                      <input type="hidden" name="attribute" value="organisation">
+                                      <div class="flex-grow-1">
+                                          <fieldset class="form-field-group mb-0">
+                                              <div class="d-flex align-items-center">
+                                                  <label id="field-organisation-label" for="field-organisation" class="fw-bold">Org:</label>
+                                                  <select class="form-select ms-2 me-2 @if(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("organisation")) {is-invalid}" id="field-organisation" name="organisation">
+                                                      <option value="MDTP" @if(user.organisation.contains("MDTP")) { selected="selected" else ""}>MDTP</option>
+                                                      <option value="VOA" @if(user.organisation.contains("VOA")) { selected="selected" else ""}>VOA</option>
+                                                      <option value="Other" @if(user.organisation.contains("Other")) { selected="selected" else ""}>Other</option>
+                                                  </select>
+                                                  <div class="ms-auto d-flex gap-2">
+                                                      <button id="save-organisation-button" class="btn btn-success btn-sm" type="submit">Save</button>
+                                                      <button id="cancel-save-organisation-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
+                                                  </div>
+                                              </div>
+                                              @if(userDetailsForm("attribute").value.contains("organisation")) {
+                                                  @userDetailsForm.errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
+                                              }
+                                          </fieldset>
+                                      </div>
+                                  </form>
+                              </div>
                           </li>
                           <li id="role">
                             <label class="fw-bold">Role:</label>
@@ -76,9 +218,11 @@
                           </li>
                       </ul>
 
-                      <div id="user-ump-link" class="list-unstyled">
-                          These details can be updated in <a href="@umpProfileUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window"/></a>
-                      </div>
+                      @if(!canEditUsers) {
+                          <div id="user-ump-link" class="list-unstyled">
+                              These details can be updated by a Team Admin.
+                          </div>
+                      }
                   </div>
               </div>
           </div>
@@ -275,3 +419,82 @@
       </script>
   }
 }
+
+<script @CSPNonce.attr>
+        document.addEventListener("DOMContentLoaded", function () {
+            const errorTypes = {
+                displayNameError: { editLinkId: "edit-user-name-link", contentId: "user-name-content", formId: "user-name-form-container" },
+                phoneNumberError: { editLinkId: "edit-phone-link", contentId: "phone-content", formId: "phone-form-container" },
+                githubError: { editLinkId: "edit-user-github-link", contentId: "user-github-content", formId: "user-github-form-container" },
+                organisationError: { editLinkId: "edit-organisation-link", contentId: "organisation-content", formId: "organisation-form-container" },
+            };
+
+            const errors = {
+                displayNameError: @(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("displayName")),
+                phoneNumberError: @(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("phoneNumber")),
+                githubError: @(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("github")),
+                organisationError: @(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("organisation")),
+            };
+
+            function toggleForm(contentId, formId, show) {
+                const contentDiv = document.getElementById(contentId);
+                const formDiv = document.getElementById(formId);
+
+                if (contentDiv && formDiv) {
+                    contentDiv.classList.toggle("d-none", show);
+                    formDiv.classList.toggle("d-none", !show);
+
+                    if (show) {
+                        const cancelButton = formDiv.querySelector("button[type='button']");
+                        cancelButton?.addEventListener("click", function (event) {
+                            event.preventDefault();
+                            toggleForm(contentId, formId, false);
+                        });
+                    }
+                }
+            }
+
+            Object.entries(errors).forEach(([key, hasError]) => {
+                if (hasError) {
+                    const { contentId, formId } = errorTypes[key];
+                    toggleForm(contentId, formId, true);
+                }
+            });
+
+            Object.values(errorTypes).forEach(({ editLinkId, contentId, formId }) => {
+                const editLink = document.getElementById(editLinkId);
+                if (editLink) {
+                    editLink.addEventListener("click", function (event) {
+                        event.preventDefault();
+                        toggleForm(contentId, formId, true);
+                    });
+                }
+            });
+
+            function debounce(func, delay) {
+                let timer;
+                return function (...args) {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+
+            const githubInput = document.getElementById("field-user-github");
+            const githubLink = document.getElementById("github-link");
+
+            if (githubInput && githubLink) {
+                githubInput.addEventListener(
+                        "input",
+                        debounce(function () {
+                            const githubUsername = githubInput.value.trim();
+                            githubLink.href = `https://github.com/${githubUsername}`;
+                            githubLink.textContent = `https://github.com/${githubUsername}`;
+                            const iconSpan = document.createElement("span");
+                            iconSpan.className = "glyphicon glyphicon-new-window";
+                            githubLink.appendChild(iconSpan);
+                        }, 300)
+                );
+            }
+        });
+</script>
+

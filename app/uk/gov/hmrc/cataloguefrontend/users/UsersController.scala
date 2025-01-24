@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.Logging
-import play.api.data.validation.Constraints
+import play.api.data.validation.{Constraint, Constraints, Invalid, Valid}
 import play.api.data.{Form, Forms}
 import play.api.mvc.*
 import play.twirl.api.Html
@@ -54,10 +54,11 @@ class UsersController @Inject()(
      with Logging:
 
   private def showUserInfoPage(
-    username: UserName,
-    retrieval: Option[Set[Resource]],
-    resultType: Html => Result,
-    form: Form[_]
+    username       : UserName,
+    retrieval      : Option[Set[Resource]],
+    resultType     : Html => Result,
+    ldapForm       : Form[ResetLdapPassword],
+    userDetailsForm: Form[EditUserDetailsRequest]
   )(using HeaderCarrier, RequestHeader): Future[Result] =
     for
       userOpt     <- userManagementConnector.getUser(username)
@@ -70,7 +71,7 @@ class UsersController @Inject()(
       userOpt match
         case Some(user) =>
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-          resultType(userInfoPage(form, isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl))
+          resultType(userInfoPage(ldapForm, userDetailsForm, isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl))
         case None =>
           NotFound(error_404_template())
 
@@ -82,8 +83,31 @@ class UsersController @Inject()(
                        resourceType = Some(ResourceType("catalogue-frontend")),
                        action       = Some(IAAction("EDIT_USER"))
                      ))
-        result    <- showUserInfoPage(username, retrieval, Ok(_), LdapResetForm.form)
+        result    <- showUserInfoPage(username, retrieval, Ok(_), LdapResetForm.form, EditUserDetailsForm.form)
       yield result
+
+  def updateUserDetails(username: UserName): Action[AnyContent] =
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
+      EditUserDetailsForm.form.bindFromRequest().fold(
+        formWithErrors =>
+          for
+            retrieval <- auth.verify(Retrieval.locations(
+                           resourceType = Some(ResourceType("catalogue-frontend")),
+                           action       = Some(IAAction("EDIT_USER"))
+                         ))
+            result    <- showUserInfoPage(username, retrieval, BadRequest(_), LdapResetForm.form, formWithErrors)
+          yield result
+        , editRequest =>
+          userManagementConnector.editUserDetails(editRequest)
+            .map: _ =>
+              Redirect(routes.UsersController.user(UserName(editRequest.username)))
+                .flashing("success" -> s"User's ${editRequest.attribute.description} has been updated successfully")
+            .recover:
+              case NonFatal(e) =>
+                Redirect(routes.UsersController.user(UserName(editRequest.username)))
+                  .flashing(s"error" -> s"Error updating User Details for user's ${editRequest.attribute.description}. Contact #team-platops")
+      )
 
   def requestLdapReset(username: UserName): Action[AnyContent] =
     auth.authenticatedAction(
@@ -93,8 +117,8 @@ class UsersController @Inject()(
         given AuthenticatedRequest[AnyContent, Set[Resource]] = request
         LdapResetForm.form.bindFromRequest().fold(
           formWithErrors =>
-            showUserInfoPage(username, Some(request.retrieval), BadRequest(_), formWithErrors)
-          , formData =>
+            showUserInfoPage(username, Some(request.retrieval), BadRequest(_), formWithErrors, EditUserDetailsForm.form)
+        , formData =>
             userManagementConnector.resetLdapPassword(formData).map: ticketOpt =>
               Ok(ldapResetRequestSentPage(username, ticketOpt))
             .recover:
@@ -162,3 +186,79 @@ object LdapResetForm:
         "email"    -> Forms.text.verifying(Constraints.emailAddress(errorMessage = "Please provide a valid email address."))
       )(ResetLdapPassword.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
+
+object EditUserDetailsForm:
+  val form: Form[EditUserDetailsRequest] = Form(
+    Forms.mapping(
+      "username" -> Forms.nonEmptyText,
+      "attribute" -> Forms.nonEmptyText.transform[UserAttribute](UserAttribute.fromString(_).get, _.name),
+      "displayName" -> Forms.optional(Forms.text),
+      "phoneNumber" -> Forms.optional(Forms.text),
+      "github" -> Forms.optional(Forms.text),
+      "organisation" -> Forms.optional(Forms.text)
+    ) { (username, attribute, displayNameOpt, phoneNumberOpt, githubOpt, organisationOpt) =>
+      val value = attribute match
+        case UserAttribute.DisplayName  => displayNameOpt.getOrElse("")
+        case UserAttribute.PhoneNumber  => phoneNumberOpt.getOrElse("")
+        case UserAttribute.Github       => githubOpt.getOrElse("")
+        case UserAttribute.Organisation => organisationOpt.getOrElse("")
+      EditUserDetailsRequest(username, attribute, value)
+    } { editUserDetailsRequest =>
+      Some((
+        editUserDetailsRequest.username,
+        editUserDetailsRequest.attribute,
+        if editUserDetailsRequest.attribute == UserAttribute.DisplayName then Some(editUserDetailsRequest.value) else None,
+        if editUserDetailsRequest.attribute == UserAttribute.PhoneNumber then Some(editUserDetailsRequest.value) else None,
+        if editUserDetailsRequest.attribute == UserAttribute.Github then Some(editUserDetailsRequest.value) else None,
+        if editUserDetailsRequest.attribute == UserAttribute.Organisation then Some(editUserDetailsRequest.value) else None
+      ))
+    }.verifying(validateByAttribute)
+  )
+
+  private def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] =
+    Constraint(constraintName): toBeValidated =>
+      if constraint(toBeValidated) then Valid else Invalid(error)
+
+  private val nameConstraints: Constraint[String] =
+    val nameLengthValidation: String => Boolean = str => str.length >= 2 && str.length <= 30
+
+    mkConstraint(s"constraints.displayNameLengthCheck")(
+      constraint = nameLengthValidation,
+      error = "Name should be between 2 and 30 characters long"
+    )
+
+  private val phoneNumberConstraint: Constraint[String] =
+    val phoneNumberValidation: String => Boolean =
+      _.matches("""^(?=.*\d)[\d\s/+]*$""")
+
+    mkConstraint("constraints.phoneNumber")(
+      constraint = phoneNumberValidation,
+      error = "Phone number can only contain digits, spaces, plus signs, or slashes."
+    )
+
+  private val githubUsernameConstraint: Constraint[String] =
+    val githubUsernameValidation: String => Boolean =
+      !_.isBlank
+
+    mkConstraint("constraints.githubUsername")(
+      constraint = githubUsernameValidation,
+      error = "GitHub username cannot be set to empty once it has been provided."
+    )
+
+  private val organisationConstraint: Constraint[String] =
+    val organisationValidation: String => Boolean =
+      Organisation.values.map(_.asString).contains(_)
+
+    mkConstraint("constraints.organisation")(
+      constraint = organisationValidation,
+      error = "Organisation must be MDTP, VOA, or Other."
+    )
+
+  private def validateByAttribute: Constraint[EditUserDetailsRequest] = Constraint("constraints.editUserDetailsRequest") { editUserDetailsRequest =>
+    editUserDetailsRequest.attribute match
+      case UserAttribute.DisplayName  => nameConstraints(editUserDetailsRequest.value)
+      case UserAttribute.PhoneNumber  => phoneNumberConstraint(editUserDetailsRequest.value)
+      case UserAttribute.Github       => githubUsernameConstraint(editUserDetailsRequest.value)
+      case UserAttribute.Organisation => organisationConstraint(editUserDetailsRequest.value)
+  }
+
