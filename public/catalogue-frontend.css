@@ -419,3 +419,25 @@ svg > g:last-child > g.google-visualization-tooltip { pointer-events: none }
 .layered-icon i:first-child {
     position: relative; /* Keeps the first icon in document flow to define height */
 }
+
+.separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+.separator::before,
+.separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: var(--bs-border-width) solid;
+    opacity: .25;
+}
+
+.separator:not(:empty)::before {
+    margin-right: .25em;
+}
+
+.separator:not(:empty)::after {
+    margin-left: .25em;
+}

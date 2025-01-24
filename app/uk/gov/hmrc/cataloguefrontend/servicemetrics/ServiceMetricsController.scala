@@ -27,7 +27,6 @@ import uk.gov.hmrc.cataloguefrontend.servicemetrics.view.html.ServiceMetricsList
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, TeamName}
-import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,7 +44,13 @@ class ServiceMetricsController @Inject() (
     with CatalogueAuthBuilders
     with I18nSupport:
 
-  def serviceMetrics(): Action[AnyContent] =
+  /**
+    * @param environment for reverse routing
+    * @param team for reverse routing
+    * @param digitalService for reverse routing
+    * @param metricType for reverse routing
+    */
+  def serviceMetrics(environment: Environment, team: Option[TeamName], digitalService: Option[DigitalService], metricType: Option[LogMetricId]): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
       ( for
@@ -53,26 +58,13 @@ class ServiceMetricsController @Inject() (
          digitalServices <- EitherT.right[Result](teamsAndRepositoriesConnector.allDigitalServices())
          form            =  ServiceMetricsFilter.form.bindFromRequest()
          filter          <- EitherT.fromEither[Future](form.fold(
-                              formWithErrors => Left(BadRequest(serviceMetricsPage(form, Seq.empty, Seq.empty, Seq.empty)))
-                            , formObject     => Right(formObject)
+                              formErrors => Left(BadRequest(serviceMetricsPage(formErrors, Seq.empty, teams, digitalServices)))
+                            , formObject => Right(formObject)
                             ))
-         results <- EitherT.right[Result](serviceMetricsConnector.metrics(filter.team, filter.digitalService, filter.metricType, Some(filter.environment)))
+         results         <- EitherT.right[Result](serviceMetricsConnector.metrics(Some(filter.environment), filter.team, filter.digitalService, filter.metricType))
         yield
           Ok(serviceMetricsPage(form.fill(filter), results, teams, digitalServices))
       ).merge
-
-import FromStringEnum._
-
-given Parser[LogMetricId] = Parser.parser(LogMetricId.values)
-
-enum LogMetricId(
-  override val asString: String,
-  val displayString    : String
-) extends FromString
-  derives Reads, FormFormat:
-  case ContainerKills   extends LogMetricId(asString = "container-kills"   , displayString = "Container Kills"   )
-  case NonIndexedQuery  extends LogMetricId(asString = "non-indexed-query" , displayString = "Non-indexed Query" )
-  case SlowRunningQuery extends LogMetricId(asString = "slow-running-query", displayString = "Slow Running Query")
 
 case class ServiceMetricsFilter(
   team          : Option[TeamName]       = None

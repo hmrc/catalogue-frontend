@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.users
 
+import cats.data.EitherT
+import cats.implicits.*
 import play.api.Logging
 import play.api.data.validation.{Constraint, Constraints, Invalid, Valid}
 import play.api.data.{Form, Forms}
@@ -138,23 +140,25 @@ class UsersController @Inject()(
         resourceType = Some(ResourceType("catalogue-frontend")),
         action       = Some(IAAction("EDIT_USER"))
       )).flatMap: retrieval =>
-        request.body.asFormUrlEncoded.flatMap(_.get("username").flatMap(_.headOption)).map(UserName.apply)
-          .fold(
-            Future.failed(RuntimeException("Could not request a new vpn certificate as hidden username form field was empty"))
-          ): username =>
-            userManagementConnector.getUser(username).flatMap:
-              case Some(user) =>
-                if(isAdminForUser(retrieval, user)) then
-                  userManagementConnector.requestNewVpnCert(username)
-                    .map(ticketOpt => Created(vpnRequestSentPage(user, ticketOpt)))
-                    .recover:
-                      case NonFatal(e) =>
-                        logger.error(s"Error requesting new VPN certificate: ${e.getMessage}", e)
-                        Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting VPN Certificate. Contact #team-platops")
-                else
-                  Future.successful(Redirect(routes.UsersController.user(username)).flashing("error" -> "Permission denied"))
-              case _          =>
-                Future.successful(Redirect(routes.UsersController.user(username)).flashing("error" -> "Unable to find user"))
+        request.body.asFormUrlEncoded.flatMap(_.get("username").flatMap(_.headOption)).map(UserName.apply).fold(
+          Future.failed(RuntimeException("Could not request a new vpn certificate as hidden username form field was empty"))
+        ): username =>
+          ( for
+              user    <- EitherT.fromOptionF(userManagementConnector.getUser(username)      , "Unable to find user")
+              _       <- EitherT.fromOption(Option.when(isAdminForUser(retrieval, user))(()), "Permission Denied")
+              oTicket <- EitherT:
+                           userManagementConnector
+                             .requestNewVpnCert(username)
+                             .map(Right.apply)
+                             .recover:
+                               case NonFatal(e) =>
+                                 logger.error(s"Error requesting new VPN certificate: ${e.getMessage}", e)
+                                 Left("Error requesting VPN Certificate. Contact #team-platops")
+            yield Created(vpnRequestSentPage(user, oTicket))
+          ).fold(
+            message => Redirect(routes.UsersController.user(username)).flashing("error" -> message)
+          , created => created
+          )
 
   val users: Action[AnyContent] =
     BasicAuthAction.async: request =>
