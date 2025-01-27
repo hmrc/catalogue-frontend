@@ -102,7 +102,10 @@ class UsersController @Inject()(
           userManagementConnector.editUserDetails(editRequest)
             .map: _ =>
               Redirect(routes.UsersController.user(UserName(editRequest.username)))
-                .flashing("success" -> s"User's ${editRequest.attribute.description} has been updated successfully")
+                .flashing(
+                  "success"   -> s"${editRequest.attribute.description} has been updated successfully for ${username.asString}.",
+                  "attribute" -> editRequest.attribute.name
+                )
             .recover:
               case NonFatal(e) =>
                 Redirect(routes.UsersController.user(UserName(editRequest.username)))
