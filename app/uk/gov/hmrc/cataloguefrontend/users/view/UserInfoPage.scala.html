@@ -32,6 +32,15 @@
   request        : RequestHeader
 )
 
+@isCurrentUser = @{request.session.get(AuthController.SESSION_USERNAME).fold(false)(_ == user.username.asString)}
+
+@saveAndCancelButtons(fieldName: String) = {
+    <div class="ms-auto d-flex gap-2">
+        <button id="save-@fieldName-button" class="btn btn-success btn-sm" type="submit">Save</button>
+        <button id="cancel-save-@fieldName-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
+    </div>
+}
+
 @standard_layout(user.username.asString, active = "users") {
   @request.flash.get("error").map { msg =>
     <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
@@ -41,7 +50,9 @@
   }
   @request.flash.get("success").map { msg =>
       <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
-          @msg
+          @msg @if(request.flash.get("attribute").contains("github")) {
+            Please follow the next steps in the <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/developer-set-up/join-hmrc-on-github.html#add-your-github-account-to-your-team-in-github" target="_blank" rel="noreferrer noopener">MDTP Handbook</a>.
+          }
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
   }
@@ -78,10 +89,7 @@
                                                   <input type="text" id="field-user-name"
                                                   class="form-control ms-2 me-2 @if(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("displayName")) {is-invalid}"
                                                   name="displayName" value="@userDetailsForm.data.getOrElse("displayName", user.displayName.getOrElse(""))">
-                                                  <div class="ms-auto d-flex gap-2">
-                                                      <button id="save-user-name-button" class="btn btn-success btn-sm" type="submit">Save</button>
-                                                      <button id="cancel-save-user-name-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
-                                                  </div>
+                                                  @saveAndCancelButtons("user-name")
                                               </div>
                                               @if(userDetailsForm("attribute").value.contains("displayName")) {
                                                   @userDetailsForm.errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
@@ -101,9 +109,7 @@
                                       <label class="fw-bold">Phone:</label>
                                       @user.phoneNumber.getOrElse("")
                                   </div>
-                                  @if(canEditUsers || request.session.get(AuthController.SESSION_USERNAME).fold(false)(_ == user.username.asString)) {
-                                      <a href="#" id="edit-phone-link" class="text-decoration-none">Edit</a>
-                                  }
+                                  @if(canEditUsers || isCurrentUser) {<a href="#" id="edit-phone-link" class="text-decoration-none">Edit</a>}
                               </div>
                               <div id="phone-form-container" class="d-none w-100">
                                   <form id="phone-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
@@ -118,10 +124,7 @@
                                                   <input type="text" id="field-phone"
                                                   class="form-control ms-2 me-2 @if(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("phoneNumber")) {is-invalid}"
                                                   name="phoneNumber" value="@userDetailsForm.data.getOrElse("phoneNumber", user.phoneNumber.getOrElse(""))">
-                                                  <div class="ms-auto d-flex gap-2">
-                                                      <button id="save-phone-button" class="btn btn-success btn-sm" type="submit">Save</button>
-                                                      <button id="cancel-save-phone-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
-                                                  </div>
+                                                  @saveAndCancelButtons("phone")
                                               </div>
                                               @if(userDetailsForm("attribute").value.contains("phoneNumber")) {
                                                   @userDetailsForm.errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
@@ -140,9 +143,7 @@
                                   case None      => {}
                                 }
                               </div>
-                              @if(canEditUsers || request.session.get(AuthController.SESSION_USERNAME).fold(false)(_ == user.username.asString)) {
-                                  <a href="#" id="edit-user-github-link" class="text-decoration-none">Edit</a>
-                              }
+                              @if(canEditUsers || isCurrentUser) {<a href="#" id="edit-user-github-link" class="text-decoration-none">Edit</a>}
                             </div>
                             <div id="user-github-form-container" class="d-none w-100">
                                 <form id="user-github-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
@@ -164,10 +165,7 @@
                                                 <input type="text" id="field-user-github"
                                                 class="form-control ms-2 me-2 @if(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("github")) {is-invalid}"
                                                 name="github" value="@userDetailsForm.data.getOrElse("github", user.githubUsername.getOrElse(""))">
-                                                <div class="ms-auto d-flex gap-2">
-                                                    <button id="save-user-github-button" class="btn btn-success btn-sm" type="submit">Save</button>
-                                                    <button id="cancel-save-user-github-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
-                                                </div>
+                                                @saveAndCancelButtons("user-github")
                                             </div>
                                             @if(userDetailsForm("attribute").value.contains("github")) {
                                                 @userDetailsForm.errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
@@ -199,10 +197,7 @@
                                                       <option value="VOA" @if(user.organisation.contains("VOA")) { selected="selected" else ""}>VOA</option>
                                                       <option value="Other" @if(user.organisation.contains("Other")) { selected="selected" else ""}>Other</option>
                                                   </select>
-                                                  <div class="ms-auto d-flex gap-2">
-                                                      <button id="save-organisation-button" class="btn btn-success btn-sm" type="submit">Save</button>
-                                                      <button id="cancel-save-organisation-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
-                                                  </div>
+                                                  @saveAndCancelButtons("organisation")
                                               </div>
                                               @if(userDetailsForm("attribute").value.contains("organisation")) {
                                                   @userDetailsForm.errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }

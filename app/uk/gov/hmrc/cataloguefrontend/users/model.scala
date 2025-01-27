@@ -241,10 +241,10 @@ object ResetLdapPassword:
     )(r => Tuple.fromProductTyped(r))
 
 enum UserAttribute(val name: String, val description: String):
-  case DisplayName  extends UserAttribute("displayName" , "name"        )
-  case Github       extends UserAttribute("github"      , "GitHub ID"   )
-  case Organisation extends UserAttribute("organisation", "organisation")
-  case PhoneNumber  extends UserAttribute("phoneNumber" , "phone number")
+  case DisplayName  extends UserAttribute("displayName" , "Name"           )
+  case Github       extends UserAttribute("github"      , "GitHub username")
+  case Organisation extends UserAttribute("organisation", "Organisation"   )
+  case PhoneNumber  extends UserAttribute("phoneNumber" , "Phone number"   )
 
 object UserAttribute:
   def fromString(value: String): Option[UserAttribute] =
