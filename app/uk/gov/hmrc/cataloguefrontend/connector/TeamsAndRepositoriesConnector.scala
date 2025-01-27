@@ -89,15 +89,33 @@ object Link:
     ~ (__ \ "cls"        ).readNullable[String]
     )(apply)
 
+case class SecurityAssessmentBreakdown(
+  high         : Int,
+  medium       : Int,
+  low          : Int,
+  informational: Int
+)
+
+object SecurityAssessmentBreakdown:
+  val reads: Reads[SecurityAssessmentBreakdown] =
+    ( (__ \ "High"         ).read[Int]
+    ~ (__ \ "Medium"       ).read[Int]
+    ~ (__ \ "Low"          ).read[Int]
+    ~ (__ \ "Informational").read[Int]
+    )(SecurityAssessmentBreakdown.apply _)
+
 case class TestJobResults(
-  numAccessibilityViolations: Option[Int],
-  numSecurityAlerts         : Option[Int]
+  numAccessibilityViolations : Option[Int],
+  numSecurityAlerts          : Option[Int],
+  securityAssessmentBreakdown: Option[SecurityAssessmentBreakdown]
 )
 
 object TestJobResults:
+  given Reads[SecurityAssessmentBreakdown] = SecurityAssessmentBreakdown.reads
   val reads: Reads[TestJobResults] =
-    ( (__ \ "numAccessibilityViolations").readNullable[Int]
-    ~ (__ \ "numSecurityAlerts"         ).readNullable[Int]
+    ( (__ \ "numAccessibilityViolations" ).readNullable[Int]
+    ~ (__ \ "numSecurityAlerts"          ).readNullable[Int]
+    ~ (__ \ "securityAssessmentBreakdown").readNullable[SecurityAssessmentBreakdown]
     )(TestJobResults.apply _)
 
 case class BuildData(
