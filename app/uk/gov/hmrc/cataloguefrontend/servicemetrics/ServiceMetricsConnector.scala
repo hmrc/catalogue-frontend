@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.{Duration, MILLISECONDS}
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

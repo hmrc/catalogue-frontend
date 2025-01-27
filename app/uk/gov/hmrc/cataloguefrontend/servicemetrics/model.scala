@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.servicemetrics
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.Environment
 
 case class EnvironmentResult(
   kibanaLink: String

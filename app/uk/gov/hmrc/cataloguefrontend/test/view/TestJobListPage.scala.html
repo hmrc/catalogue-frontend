@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
-@import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, JenkinsJob}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitHubTeam, JenkinsJob, SecurityAssessmentBreakdown}
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
 @import views.html.helper.{FieldConstructor, select}
@@ -31,6 +31,27 @@
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@breakdownTooltip(securityAssessmentBreakdown: SecurityAssessmentBreakdown) = {
+  <div class='text-nowrap'>
+    <div class='d-flex justify-content-between'>
+      <span>High:</span>
+      <span class='ms-3'>@securityAssessmentBreakdown.high</span>
+    </div>
+    <div class='d-flex justify-content-between'>
+      <span>Medium:</span>
+      <span class='ms-3'>@securityAssessmentBreakdown.medium</span>
+    </div>
+    <div class='d-flex justify-content-between'>
+      <span>Low:</span>
+      <span class='ms-3'>@securityAssessmentBreakdown.low</span>
+    </div>
+    <div class='d-flex justify-content-between'>
+      <span>Informational:</span>
+      <span class='ms-3'>@securityAssessmentBreakdown.informational</span>
+    </div>
+  </div>
+}
 
 @standard_layout("Test results", active = "explore") {
   <h1 class="page-heading mt-4">Test Results</h1>
@@ -126,7 +147,16 @@
             @testJob.latestBuild.flatMap(_.testJobResults).fold("")(_.numAccessibilityViolations)
           </td>
           <td class="security text-end pe-5" id="row@{i}_security">
-            @testJob.latestBuild.flatMap(_.testJobResults).fold("")(_.numSecurityAlerts)
+            @testJob.latestBuild.flatMap(_.testJobResults).fold(""){ results =>
+              @results.securityAssessmentBreakdown match {
+                case None => {
+                  @results.numSecurityAlerts
+                }
+                case Some(breakdown) => {
+                  <span class="breakdown-tooltip text-decoration-underline" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true" data-bs-title="@breakdownTooltip(breakdown)">@results.numSecurityAlerts</span>
+                }
+              }
+            }
           </td>
         </tr>
       }
@@ -144,6 +174,7 @@
 </script>
 
 <script @CSPNonce.attr>
+  document.querySelectorAll('.breakdown-tooltip').forEach(el => new bootstrap.Tooltip(el));
   ["teamName-dropdown", "digitalService-dropdown"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
