@@ -29,7 +29,7 @@
     <div class="card-body">
         <div class="row gy-3">
             <div id="repository-description" class="col-12">
-                <div class="@if(repo.descriptionAboveLimit) {content-grow  content-grow-gradient}">
+                <div @if(repo.descriptionAboveLimit) {class="content-grow content-grow-gradient" style="height:120px;"}>
                     <div class="content-grow-wrapper">
                         <label class="fw-bold">Description
                             <a href="#"

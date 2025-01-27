@@ -18,7 +18,9 @@ package uk.gov.hmrc.cataloguefrontend.servicemetrics
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
+import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}, FromStringEnum.*
 
 case class EnvironmentResult(
   kibanaLink: String
@@ -37,7 +39,7 @@ object LogMetric:
       ( (__ \ "kibanaLink").read[String]
       ~ (__ \ "count"     ).read[Int]
       )(EnvironmentResult.apply)
-      
+
     ( (__ \ "id"          ).read[String]
     ~ (__ \ "displayName" ).read[String]
     ~ (__ \ "environments").read[Map[Environment, EnvironmentResult]]
@@ -59,3 +61,14 @@ object ServiceMetric:
     ~ (__ \ "kibanaLink"  ).read[String]
     ~ (__ \ "logCount"    ).read[Int]
     )(apply)
+
+given Parser[LogMetricId] = Parser.parser(LogMetricId.values)
+
+enum LogMetricId(
+  override val asString: String,
+  val displayString    : String
+) extends FromString
+  derives Reads, FormFormat, QueryStringBindable:
+  case ContainerKills   extends LogMetricId(asString = "container-kills"   , displayString = "Container Kills"   )
+  case NonIndexedQuery  extends LogMetricId(asString = "non-indexed-query" , displayString = "Non-indexed Queries" )
+  case SlowRunningQuery extends LogMetricId(asString = "slow-running-query", displayString = "Slow Running Queries")

@@ -29,7 +29,7 @@
         <div class="h4 mb-0">Teams</div>
     </div>
     <div class="card-body">
-        <div class="@if(hasTooManyTeams) {content-grow-gradient content-grow}">
+        <div @if(hasTooManyTeams) {class="content-grow content-grow-gradient" style="height:120px;"}>
             <div class="content-grow-wrapper">
                 <ul class="list-unstyled mb-0">
                     @for(teamName <- teamNamesSortedByOwningTeam(repo)) {

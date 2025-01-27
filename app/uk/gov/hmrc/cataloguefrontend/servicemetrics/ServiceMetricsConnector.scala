@@ -46,16 +46,16 @@ class ServiceMetricsConnector @Inject() (
     configuration.get[Duration]("service-metrics.logDuration")
 
   def metrics(
-    teamName      : Option[TeamName]
-  , digitalService: Option[DigitalService]
-  , metricType    : Option[LogMetricId]
-  , environment   : Option[Environment]
+    environment   : Option[Environment]    = None
+  , teamName      : Option[TeamName]       = None
+  , digitalService: Option[DigitalService] = None
+  , metricType    : Option[LogMetricId]    = None
   )(using HeaderCarrier): Future[Seq[ServiceMetric]] =
     given Reads[ServiceMetric] = ServiceMetric.reads
     httpClientV2
       .get(url"$serviceMetricsBaseUrl/service-metrics/log-metrics?&team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&metricType=${metricType.map(_.asString)}&environment=${environment.map(_.asString)}&from=${Instant.now().minus(logDuration.toMillis, ChronoUnit.MILLIS)}&to=${Instant.now()}")
       .execute[Seq[ServiceMetric]]
-  
+
   def logMetrics(service: ServiceName)(using HeaderCarrier): Future[Seq[LogMetric]] =
     given Reads[LogMetric] = LogMetric.reads
     httpClientV2

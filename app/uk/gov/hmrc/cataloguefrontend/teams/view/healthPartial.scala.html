@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionRepositorySummary, routes => leakDetectionRoutes}
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{PlatformInitiative, routes => platforminitiativesRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{CachedServiceCheck, routes => serviceCommissioningStatusRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.{ServiceMetric, LogMetricId, routes => serviceMetricsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.test.{routes => testJobRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => vulnerabilityRoutes}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhere, routes => whatsRunningWhereRoutes}
@@ -36,6 +37,7 @@
 , openPrsRaisedByTeamMembers: (Int, URL)
 , openPrsForReposOwnedByTeam: (Int, URL)
 , commissioningChecks       : Seq[CachedServiceCheck]
+, serviceMetrics            : Seq[ServiceMetric]
 , whatsRunningWhere         : Seq[WhatsRunningWhere]
 , testJobs                  : Seq[JenkinsJob]
 , now                       : java.time.LocalDate = java.time.LocalDate.now()
@@ -171,26 +173,16 @@
           <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Security Alerts</a></td>
         </tr>
         <tr>
-          <td colspan="2"><hr/></td>
+          <td colspan="2"><div class="separator">Last 7 Days</div></td>
         </tr>
-        <tr>
-          @defining(-1) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
-          }
-          <td><a href="">Slow Running Queries</a></td>
-        </tr>
-        <tr>
-          @defining(-1) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
-          }
-          <td><a href="">Non Indexed Queries</a></td>
-        </tr>
-        <tr>
-          @defining(-1) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
-          }
-          <td><a href="">Container Kills</a></td>
-        </tr>
+        @for(logMetricId <- LogMetricId.values) {
+          <tr>
+            @defining(serviceMetrics.collect { case x if x.id == logMetricId => x.logCount }.sum) { count =>
+              <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+            }
+            <td><a href="@serviceMetricsRoutes.ServiceMetricsController.serviceMetrics(environment = Environment.Production, team = teamName, metricType = Some(logMetricId))">@logMetricId.displayString</a></td>
+          </tr>
+        }
       </tbody>
     </table>
   </div>

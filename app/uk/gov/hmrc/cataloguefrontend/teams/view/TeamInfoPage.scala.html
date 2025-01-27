@@ -24,6 +24,7 @@
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiative
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterComment
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.CachedServiceCheck
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetric
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
@@ -48,6 +49,7 @@ viewMessages: ViewMessages
                   , Seq[PlatformInitiative]
                   , Seq[TotalVulnerabilityCount]
                   , Seq[CachedServiceCheck]
+                  , Seq[ServiceMetric]
                   , Seq[WhatsRunningWhere]
                   , Seq[JenkinsJob]
                   )
@@ -57,7 +59,7 @@ viewMessages: ViewMessages
 
 @standard_layout(teamName.asString, active = "teams") {
   <h1 class="page-heading mt-4">@teamName.asString</h1>
-  @defining(results) { case (gitHubUrl, repos, umpTeam, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, vulnerabilities, commissioningChecks, whatsRunningWhere, testJobs) =>
+  @defining(results) { case (gitHubUrl, repos, umpTeam, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, vulnerabilities, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs) =>
 
     <section class="section-wrapper">
       <div class="row mb-3">
@@ -101,12 +103,12 @@ viewMessages: ViewMessages
         </div>
 
         <div class="col-md-8">
-          @defining(umpTeam.members.size > 8) { displayGrow =>
+          @defining(umpTeam.members.size > 16) { displayGrow =>
             <div class="card">
               <div class="card-header">
                 <div class="h4 mb-0">Members</div>
               </div>
-              <div class="content-grow @if(displayGrow){ content-grow-gradient }">
+              <div @if(displayGrow){ class="content-grow content-grow-gradient" style="height:220px;"}>
                 <div class="card-body content-grow-wrapper">
                     @if(umpTeam.members.isEmpty){
                       <p class="card-text col-6">@teamName.asString has no members.</p>
@@ -160,7 +162,7 @@ viewMessages: ViewMessages
             @shutteringPartial(teamName = Some(teamName), shutterStates)
           </div>
           <div class="col md-3">
-            @healthPartial(teamName = Some(teamName), leaks, productionBobbyReports, latestBobbyReports, platformInitiatives, vulnerabilities, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, commissioningChecks, whatsRunningWhere, testJobs)
+            @healthPartial(teamName = Some(teamName), leaks, productionBobbyReports, latestBobbyReports, platformInitiatives, vulnerabilities, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs)
           </div>
           <div class="col md-3">
             @explorePartial(teamName = Some(teamName))
