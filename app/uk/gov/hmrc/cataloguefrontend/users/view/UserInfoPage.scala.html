@@ -181,7 +181,7 @@
                                       <label class="fw-bold">Org:</label>
                                       @user.organisation.getOrElse("")
                                   </div>
-                                  @if(canEditUsers) {<a href="#" id="edit-organisation-link" class="text-decoration-none">Edit</a>}
+@*                                  @if(canEditUsers) {<a href="#" id="edit-organisation-link" class="text-decoration-none">Edit</a>} // commented out until DDCOps give go ahead to allow editing Organisation *@
                               </div>
                               <div id="organisation-form-container" class="d-none w-100">
                                   <form id="organisation-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
