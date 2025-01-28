@@ -24,15 +24,16 @@ import uk.gov.hmrc.cataloguefrontend.bobby.routes as bobbyRoutes
 import uk.gov.hmrc.cataloguefrontend.createrepository.routes as createRepoRoutes
 import uk.gov.hmrc.cataloguefrontend.dependency.routes as dependencyRoutes
 import uk.gov.hmrc.cataloguefrontend.deployments.routes as deployRoutes
-import uk.gov.hmrc.cataloguefrontend.healthindicators.routes as healthRoutes
 import uk.gov.hmrc.cataloguefrontend.leakdetection.routes as leakRoutes
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes as prcommenterRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.routes as reposRoutes
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.routes as serviceConfigsRoutes
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes as commissioningRoutes
+import uk.gov.hmrc.cataloguefrontend.servicemetrics.routes as serviceMetricsRoutes
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes as shutterRoutes}
 import uk.gov.hmrc.cataloguefrontend.teams.routes as teamRoutes
+import uk.gov.hmrc.cataloguefrontend.test.routes as testJobRoutes
 import uk.gov.hmrc.cataloguefrontend.users.routes as userRoutes
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes as wrwRoutes
 import uk.gov.hmrc.http.HeaderCarrier
@@ -67,27 +68,30 @@ class SearchIndex @Inject()(
     AtomicReference[Map[String, Seq[SearchTerm]]](Map.empty)
 
   private val hardcodedLinks = List(
-    SearchTerm("explorer", "dependency",                   dependencyRoutes.DependencyExplorerController.landing.url,                             1.0f, Set("depex")),
-    SearchTerm("explorer", "bobby",                        bobbyRoutes.BobbyExplorerController.list().url,                                        1.0f),
-    SearchTerm("explorer", "jdk",                          catalogueRoutes.JdkVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
-    SearchTerm("explorer", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f, Set("lds")),
-    SearchTerm("page",     "whats running where (wrw)",    wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
-    SearchTerm("page",     "deployment",                   deployRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,  1.0f),
-    SearchTerm("page",     "shutter-overview",             shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url,           1.0f),
-    SearchTerm("page",     "shutter-api",                  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,                1.0f),
-    SearchTerm("page",     "shutter-rate",                 shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,               1.0f),
-    SearchTerm("page",     "shutter-events",               shutterRoutes.ShutterEventsController.shutterEvents.url,                               1.0f),
-    SearchTerm("page",     "teams",                        teamRoutes.TeamsController.allTeams().url,                                             1.0f),
-    SearchTerm("page",     "repositories",                 reposRoutes.RepositoriesController.allRepositories().url,                              1.0f),
-    SearchTerm("page",     "users",                        userRoutes.UsersController.users.url,                                                  1.0f),
-    SearchTerm("page",     "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,                         1.0f),
-    SearchTerm("page",     "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,                     1.0f),
-    SearchTerm("page",     "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,              1.0f),
-    SearchTerm("page",     "create repository",            createRepoRoutes.CreateRepositoryController.createRepoLandingGet().url,                1.0f),
-    SearchTerm("page",     "deploy service",               deployRoutes.DeployServiceController.step1(None).url,                                  1.0f),
-    SearchTerm("page",     "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f),
-    SearchTerm("docs",     "mdtp-handbook",                config.get[String]("docs.handbookUrl"),                                                1.0f, openInNewWindow = true),
-    SearchTerm("docs",     "blog posts",                   config.get[String]("confluence.allBlogsUrl"),                                          1.0f, openInNewWindow = true)
+    SearchTerm("page", "dependency explorer",          dependencyRoutes.DependencyExplorerController.landing.url,                             1.0f, Set("depex")),
+    SearchTerm("page", "jdk explorer",                 catalogueRoutes.JdkVersionController.compareAllEnvironments().url,                     1.0f, Set("jdk", "jre")),
+    SearchTerm("page", "leaks",                        leakRoutes.LeakDetectionController.ruleSummaries.url,                                  1.0f),
+    SearchTerm("page", "bobby rules",                  bobbyRoutes.BobbyExplorerController.list().url,                                        1.0f),
+    SearchTerm("page", "bobby violations",             bobbyRoutes.BobbyExplorerController.bobbyViolations().url,                             1.0f),
+    SearchTerm("page", "whats running where (wrw)",    wrwRoutes.WhatsRunningWhereController.releases().url,                                  1.0f, Set("wrw")),
+    SearchTerm("page", "deployment",                   deployRoutes.DeploymentEventsController.deploymentEvents(Environment.Production).url,  1.0f),
+    SearchTerm("page", "shutter-overview",             shutterRoutes.ShutterOverviewController.allStates(ShutterType.Frontend).url,           1.0f),
+    SearchTerm("page", "shutter-api",                  shutterRoutes.ShutterOverviewController.allStates(ShutterType.Api).url,                1.0f),
+    SearchTerm("page", "shutter-rate",                 shutterRoutes.ShutterOverviewController.allStates(ShutterType.Rate).url,               1.0f),
+    SearchTerm("page", "shutter-events",               shutterRoutes.ShutterEventsController.shutterEvents.url,                               1.0f),
+    SearchTerm("page", "teams",                        teamRoutes.TeamsController.allTeams().url,                                             1.0f),
+    SearchTerm("page", "repositories",                 reposRoutes.RepositoriesController.allRepositories().url,                              1.0f),
+    SearchTerm("page", "users",                        userRoutes.UsersController.users.url,                                                  1.0f),
+    SearchTerm("page", "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,                         1.0f),
+    SearchTerm("page", "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,                     1.0f),
+    SearchTerm("page", "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,              1.0f),
+    SearchTerm("page", "create repository",            createRepoRoutes.CreateRepositoryController.createRepoLandingGet().url,                1.0f),
+    SearchTerm("page", "deploy service",               deployRoutes.DeployServiceController.step1(None).url,                                  1.0f),
+    SearchTerm("page", "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f),
+    SearchTerm("page", "service metrics",              serviceMetricsRoutes.ServiceMetricsController.serviceMetrics().url,                    1.0f),
+    SearchTerm("page", "test results",                 testJobRoutes.TestJobController.allTests().url,                                        1.0f),
+    SearchTerm("docs", "mdtp-handbook",                config.get[String]("docs.handbookUrl"),                                                1.0f, openInNewWindow = true),
+    SearchTerm("docs", "blog posts",                   config.get[String]("confluence.allBlogsUrl"),                                          1.0f, openInNewWindow = true)
   )
 
   def updateIndexes(): Future[Unit] =
@@ -98,7 +102,6 @@ class SearchIndex @Inject()(
       teamPageLinks  =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
                                                 SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases().url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))
       repoLinks      =  repos.flatMap(r => List(SearchTerm(repoTypeString(r.repoType),    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
-                                                SearchTerm("health",      r.name,          healthRoutes.HealthIndicatorsController.breakdownForRepo(r.name).url),
                                                 SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks   =  repos.filter(_.repoType == RepoType.Service)
                              .flatMap(r => List(SearchTerm("deploy",              r.name, deployRoutes.DeployServiceController.step1(Some(ServiceName(r.name))).url),

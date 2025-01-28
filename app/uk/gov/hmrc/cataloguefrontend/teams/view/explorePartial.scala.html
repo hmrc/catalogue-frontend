@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.cost.{routes => costRoutes}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterComment, routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => serviceCommissioningStatusRoutes}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => whatsRunningWhereRoutes}
 
 @(
@@ -39,6 +40,7 @@
       <li><a href="@appRoutes.JdkVersionController.compareAllEnvironments(teamName = teamName)">JDK Explorer</a></li>
       <li><a href="@appRoutes.SbtVersionController.compareAllEnvironments(teamName = teamName)">SBT Explorer</a></li>
       <li><a href="@costRoutes.CostController.costExplorer(team = teamName)">Cost Explorer</a></li>
+      <li><a href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName)">Service Commissioning State</a></li>
       @* TODO whatsRunningWhere should use standard Catalogue form params and reverse routes *@
       <li><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases()?profile_name=@teamName.fold("")(_.asString)&profile_type=team">What's Running Where</a></li>
     </ul>

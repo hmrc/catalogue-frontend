@@ -18,7 +18,6 @@ package uk.gov.hmrc.cataloguefrontend.servicemetrics
 
 import cats.data.EitherT
 import play.api.data.{Form, Forms}
-import play.api.libs.json.Reads
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
