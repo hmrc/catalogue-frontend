@@ -92,12 +92,6 @@
           <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(false))">Bobby Warnings - Latest</a></td>
         </tr>
         <tr>
-          @defining(platformInitiatives.filter(_.progress.percent < 100).size) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
-          }
-          <td><a href="@platforminitiativesRoutes.PlatformInitiativesController.platformInitiatives(team = teamName)">Platform Initiatives</a></td>
-        </tr>
-        <tr>
           @defining(commissioningChecks.filter(_.warnings).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
@@ -122,6 +116,12 @@
           }
           @* TODO whatsRunningWhere should use standard Catalogue form params and reverse routes *@
           <td><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases()?profile_name=@teamName.fold("")(_.asString)&profile_type=team">Outdated or Hotfixed Production Deployments</a></td>
+        </tr>
+        <tr>
+          @defining(platformInitiatives.filter(_.progress.percent < 100).size) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-info }">@count</span></td>
+          }
+          <td><a href="@platforminitiativesRoutes.PlatformInitiativesController.platformInitiatives(team = teamName)">Platform Initiatives</a></td>
         </tr>
         @defining(openPrsRaisedByTeamMembers) { (count, link) =>
           @if(count > 0) {
@@ -164,13 +164,13 @@
           @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numAccessibilityViolations).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Accessibility Issues</a></td>
+          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Accessibility Assessment Violations</a></td>
         </tr>
         <tr>
           @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numSecurityAlerts).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Security Alerts</a></td>
+          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Security Assessment Alerts</a></td>
         </tr>
         <tr>
           <td colspan="2"><div class="separator">Last 7 Days</div></td>

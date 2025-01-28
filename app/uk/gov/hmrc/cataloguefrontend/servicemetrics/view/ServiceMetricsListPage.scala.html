@@ -84,7 +84,7 @@
                 <div class="col-md-2">
                 @select(
                     field                 =  form("metricType"),
-                    options               =  LogMetricId.values.map(id => id.asString -> id.displayString),
+                    options               =  LogMetricId.values.toSeq.map(id => id.asString -> id.displayString),
                     Symbol("_default")    -> "All",
                     Symbol("_label")      -> "Type",
                     Symbol("_labelClass") -> "form-label",
