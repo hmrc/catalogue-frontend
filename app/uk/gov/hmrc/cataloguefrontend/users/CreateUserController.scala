@@ -62,7 +62,7 @@ class CreateUserController @Inject()(
       for
         teams <-
                  if request.retrieval.contains(Resource.from("catalogue-frontend", "teams/*")) then
-                   userManagementConnector.getAllTeams().map(_.map(_.teamName))
+                   userManagementConnector.getAllTeams().map(_.map(_.teamName).sortBy(_.asString))
                  else
                    Future.successful(cleanseUserTeams(request.retrieval))
       yield Ok(createUserPage(CreateUserForm.form, teams, Organisation.values.toSeq, isServiceAccount))
@@ -76,7 +76,7 @@ class CreateUserController @Inject()(
       (for
          teams <- EitherT.liftF:
                     if request.retrieval.contains(Resource.from("catalogue-frontend", "teams/*")) then
-                      userManagementConnector.getAllTeams().map(_.map(_.teamName))
+                      userManagementConnector.getAllTeams().map(_.map(_.teamName).sortBy(_.asString))
                     else
                       Future.successful(cleanseUserTeams(request.retrieval))
          form  <- EitherT.fromEither[Future]:
