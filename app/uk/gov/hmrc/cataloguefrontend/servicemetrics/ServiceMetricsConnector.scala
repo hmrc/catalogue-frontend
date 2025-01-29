@@ -54,7 +54,7 @@ class ServiceMetricsConnector @Inject() (
     given Reads[ServiceMetric] = ServiceMetric.reads
     val from = Instant.now().minus(logDuration.toMillis, ChronoUnit.MILLIS)
     httpClientV2
-      .get(url"$serviceMetricsBaseUrl/service-metrics/log-metrics?&team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&metricType=${metricType.map(_.asString)}&environment=${environment.map(_.asString)}&from=$from")
+      .get(url"$serviceMetricsBaseUrl/service-metrics/log-metrics?team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&metricType=${metricType.map(_.asString)}&environment=${environment.map(_.asString)}&from=$from")
       .execute[Seq[ServiceMetric]]
 
   def logMetrics(service: ServiceName)(using HeaderCarrier): Future[Seq[LogMetric]] =

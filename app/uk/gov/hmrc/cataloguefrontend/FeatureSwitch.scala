@@ -33,9 +33,6 @@ object CatalogueFrontendSwitches:
   def showTestRepoRelationships: FeatureSwitch =
     FeatureSwitch.forName("show-test-repo-relationships")
 
-  def showNewTeamPage: FeatureSwitch =
-    FeatureSwitch.forName("show-new-team-page")
-
   def showIncludeDeletedUsers: FeatureSwitch =
     FeatureSwitch.forName("show-include-deleted-users")
 

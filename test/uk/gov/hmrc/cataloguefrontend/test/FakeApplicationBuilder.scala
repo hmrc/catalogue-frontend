@@ -63,6 +63,8 @@ trait FakeApplicationBuilder
           "microservice.services.user-management.host"              -> wireMockHost,
           "microservice.services.pr-commenter.port"                 -> wireMockPort,
           "microservice.services.pr-commenter.host"                 -> wireMockHost,
+          "microservice.services.platform-initiatives.port"         -> wireMockPort,
+          "microservice.services.platform-initiatives.host"         -> wireMockHost,
           "microservice.services.vulnerabilities.port"              -> wireMockPort,
           "microservice.services.vulnerabilities.host"              -> wireMockHost,
           "build-deploy-api.url"                                    -> wireMockUrl,
