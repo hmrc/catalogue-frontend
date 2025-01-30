@@ -36,6 +36,7 @@ import uk.gov.hmrc.cataloguefrontend.teams.routes as teamRoutes
 import uk.gov.hmrc.cataloguefrontend.test.routes as testJobRoutes
 import uk.gov.hmrc.cataloguefrontend.users.routes as userRoutes
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes as wrwRoutes
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes as vulnerabilitiesRoutes
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
@@ -89,6 +90,9 @@ class SearchIndex @Inject()(
     SearchTerm("page", "deploy service",               deployRoutes.DeployServiceController.step1(None).url,                                  1.0f),
     SearchTerm("page", "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f),
     SearchTerm("page", "service metrics",              serviceMetricsRoutes.ServiceMetricsController.serviceMetrics().url,                    1.0f),
+    SearchTerm("page", "vulnerabilities",              vulnerabilitiesRoutes.VulnerabilitiesController.vulnerabilitiesList().url,             1.0f),
+    SearchTerm("page", "vulnerabilities services",     vulnerabilitiesRoutes.VulnerabilitiesController.vulnerabilitiesForServices().url,      1.0f),
+    SearchTerm("page", "vulnerabilities timeline ",    vulnerabilitiesRoutes.VulnerabilitiesController.vulnerabilitiesTimeline().url,         1.0f),
     SearchTerm("page", "test results",                 testJobRoutes.TestJobController.allTests().url,                                        1.0f),
     SearchTerm("docs", "mdtp-handbook",                config.get[String]("docs.handbookUrl"),                                                1.0f, openInNewWindow = true),
     SearchTerm("docs", "blog posts",                   config.get[String]("confluence.allBlogsUrl"),                                          1.0f, openInNewWindow = true)
