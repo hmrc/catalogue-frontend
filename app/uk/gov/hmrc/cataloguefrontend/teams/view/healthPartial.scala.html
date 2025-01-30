@@ -33,7 +33,8 @@
 , productionBobbyReports    : Seq[BobbyReport]
 , latestBobbyReports        : Seq[BobbyReport]
 , platformInitiatives       : Seq[PlatformInitiative]
-, vulnerabilities           : Seq[TotalVulnerabilityCount]
+, productionVulnerabilities : Seq[TotalVulnerabilityCount]
+, latestVulnerabilities     : Seq[TotalVulnerabilityCount]
 , openPrsRaisedByTeamMembers: (Int, URL)
 , openPrsForReposOwnedByTeam: (Int, URL)
 , commissioningChecks       : Seq[CachedServiceCheck]
@@ -71,10 +72,16 @@
           <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(true))">Bobby Errors - Latest</a></td>
         </tr>
         <tr>
-          @defining(vulnerabilities.map(_.actionRequired).sum) { count =>
+          @defining(productionVulnerabilities.map(_.actionRequired).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName)"> Service Vulnerabilities</a></td>
+          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString))"> Service Vulnerabilities - Production</a></td>
+        </tr>
+        <tr>
+          @defining(latestVulnerabilities.map(_.actionRequired).sum) { count =>
+            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+          }
+          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString))"> Service Vulnerabilities - Latest</a></td>
         </tr>
         <tr>
           <td colspan="2"><hr/></td>

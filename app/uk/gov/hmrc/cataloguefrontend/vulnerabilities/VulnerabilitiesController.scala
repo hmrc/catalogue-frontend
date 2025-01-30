@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.data.{Form, Forms}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
@@ -52,14 +52,16 @@ class VulnerabilitiesController @Inject() (
     * @param flag for reverse routing
     */
   def vulnerabilitiesList(
-    vulnerability : Option[String],
-    curationStatus: Option[String],
-    service       : Option[String],
-    team          : Option[TeamName],
-    flag          : Option[String]
+    vulnerability : Option[String]
+  , curationStatus: Option[String]
+  , service       : Option[String]
+  , team          : Option[TeamName]
+  , flag          : Option[String]
   ): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      VulnerabilitiesExplorerFilter.form
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
+      import VulnerabilitiesExplorerFilter.form
+      form
         .bindFromRequest()
         .fold(
           formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(None, Seq.empty, formWithErrors))),
@@ -72,15 +74,20 @@ class VulnerabilitiesController @Inject() (
                            , team           = validForm.team
                            , curationStatus = validForm.curationStatus
                            )
-            yield Ok(vulnerabilitiesListPage(summaries, teams, VulnerabilitiesExplorerFilter.form.fill(validForm)))
+            yield Ok(vulnerabilitiesListPage(summaries, teams, form.fill(validForm)))
           )
-    }
 
+  /**
+    * @param team for reverse routing
+    * @param flag for reverse routing
+    */
   def vulnerabilitiesForServices(
-    teamName: Option[TeamName] = None //TeamName is read from form, this param only exists for reverse routes
+    team: Option[TeamName]
+  , flag: Option[String]
   ): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesCountFilter.form
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
+      import VulnerabilitiesCountFilter.form
       form
         .bindFromRequest()
         .fold(
@@ -95,7 +102,6 @@ class VulnerabilitiesController @Inject() (
                         )
             yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
         )
-    }
 
   /**
     * @param service for reverse routing
@@ -106,14 +112,15 @@ class VulnerabilitiesController @Inject() (
     * @param from for reverse routing
     */
   def vulnerabilitiesTimeline(
-    service       : Option[ServiceName],
-    team          : Option[TeamName],
-    vulnerability : Option[String],
-    curationStatus: Option[String],
-    from          : LocalDate,
-    to            : LocalDate
+    service       : Option[ServiceName]
+  , team          : Option[TeamName]
+  , vulnerability : Option[String]
+  , curationStatus: Option[String]
+  , from          : LocalDate
+  , to            : LocalDate
   ): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
       import VulnerabilitiesTimelineFilter.form
       for
         teams    <- teamsAndRepositoriesConnector.allTeams().map(_.map(_.name))
@@ -135,7 +142,6 @@ class VulnerabilitiesController @Inject() (
                           yield Ok(vulnerabilitiesTimelinePage(teams = teams, services = services, result = counts, form.fill(validForm)))
                       )
       yield res
-    }
 
 end VulnerabilitiesController
 

@@ -82,6 +82,7 @@ class TeamsController @Inject()(
                        , shutterService.getShutterStates(ShutterType.Api     , Environment.Production, Some(teamName), None)
                        ).tupled.map(x => x._1 ++ x._2)
                      , platformInitiativesConnector.getInitiatives(team = Some(teamName))
+                     , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.ForEnvironment(Environment.Production), team = Some(teamName))
                      , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest, team = Some(teamName))
                      , serviceCommissioningStatusConnector.cachedCommissioningStatus(teamName = Some(teamName))
                      , serviceMetricsConnector.metrics(Some(Environment.Production), Some(teamName))
