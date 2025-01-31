@@ -85,31 +85,30 @@
 
 @getColourClass(dependency: Dependency) = @{
     dependency.versionState match {
-        case Some(VersionState.NewVersionAvailable )  => "text-secondary"
-        case Some(_: VersionState.BobbyRuleViolated)  => "text-danger"
-        case Some(_: VersionState.BobbyRulePending )  => "text-warning"
-        case _                                        => if(dependency.vulnerabilityIds.nonEmpty) "text-danger" else "text-success"
+        case _ if dependency.vulnerabilityIds.nonEmpty => "text-danger"
+        case Some(_: VersionState.BobbyRuleViolated)   => "text-danger"
+        case Some(_: VersionState.BobbyRulePending )   => "text-warning"
+        case Some(VersionState.NewVersionAvailable )   => "text-secondary"
+        case _                                         => "text-success"
     }
 }
 
 @getLinkColourClass(dependency: Dependency) = @{
     dependency.versionState match {
-        case Some(VersionState.NewVersionAvailable )  => "link-secondary"
-        case Some(_: VersionState.BobbyRuleViolated)  => "link-danger"
-        case Some(_: VersionState.BobbyRulePending )  => "link-warning"
-        case _                                        => if(dependency.vulnerabilityIds.nonEmpty) "link-danger" else "link-success"
+        case _ if dependency.vulnerabilityIds.nonEmpty => "link-danger"
+        case Some(_: VersionState.BobbyRuleViolated)   => "link-danger"
+        case Some(_: VersionState.BobbyRulePending )   => "link-warning"
+        case Some(VersionState.NewVersionAvailable )   => "link-secondary"
+        case _                                         => "link-success"
     }
 }
 
 @icon(dependency: Dependency) = {
   @dependency.versionState match {
-    case Some(VersionState.NewVersionAvailable )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-arrow-up" title="new version available"></span> }
-    case Some(_: VersionState.BobbyRulePending )  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-alert"    title="bobby rule pending"></span> }
-    case Some(_: VersionState.BobbyRuleViolated)  => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="bobby rule violated"></span> }
-    case _                                        => {
-                                                         @if(dependency.vulnerabilityIds.nonEmpty) {
-                                                             <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove" title="has vulnerability"></span>
-                                                         }
-                                                     }
+    case _ if dependency.vulnerabilityIds.nonEmpty => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="has vulnerability"></span>     }
+    case Some(_: VersionState.BobbyRuleViolated)   => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="bobby rule violated"></span>   }
+    case Some(_: VersionState.BobbyRulePending )   => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-alert"    title="bobby rule pending"></span>    }
+    case Some(VersionState.NewVersionAvailable )   => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-arrow-up" title="new version available"></span> }
+    case _                                         => { }
   }
 }
