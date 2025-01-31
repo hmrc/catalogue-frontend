@@ -324,30 +324,22 @@
                           </div>
                           @if(canEditUsers) {
                               <div class="card-footer">
-                                  <div class="d-flex justify-content-between gap-3">
-                                      @if(user.githubUsername.isDefined) {
-                                        <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#addToGithubTeamModal">
-                                            Add to Github Team
-                                        </button>
-                                      } else {
-                                        <button type="button" class="btn btn-success flex-grow-1" style="visibility: hidden;"> @*Hide the button and disable functionality as to not impact the layout of the other buttons *@>
-                                            Add to GitHub Team
-                                        </button>
-                                      }
-                                      @if(userAccess.vpn) {
-                                        <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#vpnModal">
-                                            Request VPN Certificate
-                                        </button>
-                                      } else {
-                                        <button type="button" class="btn btn-success flex-grow-1" style="visibility: hidden;"> @*Hide the button and disable functionality as to not impact the layout of the other buttons *@
-                                            Request VPN Certificate
-                                        </button>
-                                      }
-                                      <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#ldapModal">
-                                          Reset LDAP Password
-                                      </button>
-                                  </div>
-
+                                <div class="d-flex justify-content-between gap-3">
+                                    <button type="button" class="btn btn-success flex-grow-1" 
+                                            @if(!user.githubUsername.isDefined){style="visibility: hidden"}
+                                            data-bs-toggle="modal" data-bs-target="#addToGithubTeamModal">
+                                        Add to Github Team
+                                    </button>
+                                    <button type="button" class="btn btn-success flex-grow-1" 
+                                            @if(!userAccess.vpn){style="visibility: hidden"}
+                                            data-bs-toggle="modal" data-bs-target="#vpnModal">
+                                        Request VPN Certificate
+                                    </button>
+                                    <button type="button" class="btn btn-success flex-grow-1" 
+                                            data-bs-toggle="modal" data-bs-target="#ldapModal">
+                                        Reset LDAP Password
+                                    </button>
+                                </div>
                               </div>
                           }
                       </div>
