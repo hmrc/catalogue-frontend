@@ -25,7 +25,7 @@ import play.api.mvc.*
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
+import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{LdapResetRequestSentPage, UserInfoPage, UserListPage, UserSearchResults, VpnRequestSentPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
@@ -46,6 +46,7 @@ class UsersController @Inject()(
 , vpnRequestSentPage      : VpnRequestSentPage
 , ldapResetRequestSentPage: LdapResetRequestSentPage
 , umpConfig               : UserManagementPortalConfig
+, teamsAndReposConnector  : TeamsAndRepositoriesConnector
 , override val mcc        : MessagesControllerComponents
 , override val auth       : FrontendAuthComponents
 )(using
@@ -63,17 +64,21 @@ class UsersController @Inject()(
     userDetailsForm: Form[EditUserDetailsRequest]
   )(using HeaderCarrier, RequestHeader): Future[Result] =
     for
-      userOpt     <- userManagementConnector.getUser(username)
-      userTooling <- userManagementConnector.getUserAccess(username).map(Right(_)).recover:
-                       case e: UpstreamErrorResponse =>
-                         logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
-                           s"Error: ${e.message}.")
-                         Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
+      userOpt          <- userManagementConnector.getUser(username)
+      userTooling      <- userManagementConnector.getUserAccess(username).map(Right(_)).recover:
+                            case e: UpstreamErrorResponse =>
+                              logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
+                                s"Error: ${e.message}.")
+                              Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
+      adminGithubTeams <- retrieval match
+                            case None            => Future.successful(Set.empty[TeamName])
+                            case Some(resources) =>
+                              teamsAndReposConnector.allTeams().map(_.map(_.name).toSet).map(getAdminGithubTeams(resources, _))
     yield
       userOpt match
         case Some(user) =>
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-          resultType(userInfoPage(ldapForm, userDetailsForm, isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl))
+          resultType(userInfoPage(ldapForm, userDetailsForm, isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl, adminGithubTeams))
         case None =>
           NotFound(error_404_template())
 
@@ -136,6 +141,31 @@ class UsersController @Inject()(
     val teams = retrieval.fold(Set.empty[TeamName])(_.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply))
     teams.contains(TeamName("*")) || teams.exists(user.teamNames.contains) // Global admin or admin for user's team
 
+  private def getAdminGithubTeams(resources: Set[Resource], githubTeams: Set[TeamName]): Set[TeamName] =
+      val adminTeams = resources.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply)
+      if adminTeams.contains(TeamName("*")) then
+        githubTeams
+      else
+        githubTeams.intersect(adminTeams)
+
+  def addToGithubTeam(username: UserName): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.UsersController.user(username),
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("EDIT_USER")))
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+      AddToGithubTeamForm.form.bindFromRequest().fold(
+        formWithErrors =>
+          showUserInfoPage(username, Some(request.retrieval), BadRequest(_), LdapResetForm.form, EditUserDetailsForm.form)
+      , formData =>
+          userManagementConnector.addToGithubTeam(formData).map: _ =>
+            Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to team: ${formData.team} sent successfully.")
+          .recover:
+            case NonFatal(e) =>
+              logger.error(s"Error requesting user ${formData.username} be added to github team ${formData.team} - ${e.getMessage}", e)
+              Redirect(routes.UsersController.user(username)).flashing("error" -> "Error processing request. Contact #team-platops")
+      )
+  
   val requestNewVpnCert: Action[AnyContent] =
     BasicAuthAction.async: request =>
       given RequestHeader = request
@@ -196,6 +226,15 @@ object LdapResetForm:
         "username" -> Forms.nonEmptyText,
         "email"    -> Forms.text.verifying(Constraints.emailAddress(errorMessage = "Please provide a valid email address."))
       )(ResetLdapPassword.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
+
+object AddToGithubTeamForm:
+  val form: Form[AddToGithubTeamRequest] =
+    Form(
+      Forms.mapping(
+        "username" -> Forms.nonEmptyText,
+        "team"     -> Forms.nonEmptyText
+      )(AddToGithubTeamRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
 object EditUserDetailsForm:
