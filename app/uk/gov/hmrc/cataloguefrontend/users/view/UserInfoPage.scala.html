@@ -22,14 +22,15 @@
 
 @this()
 
-@(ldapForm       : Form[ResetLdapPassword],
-  userDetailsForm: Form[EditUserDetailsRequest],
-  canEditUsers   : Boolean,
-  userTooling    : Either[String, UserAccess],
-  user           : User,
-  umpProfileUrl  : String
+@(ldapForm        : Form[ResetLdapPassword],
+  userDetailsForm : Form[EditUserDetailsRequest],
+  canEditUsers    : Boolean,
+  userTooling     : Either[String, UserAccess],
+  user            : User,
+  umpProfileUrl   : String,
+  adminGithubTeams: Set[TeamName]
 )(implicit
-  request        : RequestHeader
+  request         : RequestHeader
 )
 
 @isCurrentUser = @{request.session.get(AuthController.SESSION_USERNAME).fold(false)(_ == user.username.asString)}
@@ -324,9 +325,15 @@
                           @if(canEditUsers) {
                               <div class="card-footer">
                                   <div class="d-flex justify-content-between gap-3">
-                                      <button type="button" class="btn btn-success flex-grow-1" style="visibility: hidden;"> @*Placeholder for Add To Github Team Button *@>
-                                          Add to GitHub Team
-                                      </button>
+                                      @if(user.githubUsername.isDefined) {
+                                        <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#addToGithubTeamModal">
+                                            Add to Github Team
+                                        </button>
+                                      } else {
+                                        <button type="button" class="btn btn-success flex-grow-1" style="visibility: hidden;"> @*Hide the button and disable functionality as to not impact the layout of the other buttons *@>
+                                            Add to GitHub Team
+                                        </button>
+                                      }
                                       @if(userAccess.vpn) {
                                         <button type="button" class="btn btn-success flex-grow-1" data-bs-toggle="modal" data-bs-target="#vpnModal">
                                             Request VPN Certificate
@@ -399,6 +406,35 @@
                   <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                       <button class="btn btn-success" type="submit">Submit</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+
+  <div class="modal fade" id="addToGithubTeamModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="addToGithubTeamModalTitle" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="addToGithubTeamModalTitle">Add to Github Team</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form id="add-to-github-team-form" method="post" action="@userRoutes.UsersController.addToGithubTeam(user.username)">
+                  @csrfFormField
+                  <div class="modal-body">
+                      <input name="username" type="hidden" value="@user.username.asString">
+                      <div class="mb-3">
+                          <label for="team-select" class="form-label fw-bold">Please select a team</label>
+                          <select id="team-select" name="team" class="form-select" required>
+                              @for(team <- adminGithubTeams.toSeq.sorted) {
+                                  <option value="@team.asString">@team.asString</option>
+                              }
+                          </select>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button id="add-to-github-team-submit" class="btn btn-success" type="submit">Submit</button>
                   </div>
               </form>
           </div>

@@ -240,6 +240,17 @@ object ResetLdapPassword:
     ~ (__ \ "email_address").write[String]
     )(r => Tuple.fromProductTyped(r))
 
+case class AddToGithubTeamRequest(
+  username: String,
+  team    : String
+)
+
+object AddToGithubTeamRequest:
+  val writes: Writes[AddToGithubTeamRequest] =
+    ( (__ \ "username").write[String]
+    ~ (__ \ "team"    ).write[String]
+    )(a => Tuple.fromProductTyped(a))
+
 enum UserAttribute(val name: String, val description: String):
   case DisplayName  extends UserAttribute("displayName" , "Name"           )
   case Github       extends UserAttribute("github"      , "GitHub username")
