@@ -70,7 +70,10 @@ class UsersController @Inject()(
                               logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
                                 s"Error: ${e.message}.")
                               Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
-      adminGithubTeams <- getAdminGithubTeams(retrieval)
+      adminGithubTeams <- retrieval match
+                            case None            => Future.successful(Set.empty[TeamName])
+                            case Some(resources) =>
+                              teamsAndReposConnector.allTeams().map(_.map(_.name).toSet).map(getAdminGithubTeams(resources, _))
     yield
       userOpt match
         case Some(user) =>
@@ -138,14 +141,12 @@ class UsersController @Inject()(
     val teams = retrieval.fold(Set.empty[TeamName])(_.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply))
     teams.contains(TeamName("*")) || teams.exists(user.teamNames.contains) // Global admin or admin for user's team
 
-  private def getAdminGithubTeams(retrieval: Option[Set[Resource]])(using HeaderCarrier): Future[Set[TeamName]] =
-    retrieval match
-      case None => Future.successful(Set.empty[TeamName])
-      case Some(resources) =>
-        for
-          githubTeams <- teamsAndReposConnector.allTeams().map(_.map(_.name).toSet)
-          adminTeams  =  resources.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply)
-        yield if adminTeams.contains(TeamName("*")) then githubTeams else adminTeams.intersect(githubTeams)
+  private def getAdminGithubTeams(resources: Set[Resource], githubTeams: Set[TeamName]): Set[TeamName] =
+      val adminTeams = resources.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply)
+      if adminTeams.contains(TeamName("*")) then
+        githubTeams
+      else
+        githubTeams.intersect(adminTeams)
 
   def addToGithubTeam(username: UserName): Action[AnyContent] =
     auth.authenticatedAction(
