@@ -20,7 +20,7 @@ import play.api.Logging
 import play.api.libs.json.*
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users.{AddToGithubTeamRequest, CreateUserRequest, EditUserAccessRequest, ResetLdapPassword, UmpTeam, User, UserAccess, EditUserDetailsRequest}
+import uk.gov.hmrc.cataloguefrontend.users.{AddToGithubTeamRequest, CreateUserRequest, EditUserAccessRequest, EditUserDetailsRequest, ResetGooglePassword, ResetLdapPassword, UmpTeam, User, UserAccess}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -135,6 +135,16 @@ class UserManagementConnector @Inject()(
       .flatMap:
         case Right(json) => Future.successful((json \ "ticket_number").validate[String].asOpt)
         case Left(err)   => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
+  def resetGooglePassword(resetGooglePassword: ResetGooglePassword)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/reset-google-password"
+    httpClientV2
+      .put(url)
+      .withBody(Json.toJson(resetGooglePassword)(ResetGooglePassword.writes))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(res) => Future.successful(res)
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def addToGithubTeam(request: AddToGithubTeamRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/add-user-to-github-team"

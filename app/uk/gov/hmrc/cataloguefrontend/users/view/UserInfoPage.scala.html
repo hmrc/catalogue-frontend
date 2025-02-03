@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.users.{User, UserAccess, ResetLdapPassword, EditUserDetailsRequest}
+@import uk.gov.hmrc.cataloguefrontend.users.{User, UserAccess, ResetLdapPassword, ResetGooglePassword, EditUserDetailsRequest}
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
 @import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
 @import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
@@ -23,6 +23,7 @@
 @this()
 
 @(ldapForm        : Form[ResetLdapPassword],
+  googleForm      : Form[ResetGooglePassword],
   userDetailsForm : Form[EditUserDetailsRequest],
   canEditUsers    : Boolean,
   userTooling     : Either[String, UserAccess],
@@ -322,23 +323,31 @@
                                   </li>
                               </ul>
                           </div>
-                          @if(canEditUsers) {
+                          @if(canEditUsers || isCurrentUser) {
                               <div class="card-footer">
                                 <div class="d-flex justify-content-between gap-3">
-                                    <button type="button" class="btn btn-success flex-grow-1" 
-                                            @if(!user.githubUsername.isDefined){style="visibility: hidden"}
-                                            data-bs-toggle="modal" data-bs-target="#addToGithubTeamModal">
-                                        Add to Github Team
+                                  @if(canEditUsers) {
+                                    <button type="button" class="btn btn-success flex-grow-1"
+                                        @if(user.githubUsername.isEmpty) {style="visibility: hidden"}
+                                    data-bs-toggle="modal" data-bs-target="#addToGithubTeamModal">
+                                        Add to GitHub Team
                                     </button>
-                                    <button type="button" class="btn btn-success flex-grow-1" 
-                                            @if(!userAccess.vpn){style="visibility: hidden"}
-                                            data-bs-toggle="modal" data-bs-target="#vpnModal">
+                                    <button type="button" class="btn btn-success flex-grow-1"
+                                        @if(!userAccess.vpn) {style="visibility: hidden"}
+                                    data-bs-toggle="modal" data-bs-target="#vpnModal">
                                         Request VPN Certificate
                                     </button>
-                                    <button type="button" class="btn btn-success flex-grow-1" 
-                                            data-bs-toggle="modal" data-bs-target="#ldapModal">
+                                    <button type="button" class="btn btn-success flex-grow-1"
+                                    data-bs-toggle="modal" data-bs-target="#ldapModal">
                                         Reset LDAP Password
                                     </button>
+                                  }
+                                  @if(isCurrentUser) {
+                                    <button type="button" class="btn btn-success flex-grow-1 ms-auto" style="max-width: 200px;"
+                                    data-bs-toggle="modal" data-bs-target="#googlePasswordModal">
+                                        Reset Google Password
+                                    </button>
+                                  }
                                 </div>
                               </div>
                           }
@@ -373,11 +382,11 @@
     </div>
   </div>
 
-  <div class="modal fade" id="ldapModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="vpnModalTitle" aria-hidden="true">
+  <div class="modal fade" id="ldapModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="ldapModalTitle" aria-hidden="true">
       <div class="modal-dialog">
           <div class="modal-content">
               <div class="modal-header">
-                  <h5 class="modal-title" id="vpnModalTitle">Initial reset of user LDAP password</h5>
+                  <h5 class="modal-title" id="ldapModalTitle">Initial reset of user LDAP password</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <form id="ldap-form" method="post" action="@userRoutes.UsersController.requestLdapReset(user.username)">
@@ -394,6 +403,36 @@
                           }
                       </div>
                       <p>For security reasons, this should NOT be the user's normal email address where VPN certificates would be sent and should not contain a '+' character.</p>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button class="btn btn-success" type="submit">Submit</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+
+  <div class="modal fade" id="googlePasswordModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="googlePasswordModalTitle" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="googlePasswordModalTitle">Reset your Google password</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form id="google-password-form" method="post" action="@userRoutes.UsersController.requestGoogleReset(user.username)">
+                  @csrfFormField
+                  <div class="modal-body">
+                      <p>If you haven't added your Google account recovery information, please do so in your account.</p>
+                      <p>Team Admins should not routinely reset passwords for their users. Instead, users should be encouraged to reset their own password and refer to <a href="https://confluence.tools.tax.service.gov.uk/pages/viewpage.action?spaceKey=TOOLS&title=Password+resets+for+digital.hmrc.gov.uk+Google+accounts" target="_blank" rel="noreferrer noopener">this page</a> for guidance.</p>
+                      <input name="username" type="hidden" value="@user.username.asString">
+                      <div class="mb-3">
+                          <label for="passwordInput" class="form-label">New password</label>
+                          <input class="form-control @if(googleForm.hasErrors) {is-invalid}" type="text" id="passwordInput" name="password" autocomplete="off" value="@googleForm("password").value.getOrElse("")">
+                          @googleForm.error("password").map { error =>
+                              <div class="invalid-feedback">@error.message</div>
+                          }
+                      </div>
                   </div>
                   <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -441,6 +480,15 @@
               });
       </script>
   }
+
+    @if(googleForm.hasErrors) {
+        <script @CSPNonce.attr>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var modal = new bootstrap.Modal(document.getElementById('googlePasswordModal'));
+                    modal.show();
+                });
+        </script>
+    }
 }
 
 <script @CSPNonce.attr>

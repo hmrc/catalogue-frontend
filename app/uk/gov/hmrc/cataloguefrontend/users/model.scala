@@ -20,6 +20,7 @@ import play.api.libs.json.*
 import play.api.libs.functional.syntax.*
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.util.FromString
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 
 case class Role(asString: String):
   def displayName: String =
@@ -272,3 +273,15 @@ object EditUserDetailsRequest:
     ~ (__ \ "attribute").write[UserAttribute](UserAttribute.writes)
     ~ (__ \ "value"    ).write[String]
     )(e => Tuple.fromProductTyped(e))
+
+case class ResetGooglePassword(
+  username: String,
+  password: SensitiveString
+)
+
+object ResetGooglePassword:
+  val writes: Writes[ResetGooglePassword] =
+    given Writes[SensitiveString] = summon[Writes[String]].contramap(_.decryptedValue)
+    ( (__ \ "username").write[String]
+    ~ (__ \ "password").write[SensitiveString]
+    )(r => Tuple.fromProductTyped(r))
