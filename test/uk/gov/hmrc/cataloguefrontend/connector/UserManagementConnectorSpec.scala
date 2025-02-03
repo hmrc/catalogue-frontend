@@ -23,6 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.*
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -531,4 +532,48 @@ class UserManagementConnectorSpec
 
         an[RuntimeException] shouldBe thrownBy {
           connector.resetLdapPassword(resetLdapPassword).futureValue
+        }
+
+    "resetGooglePassword" should :
+    
+      val resetGooglePassword =
+        ResetGooglePassword(
+          username = "joe.bloggs",
+          password = SensitiveString("password")
+        )
+    
+      val actualResetGooglePassword =
+        """{
+          |  "username" : "joe.bloggs",
+          |  "password" : "password"
+          |}
+          |""".stripMargin
+    
+      "return Unit when UMP response is 200" in :
+        stubFor(
+          put(urlPathEqualTo(s"/user-management/reset-google-password"))
+            .willReturn(
+              aResponse()
+                .withStatus(200)
+            )
+        )
+    
+        connector.resetGooglePassword(resetGooglePassword).futureValue shouldBe()
+    
+        verify(
+          putRequestedFor(urlPathEqualTo("/user-management/reset-google-password"))
+            .withRequestBody(equalToJson(actualResetGooglePassword))
+        )
+    
+      "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
+        stubFor(
+          post(urlPathEqualTo("/user-management/reset-google-password"))
+            .willReturn(
+              aResponse()
+                .withStatus(500)
+            )
+        )
+      
+        an[RuntimeException] shouldBe thrownBy {
+          connector.resetGooglePassword(resetGooglePassword).futureValue
         }

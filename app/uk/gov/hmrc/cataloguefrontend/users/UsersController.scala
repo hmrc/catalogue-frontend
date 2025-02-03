@@ -29,6 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, U
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{LdapResetRequestSentPage, UserInfoPage, UserListPage, UserSearchResults, VpnRequestSentPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -61,6 +62,7 @@ class UsersController @Inject()(
     retrieval      : Option[Set[Resource]],
     resultType     : Html => Result,
     ldapForm       : Form[ResetLdapPassword],
+    googleForm     : Form[ResetGooglePassword],
     userDetailsForm: Form[EditUserDetailsRequest]
   )(using HeaderCarrier, RequestHeader): Future[Result] =
     for
@@ -78,7 +80,7 @@ class UsersController @Inject()(
       userOpt match
         case Some(user) =>
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-          resultType(userInfoPage(ldapForm, userDetailsForm, isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl, adminGithubTeams))
+          resultType(userInfoPage(ldapForm, googleForm, userDetailsForm, isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl, adminGithubTeams))
         case None =>
           NotFound(error_404_template())
 
@@ -90,7 +92,7 @@ class UsersController @Inject()(
                        resourceType = Some(ResourceType("catalogue-frontend")),
                        action       = Some(IAAction("EDIT_USER"))
                      ))
-        result    <- showUserInfoPage(username, retrieval, Ok(_), LdapResetForm.form, EditUserDetailsForm.form)
+        result    <- showUserInfoPage(username, retrieval, Ok(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form)
       yield result
 
   def updateUserDetails(username: UserName): Action[AnyContent] =
@@ -103,7 +105,7 @@ class UsersController @Inject()(
                            resourceType = Some(ResourceType("catalogue-frontend")),
                            action       = Some(IAAction("EDIT_USER"))
                          ))
-            result    <- showUserInfoPage(username, retrieval, BadRequest(_), LdapResetForm.form, formWithErrors)
+            result    <- showUserInfoPage(username, retrieval, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, formWithErrors)
           yield result
         , editRequest =>
           userManagementConnector.editUserDetails(editRequest)
@@ -127,7 +129,7 @@ class UsersController @Inject()(
         given AuthenticatedRequest[AnyContent, Set[Resource]] = request
         LdapResetForm.form.bindFromRequest().fold(
           formWithErrors =>
-            showUserInfoPage(username, Some(request.retrieval), BadRequest(_), formWithErrors, EditUserDetailsForm.form)
+            showUserInfoPage(username, Some(request.retrieval), BadRequest(_), formWithErrors, GoogleResetForm.form, EditUserDetailsForm.form)
         , formData =>
             userManagementConnector.resetLdapPassword(formData).map: ticketOpt =>
               Ok(ldapResetRequestSentPage(username, ticketOpt))
@@ -136,6 +138,27 @@ class UsersController @Inject()(
                 logger.error(s"Error requesting LDAP password reset: ${e.getMessage}", e)
                 Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting LDAP password reset. Contact #team-platops")
         )
+
+  def requestGoogleReset(username: UserName): Action[AnyContent] =
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
+      GoogleResetForm.form.bindFromRequest().fold(
+        formWithErrors =>
+          for
+            retrieval <- auth.verify(Retrieval.locations(
+              resourceType = Some(ResourceType("catalogue-frontend")),
+              action       = Some(IAAction("EDIT_USER"))
+            ))
+            result    <- showUserInfoPage(username, retrieval, BadRequest(_), LdapResetForm.form, formWithErrors, EditUserDetailsForm.form)
+          yield result
+        , formData =>
+          userManagementConnector.resetGooglePassword(formData).map: _ =>
+            Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to reset Google password for ${username.asString} sent successfully.")
+          .recover:
+            case NonFatal(e) =>
+              logger.error(s"Error requesting Google password reset: ${e.getMessage}", e)
+              Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting Google password reset. Contact #team-platops")
+      )
 
   private def isAdminForUser(retrieval: Option[Set[Resource]], user: User): Boolean =
     val teams = retrieval.fold(Set.empty[TeamName])(_.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply))
@@ -156,7 +179,7 @@ class UsersController @Inject()(
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       AddToGithubTeamForm.form.bindFromRequest().fold(
         formWithErrors =>
-          showUserInfoPage(username, Some(request.retrieval), BadRequest(_), LdapResetForm.form, EditUserDetailsForm.form)
+          showUserInfoPage(username, Some(request.retrieval), BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form)
       , formData =>
           userManagementConnector.addToGithubTeam(formData).map: _ =>
             Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to team: ${formData.team} sent successfully.")
@@ -228,6 +251,15 @@ object LdapResetForm:
       )(ResetLdapPassword.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
+object GoogleResetForm:
+  val form: Form[ResetGooglePassword] =
+    Form(
+      Forms.mapping(
+        "username" -> Forms.nonEmptyText,
+        "password" -> Forms.text.verifying(UserConstraints.passwordConstraint: _*).transform[SensitiveString](SensitiveString.apply, _.decryptedValue)
+      )(ResetGooglePassword.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
+
 object AddToGithubTeamForm:
   val form: Form[AddToGithubTeamRequest] =
     Form(
@@ -262,12 +294,30 @@ object EditUserDetailsForm:
         if editUserDetailsRequest.attribute == UserAttribute.Github then Some(editUserDetailsRequest.value) else None,
         if editUserDetailsRequest.attribute == UserAttribute.Organisation then Some(editUserDetailsRequest.value) else None
       ))
-    }.verifying(validateByAttribute)
+    }.verifying(UserConstraints.validateByAttribute)
   )
 
+object UserConstraints:
   private def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] =
     Constraint(constraintName): toBeValidated =>
       if constraint(toBeValidated) then Valid else Invalid(error)
+
+  val passwordConstraint: Seq[Constraint[String]] =
+    val passwordValidation: String => Boolean =
+      _.matches("""^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()\-_=+{};:,<.>/?])(?!.*£).+$""")
+
+    val passwordLengthValidation: String => Boolean = str => str.length >= 8 && str.length <= 100
+
+    Seq(
+      mkConstraint (s"constraints.passwordLengthCheck")(
+        constraint = passwordLengthValidation,
+        error = "Password must be between 8 and 100 characters long"
+      ),
+      mkConstraint(s"constraints.passwordValidCheck")(
+        constraint = passwordValidation,
+        error = "Password must contain uppercase, lowercase, numeric and special characters, and must not contain a pound symbol (£)"
+      )
+    )
 
   private val nameConstraints: Constraint[String] =
     val nameLengthValidation: String => Boolean = str => str.length >= 2 && str.length <= 30
@@ -304,7 +354,7 @@ object EditUserDetailsForm:
       error = "Organisation must be MDTP, VOA, or Other."
     )
 
-  private def validateByAttribute: Constraint[EditUserDetailsRequest] = Constraint("constraints.editUserDetailsRequest") { editUserDetailsRequest =>
+  def validateByAttribute: Constraint[EditUserDetailsRequest] = Constraint("constraints.editUserDetailsRequest") { editUserDetailsRequest =>
     editUserDetailsRequest.attribute match
       case UserAttribute.DisplayName  => nameConstraints(editUserDetailsRequest.value)
       case UserAttribute.PhoneNumber  => phoneNumberConstraint(editUserDetailsRequest.value)
