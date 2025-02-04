@@ -50,7 +50,6 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     wireMockServer.stubFor(
       WireMock.get(WireMock.urlMatching("/service-metrics/service-1/log-metrics.*"))
         .withQueryParam("from", WireMock.matching(".*"))
-        .withQueryParam("to"  , WireMock.matching(".*"))
         .willReturn(
           WireMock
             .aResponse()
