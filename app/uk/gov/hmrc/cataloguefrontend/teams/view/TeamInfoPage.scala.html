@@ -29,9 +29,11 @@
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
 @import java.net.URL
+@import scala.concurrent.duration.Duration
 
 @this(
-viewMessages: ViewMessages
+  configuration: play.api.Configuration
+, viewMessages : ViewMessages
 )
 
 @(
@@ -57,6 +59,10 @@ viewMessages: ViewMessages
 )(implicit
   request: RequestHeader
 )
+
+@serviceMetricsLogDuration: Duration = @{
+  configuration.get[Duration]("service-metrics.logDuration")
+}
 
 @standard_layout(teamName.asString, active = "teams") {
   <h1 class="page-heading mt-4">@teamName.asString</h1>
@@ -163,7 +169,7 @@ viewMessages: ViewMessages
             @shutteringPartial(teamName = Some(teamName), shutterStates)
           </div>
           <div class="col md-3">
-            @healthPartial(teamName = Some(teamName), leaks, productionBobbyReports, latestBobbyReports, platformInitiatives, productionVulnerabilities, latestVulnerabilities, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs)
+            @healthPartial(teamName = Some(teamName), leaks, productionBobbyReports, latestBobbyReports, platformInitiatives, productionVulnerabilities, latestVulnerabilities, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs, serviceMetricsLogDuration)
           </div>
           <div class="col md-3">
             @explorePartial(teamName = Some(teamName))

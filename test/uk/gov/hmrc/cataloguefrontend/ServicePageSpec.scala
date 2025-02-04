@@ -46,12 +46,26 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=repo1", willRespondWith = (200, Some(JsonData.deploymentConfigsService1)))
     serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=service-1", willRespondWith = (200, Some(JsonData.deploymentConfigsService1)))
-    serviceEndpoint(GET, "/service-metrics/service-1/log-metrics", willRespondWith = (200, Some("""
-      [{
-        "id": "slow-running-query",
-        "displayName": "Slow Running Query",
-        "environments": {"qa": {"kibanaLink": "http://some/link", "count": 13 }}
-      }]""")))
+    import com.github.tomakehurst.wiremock.client.WireMock
+    wireMockServer.stubFor(
+      WireMock.get(WireMock.urlMatching("/service-metrics/service-1/log-metrics.*"))
+        .withQueryParam("from", WireMock.matching(".*"))
+        .withQueryParam("to"  , WireMock.matching(".*"))
+        .willReturn(
+          WireMock
+            .aResponse()
+            .withStatus(200)
+            .withHeader("Content-type", "Application/json")
+            .withBody("""
+              [{
+                "id": "slow-running-query",
+                "displayName": "Slow Running Query",
+                "environments": {"qa": {"kibanaLink": "http://some/link", "count": 13 }}
+              }]"""
+            )
+        )
+    )
+
     serviceEndpoint(GET, "/service-metrics/service-1/collections", willRespondWith = (200, Some("""[{"database": "database-1", "service": "service-1", "sizeBytes": 1024, "date": "2023-11-06", "collection": "collection-1", "environment": "qa", "queryTypes": []}]""")))
     serviceEndpoint(GET, "/service-commissioning-status/services/service-1/lifecycleStatus", willRespondWith = (200, Some("""{ "lifecycleStatus" : "Active" }""")))
     serviceEndpoint(GET, s"/vulnerabilities/api/reports/latest/counts?service=%22service-1%22", willRespondWith = (200, Some("[]")))

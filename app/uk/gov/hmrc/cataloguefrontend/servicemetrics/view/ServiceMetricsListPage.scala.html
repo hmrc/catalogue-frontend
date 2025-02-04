@@ -20,22 +20,26 @@
 @import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 @import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsFilter
 @import views.html.helper.{FieldConstructor, select}
+@import scala.concurrent.duration.Duration
 
 @this(
-    teamNamesPartial: partials.TeamNamesPartial
+  configuration: play.api.Configuration
 )
 
 @(form           : Form[ServiceMetricsFilter]
 , results        : Seq[ServiceMetric]
 , teams          : Seq[GitHubTeam]
 , digitalServices: Seq[DigitalService]
-
 )(implicit
   messages: Messages
 , request : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@serviceMetricsLogDuration: Duration = @{
+  configuration.get[Duration]("service-metrics.logDuration")
+}
 
 @standard_layout("Service Metrics", "service metrics") {
     <h1 class="page-heading mt-4">Service Metrics</h1>
@@ -110,7 +114,7 @@
                 <tr>
                     <th class="col-lg-6"><button role="button" data-sort="col-service-name" class="fw-bold sort no-border">Name</button></th>
                     <th class="col-lg-4"><button role="button" data-sort="col-metric-type"  class="fw-bold sort no-border">Type</button></th>
-                    <th class="col-lg-2"><button role="button" data-sort="col-occurrences"  class="fw-bold sort no-border">Occurrences (Last 7 days)</button></th>
+                    <th class="col-lg-2"><button role="button" data-sort="col-occurrences"  class="fw-bold sort no-border">Occurrences (Last @serviceMetricsLogDuration.toDays days)</button></th>
                 </tr>
             </thead>
             <tbody class="list">
