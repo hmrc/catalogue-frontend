@@ -41,6 +41,7 @@
 , serviceMetrics            : Seq[ServiceMetric]
 , whatsRunningWhere         : Seq[WhatsRunningWhere]
 , testJobs                  : Seq[JenkinsJob]
+, serviceMetricsLogDuration : scala.concurrent.duration.Duration
 , now                       : java.time.LocalDate = java.time.LocalDate.now()
 )(implicit
   request: RequestHeader
@@ -180,7 +181,7 @@
           <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Security Assessment Alerts</a></td>
         </tr>
         <tr>
-          <td colspan="2"><div class="separator">Last 7 Days</div></td>
+          <td colspan="2"><div class="separator">Last @serviceMetricsLogDuration.toDays Days</div></td>
         </tr>
         @for(logMetricId <- LogMetricId.values) {
           <tr>
