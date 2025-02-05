@@ -82,7 +82,7 @@
           @defining(latestVulnerabilities.map(_.actionRequired).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString))"> Service Vulnerabilities - Latest</a></td>
+          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName, flag = Some(SlugInfoFlag.Latest.asString))"> Service Vulnerabilities - Latest</a></td>
         </tr>
         <tr>
           <td colspan="2"><hr/></td>
