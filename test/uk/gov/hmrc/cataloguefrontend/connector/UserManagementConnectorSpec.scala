@@ -21,7 +21,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
+import uk.gov.hmrc.cataloguefrontend.model.{EditTeamDetails, TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.*
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.HeaderCarrier
@@ -501,79 +501,149 @@ class UserManagementConnectorSpec
         connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue
       }
 
-    "restLdapPassword" should:
-      val resetLdapPassword =
-        ResetLdapPassword("joe.bloggs", "tes@email.com")
-        
-      "return JSON with a ticket ID when UMP response is 200" in :
-        stubFor(
-          post(urlPathEqualTo("/user-management/reset-ldap-password"))
-            .willReturn(
-              aResponse()
-                .withStatus(200)
-                .withBody("""{"ticket_number": "some-unique-ticket-id"}""")
-            )
+  "restLdapPassword" should:
+    val resetLdapPassword =
+      ResetLdapPassword("joe.bloggs", "tes@email.com")
+
+    "return JSON with a ticket ID when UMP response is 200" in :
+      stubFor(
+        post(urlPathEqualTo("/user-management/reset-ldap-password"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+              .withBody("""{"ticket_number": "some-unique-ticket-id"}""")
+          )
+      )
+
+      connector.resetLdapPassword(resetLdapPassword).futureValue shouldBe Some("some-unique-ticket-id")
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/reset-ldap-password"))
+      )
+
+    "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
+      stubFor(
+        post(urlPathEqualTo("/user-management/reset-ldap-password"))
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+          )
+      )
+
+      an[RuntimeException] shouldBe thrownBy {
+        connector.resetLdapPassword(resetLdapPassword).futureValue
+      }
+
+  "resetGooglePassword" should :
+
+    val resetGooglePassword =
+      ResetGooglePassword(
+        username = "joe.bloggs",
+        password = SensitiveString("password")
+      )
+
+    val actualResetGooglePassword =
+      """{
+        |  "username" : "joe.bloggs",
+        |  "password" : "password"
+        |}
+        |""".stripMargin
+
+    "return Unit when UMP response is 200" in :
+      stubFor(
+        put(urlPathEqualTo(s"/user-management/reset-google-password"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.resetGooglePassword(resetGooglePassword).futureValue shouldBe()
+
+      verify(
+        putRequestedFor(urlPathEqualTo("/user-management/reset-google-password"))
+          .withRequestBody(equalToJson(actualResetGooglePassword))
+      )
+
+    "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
+      stubFor(
+        post(urlPathEqualTo("/user-management/reset-google-password"))
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+          )
+      )
+
+      an[RuntimeException] shouldBe thrownBy {
+        connector.resetGooglePassword(resetGooglePassword).futureValue
+      }
+
+  "editTeamDetails" should :
+    "return Unit when sending all details and UMP response is 200" in:
+      val editTeamDetailsRequest =
+        EditTeamDetails(
+          team              = "team-name",
+          description       = Some("description"),
+          documentation     = Some("https://documentation.url"),
+          slack             = Some("team-name"),
+          slackNotification = Some("team-name-alerts")
         )
 
-        connector.resetLdapPassword(resetLdapPassword).futureValue shouldBe Some("some-unique-ticket-id")
-
-        verify(
-          postRequestedFor(urlPathEqualTo("/user-management/reset-ldap-password"))
-        )
-
-      "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
-        stubFor(
-          post(urlPathEqualTo("/user-management/reset-ldap-password"))
-            .willReturn(
-              aResponse()
-                .withStatus(500)
-            )
-        )
-
-        an[RuntimeException] shouldBe thrownBy {
-          connector.resetLdapPassword(resetLdapPassword).futureValue
-        }
-
-    "resetGooglePassword" should :
-    
-      val resetGooglePassword =
-        ResetGooglePassword(
-          username = "joe.bloggs",
-          password = SensitiveString("password")
-        )
-    
-      val actualResetGooglePassword =
+      val actualEditTeamDetailsRequest =
         """{
-          |  "username" : "joe.bloggs",
-          |  "password" : "password"
+          |  "team" : "team-name",
+          |  "description" : "description",
+          |  "documentation" : "https://documentation.url",
+          |  "slack" : "https://hmrcdigital.slack.com/messages/team-name",
+          |  "slackNotification" : "https://hmrcdigital.slack.com/messages/team-name-alerts"
           |}
           |""".stripMargin
-    
-      "return Unit when UMP response is 200" in :
-        stubFor(
-          put(urlPathEqualTo(s"/user-management/reset-google-password"))
-            .willReturn(
-              aResponse()
-                .withStatus(200)
-            )
+
+
+      stubFor(
+        patch(urlPathEqualTo(s"/user-management/edit-team-details"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.editTeamDetails(editTeamDetailsRequest).futureValue shouldBe()
+
+      verify(
+        patchRequestedFor(urlPathEqualTo("/user-management/edit-team-details"))
+          .withRequestBody(equalToJson(actualEditTeamDetailsRequest))
+      )
+
+    "return Unit when sending a single field and UMP response is 200" in :
+      val editTeamDetailsRequest =
+        EditTeamDetails(
+          team = "team-name",
+          description = Some("description"),
+          documentation = None,
+          slack = None,
+          slackNotification = None
         )
-    
-        connector.resetGooglePassword(resetGooglePassword).futureValue shouldBe()
-    
-        verify(
-          putRequestedFor(urlPathEqualTo("/user-management/reset-google-password"))
-            .withRequestBody(equalToJson(actualResetGooglePassword))
-        )
-    
-      "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
-        stubFor(
-          post(urlPathEqualTo("/user-management/reset-google-password"))
-            .willReturn(
-              aResponse()
-                .withStatus(500)
-            )
-        )
-      
-        an[RuntimeException] shouldBe thrownBy {
-          connector.resetGooglePassword(resetGooglePassword).futureValue
-        }
+
+      val actualEditTeamDetailsRequest =
+        """{
+          |  "team" : "team-name",
+          |  "description" : "description"
+          |}
+          |""".stripMargin
+
+
+      stubFor(
+        patch(urlPathEqualTo(s"/user-management/edit-team-details"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.editTeamDetails(editTeamDetailsRequest).futureValue shouldBe()
+
+      verify(
+        patchRequestedFor(urlPathEqualTo("/user-management/edit-team-details"))
+          .withRequestBody(equalToJson(actualEditTeamDetailsRequest))
+      )
