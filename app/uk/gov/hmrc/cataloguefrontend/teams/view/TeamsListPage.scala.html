@@ -73,7 +73,11 @@
                     <a href="@teamsRoutes.TeamsController.team(team.teamName)">@team.teamName.asString</a>
                 </td>
                 <td class="members" id="row@{i}_members">
-                    @team.members.length
+                    @if(team.nonHumanMembers.nonEmpty) {
+                        @team.humanMembers.length (<abbr class="text-decoration-none" title="Service Accounts">@team.nonHumanMembers.length</abbr>)
+                    } else {
+                        @team.members.length
+                    }
                 </td>
                 <td class="github align-" id="row@{i}_github">
                     @github.map{ team =>

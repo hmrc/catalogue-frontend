@@ -20,7 +20,7 @@ import play.api.Logging
 import play.api.libs.json.*
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users.{AddToGithubTeamRequest, CreateUserRequest, EditUserAccessRequest, EditUserDetailsRequest, ResetGooglePassword, ResetLdapPassword, UmpTeam, User, UserAccess}
+import uk.gov.hmrc.cataloguefrontend.users.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -44,13 +44,13 @@ class UserManagementConnector @Inject()(
   def getTeam(team: TeamName)(using HeaderCarrier): Future[UmpTeam] =
     given Reads[UmpTeam] = UmpTeam.reads
     httpClientV2
-      .get(url"$baseUrl/user-management/teams/${team.asString}")
+      .get(url"$baseUrl/user-management/teams/${team.asString}?includeNonHuman=true")
       .execute[UmpTeam]
 
   def getAllTeams()(using HeaderCarrier): Future[Seq[UmpTeam]] =
     given Reads[UmpTeam] = UmpTeam.reads
     httpClientV2
-      .get(url"$baseUrl/user-management/teams")
+      .get(url"$baseUrl/user-management/teams?includeNonHuman=true")
       .execute[Seq[UmpTeam]]
 
   def getAllUsers(team: Option[TeamName] = None)(using HeaderCarrier): Future[Seq[User]] =
@@ -151,6 +151,26 @@ class UserManagementConnector @Inject()(
     httpClientV2
       .post(url)
       .withBody(Json.toJson(request)(AddToGithubTeamRequest.writes))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(_)  => Future.unit
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
+  def removeUserFromTeam(request: ManageTeamMembersRequest)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/remove-user-from-team"
+    httpClientV2
+      .post(url)
+      .withBody(Json.toJson(request)(ManageTeamMembersRequest.writes))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(_)  => Future.unit
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
+  def addUserToTeam(request: ManageTeamMembersRequest)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/add-user-to-team"
+    httpClientV2
+      .post(url)
+      .withBody(Json.toJson(request)(ManageTeamMembersRequest.writes))
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(_)  => Future.unit

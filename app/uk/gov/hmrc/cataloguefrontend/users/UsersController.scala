@@ -21,6 +21,7 @@ import cats.implicits.*
 import play.api.Logging
 import play.api.data.validation.{Constraint, Constraints, Invalid, Valid}
 import play.api.data.{Form, Forms}
+import play.api.libs.json.Json
 import play.api.mvc.*
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
@@ -182,7 +183,7 @@ class UsersController @Inject()(
           showUserInfoPage(username, Some(request.retrieval), BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form)
       , formData =>
           userManagementConnector.addToGithubTeam(formData).map: _ =>
-            Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to team: ${formData.team} sent successfully.")
+            Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to Github team: ${formData.team} sent successfully.")
           .recover:
             case NonFatal(e) =>
               logger.error(s"Error requesting user ${formData.username} be added to github team ${formData.team} - ${e.getMessage}", e)
@@ -239,6 +240,18 @@ class UsersController @Inject()(
       userManagementConnector
         .searchUsers(searchTerms, includeDeleted, includeNonHuman)
         .map(matches => Ok(userSearchResults(matches)))
+
+  def addUserToTeamSearch(
+    query          : String
+  ): Action[AnyContent] =
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      val searchTerms = query.split("\\s+").toIndexedSeq // query is space-delimited
+      userManagementConnector
+        .searchUsers(searchTerms, includeDeleted = false, includeNonHuman = true)
+        .map: matches =>
+          val usernames = matches.map(_.username.asString)
+          Ok(Json.toJson(usernames))
 
 end UsersController
 

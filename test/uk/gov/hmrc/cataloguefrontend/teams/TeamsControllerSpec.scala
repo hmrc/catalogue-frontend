@@ -73,7 +73,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
     "show a list of libraries, services, prototypes and repositories" in {
       val teamName = "teamA"
 
-      serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
+      serviceEndpoint(GET, s"/user-management/teams/$teamName?includeNonHuman=true", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
       serviceEndpoint(GET, "/api/v2/teams?name=teamA"         , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
       serviceEndpoint(GET, "/api/v2/repositories"             , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"),  willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
 
@@ -90,7 +90,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
     "not show a list of libraries, services, prototypes and repositories, if ump team does not have github" in {
       val teamName = "teamA"
 
-      serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
+      serviceEndpoint(GET, s"/user-management/teams/$teamName?includeNonHuman=true", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
       serviceEndpoint(GET, "/api/v2/teams?name=teamA", willRespondWith = (200, Some("[]")))
       serviceEndpoint(GET, "/api/v2/repositories"    , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"),  willRespondWith = (200, Some("[]")))
 
@@ -107,7 +107,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
     "show a message if no services are found" in {
       val teamName = "teamA"
 
-      serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
+      serviceEndpoint(GET, s"/user-management/teams/$teamName?includeNonHuman=true", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
       serviceEndpoint(GET, "/api/v2/teams?name=teamA"         , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
       serviceEndpoint(GET, "/api/v2/repositories"             , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
 
@@ -120,7 +120,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
     "show team members correctly" in {
       val teamName = "teamA"
 
-      serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-five-members.json"))))
+      serviceEndpoint(GET, s"/user-management/teams/$teamName?includeNonHuman=true", willRespondWith = (200, Some(readFile("user-management-five-members.json"))))
       serviceEndpoint(GET, "/api/v2/teams?name=teamA"         , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
       serviceEndpoint(GET, s"/api/v2/repositories"            , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
 
@@ -135,7 +135,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
     "show team details correctly" in {
       val teamName = "teamA"
 
-      serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
+      serviceEndpoint(GET, s"/user-management/teams/$teamName?includeNonHuman=true", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
       serviceEndpoint(GET, "/api/v2/teams?name=teamA"         , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
       serviceEndpoint(GET, s"/api/v2/repositories"            , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesData)))
 
