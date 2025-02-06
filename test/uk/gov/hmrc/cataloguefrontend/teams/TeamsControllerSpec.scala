@@ -38,21 +38,44 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
 
   override def beforeEach(): Unit =
     super.beforeEach()
-    serviceEndpoint(GET, "/reports/repositories", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/api/teams/teamA/dependencies", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/api/teams/CATO/dependencies", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/api/open-pull-requests", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/api/v2/repositories?archived=true", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET, "/api/teams/teamA/slug-dependencies?flag=production", willRespondWith = (200, Some("{}")))
-    serviceEndpoint(GET, "/api/teams/CATO/slug-dependencies?flag=production", willRespondWith = (200, Some("{}")))
+    serviceEndpoint(GET, "/releases-api/whats-running-where?profileName=teamA&profileType=team"            , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/service-commissioning-status/cached-status?teamName=teamA"                      , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/pr-commenter/reports?teamName=teamA"                                            , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/repositories/summary?team=teamA&excludeNonIssues=true&includeBranches=false", willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/vulnerabilities/api/reports/production/counts?team=teamA"                       , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/vulnerabilities/api/reports/latest/counts?team=teamA"                           , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/user-management/users?team=teamA"                                               , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/open-pull-requests?reposOwnedByTeam=teamA"                                  , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/open-pull-requests?raisedByMembersOfTeam=teamA"                             , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/test-jobs?teamName=teamA"                                                   , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/shutter-api/production/frontend/states?teamName=teamA"                          , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/shutter-api/production/api/states?teamName=teamA"                               , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/bobbyReports?team=teamA&flag=production"                                    , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/api/bobbyReports?team=teamA&flag=latest"                                        , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET, "/platform-initiatives/teams/teamA/initiatives"                                   , willRespondWith = (200, Some("[]")))
+
+    import com.github.tomakehurst.wiremock.client.WireMock
+    wireMockServer.stubFor(
+      WireMock.get(WireMock.urlMatching("/service-metrics/log-metrics.*"))
+        .withQueryParam("team"       , WireMock.equalTo("teamA"))
+        .withQueryParam("environment", WireMock.equalTo("production"))
+        .withQueryParam("from"       , WireMock.matching(".*"))
+        .willReturn(
+          WireMock
+            .aResponse()
+            .withStatus(200)
+            .withHeader("Content-type", "Application/json")
+            .withBody("[]")
+        )
+    )
 
   "Team services page" should {
     "show a list of libraries, services, prototypes and repositories" in {
       val teamName = "teamA"
 
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
-      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"),  willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
+      serviceEndpoint(GET, "/api/v2/teams?name=teamA"         , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/repositories"             , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"),  willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
 
       val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -68,7 +91,8 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
       val teamName = "teamA"
 
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some("[]")))
+      serviceEndpoint(GET, "/api/v2/teams?name=teamA", willRespondWith = (200, Some("[]")))
+      serviceEndpoint(GET, "/api/v2/repositories"    , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"),  willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -80,26 +104,25 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
       findAnchor(anchorTags, "/repositories/teamA-other"  , "teamA-other"  ) shouldBe empty
     }
 
-
     "show a message if no services are found" in {
       val teamName = "teamA"
 
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
-      serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
+      serviceEndpoint(GET, "/api/v2/teams?name=teamA"         , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/repositories"             , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/teams/teamA").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
-      response.body   should include(viewMessages.noRepoOfTypeForTeam("service"))
-      response.body   should include(viewMessages.noRepoOfTypeForTeam("library"))
+      response.body   should include(viewMessages.noRepoOfTypeForTeam("Service"))
+      response.body   should include(viewMessages.noRepoOfTypeForTeam("Library"))
     }
 
     "show team members correctly" in {
-      val teamName = "CATO"
+      val teamName = "teamA"
 
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-five-members.json"))))
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
-      serviceEndpoint(GET, s"/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
+      serviceEndpoint(GET, "/api/v2/teams?name=teamA"         , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, s"/api/v2/repositories"            , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some("[]")))
 
       val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
@@ -113,8 +136,8 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
       val teamName = "teamA"
 
       serviceEndpoint(GET, s"/user-management/teams/$teamName", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
-      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
-      serviceEndpoint(GET, s"/api/v2/repositories", queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesData)))
+      serviceEndpoint(GET, "/api/v2/teams?name=teamA"         , willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, s"/api/v2/repositories"            , queryParameters = Seq("owningTeam" -> teamName, "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesData)))
 
       val response = wsClient.url(s"http://localhost:$port/teams/$teamName").withAuthToken("Token token").get().futureValue
       response.status shouldBe 200
