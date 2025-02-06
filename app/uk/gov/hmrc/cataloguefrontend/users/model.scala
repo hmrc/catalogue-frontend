@@ -59,10 +59,9 @@ case class SlackInfo(url: String):
     "^[A-Z0-9]+$".r.findFirstIn(name).isEmpty
 end SlackInfo
 
-object SlackInfo {
+object SlackInfo:
   val reads: Reads[SlackInfo] =
     summon[Reads[String]].map(SlackInfo.apply)
-}
 
 case class UmpTeam(
   members          : Seq[Member]
@@ -71,7 +70,9 @@ case class UmpTeam(
 , documentation    : Option[String]
 , slack            : Option[SlackInfo]
 , slackNotification: Option[SlackInfo]
-)
+):
+  val humanMembers   : Seq[Member] = members.filter(_.isNonHuman == false).sortBy(_.username.asString)
+  val nonHumanMembers: Seq[Member] = members.filter(_.isNonHuman == true).sortBy(_.username.asString)
 
 object UmpTeam:
   val reads: Reads[UmpTeam] =
@@ -229,6 +230,17 @@ object EditUserAccessRequest:
       json ++ Json.obj(
         "isExistingLDAPUser" -> true
       )
+
+case class ManageTeamMembersRequest(
+  team    : String,
+  username: String
+)
+
+object ManageTeamMembersRequest:
+  val writes: Writes[ManageTeamMembersRequest] =
+    ( (__ \ "team"    ).write[String]
+    ~ (__ \ "username").write[String]
+    )(r => Tuple.fromProductTyped(r))
 
 case class ResetLdapPassword(
   username: String,

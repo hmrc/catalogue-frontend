@@ -37,25 +37,26 @@
 )
 
 @(
-  teamName      : TeamName
-, umpMyTeamsUrl : String
-, results       : ( Option[String]
-                  , Seq[GitRepository]
-                  , UmpTeam
-                  , (Int, URL) // Open PRs raised by the team
-                  , (Int, URL) // Open PRs for repos owned by the team
-                  , Seq[LeakDetectionRepositorySummary]
-                  , Seq[BobbyReport] // Production
-                  , Seq[BobbyReport] // Latest
-                  , Seq[ShutterState]
-                  , Seq[PlatformInitiative]
-                  , Seq[TotalVulnerabilityCount]
-                  , Seq[TotalVulnerabilityCount]
-                  , Seq[CachedServiceCheck]
-                  , Seq[ServiceMetric]
-                  , Seq[WhatsRunningWhere]
-                  , Seq[JenkinsJob]
-                  )
+  teamName        : TeamName
+, umpMyTeamsUrl   : String
+, results         : ( Option[String]
+                    , Seq[GitRepository]
+                    , UmpTeam
+                    , (Int, URL) // Open PRs raised by the team
+                    , (Int, URL) // Open PRs for repos owned by the team
+                    , Seq[LeakDetectionRepositorySummary]
+                    , Seq[BobbyReport] // Production
+                    , Seq[BobbyReport] // Latest
+                    , Seq[ShutterState]
+                    , Seq[PlatformInitiative]
+                    , Seq[TotalVulnerabilityCount]
+                    , Seq[TotalVulnerabilityCount]
+                    , Seq[CachedServiceCheck]
+                    , Seq[ServiceMetric]
+                    , Seq[WhatsRunningWhere]
+                    , Seq[JenkinsJob]
+                    )
+, canEditTeam: Boolean
 )(implicit
   request: RequestHeader
 )
@@ -65,6 +66,19 @@
 }
 
 @standard_layout(teamName.asString, active = "teams") {
+  @request.flash.get("error").map { msg =>
+    <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+        @msg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  }
+  @request.flash.get("success").map { msg =>
+      <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+          @msg
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+  }
+
   <h1 class="page-heading mt-4">@teamName.asString</h1>
   @defining(results) { case (gitHubUrl, repos, umpTeam, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, productionVulnerabilities, latestVulnerabilities, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs) =>
 
@@ -113,15 +127,24 @@
           @defining(umpTeam.members.size > 16) { displayGrow =>
             <div class="card">
               <div class="card-header">
-                <div class="h4 mb-0">Members</div>
+                <div class="h4 mb-0 float-start">Members</div>
+                @if(canEditTeam) {
+                  <div class="float-end">
+                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addUserToTeamModal">Add</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#removeUserFromTeamModal">Remove</button>
+                  </div>
+                }
               </div>
               <div @if(displayGrow){ class="content-grow content-grow-gradient" style="height:220px;"}>
                 <div class="card-body content-grow-wrapper">
                     @if(umpTeam.members.isEmpty){
                       <p class="card-text col-6">@teamName.asString has no members.</p>
                     } else {
+                      @if(umpTeam.nonHumanMembers.nonEmpty) {
+                        <h5>Users</h5>
+                      }
                       <ul id="team_members" class="list-unstyled" style="column-count: 2;">
-                        @for(teamMember <- umpTeam.members) {
+                        @for(teamMember <- umpTeam.humanMembers) {
                           <li>
                             <a href="@userRoutes.UsersController.user(teamMember.username)">@teamMember.displayName</a>
                             @if(!teamMember.role.isUser) {
@@ -130,6 +153,19 @@
                           </li>
                         }
                       </ul>
+                      @if(umpTeam.nonHumanMembers.nonEmpty) {
+                        <h5 class="mt-3">Service Accounts</h5>
+                        <ul class="list-unstyled" style="column-count: 2;">
+                          @for(teamMember <- umpTeam.nonHumanMembers) {
+                            <li>
+                              <a href="@userRoutes.UsersController.user(teamMember.username)">@teamMember.displayName</a>
+                              @if(!teamMember.role.isUser) {
+                                <span class="badge rounded-pill text-bg-secondary">@teamMember.role.displayName</span>
+                              }
+                            </li>
+                          }
+                        </ul>
+                      }
                     }
                 </div>
               </div>
@@ -178,6 +214,115 @@
         @repositoriesPartial(repos, viewMessages)
       }
     </section>
+
+    @if(canEditTeam) {
+      <div class="modal fade" id="removeUserFromTeamModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="removeUserFromTeamModalTitle" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="removeUserFromTeamModalTitle">Remove User from Team</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="remove-from-team-form" method="post" action="@teamRoutes.TeamsController.removeUserFromTeam(teamName)">
+                    @csrfFormField
+                    <div class="modal-body">
+                        <input name="team" type="hidden" value="@umpTeam.teamName.asString">
+                        <div class="mb-3">
+                            <label for="user-select" class="form-label fw-bold">Select a member to remove</label>
+                            <select id="user-select" name="user" class="form-select" required>
+                                @if(umpTeam.nonHumanMembers.nonEmpty) {
+                                  <optgroup label="Users">
+                                }
+                                @for(member <- umpTeam.humanMembers) {
+                                    <option value="@member.username.asString">
+                                      @member.displayName match {
+                                        case Some(displayName) => {@displayName (@member.username.asString)}
+                                        case None              => {@member.username.asString}
+                                      }
+                                    </option>
+                                }
+                                @if(umpTeam.nonHumanMembers.nonEmpty) {
+                                  </optgroup>
+                                  <optgroup label="Service Accounts">
+                                    @for(member <- umpTeam.nonHumanMembers) {
+                                      <option value="@member.username.asString">
+                                        @member.displayName match {
+                                          case Some(displayName) => {@displayName (@member.username.asString)}
+                                          case None              => {@member.username.asString}
+                                        }
+                                      </option>
+                                    }
+                                  </optgroup>
+                                }
+                            </select>
+                            <p class="mt-3">If the user is leaving the platform, please ensure you submit a <a href="https://confluence.tools.tax.service.gov.uk/pages/viewpage.action?pageId=160906302" target="_blank" rel="noreferrer noopener">leaver request<i class="glyphicon glyphicon-new-window"></i></a></p>
+                            <p class="mt-1 mb-0">If this is the user's only team, they will need to be added to their new team before removal.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="remove-from-team-submit" class="btn btn-success" type="submit">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      </div>
+  
+      <div class="modal fade" id="addUserToTeamModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="addUserToTeamModalTitle" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserToTeamModalTitle">Add User to Team</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="add-to-team-form" method="post" action=@teamRoutes.TeamsController.addUserToTeam(teamName)">
+                    @csrfFormField
+                    <div class="modal-body">
+                        <input name="team" type="hidden" value="@umpTeam.teamName.asString">
+                        <div class="mb-3 position-relative">
+                            <label for="user-select" class="form-label fw-bold">Search for a user to add</label>
+                            <input type="text" id="user-search" name="username" value="" class="form-control" required="required" autocomplete="off">
+                            <div id="user-search-matches" class="search-matches-dropdown d-none"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="remove-from-team-submit" class="btn btn-success" type="submit">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      </div>
+
+      <script @CSPNonce.attr src="@routes.Assets.versioned("search-with-autocomplete.js")"></script>
+      <script @CSPNonce.attr>
+        const addUserModal = document.getElementById('addUserToTeamModal');
+        addUserModal.addEventListener('shown.bs.modal', function() {
+          if (inputSearch) { // in case opened and closed multiple times we tidy up and re-initialise
+              inputSearch.removeEventListener('keydown', disableDefaults);
+              inputSearch.removeEventListener('keyup', autoCompleteSearchInputListener);
+              inputSearch.removeEventListener('focus', autoCompleteSearchInputListener);
+          }
+          
+          autoCompleteInit({ // we can only initialise once it's visible
+              formId: null, 
+              inputSearchId: "user-search",
+              matchesDivId: "user-search-matches",
+              allowPartial: false,
+              ignoreCase: true,
+              fetchUrl: '@userRoutes.UsersController.addUserToTeamSearch("")',
+              minSearch: 3
+          });
+
+          inputSearch.focus()
+        });
+
+        addUserModal.addEventListener('hidden.bs.modal', function() {
+           clearMatches();
+           clearSearch();
+        });
+      </script>
+    }
   }
 }
 

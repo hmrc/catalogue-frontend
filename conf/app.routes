@@ -3,6 +3,8 @@
 GET        /teams                                       uk.gov.hmrc.cataloguefrontend.teams.TeamsController.allTeams(name: Option[String] ?= None)
 GET        /teams/:teamName                             uk.gov.hmrc.cataloguefrontend.teams.TeamsController.team(teamName: TeamName)
 GET        /teams/:teamName/out-of-date-dependencies    uk.gov.hmrc.cataloguefrontend.teams.TeamsController.outOfDateTeamDependencies(teamName: TeamName)
+POST       /teams/remove-user-from-team                 uk.gov.hmrc.cataloguefrontend.teams.TeamsController.removeUserFromTeam(teamName: TeamName)
+POST       /teams/add-user-to-team                      uk.gov.hmrc.cataloguefrontend.teams.TeamsController.addUserToTeam(teamName: TeamName)
 
 GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, showArchived: Option[Boolean] ?= None, repoType: Option[String] ?= None)
 
@@ -135,6 +137,7 @@ GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefr
 
 GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.users
 GET        /users-search                                 uk.gov.hmrc.cataloguefrontend.users.UsersController.userSearch(query: String, includeDeleted: Boolean ?= false, includeNonHuman: Boolean ?= false)
+GET        /add-user-to-team-search                      uk.gov.hmrc.cataloguefrontend.users.UsersController.addUserToTeamSearch(query: String)
 GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: UserName)
 POST       /users/new-vpn-cert                           uk.gov.hmrc.cataloguefrontend.users.UsersController.requestNewVpnCert
 

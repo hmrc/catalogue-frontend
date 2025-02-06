@@ -1,7 +1,7 @@
 let form;
 let inputSearch;
 let matchesDiv;
-let allValues = [];
+let allValues;
 let autoCompleteAllowPartial;
 let autoCompleteIgnoreCase;
 let autoCompleteSubmitOnSelection;
@@ -14,39 +14,69 @@ const matchesListClass   = "search-match-list";
 const matchesElemId      = "search-match-";
 const matchSelectedClass = "search-match-selected";
 
-// Changed outside of script
-function autoCompleteInit({formId, inputSearchId, matchesDivId, allowPartial, ignoreCase, values, submitOnSelection, minSearch}) {
-    form        = document.forms[formId];
+let fetchEndpoint;
+let fetchDebounceTimer;
+let lastQuery = '';
+
+function autoCompleteInit({formId, inputSearchId, matchesDivId, allowPartial, ignoreCase, values, submitOnSelection, minSearch, fetchUrl}) {
+    form = document.forms[formId];
     inputSearch = document.getElementById(inputSearchId);
     matchesDiv  = document.getElementById(matchesDivId);
-    allValues   = values;
     autoCompleteSubmitOnSelection = submitOnSelection != undefined && submitOnSelection;
 
-    if (minSearch) { _minSearch = minSearch;}
+    if (minSearch) { _minSearch = minSearch; }
 
     autoCompleteAllowPartial = allowPartial;
     if (allowPartial) {
         selectedIdx = -1;
         document.body.addEventListener("click", e => clearMatches(), true);
-    }  else {
+    } else {
         selectedIdx = 0;
     }
 
     autoCompleteIgnoreCase = ignoreCase;
+    
+    if (fetchUrl) {
+        fetchEndpoint = fetchUrl;
+        allValues = []; // Don't need initial values if fetching
+    } else {
+        allValues = values || [];
+    }
 
     inputSearch.addEventListener('keydown', disableDefaults, false);
     inputSearch.addEventListener('keyup', autoCompleteSearchInputListener, false);
     inputSearch.addEventListener('focus', autoCompleteSearchInputListener, false);
 }
 
-function findMatches(rawInput) {
+async function findMatches(rawInput) {
     let query = rawInput.trim();
-    let matches = [];
 
+    if (fetchEndpoint && query !== lastQuery) {
+        clearTimeout(fetchDebounceTimer);
+        fetchDebounceTimer = setTimeout(async () => {
+            try {
+                const response = await fetch(`${fetchEndpoint}${encodeURIComponent(query)}`);
+                if (!response.ok) throw new Error('Fetch failed');
+                allValues = await response.json();
+                lastQuery = query;
+                displayMatches(query);
+            } catch (error) {
+                console.error('Failed to fetch matches:', error);
+                displayMatches(query);
+            }
+        }, 300);
+        return;
+    }
+
+    displayMatches(query);
+}
+
+function displayMatches(query) {
+    let matches = [];
     let terms = query.split(' ');
     let first = terms.shift();
 
-    matches = allValues.filter(function (el) {
+    matches = allValues.filter(function(el) {
         if (autoCompleteIgnoreCase) {
             return el.toLowerCase().includes(first.toLowerCase());
         } else {
@@ -54,9 +84,9 @@ function findMatches(rawInput) {
         }
     });
 
-    if(terms.length > 0) {
+    if (terms.length > 0) {
         terms.forEach(function(term) {
-            matches = matches.filter(function (el) {
+            matches = matches.filter(function(el) {
                 if (autoCompleteIgnoreCase) {
                     return el.toLowerCase().includes(term.toLowerCase());
                 } else {
@@ -69,7 +99,7 @@ function findMatches(rawInput) {
     let matchesList = document.createElement('div')
     matchesList.classList.add('list-group', matchesListClass);
 
-    if(matches.length === 0) {
+    if (matches.length === 0) {
         let node = document.createElement('button');
         node.classList.add('list-group-item', 'disabled');
         node.innerHTML = 'No matches found';
@@ -77,7 +107,7 @@ function findMatches(rawInput) {
     } else {
         let idx = 0
         matchesLen = matches.length;
-        matches.forEach(function (match) {
+        matches.forEach(function(match) {
             let btn = document.createElement('a');
             btn.id = matchesElemId + idx;
             btn.classList.add('list-group-item');
@@ -86,7 +116,7 @@ function findMatches(rawInput) {
                 clearMatches();
                 inputSearch.value = match;
                 if (autoCompleteSubmitOnSelection) {
-                  submit();
+                    submit();
                 }
             }
             matchesList.appendChild(btn);
@@ -146,6 +176,10 @@ function updateScroll() {
 function clearMatches() {
     matchesDiv.innerHTML = '';
     matchesDiv.classList.add('d-none');
+}
+
+function clearSearch() {
+    inputSearch.value = '';
 }
 
 function submit() {

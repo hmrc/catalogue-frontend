@@ -46,7 +46,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
       )
       serviceEndpoint(
         GET,
-        "/user-management/teams",
+        "/user-management/teams?includeNonHuman=true",
         willRespondWith = (
           200,
           Some(
