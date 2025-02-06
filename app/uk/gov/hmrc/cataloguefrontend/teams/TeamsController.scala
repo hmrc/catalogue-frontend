@@ -29,7 +29,7 @@ import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConn
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsConnector
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterType}
-import uk.gov.hmrc.cataloguefrontend.teams.view.html.{TeamInfoOldPage, TeamInfoPage, TeamsListPage}
+import uk.gov.hmrc.cataloguefrontend.teams.view.html.{TeamInfoPage, TeamsListPage}
 import uk.gov.hmrc.cataloguefrontend.users.ManageTeamMembersRequest
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Profile, ProfileName, ProfileType, ReleasesConnector}
@@ -39,7 +39,7 @@ import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 @Singleton
@@ -139,7 +139,7 @@ class TeamsController @Inject()(
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       ManageTeamMembersForm.form.bindFromRequest().fold(
-        formWithErrors =>
+        _ => //formWithErrors
           throw RuntimeException("corrupted form") // this shouldn't happen, will refactor to use showTeamPage() once it's added in BDOG-3351
       , formData =>
           userManagementConnector.addUserToTeam(formData).map: _ =>
@@ -157,7 +157,7 @@ class TeamsController @Inject()(
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       ManageTeamMembersForm.form.bindFromRequest().fold(
-        formWithErrors =>
+        _ => //formWithErrors
           throw RuntimeException("corrupted form") // this shouldn't happen, will refactor to use showTeamPage() once it's added in BDOG-3351
         , formData =>
           userManagementConnector.removeUserFromTeam(formData).map: _ =>
