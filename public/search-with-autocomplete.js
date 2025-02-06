@@ -55,7 +55,7 @@ async function findMatches(rawInput) {
         clearTimeout(fetchDebounceTimer);
         fetchDebounceTimer = setTimeout(async () => {
             try {
-                const response = await fetch(`${fetchEndpoint}?query=${encodeURIComponent(query)}`);
+                const response = await fetch(`${fetchEndpoint}${encodeURIComponent(query)}`);
                 if (!response.ok) throw new Error('Fetch failed');
                 allValues = await response.json();
                 lastQuery = query;
@@ -176,6 +176,10 @@ function updateScroll() {
 function clearMatches() {
     matchesDiv.innerHTML = '';
     matchesDiv.classList.add('d-none');
+}
+
+function clearSearch() {
+    inputSearch.value = '';
 }
 
 function submit() {

@@ -310,13 +310,16 @@
               matchesDivId: "user-search-matches",
               allowPartial: false,
               ignoreCase: true,
-              fetchUrl: "/add-user-to-team-search",
+              fetchUrl: '@userRoutes.UsersController.addUserToTeamSearch("")',
               minSearch: 3
           });
+
+          inputSearch.focus()
         });
 
         addUserModal.addEventListener('hidden.bs.modal', function() {
            clearMatches();
+           clearSearch();
         });
       </script>
     }
