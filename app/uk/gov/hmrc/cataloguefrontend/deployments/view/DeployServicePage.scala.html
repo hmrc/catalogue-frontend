@@ -20,6 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ServiceConfigsService}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
+
 @import views.html.helper.{FieldConstructor, select}
 
 @this()
@@ -129,15 +130,15 @@
         </div>
         <label class="form-label fw-bold">Please review before deploying:</label>
         @evaluationsPartial(
-          serviceName             = form.get.serviceName
-        , environment             = form.get.environment
-        , previousVersion         = releases.find(_.environment == form.get.environment).map(_.version)
-        , deployedVersion         = form.get.version
-        , oGitHubCompare          =  oGitHubCompare
-        , jvmChanges              = jvmChanges
-        , configChanges           = configChanges
-        , configWarnings          = configWarnings
-        , oVulnerabilities        = oVulnerabilities
+          serviceName      = form.get.serviceName
+        , environment      = form.get.environment
+        , previousVersion  = releases.find(_.environment == form.get.environment).map(_.version)
+        , deployedVersion  = form.get.version
+        , oGitHubCompare   = oGitHubCompare
+        , jvmChanges       = jvmChanges
+        , configChanges    = configChanges
+        , configWarnings   = configWarnings
+        , oVulnerabilities = oVulnerabilities
         )
 
         @helper.form(

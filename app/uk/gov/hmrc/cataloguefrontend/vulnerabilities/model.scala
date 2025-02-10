@@ -98,19 +98,33 @@ object DistinctVulnerability {
     )(apply)
 }
 
+case class ImportedBy(
+  group   : String,
+  artefact: String,
+  version : Version
+)
+
+object ImportedBy:
+  val reads: Reads[ImportedBy] =
+    ( (__ \ "group"   ).read[String]
+    ~ (__ \ "artefact").read[String]
+    ~ (__ \ "version" ).read[Version](Version.format)
+    )(ImportedBy.apply)
+
 case class VulnerabilityOccurrence(
   service            : ServiceName,
   serviceVersion     : String,
-  componentPathInSlug: String
+  componentPathInSlug: String,
+  importedBy         : Option[ImportedBy]
 )
 
-object VulnerabilityOccurrence {
+object VulnerabilityOccurrence:
   val reads: Reads[VulnerabilityOccurrence] =
     ( (__ \ "service"            ).read[ServiceName]
     ~ (__ \ "serviceVersion"     ).read[String]
     ~ (__ \ "componentPathInSlug").read[String]
+    ~ (__ \ "importedBy"         ).readNullable[ImportedBy](ImportedBy.reads)
     )(apply)
-}
 
 case class VulnerabilitySummary(
    distinctVulnerability: DistinctVulnerability,

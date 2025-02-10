@@ -121,7 +121,7 @@
                         </tr>
                     </thead>
                     <tbody class="list">
-                        @summaries.map(vulnerabilitiesSummary)
+                        @summaries.zipWithIndex.map((vs, idx) => vulnerabilitiesSummary(vs, idx))
                     </tbody>
                 </table>
             }
@@ -162,8 +162,8 @@
     }
 }
 
-@vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
-    @defining("collapsible-area-" + summary.distinctVulnerability.id.replace(" ", "-")) { collapsibleDivId =>
+@vulnerabilitiesSummary(summary: VulnerabilitySummary, index: Int) = {
+    @defining(s"collapsible-area-$index") { collapsibleDivId =>
         <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#@collapsibleDivId" aria-expanded="false" aria-controls="@collapsibleDivId">
             <td><span class="glyphicon glyphicon-chevron-right"></span></td>
             <td class="vulnerability">@summary.distinctVulnerability.id</td>

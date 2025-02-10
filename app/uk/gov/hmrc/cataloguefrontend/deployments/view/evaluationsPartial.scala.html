@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubProxyConnector
 @import uk.gov.hmrc.cataloguefrontend.service.ServiceJdkVersion
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{VulnerabilitySummary, routes => vulnerabilityRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityDetails
 
 @(
@@ -287,7 +287,7 @@
               </tr>
             </thead>
             <tbody id="vulnerabilities-rows" class="list">
-              @oVulnerabilities.getOrElse(Nil).map(vulnerabilitiesSummary)
+              @oVulnerabilities.getOrElse(Nil).zipWithIndex.map((vs, idx) => vulnerabilitiesSummary(vs, idx))
             </tbody>
           </table>
           <script @CSPNonce.attr>
@@ -311,7 +311,6 @@
       </div>
     </div>
   }
-</div>
 
 @displayConfigSourceValue(configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue, isStriked: Boolean) = {
   <span
@@ -350,9 +349,9 @@
   <strong>Value:</strong> @play.twirl.api.XmlFormat.escape(warning.value.displayString)
 }
 
-@vulnerabilitiesSummary(summary: VulnerabilitySummary) = {
+@vulnerabilitiesSummary(summary: VulnerabilitySummary, index: Int) = {
   @defining(summary.distinctVulnerability.vulnerableComponentName.split("://")) { splitVulnerableComponent =>
-      <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@summary.distinctVulnerability.id" aria-expanded="false" aria-controls="collapsible-area-@summary.distinctVulnerability.id">
+      <tr class="cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapsible-area-@index" aria-expanded="false" aria-controls="collapsible-area-@index">
           <td><span class="glyphicon glyphicon-chevron-right"></span></td>
           <td class="vuln-id">@summary.distinctVulnerability.id</td>
           <td class="vulnerable-component-name">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
@@ -364,14 +363,59 @@
           <td class="d-none"></td>
           <td class="d-none"></td>
       </tr>
-      <tr id="collapsible-area-@summary.distinctVulnerability.id" class="collapse">
+      <tr id="collapsible-area-@index" class="collapse">
           @*Provide hidden fields in collapsable element so that list.js sorting doesn't break when some rows are expanded*@
           <td class="vuln-id d-none">@summary.distinctVulnerability.id</td>
           <td class="vulnerable-component-name d-none">@splitVulnerableComponent.lift(1).getOrElse(summary.distinctVulnerability.vulnerableComponentName)</td>
           <td class="assessment d-none">@summary.distinctVulnerability.assessment.getOrElse("")</td>
           <td class="score d-none">@summary.distinctVulnerability.score.getOrElse("")</td>
           <td colspan="5">
-              @VulnerabilityDetails(summary, splitVulnerableComponent.lift(0))
+              <div class="container">
+                 <p>
+                    @summary.distinctVulnerability.summary
+                    <a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesList(Some(summary.distinctVulnerability.id))" target="_blank" rel="noreferrer noopener">
+                      See more info
+                      <span class="glyphicon glyphicon-new-window"></span>
+                    </a>
+                  </p>
+
+                 @summary.distinctVulnerability.fixedVersions.map { versions =>
+                   @if(versions.nonEmpty) {
+                     <p class="fw-bold">Fixed Versions:</p>
+                     <div class="overflow-x-hidden overflow-y-scroll" style="max-height: 160px;">
+                       <ul>
+                         @versions.map{ version =>
+                           <li>@version</li>
+                         }
+                       </ul>
+                     </div>
+                   }
+                 }
+
+                 <div class="row mb-3 overflow-x-hidden overflow-y-scroll" style="max-height: 305px;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Vulnerable Component</th>
+                                <th>Pulled in by</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @summary.occurrences.sortBy(o => (o.service, o.serviceVersion)).map { occ =>
+                              <tr>
+                                  <td class="text-break">@occ.componentPathInSlug</td>
+                                  <td class="text-break">
+                                      @occ.importedBy match {
+                                          case Some(imp) => { @imp.group:@imp.artefact:@imp.version }
+                                          case None      => { }
+                                      }
+                                  </td>
+                              </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+              </div>
           </td>
       </tr>
   }

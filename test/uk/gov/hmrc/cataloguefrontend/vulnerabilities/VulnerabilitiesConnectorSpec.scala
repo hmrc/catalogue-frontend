@@ -90,7 +90,12 @@ class VulnerabilitiesConnectorSpec
                 "curationStatus": "ACTION_REQUIRED",
                 "ticket": "ticket1"
               },
-              "occurrences": [{"service": "service1", "serviceVersion": "2.0", "componentPathInSlug": "some/test/path"}],
+              "occurrences": [{
+                "service": "service1",
+                "serviceVersion": "2.0",
+                "componentPathInSlug": "some/test/path",
+                "importedBy": {"group": "some-group", "artefact": "some-artefact", "version": "0.1.0"}
+              }],
               "teams": ["TeamA", "TeamB"]
             }]""".stripMargin
           ))
@@ -117,7 +122,8 @@ class VulnerabilitiesConnectorSpec
           occurrences           = Seq(VulnerabilityOccurrence(
                                     service             = ServiceName("service1"),
                                     serviceVersion      = "2.0",
-                                    componentPathInSlug = "some/test/path"
+                                    componentPathInSlug = "some/test/path",
+                                    importedBy          = Some(ImportedBy(group = "some-group", artefact = "some-artefact", version = Version("0.1.0")))
                                   )),
           teams                 = Seq("TeamA", "TeamB")
         )
