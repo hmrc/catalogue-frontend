@@ -37,26 +37,27 @@
 )
 
 @(
-  teamName        : TeamName
-, umpMyTeamsUrl   : String
-, results         : ( Option[String]
-                    , Seq[GitRepository]
-                    , UmpTeam
-                    , (Int, URL) // Open PRs raised by the team
-                    , (Int, URL) // Open PRs for repos owned by the team
-                    , Seq[LeakDetectionRepositorySummary]
-                    , Seq[BobbyReport] // Production
-                    , Seq[BobbyReport] // Latest
-                    , Seq[ShutterState]
-                    , Seq[PlatformInitiative]
-                    , Seq[TotalVulnerabilityCount]
-                    , Seq[TotalVulnerabilityCount]
-                    , Seq[CachedServiceCheck]
-                    , Seq[ServiceMetric]
-                    , Seq[WhatsRunningWhere]
-                    , Seq[JenkinsJob]
-                    )
-, canEditTeam: Boolean
+  teamName       : TeamName
+, teamDetailsForm: Form[EditTeamDetails]
+, umpMyTeamsUrl  : String
+, results        : ( Option[String]
+                  , Seq[GitRepository]
+                  , UmpTeam
+                  , (Int, URL) // Open PRs raised by the team
+                  , (Int, URL) // Open PRs for repos owned by the team
+                  , Seq[LeakDetectionRepositorySummary]
+                  , Seq[BobbyReport] // Production
+                  , Seq[BobbyReport] // Latest
+                  , Seq[ShutterState]
+                  , Seq[PlatformInitiative]
+                  , Seq[TotalVulnerabilityCount]
+                  , Seq[TotalVulnerabilityCount]
+                  , Seq[CachedServiceCheck]
+                  , Seq[ServiceMetric]
+                  , Seq[WhatsRunningWhere]
+                  , Seq[JenkinsJob]
+                  )
+, canEditTeam    : Boolean
 )(implicit
   request: RequestHeader
 )
@@ -87,30 +88,74 @@
         <div class="col-md-4">
           <div class="card">
             <div class="card-header">
-              <div class="h4 mb-0">Details</div>
+                <div class="h4 mb-0 float-start">Details</div>
+                @if(canEditTeam) {
+                    <div class="float-end">
+                        <button type="button" class="btn btn-success btn-sm" id="edit-details">Edit</button>
+                    </div>
+                }
             </div>
             <div class="card-body">
-              <dl id="team-description" class="row mb-0">
+              <dl id="team-description" class="row border-bottom border-light-subtle pb-0 mb-2">
                 <dt class="col-sm-4">Description:</dt>
-                <dd class="col-sm-8">@umpTeam.description.getOrElse("")</dd>
-              </dl>
-              <dl id="team-documentation" class="row mb-0">
-                <dt class="col-sm-4">Documentation:</dt>
-                <dd class="col-sm-8">
-                  @umpTeam.documentation.map { docs =>
-                    <a href="@docs" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window" /></a>
-                  }
+                <dd class="col-sm-8 d-flex justify-content-between">
+                  @umpTeam.description.getOrElse(<div class="col-sm-10"></div>)
+                  @if(canEditTeam) {<a href="#" id="edit-team-description-link" class="ms-2 d-none">@if(umpTeam.description.isEmpty){Add}else{Edit}</a>}
                 </dd>
               </dl>
-              <dl id="team-slack-channels" class="row mb-0">
-                <dt class="col-sm-4">Slack:</dt>
-                <dd class="col-sm-8"></dd>
+              <dl id="team-description-form-container" class="d-none row border-bottom border-light-subtle pb-0 mb-2">
+                <form id="team-description-entry-form" class="d-flex align-items-center w-100" method="post" action="@teamRoutes.TeamsController.editTeamDetails(teamName, Some("description"))">
+                  @csrfFormField
+                <input type="hidden" name="team" value="@teamName.asString">
+                <div class="flex-grow-1">
+                  <fieldset class="form-field-group mb-2">
+                    <label id="field-team-description-label" for="field-team-description" class="fw-bold">Description:</label>
+                    <div class="d-flex align-items-center">
+                      <input type="text" id="field-team-description"
+                      class="form-control me-2 @if(teamDetailsForm("description").hasErrors) {is-invalid}"
+                      name="description" value="@teamDetailsForm.data.getOrElse("description", umpTeam.description.getOrElse(""))">
+                      @saveAndCancelButtons("team-description")
+                    </div>
+                      @teamDetailsForm("description").errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
+                  </fieldset>
+                </div>
+                </form>
               </dl>
-
-              @umpTeam.slack.map(addSlackInfo("Team", _))
-              @umpTeam.slackNotification.map(addSlackInfo("Notification", _))
-              @umpUpdateLink(isMemberBox = false)
-
+              <dl id="team-documentation" class="row border-bottom border-light-subtle pb-0 mb-2">
+                <dt class="col-sm-4">Documentation:</dt>
+                <dd class="col-sm-8 d-flex justify-content-between">
+                  @umpTeam.documentation.fold{<div class="col-sm-10"></div>} { docs =>
+                    <a href="@docs" target="_blank" rel="noreferrer noopener">Go to Confluence space<span class="glyphicon glyphicon-new-window" /></a>
+                  }
+                  @if(canEditTeam) {<a href="#" id="edit-team-documentation-link"  class="ms-2 d-none">@if(umpTeam.documentation.isEmpty){Add}else{Edit}</a>}
+                </dd>
+              </dl>
+              <dl id="team-documentation-form-container" class="d-none row border-bottom border-light-subtle pb-0 mb-2">
+                <form id="team-documentation-entry-form" class="d-flex align-items-center w-100" method="post" action="@teamRoutes.TeamsController.editTeamDetails(teamName, Some("documentation"))">
+                  @csrfFormField
+                <input type="hidden" name="team" value="@teamName.asString">
+                <div class="flex-grow-1">
+                  <fieldset class="form-field-group mb-2">
+                    <label id="field-team-documentation-label" for="field-team-documentation" class="fw-bold">Documentation:</label>
+                    <div class="mb-2">Please enter the URL for the team documentation</div>
+                    <div class="d-flex align-items-center">
+                      <input type="text" id="field-team-documentation"
+                      class="form-control me-2 @if(teamDetailsForm("documentation").hasErrors) {is-invalid}"
+                      name="documentation" value="@teamDetailsForm.data.getOrElse("documentation", umpTeam.documentation.getOrElse(""))">
+                      @saveAndCancelButtons("team-documentation")
+                    </div>
+                    @teamDetailsForm("documentation").errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
+                  </fieldset>
+                </div>
+                </form>
+              </dl>
+              @if(canEditTeam && umpTeam.slack.isEmpty) {
+                @addSlackInfo("Slack Team", SlackInfo(""))
+                @addSlackInfo("Slack Notification", SlackInfo(""))
+              } else {
+                @umpTeam.slack.map(addSlackInfo("Slack Team", _))
+                @umpTeam.slackNotification.map(addSlackInfo("Slack Notification", _))
+              }
               <dl id="github" class="row mb-0">
                 <dt class="col-sm-4">GitHub:</dt>
                 <dd class="col-sm-8">
@@ -119,6 +164,7 @@
                   }
                 </dd>
               </dl>
+              @umpUpdateLink(isMemberBox = false)
             </div>
           </div>
         </div>
@@ -267,7 +313,7 @@
             </div>
         </div>
       </div>
-  
+
       <div class="modal fade" id="addUserToTeamModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="addUserToTeamModalTitle" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -303,9 +349,9 @@
               inputSearch.removeEventListener('keyup', autoCompleteSearchInputListener);
               inputSearch.removeEventListener('focus', autoCompleteSearchInputListener);
           }
-          
+
           autoCompleteInit({ // we can only initialise once it's visible
-              formId: null, 
+              formId: null,
               inputSearchId: "user-search",
               matchesDivId: "user-search-matches",
               allowPartial: false,
@@ -327,35 +373,209 @@
 }
 
 @addSlackInfo(label: String, slackInfo: SlackInfo) = {
-  @if(!slackInfo.hasValidUrl) {
-    <dl id="slack-@label.toLowerCase" class="row mb-0">
-      <dt class="col-sm-3 offset-1">@label:</dt>
-      <dd class="col-sm-8">
-        <p>@slackInfo.url <span class="glyphicon glyphicon-warning-sign" /></p>
-        <p>Please change to a URL via <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">UMP<span class="glyphicon glyphicon-new-window" /></a></p>
-      </dd>
+  @if(slackInfo.url == "") {
+      <dl id="@{
+          label.toLowerCase.replace(" ", "-")
+      }" class="row border-bottom border-light-subtle pb-0 mb-2">
+          <dt class="col-sm-4">@label:</dt>
+          <dd class="col-sm-8 d-flex justify-content-between">
+            <div class="col-sm-10"></div>
+            @if(canEditTeam) {<a href="#" id="edit-@{label.toLowerCase.replace(" ", "-")}-link" class="ms-2 d-none">Add</a>}
+          </dd>
+      </dl>
+  } else if (!slackInfo.hasValidUrl) {
+    <dl id="@{label.toLowerCase.replace(" ","-")}" class="row border-bottom border-light-subtle pb-0 mb-2">
+        <dt class="col-sm-4">@label:</dt>
+        <dd class="col-sm-8 d-flex justify-content-between">
+            <p class="col-sm-10">@slackInfo.url <span class="glyphicon glyphicon-warning-sign"></span></p>
+            @if(canEditTeam) {<a href="#" id="edit-@{label.toLowerCase.replace(" ","-")}-link" class="ms-2 d-none">Edit</a>}
+        </dd>
+        @if(canEditTeam) {<p>Please change this to a valid URL via the edit link.</p>} else {<p>Please ask a Team Admin to change this to a valid URL</p>}
     </dl>
   } else if (!slackInfo.hasValidName) {
-    <dl id="slack-@label.toLowerCase" class="row mb-0">
-      <dt class="col-sm-3 offset-1">@label:</dt>
-      <dd class="col-sm-8">
+    <dl id="@{label.toLowerCase.replace(" ","-")}" class="row border-bottom border-light-subtle pb-0 mb-2">
+      <dt class="col-sm-4">@label:</dt>
+      <dd class="col-sm-8 d-flex justify-content-between">
         <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">Go to @label.toLowerCase channel<span class="glyphicon glyphicon-new-window" /></a>
+        @if(canEditTeam) {<a href="#" id="edit-@{label.toLowerCase.replace(" ","-")}-link" class="ms-2 d-none">Edit</a>}
       </dd>
     </dl>
   } else {
-    <dl id="slack-@label.toLowerCase" class="row mb-0">
-      <dt class="col-sm-3 offset-1">@label:</dt>
-      <dd class="col-sm-8">
+    <dl id="@{label.toLowerCase.replace(" ","-")}" class="row border-bottom border-light-subtle pb-0 mb-2">
+      <dt class="col-sm-4">@label:</dt>
+      <dd class="col-sm-8 d-flex justify-content-between">
         <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window" /></a>
+        @if(canEditTeam) {<a href="#" id="edit-@{label.toLowerCase.replace(" ","-")}-link" class="ms-2 d-none">Edit</a>}
       </dd>
     </dl>
   }
+  <dl id="@{label.toLowerCase.replace(" ","-")}-form-container" class="d-none row border-bottom border-light-subtle pb-0 mb-2">
+    <form id="@{label.toLowerCase.replace(" ","-")}-entry-form" class="d-flex align-items-center w-100" method="post" action="@teamRoutes.TeamsController.editTeamDetails(teamName, Some(if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}))">
+      @csrfFormField
+      <input type="hidden" name="team" value="@teamName.asString">
+      <div class="flex-grow-1">
+        <fieldset class="form-field-group mb-2">
+          <label id="field-@{label.toLowerCase.replace(" ","-")}-label" for="field-@{label.toLowerCase.replace(" ","-")}" class="fw-bold">@label:</label>
+          <div class="mb-2">Please enter the channel name only.</div>
+          <div class="mb-2">Before saving, click below to check that the URL matches the Slack channel associated with this team:</div>
+          <div class="mb-2 text-break">
+            <a id="@{label.toLowerCase.replace(" ","-")}-link" href="https://hmrcdigital.slack.com/messages/@{slackInfo.name}" target="_blank" rel="noreferrer noopener">
+              https://hmrcdigital.slack.com/messages/@{slackInfo.name}<span class="glyphicon glyphicon-new-window"/>
+            </a>
+          </div>
+          <div class="d-flex align-items-center">
+            <input type="text" id="field-@{label.toLowerCase.replace(" ","-")}"
+            class="form-control me-2 @if(teamDetailsForm(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}").hasErrors) {is-invalid}"
+            name="@{if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}" value="@teamDetailsForm.data.getOrElse(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}", slackInfo.name)">
+            @saveAndCancelButtons(s"${label.toLowerCase.replace(" ","-")}")
+          </div>
+            @teamDetailsForm(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}").errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
+        </fieldset>
+      </div>
+    </form>
+  </dl>
 }
 
 @umpUpdateLink(isMemberBox: Boolean) = {
+@if(!canEditTeam) {
   <p id="ump-correct-data-link" class="card-text">
     <small class="text-body-secondary">
-        To update @teamName.asString team @if(isMemberBox) { members } else { details }, go to the <a href="@umpMyTeamsUrl" target="_blank" rel="noreferrer noopener">User Management Portal<span class="glyphicon glyphicon-new-window" /></a>
+        Your Team Admin can update @teamName.asString team @if(isMemberBox) { members } else { details } on this page if needed.</a>
     </small>
   </p>
+  }
 }
+
+@saveAndCancelButtons(fieldName: String) = {
+  <div class="ms-auto d-flex gap-2">
+    <button id="save-@fieldName-button" class="btn btn-success btn-sm" type="submit">Save</button>
+    <button id="cancel-save-@fieldName-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
+  </div>
+}
+
+<script @CSPNonce.attr>
+        document.addEventListener("DOMContentLoaded", function () {
+          const errorTypes = {
+            teamDescriptionError: { editLinkId: "edit-team-description-link", contentId: "team-description", formId: "team-description-form-container" },
+            teamDocumentationError: { editLinkId: "edit-team-documentation-link", contentId: "team-documentation", formId: "team-documentation-form-container" },
+            slackTeamError: { editLinkId: "edit-slack-team-link", contentId: "slack-team", formId: "slack-team-form-container" },
+            slackNotificationError: { editLinkId: "edit-slack-notification-link", contentId: "slack-notification", formId: "slack-notification-form-container" },
+          };
+
+          const errors = {
+            teamDescriptionError: @(teamDetailsForm("description").hasErrors),
+            teamDocumentationError: @(teamDetailsForm("documentation").hasErrors),
+            slackTeamError: @(teamDetailsForm("slack").hasErrors),
+            slackNotificationError: @(teamDetailsForm("slackNotification").hasErrors),
+          };
+
+          const editButton = document.getElementById("edit-details");
+          const editLinks = document.querySelectorAll("a[id^='edit-']");
+
+          function toggleForm(contentId, formId, show) {
+            const contentDiv = document.getElementById(contentId);
+            const formDiv = document.getElementById(formId);
+
+            if (contentDiv && formDiv) {
+              contentDiv.classList.toggle("d-none", show);
+              formDiv.classList.toggle("d-none", !show);
+
+              if (show) {
+                const cancelButton = formDiv.querySelector("button[type='button']");
+                cancelButton?.addEventListener("click", function (event) {
+                  event.preventDefault();
+                  toggleForm(contentId, formId, false);
+                });
+              }
+            }
+          }
+
+            function hideAllForms() {
+                Object.values(errorTypes).forEach(({ contentId, formId }) => {
+                    document.getElementById(contentId)?.classList.remove("d-none");
+                    document.getElementById(formId)?.classList.add("d-none");
+                });
+            }
+
+            if (editButton) {
+                editButton.addEventListener("click", function () {
+                    const isEditing = editButton.classList.contains("btn-secondary");
+
+                    editLinks.forEach(link => link.classList.toggle("d-none", isEditing));
+
+                    if (isEditing) {
+                        hideAllForms();
+                    }
+
+                    editButton.textContent = isEditing ? "Edit" : "Cancel";
+                    editButton.classList.toggle("btn-success", isEditing);
+                    editButton.classList.toggle("btn-secondary", !isEditing);
+                });
+            }
+
+            let hasErrors = false;
+
+          Object.entries(errors).forEach(([key, hasError]) => {
+            if (hasError) {
+              hasErrors = true;
+              const { editLinkId, contentId, formId } = errorTypes[key];
+
+              document.getElementById(editLinkId)?.classList.remove("d-none");
+
+              toggleForm(contentId, formId, true);
+            }
+          });
+
+            if (hasErrors && editButton) {
+                editButton.textContent = "Cancel";
+                editButton.classList.remove("btn-success");
+                editButton.classList.add("btn-secondary");
+
+                editLinks.forEach(link => link.classList.remove("d-none"));
+            }
+
+          Object.values(errorTypes).forEach(({ editLinkId, contentId, formId }) => {
+            const editLink = document.getElementById(editLinkId);
+            if (editLink) {
+              editLink.addEventListener("click", function (event) {
+                event.preventDefault();
+                toggleForm(contentId, formId, true);
+              });
+            }
+          });
+
+          function debounce(func, delay) {
+            let timer;
+            return function (...args) {
+              clearTimeout(timer);
+              timer = setTimeout(() => func.apply(this, args), delay);
+            };
+          }
+
+          function updateSlackLink(inputId, linkId) {
+            const input = document.getElementById(inputId);
+            const link = document.getElementById(linkId);
+
+            if (input && link) {
+              input.addEventListener(
+                      "input",
+                      debounce(function () {
+                        const slackName = input.value.trim();
+                        link.href = `https://hmrcdigital.slack.com/messages/${slackName}`;
+                        link.textContent = `https://hmrcdigital.slack.com/messages/${slackName}`;
+
+                        if (!link.querySelector(".glyphicon-new-window")) {
+                          const iconSpan = document.createElement("span");
+                          iconSpan.className = "glyphicon glyphicon-new-window ms-1";
+                          link.appendChild(iconSpan);
+                        }
+                      }, 300)
+              );
+            }
+          }
+
+          updateSlackLink("field-slack-team", "slack-team-link");
+          updateSlackLink("field-slack-notification", "slack-notification-link");
+
+        });
+</script>

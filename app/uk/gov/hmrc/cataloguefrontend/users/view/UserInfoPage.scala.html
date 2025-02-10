@@ -66,7 +66,12 @@
           <div class="col-md-4">
               <div class="card mb-4">
                   <div class="card-header d-flex justify-content-between align-items-center">
-                      <div class="h4 mb-0">Details</div>
+                      <div class="h4 mb-0 float-start">Details</div>
+                      @if(canEditUsers || isCurrentUser) {
+                          <div class="float-end">
+                              <button type="button" class="btn btn-success btn-sm" id="edit-details">Edit</button>
+                          </div>
+                      }
                   </div>
 
                   <div class="card-body">
@@ -77,7 +82,7 @@
                                 <label class="fw-bold">Name:</label>
                                 @user.displayName.getOrElse("")
                               </div>
-                              @if(canEditUsers) {<a href="#" id="edit-user-name-link" class="text-decoration-none">Edit</a>}
+                              @if(canEditUsers) {<a href="#" id="edit-user-name-link" class="text-decoration-none  d-none">@if(user.displayName.isEmpty){Add}else{Edit}</a>}
                             </div>
                               <div id="user-name-form-container" class="d-none w-100">
                                   <form id="user-name-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
@@ -111,7 +116,7 @@
                                       <label class="fw-bold">Phone:</label>
                                       @user.phoneNumber.getOrElse("")
                                   </div>
-                                  @if(canEditUsers || isCurrentUser) {<a href="#" id="edit-phone-link" class="text-decoration-none">Edit</a>}
+                                  @if(canEditUsers || isCurrentUser) {<a href="#" id="edit-phone-link" class="text-decoration-none d-none">@if(user.phoneNumber.isEmpty){Add}else{Edit}</a>}
                               </div>
                               <div id="phone-form-container" class="d-none w-100">
                                   <form id="phone-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
@@ -145,7 +150,7 @@
                                   case None      => {}
                                 }
                               </div>
-                              @if(canEditUsers || isCurrentUser) {<a href="#" id="edit-user-github-link" class="text-decoration-none">Edit</a>}
+                              @if(canEditUsers || isCurrentUser) {<a href="#" id="edit-user-github-link" class="text-decoration-none d-none">@if(user.githubUsername.isEmpty){Add}else{Edit}</a>}
                             </div>
                             <div id="user-github-form-container" class="d-none w-100">
                                 <form id="user-github-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
@@ -183,7 +188,7 @@
                                       <label class="fw-bold">Org:</label>
                                       @user.organisation.getOrElse("")
                                   </div>
-@*                                  @if(canEditUsers) {<a href="#" id="edit-organisation-link" class="text-decoration-none">Edit</a>} // commented out until DDCOps give go ahead to allow editing Organisation *@
+@*                                  @if(canEditUsers) {<a href="#" id="edit-organisation-link" class="text-decoration-none  d-none">@if(user.organisation.isEmpty){Add}else{Edit}</a>} // commented out until DDCOps give go ahead to allow editing Organisation *@
                               </div>
                               <div id="organisation-form-container" class="d-none w-100">
                                   <form id="organisation-entry-form" class="d-flex align-items-center w-100" method="post" action="@userRoutes.UsersController.updateUserDetails(user.username)">
@@ -233,7 +238,7 @@
                   <div class="card-body">
                       @if(user.teamNames.isEmpty) {
                         <p class="card-text col-6">
-                            @user.username does not belong to any teams.
+                            @user.username.asString does not belong to any teams.
                         </p>
                       }
                         <ul id="user-teams" class="list-unstyled" style="column-count: 2;">
@@ -507,6 +512,9 @@
                 organisationError: @(userDetailsForm.hasErrors && userDetailsForm("attribute").value.contains("organisation")),
             };
 
+            const editButton = document.getElementById("edit-details");
+            const editLinks = document.querySelectorAll("a[id^='edit-']");
+
             function toggleForm(contentId, formId, show) {
                 const contentDiv = document.getElementById(contentId);
                 const formDiv = document.getElementById(formId);
@@ -525,12 +533,49 @@
                 }
             }
 
+            function hideAllForms() {
+                Object.values(errorTypes).forEach(({ contentId, formId }) => {
+                    document.getElementById(contentId)?.classList.remove("d-none");
+                    document.getElementById(formId)?.classList.add("d-none");
+                });
+            }
+
+            if (editButton) {
+                editButton.addEventListener("click", function () {
+                    const isEditing = editButton.classList.contains("btn-secondary");
+
+                    editLinks.forEach(link => link.classList.toggle("d-none", isEditing));
+
+                    if (isEditing) {
+                        hideAllForms();
+                    }
+
+                    editButton.textContent = isEditing ? "Edit" : "Cancel";
+                    editButton.classList.toggle("btn-success", isEditing);
+                    editButton.classList.toggle("btn-secondary", !isEditing);
+                });
+            }
+
+            let hasErrors = false;
+
             Object.entries(errors).forEach(([key, hasError]) => {
                 if (hasError) {
-                    const { contentId, formId } = errorTypes[key];
+                    hasErrors = true;
+                    const { editLinkId, contentId, formId } = errorTypes[key];
+
+                    document.getElementById(editLinkId)?.classList.remove("d-none");
+
                     toggleForm(contentId, formId, true);
                 }
             });
+
+            if (hasErrors && editButton) {
+                editButton.textContent = "Cancel";
+                editButton.classList.remove("btn-success");
+                editButton.classList.add("btn-secondary");
+
+                editLinks.forEach(link => link.classList.remove("d-none"));
+            }
 
             Object.values(errorTypes).forEach(({ editLinkId, contentId, formId }) => {
                 const editLink = document.getElementById(editLinkId);
@@ -568,4 +613,3 @@
             }
         });
 </script>
-
