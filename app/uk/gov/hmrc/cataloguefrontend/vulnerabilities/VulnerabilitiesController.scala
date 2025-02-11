@@ -61,22 +61,24 @@ class VulnerabilitiesController @Inject() (
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
-      import VulnerabilitiesExplorerFilter.form
-      form
-        .bindFromRequest()
-        .fold(
-          formWithErrors => Future.successful(BadRequest(vulnerabilitiesListPage(None, Seq.empty, formWithErrors))),
-          validForm =>
-            for
-              teams     <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-              summaries <- vulnerabilitiesConnector.vulnerabilitySummaries(
-                             flag           = Some(validForm.flag)
-                           , serviceQuery   = validForm.service.map(_.asString)
-                           , team           = validForm.team
-                           , curationStatus = validForm.curationStatus
-                           )
-            yield Ok(vulnerabilitiesListPage(summaries, teams, form.fill(validForm)))
-          )
+      (for
+         teams     <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams())
+         form      =  VulnerabilitiesExplorerFilter.form.bindFromRequest()
+         filter    <- EitherT.fromEither[Future]:
+                        form.fold(
+                          formWithErrors => Left(BadRequest(vulnerabilitiesListPage(summaries = None, teams, formWithErrors)))
+                        , formObject     => Right(formObject)
+                        )
+         summaries <- EitherT.right[Result]:
+                        vulnerabilitiesConnector.vulnerabilitySummaries(
+                          flag           = Some(filter.flag)
+                        , serviceQuery   = filter.service.map(_.asString)
+                        , team           = filter.team
+                        , curationStatus = filter.curationStatus
+                        )
+       yield
+         Ok(vulnerabilitiesListPage(summaries, teams, form))
+      ).merge
 
   /**
     * @param team for reverse routing
@@ -94,17 +96,24 @@ class VulnerabilitiesController @Inject() (
          teams           <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams())
          digitalServices <- EitherT.right[Result](teamsAndRepositoriesConnector.allDigitalServices())
          form            =  VulnerabilitiesCountFilter.form.bindFromRequest()
-         filter          <- EitherT.fromEither[Future](form.fold(
-                             formWithErrors => Left(BadRequest(vulnerabilitiesForServicesPage(curationStatus.getOrElse(CurationStatus.ActionRequired), Seq.empty, teams, digitalServices, formWithErrors)))
-                           , formObject     => Right(formObject)
-                            ))
+         filter          <- EitherT.fromEither[Future]:
+                              form.fold(
+                                formWithErrors => Left(BadRequest(vulnerabilitiesForServicesPage(
+                                                    curationStatus.getOrElse(CurationStatus.ActionRequired),
+                                                    vulnerabilityCounts = Seq.empty,
+                                                    teams,
+                                                    digitalServices,
+                                                    formWithErrors
+                                                  )))
+                              , formObject     => Right(formObject)
+                              )
          counts          <- EitherT.right[Result]:
-                             vulnerabilitiesConnector.vulnerabilityCounts(
-                               flag           = filter.flag
-                             , serviceName    = None // Use listJS filters
-                             , team           = filter.team
-                             , digitalService = filter.digitalService
-                             )
+                              vulnerabilitiesConnector.vulnerabilityCounts(
+                                flag           = filter.flag
+                              , serviceName    = None // Use listJS filters
+                              , team           = filter.team
+                              , digitalService = filter.digitalService
+                              )
        yield
          Ok(vulnerabilitiesForServicesPage(filter.curationStatus, counts, teams, digitalServices, form))
       ).merge
@@ -128,27 +137,29 @@ class VulnerabilitiesController @Inject() (
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
-      import VulnerabilitiesTimelineFilter.form
-      for
-        teams    <- teamsAndRepositoriesConnector.allTeams().map(_.map(_.name))
-        services <- teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service)).map(_.map(s => ServiceName(s.name)))
-        res      <- form.bindFromRequest()
-                      .fold(
-                        formWithErrors =>
-                          Future.successful(BadRequest(vulnerabilitiesTimelinePage(teams = teams, services = services, result = Seq.empty, formWithErrors))),
-                        validForm      =>
-                          for
-                            counts <- vulnerabilitiesConnector.timelineCounts(
-                                        serviceName    = validForm.service,
-                                        team           = validForm.team,
-                                        vulnerability  = validForm.vulnerability,
-                                        curationStatus = validForm.curationStatus,
-                                        from           = validForm.from,
-                                        to             = validForm.to
-                                      ).map(_.sortBy(_.weekBeginning))
-                          yield Ok(vulnerabilitiesTimelinePage(teams = teams, services = services, result = counts, form.fill(validForm)))
-                      )
-      yield res
+      (for
+         teams    <- EitherT.right[Result]:
+                       teamsAndRepositoriesConnector.allTeams().map(_.map(_.name))
+         services <- EitherT.right[Result]:
+                       teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service)).map(_.map(s => ServiceName(s.name)))
+         form     =  VulnerabilitiesTimelineFilter.form.bindFromRequest()
+         filter   <- EitherT.fromEither[Future]:
+                       form.fold(
+                         formWithErrors => Left(BadRequest(vulnerabilitiesTimelinePage(teams = teams, services = services, result = Seq.empty, formWithErrors)))
+                       , formObject     => Right(formObject)
+                       )
+         counts   <- EitherT.right[Result]:
+                       vulnerabilitiesConnector.timelineCounts(
+                         serviceName    = filter.service,
+                         team           = filter.team,
+                         vulnerability  = filter.vulnerability,
+                         curationStatus = filter.curationStatus,
+                         from           = filter.from,
+                         to             = filter.to
+                       ).map(_.sortBy(_.weekBeginning))
+       yield
+         Ok(vulnerabilitiesTimelinePage(teams = teams, services = services, result = counts, form))
+      ).merge
 
 end VulnerabilitiesController
 
