@@ -132,9 +132,9 @@ GET        /deployment-timeline-select/:serviceName                        uk.go
 +nocsrf
 POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()
 
-GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesList(vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, service: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None)
-GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(team: Option[TeamName] ?= None, flag: Option[String] ?= None)
-GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[ServiceName] ?= None, team: Option[TeamName] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[String] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
+GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesList(vulnerability: Option[String] ?= None, curationStatus: Option[CurationStatus] ?= None, service: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None)
+GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus: Option[CurationStatus] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None)
+GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[ServiceName] ?= None, team: Option[TeamName] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[CurationStatus] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
 GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.users
 GET        /users-search                                 uk.gov.hmrc.cataloguefrontend.users.UsersController.userSearch(query: String, includeDeleted: Boolean ?= false, includeNonHuman: Boolean ?= false)

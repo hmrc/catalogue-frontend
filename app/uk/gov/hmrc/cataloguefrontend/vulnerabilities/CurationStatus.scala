@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.json.Reads
+import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import FromStringEnum._
@@ -27,7 +28,7 @@ enum CurationStatus(
   override val asString: String,
   val displayString    : String
 ) extends FromString
-  derives Ordering, Reads, FormFormat:
+  derives Ordering, Reads, FormFormat, QueryStringBindable:
   case InvestigationOngoing extends CurationStatus(asString = "INVESTIGATION_ONGOING", displayString = "Investigation ongoing")
   case NoActionRequired     extends CurationStatus(asString = "NO_ACTION_REQUIRED"   , displayString = "No action required"   )
   case ActionRequired       extends CurationStatus(asString = "ACTION_REQUIRED"      , displayString = "Action required"      )

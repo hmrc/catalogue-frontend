@@ -57,7 +57,7 @@
             }
             @if(repo.repoType == RepoType.Service) {
                 <li>
-                    <a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesList(None, curationStatus = Some(CurationStatus.ActionRequired.asString), Some(s"\"${repo.name}\""), None)">
+                    <a id="link-to-vulnerabilities" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesList(None, curationStatus = Some(CurationStatus.ActionRequired), Some(s"\"${repo.name}\""), None)">
                         Vulnerabilities
                     </a>
                 </li>
