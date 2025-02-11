@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
+import cats.data.EitherT
 import play.api.data.{Form, Forms}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.{VulnerabilitiesForServicesPage, VulnerabilitiesListPage, VulnerabilitiesTimelinePage}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -84,25 +85,30 @@ class VulnerabilitiesController @Inject() (
   def vulnerabilitiesForServices(
     curationStatus: Option[CurationStatus]
   , team          : Option[TeamName]
+  , digitalService: Option[DigitalService]
   , flag          : Option[SlugInfoFlag]
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
-      import VulnerabilitiesCountFilter.form
-      form
-        .bindFromRequest()
-        .fold(
-          formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(curationStatus.getOrElse(CurationStatus.ActionRequired), Seq.empty, Seq.empty, formWithErrors))),
-          validForm =>
-            for
-              teams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
-              counts <- vulnerabilitiesConnector.vulnerabilityCounts(
-                          flag        = validForm.flag
-                        , serviceName = None // Use listJS filters
-                        , team        = validForm.team
-                        )
-            yield Ok(vulnerabilitiesForServicesPage(validForm.curationStatus, counts, teams, form.fill(validForm)))
-        )
+      (for
+         teams           <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams())
+         digitalServices <- EitherT.right[Result](teamsAndRepositoriesConnector.allDigitalServices())
+         form            =  VulnerabilitiesCountFilter.form.bindFromRequest()
+         filter          <- EitherT.fromEither[Future](form.fold(
+                             formWithErrors => Left(BadRequest(vulnerabilitiesForServicesPage(curationStatus.getOrElse(CurationStatus.ActionRequired), Seq.empty, teams, digitalServices, formWithErrors)))
+                           , formObject     => Right(formObject)
+                            ))
+         counts          <- EitherT.right[Result]:
+                             vulnerabilitiesConnector.vulnerabilityCounts(
+                               flag           = filter.flag
+                             , serviceName    = None // Use listJS filters
+                             , team           = filter.team
+                             , digitalService = filter.digitalService
+                             )
+       yield
+         Ok(vulnerabilitiesForServicesPage(filter.curationStatus, counts, teams, digitalServices, form))
+      ).merge
+
 
   /**
     * @param service for reverse routing
@@ -168,9 +174,10 @@ object VulnerabilitiesExplorerFilter:
     )
 
 case class VulnerabilitiesCountFilter(
-  flag          : SlugInfoFlag        = SlugInfoFlag.Latest,
-  service       : Option[ServiceName] = None,
-  team          : Option[TeamName]    = None,
+  flag          : SlugInfoFlag           = SlugInfoFlag.Latest,
+  service       : Option[ServiceName]    = None,
+  team          : Option[TeamName]       = None,
+  digitalService: Option[DigitalService] = None,
   curationStatus: CurationStatus
 )
 
@@ -178,10 +185,11 @@ object VulnerabilitiesCountFilter:
   lazy val form: Form[VulnerabilitiesCountFilter] =
     Form(
       Forms.mapping(
-        "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply),
-        "service"        -> Forms.optional(Forms.of[ServiceName]),
-        "team"           -> Forms.optional(Forms.of[TeamName]),
-        "curationStatus" -> Forms.optional(Forms.of[CurationStatus]).transform(_.getOrElse(CurationStatus.ActionRequired), Some.apply)
+        "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply)
+      , "service"        -> Forms.optional(Forms.of[ServiceName])
+      , "team"           -> Forms.optional(Forms.of[TeamName])
+      , "digitalService" -> Forms.optional(Forms.of[DigitalService])
+      , "curationStatus" -> Forms.optional(Forms.of[CurationStatus]).transform(_.getOrElse(CurationStatus.ActionRequired), Some.apply)
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 

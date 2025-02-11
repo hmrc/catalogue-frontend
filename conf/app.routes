@@ -84,7 +84,7 @@ GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefro
 
 GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.cost.CostController.costExplorer(team: Option[TeamName] ?= None, asCSV: Boolean ?= false)
 
-GET        /bobby-violations                            uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.bobbyViolations(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, flag: Option[String] ?= None, isActive: Option[Boolean] ?= None)
+GET        /bobby-violations                            uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.bobbyViolations(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, flag: Option[SlugInfoFlag] ?= None, isActive: Option[Boolean] ?= None)
 GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.list(selector: Option[String] ?= None)
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.bobby.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
@@ -132,8 +132,8 @@ GET        /deployment-timeline-select/:serviceName                        uk.go
 +nocsrf
 POST       /audit                                                          uk.gov.hmrc.cataloguefrontend.auditing.BrowserSideAuditingController.sendAudit()
 
-GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesList(vulnerability: Option[String] ?= None, curationStatus: Option[CurationStatus] ?= None, service: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None)
-GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus: Option[CurationStatus] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None)
+GET        /vulnerabilities                              uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesList(vulnerability: Option[String] ?= None, curationStatus: Option[CurationStatus] ?= None, service: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[SlugInfoFlag] ?= None)
+GET        /vulnerabilities/services                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus: Option[CurationStatus] ?= None, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, flag: Option[SlugInfoFlag] ?= None)
 GET        /vulnerabilities/timeline                     uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesController.vulnerabilitiesTimeline(service: Option[ServiceName] ?= None, team: Option[TeamName] ?= None, vulnerability: Option[String] ?= None, curationStatus: Option[CurationStatus] ?= None, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
 GET        /users                                        uk.gov.hmrc.cataloguefrontend.users.UsersController.users

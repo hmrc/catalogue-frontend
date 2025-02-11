@@ -56,18 +56,18 @@ class BobbyExplorerController @Inject() (
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
-      ( for
-          teams           <- EitherT.right[Result](teamsAndReposConnector.allTeams())
-          digitalServices <- EitherT.right[Result](teamsAndReposConnector.allDigitalServices())
-          form            =  BobbyReportFilter.form.bindFromRequest()
-          filter          <- EitherT.fromEither[Future](form.fold(
-                              formErrors => Left(BadRequest(bobbyViolationsPage(form, teams, digitalServices, results = None)))
-                            , formObject => Right(formObject)
-                             ))
-          results         <- EitherT.right[Result]:
-                              serviceDeps.bobbyReports(filter.teamName, filter.digitalService, filter.repoType, filter.flag)
-        yield
-          Ok(bobbyViolationsPage(form, teams, digitalServices, results = Some(results)))
+      (for
+         teams           <- EitherT.right[Result](teamsAndReposConnector.allTeams())
+         digitalServices <- EitherT.right[Result](teamsAndReposConnector.allDigitalServices())
+         form            =  BobbyReportFilter.form.bindFromRequest()
+         filter          <- EitherT.fromEither[Future](form.fold(
+                             formErrors => Left(BadRequest(bobbyViolationsPage(form, teams, digitalServices, results = None)))
+                           , formObject => Right(formObject)
+                            ))
+         results         <- EitherT.right[Result]:
+                             serviceDeps.bobbyReports(filter.teamName, filter.digitalService, filter.repoType, filter.flag)
+       yield
+         Ok(bobbyViolationsPage(form, teams, digitalServices, results = Some(results)))
       ).merge
 
   /**

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
@@ -53,15 +53,16 @@ class VulnerabilitiesConnector @Inject() (
       .execute[Option[Seq[VulnerabilitySummary]]]
 
   def vulnerabilityCounts(
-    flag       : SlugInfoFlag
-  , serviceName: Option[ServiceName] = None
-  , team       : Option[TeamName]    = None
+    flag          : SlugInfoFlag
+  , serviceName   : Option[ServiceName]    = None
+  , team          : Option[TeamName]       = None
+  , digitalService: Option[DigitalService] = None
   )(using
     HeaderCarrier
   ): Future[Seq[TotalVulnerabilityCount]] =
     given Reads[TotalVulnerabilityCount] = TotalVulnerabilityCount.reads
     httpClientV2
-      .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=${serviceName.map(s => s"\"${s.asString}\"")}&team=${team.map(_.asString)}")
+      .get(url"$url/vulnerabilities/api/reports/${flag.asString}/counts?service=${serviceName.map(s => s"\"${s.asString}\"")}&team=${team.map(_.asString)}&digitalService=${digitalService.map(_.asString)}")
       .execute[Seq[TotalVulnerabilityCount]]
 
   def timelineCounts(
