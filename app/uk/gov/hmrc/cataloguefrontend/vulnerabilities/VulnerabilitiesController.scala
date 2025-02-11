@@ -53,7 +53,7 @@ class VulnerabilitiesController @Inject() (
     */
   def vulnerabilitiesList(
     vulnerability : Option[String]
-  , curationStatus: Option[String]
+  , curationStatus: Option[CurationStatus]
   , service       : Option[String]
   , team          : Option[TeamName]
   , flag          : Option[String]
@@ -82,8 +82,9 @@ class VulnerabilitiesController @Inject() (
     * @param flag for reverse routing
     */
   def vulnerabilitiesForServices(
-    team: Option[TeamName]
-  , flag: Option[String]
+    curationStatus: Option[CurationStatus]
+  , team          : Option[TeamName]
+  , flag          : Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
@@ -91,7 +92,7 @@ class VulnerabilitiesController @Inject() (
       form
         .bindFromRequest()
         .fold(
-          formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(Seq.empty, Seq.empty, formWithErrors))),
+          formWithErrors => Future.successful(BadRequest(vulnerabilitiesForServicesPage(curationStatus.getOrElse(CurationStatus.ActionRequired), Seq.empty, Seq.empty, formWithErrors))),
           validForm =>
             for
               teams  <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString.toLowerCase))
@@ -100,7 +101,7 @@ class VulnerabilitiesController @Inject() (
                         , serviceName = None // Use listJS filters
                         , team        = validForm.team
                         )
-            yield Ok(vulnerabilitiesForServicesPage(counts, teams, form.fill(validForm)))
+            yield Ok(vulnerabilitiesForServicesPage(validForm.curationStatus, counts, teams, form.fill(validForm)))
         )
 
   /**
@@ -115,7 +116,7 @@ class VulnerabilitiesController @Inject() (
     service       : Option[ServiceName]
   , team          : Option[TeamName]
   , vulnerability : Option[String]
-  , curationStatus: Option[String]
+  , curationStatus: Option[CurationStatus]
   , from          : LocalDate
   , to            : LocalDate
   ): Action[AnyContent] =
@@ -167,18 +168,20 @@ object VulnerabilitiesExplorerFilter:
     )
 
 case class VulnerabilitiesCountFilter(
-  flag   : SlugInfoFlag        = SlugInfoFlag.Latest,
-  service: Option[ServiceName] = None,
-  team   : Option[TeamName]    = None,
+  flag          : SlugInfoFlag        = SlugInfoFlag.Latest,
+  service       : Option[ServiceName] = None,
+  team          : Option[TeamName]    = None,
+  curationStatus: CurationStatus
 )
 
 object VulnerabilitiesCountFilter:
   lazy val form: Form[VulnerabilitiesCountFilter] =
     Form(
       Forms.mapping(
-        "flag"    -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply),
-        "service" -> Forms.optional(Forms.of[ServiceName]),
-        "team"    -> Forms.optional(Forms.of[TeamName]),
+        "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply),
+        "service"        -> Forms.optional(Forms.of[ServiceName]),
+        "team"           -> Forms.optional(Forms.of[TeamName]),
+        "curationStatus" -> Forms.optional(Forms.of[CurationStatus]).transform(_.getOrElse(CurationStatus.ActionRequired), Some.apply)
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 

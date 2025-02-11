@@ -21,12 +21,13 @@
 @this()
 
 
-@(vulnerabilities: Seq[TotalVulnerabilityCount],
-  teams          : Seq[GitHubTeam],
-  form           : Form[VulnerabilitiesCountFilter]
+@(curationStatus     : CurationStatus,
+  vulnerabilityCounts: Seq[TotalVulnerabilityCount],
+  teams              : Seq[GitHubTeam],
+  form               : Form[VulnerabilitiesCountFilter]
 )(implicit
-  messages       : Messages,
-  request        : RequestHeader
+  messages           : Messages,
+  request            : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
@@ -38,7 +39,7 @@
     <div id="service-list">
         <form id="form" method="get">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <dl>
                         <dt>
                             <label for="search" class="form-label">Service</label>
@@ -59,7 +60,7 @@
                         Symbol("class")       -> "form-select"
                     )
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     @select(
                         field                 =  form("flag"),
                         options               =  SlugInfoFlag.values.toSeq.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString),
@@ -69,20 +70,36 @@
                         Symbol("class")       -> "form-select"
                     )
                 </div>
+                <div class="col-md-2">
+                    @select(
+                        field                 =  form("curationStatus"),
+                        options               =  CurationStatus.values.toSeq.map(cs => cs.asString -> cs.displayString),
+                        Symbol("_label")      -> "Curation status:",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "curation-status-filter",
+                        Symbol("class")       -> "form-select"
+                    )
+                </div>
             </div>
         </form>
         <table class="table table-striped sticky-header">
             <thead>
                 <tr>
                     <th class="col-6"><button class="sort no-border fw-bold" data-sort="service">Service</button></th>
-                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="action-required">Action Required</button></th>
-                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="investigation-ongoing">Investigation Ongoing</button></th>
-                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="no-action-required">No Action Required</button></th>
-                    <th class="col-2 text-center"><button class="sort no-border fw-bold" data-sort="uncurated">Uncurated</button></th>
+                    <th class="col-2 text-center">
+                      <button class="sort no-border fw-bold" data-sort="count">
+                        @curationStatus match {
+                            case CurationStatus.ActionRequired       => { Action Required       }
+                            case CurationStatus.InvestigationOngoing => { Investigation Ongoing }
+                            case CurationStatus.NoActionRequired     => { No Action Required    }
+                            case CurationStatus.Uncurated            => { Uncurated             }
+                          }
+                      </button>
+                    </th>
                 </tr>
             </thead>
             <tbody class="list">
-                @vulnerabilities.map(vulnerabilitiesCountForService)
+                @vulnerabilityCounts.map(vulnerabilitiesCountForService)
             </tbody>
         </table>
     </div>
@@ -92,17 +109,24 @@
 @vulnerabilitiesCountForService(tvc: TotalVulnerabilityCount) = {
     <tr>
         <td><a class="service" id="link-to-@tvc.service.asString" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(tvc.service)">@tvc.service.asString</a></td>
-        <td class="text-center"><a class="action-required" id="@tvc.service-action-required-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.ActionRequired)">@tvc.actionRequired</a></td>
-        <td class="text-center"><a class="investigation-ongoing" id="@tvc.service-investigation-ongoing-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.InvestigationOngoing)">@tvc.investigationOngoing</a></td>
-        <td class="text-center"><a class="no-action-required" id="@tvc.service-no-action-required-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.NoActionRequired)">@tvc.noActionRequired</a></td>
-        <td class="text-center"><a class="uncurated" id="@tvc.service-uncurated-required-vulnerabilities" href="@vulnerabilitiesListHref(tvc.service, CurationStatus.Uncurated)">@tvc.uncurated</a></td>
+        <td class="text-center">
+          <a class="count" id="@tvc.service-count" href="@vulnerabilitiesListHref(tvc.service, curationStatus)">
+            @curationStatus match {
+                case CurationStatus.ActionRequired       => { @tvc.actionRequired       }
+                case CurationStatus.InvestigationOngoing => { @tvc.investigationOngoing }
+                case CurationStatus.NoActionRequired     => { @tvc.noActionRequired     }
+                case CurationStatus.Uncurated            => { @tvc.uncurated            }
+            }
+          </a>
+        </td>
+
     </tr>
 }
 
 @vulnerabilitiesListHref(service: ServiceName, curationStatus: CurationStatus) = {
      @uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesList(
         vulnerability  = None,
-        curationStatus = Some(curationStatus.asString),
+        curationStatus = Some(curationStatus),
         service        = Some(s"\"${service.asString}\""),
         team           = form("team").value.map(TeamName.apply),
         flag           = form("flag").value
@@ -113,12 +137,14 @@
 <!-- listjs configuration -->
 <script @CSPNonce.attr>
     let options = {
-        valueNames: [ 'service', 'action-required', 'investigation-ongoing', 'no-action-required', 'uncurated' ],
+        valueNames: [ 'service', 'count' ],
         searchColumns: ['service'],
         searchDelay: 350
     };
 
     let serviceList = new List('service-list', options);
+    serviceList.sort('service', { order: "asc"  });
+    serviceList.sort('count'  , { order: "desc" });
 
     let searchBox = document.getElementById("search");
     // set autofocus cursor to right of text in search box
@@ -129,7 +155,7 @@
     serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
-  ["team-filter", "flag-filter"]
+  ["team-filter", "flag-filter", "curation-status-filter"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("form").submit();

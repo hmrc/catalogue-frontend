@@ -17,7 +17,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl",
       "uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.PrototypeStatus",
       "uk.gov.hmrc.cataloguefrontend.createrepository.RepoType",
-      "uk.gov.hmrc.cataloguefrontend.servicemetrics.LogMetricId"
+      "uk.gov.hmrc.cataloguefrontend.servicemetrics.LogMetricId",
+      "uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus"
     ),
     TwirlKeys.templateImports ++= Seq(
       "uk.gov.hmrc.cataloguefrontend.model._",
@@ -38,8 +39,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "9.7.0"
-val hmrcMongoVersion     = "2.3.0"
+val bootstrapPlayVersion = "9.8.0"
+val hmrcMongoVersion     = "2.5.0"
 
 val compile = Seq(
   caffeine,
