@@ -56,7 +56,7 @@ class VulnerabilitiesController @Inject() (
   , curationStatus: Option[CurationStatus]
   , service       : Option[String]
   , team          : Option[TeamName]
-  , flag          : Option[String]
+  , flag          : Option[SlugInfoFlag]
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
@@ -84,7 +84,7 @@ class VulnerabilitiesController @Inject() (
   def vulnerabilitiesForServices(
     curationStatus: Option[CurationStatus]
   , team          : Option[TeamName]
-  , flag          : Option[String]
+  , flag          : Option[SlugInfoFlag]
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request

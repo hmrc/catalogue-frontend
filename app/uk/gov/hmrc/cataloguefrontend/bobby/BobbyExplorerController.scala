@@ -48,7 +48,12 @@ class BobbyExplorerController @Inject() (
     * @param flag for reverse routing
     * @param isActive for reverse routing
     */
-  def bobbyViolations(teamName: Option[TeamName], digitalService: Option[DigitalService], flag: Option[String], isActive: Option[Boolean]): Action[AnyContent] =
+  def bobbyViolations(
+    teamName      : Option[TeamName],
+    digitalService: Option[DigitalService],
+    flag          : Option[SlugInfoFlag],
+    isActive      : Option[Boolean]
+  ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
       ( for

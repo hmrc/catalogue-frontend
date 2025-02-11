@@ -17,6 +17,8 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, TotalVulnerabilityCount, VulnerabilitiesCountFilter}
 @import views.html.helper.{FieldConstructor, select}
+@import uk.gov.hmrc.cataloguefrontend.util.Parser
+@import uk.gov.hmrc.cataloguefrontend.model.given
 
 @this()
 
@@ -129,7 +131,7 @@
         curationStatus = Some(curationStatus),
         service        = Some(s"\"${service.asString}\""),
         team           = form("team").value.map(TeamName.apply),
-        flag           = form("flag").value
+        flag           = form("flag").value.flatMap(Parser[SlugInfoFlag].parse(_).toOption)
     )
 }
 

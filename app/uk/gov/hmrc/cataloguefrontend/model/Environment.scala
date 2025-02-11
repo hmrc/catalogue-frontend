@@ -18,6 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.model
 
 import play.api.libs.json.{Reads, Writes}
 import play.api.mvc.{PathBindable, QueryStringBindable}
+import uk.gov.hmrc.cataloguefrontend.binders.Binders
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}
 
 import FromStringEnum._
@@ -55,3 +56,9 @@ object SlugInfoFlag:
 
   given Ordering[SlugInfoFlag] =
     Ordering.by(values.indexOf(_))
+
+  given QueryStringBindable[SlugInfoFlag] =
+    Binders.queryStringBindableFromString(
+        s => Some(summon[Parser[SlugInfoFlag]].parse(s)),
+        _.asString
+      )
