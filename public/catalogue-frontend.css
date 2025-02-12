@@ -216,7 +216,7 @@ th {
     outline: none;
 }
 
-.dropdown-menu {
+.dropdown-menu, .tooltip, .popover {
     z-index: 10000;
 }
 
