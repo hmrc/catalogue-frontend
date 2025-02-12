@@ -48,21 +48,26 @@ class BobbyExplorerController @Inject() (
     * @param flag for reverse routing
     * @param isActive for reverse routing
     */
-  def bobbyViolations(teamName: Option[TeamName], digitalService: Option[DigitalService], flag: Option[String], isActive: Option[Boolean]): Action[AnyContent] =
+  def bobbyViolations(
+    teamName      : Option[TeamName],
+    digitalService: Option[DigitalService],
+    flag          : Option[SlugInfoFlag],
+    isActive      : Option[Boolean]
+  ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
-      ( for
-          teams           <- EitherT.right[Result](teamsAndReposConnector.allTeams())
-          digitalServices <- EitherT.right[Result](teamsAndReposConnector.allDigitalServices())
-          form            =  BobbyReportFilter.form.bindFromRequest()
-          filter          <- EitherT.fromEither[Future](form.fold(
-                              formErrors => Left(BadRequest(bobbyViolationsPage(form, teams, digitalServices, results = None)))
-                            , formObject => Right(formObject)
-                             ))
-          results         <- EitherT.right[Result]:
-                              serviceDeps.bobbyReports(filter.teamName, filter.digitalService, filter.repoType, filter.flag)
-        yield
-          Ok(bobbyViolationsPage(form, teams, digitalServices, results = Some(results)))
+      (for
+         teams           <- EitherT.right[Result](teamsAndReposConnector.allTeams())
+         digitalServices <- EitherT.right[Result](teamsAndReposConnector.allDigitalServices())
+         form            =  BobbyReportFilter.form.bindFromRequest()
+         filter          <- EitherT.fromEither[Future](form.fold(
+                             formErrors => Left(BadRequest(bobbyViolationsPage(form, teams, digitalServices, results = None)))
+                           , formObject => Right(formObject)
+                            ))
+         results         <- EitherT.right[Result]:
+                             serviceDeps.bobbyReports(filter.teamName, filter.digitalService, filter.repoType, filter.flag)
+       yield
+         Ok(bobbyViolationsPage(form, teams, digitalServices, results = Some(results)))
       ).merge
 
   /**

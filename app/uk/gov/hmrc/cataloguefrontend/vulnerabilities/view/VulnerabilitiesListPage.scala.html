@@ -21,12 +21,12 @@
 
 @this()
 
-@(maybeSummaries: Option[Seq[VulnerabilitySummary]],
-  teams         : Seq[GitHubTeam],
-  form          : Form[?]
+@(summaries: Option[Seq[VulnerabilitySummary]],
+  teams    : Seq[GitHubTeam],
+  form     : Form[?]
 )(implicit
-  messages      : Messages,
-  request       : RequestHeader
+  messages : Messages,
+  request  : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
@@ -94,7 +94,7 @@
             </div>
         </form>
 
-        @maybeSummaries.fold{
+        @summaries.fold{
             <div>There is no data matching the search criteria.</div>
         }{ summaries =>
             @if(summaries.isEmpty) {
@@ -128,7 +128,7 @@
         }
     </div>
 
-    @maybeSummaries.map { summaries =>
+    @summaries.map { summaries =>
         @if(summaries.nonEmpty) {
           <script @CSPNonce.attr>
             let options = {

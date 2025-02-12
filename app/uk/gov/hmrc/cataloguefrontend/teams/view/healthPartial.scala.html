@@ -23,7 +23,7 @@
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{CachedServiceCheck, routes => serviceCommissioningStatusRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicemetrics.{ServiceMetric, LogMetricId, routes => serviceMetricsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.test.{routes => testJobRoutes}
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{TotalVulnerabilityCount, routes => vulnerabilityRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, TotalVulnerabilityCount, routes => vulnerabilityRoutes}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhere, routes => whatsRunningWhereRoutes}
 @import java.net.URL
 
@@ -64,25 +64,25 @@
           @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString), isActive = Some(true))">Bobby Errors - Production</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(true))">Bobby Errors - Production</a></td>
         </tr>
         <tr>
           @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(true))">Bobby Errors - Latest</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest), isActive = Some(true))">Bobby Errors - Latest</a></td>
         </tr>
         <tr>
           @defining(productionVulnerabilities.map(_.actionRequired).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString))"> Service Vulnerabilities - Production</a></td>
+          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)))"> Service Vulnerabilities - Production</a></td>
         </tr>
         <tr>
           @defining(latestVulnerabilities.map(_.actionRequired).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(team = teamName, flag = Some(SlugInfoFlag.Latest.asString))"> Service Vulnerabilities - Latest</a></td>
+          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, flag = Some(SlugInfoFlag.Latest))"> Service Vulnerabilities - Latest</a></td>
         </tr>
         <tr>
           <td colspan="2"><hr/></td>
@@ -91,13 +91,13 @@
           @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production).asString), isActive = Some(false))">Bobby Warnings - Production</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(false))">Bobby Warnings - Production</a></td>
         </tr>
         <tr>
           @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest.asString), isActive = Some(false))">Bobby Warnings - Latest</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest), isActive = Some(false))">Bobby Warnings - Latest</a></td>
         </tr>
         <tr>
           @defining(commissioningChecks.filter(_.warnings).size) { count =>

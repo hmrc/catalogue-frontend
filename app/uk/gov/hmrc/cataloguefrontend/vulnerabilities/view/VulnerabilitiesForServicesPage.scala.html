@@ -17,17 +17,20 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, TotalVulnerabilityCount, VulnerabilitiesCountFilter}
 @import views.html.helper.{FieldConstructor, select}
+@import uk.gov.hmrc.cataloguefrontend.util.Parser
+@import uk.gov.hmrc.cataloguefrontend.model.given
 
 @this()
 
 
-@(curationStatus     : CurationStatus,
-  vulnerabilityCounts: Seq[TotalVulnerabilityCount],
-  teams              : Seq[GitHubTeam],
-  form               : Form[VulnerabilitiesCountFilter]
+@(curationStatus     : CurationStatus
+, vulnerabilityCounts: Seq[TotalVulnerabilityCount]
+, teams              : Seq[GitHubTeam]
+, digitalServices    : Seq[DigitalService]
+, form               : Form[VulnerabilitiesCountFilter]
 )(implicit
-  messages           : Messages,
-  request            : RequestHeader
+  messages           : Messages
+, request            : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
@@ -39,7 +42,7 @@
     <div id="service-list">
         <form id="form" method="get">
             <div class="row">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <dl>
                         <dt>
                             <label for="search" class="form-label">Service</label>
@@ -49,35 +52,46 @@
                         </dd>
                     </dl>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     @select(
-                        field                 =  form("team"),
-                        options               =  teams.map(t => t.name.asString -> t.name.asString),
-                        Symbol("_default")    -> "All",
-                        Symbol("_label")      -> "Team",
-                        Symbol("_labelClass") -> "form-label",
-                        Symbol("id")          -> "team-filter",
-                        Symbol("class")       -> "form-select"
+                      field                 =  form("team")
+                    , options               =  teams.map(t => t.name.asString -> t.name.asString)
+                    , Symbol("_default")    -> "All"
+                    , Symbol("_label")      -> "Team"
+                    , Symbol("_labelClass") -> "form-label"
+                    , Symbol("id")          -> "team-filter"
+                    , Symbol("class")       -> "form-select"
                     )
                 </div>
                 <div class="col-md-2">
                     @select(
-                        field                 =  form("flag"),
-                        options               =  SlugInfoFlag.values.toSeq.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString),
-                        Symbol("_label")      -> "Flag",
-                        Symbol("_labelClass") -> "form-label",
-                        Symbol("id")          -> "flag-filter",
-                        Symbol("class")       -> "form-select"
+                      field                 =  form("digitalService")
+                    , options               =  digitalServices.map(ds => ds.asString -> ds.asString)
+                    , Symbol("_default")    -> "All"
+                    , Symbol("_label")      -> "Digital Service"
+                    , Symbol("_labelClass") -> "form-label"
+                    , Symbol("id")          -> "digital-service-filter"
+                    , Symbol("class")       -> "form-select"
+                    )
+                  </div>
+                <div class="col-md-2">
+                    @select(
+                      field                 =  form("flag")
+                    , options               =  SlugInfoFlag.values.toSeq.filterNot(_ == SlugInfoFlag.ForEnvironment(Environment.Integration)).map(env => env.asString -> env.displayString)
+                    , Symbol("_label")      -> "Flag"
+                    , Symbol("_labelClass") -> "form-label"
+                    , Symbol("id")          -> "flag-filter"
+                    , Symbol("class")       -> "form-select"
                     )
                 </div>
                 <div class="col-md-2">
                     @select(
-                        field                 =  form("curationStatus"),
-                        options               =  CurationStatus.values.toSeq.map(cs => cs.asString -> cs.displayString),
-                        Symbol("_label")      -> "Curation status:",
-                        Symbol("_labelClass") -> "form-label",
-                        Symbol("id")          -> "curation-status-filter",
-                        Symbol("class")       -> "form-select"
+                      field                 =  form("curationStatus")
+                    , options               =  CurationStatus.values.toSeq.map(cs => cs.asString -> cs.displayString)
+                    , Symbol("_label")      -> "Curation Status"
+                    , Symbol("_labelClass") -> "form-label"
+                    , Symbol("id")          -> "curation-status-filter"
+                    , Symbol("class")       -> "form-select"
                     )
                 </div>
             </div>
@@ -129,7 +143,7 @@
         curationStatus = Some(curationStatus),
         service        = Some(s"\"${service.asString}\""),
         team           = form("team").value.map(TeamName.apply),
-        flag           = form("flag").value
+        flag           = form("flag").value.flatMap(Parser[SlugInfoFlag].parse(_).toOption)
     )
 }
 
@@ -155,7 +169,7 @@
     serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
-  ["team-filter", "flag-filter", "curation-status-filter"]
+  ["team-filter", "digital-service-filter", "flag-filter", "curation-status-filter"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("form").submit();
