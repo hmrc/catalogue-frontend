@@ -170,7 +170,8 @@ class TeamsController @Inject()(
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       ManageTeamMembersForm.form.bindFromRequest().fold(
-        _ =>
+        formWithErrors =>
+          logger.error(s"Unexpected error reading Add User To Team form - $formWithErrors")
           showTeamPage(teamName, Some(request.retrieval), BadRequest(_), TeamDetailsForm.form())
       , formData =>
           userManagementConnector.addUserToTeam(formData).map: _ =>
@@ -188,7 +189,8 @@ class TeamsController @Inject()(
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       ManageTeamMembersForm.form.bindFromRequest().fold(
-        _ =>
+        formWithErrors =>
+          logger.error(s"Unexpected error handling Remove User From Team form - $formWithErrors")
           showTeamPage(teamName, Some(request.retrieval), BadRequest(_), TeamDetailsForm.form())
         , formData =>
           userManagementConnector.removeUserFromTeam(formData).map: _ =>
