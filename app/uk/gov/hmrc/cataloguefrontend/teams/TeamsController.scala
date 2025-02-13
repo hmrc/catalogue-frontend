@@ -26,7 +26,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.model.{EditTeamDetails, Environment, ServiceName, SlugInfoFlag, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{EditTeamDetails, Environment, ServiceName, SlugInfoFlag, TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConnector
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsConnector
@@ -193,12 +193,26 @@ class TeamsController @Inject()(
           logger.error(s"Unexpected error handling Remove User From Team form - $formWithErrors")
           showTeamPage(teamName, Some(request.retrieval), BadRequest(_), TeamDetailsForm.form())
         , formData =>
-          userManagementConnector.removeUserFromTeam(formData).map: _ =>
-            Redirect(routes.TeamsController.team(teamName)).flashing("success" -> s"Request to remove user from team: ${formData.team} sent successfully.")
+          userManagementConnector.getUser(UserName(formData.username)).flatMap:
+            case None =>
+              Future.successful(
+                Redirect(routes.TeamsController.team(teamName))
+                  .flashing("error" -> "Unable to determine if the user belongs to more than one team. Contact #team-platops")
+              )
+            case Some(user) if user.teamNames.length <= 1 =>
+              Future.successful(
+                Redirect(routes.TeamsController.team(teamName))
+                  .flashing("error" -> s"Cannot remove user from their only team. Please add them to another team first.")
+              )
+            case Some(_) =>
+              userManagementConnector.removeUserFromTeam(formData).map: _ =>
+                Redirect(routes.TeamsController.team(teamName))
+                  .flashing("success" -> s"Request to remove user from team: ${formData.team} sent successfully.")
           .recover:
             case NonFatal(e) =>
               logger.error(s"Error requesting user ${formData.username} be removed from team ${formData.team} - ${e.getMessage}", e)
-              Redirect(routes.TeamsController.team(teamName)).flashing("error" -> "Error processing request. Contact #team-platops")
+              Redirect(routes.TeamsController.team(teamName))
+                .flashing("error" -> "Error processing request. Contact #team-platops")
       )
 
 end TeamsController
