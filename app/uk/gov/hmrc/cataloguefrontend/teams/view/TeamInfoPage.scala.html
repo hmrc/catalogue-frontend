@@ -275,7 +275,7 @@
                         <input name="team" type="hidden" value="@umpTeam.teamName.asString">
                         <div class="mb-3">
                             <label for="user-select" class="form-label fw-bold">Select a member to remove</label>
-                            <select id="user-select" name="user" class="form-select" required>
+                            <select id="user-select" name="username" class="form-select" required>
                                 @if(umpTeam.nonHumanMembers.nonEmpty) {
                                   <optgroup label="Users">
                                 }
@@ -321,7 +321,7 @@
                     <h5 class="modal-title" id="addUserToTeamModalTitle">Add User to Team</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="add-to-team-form" method="post" action=@teamRoutes.TeamsController.addUserToTeam(teamName)">
+                <form id="add-to-team-form" method="post" action="@teamRoutes.TeamsController.addUserToTeam(teamName)">
                     @csrfFormField
                     <div class="modal-body">
                         <input name="team" type="hidden" value="@umpTeam.teamName.asString">
