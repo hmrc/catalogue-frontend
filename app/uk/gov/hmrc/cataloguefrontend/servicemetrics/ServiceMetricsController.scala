@@ -79,6 +79,6 @@ object ServiceMetricsFilter:
         "team"           -> Forms.optional(Forms.of[TeamName      ])
       , "digitalService" -> Forms.optional(Forms.of[DigitalService])
       , "metricType"     -> Forms.optional(Forms.of[LogMetricId   ])
-      , "environment"    -> Forms.optional(Forms.of[Environment   ]).transform(_.getOrElse(Environment.Production), Some.apply)
+      , "environment"    -> Forms.default (Forms.of[Environment   ], Environment.Production)
       )(ServiceMetricsFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

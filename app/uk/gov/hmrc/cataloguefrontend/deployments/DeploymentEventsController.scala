@@ -102,12 +102,8 @@ object DeploymentEventsController:
     Form(
       Forms
         .mapping(
-          "from"    -> Forms
-                        .optional(Forms.localDate(dateFormat))
-                        .transform[LocalDate](o => o.getOrElse(defaultFromTime()), l => Some(l)), //Default to last week if not set
-          "to"      -> Forms
-                        .optional(Forms.localDate(dateFormat))
-                        .transform[LocalDate](o => o.getOrElse(defaultToTime()), l => Some(l)), //Default to now if not set
+          "from"    -> Forms.default(Forms.localDate(dateFormat), defaultFromTime()),
+          "to"      -> Forms.default(Forms.localDate(dateFormat), defaultToTime()),
           "team"    -> Forms.optional(Forms.text),
           "service" -> Forms.optional(Forms.text),
           "page"    -> Forms.optional(Forms.number(min = 0))

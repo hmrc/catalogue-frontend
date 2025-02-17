@@ -77,7 +77,7 @@ class VulnerabilitiesController @Inject() (
                         , curationStatus = filter.curationStatus
                         )
        yield
-         Ok(vulnerabilitiesListPage(summaries, teams, form))
+         Ok(vulnerabilitiesListPage(summaries, teams, form.fill(filter)))
       ).merge
 
   /**
@@ -115,7 +115,7 @@ class VulnerabilitiesController @Inject() (
                               , digitalService = filter.digitalService
                               )
        yield
-         Ok(vulnerabilitiesForServicesPage(filter.curationStatus, counts, teams, digitalServices, form))
+         Ok(vulnerabilitiesForServicesPage(filter.curationStatus, counts, teams, digitalServices, form.fill(filter)))
       ).merge
 
 
@@ -158,7 +158,7 @@ class VulnerabilitiesController @Inject() (
                          to             = filter.to
                        ).map(_.sortBy(_.weekBeginning))
        yield
-         Ok(vulnerabilitiesTimelinePage(teams = teams, services = services, result = counts, form))
+         Ok(vulnerabilitiesTimelinePage(teams = teams, services = services, result = counts, form.fill(filter)))
       ).merge
 
 end VulnerabilitiesController
@@ -176,7 +176,7 @@ object VulnerabilitiesExplorerFilter:
   lazy val form: Form[VulnerabilitiesExplorerFilter] =
     Form(
       Forms.mapping(
-        "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply),
+        "flag"           -> Forms.default(Forms.of[SlugInfoFlag], SlugInfoFlag.Latest),
         "vulnerability"  -> Forms.optional(Forms.text),
         "curationStatus" -> Forms.optional(Forms.of[CurationStatus]),
         "service"        -> Forms.optional(Forms.of[ServiceName]),
@@ -196,11 +196,11 @@ object VulnerabilitiesCountFilter:
   lazy val form: Form[VulnerabilitiesCountFilter] =
     Form(
       Forms.mapping(
-        "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply)
+        "flag"           -> Forms.default(Forms.of[SlugInfoFlag], SlugInfoFlag.Latest)
       , "service"        -> Forms.optional(Forms.of[ServiceName])
       , "team"           -> Forms.optional(Forms.of[TeamName])
       , "digitalService" -> Forms.optional(Forms.of[DigitalService])
-      , "curationStatus" -> Forms.optional(Forms.of[CurationStatus]).transform(_.getOrElse(CurationStatus.ActionRequired), Some.apply)
+      , "curationStatus" -> Forms.default(Forms.of[CurationStatus], CurationStatus.ActionRequired)
       )(VulnerabilitiesCountFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
@@ -229,8 +229,8 @@ object VulnerabilitiesTimelineFilter:
         "team"           -> Forms.optional(Forms.of[TeamName]),
         "vulnerability"  -> Forms.optional(Forms.text),
         "curationStatus" -> Forms.optional(Forms.of[CurationStatus]),
-        "from"           -> Forms.optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultFromTime()), Some.apply), // Default to 6 months ago if loading initial page/value not set
-        "to"             -> Forms.optional(Forms.localDate(dateFormat)).transform[LocalDate](_.getOrElse(defaultToTime()  ), Some.apply), // Default to now if loading initial page/value not set
+        "from"           -> Forms.default(Forms.localDate(dateFormat), defaultFromTime()),
+        "to"             -> Forms.default(Forms.localDate(dateFormat), defaultToTime()),
         "showDelta"      -> Forms.boolean
       )(VulnerabilitiesTimelineFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying("To Date must be greater than From Date", form => form.to.isAfter(form.from))

@@ -64,7 +64,7 @@ class SearchByUrlController @Inject() (
     lazy val form =
       Form:
         Forms.mapping(
-          "name" -> Forms.optional(Forms.text).transform[Option[String]](x => if x.exists(_.trim.isEmpty) then None else x, identity)
+          "name" -> Forms.optional(Forms.text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity)
         )(UrlSearchFilter.apply)(f => Some(f.name))
 
 end SearchByUrlController
