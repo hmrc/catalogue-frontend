@@ -48,7 +48,7 @@ class VulnerabilitiesController @Inject() (
   /**
     * @param vulnerability for reverse routing
     * @param curationStatus for reverse routing
-    * @param service for reverse routing
+    * @param service for reverse routing - must wrap in quotes for exact match
     * @param team for reverse routing
     * @param flag for reverse routing
     */
