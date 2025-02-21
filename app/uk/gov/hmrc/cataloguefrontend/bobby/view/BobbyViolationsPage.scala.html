@@ -149,7 +149,7 @@
                 <td>@repoVersion</td>
                 <td class="col-repo-type">@repoType</td>
                 <td></td>
-                <td class="col-dependency">@violation.depGroup:@violation.depArtefact:@violation.depVersion<br/>@violation.depScopes.mkString(", ")</td>
+                <td class="col-dependency">@violation.depGroup:@violation.depArtefact:@violation.depVersion<br/>@violation.depScopes.toList.sorted.map(_.displayString).mkString(", ")</td>
                   @defining(violation.range.rangeDescr) {
                     case Some((lbDescr, upDescr)) => {
                       <td class="bobby-range" style="white-space: nowrap; padding-right: 0; text-align: right">
