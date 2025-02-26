@@ -20,7 +20,7 @@ import play.api.Logger
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atEndOfDayInstant, atStartOfDayInstant}
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, DigitalService, ServiceName, TeamName}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -28,7 +28,6 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.{Inject, Singleton}
 import java.time.{Instant, LocalDate}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
 
 @Singleton
 class ReleasesConnector @Inject() (
@@ -44,41 +43,25 @@ class ReleasesConnector @Inject() (
   private given Reads[WhatsRunningWhere] = JsonCodecs.whatsRunningWhereReads
   private given Reads[Profile]           = JsonCodecs.profileFormat
 
-
-  def releases(profile: Option[Profile])(using HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
-    val url = s"$serviceUrl/releases-api/whats-running-where"
-    val params = Seq(
-      "profileName" -> profile.map(_.profileName.asString),
-      "profileType" -> profile.map(_.profileType.asString)
-    )
+  def releases(
+    teamName      : Option[TeamName]       = None
+  , digitalService: Option[DigitalService] = None
+  , sm2Profile    : Option[String]         = None
+  )(using HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
     httpClientV2
-      .get(url"$url?$params")
+      .get(url"$serviceUrl/releases-api/whats-running-where?teamName=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&sm2Profile=$sm2Profile")
       .execute[Seq[WhatsRunningWhere]]
-      .recover:
-        case NonFatal(ex) =>
-          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          Seq.empty
 
   def profiles()(using HeaderCarrier): Future[Seq[Profile]] =
-    val url = url"$serviceUrl/releases-api/profiles"
     httpClientV2
-      .get(url)
+      .get(url"$serviceUrl/releases-api/profiles")
       .execute[Seq[Profile]]
-      .recover:
-        case NonFatal(ex) =>
-          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          Seq.empty
 
   def releasesForService(service: ServiceName)(using HeaderCarrier): Future[WhatsRunningWhere] =
-    val url = url"$serviceUrl/releases-api/whats-running-where/${service.asString}"
     httpClientV2
-      .get(url)
+      .get(url"$serviceUrl/releases-api/whats-running-where/${service.asString}")
       .execute[Option[WhatsRunningWhere]]
       .map(_.getOrElse(WhatsRunningWhere(service, Nil)))
-      .recover:
-        case ex =>
-          logger.error(s"An error occurred when connecting to $url: ${ex.getMessage}", ex)
-          throw ex
 
   private val paginatedHistoryReads: HttpReads[PaginatedDeploymentHistory] =
     implicit val rf = JsonCodecs.deploymentHistoryReads
@@ -129,7 +112,7 @@ class ReleasesConnector @Inject() (
           logger.warn(s"Received 404 from API for timeline of service ${service.asString}")
           Map.empty[String, Seq[DeploymentTimelineEvent]]
       }
-  
+
   private given Reads[ReleasesConnector.ApiService] = ReleasesConnector.apiServiceReads
 
   def apiServices(environment: Environment)(using HeaderCarrier): Future[Seq[ReleasesConnector.ApiService]] =

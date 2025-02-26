@@ -22,7 +22,7 @@ import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
 import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyRuleSet
 import uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, DigitalService, ServiceName, TeamName, Version}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -114,18 +114,20 @@ class ServiceConfigsConnector @Inject() (
       .execute[BobbyRuleSet]
 
   def deploymentConfig(
-    service    : Option[ServiceName] = None
-  , environment: Option[Environment] = None
-  , team       : Option[TeamName]    = None
-  , applied    : Boolean             = true
+    service       : Option[ServiceName]    = None
+  , environment   : Option[Environment]    = None
+  , team          : Option[TeamName]       = None
+  , digitalService: Option[DigitalService] = None
+  , applied       : Boolean                = true
   )(using
     HeaderCarrier
   ): Future[Seq[DeploymentConfig]] =
     given Reads[DeploymentConfig] = DeploymentConfig.reads
     val queryParams = Seq(
-      environment.map("environment" -> _.asString),
-      service    .map("serviceName" -> _.asString),
-      team       .map("teamName"    -> _.asString)
+      environment   .map("environment"    -> _.asString),
+      service       .map("serviceName"    -> _.asString),
+      team          .map("teamName"       -> _.asString),
+      digitalService.map("digitalService" -> _.asString)
     ).flatten.toMap
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/deployment-config?$queryParams&applied=$applied")

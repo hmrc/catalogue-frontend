@@ -39,7 +39,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
   override def beforeEach(): Unit =
     super.beforeEach()
     serviceEndpoint(POST, "/internal-auth/auth"                                                             , willRespondWith = (200, Some("""{"retrievals": [[]]}""")))
-    serviceEndpoint(GET , "/releases-api/whats-running-where?profileName=teamA&profileType=team"            , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET , "/releases-api/whats-running-where?teamName=teamA"                                , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/service-commissioning-status/cached-status?teamName=teamA"                      , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/pr-commenter/reports?teamName=teamA"                                            , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/api/repositories/summary?team=teamA&excludeNonIssues=true&includeBranches=false", willRespondWith = (200, Some("[]")))
@@ -53,7 +53,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
     serviceEndpoint(GET , "/shutter-api/production/api/states?teamName=teamA"                               , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/api/bobbyReports?team=teamA&flag=production"                                    , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/api/bobbyReports?team=teamA&flag=latest"                                        , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/platform-initiatives/teams/teamA/initiatives"                                   , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET , "/platform-initiatives/initiatives?teamName=teamA"                                , willRespondWith = (200, Some("[]")))
 
     import com.github.tomakehurst.wiremock.client.WireMock
     wireMockServer.stubFor(

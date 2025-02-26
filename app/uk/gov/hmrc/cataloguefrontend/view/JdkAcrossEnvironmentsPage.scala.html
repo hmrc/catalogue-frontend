@@ -17,15 +17,18 @@
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{JdkUsageByEnv, Vendor, Kind}
+@import uk.gov.hmrc.cataloguefrontend.model.DigitalService
 
 @this()
 
-@(envdata         : Seq[JdkUsageByEnv],
-  jdks            : Seq[(Version, Vendor, Kind)],
-  teams           : Seq[GitHubTeam],
-  selectedTeamName: Option[TeamName]
+@(envdata               : Seq[JdkUsageByEnv],
+  jdks                  : Seq[(Version, Vendor, Kind)],
+  teams                 : Seq[GitHubTeam],
+  digitalServices       : Seq[DigitalService],
+  selectedTeamName      : Option[TeamName],
+  selectedDigitalService: Option[DigitalService]
 )(implicit
-  request         : RequestHeader
+  request               : RequestHeader
 )
 
 @standard_layout("JDK Versions", active = "explore") {
@@ -42,8 +45,19 @@
                 <select class="form-select" id="teamName" name="teamName">
                     <option value="" @{if(selectedTeamName.isEmpty) "selected" else ""}>All</option>
                     @teams.map { team =>
-                        <option value="@{team.name.asString}" @{if(Some(team.name) == selectedTeamName) "selected" else ""}>
+                        <option value="@{team.name.asString}" @{if(selectedTeamName.contains(team)) "selected" else ""}>
                             @team.name.asString
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="teamName" class="form-label fw-bold">Digital Service:</label>
+                <select class="form-select" id="digitalService" name="digitalService">
+                    <option value="" @{if(selectedDigitalService.isEmpty) "selected" else ""}>All</option>
+                    @digitalServices.map { digitalService =>
+                        <option value="@{digitalService.asString}" @{if(selectedDigitalService.contains(digitalService)) "selected" else ""}>
+                            @digitalService.asString
                         </option>
                     }
                 </select>
@@ -74,7 +88,7 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@appRoutes.JdkVersionController.findLatestVersions(d.env.asString, selectedTeamName)">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.JdkVersionController.findLatestVersions(d.env.asString, selectedTeamName, selectedDigitalService)">@d.env.displayString</a></td>
               @for((version, vendor) <- jdks.map(j => (j._1, j._2)).distinct) {
                   <td>@{d.usage.getOrElse((version, vendor, Kind.JRE), 0) + d.usage.getOrElse((version, vendor, Kind.JDK), 0)}</td>
               }
@@ -136,8 +150,11 @@
         });
     </script>
     <script @CSPNonce.attr>
-      document.getElementById("teamName").addEventListener("change", function() {
-        document.getElementById("form").submit();
-      });
+        ["teamName", "digitalService"]
+        .forEach(function(id) {
+          document.getElementById(id).addEventListener("change", function() {
+            document.getElementById("form").submit();
+          });
+        });
     </script>
 }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.prcommenter
 
 import play.api.Logging
 import play.api.libs.json.Reads
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -45,12 +45,13 @@ class PrCommenterConnector @Inject()(
       .execute[Option[PrCommenterReport]]
 
   def search(
-    name       : Option[String]   = None,
-    teamName   : Option[TeamName] = None,
-    commentType: Option[String]   = None
+    name          : Option[String]         = None,
+    teamName      : Option[TeamName]       = None,
+    digitalService: Option[DigitalService] = None,
+    commentType   : Option[String]         = None
   )(using
     HeaderCarrier
   ): Future[Seq[PrCommenterReport]] =
     httpClientV2
-      .get(url"$baseUrl/pr-commenter/reports?name=$name&teamName=${teamName.map(_.asString)}&commentType=$commentType")
+      .get(url"$baseUrl/pr-commenter/reports?name=$name&teamName=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&commentType=$commentType")
       .execute[Seq[PrCommenterReport]]

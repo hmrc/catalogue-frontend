@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
@@ -72,8 +72,9 @@ class LeakDetectionService @Inject() (
           .sortBy(_.unresolvedCount).reverse
 
   def repoSummaries(
-    ruleId           : Option[String]   = None,
-    team             : Option[TeamName] = None,
+    ruleId           : Option[String]         = None,
+    team             : Option[TeamName]       = None,
+    digitalService   : Option[DigitalService] = None,
     includeWarnings  : Boolean,
     includeExemptions: Boolean,
     includeViolations: Boolean,
@@ -86,6 +87,7 @@ class LeakDetectionService @Inject() (
                              ruleId           = ruleId,
                              repo             = None,
                              team             = team,
+                             digitalService   = digitalService,
                              includeNonIssues = includeNonIssues,
                              includeBranches  = false
                            )
@@ -101,7 +103,7 @@ class LeakDetectionService @Inject() (
 
   def branchSummaries(repo: String, includeNonIssues: Boolean)(using HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
     leakDetectionConnector
-      .leakDetectionRepoSummaries(ruleId = None, repo = Some(repo), team = None, includeNonIssues = includeNonIssues, includeBranches = true)
+      .leakDetectionRepoSummaries(ruleId = None, repo = Some(repo), team = None, digitalService = None, includeNonIssues = includeNonIssues, includeBranches = true)
       .map:
         _
           .flatMap(_.branchSummary.getOrElse(Seq.empty))

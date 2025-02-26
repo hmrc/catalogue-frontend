@@ -98,10 +98,10 @@ class SlugInfoServiceSpec
       val jdk3 = JdkVersion(ServiceName("test3"), Version("1.191.1"), Vendor.OpenJDK, Kind.JRE)
       val jdk4 = JdkVersion(ServiceName("test4"), Version("1.121.1"), Vendor.OpenJDK, Kind.JRE)
 
-      when(boot.mockedServiceDependenciesConnector.getJdkVersions(teamName = None, flag = SlugInfoFlag.Latest))
+      when(boot.mockedServiceDependenciesConnector.getJdkVersions(teamName = None, digitalService = None, flag = SlugInfoFlag.Latest))
         .thenReturn(Future.successful(List(jdk1, jdk2, jdk3, jdk4)))
 
-      val res = boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None).futureValue
+      val res = boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None, digitalService = None).futureValue
 
       res.usage((Version("1.181.1"), Vendor.Oracle, Kind.JDK)) shouldBe 2
       res.usage((Version("1.191.1"), Vendor.OpenJDK, Kind.JRE)) shouldBe 1
@@ -111,10 +111,10 @@ class SlugInfoServiceSpec
     "still returns a value when no matches are found for env" in {
       val boot = Boot.init
 
-      when(boot.mockedServiceDependenciesConnector.getJdkVersions(teamName = None, flag = SlugInfoFlag.Latest))
+      when(boot.mockedServiceDependenciesConnector.getJdkVersions(teamName = None, digitalService = None, flag = SlugInfoFlag.Latest))
         .thenReturn(Future.successful(List.empty[JdkVersion]))
 
-      boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None).futureValue shouldBe JdkUsageByEnv(SlugInfoFlag.Latest, Map.empty[(Version, Vendor, Kind), Int])
+      boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None, digitalService = None).futureValue shouldBe JdkUsageByEnv(SlugInfoFlag.Latest, Map.empty[(Version, Vendor, Kind), Int])
     }
   }
 

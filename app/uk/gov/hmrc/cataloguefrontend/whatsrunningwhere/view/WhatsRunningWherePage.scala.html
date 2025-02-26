@@ -14,22 +14,27 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileName, ProfileType, ServiceDeploymentConfigSummary, WhatsRunningWhere, ViewMode, routes => wrwroutes }
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Profile, ServiceDeploymentConfigSummary, WhatsRunningWhere, ViewMode, routes => wrwroutes }
+@import uk.gov.hmrc.cataloguefrontend.model.DigitalService
+@import views.html.helper.{FieldConstructor, select}
 
 @this()
 
-@( environments       : Seq[Environment]
- , whatsRunning       : Seq[WhatsRunningWhere]
- , selectedProfileType: ProfileType
- , profileNames       : Seq[ProfileName]
- , form               : Form[?]
- , serviceDeployments : Seq[ServiceDeploymentConfigSummary]
- , maxMemory          : Double
- , viewMode           : ViewMode
+@( form           : Form[?]
+ , teams          : Seq[GitHubTeam]
+ , digitalServices: Seq[DigitalService]
+ , sm2Profiles    : Seq[Profile]
+ , maxMemory      : Double
+ , viewMode       : ViewMode
+ , versionResults : Seq[WhatsRunningWhere]              = Nil
+ , instanceResults: Seq[ServiceDeploymentConfigSummary] = Nil
 )(implicit
-  messages            : Messages
-, request             : RequestHeader
+  messages        : Messages
+, request         : RequestHeader
 )
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
 @standard_layout("What's Running Where?", active = "whats-running-where") {
     <h1 class="page-heading mt-4">
@@ -40,7 +45,7 @@
         <div class="alert alert-danger" role="alert">
             <ul class="list">
             @form.errors.map { error =>
-                <li class="alert-danger"> @Messages(error.message, error.args*)</li>
+                <li class="alert-danger">@Messages(error.message, error.args*)</li>
             }
             </ul>
         </div>
@@ -48,100 +53,98 @@
 
     <div id="whats-running-where-list">
         <form id="form" method="get">
-            <input type="hidden" id="profile_type" name="profile_type" value="@selectedProfileType.asString" />
-            <div class="row mb-3">
-                <label for="search" class="col-md-2 col-form-label fw-bold">Application name:</label>
+            <div class="row">
                 <div class="col-md-4">
-                    <input class="search form-control" id="search" type="text" name="application_name" value='@form("application_name").value' autofocus>
+                    <dl id="search_field">
+                        <dt><label for="search" class="form-label">Service Name</label></dt>
+                        <dd><input class="search form-control" id="search" type="search" name="serviceName" value='@form("serviceName").value' autofocus></dd>
+                    </dl>
                 </div>
-            </div>
-            <ul class="nav nav-tabs mb-2">
-                @ProfileType.values.map(profileTypeTab)
-            </ul>
-            <div class="tab-content mb-4">
-                <div class="tab-pane active d-flex justify-content-between align-items-center" role="tabpanel">
-                    <select aria-label="Profile Name" class="form-select" id="profile_name" name="profile_name" style="width: 200px">
-                        @defining(Seq("" -> Messages("whatsrunningwhere.select.profile")) ++ profileNames.map(_.asString).map(p => (p, p))){ options =>
-                            @options.map(selectOption(form("profile_name").value))
-                        }
-                    </select>
-
-                    <select aria-label="View Mode" class="form-select" id="view_mode" name="view_mode" style="width: 200px">
-                        <option @{if(viewMode == ViewMode.Versions ) "selected" else ""} value="versions">Versions</option>
-                        <option @{if(viewMode == ViewMode.Instances) "selected" else ""} value="instances">Instances</option>
-                    </select>
+                <div class="col-md-2">
+                    @select(
+                        field                 = form("teamName"),
+                        options               = teams.map(x => x.name.asString -> x.name.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Team",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "select-team",
+                        Symbol("class")       -> "form-select"
+                    )
+                </div>
+                <div class="col-md-2">
+                    @select(
+                    field                   =  form("digitalService")
+                    , options               =  digitalServices.map(x => x.asString -> x.asString)
+                    , Symbol("_default")    -> "All"
+                    , Symbol("_label")      -> "Digital Service"
+                    , Symbol("_labelClass") -> "form-label"
+                    , Symbol("id")          -> "select-digital-service"
+                    , Symbol("class")       -> "form-select"
+                    )
+                </div>
+                <div class="col-md-2">
+                    @select(
+                        field                 =  form("sm2Profile"),
+                        options               =  sm2Profiles.map(x => x.profileName.asString -> x.profileName.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Service Manager Profile",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "select-sm2-profile",
+                        Symbol("class")       -> "form-select"
+                    )
+                </div>
+                <div class="col-md-2">
+                    @select(
+                        field                 =  form("viewMode"),
+                        options               =  ViewMode.values.toSeq.map(x => x.asString -> x.asString),
+                        Symbol("_label")      -> "Display",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "select-view-mode",
+                        Symbol("class")       -> "form-select"
+                    )
                 </div>
             </div>
         </form>
+
         <table class="table table-striped sticky-header" id="service-list">
             <thead>
-                <th><button role="button" class="sort no-border fw-bold" data-sort="application-name">Application Name</button></th>
+                <th><button role="button" class="sort no-border fw-bold" data-sort="application-name">Service Name</button></th>
                 @if(viewMode == ViewMode.Versions) {
-                    @environments.map { env =>
+                    @Environment.values.map { env =>
                         <th class="wrw-environment-head">@env.displayString</th>
                     }
                     <th class="d-none visually-hidden">-</th>
                 } else {
-                    @environments.map { env =>
+                    @Environment.values.map { env =>
                         <th class="wrw-environment-head"><button role="button" class="sort no-border fw-bold" data-sort="@env.asString">@env.displayString</button></th>
                     }
                 }
             </thead>
             @if(viewMode == ViewMode.Versions) {
-                @WhatsRunningWhereVersionsPartial(whatsRunning, environments)
+                @WhatsRunningWhereVersionsPartial(versionResults)
             } else {
-                @WhatsRunningWhereInstancesPartial(serviceDeployments, environments, maxMemory)
+                @WhatsRunningWhereInstancesPartial(instanceResults, maxMemory)
             }
         </table>
     </div>
 }
 <script @CSPNonce.attr>
-    let searchBox = document.getElementById("search");
-
-    @if((viewMode == ViewMode.Versions && whatsRunning.nonEmpty) || serviceDeployments.nonEmpty) {
-      let options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
-      let serviceList = new List('whats-running-where-list', options);
-      // re-search the list upon page load.
-      serviceList.search(searchBox.value);
-    }
-
-    // set autofocus cursor to right of text in search box
-    let length = searchBox.value.length;
-    searchBox.focus();
-    searchBox.setSelectionRange(length, length);
-
-    function selectProfileType(profileType) {
-        document.getElementById('profile_type').value = profileType;
-        document.getElementById('profile_name').value = '';
-        document.getElementById('form').submit();
-    }
-
-    ["profile_name", "view_mode"]
+    ["select-team", "select-digital-service", "select-sm2-profile", "select-view-mode"]
       .forEach(function(id) {
         document.getElementById(id).addEventListener("change", function() {
           document.getElementById("form").submit();
         });
       });
+
+    let searchBox = document.getElementById("search");
+
+    let options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
+    let serviceList = new List('whats-running-where-list', options);
+    // re-search the list upon page load.
+    serviceList.search(searchBox.value);
+
+    // set autofocus cursor to right of text in search box
+    let length = searchBox.value.length;
+    searchBox.focus();
+    searchBox.setSelectionRange(length, length);
 </script>
-
-@selectOption(selected: Option[String])(option: (String, String)) = {
-    <option value="@{option._1}" @{if(selected.exists(_ == option._1)) "selected" else ""}>
-    @option._2
-    </option>
-}
-
-@profileTypeTab(profileType: ProfileType) = {
-    @defining(profileType == selectedProfileType){ active =>
-        <li id="tab-@profileType.asString" class="nav-item">
-            <a id="@profileType.asString-tab" class="nav-link @if(active){active}" href="@wrwroutes.WhatsRunningWhereController.releases()">
-                @profileType Profile
-            </a>
-            <script @CSPNonce.attr>
-              document.getElementById("@profileType.asString-tab").addEventListener("click", function(e) {
-                e.preventDefault() // prevent following the href as we submit the form via js.
-                selectProfileType('@profileType.asString')
-              });
-            </script>
-        </li>
-    }
-}

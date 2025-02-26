@@ -20,7 +20,7 @@ import cats.implicits._
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, given}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, SlugInfoFlag, TeamName, given}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.cataloguefrontend.view.html.{SbtVersionPage, SbtAcrossEnvironmentsPage}
@@ -43,24 +43,26 @@ class SbtVersionController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  def findLatestVersions(flag: String, teamName: Option[TeamName]) =
+  def findLatestVersions(flag: String, teamName: Option[TeamName], digitalService: Option[DigitalService]) =
     BasicAuthAction.async: request =>
       given RequestHeader = request
       for
-        teams        <- teamsAndRepositoriesConnector.allTeams()
-        selectedFlag =  Parser[SlugInfoFlag].parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
-        selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
-        sbtVersions  <- dependenciesService.getSbtVersions(selectedFlag, selectedTeam.map(_.name))
-      yield Ok(sbtVersionPage(sbtVersions.sortBy(s => (s.version, s.serviceName)), SlugInfoFlag.values.toSeq, teams, selectedFlag, selectedTeam))
+        teams           <- teamsAndRepositoriesConnector.allTeams()
+        digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
+        selectedFlag    =  Parser[SlugInfoFlag].parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
+        sbtVersions     <- dependenciesService
+                             .getSbtVersions(selectedFlag, teamName, digitalService)
+                             .map(_.sortBy(s => (s.version, s.serviceName)))
+      yield Ok(sbtVersionPage(sbtVersions, teams, digitalServices, selectedFlag, teamName, digitalService))
 
-  def compareAllEnvironments(teamName: Option[TeamName]) =
+  def compareAllEnvironments(teamName: Option[TeamName], digitalService: Option[DigitalService]) =
     BasicAuthAction.async: request =>
       given RequestHeader = request
       for
-        teams        <- teamsAndRepositoriesConnector.allTeams()
-        selectedTeam =  teamName.flatMap(n => teams.find(_.name == n))
-        envs         <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getSbtCountsForEnv(env, selectedTeam.map(_.name)))
-        sbts         =  envs.flatMap(_.usage.keys).distinct.sorted
-      yield Ok(sbtAcrossEnvironmentsPage(envs, sbts, teams, selectedTeam))
+        teams           <- teamsAndRepositoriesConnector.allTeams()
+        digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
+        envs            <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getSbtCountsForEnv(env, teamName, digitalService))
+        sbts            =  envs.flatMap(_.usage.keys).distinct.sorted
+      yield Ok(sbtAcrossEnvironmentsPage(envs, sbts, teams, digitalServices, teamName, digitalService))
 
 end SbtVersionController

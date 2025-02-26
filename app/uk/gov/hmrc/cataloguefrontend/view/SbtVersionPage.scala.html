@@ -17,16 +17,18 @@
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.connector.model.SbtVersion
+@import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 
 @this()
 
-@(sbtVersions : Seq[SbtVersion],
-  flags       : Seq[SlugInfoFlag],
-  teams       : Seq[GitHubTeam],
-  selectedFlag: SlugInfoFlag,
-  selectedTeam: Option[GitHubTeam]
+@(sbtVersions           : Seq[SbtVersion],
+  teams                 : Seq[GitHubTeam],
+  digitalServices       : Seq[DigitalService],
+  selectedFlag          : SlugInfoFlag,
+  selectedTeam          : Option[TeamName],
+  selectedDigitalService: Option[DigitalService]
 )(implicit
-  request     : RequestHeader
+  request               : RequestHeader
 )
 
 @standard_layout("SBT Versions") {
@@ -43,7 +45,7 @@
                 <div class="col-md-3">
                     <label for="flag" class="form-label fw-bold">Environment:</label>
                     <select class="form-select" id="flag" name="env">
-                        @flags.map { flag =>
+                        @SlugInfoFlag.values.toSeq.map { flag =>
                             <option value="@{flag.asString}" @{if(flag == selectedFlag) "selected" else ""}>
                                 @flag.displayString
                             </option>
@@ -57,6 +59,17 @@
                         @teams.map { team =>
                             <option value="@{team.name.asString}" @{if(selectedTeam.contains(team)) "selected" else ""}>
                                 @team.name.asString
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="digitalService" class="form-label fw-bold">Digital Service:</label>
+                    <select class="form-select" id="digitalService" name="digitalService">
+                        <option value="" @{if(selectedDigitalService.isEmpty) "selected" else ""}>All</option>
+                        @digitalServices.map { digitalService =>
+                            <option value="@{digitalService.asString}" @{if(selectedDigitalService.contains(digitalService)) "selected" else ""}>
+                                @digitalService.asString
                             </option>
                         }
                     </select>
@@ -107,7 +120,7 @@
         }
     </script>
     <script @CSPNonce.attr>
-      ["teamName", "flag"]
+      ["teamName", "digitalService", "flag"]
         .forEach(function(id) {
           document.getElementById(id).addEventListener("change", function() {
             document.getElementById("form").submit();

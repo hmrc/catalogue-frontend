@@ -26,7 +26,7 @@ import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.cost.view.html.{CostEstimationPage, CostExplorerPage}
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, DigitalService, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
@@ -67,14 +67,16 @@ class CostController @Inject() (
       .toSeq
 
   def costExplorer(
-    team : Option[TeamName] = None,
-    asCSV: Boolean          = false
+    team          : Option[TeamName]       = None,
+    digitalService: Option[DigitalService] = None,
+    asCSV         : Boolean                = false
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
       for
-        teams           <- teamsAndRepositoriesConnector.allTeams().map(_.sortBy(_.name.asString))
-        configs         <- serviceConfigsConnector.deploymentConfig(team = team.filterNot(_.asString.trim.isEmpty))
+        teams           <- teamsAndRepositoriesConnector.allTeams()
+        digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
+        configs         <- serviceConfigsConnector.deploymentConfig(team = team, digitalService = digitalService)
         groupedConfigs  =  configs.groupBy(_.serviceName)
       yield
         if asCSV
@@ -88,7 +90,7 @@ class CostController @Inject() (
             body   = HttpEntity.Streamed(source, None, Some("text/csv"))
           )
         else
-          Ok(costExplorerPage(groupedConfigs, teams, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
+          Ok(costExplorerPage(groupedConfigs, teams, digitalServices, RepoListFilter.form.bindFromRequest(), costEstimateConfig))
 
   def costEstimation(serviceName: ServiceName): Action[AnyContent] =
     BasicAuthAction.async: request =>
