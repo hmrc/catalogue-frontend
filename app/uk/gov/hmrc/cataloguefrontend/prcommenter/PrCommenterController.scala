@@ -20,7 +20,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.data.{Form, Forms}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.view.html.PrCommenterRecommendationsPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -55,19 +55,21 @@ class PrCommenterController @Inject() (
     )
 
   def recommendations(
-    name       : Option[String],
-    teamName   : Option[TeamName],
-    commentType: Option[String]
+    name          : Option[String],
+    teamName      : Option[TeamName],
+    digitalService: Option[DigitalService],
+    commentType   : Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for
-        teams        <- teamsAndRepositoriesConnector.allTeams()
-        repos        <- teamsAndRepositoriesConnector.allRepositories(team = teamName, name = name)
-        reports      <- prCommenterConnector.search(
-                          name        = None, // Use listjs filtering
-                          teamName    = teamName.filter(_.asString.nonEmpty),
-                          commentType = commentType.filter(_.nonEmpty)
-                        )
-        commentTypes =  reports.flatMap(_.comments.map(_.commentType)).toSet
-      yield Ok(recommendationsPage(form.bindFromRequest(), teams, reports, commentTypes))
+        teams           <- teamsAndRepositoriesConnector.allTeams()
+        digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
+        reports         <- prCommenterConnector.search(
+                             name           = None, // Use listjs filtering
+                             teamName       = teamName,
+                             digitalService = digitalService,
+                             commentType    = commentType.filter(_.nonEmpty)
+                           )
+        commentTypes    =  reports.flatMap(_.comments.map(_.commentType)).toSet
+      yield Ok(recommendationsPage(form.bindFromRequest(), teams, digitalServices, reports, commentTypes))
     }

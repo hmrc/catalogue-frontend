@@ -61,7 +61,7 @@ class DeployServiceControllerSpec
       when(mockTeamsAndRepositoriesConnector.allRepositories(
         name               = any
       , team               = any
-      , digitalServiceName = any
+      , digitalService     = any
       , archived           = eqTo(Some(false))
       , repoType           = eqTo(Some(RepoType.Service))
       , serviceType        = any
@@ -83,7 +83,7 @@ class DeployServiceControllerSpec
       when(mockTeamsAndRepositoriesConnector.allRepositories(
         name               = any
       , team               = any
-      , digitalServiceName = any
+      , digitalService     = any
       , archived           = eqTo(Some(false))
       , repoType           = eqTo(Some(RepoType.Service))
       , serviceType        = any
@@ -124,7 +124,7 @@ class DeployServiceControllerSpec
       when(mockTeamsAndRepositoriesConnector.allRepositories(
         name               = any
       , team               = any
-      , digitalServiceName = any
+      , digitalService     = any
       , archived           = eqTo(Some(false))
       , repoType           = eqTo(Some(RepoType.Service))
       , serviceType        = any
@@ -198,7 +198,7 @@ class DeployServiceControllerSpec
       when(mockTeamsAndRepositoriesConnector.allRepositories(
         name               = any
       , team               = any
-      , digitalServiceName = any
+      , digitalService     = any
       , archived           = eqTo(Some(false))
       , repoType           = eqTo(Some(RepoType.Service))
       , serviceType        = any

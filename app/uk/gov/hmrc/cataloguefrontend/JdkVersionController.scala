@@ -20,7 +20,7 @@ import cats.implicits._
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.{SlugInfoFlag, TeamName, given}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, SlugInfoFlag, TeamName, given}
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.cataloguefrontend.view.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
@@ -43,24 +43,26 @@ class JdkVersionController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  def findLatestVersions(flag: String, teamName: Option[TeamName]) =
+  def findLatestVersions(flag: String, teamName: Option[TeamName], digitalService: Option[DigitalService]) =
     BasicAuthAction.async: request =>
       given RequestHeader = request
       for
         teams            <- teamsAndRepositoriesConnector.allTeams()
+        digitalServices  <- teamsAndRepositoriesConnector.allDigitalServices()
         selectedFlag     =  Parser[SlugInfoFlag].parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
-        selectedTeamName =  teamName.flatMap(n => teams.find(_.name == n)).map(_.name)
-        jdkVersions      <- dependenciesService.getJdkVersions(selectedFlag, selectedTeamName)
-      yield Ok(jdkVersionPage(jdkVersions.sortBy(j => (j.version, j.serviceName)), SlugInfoFlag.values.toSeq, teams, selectedFlag, selectedTeamName))
+        jdkVersions      <- dependenciesService
+                              .getJdkVersions(selectedFlag, teamName, digitalService)
+                              .map(_.sortBy(j => (j.version, j.serviceName)))
+      yield Ok(jdkVersionPage(jdkVersions, teams, digitalServices, selectedFlag, teamName, digitalService))
 
-  def compareAllEnvironments(teamName: Option[TeamName]) =
+  def compareAllEnvironments(teamName: Option[TeamName], digitalService: Option[DigitalService]) =
     BasicAuthAction.async: request =>
       given RequestHeader = request
       for
         teams            <- teamsAndRepositoriesConnector.allTeams()
-        selectedTeamName =  teamName.flatMap(n => teams.find(_.name == n)).map(_.name)
-        envs             <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getJdkCountsForEnv(env, selectedTeamName))
+        digitalServices  <- teamsAndRepositoriesConnector.allDigitalServices()
+        envs             <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getJdkCountsForEnv(env, teamName, digitalService))
         jdks             =  envs.flatMap(_.usage.keys).distinct.sortBy(_._1)
-      yield Ok(jdkAcrossEnvironmentsPage(envs, jdks, teams, selectedTeamName))
+      yield Ok(jdkAcrossEnvironmentsPage(envs, jdks, teams, digitalServices, teamName, digitalService))
 
 end JdkVersionController

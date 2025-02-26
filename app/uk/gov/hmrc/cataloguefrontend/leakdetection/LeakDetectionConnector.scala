@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.leakdetection
 import play.api.Logger
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Reads, __}
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{TeamName, DigitalService}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -66,6 +66,7 @@ class LeakDetectionConnector @Inject() (
     ruleId          : Option[String],
     repo            : Option[String],
     team            : Option[TeamName],
+    digitalService  : Option[DigitalService],
     includeNonIssues: Boolean,
     includeBranches : Boolean
   )(using
@@ -74,7 +75,7 @@ class LeakDetectionConnector @Inject() (
     given Reads[LeakDetectionRepositorySummary] = LeakDetectionRepositorySummary.reads
     val excludeNonIssues = !includeNonIssues
     httpClientV2
-      .get(url"$url/api/repositories/summary?ruleId=$ruleId&repository=$repo&team=${team.map(_.asString)}&excludeNonIssues=$excludeNonIssues&includeBranches=$includeBranches")
+      .get(url"$url/api/repositories/summary?ruleId=$ruleId&repository=$repo&team=${team.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&excludeNonIssues=$excludeNonIssues&includeBranches=$includeBranches")
       .execute[Seq[LeakDetectionRepositorySummary]]
 
   def leakDetectionDraftReports(ruleId: Option[String])(using HeaderCarrier): Future[Seq[LeakDetectionReport]] =

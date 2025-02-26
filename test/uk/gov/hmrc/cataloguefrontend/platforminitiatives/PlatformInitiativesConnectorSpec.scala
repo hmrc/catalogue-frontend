@@ -25,7 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Results
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.WireMockSupport
 
@@ -81,10 +81,19 @@ class PlatformInitiativesConnectorSpec
 
     "return correct JSON for Platform Initiatives for a specified team" in {
       stubFor(
-        get(urlEqualTo(s"/platform-initiatives/teams/team/initiatives"))
+        get(urlEqualTo(s"/platform-initiatives/initiatives?teamName=team"))
           .willReturn(aResponse().withBodyFile("platform-initiatives.json"))
       )
       val initiatives = connector.getInitiatives(Some(TeamName("team"))).futureValue
+      initiatives mustBe result
+    }
+
+    "return correct JSON for Platform Initiatives for a specified digital service" in {
+      stubFor(
+        get(urlEqualTo(s"/platform-initiatives/initiatives?digitalService=ds"))
+          .willReturn(aResponse().withBodyFile("platform-initiatives.json"))
+      )
+      val initiatives = connector.getInitiatives(digitalService = Some(DigitalService("ds"))).futureValue
       initiatives mustBe result
     }
   }

@@ -26,15 +26,15 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.model.{EditTeamDetails, Environment, ServiceName, SlugInfoFlag, TeamName, UserName}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, EditTeamDetails, Environment, ServiceName, SlugInfoFlag, TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConnector
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsConnector
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterType}
-import uk.gov.hmrc.cataloguefrontend.teams.view.html.{TeamInfoPage, TeamsListPage}
+import uk.gov.hmrc.cataloguefrontend.teams.view.html.{DigitalServicePage, TeamInfoPage, TeamsListPage}
 import uk.gov.hmrc.cataloguefrontend.users.ManageTeamMembersRequest
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Profile, ProfileName, ProfileType, ReleasesConnector}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ReleasesConnector
 import uk.gov.hmrc.cataloguefrontend.view.html.OutOfDateTeamDependenciesPage
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.internalauth.client.*
@@ -58,6 +58,7 @@ class TeamsController @Inject()(
 , shutterService                     : ShutterService
 , umpConfig                          : UserManagementPortalConfig
 , teamInfoPage                       : TeamInfoPage
+, digitalServicePage                 : DigitalServicePage
 , outOfDateTeamDependenciesPage      : OutOfDateTeamDependenciesPage
 , override val mcc                   : MessagesControllerComponents
 , override val auth                  : FrontendAuthComponents
@@ -86,16 +87,16 @@ class TeamsController @Inject()(
                  , leakDetectionService.repoSummaries(team = Some(teamName), includeWarnings = false, includeExemptions = false, includeViolations = true, includeNonIssues = false)
                  , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.ForEnvironment(Environment.Production))
                  , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.Latest)
-                 , ( shutterService.getShutterStates(ShutterType.Frontend, Environment.Production, Some(teamName), None)
-                   , shutterService.getShutterStates(ShutterType.Api, Environment.Production, Some(teamName), None)
+                 , ( shutterService.getShutterStates(ShutterType.Frontend, Environment.Production, teamName = Some(teamName))
+                   , shutterService.getShutterStates(ShutterType.Api     , Environment.Production, teamName = Some(teamName))
                    ).tupled.map(x => x._1 ++ x._2)
-                 , platformInitiativesConnector.getInitiatives(team = Some(teamName))
+                 , platformInitiativesConnector.getInitiatives(teamName = Some(teamName))
                  , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.ForEnvironment(Environment.Production), team = Some(teamName))
-                 , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest, team = Some(teamName))
+                 , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest                                , team = Some(teamName))
                  , serviceCommissioningStatusConnector.cachedCommissioningStatus(teamName = Some(teamName))
-                 , serviceMetricsConnector.metrics(Some(Environment.Production), Some(teamName))
-                 , releasesConnector.releases(Some(Profile(ProfileType.Team, ProfileName(teamName.asString))))
-                 , teamsAndRepositoriesConnector.findTestJobs(Some(teamName))
+                 , serviceMetricsConnector.metrics(Some(Environment.Production), teamName = Some(teamName))
+                 , releasesConnector.releases(teamName = Some(teamName))
+                 , teamsAndRepositoriesConnector.findTestJobs(teamName = Some(teamName))
                  ).tupled
     yield
       resultType(teamInfoPage(teamName, teamDetailsForm, umpMyTeamsUrl = umpConfig.umpMyTeamsPageUrl(teamName), results, canEditTeam(retrieval, teamName)))
@@ -111,6 +112,31 @@ class TeamsController @Inject()(
                       )
         result    <- showTeamPage(teamName, retrieval, Ok(_), TeamDetailsForm.form())
       yield result
+
+  def digitalService(digitalService: DigitalService): Action[AnyContent] =
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      for
+        results <- ( teamsAndRepositoriesConnector.allRepositories(digitalService = Some(digitalService), archived = Some(false))
+                   , teamsAndRepositoriesConnector.openPullRequestsForReposOwnedByDigitalService(digitalService).map: openPrs =>
+                       val githubUrl = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open&type=pullrequests"
+                       (openPrs.size, url"$githubUrl")
+                   , leakDetectionService.repoSummaries(digitalService = Some(digitalService), includeWarnings = false, includeExemptions = false, includeViolations = true, includeNonIssues = false)
+                   , serviceDependenciesConnector.bobbyReports(digitalService = Some(digitalService), flag = SlugInfoFlag.ForEnvironment(Environment.Production))
+                   , serviceDependenciesConnector.bobbyReports(digitalService = Some(digitalService), flag = SlugInfoFlag.Latest)
+                   , ( shutterService.getShutterStates(ShutterType.Frontend, Environment.Production, digitalService = Some(digitalService))
+                     , shutterService.getShutterStates(ShutterType.Api     , Environment.Production, digitalService = Some(digitalService))
+                     ).tupled.map(x => x._1 ++ x._2)
+                   , platformInitiativesConnector.getInitiatives(digitalService = Some(digitalService))
+                   , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.ForEnvironment(Environment.Production), digitalService = Some(digitalService))
+                   , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest                                , digitalService = Some(digitalService))
+                   , serviceCommissioningStatusConnector.cachedCommissioningStatus(digitalService = Some(digitalService))
+                   , serviceMetricsConnector.metrics(Some(Environment.Production), digitalService = Some(digitalService))
+                   , releasesConnector.releases(digitalService = Some(digitalService))
+                   , teamsAndRepositoriesConnector.findTestJobs(digitalService = Some(digitalService))
+                   ).tupled
+      yield
+        Ok(digitalServicePage(digitalService, results))
 
   def allTeams(name: Option[String]): Action[AnyContent] =
     BasicAuthAction.async: request =>

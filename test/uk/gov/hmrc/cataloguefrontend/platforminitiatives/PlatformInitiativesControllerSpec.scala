@@ -27,7 +27,7 @@ import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.DisplayType.Chart
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.view.html.PlatformInitiativesListPage
 import uk.gov.hmrc.cataloguefrontend.test.FakeApplicationBuilder
@@ -86,11 +86,14 @@ class PlatformInitiativesControllerSpec
       when(mockTRConnector.allTeams(any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq()))
 
-      when(mockPIConnector.getInitiatives(any[Option[TeamName]])(using any[HeaderCarrier]))
+      when(mockTRConnector.allDigitalServices()(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Seq()))
+
+      when(mockPIConnector.getInitiatives(any[Option[TeamName]], any[Option[DigitalService]])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(mockInitiatives))
 
       val result: Future[Result] = controller
-        .platformInitiatives(display = Chart, team = None)
+        .platformInitiatives(display = Chart, team = None, digitalService = None)
         .apply(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
 
       status(result) shouldBe 200
@@ -113,6 +116,6 @@ class PlatformInitiativesControllerSpec
     val mockPIConnector   = mock[PlatformInitiativesConnector]
     val authStubBehaviour = mock[StubBehaviour]
     val authComponent     = FrontendAuthComponentsStub(authStubBehaviour)
-    val controller        = PlatformInitiativesController(mcc, mockPIConnector, mockPIView, mockTRConnector, authComponent)
+    val controller        = PlatformInitiativesController(mcc, mockPIConnector, mockTRConnector, mockPIView, authComponent)
   }
 }

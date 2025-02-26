@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.scalatest._
 import play.api.libs.ws.readableAsString
-import uk.gov.hmrc.cataloguefrontend.jsondata.JsonData
+import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, TeamsAndRepositoriesJsonData}
 import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec, WireMockEndpoints}
 
 class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder with WireMockEndpoints {
@@ -30,6 +30,8 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
 
   "What's running where page" should {
     "show a list of applications, environments and version numbers for releases" in {
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/digital-services", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.digitalServicesData)))
       serviceEndpoint(GET, "/releases-api/profiles", willRespondWith = (200, Some(JsonData.profiles)))
 
       serviceEndpoint(

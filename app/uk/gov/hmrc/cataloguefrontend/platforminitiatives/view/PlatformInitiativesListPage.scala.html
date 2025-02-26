@@ -18,27 +18,24 @@
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives._
 @import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{DisplayType, PlatformInitiative, routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
+@import views.html.helper.{FieldConstructor, select}
 
 @this()
 
-@(initiatives : Seq[PlatformInitiative]
-, display     : DisplayType
-, team        : Option[TeamName]
-, allTeams    : Seq[GitHubTeam]
-, form        : Form[?]
+@(form           : Form[?]
+, display        : DisplayType
+, allTeams       : Seq[GitHubTeam]
+, digitalServices: Seq[DigitalService]
+, results        : Option[Seq[PlatformInitiative]]
 )(implicit
-  messages    : Messages
-, request     : RequestHeader
+  messages       : Messages
+, request        : RequestHeader
 )
 
 @standard_layout(s"Platform Initiatives", active = "health") {
 
-    <h1 class="page-heading mt-4">
-        @team match {
-            case Some(team) if team.asString.nonEmpty => {Platform Initiatives: @team.asString}
-            case _ => {Platform Initiatives}
-        }
-    </h1>
+    <h1 class="page-heading mt-4">Platform Initiatives</h1>
+
     <script @CSPNonce.attr type="text/javascript" src="@controllers.routes.Assets.versioned("charts-loader-51.js")"></script>
 
     @if(form.hasErrors) {
@@ -54,25 +51,39 @@
     <div id="platform-initiatives">
         <form id="form" method="get">
             <div class="row mb-4">
-                <label for="search" class="col-1 col-form-label fw-bold">Search:</label>
-                <div class="col-3">
+                <div class="col-4">
+                    <label for="search" class="fw-bold">Search:</label>
                     <input id="search" class="search form-control" type="search">
                 </div>
-                <div class="col-3 pt-2">
+                <div class="col-3">
+                    @select(
+                        field                 =  form("team")
+                      , options               =  allTeams.map(x => x.name.asString -> x.name.asString)
+                      , Symbol("_default")    -> "All"
+                      , Symbol("_label")      -> "Team"
+                      , Symbol("_labelClass") -> "form-label"
+                      , Symbol("id")          -> "select-team-name"
+                      , Symbol("class")       -> "form-select"
+                      )
+                </div>
+                <div class="col-3">
+                    @select(
+                        field                 =  form("digitalService")
+                      , options               =  digitalServices.map(x => x.asString -> x.asString)
+                      , Symbol("_default")    -> "All"
+                      , Symbol("_label")      -> "Digital Service"
+                      , Symbol("_labelClass") -> "form-label"
+                      , Symbol("id")          -> "select-digital-service"
+                      , Symbol("class")       -> "form-select"
+                      )
+                </div>
+                <div class="col-2" style="margin-top: 35px;">
                     @Seq(DisplayType.Chart, DisplayType.Progress).zipWithIndex.map { case (dt, i) =>
                         @if(i != 0){ | }
-                        <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt, team)">
-                        @if(display == dt){ <strong>@dt.asString </strong> } else { @dt.asString }
-                    </a>
+                        <a href="@appRoutes.PlatformInitiativesController.platformInitiatives(dt, form("team").value.map(TeamName.apply), form("digitalService").value.map(DigitalService.apply))">
+                            @if(display == dt){ <strong>@dt.asString </strong> } else { @dt.asString }
+                        </a>
                     }
-                </div>
-                <div class="col-2 offset-3">
-                    <select id="teamName" name="team" class="form-select">
-                        <option class="blank" value>All</option>
-                        @for(team <- allTeams.map(_.name).distinct.sorted) {
-                            <option value="@team.asString" @{if(form("team").value.contains(team.asString)) "selected" else ""}>@team.asString</option>
-                        }
-                    </select>
                 </div>
             </div>
         </form>
@@ -101,7 +112,7 @@
         </div>
 
         <div class="row list">
-            @for(initiative <- initiatives.sortBy(_.progress.percent)) {
+            @for(initiative <- results.getOrElse(Nil).sortBy(_.progress.percent)) {
                 <div class="col-6">
                     <div class="card mb-3">
                         <div class="card-header">
@@ -154,7 +165,7 @@
     google.charts.load('current', {'packages': ['corechart']});
     google.charts.setOnLoadCallback(drawChart);
     function drawChart() {
-      @initiatives.zipWithIndex.map { case (initiative, i) =>
+      @results.getOrElse(Nil).zipWithIndex.map { case (initiative, i) =>
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'InitiativeName');
         data.addColumn('number', 'Count');
@@ -175,7 +186,7 @@
   </script>
 }
 
-@if(initiatives.nonEmpty) {
+@if(results.getOrElse(Nil).nonEmpty) {
   <script @CSPNonce.attr>
     let options = { valueNames:     ['initiativeName'],
                     searchColumns:  ['initiativeName'] };
@@ -184,7 +195,10 @@
 }
 
 <script @CSPNonce.attr>
-  document.getElementById("teamName").addEventListener("change", function() {
-    document.getElementById("form").submit();
-  });
+  ["select-team-name", "select-digital-service"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
 </script>

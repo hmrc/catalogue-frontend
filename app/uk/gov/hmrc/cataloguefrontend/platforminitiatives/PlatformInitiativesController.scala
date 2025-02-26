@@ -16,25 +16,26 @@
 
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
+import cats.data.EitherT
 import play.api.data.{Form, Forms}
 import play.api.data.Forms.{mapping, optional, text}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.cataloguefrontend.platforminitiatives.view.html.PlatformInitiativesListPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PlatformInitiativesController @Inject()
 ( override val mcc              : MessagesControllerComponents
 , platformInitiativesConnector  : PlatformInitiativesConnector
-, platformInitiativesListPage   : PlatformInitiativesListPage
 , teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
+, platformInitiativesListPage   : PlatformInitiativesListPage
 , override val auth             : FrontendAuthComponents
 )(using
   override val ec: ExecutionContext
@@ -43,40 +44,30 @@ class PlatformInitiativesController @Inject()
 
   /**
     * @param team for reverse routing
+    * @param digitalService for reverse routing
     */
-  def platformInitiatives(display: DisplayType, team: Option[TeamName]): Action[AnyContent] =
+  def platformInitiatives(display: DisplayType, team: Option[TeamName], digitalService: Option[DigitalService]): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
-      val boundForm = PlatformInitiativesFilter.form.bindFromRequest()
-      boundForm.fold(
-        formWithErrors =>
-          for
-            allTeams <- teamsAndRepositoriesConnector.allTeams()
-          yield BadRequest(platformInitiativesListPage(
-            initiatives = Seq.empty,
-            display     = display,
-            team        = None,
-            allTeams    = allTeams,
-            formWithErrors
-          )),
-        query =>
-          for
-            allTeams <- teamsAndRepositoriesConnector.allTeams()
-            initiatives <- platformInitiativesConnector.getInitiatives(query.team)
-          yield Ok(platformInitiativesListPage(
-            initiatives = initiatives,
-            display     = display,
-            team        = team,
-            allTeams    = allTeams,
-            boundForm
-          ))
-      )
+      ( for
+         teams           <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams())
+         digitalServices <- EitherT.right[Result](teamsAndRepositoriesConnector.allDigitalServices())
+         form            =  PlatformInitiativesFilter.form.bindFromRequest()
+         filter          <- EitherT.fromEither[Future](form.fold(
+                              formErrors => Left(BadRequest(platformInitiativesListPage(formErrors, display, teams, digitalServices, results = None)))
+                            , formObject => Right(formObject)
+                            ))
+         results         <- EitherT.right[Result](platformInitiativesConnector.getInitiatives(filter.team, filter.digitalService))
+        yield
+          Ok(platformInitiativesListPage(form.fill(filter), display, teams, digitalServices, results = Some(results)))
+      ).merge
 
 end PlatformInitiativesController
 
 case class PlatformInitiativesFilter(
-  initiativeName: Option[String] = None,
-  team          : Option[TeamName]
+  initiativeName : Option[String] = None,
+  team           : Option[TeamName],
+  digitalService : Option[DigitalService]
 ):
   def isEmpty: Boolean =
     initiativeName.isEmpty && team.isEmpty
@@ -86,7 +77,8 @@ object PlatformInitiativesFilter {
     Form(
       mapping(
         "initiativeName" -> optional(text).transform[Option[String]](_.filter(_.trim.nonEmpty), identity),
-        "team"           -> optional(Forms.of[TeamName])
+        "team"           -> optional(Forms.of[TeamName]),
+        "digitalService" -> optional(Forms.of[DigitalService])
         )
       (PlatformInitiativesFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
     )

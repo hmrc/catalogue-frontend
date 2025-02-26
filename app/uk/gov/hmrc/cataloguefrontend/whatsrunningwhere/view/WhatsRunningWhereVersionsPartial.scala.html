@@ -19,9 +19,7 @@
 @import uk.gov.hmrc.cataloguefrontend.deployments.{routes => depRoutes}
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
 
-@(whatsRunning: Seq[WhatsRunningWhere]
-, environments: Seq[Environment]
-)
+@(whatsRunning: Seq[WhatsRunningWhere])
 
 <tbody class="list">
 @whatsRunning.zipWithIndex.map { case (wrw, i) =>
@@ -29,7 +27,7 @@
     <td class="application-name" id="row@{i}_application">
         <a id="link-to-info-page-for-@{wrw.serviceName.asString}" href="@appRoutes.CatalogueController.service(wrw.serviceName)">@{wrw.serviceName.asString}</a>
     </td>
-    @defining(environments.map(env => env -> wrw.versions.find(_.environment == env))) { versionMap =>
+    @defining(Environment.values.map(env => env -> wrw.versions.find(_.environment == env))) { versionMap =>
       @defining(versionMap.map(_._2).collect { case Some(x) => x.version}.sorted) { sortedVersions =>
         @defining(sortedVersions.reverse.head) { latestVersion =>
           @versionMap.map {

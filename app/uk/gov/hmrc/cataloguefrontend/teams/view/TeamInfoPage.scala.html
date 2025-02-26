@@ -81,7 +81,7 @@
   }
 
   <h1 class="page-heading mt-4">@teamName.asString</h1>
-  @defining(results) { case (gitHubUrl, repos, umpTeam, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, productionVulnerabilities, latestVulnerabilities, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs) =>
+  @defining(results) { case (gitHubUrl, repos, umpTeam, openPrsRaisedByTeamMembers, openPrsForRepos, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, productionVulnerabilities, latestVulnerabilities, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs) =>
 
     <section class="section-wrapper">
       <div class="row mb-3">
@@ -239,7 +239,7 @@
                   } else {
                     <ul class="list-unstyled">
                       @for(digitalService <- digitalServices) {
-                        <li>@digitalService.asString</li>
+                        <li><a href="@teamRoutes.TeamsController.digitalService(digitalService)">@digitalService.asString</a></li>
                       }
                     </ul>
                   }
@@ -248,13 +248,13 @@
             </div>
           </div>
           <div class="col md-3">
-            @shutteringPartial(teamName = Some(teamName), shutterStates)
+            @shutteringPartial(teamName = Some(teamName), digitalService = None, shutterStates)
           </div>
           <div class="col md-3">
-            @healthPartial(teamName = Some(teamName), leaks, productionBobbyReports, latestBobbyReports, platformInitiatives, productionVulnerabilities, latestVulnerabilities, openPrsRaisedByTeam, openPrsForReposOwnedByTeam, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs, serviceMetricsLogDuration)
+            @healthPartial(teamName = Some(teamName), digitalService = None, leaks, productionBobbyReports, latestBobbyReports, platformInitiatives, productionVulnerabilities, latestVulnerabilities, Some(openPrsRaisedByTeamMembers), Some(openPrsForRepos), commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs, serviceMetricsLogDuration)
           </div>
           <div class="col md-3">
-            @explorePartial(teamName = Some(teamName))
+            @explorePartial(teamName = Some(teamName), digitalService = None)
           </div>
         </div>
         @repositoriesPartial(repos, viewMessages)
