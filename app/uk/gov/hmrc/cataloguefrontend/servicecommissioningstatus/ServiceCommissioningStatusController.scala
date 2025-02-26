@@ -20,7 +20,7 @@ import play.api.http.HttpEntity
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceType, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.view.html.{SearchServiceCommissioningStatusPage, ServiceCommissioningStatusPage}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -55,47 +55,52 @@ class ServiceCommissioningStatusController @Inject() (
   val searchLanding: Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for
-        allTeams  <- teamsAndRepositoriesConnector.allTeams()
-        allChecks <- serviceCommissioningStatusConnector.allChecks()
-        form      =  SearchCommissioning.searchForm.fill(
-                       SearchCommissioning.SearchCommissioningForm(
-                         teamName           = None
-                       , serviceType        = None
-                       , lifecycleStatus    = LifecycleStatus.values.toSeq
-                       , checks             = allChecks.map(_._1)
-                       , environments       = Environment.values.toSeq.filterNot(_ == Environment.Integration)
-                       , groupByEnvironment = Option(false)
-                       , warningFilter      = Option(false)
-                       )
-                     )
-      yield Ok(searchServiceCommissioningStatusPage(form, allTeams, allChecks))
+        allTeams        <- teamsAndRepositoriesConnector.allTeams()
+        digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
+        allChecks       <- serviceCommissioningStatusConnector.allChecks()
+        form            =  SearchCommissioning.searchForm.fill(
+                             SearchCommissioning.SearchCommissioningForm(
+                               teamName           = None
+                             , digitalService     = None
+                             , serviceType        = None
+                             , lifecycleStatus    = LifecycleStatus.values.toSeq
+                             , checks             = allChecks.map(_._1)
+                             , environments       = Environment.values.toSeq.filterNot(_ == Environment.Integration)
+                             , groupByEnvironment = Option(false)
+                             , warningFilter      = Option(false)
+                             )
+                           )
+      yield Ok(searchServiceCommissioningStatusPage(form, allTeams, digitalServices, allChecks))
     }
 
   /**
     * @param teamName for reverse routing
+    * @param digitalService for reverse routing
     * @param hasWarning for reverse routing
     */
-  def searchResults(teamName: Option[TeamName], hasWarning: Option[Boolean]): Action[AnyContent] =
+  def searchResults(teamName: Option[TeamName], digitalService: Option[DigitalService], hasWarning: Option[Boolean]): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       SearchCommissioning
         .searchForm
         .bindFromRequest()
         .fold(
           formWithErrors => for
-                              allTeams  <- teamsAndRepositoriesConnector.allTeams()
-                              allChecks <- serviceCommissioningStatusConnector.allChecks()
-                            yield BadRequest(searchServiceCommissioningStatusPage(formWithErrors, allTeams, allChecks))
+                              allTeams        <- teamsAndRepositoriesConnector.allTeams()
+                              digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
+                              allChecks       <- serviceCommissioningStatusConnector.allChecks()
+                            yield BadRequest(searchServiceCommissioningStatusPage(formWithErrors, allTeams, digitalServices, allChecks))
         , formObject     => for
-                              allTeams   <- teamsAndRepositoriesConnector.allTeams()
-                              allChecks  <- serviceCommissioningStatusConnector.allChecks()
-                              checks      = if formObject.checks.isEmpty then allChecks.map(_._1).toList else formObject.checks
-                              allResults <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.serviceType, formObject.lifecycleStatus)
-                              results     = allResults.filter: result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
-                                              val hasChecks = result.checks.exists:
-                                                case check: Check.SimpleCheck => check.checkResult.isRight
-                                                case check: Check.EnvCheck    => check.checkResults.values.exists(_.isRight)
-                                              val hasWarnings = result.warnings.nonEmpty
-                                              hasWarnings || (!formObject.warningFilter.getOrElse(false) && hasChecks)
+                              allTeams        <- teamsAndRepositoriesConnector.allTeams()
+                              digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
+                              allChecks       <- serviceCommissioningStatusConnector.allChecks()
+                              checks          =  if formObject.checks.isEmpty then allChecks.map(_._1).toList else formObject.checks
+                              allResults      <- serviceCommissioningStatusConnector.cachedCommissioningStatus(formObject.teamName, formObject.digitalService, formObject.serviceType, formObject.lifecycleStatus)
+                              results         =  allResults.filter: result => //we show all services with any present checks since this can indicate where they haven't been fully decommissioned
+                                                   val hasChecks = result.checks.exists:
+                                                     case check: Check.SimpleCheck => check.checkResult.isRight
+                                                     case check: Check.EnvCheck    => check.checkResults.values.exists(_.isRight)
+                                                   val hasWarnings = result.warnings.nonEmpty
+                                                   hasWarnings || (!formObject.warningFilter.getOrElse(false) && hasChecks)
                             yield
                               if formObject.asCsv
                               then
@@ -107,7 +112,7 @@ class ServiceCommissioningStatusController @Inject() (
                                   body   = HttpEntity.Streamed(source, None, Some("text/csv"))
                                 )
                               else
-                                Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, allChecks, Some(results)))
+                                Ok(searchServiceCommissioningStatusPage(SearchCommissioning.searchForm.fill(formObject.copy(checks = checks)), allTeams, digitalServices, allChecks, Some(results)))
         )
     }
 
@@ -142,6 +147,7 @@ import play.api.data.{Form, Forms}
 object SearchCommissioning {
   case class SearchCommissioningForm(
     teamName          : Option[TeamName]
+  , digitalService    : Option[DigitalService]
   , serviceType       : Option[ServiceType]
   , lifecycleStatus   : Seq[LifecycleStatus]
   , checks            : Seq[String]
@@ -155,6 +161,7 @@ object SearchCommissioning {
     Form(
       Forms.mapping(
         "team"               -> Forms.optional(Forms.of[TeamName])
+      , "digitalService"     -> Forms.optional(Forms.of[DigitalService])
       , "serviceType"        -> Forms.optional(Forms.of[ServiceType])
       , "lifecycleStatus"    -> Forms.default(
                                   Forms.seq(Forms.of[LifecycleStatus])

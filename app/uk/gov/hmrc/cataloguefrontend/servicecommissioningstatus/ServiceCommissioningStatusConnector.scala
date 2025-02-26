@@ -23,7 +23,7 @@ import play.api.libs.json._
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceType
-import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, ServiceName, TeamName}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,15 +50,16 @@ class ServiceCommissioningStatusConnector @Inject() (
       .map(_.flatMap(identity))
 
   def cachedCommissioningStatus(
-    teamName       : Option[TeamName]     = None,
-    serviceType    : Option[ServiceType]  = None,
-    lifecycleStatus: Seq[LifecycleStatus] = Nil
+    teamName       : Option[TeamName]       = None,
+    digitalService : Option[DigitalService] = None,
+    serviceType    : Option[ServiceType]    = None,
+    lifecycleStatus: Seq[LifecycleStatus]   = Nil
   )(using
     HeaderCarrier
   ): Future[List[CachedServiceCheck]] =
     given Reads[CachedServiceCheck] = CachedServiceCheck.reads
     httpClientV2
-      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&lifecycleStatus=${lifecycleStatus.map(_.asString)}")
+      .get(url"$serviceCommissioningBaseUrl/service-commissioning-status/cached-status?teamName=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&serviceType=${serviceType.map(_.asString)}&lifecycleStatus=${lifecycleStatus.map(_.asString)}")
       .execute[List[CachedServiceCheck]]
 
   def setLifecycleStatus(

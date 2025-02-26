@@ -107,16 +107,16 @@ class ServiceDependenciesConnector @Inject() (
       .get(url"$servicesDependenciesBaseUrl/api/groupArtefacts")
       .execute[List[GroupArtefacts]]
 
-  def getJdkVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(using HeaderCarrier): Future[List[JdkVersion]] =
+  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService])(using HeaderCarrier): Future[List[JdkVersion]] =
     given Reads[JdkVersion] = JdkVersion.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/jdkVersions?team=${teamName.map(_.asString)}&flag=${flag.asString}")
+      .get(url"$servicesDependenciesBaseUrl/api/jdkVersions?team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&flag=${flag.asString}")
       .execute[List[JdkVersion]]
 
-  def getSbtVersions(teamName: Option[TeamName], flag: SlugInfoFlag)(using HeaderCarrier): Future[List[SbtVersion]] =
+  def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService])(using HeaderCarrier): Future[List[SbtVersion]] =
     given Reads[SbtVersion] = SbtVersion.reads
     httpClientV2
-      .get(url"$servicesDependenciesBaseUrl/api/sbtVersions?team=${teamName.map(_.asString)}&flag=${flag.asString}")
+      .get(url"$servicesDependenciesBaseUrl/api/sbtVersions?team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&flag=${flag.asString}")
       .execute[List[SbtVersion]]
 
   def getBobbyRuleViolations()(using HeaderCarrier): Future[Map[(BobbyRule, SlugInfoFlag), Int]] =

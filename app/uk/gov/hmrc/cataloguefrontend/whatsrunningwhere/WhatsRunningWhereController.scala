@@ -16,24 +16,26 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import cats.implicits._
+import cats.data.EitherT
 import play.api.data.{Form, Forms}
 import play.api.i18n.Messages.implicitMessagesProviderToMessages
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.view.html.WhatsRunningWherePage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class WhatsRunningWhereController @Inject() (
-  service           : WhatsRunningWhereService,
-  page              : WhatsRunningWherePage,
-  config            : WhatsRunningWhereServiceConfig,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
+, whatsRunningWhereService     : WhatsRunningWhereService
+, whatsRunningWherePage        : WhatsRunningWherePage
+, config                       : WhatsRunningWhereServiceConfig,
   override val mcc  : MessagesControllerComponents,
   override val auth : FrontendAuthComponents
 )(using
@@ -41,91 +43,48 @@ class WhatsRunningWhereController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  private def profileFrom(form: Form[WhatsRunningWhereFilter]): Option[Profile] =
-    form.fold(
-      _ => None,
-      f =>
-        for
-          profileType <- f.profileType
-          profileName <- f.profileName
-        yield Profile(profileType, profileName)
-    )
-
-  private def distinctEnvironments(releases: Seq[WhatsRunningWhere]): Seq[Environment] =
-    releases.flatMap(_.versions.map(_.environment)).distinct.sorted
-
-  def releases(): Action[AnyContent] =
-    BasicAuthAction.async { implicit request =>
-      val form                  = WhatsRunningWhereFilter.form.bindFromRequest()
-      val profile               = profileFrom(form)
-      val selectedProfileType   = form.fold(_ => None, _.profileType).getOrElse(ProfileType.Team)
-      val selectedViewMode      = form.fold(_ => None, _.viewMode).getOrElse(ViewMode.Versions)
-
-      selectedViewMode match
-        case ViewMode.Instances => instancesPage(form, profile, selectedProfileType, selectedViewMode).map(page => Ok(page))
-        case ViewMode.Versions  => versionsPage (form, profile, selectedProfileType, selectedViewMode).map(page => Ok(page))
-    }
-
-
-  private def versionsPage(
-    form               : Form[WhatsRunningWhereFilter],
-    profile            : Option[Profile],
-    selectedProfileType: ProfileType,
-    selectedViewMode   : ViewMode,
-  )(using
-    request            : MessagesRequest[AnyContent
-  ]) =
-    for
-      profiles     <- service.profiles()
-      releases     <- service.releasesForProfile(profile).map(_.sortBy(_.serviceName.asString))
-      environments =  distinctEnvironments(releases)
-      profileNames =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-    yield page(environments, releases, selectedProfileType, profileNames, form, Seq.empty, config.maxMemoryAmount, selectedViewMode)
-
-
-  private def instancesPage(
-    form               : Form[WhatsRunningWhereFilter],
-    profile            : Option[Profile],
-    selectedProfileType: ProfileType,
-    selectedViewMode   : ViewMode
-  )(using
-    request            : MessagesRequest[AnyContent]
-  ) =
-    for
-      profiles           <- service.profiles()
-      releases           <- service.releasesForProfile(profile).map(_.sortBy(_.serviceName.asString))
-      environments       =  distinctEnvironments(releases)
-      serviceDeployments <- service.allDeploymentConfigs(releases)
-      profileNames       =  profiles.filter(_.profileType == selectedProfileType).map(_.profileName).sorted
-    yield page(environments, Seq.empty, selectedProfileType, profileNames, form, serviceDeployments.sortBy(_.serviceName), config.maxMemoryAmount, selectedViewMode)
-
-end WhatsRunningWhereController
+  /**
+    * @param teamName for reverse routing
+    * @param digitalService for reverse routing
+    */
+  def releases(teamName: Option[TeamName], digitalService: Option[DigitalService]): Action[AnyContent] =
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
+      ( for
+         teamNames       <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams())
+         digitalServices <- EitherT.right[Result](teamsAndRepositoriesConnector.allDigitalServices())
+         sm2Profiles     <- EitherT.right[Result](whatsRunningWhereService.sm2Profiles())
+         form            =  WhatsRunningWhereFilter.form.bindFromRequest()
+         filter          <- EitherT.fromEither[Future](form.fold(
+                              formErrors => Left(BadRequest(whatsRunningWherePage(formErrors, teamNames, digitalServices, sm2Profiles, config.maxMemoryAmount, ViewMode.Versions)))
+                            , formObject => Right(formObject)
+                            ))
+         releases        <- EitherT.right[Result](whatsRunningWhereService.releases(filter.teamName, filter.digitalService, filter.sm2Profile))
+         versionResults  <- filter.viewMode match
+                              case ViewMode.Versions => EitherT.pure[Future, Result](releases)
+                              case _                 => EitherT.pure[Future, Result](Nil)
+         instanceResults  <- filter.viewMode match
+                              case ViewMode.Instances => EitherT.right[Result](whatsRunningWhereService.allDeploymentConfigs(releases))
+                              case _                  => EitherT.pure[Future, Result](Nil)
+        yield
+          Ok(whatsRunningWherePage(form.fill(filter), teamNames, digitalServices, sm2Profiles, config.maxMemoryAmount, filter.viewMode, versionResults, instanceResults))
+      ).merge
 
 case class WhatsRunningWhereFilter(
-  profileName: Option[ProfileName] = None,
-  profileType: Option[ProfileType] = None,
-  serviceName: Option[ServiceName] = None,
-  viewMode:    Option[ViewMode]    = None
+  serviceName   : Option[ServiceName]
+, teamName      : Option[TeamName]
+, digitalService: Option[DigitalService]
+, sm2Profile    : Option[String]
+, viewMode      : ViewMode
 )
 
 object WhatsRunningWhereFilter:
-  private def filterEmptyString(x: Option[String]) =
-    x.filter(_.trim.nonEmpty)
-
   lazy val form: Form[WhatsRunningWhereFilter] =
-    Form(
+    Form:
       Forms.mapping(
-        "profile_name" -> Forms.optional(Forms.text)
-                            .transform[Option[ProfileName]](
-                              _.map(ProfileName.apply),
-                              _.map(_.asString)
-                            ),
-        "profile_type" -> Forms.optional(Forms.of[ProfileType]),
-        "service_name" -> Forms.optional(Forms.text)
-                            .transform[Option[ServiceName]](
-                              filterEmptyString(_).map(ServiceName.apply),
-                              _.map(_.asString)
-                            ),
-        "view_mode"    -> Forms.optional(Forms.of[ViewMode])
+        "serviceName"    -> Forms.optional(Forms.of[ServiceName])
+      , "teamName"       -> Forms.optional(Forms.of[TeamName])
+      , "digitalService" -> Forms.optional(Forms.of[DigitalService])
+      , "sm2Profile"     -> Forms.optional(Forms.text)
+      , "viewMode"       -> Forms.default(Forms.of[ViewMode], ViewMode.Versions),
       )(WhatsRunningWhereFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
-    )

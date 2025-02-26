@@ -39,7 +39,6 @@ import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.routes as wrwRoutes
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes as vulnerabilitiesRoutes
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.net.URLEncoder
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -101,24 +100,27 @@ class SearchIndex @Inject()(
   def updateIndexes(): Future[Unit] =
     given HeaderCarrier = HeaderCarrier()
     for
-      repos          <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
-      teams          <- teamsAndRepositoriesConnector.allTeams()
-      teamPageLinks  =  teams.flatMap(t => List(SearchTerm("teams",       t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
-                                                SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases().url}?profile_type=team&profile_name=${URLEncoder.encode(t.name.asString, "UTF-8")}")))
-      repoLinks      =  repos.flatMap(r => List(SearchTerm(repoTypeString(r.repoType),    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
-                                                SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
-      serviceLinks   =  repos.filter(_.repoType == RepoType.Service)
-                             .flatMap(r => List(SearchTerm("deploy",              r.name, deployRoutes.DeployServiceController.step1(Some(ServiceName(r.name))).url),
-                                                SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(r.name)).url ),
-                                                SearchTerm("timeline",            r.name, deployRoutes.DeploymentTimelineController.graph(Some(ServiceName(r.name))).url),
-                                                SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(ServiceName(r.name)).url)
-                                           )
-                                     )
-      comments       <- prCommenterConnector.search(None, None, None)
-      commentLinks   =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
-      users          <- userManagementConnector.getAllUsers(None)
-      userLinks      =  users.map(u => SearchTerm("users", u.username.asString, userRoutes.UsersController.user(u.username).url, 0.5f))
-      allLinks       =  hardcodedLinks ++ teamPageLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
+      repos           <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
+      teams           <- teamsAndRepositoriesConnector.allTeams()
+      digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
+      teamPageLinks   =  teams.flatMap(t => List(SearchTerm("team",        t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
+                                                 SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(teamName = Some(t.name)).url}")))
+      digitalLinks    =  digitalServices.flatMap(x => List(SearchTerm("digital service", x.asString, teamRoutes.TeamsController.digitalService(x).url, 0.5f),
+                                                           SearchTerm("deployments"    , x.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(digitalService = Some(x)).url}")))
+      repoLinks       =  repos.flatMap(r => List(SearchTerm(repoTypeString(r.repoType),    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
+                                                 SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
+      serviceLinks    =  repos.filter(_.repoType == RepoType.Service)
+                              .flatMap(r => List(SearchTerm("deploy",              r.name, deployRoutes.DeployServiceController.step1(Some(ServiceName(r.name))).url),
+                                                 SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(r.name)).url ),
+                                                 SearchTerm("timeline",            r.name, deployRoutes.DeploymentTimelineController.graph(Some(ServiceName(r.name))).url),
+                                                 SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(ServiceName(r.name)).url)
+                                            )
+                                      )
+      comments        <- prCommenterConnector.search(None, None, None)
+      commentLinks    =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
+      users           <- userManagementConnector.getAllUsers(None)
+      userLinks       =  users.map(u => SearchTerm("users", u.username.asString, userRoutes.UsersController.user(u.username).url, 0.5f))
+      allLinks        =  hardcodedLinks ++ teamPageLinks ++ digitalLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
     yield cachedIndex.set(optimizeIndex(allLinks))
 
   def search(query: Seq[String]): Seq[SearchTerm] =

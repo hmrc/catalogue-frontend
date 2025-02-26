@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.model.DigitalService
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.util.MarkdownLoader
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
@@ -24,13 +25,14 @@
   teamNamesPartial: partials.TeamNamesPartial
 )
 
-@(form        : Form[?],
-  teams       : Seq[GitHubTeam],
-  reports     : Seq[PrCommenterReport],
-  commentTypes: Set[String]
+@(form           : Form[?],
+  teams          : Seq[GitHubTeam],
+  digitalServices: Seq[DigitalService],
+  reports        : Seq[PrCommenterReport],
+  commentTypes   : Set[String]
 )(implicit
-  messages    : Messages,
-  request     : RequestHeader
+  messages       : Messages,
+  request        : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
@@ -41,7 +43,7 @@
     <div id="recommendations-list">
         <form id="form" method="get">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <dl>
                         <dt>
                             <label for="search" class="form-label">Name</label>
@@ -62,6 +64,17 @@
                         Symbol("class")       -> "form-select"
                     )
                 </div>
+                <div class="col-md-3">
+                  @select(
+                      field                 =  form("digitalService"),
+                      options               =  digitalServices.map(x => x.asString -> x.asString),
+                      Symbol("_default")    ->  "All",
+                      Symbol("_label")      -> "Digital Service",
+                      Symbol("_labelClass") -> "form-label",
+                      Symbol("id")          -> "digital-service-dropdown",
+                      Symbol("class")       -> "form-select"
+                  )
+              </div>
                 <div class="col-md-3">
                     @select(
                       field                 =  form("commentType"),
@@ -212,7 +225,7 @@
   }
 }
 <script @CSPNonce.attr>
-  ["team-dropdown", "comment-type-dropdown"]
+  ["team-dropdown", "digital-service-dropdown", "comment-type-dropdown"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("form").submit();

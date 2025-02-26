@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
+@import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
 
 @this(
   teamNamesPartial: TeamNamesPartial
@@ -49,7 +50,7 @@
     </td>
 
     <td id="row@{i}_digital-service">
-        @repo.digitalServiceName.map{dsn => <div class="repo-service">@dsn.asString</div>}
+        @repo.digitalServiceName.map{dsn => <a href="@teamsRoutes.TeamsController.digitalService(dsn)"><div class="repo-service">@dsn.asString</div></a>}
     </td>
 
     <td class="repo-bp font-monospace text-center" id="row@{i}_branch-protection">

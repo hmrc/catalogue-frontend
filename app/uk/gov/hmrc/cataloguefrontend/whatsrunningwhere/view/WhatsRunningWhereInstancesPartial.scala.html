@@ -18,7 +18,6 @@
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ServiceDeploymentConfigSummary
 
 @(serviceDeployments: Seq[ServiceDeploymentConfigSummary]
-, environments      : Seq[Environment]
 , maxMemory         : Double
 )
 
@@ -28,7 +27,7 @@
     <td class="application-name" id="row@{i}_application">
         <a aria-label="Link to info page for @{sdcSummary.serviceName.asString}" id="link-to-info-page-for-@{sdcSummary.serviceName.asString}" href="@appRoutes.CatalogueController.service(sdcSummary.serviceName)">@{sdcSummary.serviceName.asString}</a>
     </td>
-    @environments.map { env =>
+    @Environment.values.map { env =>
       @sdcSummary.deploymentSizes.get(env).map { deploymentSize =>
         <td id="row@{i}_version_@{env.asString}" style="background: rgba(246, 124, 27, @{deploymentSize.slotsAndInstancesToMemory / maxMemory});">
             <abbr style="text-decoration: none; border-bottom: none;" title="instances * (number of slots * 128MB) instances:@deploymentSize.instances slots:@deploymentSize.slots">

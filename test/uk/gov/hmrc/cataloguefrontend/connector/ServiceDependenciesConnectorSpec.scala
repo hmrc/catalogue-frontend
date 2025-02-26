@@ -72,7 +72,7 @@ class ServiceDependenciesConnectorSpec
           )
       )
 
-      val response = serviceDependenciesConnector.getJdkVersions(teamName = None, flag = SlugInfoFlag.ForEnvironment(Environment.Production)).futureValue
+      val response = serviceDependenciesConnector.getJdkVersions(teamName = None, digitalService = None, flag = SlugInfoFlag.ForEnvironment(Environment.Production)).futureValue
 
       response(0).serviceName shouldBe ServiceName("something-api")
       response(0).version     shouldBe Version("1.8.0_181")
