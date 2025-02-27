@@ -78,7 +78,7 @@ class DeploymentTimelineControllerSpec
       when(mockedTeamsAndRepositoriesConnector.allRepositories(
         name               = any,
         team               = any,
-        digitalServiceName = any,
+        digitalService     = any,
         archived           = any,
         repoType           = eqTo(Some(RepoType.Service)),
         serviceType        = any

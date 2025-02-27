@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, DigitalService, ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.util.DependencyGraphParser
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 import uk.gov.hmrc.http.HeaderCarrier
@@ -83,21 +83,21 @@ class DependenciesService @Inject() (
       .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
 
-  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[List[JdkVersion]] =
-    serviceDependenciesConnector.getJdkVersions(teamName, flag)
+  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService])(using HeaderCarrier): Future[List[JdkVersion]] =
+    serviceDependenciesConnector.getJdkVersions(flag, teamName, digitalService)
 
-  def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[JdkUsageByEnv] =
+  def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService])(using HeaderCarrier): Future[JdkUsageByEnv] =
     for
-      versions <- serviceDependenciesConnector.getJdkVersions(teamName, env)
+      versions <- serviceDependenciesConnector.getJdkVersions(env, teamName, digitalService)
       counts   =  versions.groupBy(v => (v.version, v.vendor, v.kind)).view.mapValues(_.length).toMap
     yield JdkUsageByEnv(env, counts)
 
-  def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[List[SbtVersion]] =
-    serviceDependenciesConnector.getSbtVersions(teamName, flag)
+  def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService])(using HeaderCarrier): Future[List[SbtVersion]] =
+    serviceDependenciesConnector.getSbtVersions(flag, teamName, digitalService)
 
-  def getSbtCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName])(using HeaderCarrier): Future[SbtUsageByEnv] =
+  def getSbtCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService])(using HeaderCarrier): Future[SbtUsageByEnv] =
     for
-      versions <- serviceDependenciesConnector.getSbtVersions(teamName, env)
+      versions <- serviceDependenciesConnector.getSbtVersions(env, teamName, digitalService)
       counts   =  versions.groupBy(_.version).view.mapValues(_.length).toMap
     yield SbtUsageByEnv(env, counts)
 

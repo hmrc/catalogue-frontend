@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.platforminitiatives
 
 import play.api.libs.json.Format
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -36,13 +36,10 @@ class PlatformInitiativesConnector @Inject()(
 
   private given Format[PlatformInitiative] = PlatformInitiative.format
 
-  def getInitiatives(team: Option[TeamName])(using HeaderCarrier): Future[Seq[PlatformInitiative]] =
+  def getInitiatives(
+    teamName      : Option[TeamName]       = None
+  , digitalService: Option[DigitalService] = None
+  )(using HeaderCarrier): Future[Seq[PlatformInitiative]] =
     httpClientV2
-      .get(
-        team.fold(
-          url"$platformInitiativesBaseUrl/platform-initiatives/initiatives"
-        )(t =>
-          url"$platformInitiativesBaseUrl/platform-initiatives/teams/${t.asString}/initiatives"
-        )
-      )
+      .get(url"$platformInitiativesBaseUrl/platform-initiatives/initiatives?teamName=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}")
       .execute[Seq[PlatformInitiative]]

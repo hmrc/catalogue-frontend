@@ -23,6 +23,7 @@
 @(
   serviceNameAndConfigs: Map[ServiceName, Seq[DeploymentConfig]]
 , teams                : Seq[GitHubTeam]
+, digitalServices      : Seq[DigitalService]
 , form                 : Form[?]
 , costEstimateConfig   : CostEstimateConfig
 )(implicit
@@ -44,7 +45,7 @@
     <div id="costs-summary-list">
         <form id="costs-summary-form" method="get">
             <div id="repos-form-row" class="row">
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <dl id="search_field">
                         <dt>
                             <label for="search" class="form-label">Name</label>
@@ -55,15 +56,26 @@
                     </dl>
                 </div>
                 <div class="col-md-3">
-                @select(
-                    field = form("team"),
-                    options = teams.map(t => t.name.asString -> t.name.asString),
-                    Symbol("_default") -> "All",
-                    Symbol("_label") -> "Team",
-                    Symbol("_labelClass") -> "form-label",
-                    Symbol("id") -> "team-filter",
-                    Symbol("class") -> "form-select"
-                )
+                    @select(
+                        field                 =  form("team"),
+                        options               =  teams.map(t => t.name.asString -> t.name.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Team",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "team-filter",
+                        Symbol("class")       -> "form-select"
+                    )
+                </div>
+                <div class="col-md-3">
+                    @select(
+                        field                 =  form("digitalService"),
+                        options               =  digitalServices.map(x => x.asString -> x.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Digital Service",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "digital-service-filter",
+                        Symbol("class")       -> "form-select"
+                    )
                 </div>
                 <input type="hidden" id="asCSV"        name="asCSV" value="false" />
                 <div class="col-md-3 align-self-end" style="padding-bottom: 1rem">
@@ -137,7 +149,7 @@
         serviceList.search(searchBox.value);
 </script>
 <script @CSPNonce.attr>
-        ["team-filter"]
+        ["team-filter", "digital-service-filter"]
                 .forEach(function (id) {
                     document.getElementById(id).addEventListener("change", function () {
                         document.getElementById("costs-summary-form").submit();

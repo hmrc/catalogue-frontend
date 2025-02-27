@@ -32,6 +32,7 @@ class PrCommenterSpec extends UnitSpec with BeforeAndAfter with FakeApplicationB
   "PrCommenter Page" should {
     "show page with some results" in {
       serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/digital-services", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.digitalServicesData)))
       serviceEndpoint(GET, "/api/v2/repositories?name=11-seven-teams-repo", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesSharedRepoSearchResult)))
       serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
       serviceEndpoint(GET, "/pr-commenter/reports", willRespondWith = (200, Some(PrCommenterJsonData.reportResults)))
