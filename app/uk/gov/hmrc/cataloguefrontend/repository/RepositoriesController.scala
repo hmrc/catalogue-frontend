@@ -42,11 +42,11 @@ class RepositoriesController @Inject() (
   with CatalogueAuthBuilders:
 
   def allRepositories(
-    name              : Option[String],
-    team              : Option[TeamName],
-    digitalServiceName: Option[DigitalService],
-    showArchived      : Option[Boolean],
-    repoTypeString    : Option[String]
+    name          : Option[String],
+    team          : Option[TeamName],
+    digitalService: Option[DigitalService],
+    showArchived  : Option[Boolean],
+    repoTypeString: Option[String]
   ): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       val allTeams =
@@ -65,12 +65,12 @@ class RepositoriesController @Inject() (
       val allRepositories =
         teamsAndRepositoriesConnector
           .allRepositories(
-            name               = None, // Use listjs filtering
-            team               = team.filterNot(_.asString.isEmpty),
-            digitalServiceName = digitalServiceName.filterNot(_.asString.isEmpty),
-            archived           = if showArchived.contains(true) then None else Some(false),
-            repoType           = repoType,
-            serviceType        = serviceType
+            name           = None, // Use listjs filtering
+            team           = team.filterNot(_.asString.isEmpty),
+            digitalService = digitalService.filterNot(_.asString.isEmpty),
+            archived       = if showArchived.contains(true) then None else Some(false),
+            repoType       = repoType,
+            serviceType    = serviceType
           ).map(_.sortBy(_.name.toLowerCase))
 
       val allDigitalServices =
@@ -98,14 +98,14 @@ class RepositoriesController @Inject() (
       Redirect(repositoryRoutes.RepositoriesController.allRepositories(repoType = Some(RepoType.Prototype.asString)))
 
 case class RepoListFilter(
-  name               : Option[String]         = None,
-  team               : Option[TeamName]       = None,
-  digitalServiceName : Option[DigitalService] = None,
-  repoType           : Option[String]         = None,
-  showArchived       : Option[Boolean]        = None
+  name          : Option[String]         = None,
+  team          : Option[TeamName]       = None,
+  digitalService: Option[DigitalService] = None,
+  repoType      : Option[String]         = None,
+  showArchived  : Option[Boolean]        = None
 ):
   def isEmpty: Boolean =
-    name.isEmpty && team.isEmpty && digitalServiceName.isEmpty && repoType.isEmpty
+    name.isEmpty && team.isEmpty && digitalService.isEmpty && repoType.isEmpty
 
 object RepoListFilter {
   lazy val form =

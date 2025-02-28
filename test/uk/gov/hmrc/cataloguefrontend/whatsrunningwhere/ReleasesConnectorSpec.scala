@@ -69,7 +69,7 @@ class ReleasesConnectorSpec
       )
 
       val response =
-        releasesConnector.releases(profile = None).futureValue
+        releasesConnector.releases(teamName = None, digitalService = None, sm2Profile = None).futureValue
 
       response should contain theSameElementsAs Seq(
         WhatsRunningWhere(
@@ -88,8 +88,6 @@ class ReleasesConnectorSpec
     }
 
     "return all releases for given profile" in {
-      val profileType = ProfileType.ServiceManager
-      val profileName = ProfileName("profile1")
 
       stubFor(
         get(urlPathEqualTo("/releases-api/whats-running-where"))
@@ -114,7 +112,7 @@ class ReleasesConnectorSpec
 
       val response =
         releasesConnector
-          .releases(profile = Some(Profile(profileType, profileName)))
+          .releases(teamName = None, digitalService = None, sm2Profile = Some("profile1"))
           .futureValue
 
       response should contain theSameElementsAs Seq(
@@ -128,25 +126,8 @@ class ReleasesConnectorSpec
 
       wireMockServer.verify(
         getRequestedFor(urlPathEqualTo("/releases-api/whats-running-where"))
-          .withQueryParam("profileName", equalTo(profileName.asString))
-          .withQueryParam("profileType", equalTo(profileType.asString))
+          .withQueryParam("sm2Profile", equalTo("profile1"))
       )
-    }
-
-    "return empty upon error" in {
-      stubFor(
-        get(urlPathEqualTo("/releases-api/whats-running-where"))
-          .willReturn(
-            aResponse()
-            .withStatus(500)
-            .withBody("errors!")
-          )
-      )
-
-      val response =
-        releasesConnector.releases(profile = None).futureValue
-
-      response shouldBe Seq.empty
     }
   }
 

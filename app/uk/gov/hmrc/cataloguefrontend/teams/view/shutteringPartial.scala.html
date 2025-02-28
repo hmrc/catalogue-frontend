@@ -15,11 +15,12 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatus, ShutterType, routes => shutterRoutes}
-@import uk.gov.hmrc.cataloguefrontend.model.Environment
+@import uk.gov.hmrc.cataloguefrontend.model.{Environment, DigitalService}
 
 @(
-  teamName     : Option[TeamName]
-, shutterStates: Seq[ShutterState]
+  teamName      : Option[TeamName]
+, digitalService: Option[DigitalService]
+, shutterStates : Seq[ShutterState]
 )(implicit
   request: RequestHeader
 )
@@ -35,7 +36,7 @@
           @defining(shutterStates.filter(x => x.shutterType == ShutterType.Frontend && x.status.value == ShutterStatus.Shuttered).size) { count =>
             <td><span class="badge rounded-pill text-bg-light">@count</span></td>
             <td style="width: 100%;">
-              <a href="@shutterRoutes.ShutterOverviewController.allStatesForEnv(ShutterType.Frontend, Environment.Production, teamName = teamName)">Shuttered Frontend - Production</a>
+              <a href="@shutterRoutes.ShutterOverviewController.allStatesForEnv(ShutterType.Frontend, Environment.Production, teamName = teamName, digitalService = digitalService)">Shuttered Frontend - Production</a>
               @if(count > 0) {<span class="badge rounded-pill shutter-badge float-end">&nbsp;</span>}
             </td>
           }
@@ -44,7 +45,7 @@
           @defining(shutterStates.filter(x => x.shutterType == ShutterType.Api && x.status.value == ShutterStatus.Shuttered).size) { count =>
             <td><span class="badge rounded-pill text-bg-light">@count</span></td>
             <td>
-              <a href="@shutterRoutes.ShutterOverviewController.allStatesForEnv(ShutterType.Api, Environment.Production, teamName = teamName)">Shuttered Api - Production</a>
+              <a href="@shutterRoutes.ShutterOverviewController.allStatesForEnv(ShutterType.Api, Environment.Production, teamName = teamName, digitalService = digitalService)">Shuttered Api - Production</a>
               @if(count > 0) {<span class="badge rounded-pill shutter-badge float-end">&nbsp;</span>}
             </td>
           }

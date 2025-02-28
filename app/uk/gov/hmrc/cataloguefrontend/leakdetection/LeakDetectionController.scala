@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.leakdetection
 
+import cats.data.EitherT
 import play.api.data.{Form, Forms}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, RequestHeader, Request}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result, RequestHeader, Request}
 import uk.gov.hmrc.cataloguefrontend.auth.{AuthController, CatalogueAuthBuilders}
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionExplorerFilter.form
 import uk.gov.hmrc.cataloguefrontend.leakdetection.view.html._
-import uk.gov.hmrc.cataloguefrontend.model.TeamName
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.internalauth.client._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -53,9 +53,11 @@ class LeakDetectionController @Inject()(
 
   /**
     * @param team for reverse routing
+    * @param digitalService for reverse routing
     */
   def repoSummaries(
     team             : Option[TeamName]
+  , digitalService   : Option[DigitalService]
   , includeWarnings  : Boolean
   , includeExemptions: Boolean
   , includeViolations: Boolean
@@ -63,43 +65,47 @@ class LeakDetectionController @Inject()(
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given Request[AnyContent] = request
-      form
-        .bindFromRequest()
-        .fold(
-          formWithErrors => Future.successful(BadRequest(repositoriesPage(Seq.empty, Seq.empty, Seq.empty, formWithErrors, includeWarnings, includeExemptions, includeViolations, includeNonIssues))),
-          validForm =>
-            for
-              summaries <- leakDetectionService.repoSummaries(validForm.rule, validForm.team, includeWarnings, includeExemptions, includeViolations, includeNonIssues)
-              rules     <- leakDetectionService.rules().map(_.filterNot(_.draft).map(_.id))
-              teams     <- teamsAndRepositoriesConnector.allTeams()
-            yield Ok(repositoriesPage(rules, summaries, teams.sortBy(_.name), form.fill(validForm), includeWarnings, includeExemptions, includeViolations, includeNonIssues))
-        )
+      (for
+         teams           <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams())
+         digitalServices <- EitherT.right[Result](teamsAndRepositoriesConnector.allDigitalServices())
+         rules           <- EitherT.right[Result](leakDetectionService.rules().map(_.filterNot(_.draft).map(_.id)))
+         form            =  LeakDetectionExplorerFilter.form.bindFromRequest()
+         filter          <- EitherT.fromEither[Future](form.fold(
+                             formErrors => Left(BadRequest(repositoriesPage(formErrors, rules, teams, digitalServices, includeWarnings, includeExemptions, includeViolations, includeNonIssues, results = None)))
+                           , formObject => Right(formObject)
+                            ))
+         results         <- EitherT.right[Result]:
+                              leakDetectionService.repoSummaries(filter.rule, filter.team, filter.digitalService, includeWarnings, includeExemptions, includeViolations, includeNonIssues)
+       yield
+         Ok(repositoriesPage(form.fill(filter), rules, teams, digitalServices, includeWarnings, includeExemptions, includeViolations, includeNonIssues, results = Some(results)))
+      ).merge
 
   def branchSummaries(repository: String, includeNonIssues: Boolean): Action[AnyContent] =
-    BasicAuthAction
-      .async: request =>
-        given RequestHeader = request
-        for
-          isAuthorised    <- auth.verify(Retrieval.hasPredicate(leaksPermission(repository, "RESCAN")))
-          branchSummaries <- leakDetectionService.branchSummaries(repository, includeNonIssues)
-        yield Ok(repositoryPage(repository, includeNonIssues, branchSummaries, isAuthorised.getOrElse(false)))
+    BasicAuthAction.async: request =>
+      given RequestHeader = request
+      for
+        isAuthorised    <- auth.verify(Retrieval.hasPredicate(leaksPermission(repository, "RESCAN")))
+        branchSummaries <- leakDetectionService.branchSummaries(repository, includeNonIssues)
+      yield Ok(repositoryPage(repository, includeNonIssues, branchSummaries, isAuthorised.getOrElse(false)))
 
-  def leaksPermission(repository: String, action: String): Predicate =
+  private def leaksPermission(repository: String, action: String): Predicate =
     Predicate.Permission(Resource.from("repository-leaks", repository), IAAction(action))
 
   val draftReports: Action[AnyContent] =
     BasicAuthAction.async: request =>
       given Request[AnyContent] = request
-      form
-        .bindFromRequest()
-        .fold(
-          formWithErrors => Future.successful(BadRequest(draftPage(Seq.empty, Seq.empty, formWithErrors))),
-          validForm =>
-            for
-              reports <- leakDetectionService.draftReports(validForm.rule)
-              rules   <- leakDetectionService.rules().map(_.filter(_.draft))
-            yield Ok(draftPage(rules, reports, form.fill(validForm)))
-        )
+      (for
+         rules   <- EitherT.right[Result](leakDetectionService.rules().map(_.filter(_.draft)))
+         form    =  LeakDetectionExplorerFilter.form.bindFromRequest()
+         filter  <- EitherT.fromEither[Future](form.fold(
+                     formErrors => Left(BadRequest(draftPage(formErrors, rules, results = None)))
+                   , formObject => Right(formObject)
+                    ))
+         results <- EitherT.right[Result]:
+                      leakDetectionService.draftReports(filter.rule)
+       yield
+         Ok(draftPage(form.fill(filter), rules, results = Some(results)))
+      ).merge
 
   def report(repository: String, branch: String): Action[AnyContent] =
     auth
@@ -139,15 +145,16 @@ class LeakDetectionController @Inject()(
 end LeakDetectionController
 
 case class LeakDetectionExplorerFilter(
-  rule: Option[String]   = None,
-  team: Option[TeamName] = None
+  rule          : Option[String]         = None,
+  team          : Option[TeamName]       = None,
+  digitalService: Option[DigitalService] = None
 )
 
 object LeakDetectionExplorerFilter:
   lazy val form: Form[LeakDetectionExplorerFilter] =
-    Form(
+    Form:
       Forms.mapping(
-        "rule" -> Forms.optional(Forms.text),
-        "team" -> Forms.optional(Forms.of[TeamName]),
+        "rule"           -> Forms.optional(Forms.text),
+        "team"           -> Forms.optional(Forms.of[TeamName]),
+        "digitalService" -> Forms.optional(Forms.of[DigitalService]),
       )(LeakDetectionExplorerFilter.apply)(r => Some(Tuple.fromProductTyped(r)))
-    )

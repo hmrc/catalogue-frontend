@@ -17,13 +17,16 @@
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.connector.model.SbtUsageByEnv
+@import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 
 @this()
 
-@(envdata     : Seq[SbtUsageByEnv],
-  sbts        : Seq[Version],
-  teams       : Seq[GitHubTeam],
-  selectedTeam: Option[GitHubTeam]
+@(envdata               : Seq[SbtUsageByEnv],
+  sbts                  : Seq[Version],
+  teams                 : Seq[GitHubTeam],
+  digitalServices       : Seq[DigitalService],
+  selectedTeamName      : Option[TeamName],
+  selectedDigitalService: Option[DigitalService]
 )(implicit
   request     : RequestHeader
 )
@@ -41,14 +44,26 @@
             <div class="col-md-3">
                 <label for="teamName" class="form-label fw-bold">Team:</label>
                 <select class="form-select" id="teamName" name="teamName">
-                    <option value="" @{if(selectedTeam.isEmpty) "selected" else ""}>All</option>
+                    <option value="" @{if(selectedTeamName.isEmpty) "selected" else ""}>All</option>
                     @teams.map { team =>
-                        <option value="@{team.name.asString}" @{if(selectedTeam.contains(team)) "selected" else ""}>
+                        <option value="@{team.name.asString}" @{if(selectedTeamName.contains(team.name)) "selected" else ""}>
                             @team.name.asString
                         </option>
                     }
                 </select>
             </div>
+            <div class="col-md-3">
+                <label for="teamName" class="form-label fw-bold">Digital Service:</label>
+                <select class="form-select" id="digitalService" name="digitalService">
+                    <option value="" @{if(selectedDigitalService.isEmpty) "selected" else ""}>All</option>
+                    @digitalServices.map { digitalService =>
+                        <option value="@{digitalService.asString}" @{if(selectedDigitalService.contains(digitalService)) "selected" else ""}>
+                            @digitalService.asString
+                        </option>
+                    }
+                </select>
+            </div>
+
             <div class="col-md-2">
                 <label class="form-label fw-bold">Graph Mode:</label>
                 <div><button type="button" id="chart-toggle" class="btn btn-outline-secondary">show absolute</button></div>
@@ -71,7 +86,7 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@appRoutes.SbtVersionController.findLatestVersions(d.env.asString, selectedTeam.map(_.name))">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.SbtVersionController.findLatestVersions(d.env.asString, selectedTeamName, selectedDigitalService)">@d.env.displayString</a></td>
               @for(sbt <- sbts) { <td>@{d.usage.getOrElse(sbt, 0)}</td>}
           </tr>
 
@@ -131,8 +146,11 @@
         });
     </script>
     <script @CSPNonce.attr>
-      document.getElementById("teamName").addEventListener("change", function() {
-        document.getElementById("form").submit();
-      });
+        ["teamName", "digitalService"]
+        .forEach(function(id) {
+          document.getElementById(id).addEventListener("change", function() {
+            document.getElementById("form").submit();
+          });
+        });
     </script>
 }

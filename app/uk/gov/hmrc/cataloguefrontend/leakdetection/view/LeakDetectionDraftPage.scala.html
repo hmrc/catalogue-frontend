@@ -20,12 +20,12 @@
 
 @this()
 
-@(rules     : Seq[LeakDetectionRule],
-  summaries : Seq[LeakDetectionReport],
-  form      : Form[?]
+@(form   : Form[?],
+  rules  : Seq[LeakDetectionRule],
+  results: Option[Seq[LeakDetectionReport]]
 )(implicit
-  messages : Messages,
-  request  : RequestHeader
+  messages: Messages,
+  request : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
@@ -71,7 +71,7 @@
                 </tr>
             </thead>
             <tbody class="list">
-            @summaries.map { report =>
+            @results.getOrElse(Nil).map { report =>
                 <tr>
                     <td class="repository">@report.repoName</td>
                     <td class="scanned">@report.timestamp.displayFormat</td>

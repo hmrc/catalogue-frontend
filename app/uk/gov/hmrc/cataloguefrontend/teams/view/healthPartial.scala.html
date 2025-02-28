@@ -29,14 +29,15 @@
 
 @(
   teamName                  : Option[TeamName]
+, digitalService            : Option[DigitalService]
 , leaks                     : Seq[LeakDetectionRepositorySummary]
 , productionBobbyReports    : Seq[BobbyReport]
 , latestBobbyReports        : Seq[BobbyReport]
 , platformInitiatives       : Seq[PlatformInitiative]
 , productionVulnerabilities : Seq[TotalVulnerabilityCount]
 , latestVulnerabilities     : Seq[TotalVulnerabilityCount]
-, openPrsRaisedByTeamMembers: (Int, URL)
-, openPrsForReposOwnedByTeam: (Int, URL)
+, openPrsRaisedByTeamMembers: Option[(Int, URL)]
+, openPrsForRepos           : Option[(Int, URL)]
 , commissioningChecks       : Seq[CachedServiceCheck]
 , serviceMetrics            : Seq[ServiceMetric]
 , whatsRunningWhere         : Seq[WhatsRunningWhere]
@@ -58,31 +59,31 @@
           @defining(leaks.map(_.unresolvedCount).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td style="width: 100%;"><a href="@leakDetectionRoutes.LeakDetectionController.repoSummaries(team = teamName, includeWarnings = false, includeExemptions = false, includeViolations = true)">Leaks</a></td>
+          <td style="width: 100%;"><a href="@leakDetectionRoutes.LeakDetectionController.repoSummaries(team = teamName, digitalService = digitalService, includeWarnings = false, includeExemptions = false, includeViolations = true)">Leaks</a></td>
         </tr>
         <tr>
           @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(true))">Bobby Errors - Production</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(true))">Bobby Errors - Production</a></td>
         </tr>
         <tr>
           @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest), isActive = Some(true))">Bobby Errors - Latest</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest), isActive = Some(true))">Bobby Errors - Latest</a></td>
         </tr>
         <tr>
           @defining(productionVulnerabilities.map(_.actionRequired).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)))"> Service Vulnerabilities - Production</a></td>
+          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)))"> Service Vulnerabilities - Production</a></td>
         </tr>
         <tr>
           @defining(latestVulnerabilities.map(_.actionRequired).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, flag = Some(SlugInfoFlag.Latest))"> Service Vulnerabilities - Latest</a></td>
+          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest))"> Service Vulnerabilities - Latest</a></td>
         </tr>
         <tr>
           <td colspan="2"><hr/></td>
@@ -91,19 +92,19 @@
           @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(false))">Bobby Warnings - Production</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(false))">Bobby Warnings - Production</a></td>
         </tr>
         <tr>
           @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, flag = Some(SlugInfoFlag.Latest), isActive = Some(false))">Bobby Warnings - Latest</a></td>
+          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest), isActive = Some(false))">Bobby Warnings - Latest</a></td>
         </tr>
         <tr>
           @defining(commissioningChecks.filter(_.warnings).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName, warningFilter = Some(true))">Service Commissioning State Warnings</a></td>
+          <td><a href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName, digitalService = digitalService, warningFilter = Some(true))">Service Commissioning State Warnings</a></td>
         </tr>
         <tr>
             @defining(
@@ -122,16 +123,15 @@
           ) { counts =>
             <td><span class="badge rounded-pill @if(counts.sum == 0) { text-bg-secondary } else { text-bg-warning }">@counts.sum</span></td>
           }
-          @* TODO whatsRunningWhere should use standard Catalogue form params and reverse routes *@
-          <td><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases()?profile_name=@teamName.fold("")(_.asString)&profile_type=team">Outdated or Hotfixed Production Deployments</a></td>
+          <td><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases(teamName = teamName, digitalService = digitalService)">Outdated or Hotfixed Production Deployments</a></td>
         </tr>
         <tr>
           @defining(platformInitiatives.filter(_.progress.percent < 100).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-info }">@count</span></td>
           }
-          <td><a href="@platforminitiativesRoutes.PlatformInitiativesController.platformInitiatives(team = teamName)">Platform Initiatives</a></td>
+          <td><a href="@platforminitiativesRoutes.PlatformInitiativesController.platformInitiatives(team = teamName, digitalService = digitalService)">Platform Initiatives</a></td>
         </tr>
-        @defining(openPrsRaisedByTeamMembers) { (count, link) =>
+        @openPrsRaisedByTeamMembers.map { (count, link) =>
           @if(count > 0) {
             <tr>
               <td><span class="badge rounded-pill text-bg-info">@count</span></td>
@@ -145,7 +145,7 @@
             </tr>
           }
         }
-        @defining(openPrsForReposOwnedByTeam) { (count, link) =>
+        @openPrsForRepos.map { (count, link) =>
           @if(count > 0) {
             <tr>
               <td><span class="badge rounded-pill text-bg-info">@count</span></td>
@@ -166,19 +166,19 @@
           @defining(testJobs.flatMap(_.latestBuild).filter(_.result == Some("FAILURE")).size) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
           }
-          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Test Failures</a></td>
+          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName, digitalService = digitalService)">Test Failures</a></td>
         </tr>
         <tr>
           @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numAccessibilityViolations).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Accessibility Assessment Violations</a></td>
+          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName, digitalService = digitalService)">Accessibility Assessment Violations</a></td>
         </tr>
         <tr>
           @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numSecurityAlerts).sum) { count =>
             <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
           }
-          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName)">Security Assessment Alerts</a></td>
+          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName, digitalService = digitalService)">Security Assessment Alerts</a></td>
         </tr>
         <tr>
           <td colspan="2"><div class="separator">Last @serviceMetricsLogDuration.toDays Days</div></td>
@@ -188,7 +188,7 @@
             @defining(serviceMetrics.collect { case x if x.id == logMetricId => x.logCount }.sum) { count =>
               <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
             }
-            <td><a href="@serviceMetricsRoutes.ServiceMetricsController.serviceMetrics(environment = Environment.Production, team = teamName, metricType = Some(logMetricId))">@logMetricId.displayString</a></td>
+            <td><a href="@serviceMetricsRoutes.ServiceMetricsController.serviceMetrics(environment = Environment.Production, team = teamName, digitalService = digitalService, metricType = Some(logMetricId))">@logMetricId.displayString</a></td>
           </tr>
         }
       </tbody>

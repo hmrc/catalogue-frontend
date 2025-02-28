@@ -60,7 +60,10 @@ class CostControllerSpec
     when(mockTeamsAndRepositoriesConnector.allTeams(any)(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Seq.empty))
 
-    when(mockServiceConfigConnector.deploymentConfig(any, any, any, any)(using any[HeaderCarrier]))
+    when(mockTeamsAndRepositoriesConnector.allDigitalServices()(using any[HeaderCarrier]))
+      .thenReturn(Future.successful(Seq.empty))
+
+    when(mockServiceConfigConnector.deploymentConfig(any, any, any, any, any)(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Seq.empty))
 
     val request = FakeRequest(GET, routes.CostController.costExplorer().url)

@@ -22,7 +22,8 @@
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => whatsRunningWhereRoutes}
 
 @(
-  teamName: Option[TeamName]
+  teamName      : Option[TeamName]
+, digitalService: Option[DigitalService]
 )(implicit
   request: RequestHeader
 )
@@ -36,13 +37,12 @@
       @teamName.map { x =>
         <li><a href="@teamRoutes.TeamsController.outOfDateTeamDependencies(x)">Outdated Dependencies</a></li>
       }
-      <li><a href="@prcommenterRoutes.PrCommenterController.recommendations(teamName = teamName)">PR-Commenter recommendations</a></li>
-      <li><a href="@appRoutes.JdkVersionController.compareAllEnvironments(teamName = teamName)">JDK Explorer</a></li>
-      <li><a href="@appRoutes.SbtVersionController.compareAllEnvironments(teamName = teamName)">SBT Explorer</a></li>
-      <li><a href="@costRoutes.CostController.costExplorer(team = teamName)">Cost Explorer</a></li>
-      <li><a href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName)">Service Commissioning State</a></li>
-      @* TODO whatsRunningWhere should use standard Catalogue form params and reverse routes *@
-      <li><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases()?profile_name=@teamName.fold("")(_.asString)&profile_type=team">What's Running Where</a></li>
+      <li><a href="@prcommenterRoutes.PrCommenterController.recommendations(teamName = teamName, digitalService = digitalService)">PR-Commenter recommendations</a></li>
+      <li><a href="@appRoutes.JdkVersionController.compareAllEnvironments(teamName = teamName, digitalService = digitalService)">JDK Explorer</a></li>
+      <li><a href="@appRoutes.SbtVersionController.compareAllEnvironments(teamName = teamName, digitalService = digitalService)">SBT Explorer</a></li>
+      <li><a href="@costRoutes.CostController.costExplorer(team = teamName, digitalService = digitalService)">Cost Explorer</a></li>
+      <li><a href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName, digitalService = digitalService)">Service Commissioning State</a></li>
+      <li><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases(teamName = teamName, digitalService = digitalService)">What's Running Where</a></li>
     </ul>
   </div>
 </div>

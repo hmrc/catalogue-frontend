@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.cost.DeploymentSize
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, DigitalService, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -30,18 +30,27 @@ class WhatsRunningWhereService @Inject()(
   serviceConfigsConnector: ServiceConfigsConnector
 )(using ExecutionContext):
 
-  def releasesForProfile(profile: Option[Profile])(using HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
-    releasesConnector.releases(profile)
+  def sm2Profiles()(using HeaderCarrier): Future[Seq[Profile]] =
+    releasesConnector
+      .profiles()
+      .map(_.filter(_.profileType == ProfileType.ServiceManager))
+      .map(_.sortBy(_.profileName.asString))
 
-  def profiles()(using HeaderCarrier): Future[Seq[Profile]] =
-    releasesConnector.profiles()
+  def releases(
+    teamName      : Option[TeamName]
+  , digitalService: Option[DigitalService]
+  , sm2Profile    : Option[String]
+  )(using HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
+    releasesConnector.releases(teamName, digitalService, sm2Profile)
 
   def releasesForService(service: ServiceName)(using HeaderCarrier): Future[WhatsRunningWhere] =
     releasesConnector.releasesForService(service)
 
   def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(using HeaderCarrier): Future[Seq[ServiceDeploymentConfigSummary]] =
     val releasesPerEnv = releases.map(r => (r.serviceName, r.versions.map(_.environment))).toMap
-    serviceConfigsConnector.deploymentConfig()
+
+    serviceConfigsConnector
+      .deploymentConfig()
       .map:
         _
           .filter: config =>

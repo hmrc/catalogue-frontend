@@ -356,6 +356,11 @@ class TeamsAndRepositoriesConnector @Inject()(
       .get(url"$teamsAndServicesBaseUrl/api/open-pull-requests?reposOwnedByTeam=${teamName.asString}")
       .execute[Seq[OpenPullRequest]]
 
+  def openPullRequestsForReposOwnedByDigitalService(digitalService: DigitalService)(using HeaderCarrier): Future[Seq[OpenPullRequest]] =
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/open-pull-requests?reposOwnedByDigitalService=${digitalService.asString}")
+      .execute[Seq[OpenPullRequest]]
+
   def openPullRequestsRaisedByMembersOfTeam(teamName: TeamName)(using HeaderCarrier): Future[Seq[OpenPullRequest]] =
     httpClientV2
       .get(url"$teamsAndServicesBaseUrl/api/open-pull-requests?raisedByMembersOfTeam=${teamName.asString}")
@@ -386,15 +391,15 @@ class TeamsAndRepositoriesConnector @Inject()(
           Nil
 
   def allRepositories(
-     name              : Option[String]         = None,
-     team              : Option[TeamName]       = None,
-     digitalServiceName: Option[DigitalService] = None,
-     archived          : Option[Boolean]        = None,
-     repoType          : Option[RepoType]       = None,
-     serviceType       : Option[ServiceType]    = None
+     name          : Option[String]         = None,
+     team          : Option[TeamName]       = None,
+     digitalService: Option[DigitalService] = None,
+     archived      : Option[Boolean]        = None,
+     repoType      : Option[RepoType]       = None,
+     serviceType   : Option[ServiceType]    = None
    )(using HeaderCarrier): Future[Seq[GitRepository]] =
     httpClientV2
-      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&digitalServiceName=${digitalServiceName.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
+      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories?name=$name&owningTeam=${team.map(_.asString)}&digitalServiceName=${digitalService.map(_.asString)}&archived=$archived&repoType=${repoType.map(_.asString)}&serviceType=${serviceType.map(_.asString)}")
       .execute[Seq[GitRepository]]
       .map(_.sortBy(_.name))
 

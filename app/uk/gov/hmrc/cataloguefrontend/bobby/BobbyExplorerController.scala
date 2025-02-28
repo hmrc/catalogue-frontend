@@ -67,7 +67,7 @@ class BobbyExplorerController @Inject() (
          results         <- EitherT.right[Result]:
                              serviceDeps.bobbyReports(filter.teamName, filter.digitalService, filter.repoType, filter.flag)
        yield
-         Ok(bobbyViolationsPage(form, teams, digitalServices, results = Some(results)))
+         Ok(bobbyViolationsPage(form.fill(filter), teams, digitalServices, results = Some(results)))
       ).merge
 
   /**

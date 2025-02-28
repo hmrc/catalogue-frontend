@@ -21,14 +21,15 @@
 
 @this()
 
-@(rules            : Seq[String],
-  summaries        : Seq[LeakDetectionRepositorySummary],
+@(form             : Form[?],
+  rules            : Seq[String],
   teams            : Seq[GitHubTeam],
-  form             : Form[?],
+  digitalServices  : Seq[DigitalService],
   includeWarnings  : Boolean,
   includeExemptions: Boolean,
   includeViolations: Boolean,
-  includeNonIssues : Boolean
+  includeNonIssues : Boolean,
+  results          : Option[Seq[LeakDetectionRepositorySummary]]
 )(implicit
   messages         : Messages,
   request          : RequestHeader
@@ -42,26 +43,37 @@
     <form id="form" method="get">
         <div class="row mb-3">
             <div class="col-md-3">
-            @select(
-                field                 =  form("rule"),
-                options               =  rules.map(r => r -> r),
-                Symbol("_default")    -> "All",
-                Symbol("_label")      -> "Rule",
-                Symbol("_labelClass") -> "form-label",
-                Symbol("id")          -> "rule-dropdown",
-                Symbol("class")       -> "form-select"
-            )
+                @select(
+                    field                 =  form("rule"),
+                    options               =  rules.map(r => r -> r),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Rule",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "rule-dropdown",
+                    Symbol("class")       -> "form-select"
+                )
             </div>
             <div class="col-md-3">
-            @select(
-                field                 =  form("team"),
-                options               =  teams.map(t => t.name.asString -> t.name.asString),
-                Symbol("_default")    -> "All",
-                Symbol("_label")      -> "Team",
-                Symbol("_labelClass") -> "form-label",
-                Symbol("id")          -> "team-dropdown",
-                Symbol("class")       -> "form-select"
-            )
+                @select(
+                    field                 =  form("team"),
+                    options               =  teams.map(t => t.name.asString -> t.name.asString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Team",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "team-dropdown",
+                    Symbol("class")       -> "form-select"
+                )
+            </div>
+            <div class="col-md-3">
+                @select(
+                    field                 =  form("digitalService"),
+                    options               =  digitalServices.map(x => x.asString -> x.asString),
+                    Symbol("_default")    -> "All",
+                    Symbol("_label")      -> "Digital Service",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "digital-service-dropdown",
+                    Symbol("class")       -> "form-select"
+                )
             </div>
             <div class="col-md-3">
                 <label class="form-label fw-bold">Show repositories with:</label>
@@ -101,12 +113,12 @@
                 </tr>
             </thead>
             <tbody class="list">
-            @summaries.map(leakDetectionRuleSummary)
+            @results.getOrElse(Nil).map(leakDetectionRuleSummary)
             </tbody>
         </table>
     </div>
 
-    @if(summaries.nonEmpty) {
+    @if(results.getOrElse(Nil).nonEmpty) {
       <script @CSPNonce.attr>
         var options = {valueNames: ['repository', 'repo-status', 'first-scanned', 'last-scanned', 'warnings', 'exemptions', 'violations']};
         new List('repo-list', options);
@@ -141,7 +153,7 @@
         }</td>
 }
 <script @CSPNonce.attr>
-  ["rule-dropdown", "team-dropdown", "includeWarnings", "includeExemptions", "includeViolations", "includeNonIssues"]
+  ["rule-dropdown", "team-dropdown", "digital-service-dropdown", "includeWarnings", "includeExemptions", "includeViolations", "includeNonIssues"]
     .forEach(function(id) {
       document.getElementById(id).addEventListener("change", function() {
         document.getElementById("form").submit();
