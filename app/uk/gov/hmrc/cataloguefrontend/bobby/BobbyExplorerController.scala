@@ -82,7 +82,8 @@ class BobbyExplorerController @Inject() (
       yield Ok(bobbyExplorerPage(rules, counts))
 
 case class BobbyReportFilter(
-  teamName      : Option[TeamName]       = None
+  repoName      : Option[String]         = None
+, teamName      : Option[TeamName]       = None
 , digitalService: Option[DigitalService] = None
 , repoType      : Option[RepoType]       = None
 , flag          : SlugInfoFlag           = SlugInfoFlag.Latest
@@ -93,7 +94,8 @@ object BobbyReportFilter:
   lazy val form: Form[BobbyReportFilter] =
     Form(
       Forms.mapping(
-        "teamName"       -> Forms.optional(Forms.of[TeamName])
+        "repoName"       -> Forms.optional(Forms.text)
+      , "teamName"       -> Forms.optional(Forms.of[TeamName])
       , "digitalService" -> Forms.optional(Forms.of[DigitalService])
       , "repoType"       -> Forms.optional(Forms.of[RepoType])
       , "flag"           -> Forms.optional(Forms.of[SlugInfoFlag]).transform(_.getOrElse(SlugInfoFlag.Latest), Some.apply)
