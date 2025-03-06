@@ -79,10 +79,10 @@ class TeamsController @Inject()(
                  , teamsAndRepositoriesConnector.allRepositories(team = Some(teamName), archived = Some(false))
                  , userManagementConnector.getTeam(teamName)
                  , teamsAndRepositoriesConnector.openPullRequestsRaisedByMembersOfTeam(teamName).map: openPrs =>
-                    val githubUrl = s"https://github.com/search?q=org:hmrc+is:pr+is:open+${openPrs.map(_.author).distinct.map { a => s"author:$a" }.mkString("+")}&type=pullrequests"
+                    val githubUrl = s"https://github.com/search?q=org:hmrc+is:pr+is:open+archived:false+${openPrs.map(_.author).distinct.map { a => s"author:$a" }.mkString("+")}&type=pullrequests"
                     (openPrs.size, url"$githubUrl")
                  , teamsAndRepositoriesConnector.openPullRequestsForReposOwnedByTeam(teamName).map: openPrs =>
-                    val githubUrl = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open+archived:false&type=pullrequests"
+                    val githubUrl = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open&type=pullrequests"
                     (openPrs.size, url"$githubUrl")
                  , leakDetectionService.repoSummaries(team = Some(teamName), includeWarnings = false, includeExemptions = false, includeViolations = true, includeNonIssues = false)
                  , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.ForEnvironment(Environment.Production))
