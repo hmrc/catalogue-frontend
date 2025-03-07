@@ -25,7 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.view.html.ServiceMetricsListPage
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, TeamName}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -66,7 +66,8 @@ class ServiceMetricsController @Inject() (
       ).merge
 
 case class ServiceMetricsFilter(
-  team          : Option[TeamName]       = None
+  serviceName   : Option[ServiceName]    = None
+, team          : Option[TeamName]       = None
 , digitalService: Option[DigitalService] = None
 , metricType    : Option[LogMetricId]    = None
 , environment   : Environment            = Environment.Production
@@ -76,7 +77,8 @@ object ServiceMetricsFilter:
   lazy val form: Form[ServiceMetricsFilter] =
     Form(
       Forms.mapping(
-        "team"           -> Forms.optional(Forms.of[TeamName      ])
+        "serviceName"    -> Forms.optional(Forms.of[ServiceName   ])
+      , "team"           -> Forms.optional(Forms.of[TeamName      ])
       , "digitalService" -> Forms.optional(Forms.of[DigitalService])
       , "metricType"     -> Forms.optional(Forms.of[LogMetricId   ])
       , "environment"    -> Forms.default (Forms.of[Environment   ], Environment.Production)
