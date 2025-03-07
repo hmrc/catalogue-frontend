@@ -19,14 +19,30 @@
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamsRoutes}
 
-@(teams  : Seq[(UmpTeam, Option[GitHubTeam])],
-  name   : Option[String]
+@(teams         : Seq[(UmpTeam, Option[GitHubTeam])],
+  name          : Option[String],
+  canCreateTeams: Boolean
 )(implicit
-  request: RequestHeader
+  request       : RequestHeader
 )
 
 @standard_layout("Teams list", active = "teams") {
-    <h1 class="page-heading mt-4">Teams</h1>
+    @request.flash.get("success").map { msg =>
+        <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+            @msg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if(canCreateTeams){
+        <h1 class="page-heading mt-4">Teams
+            <div class="btn-group float-end" role="group">
+                <a href="@teamsRoutes.CreateTeamController.createTeam" class="btn btn-success" role="button">Create a Team</a>
+            </div>
+        </h1>
+    } else {
+        <h1 class="page-heading mt-4">Teams</h1>
+    }
 
     <div id="teams-list">
         <div class="row">

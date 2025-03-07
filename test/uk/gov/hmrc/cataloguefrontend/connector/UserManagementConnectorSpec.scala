@@ -22,6 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.model.{EditTeamDetails, TeamName, UserName}
+import uk.gov.hmrc.cataloguefrontend.teams.CreateTeamRequest
 import uk.gov.hmrc.cataloguefrontend.users.*
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.HeaderCarrier
@@ -499,6 +500,80 @@ class UserManagementConnectorSpec
 
       an[RuntimeException] shouldBe thrownBy {
         connector.createUser(createUserRequest.copy(isServiceAccount = true)).futureValue
+      }
+
+  "createTeam" should :
+
+    val createTeamRequest =
+      CreateTeamRequest(
+        organisation = "MDTP",
+        team         = "Test"
+      )
+
+    val actualTeamRequest =
+      """{
+        |  "organisation": "MDTP",
+        |  "team": "Test"
+        |}
+        |""".stripMargin
+
+    "return Unit when UMP response is 200" in :
+      stubFor(
+        post(urlPathEqualTo(s"/user-management/create-team"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.createTeam(createTeamRequest).futureValue shouldBe()
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/create-team"))
+          .withRequestBody(equalToJson(actualTeamRequest))
+      )
+
+    "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
+      stubFor(
+        post(urlPathEqualTo("/user-management/create-team"))
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+          )
+      )
+
+      an[RuntimeException] shouldBe thrownBy {
+        connector.createTeam(createTeamRequest).futureValue
+      }
+
+  "deleteTeam" should :
+
+    "return Unit when UMP response is 200" in :
+      stubFor(
+        delete(urlPathEqualTo(s"/user-management/delete-team/TestTeam"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.deleteTeam(TeamName("TestTeam")).futureValue shouldBe()
+
+      verify(
+        deleteRequestedFor(urlPathEqualTo("/user-management/delete-team/TestTeam"))
+      )
+
+    "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
+      stubFor(
+        post(urlPathEqualTo("/user-management/delete-team/TestTeam"))
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+          )
+      )
+
+      an[RuntimeException] shouldBe thrownBy {
+        connector.deleteTeam(TeamName("TestTeam")).futureValue
       }
 
   "restLdapPassword" should:

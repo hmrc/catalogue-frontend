@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.teams
 
-import com.github.tomakehurst.wiremock.http.RequestMethod._
+import com.github.tomakehurst.wiremock.http.RequestMethod
+import com.github.tomakehurst.wiremock.http.RequestMethod.*
 import org.scalatest.BeforeAndAfter
 import play.api.libs.ws.readableAsString
 import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
@@ -27,6 +28,7 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
   "Teams list" should {
     "show a list of teams" in {
       setupAuthEndpoint()
+      serviceEndpoint(RequestMethod.POST, "/internal-auth/auth", willRespondWith = (200, Some("""{"retrievals": [[{"resourceType": "catalogue-frontend", "resourceLocation": "teams/*"}]]}""")))
       serviceEndpoint(
         GET,
         "/api/v2/teams",

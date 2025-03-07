@@ -20,6 +20,7 @@ import play.api.Logging
 import play.api.libs.json.*
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.cataloguefrontend.model.{EditTeamDetails, TeamName, UserName}
+import uk.gov.hmrc.cataloguefrontend.teams.CreateTeamRequest
 import uk.gov.hmrc.cataloguefrontend.users.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
@@ -117,11 +118,30 @@ class UserManagementConnector @Inject()(
         case Right(res) => Future.successful(res)
         case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
+  def createTeam(teamRequest: CreateTeamRequest)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/create-team"
+    httpClientV2
+      .post(url)
+      .withBody(Json.toJson(teamRequest)(CreateTeamRequest.writes))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(res) => Future.successful(res)
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
   def editTeamDetails(editTeamDetails: EditTeamDetails)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/edit-team-details"
     httpClientV2
       .patch(url)
       .withBody(Json.toJson(editTeamDetails)(EditTeamDetails.writes))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(res) => Future.successful(res)
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
+  def deleteTeam(teamName: TeamName)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/delete-team/${teamName.asString}"
+    httpClientV2
+      .delete(url)
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)

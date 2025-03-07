@@ -1,0 +1,101 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.users.Organisation
+
+@this()
+
+@(form            : Form[?],
+  organisations   : Seq[Organisation]
+)(implicit
+  request         : RequestHeader,
+  messagesProvider: MessagesProvider
+)
+
+@standard_layout("Create a Team", active = "teams") {
+  @request.flash.get("error").map { msg =>
+    <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+      @msg
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  }
+
+  <section class="section-wrapper">
+
+    <h1 class="page-heading mt-4">Create A Team</h1>
+
+    <p>Use the below form to create a new team.</p>
+
+    @helper.form(
+      action                = uk.gov.hmrc.cataloguefrontend.teams.routes.CreateTeamController.createTeam,
+      Symbol("id")         -> "createTeamForm",
+      Symbol("method")     -> "post",
+      Symbol("class")      -> "needs-validation",
+      Symbol("novalidate") -> ""
+    ) {
+    @csrfFormField
+
+      <div class="form-group row mb-2">
+        <div class="col-md-6 d-grid gap-2">
+          <label class="fw-bold" for="organisationInput">Organisation:</label>
+          <div class="mb-2">
+            <select class="form-select" id="organisationInput" name="organisation">
+              @organisations.map { org =>
+                <option value="@{org.asString}" @if(form.data.getOrElse("organisation", "").equals(org.asString)) { selected="selected" else ""}>
+                  @org.asString
+                </option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-md-6 mb-3">
+          <label class="fw-bold" for="teamInput">Team Name:</label>
+          <input class="form-control @if(form("team").hasErrors) {is-invalid}" type="text" id="teamInput" name="team" value="@form.data.getOrElse("team", "")">
+          @form("team").errors.headOption.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
+        </div>
+      </div>
+
+      <div>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+          Create
+        </button>
+      </div>
+
+        <!-- Modal -->
+      <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="staticBackdropLabel">Create New Team</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to create a new team?</p>
+              <p class="mb-0">Please check that the details are correct.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-success">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </section>
+
+}
