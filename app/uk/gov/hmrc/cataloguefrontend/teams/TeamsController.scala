@@ -68,13 +68,26 @@ class TeamsController @Inject()(
      with CatalogueAuthBuilders
      with Logging:
 
+  private def canCreateAndDeleteTeams(retrieval: Option[Set[Resource]]): Boolean =
+    val teams = retrieval.fold(Set.empty[String])(_.map(_.resourceLocation.value))
+    teams.contains("teams/*")
+
   private def showTeamPage(
     teamName: TeamName,
-    retrieval: Option[Set[Resource]],
     resultType: Html => Result,
     teamDetailsForm: Form[EditTeamDetails]
   )(using HeaderCarrier, RequestHeader): Future[Result] =
     for
+      editR   <- auth.verify:
+                   Retrieval.locations(
+                     resourceType = Some(ResourceType("catalogue-frontend")),
+                     action       = Some(IAAction("EDIT_TEAM"))
+                   )
+      deleteR <- auth.verify:
+                   Retrieval.locations(
+                     resourceType = Some(ResourceType("catalogue-frontend")),
+                     action       = Some(IAAction("ADD_REMOVE_TEAM"))
+                   )
       results <- ( teamsAndRepositoriesConnector.allTeams(Some(teamName)).map(_.headOption.map(_.githubUrl))
                  , teamsAndRepositoriesConnector.allRepositories(team = Some(teamName), archived = Some(false))
                  , userManagementConnector.getTeam(teamName)
@@ -99,19 +112,12 @@ class TeamsController @Inject()(
                  , teamsAndRepositoriesConnector.findTestJobs(teamName = Some(teamName))
                  ).tupled
     yield
-      resultType(teamInfoPage(teamName, teamDetailsForm, umpMyTeamsUrl = umpConfig.umpMyTeamsPageUrl(teamName), results, canEditTeam(retrieval, teamName)))
+      resultType(teamInfoPage(teamName, teamDetailsForm, umpMyTeamsUrl = umpConfig.umpMyTeamsPageUrl(teamName), results, canEditTeam(editR, teamName), canCreateAndDeleteTeams(deleteR)))
 
   def team(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given RequestHeader = request
-      for
-        retrieval <- auth.verify:
-                      Retrieval.locations(
-                        resourceType = Some(ResourceType("catalogue-frontend")),
-                        action       = Some(IAAction("EDIT_TEAM"))
-                      )
-        result    <- showTeamPage(teamName, retrieval, Ok(_), TeamDetailsForm.form())
-      yield result
+      showTeamPage(teamName, Ok(_), TeamDetailsForm.form())
 
   def digitalService(digitalService: DigitalService): Action[AnyContent] =
     BasicAuthAction.async: request =>
@@ -143,10 +149,13 @@ class TeamsController @Inject()(
       given RequestHeader = request
       ( userManagementConnector.getAllTeams()
       , teamsAndRepositoriesConnector.allTeams()
-      ).mapN: (umpTeams, gitHubTeams) =>
+        // This retrieval is not happening in original auth call to make unauthenticated testing easier
+      , auth.verify(Retrieval.locations(Some(ResourceType("catalogue-frontend")), Some(IAAction("ADD_REMOVE_TEAM")))) 
+      ).mapN: (umpTeams, gitHubTeams, retrieval) =>
         Ok(TeamsListPage(
           teams = umpTeams.map(umpTeam => (umpTeam, gitHubTeams.find(_.name == umpTeam.teamName))),
-          name
+          name,
+          canCreateAndDeleteTeams(retrieval)
         ))
 
   def outOfDateTeamDependencies(teamName: TeamName): Action[AnyContent] =
@@ -179,7 +188,7 @@ class TeamsController @Inject()(
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       TeamDetailsForm.form(fieldBeingEdited).bindFromRequest().fold(
         formWithErrors =>
-          showTeamPage(teamName, Some(request.retrieval), BadRequest(_), formWithErrors)
+          showTeamPage(teamName, BadRequest(_), formWithErrors)
         , formData =>
           userManagementConnector.editTeamDetails(formData).map: _ =>
             Redirect(routes.TeamsController.team(teamName)).flashing("success" -> s"Request to edit team details for ${formData.team} sent successfully.")
@@ -188,6 +197,19 @@ class TeamsController @Inject()(
               logger.error(s"Error updating team details for team ${formData.team} - ${e.getMessage}", e)
               Redirect(routes.TeamsController.team(teamName)).flashing("error" -> "Error processing request. Contact #team-platops")
       )
+
+  def deleteTeam(teamName: TeamName): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.TeamsController.team(teamName),
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("ADD_REMOVE_TEAM")))
+    ).async: request =>
+       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+       userManagementConnector.deleteTeam(teamName).map: _ =>
+         Redirect(routes.TeamsController.allTeams()).flashing("success" -> s"Request to delete team ${teamName.asString} sent successfully.")
+       .recover:
+         case NonFatal(e) =>
+           logger.error(s"Error deleting team ${teamName.asString} - ${e.getMessage}", e)
+           Redirect(routes.TeamsController.team(teamName)).flashing("error" -> "Error processing request to delete team. Contact #team-platops")
 
   def addUserToTeam(teamName: TeamName): Action[AnyContent] =
     auth.authenticatedAction(
@@ -198,7 +220,7 @@ class TeamsController @Inject()(
       ManageTeamMembersForm.form.bindFromRequest().fold(
         formWithErrors =>
           logger.error(s"Unexpected error reading Add User To Team form - $formWithErrors")
-          showTeamPage(teamName, Some(request.retrieval), BadRequest(_), TeamDetailsForm.form())
+          showTeamPage(teamName, BadRequest(_), TeamDetailsForm.form())
       , formData =>
           userManagementConnector.addUserToTeam(formData).map: _ =>
             Redirect(routes.TeamsController.team(teamName)).flashing("success" -> s"Request to add user to team: ${formData.team} sent successfully.")
@@ -217,7 +239,7 @@ class TeamsController @Inject()(
       ManageTeamMembersForm.form.bindFromRequest().fold(
         formWithErrors =>
           logger.error(s"Unexpected error handling Remove User From Team form - $formWithErrors")
-          showTeamPage(teamName, Some(request.retrieval), BadRequest(_), TeamDetailsForm.form())
+          showTeamPage(teamName, BadRequest(_), TeamDetailsForm.form())
         , formData =>
           userManagementConnector.getUser(UserName(formData.username)).flatMap:
             case None =>

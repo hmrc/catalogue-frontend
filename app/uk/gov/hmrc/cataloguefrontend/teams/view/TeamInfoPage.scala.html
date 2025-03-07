@@ -32,8 +32,8 @@
 @import scala.concurrent.duration.Duration
 
 @this(
-  configuration: play.api.Configuration
-, viewMessages : ViewMessages
+  configuration : play.api.Configuration
+, viewMessages  : ViewMessages
 )
 
 @(
@@ -58,6 +58,7 @@
                   , Seq[JenkinsJob]
                   )
 , canEditTeam    : Boolean
+, canDeleteTeams : Boolean
 )(implicit
   request: RequestHeader
 )
@@ -80,7 +81,16 @@
       </div>
   }
 
-  <h1 class="page-heading mt-4">@teamName.asString</h1>
+    @if(canDeleteTeams){
+        <h1 class="page-heading mt-4">@teamName.asString
+            <div class="btn-group float-end" role="group">
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Delete this Team</button>
+            </div>
+        </h1>
+    } else {
+        <h1 class="page-heading mt-4">@teamName.asString</h1>
+    }
+
   @defining(results) { case (gitHubUrl, repos, umpTeam, openPrsRaisedByTeamMembers, openPrsForRepos, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, productionVulnerabilities, latestVulnerabilities, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs) =>
 
     <section class="section-wrapper">
@@ -452,6 +462,25 @@
     <button id="cancel-save-@fieldName-button" class="btn btn-outline-secondary btn-sm" type="button">Cancel</button>
   </div>
 }
+
+    <!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Delete Team</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this team?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-danger">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script @CSPNonce.attr>
         document.addEventListener("DOMContentLoaded", function () {
