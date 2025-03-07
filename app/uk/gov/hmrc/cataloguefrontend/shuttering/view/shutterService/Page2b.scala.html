@@ -95,26 +95,26 @@
                         <label for="dateFormat" class="form-label fw-bold">Select a format</label>
                         <select id="dateFormat" class="form-select">
                             @* https://flatpickr.js.org/formatting/ *@
-                            <option value="\\o\\n l J F \\a\\t H:i."></option>
-                            <option value="\\o\\n l J F Y \\a\\t H:i."></option>
-                            <option value="\\o\\n l J F."></option>
-                            <option value="\\o\\n l J F Y."></option>
-                            <option value="\\a\\f\\t\\e\\r l J F \\a\\t H:i."></option>
-                            <option value="\\a\\f\\t\\e\\r l J F Y \\a\\t H:i."></option>
-                            <option value="\\a\\f\\t\\e\\r l J F."></option>
-                            <option value="\\a\\f\\t\\e\\r l J F Y."></option>
+                            <option value="\\o\\n l j F \\a\\t h:iK."></option>
+                            <option value="\\o\\n l j F Y \\a\\t h:iK."></option>
+                            <option value="\\o\\n l j F."></option>
+                            <option value="\\o\\n l j F Y."></option>
+                            <option value="\\a\\f\\t\\e\\r l j F \\a\\t h:iK."></option>
+                            <option value="\\a\\f\\t\\e\\r l j F Y \\a\\t h:iK."></option>
+                            <option value="\\a\\f\\t\\e\\r l j F."></option>
+                            <option value="\\a\\f\\t\\e\\r l j F Y."></option>
                         </select>
                     </div>
 
                     <select id="dateFormatWelsh" class="d-none">
-                        <option value="\\a\\r l J F \\a\\m H:i."></option>
-                        <option value="\\a\\r l J F Y \\a\\m H:i."></option>
-                        <option value="\\a\\r l J F."></option>
-                        <option value="\\a\\r l J F Y."></option>
-                        <option value="\\a\\r \\ô\\l l J F \\a\\m H:i."></option>
-                        <option value="\\a\\r \\ô\\l l J F Y \\a\\m H:i."></option>
-                        <option value="\\a\\r \\ô\\l l J F."></option>
-                        <option value="\\a\\r \\ô\\l l J F Y."></option>
+                        <option value="\\a\\r l j F \\a\\m h:iK."></option>
+                        <option value="\\a\\r l j F Y \\a\\m h:iK."></option>
+                        <option value="\\a\\r l j F."></option>
+                        <option value="\\a\\r l j F Y."></option>
+                        <option value="\\a\\r \\ô\\l l j F \\a\\m h:iK."></option>
+                        <option value="\\a\\r \\ô\\l l j F Y \\a\\m h:iK."></option>
+                        <option value="\\a\\r \\ô\\l l j F."></option>
+                        <option value="\\a\\r \\ô\\l l j F Y."></option>
                     </select>
                     <input type="hidden" name="outageMessageWelsh" id="outageMessageWelsh">
                 </div>
@@ -240,8 +240,8 @@
     function updateFormatOptions(date) {
         if(date) {
             for (let i = 0; i < dateFormat.options.length; i++) {
-                let format = dateFormat.options[i].value
-                let formatted = fp.formatDate(date, format);
+                let format = dateFormat.options[i].value;
+                let formatted = prettify(fp.formatDate(date, format));
                 dateFormat.options[i].text = formatted;
             }
 
@@ -252,9 +252,29 @@
     }
 
     function updateWelsh() {
-        let format = dateFormatWelsh.value
+        let format = dateFormatWelsh.value;
         let formatted = fpWelsh.formatDate(fp.selectedDates[0], format);
-        outageMessageWelsh.value = formatted;
+        let prettified = prettify(formatted);
+        let translated = prettified.replace(/midnight/gi, "hanner nos").replace(/midday/gi, "hanner dydd");
+        outageMessageWelsh.value = translated;
+    }
+
+    function prettify(dateStr) {
+        // https://www.gov.uk/guidance/style-guide/a-to-z#times
+        if (!dateStr) return dateStr;
+    
+        let result = dateStr;
+    
+        // Replace "12:00AM" with "midnight" and "12:00PM" with "midday"
+        result = result.replace(/12:00AM/i, "midnight").replace(/12:00PM/i, "midday");
+    
+        // Convert AM/PM to lowercase
+        result = result.replace(/AM/g, "am").replace(/PM/g, "pm");
+    
+        // Remove ":00" when it's on the hour
+        result = result.replace(/:00/g, "");
+    
+        return result;
     }
 
     $(document).ready(function() {
@@ -266,10 +286,10 @@
 
       fp = flatpickr("#dateTime", {
           enableTime: true,
-          dateFormat: "\\o\\n l J F \\a\\t H:i.", // e.g. "on Monday 1st January 1 at 00:00." https://flatpickr.js.org/formatting/
+          dateFormat: "\\o\\n l j F \\a\\t h:iK.", // e.g. "on Monday 1 January 1 at 12:00AM." https://flatpickr.js.org/formatting/
           minDate: "today", // Can't select a datetime in the past
           mode: "single", // Select a single datetime
-          time_24hr: true,
+          time_24hr: false,
           minuteIncrement: 30, // Restrict time selection to every 30 minutes
           onOpen: function(selectedDates, dateStr, instance) { // Empty by default but pre-populate onOpen
               // Calculate the next 30-minute interval only if the input is empty
@@ -280,16 +300,20 @@
               }
           },
           onChange: function(selectedDates, dateStr, instance) {
-              updateContentPreview(dateStr);
-              updatePreviewLinks(dateStr);
+              let prettified = prettify(dateStr);
+              updateContentPreview(prettified);
+              updatePreviewLinks(prettified);
               updateFormatOptions(selectedDates[0]);
               updateWelsh();
+          },
+          onValueUpdate: function(selectedDates, dateStr, instance) {
+            instance.input.value = prettify(dateStr);
           }
       });
 
       fpWelsh = flatpickr(document.createElement('input'), {
           enableTime: true,
-          time_24hr: true,
+          time_24hr: false,
           locale: 'cy',
           onReady: function(selectedDates, dateStr, instance) {
               instance.calendarContainer.style.display = 'none';
@@ -300,8 +324,9 @@
         let format = this.value
         fp.set('dateFormat', format);
         dateFormatWelsh.selectedIndex = dateFormat.selectedIndex;
-        updateContentPreview(fp.formatDate(fp.selectedDates[0], format));
-        updatePreviewLinks(fp.formatDate(fp.selectedDates[0], format));
+        let formatted = prettify(fp.formatDate(fp.selectedDates[0], format));
+        updateContentPreview(formatted);
+        updatePreviewLinks(formatted);
         updateWelsh();
       });
 
