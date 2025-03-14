@@ -35,15 +35,23 @@ class AuthController @Inject() (
   import AuthController.*
 
   def signIn(targetUrl: Option[RedirectUrl]) =
-    auth.authenticatedAction(
-      continueUrl = routes.AuthController.postSignIn(sanitize(targetUrl))
-    )(Redirect(routes.AuthController.postSignIn(sanitize(targetUrl))))
+    val continueUrl = // encode to handle bookmarks (# to %23)
+      routes.AuthController.postSignIn:
+        sanitize(targetUrl).map: x =>
+          RedirectUrl(java.net.URLEncoder.encode(x.unsafeValue, "UTF-8"))
+
+    auth.authenticatedAction(continueUrl = continueUrl)(Redirect(continueUrl))
 
   // endpoint exists to run retrievals and store the results in the session after logging in
   // (opposed to running retrievals on every page and make results available to standard_layout)
   def postSignIn(targetUrl: Option[RedirectUrl]) =
+
+    val decodedTargetUrl = // decode to handle bookmarks (%23 to #)
+      targetUrl.map: x =>
+        RedirectUrl(java.net.URLDecoder.decode(x.unsafeValue, "UTF-8"))
+
     auth.authenticatedAction(
-      continueUrl = routes.AuthController.signIn(sanitize(targetUrl)),
+      continueUrl = routes.AuthController.signIn(sanitize(decodedTargetUrl)),
       retrieval   = Retrieval.username
                   ~ Retrieval.locations(
                       resourceType = Some(ResourceType("catalogue-frontend")),
@@ -54,7 +62,8 @@ class AuthController @Inject() (
       val usernameRetrieval ~ createUserResource = request.retrieval
       val canCreateUsers = createUserResource.nonEmpty.toString
         Redirect(
-          targetUrl.flatMap(_.getEither(OnlyRelative).toOption)
+          decodedTargetUrl
+            .flatMap(_.getEither(OnlyRelative).toOption)
             .fold(appRoutes.CatalogueController.index.url)(_.url)
         ).addingToSession(
           AuthController.SESSION_USERNAME -> usernameRetrieval.value,
