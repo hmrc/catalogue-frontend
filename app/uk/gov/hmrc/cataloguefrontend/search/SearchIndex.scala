@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.routes as leakRoutes
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes as prcommenterRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.routes as reposRoutes
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.routes as serviceConfigsRoutes
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, routes as serviceConfigsRoutes}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes as commissioningRoutes
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.routes as serviceMetricsRoutes
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes as shutterRoutes}
@@ -59,7 +59,8 @@ class SearchIndex @Inject()(
   config                       : Configuration,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   prCommenterConnector         : PrCommenterConnector,
-  userManagementConnector      : UserManagementConnector
+  userManagementConnector      : UserManagementConnector,
+  serviceConfigsConnector      : ServiceConfigsConnector
 )(using ExecutionContext):
 
   import SearchIndex.*
@@ -96,7 +97,7 @@ class SearchIndex @Inject()(
     SearchTerm("docs", "mdtp-handbook",                config.get[String]("docs.handbookUrl"),                                                1.0f, openInNewWindow = true),
     SearchTerm("docs", "blog posts",                   config.get[String]("confluence.allBlogsUrl"),                                          1.0f, openInNewWindow = true)
   )
-
+ //if repo name exists in list then show the service name for it?
   def updateIndexes(): Future[Unit] =
     given HeaderCarrier = HeaderCarrier()
     for
@@ -107,15 +108,17 @@ class SearchIndex @Inject()(
                                                  SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(teamName = Some(t.name)).url}")))
       digitalLinks    =  digitalServices.flatMap(x => List(SearchTerm("digital service", x.asString, teamRoutes.TeamsController.digitalService(x).url, 0.5f),
                                                            SearchTerm("deployments"    , x.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(digitalService = Some(x)).url}")))
-      repoLinks       =  repos.flatMap(r => List(SearchTerm(repoTypeString(r.repoType),    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
+      serviceRepoMap  <- serviceConfigsConnector.serviceRepoMappings.map(_.map(m => m.repoName -> m.serviceName).toMap)
+      repoLinks       =  repos.flatMap(r => List(SearchTerm(repoTypeString(r.repoType),    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository") ++ serviceRepoMap.get(r.name).toSet),
                                                  SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
       serviceLinks    =  repos.filter(_.repoType == RepoType.Service)
-                              .flatMap(r => List(SearchTerm("deploy",              r.name, deployRoutes.DeployServiceController.step1(Some(ServiceName(r.name))).url),
-                                                 SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(r.name)).url ),
-                                                 SearchTerm("timeline",            r.name, deployRoutes.DeploymentTimelineController.graph(Some(ServiceName(r.name))).url),
-                                                 SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(ServiceName(r.name)).url)
-                                            )
-                                      )
+                              .flatMap: r =>
+                                val serviceHint = serviceRepoMap.get(r.name).toSet
+                                List(SearchTerm("deploy",              r.name, deployRoutes.DeployServiceController.step1(Some(ServiceName(r.name))).url                              , hints = serviceHint),
+                                     SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(r.name)).url                  , hints = serviceHint),
+                                     SearchTerm("timeline",            r.name, deployRoutes.DeploymentTimelineController.graph(Some(ServiceName(r.name))).url                         , hints = serviceHint),
+                                     SearchTerm("commissioning state", r.name, commissioningRoutes.ServiceCommissioningStatusController.getCommissioningState(ServiceName(r.name)).url, hints = serviceHint)
+                                )
       comments        <- prCommenterConnector.search(None, None, None)
       commentLinks    =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
       users           <- userManagementConnector.getAllUsers(None)
