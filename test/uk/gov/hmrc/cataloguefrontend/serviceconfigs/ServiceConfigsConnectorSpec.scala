@@ -135,4 +135,66 @@ final class ServiceConfigsConnectorSpec
       )
     }
   }
+
+  "repoNameForService" should {
+    val service = ServiceName("service-1")
+    "return repo name for a service" in {
+      stubFor(
+        get(urlEqualTo(s"/service-configs/services/repo-name?serviceName=${service.asString}"))
+          .willReturn(
+            aResponse()
+              .withBody(""" "repo-1" """)
+          )
+      )
+      serviceConfigsConnector.repoNameForService(service).futureValue shouldBe Some("repo-1")
+    }
+
+    "return none when no repo name for service found" in {
+      stubFor(
+        get(urlEqualTo(s"/service-configs/services/repo-name?serviceName=${service.asString}"))
+          .willReturn(
+            aResponse()
+              .withStatus(404)
+          )
+      )
+      serviceConfigsConnector.repoNameForService(service).futureValue shouldBe None
+    }
+  }
+
+  "serviceRepoMappings" should {
+    "return service to repo name mappings" in {
+      stubFor(
+        get(urlEqualTo(s"/service-configs/service-repo-names"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                """[
+                  |  {
+                  |    "serviceName": "service-1",
+                  |    "artefactName": "repo-1",
+                  |    "repoName": "repo-1",
+                  |    "disabled": false
+                  |  },
+                  |  {
+                  |    "serviceName": "service-2",
+                  |    "artefactName": "repo-2",
+                  |    "repoName": "repo-2",
+                  |    "disabled": false
+                  |  },
+                  |  {
+                  |    "serviceName": "service-3",
+                  |    "artefactName": "repo-3",
+                  |    "repoName": "repo-3",
+                  |    "disabled": false
+                  |  }
+                  |]""".stripMargin)
+          )
+      )
+      serviceConfigsConnector.serviceRepoMappings.futureValue shouldBe List(
+        ServiceToRepoName("service-1", "repo-1", "repo-1", false),
+        ServiceToRepoName("service-2", "repo-2", "repo-2", false),
+        ServiceToRepoName("service-3", "repo-3", "repo-3", false)
+      )
+    }
+  }
 }

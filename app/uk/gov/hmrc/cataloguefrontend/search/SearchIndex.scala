@@ -97,7 +97,7 @@ class SearchIndex @Inject()(
     SearchTerm("docs", "mdtp-handbook",                config.get[String]("docs.handbookUrl"),                                                1.0f, openInNewWindow = true),
     SearchTerm("docs", "blog posts",                   config.get[String]("confluence.allBlogsUrl"),                                          1.0f, openInNewWindow = true)
   )
- //if repo name exists in list then show the service name for it?
+
   def updateIndexes(): Future[Unit] =
     given HeaderCarrier = HeaderCarrier()
     for
