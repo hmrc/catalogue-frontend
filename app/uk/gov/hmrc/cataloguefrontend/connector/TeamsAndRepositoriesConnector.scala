@@ -67,6 +67,7 @@ enum Tag(
   derives Ordering, Reads:
   case AdminFrontend    extends Tag(asString = "admin"             , displayString = "Admin Frontend"    )
   case Api              extends Tag(asString = "api"               , displayString = "API"               )
+  case External         extends Tag(asString = "external"          , displayString = "External"          )
   case BuiltOffPlatform extends Tag(asString = "built-off-platform", displayString = "Built Off Platform")
   case Maven            extends Tag(asString = "maven"             , displayString = "Maven"             )
   case Stub             extends Tag(asString = "stub"              , displayString = "Stub"              )
