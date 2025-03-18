@@ -476,7 +476,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-danger">Yes</button>
+                @helper.form(action= uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.deleteTeam(teamName)) {
+                    @csrfFormField
+                    <button type="submit" class="btn btn-danger">Yes</button>
+                }
             </div>
         </div>
     </div>

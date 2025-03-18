@@ -11,7 +11,7 @@ POST       /teams/add-user-to-team                      uk.gov.hmrc.cataloguefro
 GET        /create-team                                 uk.gov.hmrc.cataloguefrontend.teams.CreateTeamController.createTeamLanding
 POST       /create-team                                 uk.gov.hmrc.cataloguefrontend.teams.CreateTeamController.createTeam
 
-DELETE     /delete-team/:teamName                       uk.gov.hmrc.cataloguefrontend.teams.TeamsController.deleteTeam(teamName: TeamName)
+POST       /delete-team/:teamName                       uk.gov.hmrc.cataloguefrontend.teams.TeamsController.deleteTeam(teamName: TeamName)
 
 GET        /repositories                                uk.gov.hmrc.cataloguefrontend.repository.RepositoriesController.allRepositories(name: Option[String] ?= None, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, showArchived: Option[Boolean] ?= None, repoType: Option[String] ?= None)
 
