@@ -75,8 +75,8 @@
         }
         <div id="@{dependency.name}-@{rootId}-bobbyrule" class="col-2">
         @dependency.versionState match {
-            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{bobbyRoutes.BobbyExplorerController.list(selector = Some(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}"))}">See rule</a> }
-            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{bobbyRoutes.BobbyExplorerController.list(selector = Some(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}"))}">See rule</a> }
+            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{bobbyRoutes.BobbyExplorerController.list().withFragment(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}")}">See rule</a> }
+            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{bobbyRoutes.BobbyExplorerController.list().withFragment(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}")}">See rule</a> }
             case _                                               => { }
         }
         </div>

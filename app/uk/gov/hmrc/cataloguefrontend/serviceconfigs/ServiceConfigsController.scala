@@ -49,10 +49,7 @@ class ServiceConfigsController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  /**
-    * @param selector for reverse routing
-    */
-  def configExplorer(serviceName: ServiceName, showWarnings: Boolean, selector: Option[KeyName]): Action[AnyContent] =
+  def configExplorer(serviceName: ServiceName, showWarnings: Boolean): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for
         deployments      <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
