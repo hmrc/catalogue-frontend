@@ -77,7 +77,7 @@ GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefro
 GET        /sbtexplorer/environment                     uk.gov.hmrc.cataloguefrontend.SbtVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SbtVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 
-GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name: ServiceName, showWarnings: Boolean ?= false, selector: Option[uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService.KeyName] ?= None)
+GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name: ServiceName, showWarnings: Boolean ?= false)
 GET        /config/search                               uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchLanding()
 GET        /config/search/results                       uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchResults(configKey: Option[String] ?= None)
 GET        /config/warnings/search                      uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningLanding()
@@ -86,7 +86,7 @@ GET        /config/warnings/search/results              uk.gov.hmrc.cataloguefro
 GET        /cost-explorer                               uk.gov.hmrc.cataloguefrontend.cost.CostController.costExplorer(team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, asCSV: Boolean ?= false)
 
 GET        /bobby-violations                            uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.bobbyViolations(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, flag: Option[SlugInfoFlag] ?= None, isActive: Option[Boolean] ?= None)
-GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.list(selector: Option[String] ?= None)
+GET        /bobbyrules                                  uk.gov.hmrc.cataloguefrontend.bobby.BobbyExplorerController.list()
 GET        /bobbyrulestrend                             uk.gov.hmrc.cataloguefrontend.bobby.BobbyRulesTrendController.display(`rules[]`: Seq[String] ?= Seq.empty, from: java.time.LocalDate ?= java.time.LocalDate.now().minusYears(2), to: java.time.LocalDate ?= java.time.LocalDate.now())
 
 GET        /pr-commenter/recommendations                uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterController.recommendations(name: Option[String] ?= None, teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, commentType: Option[String] ?= None)

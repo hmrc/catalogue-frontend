@@ -73,7 +73,7 @@ class BobbyExplorerController @Inject() (
   /**
     * @param selector for reverse routing
     */
-  def list(selector: Option[String]): Action[AnyContent] =
+  def list(): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given RequestHeader = request
       for
