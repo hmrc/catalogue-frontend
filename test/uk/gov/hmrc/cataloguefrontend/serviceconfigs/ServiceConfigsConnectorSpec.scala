@@ -172,28 +172,25 @@ final class ServiceConfigsConnectorSpec
                   |  {
                   |    "serviceName": "service-1",
                   |    "artefactName": "repo-1",
-                  |    "repoName": "repo-1",
-                  |    "disabled": false
+                  |    "repoName": "repo-1"
                   |  },
                   |  {
                   |    "serviceName": "service-2",
                   |    "artefactName": "repo-2",
-                  |    "repoName": "repo-2",
-                  |    "disabled": false
+                  |    "repoName": "repo-2"
                   |  },
                   |  {
                   |    "serviceName": "service-3",
                   |    "artefactName": "repo-3",
-                  |    "repoName": "repo-3",
-                  |    "disabled": false
+                  |    "repoName": "repo-3"
                   |  }
                   |]""".stripMargin)
           )
       )
       serviceConfigsConnector.serviceRepoMappings.futureValue shouldBe List(
-        ServiceToRepoName("service-1", "repo-1", "repo-1", false),
-        ServiceToRepoName("service-2", "repo-2", "repo-2", false),
-        ServiceToRepoName("service-3", "repo-3", "repo-3", false)
+        ServiceToRepoName("service-1", "repo-1", "repo-1"),
+        ServiceToRepoName("service-2", "repo-2", "repo-2"),
+        ServiceToRepoName("service-3", "repo-3", "repo-3")
       )
     }
   }
