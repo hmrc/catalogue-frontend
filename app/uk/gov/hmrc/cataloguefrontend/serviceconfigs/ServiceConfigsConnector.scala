@@ -49,11 +49,17 @@ class ServiceConfigsConnector @Inject() (
   private given Reads[ConfigByEnvironment]  = ConfigByEnvironment.reads
   private given Reads[ConfigWarning]        = ConfigWarning.reads
   private given Reads[ServiceRelationships] = ServiceRelationships.reads
+  private given Reads[ServiceToRepoName]    = ServiceToRepoName.reads
 
   def repoNameForService(service: ServiceName)(using HeaderCarrier): Future[Option[String]] =
     httpClientV2
       .get(url"$serviceConfigsBaseUrl/service-configs/services/repo-name?serviceName=${service.asString}")
       .execute[Option[String]]
+    
+  def serviceRepoMappings(using HeaderCarrier): Future[List[ServiceToRepoName]] =
+    httpClientV2
+      .get(url"$serviceConfigsBaseUrl/service-configs/service-repo-names")
+      .execute[List[ServiceToRepoName]]
 
   def deploymentEvents(
     service: ServiceName,

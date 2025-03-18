@@ -22,6 +22,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterConnector
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -68,8 +69,9 @@ class SearchIndexSpec
   private val mockTeamsAndRepositoriesConnector = mock[TeamsAndRepositoriesConnector]
   private val mockPrCommenterConnector          = mock[PrCommenterConnector]
   private val mockUserManagementConnector       = mock[UserManagementConnector]
+  private val mockServiceConfigsConnector       = mock[ServiceConfigsConnector]
   private val mockConfig                        = mock[Configuration]
-  private val testIndex = new SearchIndex(mockConfig, mockTeamsAndRepositoriesConnector, mockPrCommenterConnector, mockUserManagementConnector)
+  private val testIndex = new SearchIndex(mockConfig, mockTeamsAndRepositoriesConnector, mockPrCommenterConnector, mockUserManagementConnector, mockServiceConfigsConnector)
 
   //Populate index with mock data
   testIndex.cachedIndex.set(SearchIndex.optimizeIndex(index))

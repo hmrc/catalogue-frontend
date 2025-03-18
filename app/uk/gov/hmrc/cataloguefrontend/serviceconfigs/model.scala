@@ -106,3 +106,16 @@ object DeploymentConfigEvent {
     ~ (__ \ "lastUpdated"            ).read[Instant]
     )(DeploymentConfigEvent.apply)
 }
+
+case class ServiceToRepoName(
+  serviceName : String,
+  artefactName: String,
+  repoName    : String
+)
+
+object ServiceToRepoName:
+  val reads: Reads[ServiceToRepoName] =
+    ( (__ \ "serviceName" ).read[String]
+    ~ (__ \ "artefactName").read[String]
+    ~ (__ \ "repoName"    ).read[String]
+    )(ServiceToRepoName.apply _)

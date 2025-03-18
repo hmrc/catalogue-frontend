@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.leakdetection.routes as leakRoutes
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes as prcommenterRoutes}
 import uk.gov.hmrc.cataloguefrontend.repository.routes as reposRoutes
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.routes as serviceConfigsRoutes
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsConnector, routes as serviceConfigsRoutes}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes as commissioningRoutes
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.routes as serviceMetricsRoutes
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterType, routes as shutterRoutes}
@@ -59,7 +59,8 @@ class SearchIndex @Inject()(
   config                       : Configuration,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   prCommenterConnector         : PrCommenterConnector,
-  userManagementConnector      : UserManagementConnector
+  userManagementConnector      : UserManagementConnector,
+  serviceConfigsConnector      : ServiceConfigsConnector
 )(using ExecutionContext):
 
   import SearchIndex.*
@@ -107,8 +108,10 @@ class SearchIndex @Inject()(
                                                  SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(teamName = Some(t.name)).url}")))
       digitalLinks    =  digitalServices.flatMap(x => List(SearchTerm("digital service", x.asString, teamRoutes.TeamsController.digitalService(x).url, 0.5f),
                                                            SearchTerm("deployments"    , x.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(digitalService = Some(x)).url}")))
+      mappings        <- serviceConfigsConnector.serviceRepoMappings
       repoLinks       =  repos.flatMap(r => List(SearchTerm(repoTypeString(r.repoType),    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
-                                                 SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f)))
+                                                 SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f))
+                         ) ++ mappings.flatMap(s => List(SearchTerm(repoTypeString(RepoType.Service), s.serviceName, catalogueRoutes.CatalogueController.service(ServiceName(s.serviceName)).url, 0.5f, Set("repository"))))
       serviceLinks    =  repos.filter(_.repoType == RepoType.Service)
                               .flatMap(r => List(SearchTerm("deploy",              r.name, deployRoutes.DeployServiceController.step1(Some(ServiceName(r.name))).url),
                                                  SearchTerm("config",              r.name, serviceConfigsRoutes.ServiceConfigsController.configExplorer(ServiceName(r.name)).url ),
