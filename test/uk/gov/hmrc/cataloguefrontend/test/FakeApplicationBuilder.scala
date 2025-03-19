@@ -43,8 +43,6 @@ trait FakeApplicationBuilder
         Map(
           "microservice.services.internal-auth.port"                -> wireMockPort,
           "microservice.services.internal-auth.host"                -> wireMockHost,
-          "microservice.services.health-indicators.port"            -> wireMockPort,
-          "microservice.services.health-indicators.host"            -> wireMockHost,
           "microservice.services.teams-and-repositories.port"       -> wireMockPort,
           "microservice.services.teams-and-repositories.host"       -> wireMockHost,
           "microservice.services.indicators.port"                   -> wireMockPort,

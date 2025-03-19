@@ -113,9 +113,6 @@ GET        /shutter-events/list                         uk.gov.hmrc.cataloguefro
 GET        /whats-running-where        uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 GET        /deployments/:env           uk.gov.hmrc.cataloguefrontend.deployments.DeploymentEventsController.deploymentEvents(env: Environment)
 
-GET        /health-indicators                           uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.indicatorsForRepoType()
-GET        /health-indicators/:name                     uk.gov.hmrc.cataloguefrontend.healthindicators.HealthIndicatorsController.breakdownForRepo(name: String)
-
 GET        /platform-initiatives                        uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesController.platformInitiatives(display: DisplayType ?= DisplayType.Chart, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 
 GET        /leak-detection                                                 uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionController.ruleSummaries
