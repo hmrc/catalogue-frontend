@@ -18,7 +18,6 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType}
 @import uk.gov.hmrc.cataloguefrontend.dependency.{routes => dependencyRoutes}
 @import uk.gov.hmrc.cataloguefrontend.deployments.{routes => deploymentRoutes}
-@import uk.gov.hmrc.cataloguefrontend.healthindicators.routes.HealthIndicatorsController
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterReport, routes => prcommenterRoutes}
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{routes => serviceConfigsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.routes.ServiceCommissioningStatusController
@@ -48,9 +47,6 @@
                 <li><a id="link-to-@{repo.name}-config" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.getOrElse(ServiceName(repo.name)))" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
                 <li><a id="link-to-dependency-list" href="@dependencyRoutes.DependenciesController.services(serviceName.getOrElse(ServiceName(repo.name)))">Service Dependencies</a></li>
                 <li><a id="link-to-frontend-route-warnings" href="@ShutterOverviewController.frontendRouteWarnings(Environment.Production, serviceName.getOrElse(ServiceName(repo.name)))">Frontend Route Warnings</a></li>
-            }
-            @if(repo.repoType == RepoType.Service || repo.repoType == RepoType.Library) {
-                <li><a id="link-to-@{repo.name}-health" href="@HealthIndicatorsController.breakdownForRepo(repo.name)">Health-Indicator</a></li>
             }
             @commenterReport.map { report =>
                 <li><a id="link-to-@{repo.name}-comments" href="@prcommenterRoutes.PrCommenterController.recommendations(name = Some(report.name))">PR-Commenter recommendations (@report.comments.size)</a></li>
