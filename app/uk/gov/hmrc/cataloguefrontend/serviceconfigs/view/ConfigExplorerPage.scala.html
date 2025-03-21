@@ -258,20 +258,8 @@
         </aside>
         </main>
         <script @CSPNonce.attr type="text/javascript">
+            const onloadParams = new URLSearchParams(window.location.search);
             ready(function() {
-                (window.onhashchange = function () {
-                    if (window.location.hash) {
-                        const el = document.getElementById(window.location.hash.replace("#", "config-row-"));
-                        const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
-                        highlighted.forEach(e => e.classList.remove("highlight-amber"));
-
-                        if (el) {
-                            el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
-                            el.classList.add("highlight-amber");
-                        }
-                    }
-                })();
-
                 Split(["#header-0", "#header-1", "#header-2", "#header-3", "#header-4", "#header-5", "#header-6", "#header-7"], {
                     sizes: [300, 500, 500, 500, 500, 500, 500, 500]
                 });
@@ -300,34 +288,81 @@
                 });
 
                 Array.from(document.querySelectorAll(".column-filter")).forEach(input => {
-                    const env = input.id.replace("show-", "");
                     input.addEventListener("change", e => {
-                        Array.from(document.getElementsByClassName(`column-${env}`)).forEach(item => {
+                        addQueryParam(input.id, e.target.checked);
+                        Array.from(document.getElementsByClassName(input.id.replace("show-", "column-"))).forEach(item => {
                             item.classList.toggle("hidden");
                         });
                     });
+                    setCheckboxWithQueryParam(input, input.id);
                 });
 
+                const referenceConfInput = document.querySelector("#show-referenceConf");
+                referenceConfInput.addEventListener("change", e => {
+                    addQueryParam("show-referenceConf", e.target.checked);
+                    document.querySelector("body").classList.toggle("hide-refconf-only");
+                });
+                setCheckboxWithQueryParam(referenceConfInput, "show-referenceConf");
+
+                const deploymentConfInput = document.querySelector("#show-deploymentConf");
+                deploymentConfInput.addEventListener("change", e => {
+                    addQueryParam("show-deploymentConf", e.target.checked);
+                    document.querySelector("body").classList.toggle("hide-deploymentconf");
+                });
+                setCheckboxWithQueryParam(deploymentConfInput, "show-deploymentConf");
+
+                const evictionsInput = document.querySelector("#show-evictions");
                 document.querySelector("#show-evictions").addEventListener("change", e => {
+                    addQueryParam("show-evictions", e.target.checked);
                     Array.from(document.querySelectorAll(".strikethrough")).forEach(item => {
                         item.classList.toggle("hide-evictions")
                     });
                 });
-                document.querySelector("#show-referenceConf").addEventListener("change", e => {
-                    document.querySelector("body").classList.toggle("hide-refconf-only");
-                });
-                document.querySelector("#show-deploymentConf").addEventListener("change", e => {
-                    document.querySelector("body").classList.toggle("hide-deploymentconf");
-                })
+                setCheckboxWithQueryParam(evictionsInput, "show-evictions");
+
+                const wordWrapInput = document.querySelector("#word-wrap");
                 document.querySelector("#word-wrap").addEventListener("change", e => {
+                    addQueryParam("word-wrap", e.target.checked);
                     document.querySelector("body").classList.toggle("word-wrap");
                 });
+                setCheckboxWithQueryParam(wordWrapInput, "word-wrap");
+
                 document.querySelector("#show-warnings").addEventListener("change", e => {
+                    addQueryParam("showWarnings", e.target.checked);
                     document.querySelector("body").classList.toggle("show-warnings");
                 });
+                // Onload show-warnings handled server side - adding everything this way would be too much
+
                 // Activate bootstrap tooltips
                 const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
-                const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+                const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+
+                function addQueryParam(queryParamName, queryParamValue) {
+                    const url = new URL(window.location);
+                    url.searchParams.set(queryParamName, queryParamValue);
+                    window.history.pushState({}, 'Config - @serviceName.asString', url);
+                }
+
+                function setCheckboxWithQueryParam(inputElement, queryParamName) {
+                    if (onloadParams.has(queryParamName) && onloadParams.get(queryParamName) != inputElement.value.toString()) {
+                        inputElement.checked = onloadParams.get(queryParamName) === 'true';
+                        inputElement.dispatchEvent(new Event("change"));
+                    }
+                }
+
+                // Requires all setCheckboxWithQueryParam to be run first e.g show-referenceConf
+                (window.onhashchange = function () {
+                    if (window.location.hash) {
+                        const el = document.getElementById(window.location.hash.replace("#", "config-row-"));
+                        const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
+                        highlighted.forEach(e => e.classList.remove("highlight-amber"));
+
+                        if (el) {
+                            el.scrollIntoView({block: "center", inline: "nearest", behavior: "smooth"});
+                            el.classList.add("highlight-amber");
+                        }
+                    }
+                })();
             });
         </script>
     </body>
