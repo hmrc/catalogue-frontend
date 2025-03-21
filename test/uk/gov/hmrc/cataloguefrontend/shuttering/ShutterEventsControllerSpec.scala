@@ -70,11 +70,11 @@ class ShutterEventsControllerSpec
       .thenReturn(Future.successful(Seq.empty[Route]))
 
     def stubConnectorSuccess(forFilter: ShutterEventsFilter, returnEvents: Seq[ShutterStateChangeEvent] = Seq.empty): Unit =
-      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(using any[HeaderCarrier]))
+      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter), eqTo(None), eqTo(None))(using any[HeaderCarrier]))
         .thenReturn(Future.successful(returnEvents))
 
     def stubConnectorFailure(forFilter: ShutterEventsFilter): Unit =
-      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter.copy(serviceName = None)), eqTo(None), eqTo(None))(using any[HeaderCarrier]))
+      when(connector.shutterEventsByTimestampDesc(eqTo(forFilter), eqTo(None), eqTo(None))(using any[HeaderCarrier]))
         .thenReturn(Future.failed(RuntimeException("connector failure")))
 
     extension (eventualResult: Future[Result])
