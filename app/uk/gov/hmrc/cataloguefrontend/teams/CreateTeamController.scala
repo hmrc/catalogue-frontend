@@ -83,7 +83,9 @@ object CreateTeamForm:
     Form(
       Forms.mapping(
         "organisation"     -> Forms.nonEmptyText,
-        "team"             -> Forms.text.verifying(CreateTeamConstraints.teamNameConstraints: _*)
+        "team"             -> Forms.text
+                                .verifying(CreateTeamConstraints.teamNameConstraints: _*)
+                                .transform(_.trim, _.toString)
       )(CreateTeamRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
@@ -94,7 +96,7 @@ object CreateTeamConstraints:
 
   val teamNameConstraints: Seq[Constraint[String]] =
     val nonEmptyValidation: String => Boolean = _.trim.nonEmpty
-    val validPattern: String => Boolean = _.matches("^[a-zA-Z0-9_-]+$")
+    val validPattern: String => Boolean = _.matches("^[a-zA-Z0-9_\\- ]+$")
     val validLength: String => Boolean = _.length <= 30
 
     Seq(
@@ -108,6 +110,6 @@ object CreateTeamConstraints:
       ),
       mkConstraint("constraints.teamNameValidCheck")(
         constraint = validPattern,
-        error = "Team name must only contain letters, numbers, underscores (_), or hyphens (-)"
+        error = "Team name can only contain letters, numbers, spaces, underscores (_), or hyphens (-)"
       )
     )
