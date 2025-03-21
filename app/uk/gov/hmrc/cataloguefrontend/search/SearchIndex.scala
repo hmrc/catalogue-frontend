@@ -104,10 +104,12 @@ class SearchIndex @Inject()(
       repos           <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
       teams           <- teamsAndRepositoriesConnector.allTeams()
       digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
-      teamPageLinks   =  teams.flatMap(t => List(SearchTerm("team",        t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
-                                                 SearchTerm("deployments", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(teamName = Some(t.name)).url}")))
-      digitalLinks    =  digitalServices.flatMap(x => List(SearchTerm("digital service", x.asString, teamRoutes.TeamsController.digitalService(x).url, 0.5f),
-                                                           SearchTerm("deployments"    , x.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(digitalService = Some(x)).url}")))
+      teamPageLinks   =  teams.flatMap: t =>
+                           List(SearchTerm("team"              , t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
+                                SearchTerm("deployments (team)", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(teamName = Some(t.name)).url}"))
+      digitalLinks    =  digitalServices.flatMap: x =>
+                           List(SearchTerm("digital service"              , x.asString, teamRoutes.TeamsController.digitalService(x).url, 0.5f),
+                                SearchTerm("deployments (digital service)", x.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(digitalService = Some(x)).url}"))
       mappings        <- serviceConfigsConnector.serviceRepoMappings
       repoLinks       =  repos.flatMap(r => List(SearchTerm(repoTypeString(r.repoType),    r.name, catalogueRoutes.CatalogueController.repository(r.name).url, 0.5f, Set("repository")),
                                                  SearchTerm("leak",        r.name,          leakRoutes.LeakDetectionController.branchSummaries(r.name).url, 0.5f))
