@@ -68,13 +68,7 @@ class ServiceConfigsService @Inject()(
   )(using
     HeaderCarrier
   ): Future[Option[ConfigChanges]] =
-    serviceConfigsConnector
-      .configChanges(deploymentId, fromDeploymentId)
-      .map: o =>
-        o.map: x =>
-          x.copy(
-           configChanges = x.configChanges.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
-          )
+    serviceConfigsConnector.configChanges(deploymentId, fromDeploymentId)
 
   def configChangesNextDeployment(
     serviceName: ServiceName,
@@ -83,12 +77,7 @@ class ServiceConfigsService @Inject()(
   )(using
     HeaderCarrier
   ): Future[ConfigChanges] =
-    serviceConfigsConnector
-      .configChangesNextDeployment(serviceName, environment, version)
-      .map: x =>
-        x.copy(
-          configChanges = x.configChanges.filter(c => c._2.from.exists(!_.isReferenceConf) || c._2.to.exists(!_.isReferenceConf))
-        )
+    serviceConfigsConnector.configChangesNextDeployment(serviceName, environment, version)
 
   def configByKeyWithNextDeployment(
     serviceName : ServiceName,

@@ -178,53 +178,58 @@
     </div>
   </div>
 
-  <div class="accordion-item">
-    <div class="accordion-header" id="headingConfigUpdates">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(configChanges.configChanges.isEmpty) {disabled} >
-        Config Updates
-        @changesBadge(configChanges.configChanges.size)
-      </button>
-    </div>
-    <div id="collapseConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
-      <div class="accordion-body">
-        <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
-          <thead>
-            <tr>
-              <th>Key</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody id="config-updates-rows">
-            @for((key, ConfigChange(from, to)) <- configChanges.configChanges.toList.sortBy(_._1.asString) ) {
+
+  @defining(configChanges.configChanges.partition(c => c._2.from.exists(_.isReferenceConf) || c._2.to.exists(_.isReferenceConf))) { case (refConfigChanges, nonRefConfigChanges) =>
+    <div class="accordion-item">
+      <div class="accordion-header" id="headingConfigUpdates">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(nonRefConfigChanges.isEmpty) {disabled} >
+          Config Updates @if(refConfigChanges.nonEmpty) {
+            (plus @refConfigChanges.size <code class="p-1">reference.conf</code> changes)
+          }
+          @changesBadge(nonRefConfigChanges.size)
+        </button>
+      </div>
+      <div id="collapseConfigUpdates" class="accordion-collapse collapse" aria-labelledby="headingConfigUpdates" data-bs-parent="#accordion">
+        <div class="accordion-body">
+          <table class="table table-striped always-wrap sticky-header text-break" style="table-layout:fixed">
+            <thead>
               <tr>
-                <td>
-                  <code>
-                    <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true).withFragment(key.asString)" target="_blank">
-                      @if(from.nonEmpty && to.isEmpty) {
-                        <del>@key.asString</del>
-                      } else {
-                        @key.asString
-                      }
-                    </a>
-                  </code>
-                </td>
-                <td>
-                  <ul class="list-unstyled">
-                    @from.map { c =>
-                      <li>@displayConfigSourceValue(key, environment, c, isStriked = true)</li>
-                    }
-                    @to.map { c =>
-                      <li>@displayConfigSourceValue(key, environment, c, isStriked = false)</li>
-                    }
-                  </ul>
-                </td>
+                <th>Key</th>
+                <th>Value</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody id="config-updates-rows">
+              @for((key, ConfigChange(from, to)) <- nonRefConfigChanges.toList.sortBy(_._1.asString) ) {
+                <tr>
+                  <td>
+                    <code>
+                      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true).withFragment(key.asString)" target="_blank">
+                        @if(from.nonEmpty && to.isEmpty) {
+                          <del>@key.asString</del>
+                        } else {
+                          @key.asString
+                        }
+                      </a>
+                    </code>
+                  </td>
+                  <td>
+                    <ul class="list-unstyled">
+                      @from.map { c =>
+                        <li>@displayConfigSourceValue(key, environment, c, isStriked = true)</li>
+                      }
+                      @to.map { c =>
+                        <li>@displayConfigSourceValue(key, environment, c, isStriked = false)</li>
+                      }
+                    </ul>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
+  }
 
   @if(showConfigWarnings) {
     <div class="accordion-item">
