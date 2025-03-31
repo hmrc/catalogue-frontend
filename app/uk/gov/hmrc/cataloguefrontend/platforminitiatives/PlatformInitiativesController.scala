@@ -68,9 +68,7 @@ case class PlatformInitiativesFilter(
   initiativeName : Option[String] = None,
   team           : Option[TeamName],
   digitalService : Option[DigitalService]
-):
-  def isEmpty: Boolean =
-    initiativeName.isEmpty && team.isEmpty
+)
 
 object PlatformInitiativesFilter {
   lazy val form: Form[PlatformInitiativesFilter] =

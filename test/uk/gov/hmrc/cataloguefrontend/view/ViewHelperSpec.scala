@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.view
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Link, RepoType}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Organisation, Link, RepoType}
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 
 import java.time.Instant
@@ -59,6 +59,7 @@ class ViewHelperSpec extends AnyWordSpec with Matchers {
 
   val aRepo = GitRepository(
     name           = "name",
+    organisation   = Some(Organisation.Mdtp),
     description    = "description",
     createdDate    = Instant.now,
     lastActiveDate = Instant.now,

@@ -404,6 +404,7 @@ class CreateAppConfigsControllerSpec
     val gitRepository =
       GitRepository(
         name           = serviceName.asString,
+        organisation   = Some(Organisation.Mdtp),
         description    = "test",
         githubUrl      = "test",
         createdDate    = Instant.now(),

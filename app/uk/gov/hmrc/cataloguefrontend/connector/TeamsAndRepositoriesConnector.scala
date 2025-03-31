@@ -38,6 +38,19 @@ import FromStringEnum._
 
 given Parser[RepoType] = Parser.parser(RepoType.values)
 
+enum Organisation(
+  override val asString: String
+) extends FromString
+  derives Reads:
+  case Mdtp                   extends Organisation("mdtp")
+  case External(name: String) extends Organisation(name)
+
+given Parser[Organisation] =
+    (s: String) =>
+      s.toLowerCase match
+        case Organisation.Mdtp.asString => Right(Organisation.Mdtp)
+        case o                          => Right(Organisation.External(o))
+
 enum RepoType(
   override val asString: String
 ) extends FromString
@@ -180,6 +193,7 @@ object JenkinsJob:
 
 case class GitRepository(
   name                : String,
+  organisation        : Option[Organisation],
   description         : String,
   githubUrl           : String,
   createdDate         : Instant,
@@ -197,11 +211,12 @@ case class GitRepository(
   branchProtection    : Option[BranchProtection] = None,
   isDeprecated        : Boolean                  = false,
   teamNames           : Seq[TeamName]            = Seq.empty,
-  jenkinsJobs         : Seq[JenkinsJob]          = Seq.empty,
   prototypeName       : Option[String]           = None,
   prototypeAutoPublish: Option[Boolean]          = None,
-  zone                : Option[Zone]             = None,
 ):
+  def displayName: String =
+    name + organisation.filterNot(_ == Organisation.Mdtp).fold("")(x => s" (${x.asString})")
+
   def isShared: Boolean =
     teamNames.length >= Constant.sharedRepoTeamsCutOff
 
@@ -215,9 +230,8 @@ end GitRepository
 
 object GitRepository:
   val reads: Reads[GitRepository] =
-    given Reads[JenkinsJob] = JenkinsJob.reads
-
     ( (__ \ "name"                ).read[String]
+    ~ (__ \ "organisation"        ).readNullable[Organisation]
     ~ (__ \ "description"         ).read[String]
     ~ (__ \ "url"                 ).read[String]
     ~ (__ \ "createdDate"         ).read[Instant]
@@ -235,10 +249,8 @@ object GitRepository:
     ~ (__ \ "branchProtection"    ).readNullable(BranchProtection.reads)
     ~ (__ \ "isDeprecated"        ).readWithDefault[Boolean](false)
     ~ (__ \ "teamNames"           ).readWithDefault[Seq[TeamName]](Seq.empty)
-    ~ (__ \ "jenkinsJobs"         ).readWithDefault[Seq[JenkinsJob]](Seq.empty[JenkinsJob])
     ~ (__ \ "prototypeName"       ).readNullable[String]
     ~ (__ \ "prototypeAutoPublish").readNullable[Boolean]
-    ~ (__ \ "zone"                ).readNullable[Zone]
     )(apply)
 
 case class BranchProtection(
@@ -405,13 +417,9 @@ class TeamsAndRepositoriesConnector @Inject()(
       .map(_.sortBy(_.name))
 
   def repositoryDetails(name: String)(using HeaderCarrier): Future[Option[GitRepository]] =
-    for
-      repo     <- httpClientV2
-                    .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
-                    .execute[Option[GitRepository]]
-      jobs     <- lookupLatestJenkinsJobs(name)
-      withJobs =  repo.map(_.copy(jenkinsJobs = jobs))
-    yield withJobs
+    httpClientV2
+      .get(url"$teamsAndServicesBaseUrl/api/v2/repositories/$name")
+      .execute[Option[GitRepository]]
 
   def allTeamsByService()(using HeaderCarrier): Future[Map[String, Seq[TeamName]]] =
     for

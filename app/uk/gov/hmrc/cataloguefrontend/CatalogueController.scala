@@ -224,7 +224,9 @@ class CatalogueController @Inject() (
     yield
       Ok(serviceInfoPage(
         serviceName                  = serviceName,
-        repositoryDetails            = repositoryDetails.copy(jenkinsJobs = jenkinsJobs, zone = zone),
+        repositoryDetails            = repositoryDetails,
+        jenkinsJobs                  = jenkinsJobs,
+        zone                         = zone,
         serviceCostEstimate          = serviceCostEstimate,
         costEstimateConfig           = costEstimateConfig,
         repositoryCreationDate       = repositoryDetails.createdDate,
@@ -366,7 +368,8 @@ class CatalogueController @Inject() (
             , commenterReport
             ) =>
       Ok(libraryInfoPage(
-        repoDetails.copy(jenkinsJobs = jenkinsJobs),
+        repoDetails,
+        jenkinsJobs,
         repoModulesAllVersions.sorted(Ordering.by((_: RepositoryModules).version).reverse),
         urlIfLeaksFound,
         hasBranchProtectionAuth,
@@ -408,7 +411,8 @@ class CatalogueController @Inject() (
       commenterReport   <- prCommenterConnector.report(repoDetails.name)
       servicesUnderTest <- teamsAndRepositoriesConnector.findServicesUnderTest(repoDetails.name)
     yield Ok(testRepoInfoPage(
-      repoDetails.copy(jenkinsJobs = jenkinsJobs),
+      repoDetails,
+      jenkinsJobs,
       repoModules,
       urlIfLeaksFound,
       hasBranchProtectionAuth,
@@ -435,8 +439,8 @@ class CatalogueController @Inject() (
             teamNames   = { val (owners, writers) =  repoDetails.teamNames.partition(repoDetails.owningTeams.contains) // TODO should this apply to renderLibrary too?
                             owners.sorted ++ writers.sorted
                           },
-            jenkinsJobs = jenkinsJobs
           ),
+          jenkinsJobs = jenkinsJobs,
           repoModules,
           urlIfLeaksFound,
           hasBranchProtectionAuth,

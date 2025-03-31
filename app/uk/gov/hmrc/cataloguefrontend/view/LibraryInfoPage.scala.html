@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
@@ -26,6 +26,7 @@
 )
 
 @(library                : GitRepository,
+  jenkinsJobs            : Seq[JenkinsJob],
   repositoryModules      : Seq[RepositoryModules],
   linkToLeakDetection    : Option[String],
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
@@ -71,7 +72,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    @partials.build(library, hasBranchProtectionAuth, commenterReport)
+                    @partials.build(library, jenkinsJobs, hasBranchProtectionAuth, commenterReport)
                 </div>
 
                 <div class="col-md-6">

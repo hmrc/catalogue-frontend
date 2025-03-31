@@ -22,8 +22,7 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.cost.Zone
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Organisation, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{Active, DecommissionInProgress, Deprecated}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Lifecycle, ServiceCommissioningStatusConnector}
@@ -219,6 +218,7 @@ class ServiceConfigsServiceSpec
     def gitRepository(name: String) =
       GitRepository(
         name           = name,
+        organisation   = Some(Organisation.Mdtp),
         description    = "test",
         githubUrl      = "test",
         createdDate    = Instant.now(),
