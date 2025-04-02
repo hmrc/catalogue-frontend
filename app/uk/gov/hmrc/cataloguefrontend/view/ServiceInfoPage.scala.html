@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.cataloguefrontend.{EnableBranchProtection, EnvData, MarkForDecommissioning}
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
-@import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate}
+@import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate, Zone}
 @import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.{Route, RouteType}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
@@ -32,6 +32,8 @@
 
 @(serviceName                  : ServiceName,
   repositoryDetails            : GitRepository,
+  jenkinsJobs                  : Seq[JenkinsJob],
+  zone                         : Option[Zone],
   serviceCostEstimate          : ServiceCostEstimate,
   costEstimateConfig           : CostEstimateConfig,
   repositoryCreationDate       : Instant,
@@ -85,7 +87,7 @@
 
         <div class="row mb-3">
             <div class="col-md-6">
-                @partials.details(repositoryDetails, canMarkForDecommissioning = canMarkForDecommissioning, lifecycle = lifecycle, isGuest = isGuest, hideDecommissioning = false)
+                @partials.details(repositoryDetails, zone = zone, canMarkForDecommissioning = canMarkForDecommissioning, lifecycle = lifecycle, isGuest = isGuest, hideDecommissioning = false)
             </div>
             <div class="col-md-6">
                 @partials.costEstimation(serviceCostEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
@@ -120,7 +122,7 @@
                 @partials.service_relationships(serviceRelationships)
             </div>
             <div class="col-md-6 mb-3">
-                @partials.build(repositoryDetails, hasBranchProtectionAuth, commenterReport)
+                @partials.build(repositoryDetails, jenkinsJobs, hasBranchProtectionAuth, commenterReport)
             </div>
         </div>
 

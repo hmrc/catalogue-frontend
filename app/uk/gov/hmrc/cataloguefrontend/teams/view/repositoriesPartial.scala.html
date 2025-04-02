@@ -66,7 +66,7 @@
       <div>
         <a class="@if(repo.isDeprecated){fst-italic}"
           href="@appRoutes.CatalogueController.repository(repo.name)">
-          @repo.name
+          @repo.displayName
           @if(repo.isDeprecated){ <span class="badge rounded-pill text-bg-secondary fst-normal">deprecated</span> }
         </a>
       </div>

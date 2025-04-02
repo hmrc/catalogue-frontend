@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.view.partials.html
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.FakeRequest
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, RepoType, ServiceType}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, Organisation, RepoType, ServiceType}
 import uk.gov.hmrc.cataloguefrontend.cost.Zone
 import uk.gov.hmrc.cataloguefrontend.model.DigitalService
 
@@ -29,6 +29,7 @@ class DetailsSpec extends AnyWordSpec with Matchers {
 
   val repo = GitRepository(
     name           = "reponame",
+    organisation   = Some(Organisation.Mdtp),
     description    = "some description",
     createdDate    = Instant.parse("2018-12-31T08:30:30.00Z"),
     lastActiveDate = Instant.parse("2018-12-31T18:30:30.00Z"),
@@ -40,7 +41,6 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     isPrivate      = true,
     isArchived     = false,
     defaultBranch  = "main",
-    zone           = Option(Zone.Protected),
     serviceType    = Option(ServiceType.Backend),
   )
 
@@ -55,7 +55,7 @@ class DetailsSpec extends AnyWordSpec with Matchers {
     }
 
     "display zone" in {
-      val result = details(repo)(request).body
+      val result = details(repo, zone = Some(Zone.Protected))(request).body
       result should include ("id=\"repository-zone\"")
       result should include ("Protected")
     }

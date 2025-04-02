@@ -15,7 +15,7 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.EnableBranchProtection
-@import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, RepositoryModules}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
 @import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
@@ -26,6 +26,7 @@
 )
 
 @(repository             : GitRepository,
+  jenkinsJobs            : Seq[JenkinsJob],
   repositoryModules      : Option[RepositoryModules],
   linkToLeakDetection    : Option[String],
   hasBranchProtectionAuth: EnableBranchProtection.HasAuthorisation,
@@ -38,7 +39,7 @@
   <header class="header-with-github-badge">
     <div>
       <h1 class="page-heading mt-4">
-        Repository: @repository.name
+        Repository: @repository.displayName
         @if(repository.isArchived) {
             <span class="badge rounded-pill text-bg-secondary">Archived</span>
         } else if(repository.isDeprecated) {
@@ -75,7 +76,7 @@
 
     <div class="row">
       <div class="col-md-12">
-        @partials.build(repository, hasBranchProtectionAuth, commenterReport)
+        @partials.build(repository, jenkinsJobs, hasBranchProtectionAuth, commenterReport)
       </div>
     </div>
 

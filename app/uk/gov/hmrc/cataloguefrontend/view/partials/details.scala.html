@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.MarkForDecommissioning
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
+@import uk.gov.hmrc.cataloguefrontend.cost.Zone
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.LifecycleStatus.{DecommissionInProgress, Deprecated, Archived}
 @import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
@@ -25,6 +26,7 @@
 
 @(
   repositoryDetails        : GitRepository,
+  zone                     : Option[Zone]                            = None,
   version                  : Option[Version]                         = None,
   hideDecommissioning      : Boolean                                 = true,
   canMarkForDecommissioning: MarkForDecommissioning.HasAuthorisation = MarkForDecommissioning.HasAuthorisation(false),
@@ -122,7 +124,7 @@
                 @githubBadgeType(repositoryDetails)
             </div>
 
-            @repositoryDetails.zone.map { zone =>
+            @zone.map { zone =>
                 <div id="repository-zone" class="col-6">
                     <label class="fw-bold">Zone: </label>
                     @zone
