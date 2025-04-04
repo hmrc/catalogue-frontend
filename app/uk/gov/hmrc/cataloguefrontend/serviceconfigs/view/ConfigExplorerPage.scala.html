@@ -353,7 +353,8 @@
                 // Requires all setCheckboxWithQueryParam to be run first e.g show-referenceConf
                 (window.onhashchange = function () {
                     if (window.location.hash) {
-                        const el = document.getElementById(window.location.hash.replace("#", "config-row-"));
+                        // Decodes config.keys as needs to handle quotes e.g. logger."uk.hmrc"
+                        const el = document.getElementById(decodeURI(window.location.hash.replace("#", "config-row-")));
                         const highlighted = Array.from(document.getElementsByClassName("highlight-amber"));
                         highlighted.forEach(e => e.classList.remove("highlight-amber"));
 
