@@ -86,7 +86,7 @@ class TeamsController @Inject()(
       deleteR <- auth.verify:
                    Retrieval.locations(
                      resourceType = Some(ResourceType("catalogue-frontend")),
-                     action       = Some(IAAction("ADD_REMOVE_TEAM"))
+                     action       = Some(IAAction("MANAGE_TEAM"))
                    )
       results <- ( teamsAndRepositoriesConnector.allTeams(Some(teamName)).map(_.headOption.map(_.githubUrl))
                  , teamsAndRepositoriesConnector.allRepositories(team = Some(teamName), archived = Some(false))
@@ -150,7 +150,7 @@ class TeamsController @Inject()(
       ( userManagementConnector.getAllTeams()
       , teamsAndRepositoriesConnector.allTeams()
         // This retrieval is not happening in original auth call to make unauthenticated testing easier
-      , auth.verify(Retrieval.locations(Some(ResourceType("catalogue-frontend")), Some(IAAction("ADD_REMOVE_TEAM")))) 
+      , auth.verify(Retrieval.locations(Some(ResourceType("catalogue-frontend")), Some(IAAction("MANAGE_TEAM")))) 
       ).mapN: (umpTeams, gitHubTeams, retrieval) =>
         Ok(TeamsListPage(
           teams = umpTeams.map(umpTeam => (umpTeam, gitHubTeams.find(_.name == umpTeam.teamName))),
@@ -201,7 +201,7 @@ class TeamsController @Inject()(
   def deleteTeam(teamName: TeamName): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.TeamsController.team(teamName),
-      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("ADD_REMOVE_TEAM")))
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_TEAM")))
     ).async: request =>
        given AuthenticatedRequest[AnyContent, Set[Resource]] = request
        userManagementConnector.deleteTeam(teamName).map: _ =>

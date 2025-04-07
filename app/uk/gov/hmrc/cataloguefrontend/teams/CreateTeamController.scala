@@ -45,12 +45,12 @@ class CreateTeamController @Inject()(
      with Logging:
 
   private def createTeamPermission: Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/*"), IAAction("ADD_REMOVE_TEAM"))
+    Predicate.Permission(Resource.from("catalogue-frontend", s"teams/*"), IAAction("MANAGE_TEAM"))
 
   def createTeamLanding: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateTeamController.createTeamLanding,
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("ADD_REMOVE_TEAM")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_TEAM")))
     ): request =>
       given RequestHeader = request
       Ok(createTeamPage(CreateTeamForm.form, Organisation.values.toSeq))
@@ -58,7 +58,7 @@ class CreateTeamController @Inject()(
   def createTeam: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateTeamController.createTeamLanding,
-      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("ADD_REMOVE_TEAM")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_TEAM")))
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       CreateTeamForm.form.bindFromRequest().fold(

@@ -286,6 +286,39 @@ object EditUserDetailsRequest:
     ~ (__ \ "value"    ).write[String]
     )(e => Tuple.fromProductTyped(e))
 
+case class UserRoles(
+  roles: Seq[UserRole]
+)
+
+object UserRoles:
+  val reads: Reads[UserRoles] =
+    given Reads[UserRole] = UserRole.reads
+    (__ \ "roles").read[Seq[UserRole]].map(apply)
+
+  val writes: Writes[UserRoles] =
+    given Writes[UserRole] = UserRole.writes
+    (__ \ "roles").write[Seq[UserRole]].contramap(_.roles)
+
+enum UserRole(val role: String, val description: String):
+  case TeamAdmin extends UserRole("team_admin"                      , "Team Admin"                     )
+  case TrustedAuthoriser extends UserRole("trusted_authoriser"      , "Trusted Authoriser"             )
+  case LocationAuthoriser extends UserRole("location_authoriser"    , "Location Authoriser"            )
+  case GlobalAuthoriser extends UserRole("global_authoriser"        , "Global Authoriser"              )
+  case ExperimentalFeatures extends UserRole("experimental_features", "Access to Experimental Features")
+
+object UserRole:
+  def fromString(value: String): Option[UserRole] =
+    UserRole.values.find(_.role == value)
+
+  val reads: Reads[UserRole] =
+    __.read[String].flatMap: role =>
+      UserRole.fromString(role) match
+        case Some(attr) => Reads.pure(attr)
+        case None => Reads(_ => JsError(s"Unknown role: $role"))
+
+  val writes: Writes[UserRole] =
+    Writes { attr => JsString(attr.role) }
+
 case class ResetGooglePassword(
   username: String,
   password: SensitiveString
