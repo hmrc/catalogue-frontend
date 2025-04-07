@@ -33,7 +33,6 @@ import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.internalauth.client.*
-import uk.gov.hmrc.internalauth.client.syntax.toProductOps
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
@@ -131,7 +130,7 @@ class UsersController @Inject()(
       EditUserRolesForm.form.bindFromRequest().fold(
         formWithErrors =>
             showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, formWithErrors)
-        , userRoles =>
+      , userRoles =>
           userManagementConnector.editUserRoles(username, userRoles)
             .map: _ =>
               Redirect(routes.UsersController.user(username))
@@ -306,11 +305,8 @@ object EditUserRolesForm:
     Form(
       Forms.mapping(
         "roles" -> Forms.list(Forms.text)
-      ) { roleStrings =>
-        UserRoles(roleStrings.flatMap(UserRole.fromString))
-      } { userRoles =>
-        Some(userRoles.roles.map(_.role).toList)
-      }
+      ) ( roleStrings => UserRoles(roleStrings.flatMap(UserRole.fromString)) )
+        ( userRoles   => Some(userRoles.roles.map(_.role).toList) )
     )
 
 object EditUserDetailsForm:
