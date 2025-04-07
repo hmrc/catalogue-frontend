@@ -300,10 +300,10 @@ object UserRoles:
     (__ \ "roles").write[Seq[UserRole]].contramap(_.roles)
 
 enum UserRole(val role: String, val description: String):
-  case TeamAdmin extends UserRole("team_admin"                      , "Team Admin"                     )
-  case TrustedAuthoriser extends UserRole("trusted_authoriser"      , "Trusted Authoriser"             )
-  case LocationAuthoriser extends UserRole("location_authoriser"    , "Location Authoriser"            )
-  case GlobalAuthoriser extends UserRole("global_authoriser"        , "Global Authoriser"              )
+  case TeamAdmin            extends UserRole("team_admin"           , "Team Admin"                     )
+  case TrustedAuthoriser    extends UserRole("trusted_authoriser"   , "Trusted Authoriser"             )
+  case LocationAuthoriser   extends UserRole("location_authoriser"  , "Location Authoriser"            )
+  case GlobalAuthoriser     extends UserRole("global_authoriser"    , "Global Authoriser"              )
   case ExperimentalFeatures extends UserRole("experimental_features", "Access to Experimental Features")
 
 object UserRole:

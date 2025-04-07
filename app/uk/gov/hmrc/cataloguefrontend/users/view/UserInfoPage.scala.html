@@ -237,8 +237,8 @@
                                               <div class="d-flex flex-column">
                                                   @userRoles.roles.map { role =>
                                                       <div class="form-check">
-                                                          <input type="checkbox" id="field-role" class="form-check-input" name="roles" value="@{role.role}" @if(currentUserRoles.roles.contains(role)){ checked }>
-                                                          <label for="field-role" class="form-check-label">@role.description</label>
+                                                          <input type="checkbox" id="field-role-@role.role" class="form-check-input" name="roles[]" value="@{role.role}" @if(currentUserRoles.roles.contains(role)){ checked }>
+                                                          <label for="field-role-@role.role" class="form-check-label">@role.description</label>
                                                       </div>
                                                   }
                                                   @saveAndCancelButtons("role")
