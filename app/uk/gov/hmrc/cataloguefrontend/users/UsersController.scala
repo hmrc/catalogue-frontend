@@ -33,6 +33,7 @@ import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.internalauth.client.*
+import uk.gov.hmrc.internalauth.client.syntax.toProductOps
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
@@ -60,54 +61,53 @@ class UsersController @Inject()(
 
   private def showUserInfoPage(
     username       : UserName,
-    retrieval      : Option[Set[Resource]],
     resultType     : Html => Result,
     ldapForm       : Form[ResetLdapPassword],
     googleForm     : Form[ResetGooglePassword],
-    userDetailsForm: Form[EditUserDetailsRequest]
+    userDetailsForm: Form[EditUserDetailsRequest],
+    userRolesForm  : Form[UserRoles]
   )(using HeaderCarrier, RequestHeader): Future[Result] =
+
+
     for
-      userOpt          <- userManagementConnector.getUser(username)
-      userTooling      <- userManagementConnector.getUserAccess(username).map(Right(_)).recover:
-                            case e: UpstreamErrorResponse =>
-                              logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
-                                s"Error: ${e.message}.")
-                              Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
-      adminGithubTeams <- retrieval match
-                            case None            => Future.successful(Set.empty[TeamName])
-                            case Some(resources) =>
-                              teamsAndReposConnector.allTeams().map(_.map(_.name).toSet).map(getAdminGithubTeams(resources, _))
+      userOpt              <- userManagementConnector.getUser(username)
+      retrieval            <- auth.verify(
+                                Retrieval.locations(Some(ResourceType("catalogue-frontend")), Some(IAAction("EDIT_USER"))) ~
+                                Retrieval.locations(Some(ResourceType("catalogue-frontend")), Some(IAAction("MANAGE_USER")))
+                              )
+      (editR, manageUserR) =  retrieval match
+                                case Some(retrievalA ~ retrievalB) => (Some(retrievalA), Some(retrievalB))
+                                case None              => (None, None)
+      canManageUsers       =  manageUserR.exists(_.exists(_.resourceLocation.value.contains("teams/*")))
+      currentRoles         <- if canManageUsers then userManagementConnector.getUserRoles(username) else Future.successful(UserRoles(Seq.empty[UserRole]))
+      userTooling          <- userManagementConnector.getUserAccess(username).map(Right(_)).recover:
+                                case e: UpstreamErrorResponse =>
+                                  logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
+                                    s"Error: ${e.message}.")
+                                  Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
+      adminGithubTeams     <- editR match
+                                case None            => Future.successful(Set.empty[TeamName])
+                                case Some(resources) =>
+                                  teamsAndReposConnector.allTeams().map(_.map(_.name).toSet).map(getAdminGithubTeams(resources, _))
     yield
       userOpt match
         case Some(user) =>
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-          resultType(userInfoPage(ldapForm, googleForm, userDetailsForm, isAdminForUser(retrieval, user), userTooling, user, umpProfileUrl, adminGithubTeams))
+          resultType(userInfoPage(ldapForm, googleForm, userDetailsForm, userRolesForm, isAdminForUser(editR, user), canManageUsers, currentRoles, userTooling, UserRoles(UserRole.values.toSeq), user, umpProfileUrl, adminGithubTeams))
         case None =>
           NotFound(error_404_template())
 
   def user(username: UserName): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given RequestHeader = request
-      for
-        retrieval <- auth.verify(Retrieval.locations(
-                       resourceType = Some(ResourceType("catalogue-frontend")),
-                       action       = Some(IAAction("EDIT_USER"))
-                     ))
-        result    <- showUserInfoPage(username, retrieval, Ok(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form)
-      yield result
+      showUserInfoPage(username, Ok(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
 
   def updateUserDetails(username: UserName): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
       EditUserDetailsForm.form.bindFromRequest().fold(
         formWithErrors =>
-          for
-            retrieval <- auth.verify(Retrieval.locations(
-                           resourceType = Some(ResourceType("catalogue-frontend")),
-                           action       = Some(IAAction("EDIT_USER"))
-                         ))
-            result    <- showUserInfoPage(username, retrieval, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, formWithErrors)
-          yield result
+          showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, formWithErrors, EditUserRolesForm.form)
         , editRequest =>
           userManagementConnector.editUserDetails(editRequest)
             .map: _ =>
@@ -122,6 +122,28 @@ class UsersController @Inject()(
                   .flashing(s"error" -> s"Error updating User Details for user's ${editRequest.attribute.description}. Contact #team-platops")
       )
 
+  def updateUserRoles(username: UserName): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.UsersController.user(username),
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_USER")))
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+      EditUserRolesForm.form.bindFromRequest().fold(
+        formWithErrors =>
+            showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, formWithErrors)
+        , userRoles =>
+          userManagementConnector.editUserRoles(username, userRoles)
+            .map: _ =>
+              Redirect(routes.UsersController.user(username))
+                .flashing(
+                  "success" -> s"Authorisation roles have been updated successfully for ${username.asString}. New roles may not appear immediately."
+                )
+            .recover:
+              case NonFatal(e) =>
+                Redirect(routes.UsersController.user(username))
+                  .flashing(s"error" -> s"Error updating authorisation roles for for ${username.asString}. Contact #team-platops")
+      )
+
   def requestLdapReset(username: UserName): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.UsersController.user(username),
@@ -130,7 +152,7 @@ class UsersController @Inject()(
         given AuthenticatedRequest[AnyContent, Set[Resource]] = request
         LdapResetForm.form.bindFromRequest().fold(
           formWithErrors =>
-            showUserInfoPage(username, Some(request.retrieval), BadRequest(_), formWithErrors, GoogleResetForm.form, EditUserDetailsForm.form)
+            showUserInfoPage(username, BadRequest(_), formWithErrors, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
         , formData =>
             userManagementConnector.resetLdapPassword(formData).map: ticketOpt =>
               Ok(ldapResetRequestSentPage(username, ticketOpt))
@@ -141,25 +163,22 @@ class UsersController @Inject()(
         )
 
   def requestGoogleReset(username: UserName): Action[AnyContent] =
-    BasicAuthAction.async: request =>
-      given MessagesRequest[AnyContent] = request
-      GoogleResetForm.form.bindFromRequest().fold(
-        formWithErrors =>
-          for
-            retrieval <- auth.verify(Retrieval.locations(
-              resourceType = Some(ResourceType("catalogue-frontend")),
-              action       = Some(IAAction("EDIT_USER"))
-            ))
-            result    <- showUserInfoPage(username, retrieval, BadRequest(_), LdapResetForm.form, formWithErrors, EditUserDetailsForm.form)
-          yield result
-        , formData =>
-          userManagementConnector.resetGooglePassword(formData).map: _ =>
-            Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to reset Google password for ${username.asString} sent successfully.")
-          .recover:
-            case NonFatal(e) =>
-              logger.error(s"Error requesting Google password reset: ${e.getMessage}", e)
-              Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting Google password reset. Contact #team-platops")
-      )
+    auth.authenticatedAction(
+      continueUrl = routes.UsersController.user(username),
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("EDIT_USER")))
+    ).async: request =>
+        given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+        GoogleResetForm.form.bindFromRequest().fold(
+          formWithErrors =>
+              showUserInfoPage(username, BadRequest(_), LdapResetForm.form, formWithErrors, EditUserDetailsForm.form, EditUserRolesForm.form)
+          , formData =>
+            userManagementConnector.resetGooglePassword(formData).map: _ =>
+              Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to reset Google password for ${username.asString} sent successfully.")
+            .recover:
+              case NonFatal(e) =>
+                logger.error(s"Error requesting Google password reset: ${e.getMessage}", e)
+                Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting Google password reset. Contact #team-platops")
+        )
 
   private def isAdminForUser(retrieval: Option[Set[Resource]], user: User): Boolean =
     val teams = retrieval.fold(Set.empty[TeamName])(_.map(_.resourceLocation.value.stripPrefix("teams/")).map(TeamName.apply))
@@ -180,7 +199,7 @@ class UsersController @Inject()(
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       AddToGithubTeamForm.form.bindFromRequest().fold(
         formWithErrors =>
-          showUserInfoPage(username, Some(request.retrieval), BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form)
+          showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
       , formData =>
           userManagementConnector.addToGithubTeam(formData).map: _ =>
             Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to Github team: ${formData.team} sent successfully.")
@@ -280,6 +299,18 @@ object AddToGithubTeamForm:
         "username" -> Forms.nonEmptyText,
         "team"     -> Forms.nonEmptyText
       )(AddToGithubTeamRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
+    )
+
+object EditUserRolesForm:
+  val form: Form[UserRoles] =
+    Form(
+      Forms.mapping(
+        "roles" -> Forms.list(Forms.text)
+      ) { roleStrings =>
+        UserRoles(roleStrings.flatMap(UserRole.fromString))
+      } { userRoles =>
+        Some(userRoles.roles.map(_.role).toList)
+      }
     )
 
 object EditUserDetailsForm:

@@ -118,6 +118,27 @@ class UserManagementConnector @Inject()(
         case Right(res) => Future.successful(res)
         case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
+  def getUserRoles(username: UserName)(using HeaderCarrier): Future[UserRoles] =
+    given Reads[UserRoles] = UserRoles.reads
+    val url: URL = url"$baseUrl/user-management/users/${username.asString}/roles"
+    httpClientV2
+      .get(url)
+      .execute[UserRoles]
+      .recover:
+        case e =>
+          logger.warn(s"Unexpected response from user-management when retrieving user roles: $url - ${e.getMessage}", e)
+          UserRoles(Seq.empty[UserRole])
+
+  def editUserRoles(username: UserName, userRoles: UserRoles)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/users/${username.asString}/roles"
+    httpClientV2
+      .post(url)
+      .withBody(Json.toJson(userRoles)(UserRoles.writes))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(res) => Future.successful(res)
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        
   def createTeam(teamRequest: CreateTeamRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/create-team"
     httpClientV2

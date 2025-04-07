@@ -24,6 +24,7 @@ import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.model.{EditTeamDetails, TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.teams.CreateTeamRequest
 import uk.gov.hmrc.cataloguefrontend.users.*
+import uk.gov.hmrc.cataloguefrontend.users.UserRole.*
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
@@ -385,6 +386,61 @@ class UserManagementConnectorSpec
         putRequestedFor(urlPathEqualTo("/user-management/edit-user-details"))
           .withRequestBody(equalToJson(actualEditUserDetailsRequest))
       )
+
+  "getUserRoles" should {
+    "return a list of roles for user" in {
+      stubFor(
+        get(urlPathEqualTo("/user-management/users/joe.bloggs/roles"))
+          .willReturn(
+            aResponse()
+              .withBody(
+                """{
+                  "roles": [
+                    "team_admin",
+                    "location_authoriser",
+                    "experimental_features"
+                  ]
+                }""")
+          )
+      )
+
+      connector.getUserRoles(UserName("joe.bloggs")).futureValue should be
+        UserRoles(Seq(TeamAdmin, LocationAuthoriser, ExperimentalFeatures))
+    }
+
+    "return empty list when encountered an error" in {
+      stubFor(
+        get(urlPathEqualTo("/user-management/users/joe.bloggs/roles"))
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+          )
+      )
+
+      connector.getUserRoles(UserName("joe.bloggs")).futureValue.roles.isEmpty shouldBe true
+    }
+  }
+
+  "editUserRoles" should {
+    "return Unit when UMP response is 200 for a given user" in {
+      stubFor(
+        post(urlPathEqualTo("/user-management/users/joe.bloggs/roles"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      val userRolesJson = """{"roles": ["team_admin"]}"""
+
+      connector.editUserRoles(UserName("joe.bloggs"), UserRoles(Seq(TeamAdmin))).futureValue shouldBe()
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/users/joe.bloggs/roles"))
+          .withRequestBody(equalToJson(userRolesJson))
+      )
+    }
+  }
 
   "createUser" should:
 
