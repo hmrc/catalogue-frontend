@@ -358,32 +358,51 @@
                                   </li>
                               </ul>
                           </div>
-                          @if(canEditUsers || isCurrentUser) {
+                          @if(canEditUsers || isCurrentUser || canManageUsers) {
                               <div class="card-footer">
-                                <div class="d-flex justify-content-between gap-3">
-                                  @if(canEditUsers) {
-                                    <button type="button" class="btn btn-success flex-grow-1"
-                                        @if(user.githubUsername.isEmpty) {style="visibility: hidden"}
-                                    data-bs-toggle="modal" data-bs-target="#addToGithubTeamModal">
-                                        Add to GitHub Team
-                                    </button>
-                                    <button type="button" class="btn btn-success flex-grow-1"
-                                        @if(!userAccess.vpn) {style="visibility: hidden"}
-                                    data-bs-toggle="modal" data-bs-target="#vpnModal">
-                                        Request VPN Certificate
-                                    </button>
-                                    <button type="button" class="btn btn-success flex-grow-1"
-                                    data-bs-toggle="modal" data-bs-target="#ldapModal">
-                                        Reset LDAP Password
-                                    </button>
-                                  }
-                                  @if(isCurrentUser) {
-                                    <button type="button" class="btn btn-success flex-grow-1 ms-auto" style="max-width: 200px;"
-                                    data-bs-toggle="modal" data-bs-target="#googlePasswordModal">
-                                        Reset Google Password
-                                    </button>
-                                  }
-                                </div>
+                                  <div class="d-grid gap-2" style="display: grid; grid-template-columns: repeat(2, 1fr);">
+
+                                      @if(canManageUsers) {
+                                          <button type="button" class="btn @if(userAccess.vpn) {btn-danger} else {btn-success} w-100"
+                                          data-bs-toggle="modal" data-bs-target="#manageVpnModal">
+                                          @if(userAccess.vpn){Remove VPN Access}else{Add VPN Access}
+                                          </button>
+
+                                          <button type="button" class="btn @if(userAccess.devTools) {btn-danger} else {btn-success} w-100"
+                                          data-bs-toggle="modal" data-bs-target="#manageDevToolsModal">
+                                          @if(userAccess.devTools){Remove Developer Tools}else{Add Developer Tools}
+                                          </button>
+                                      }
+
+                                      @if(canEditUsers && user.githubUsername.nonEmpty) {
+                                          <button type="button" class="btn btn-success w-100"
+                                          data-bs-toggle="modal" data-bs-target="#addToGithubTeamModal">
+                                              Add to GitHub Team
+                                          </button>
+                                      }
+
+                                      @if(canEditUsers && userAccess.vpn) {
+                                          <button type="button" class="btn btn-success w-100"
+                                          data-bs-toggle="modal" data-bs-target="#vpnModal">
+                                              Request VPN Certificate
+                                          </button>
+                                      }
+
+                                      @if(canEditUsers) {
+                                          <button type="button" class="btn btn-success w-100"
+                                          data-bs-toggle="modal" data-bs-target="#ldapModal">
+                                              Reset LDAP Password
+                                          </button>
+                                      }
+
+                                      @if(isCurrentUser) {
+                                          <button type="button" class="btn btn-success w-100"
+                                          data-bs-toggle="modal" data-bs-target="#googlePasswordModal">
+                                              Reset Google Password
+                                          </button>
+                                      }
+
+                                  </div>
                               </div>
                           }
                       </div>
@@ -392,6 +411,87 @@
           }
       }
   </section>
+
+  <div class="modal fade" id="manageVpnModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="vpnModalTitle" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+          @userTooling match {
+              case Left(_) => {
+                  <div class="modal-header">
+                      <h5 class="modal-title" id="vpnModalTitle">Update VPN Access</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="invalid-feedback">There was an error retrieving the current status of the tooling. Please try again later.</div>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  </div>
+              }
+              case Right(userAccess) => {
+                  <div class="modal-header">
+                      <h5 class="modal-title" id="vpnModalTitle">@if(userAccess.vpn){Remove}else{Add} VPN Access</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                      <p>You are about to @if(userAccess.vpn){remove}else{add} VPN access for @user.username.asString.</p>
+                      <p>If you are sure this is what you intend, click 'Submit'.</p>
+                      @if(userAccess.vpn) {
+                          <p><strong>Please note:</strong> @user.username.asString will still be connected to the VPN until the certificate is automatically revoked (usually within 6 hours).</p>
+                      } else {
+                          <p><strong>Please note:</strong> @user.username.asString will need to be issued a VPN certificate to be able to connect.</p>
+                      }
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <form id="vpn-form" method="post" action="@userRoutes.UsersController.manageVpnAccess(user.username, !userAccess.vpn)">
+                          @csrfFormField
+                          <button id="vpn-submit" class="btn btn-success" type="submit">Submit</button>
+                      </form>
+                  </div>
+              }
+          }
+          </div>
+      </div>
+  </div>
+
+  <div class="modal fade" id="manageDevToolsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="devToolsModalTitle" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+          @userTooling match {
+              case Left(_) => {
+                  <div class="modal-header">
+                      <h5 class="modal-title" id="devToolsModalTitle">Update Developer Tools</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="invalid-feedback">There was an error retrieving the current status of the tooling. Please try again later.</div>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  </div>
+              }
+              case Right(userAccess) => {
+                  <div class="modal-header">
+                      <h5 class="modal-title" id="devToolsModalTitle">@if(userAccess.devTools){Remove}else{Add} Developer Tools</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                      <p>You are about to @if(userAccess.devTools){remove}else{add} Developer Tools for @user.username.asString.</p>
+                    <p>If you are sure this is what you intend, click 'Submit'.</p>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <form id="devTools-form" method="post" action="@userRoutes.UsersController.manageDevToolsAccess(user.username, !userAccess.devTools)">
+                          @csrfFormField
+                      <button id="devTools-submit" class="btn btn-success" type="submit">Submit</button>
+                      </form>
+                  </div>
+              }
+          }
+          </div>
+      </div>
+  </div>
 
   <div class="modal fade" id="vpnModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="vpnModalTitle" aria-hidden="true">
     <div class="modal-dialog">
@@ -402,7 +502,7 @@
             </div>
             <div class="modal-body">
                 <p>You are about to request a new VPN certificate for @user.username.asString.</p>
-                <p>If you continue you will invalidate @{user.username.asString}'s existing certificate.</p>
+                <p>If you continue this will invalidate @{user.username.asString}'s existing certificate shortly.</p>
                 <p>To proceed click 'Submit' and a new certificate will be sent to @user.primaryEmail shortly.</p>
             </div>
             <div class="modal-footer">
