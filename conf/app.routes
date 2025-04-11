@@ -145,6 +145,9 @@ GET        /add-user-to-team-search                      uk.gov.hmrc.cataloguefr
 GET        /users/:username                              uk.gov.hmrc.cataloguefrontend.users.UsersController.user(username: UserName)
 POST       /users/new-vpn-cert                           uk.gov.hmrc.cataloguefrontend.users.UsersController.requestNewVpnCert
 
+POST       /users/manage-vpn-access                      uk.gov.hmrc.cataloguefrontend.users.UsersController.manageVpnAccess(username: UserName, enableVpn: Boolean)
+POST       /users/manage-dev-toolss                      uk.gov.hmrc.cataloguefrontend.users.UsersController.manageDevToolsAccess(username: UserName, enableDevTools: Boolean)
+
 POST       /users/edit-user-details                      uk.gov.hmrc.cataloguefrontend.users.UsersController.updateUserDetails(username: UserName)
 POST       /users/edit-user-roles                        uk.gov.hmrc.cataloguefrontend.users.UsersController.updateUserRoles(username: UserName)
 GET        /users/edit-user/access                       uk.gov.hmrc.cataloguefrontend.users.EditUserController.editUserLanding(username: UserName, organisation: Option[String] ?= None)

@@ -135,13 +135,47 @@ class UsersController @Inject()(
             .map: _ =>
               Redirect(routes.UsersController.user(username))
                 .flashing(
-                  "success" -> s"Authorisation roles have been updated successfully for ${username.asString}. New roles may not appear immediately."
+                  "success" -> s"Authorisation roles have been updated successfully for ${username.asString}."
                 )
             .recover:
               case NonFatal(e) =>
                 Redirect(routes.UsersController.user(username))
-                  .flashing(s"error" -> s"Error updating authorisation roles for for ${username.asString}. Contact #team-platops")
+                  .flashing(s"error" -> s"Error updating authorisation roles for ${username.asString}. Contact #team-platops")
       )
+
+  def manageVpnAccess(username: UserName, enableVpn: Boolean): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.UsersController.user(username),
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_USER")))
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+      userManagementConnector.manageVpnAccess(username, enableVpn)
+        .map: _ =>
+          Redirect(routes.UsersController.user(username))
+            .flashing(
+              "success" -> s"VPN access has been ${if enableVpn then "added" else "removed"} successfully for ${username.asString}."
+            )
+        .recover:
+          case NonFatal(e) =>
+            Redirect(routes.UsersController.user(username))
+              .flashing(s"error" -> s"Error updating VPN access for ${username.asString}. Contact #team-platops")
+
+  def manageDevToolsAccess(username: UserName, enableDevTools: Boolean): Action[AnyContent] =
+    auth.authenticatedAction(
+      continueUrl = routes.UsersController.user(username),
+      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_USER")))
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+      userManagementConnector.manageDevToolsAccess(username, enableDevTools)
+        .map: _ =>
+          Redirect(routes.UsersController.user(username))
+            .flashing(
+              "success" -> s"Developer Tools have been ${if enableDevTools then "added" else "removed"} successfully for ${username.asString}."
+            )
+        .recover:
+          case NonFatal(e) =>
+            Redirect(routes.UsersController.user(username))
+              .flashing(s"error" -> s"Error updating Developer Tools for ${username.asString}. Contact #team-platops")
 
   def requestLdapReset(username: UserName): Action[AnyContent] =
     auth.authenticatedAction(

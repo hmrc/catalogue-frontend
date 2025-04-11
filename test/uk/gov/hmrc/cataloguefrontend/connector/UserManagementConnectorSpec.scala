@@ -632,6 +632,64 @@ class UserManagementConnectorSpec
         connector.deleteTeam(TeamName("TestTeam")).futureValue
       }
 
+  "manageVpnAccess" should :
+    "return Unit when UMP response is 200" in :
+      stubFor(
+        post(urlPathEqualTo("/user-management/users/joe.bloggs/vpn/true"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.manageVpnAccess(UserName("joe.bloggs"), enableVpn = true).futureValue shouldBe ()
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/users/joe.bloggs/vpn/true"))
+      )
+
+    "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
+      stubFor(
+        post(urlPathEqualTo("/user-management/users/joe.bloggs/vpn/true"))
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+          )
+      )
+
+      an[RuntimeException] shouldBe thrownBy {
+        connector.manageVpnAccess(UserName("joe.bloggs"), enableVpn = true).futureValue
+      }
+
+  "manageDevToolsAccess" should :
+    "return Unit when UMP response is 200" in :
+      stubFor(
+        post(urlPathEqualTo("/user-management/users/joe.bloggs/dev-tools/true"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.manageDevToolsAccess(UserName("joe.bloggs"), enableDevTools = true).futureValue shouldBe()
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/users/joe.bloggs/dev-tools/true"))
+      )
+
+    "throw a RuntimeException when UMP response is an UpStreamErrorResponse" in :
+      stubFor(
+        post(urlPathEqualTo("/user-management/users/joe.bloggs/dev-tools/true"))
+          .willReturn(
+            aResponse()
+              .withStatus(500)
+          )
+      )
+
+      an[RuntimeException] shouldBe thrownBy {
+        connector.manageDevToolsAccess(UserName("joe.bloggs"), enableDevTools = true).futureValue
+      }    
+      
   "restLdapPassword" should:
     val resetLdapPassword =
       ResetLdapPassword("joe.bloggs", "tes@email.com")

@@ -168,6 +168,24 @@ class UserManagementConnector @Inject()(
         case Right(res) => Future.successful(res)
         case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
+  def manageVpnAccess(username: UserName, enableVpn: Boolean)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/users/${username.asString}/vpn/$enableVpn"
+    httpClientV2
+      .post(url)
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(res) => Future.successful(res)
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
+  def manageDevToolsAccess(username: UserName, enableDevTools: Boolean)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/users/${username.asString}/dev-tools/$enableDevTools"
+    httpClientV2
+      .post(url)
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(res) => Future.successful(res)
+        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
   def requestNewVpnCert(username: UserName)(using HeaderCarrier): Future[Option[String]] =
     val url: URL = url"$baseUrl/user-management/users/${username.asString}/vpn"
     httpClientV2
