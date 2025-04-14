@@ -244,3 +244,14 @@ class UserManagementConnector @Inject()(
       .flatMap:
         case Right(_)  => Future.unit
         case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+
+  def offBoardUsers(request: OffBoardUsers)(using HeaderCarrier): Future[Unit] =
+    val url: URL = url"$baseUrl/user-management/offboard-users"
+    println("JSON: " + Json.toJson(request)(OffBoardUsers.writes))
+    httpClientV2
+      .post(url)
+      .withBody(Json.toJson(request)(OffBoardUsers.writes))
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap:
+        case Right(res) => Future.successful(res)
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))

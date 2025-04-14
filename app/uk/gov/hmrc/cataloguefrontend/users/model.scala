@@ -249,7 +249,7 @@ case class ResetLdapPassword(
 
 object ResetLdapPassword:
   val writes: Writes[ResetLdapPassword] =
-    ( (__ \ "username").write[String]
+    ( (__ \ "username"     ).write[String]
     ~ (__ \ "email_address").write[String]
     )(r => Tuple.fromProductTyped(r))
 
@@ -330,3 +330,12 @@ object ResetGooglePassword:
     ( (__ \ "username").write[String]
     ~ (__ \ "password").write[SensitiveString]
     )(r => Tuple.fromProductTyped(r))
+
+case class OffBoardUsers(
+  usernames: Set[String]
+)
+
+object OffBoardUsers:
+  val writes: Writes[OffBoardUsers] =
+  (__ \ "usernames").write[Set[String]]
+    .contramap(_.usernames)
