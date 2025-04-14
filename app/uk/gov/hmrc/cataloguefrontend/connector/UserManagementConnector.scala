@@ -247,7 +247,6 @@ class UserManagementConnector @Inject()(
 
   def offBoardUsers(request: OffBoardUsers)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/offboard-users"
-    println("JSON: " + Json.toJson(request)(OffBoardUsers.writes))
     httpClientV2
       .post(url)
       .withBody(Json.toJson(request)(OffBoardUsers.writes))

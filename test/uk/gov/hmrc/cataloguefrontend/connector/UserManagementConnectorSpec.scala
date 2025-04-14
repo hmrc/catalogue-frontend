@@ -836,3 +836,31 @@ class UserManagementConnectorSpec
         patchRequestedFor(urlPathEqualTo("/user-management/edit-team-details"))
           .withRequestBody(equalToJson(actualEditTeamDetailsRequest))
       )
+
+  "offboardUsers" should:
+    "return Unit when sending offboard users request and UMP response is 200" in:
+      val offboardUsersRequest =
+        OffBoardUsers(
+          usernames = Set("user.one", "user.two")
+        )
+
+      val actualOffboardUsersRequest =
+        """{
+          |  "usernames" : [ "user.one", "user.two" ]
+          |}
+          |""".stripMargin
+
+      stubFor(
+        post(urlPathEqualTo("/user-management/offboard-users"))
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+          )
+      )
+
+      connector.offBoardUsers(offboardUsersRequest).futureValue shouldBe()
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/offboard-users"))
+          .withRequestBody(equalToJson(actualOffboardUsersRequest))
+      )
