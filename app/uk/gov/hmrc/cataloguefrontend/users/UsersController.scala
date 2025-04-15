@@ -311,8 +311,11 @@ class UsersController @Inject()(
     Predicate.Permission(Resource.from("catalogue-frontend", "teams/*"), IAAction("OFFBOARD_USER"))
 
   def offBoardUsersLanding: Action[AnyContent] =
-    BasicAuthAction.async: request =>
-      given RequestHeader = request
+    auth.authorizedAction(
+      continueUrl = routes.UsersController.offBoardUsersLanding,
+      predicate   = offBoardUserPermission
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Unit] = request
       for
         users     <- userManagementConnector.getAllUsers()
         usernames =  users.map(_.username.asString)

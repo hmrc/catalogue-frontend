@@ -210,7 +210,11 @@
 
         function handlePaste(event) {
             const pastedText = event.clipboardData.getData('text');
-            const usernames = pastedText.split(/\s+/).map(name => name.trim()).filter(name => name.length > 0);
+            const usernames = pastedText
+                                .split(/[\s,]+/) // Split on any whitespace or comma
+                                .map(name => name.trim())
+                    .filter(name => name.length > 0);
+
 
             usernames.forEach(username => {
                 if (items.includes(username) && !selectedItems.includes(username)) {
