@@ -48,17 +48,23 @@ class AuthController @Inject() (
                   ~ Retrieval.locations(
                       resourceType = Some(ResourceType("catalogue-frontend")),
                       action       = Some(IAAction("CREATE_USER"))
-                    )
-    ): (request: AuthenticatedRequest[AnyContent, Retrieval.Username ~ Set[Resource]]) =>
+                    ) 
+                  ~ Retrieval.locations(
+                      resourceType = Some(ResourceType("catalogue-frontend")),
+                      action       = Some(IAAction("MANAGE_USER"))
+                    ) 
+    ): (request: AuthenticatedRequest[AnyContent, Retrieval.Username ~ Set[Resource] ~ Set[Resource]]) =>
       given RequestHeader = request
-      val usernameRetrieval ~ createUserResource = request.retrieval
-      val canCreateUsers = createUserResource.nonEmpty.toString
+      val usernameRetrieval ~ createUserResource ~ manageUserResource = request.retrieval
+      val canCreateUsers   = createUserResource.nonEmpty.toString
+      val canManageUsers   = manageUserResource.nonEmpty.toString
         Redirect(
           targetUrl.flatMap(_.getEither(OnlyRelative).toOption)
             .fold(appRoutes.CatalogueController.index.url)(_.url)
         ).addingToSession(
           AuthController.SESSION_USERNAME -> usernameRetrieval.value,
-          AuthController.CAN_CREATE_USERS -> canCreateUsers
+          AuthController.CAN_CREATE_USERS -> canCreateUsers,
+          AuthController.CAN_MANAGE_USERS -> canManageUsers
         )
 
   val signOut =
@@ -68,8 +74,9 @@ class AuthController @Inject() (
 end AuthController
 
 object AuthController:
-  val SESSION_USERNAME = "username"
-  val CAN_CREATE_USERS = "canCreateUsers"
+  val SESSION_USERNAME   = "username"
+  val CAN_CREATE_USERS   = "canCreateUsers"
+  val CAN_MANAGE_USERS   = "canManageUsers"
 
     // to avoid cyclical urls
   private[cataloguefrontend] def sanitize(targetUrl: Option[RedirectUrl]): Option[RedirectUrl] =

@@ -1,0 +1,259 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@this()
+
+@(form     : Form[?]
+, usernames: Seq[String]
+)(implicit
+  request         : RequestHeader,
+  messagesProvider: MessagesProvider
+)
+
+@standard_layout("Offboard Users", active = "users") {
+  <section class="section-wrapper">
+    <link rel="stylesheet" href="@routes.Assets.versioned("search-multi-select.autocomplete.css")" />
+    <h1 class="page-heading mt-4">Offboard Users</h1>
+
+  @request.flash.get("success").map { msg =>
+      <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+          @Html(msg)
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+  }
+
+    @helper.form(
+      action                = uk.gov.hmrc.cataloguefrontend.users.routes.UsersController.offBoardUsers,
+      Symbol("id")         -> "offBoardUsersForm",
+      Symbol("method")     -> "post",
+      Symbol("class")      -> "needs-validation",
+      Symbol("novalidate") -> ""
+    ) {
+
+        <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
+            <div class="form-group mb-4">
+                <div class="col-md-6 d-grid gap-2">
+                    <label for="searchInput" class="form-label">Search and select users to offboard:</label>
+                    <div class="search-wrapper">
+                        <div class="search-container" id="searchContainer">
+                            <input type="text" class="search-input" id="searchInput" placeholder="Type to search...">
+                        </div>
+                        <div class="autocomplete-results" id="autocompleteResults"></div>
+                        <input type="hidden" id="selectedUsernamesInput" name="usernames" value="">
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#offboardUsersModal" id="openModalButton" disabled>Offboard Users</button>
+            <div class="modal fade" id="offboardUsersModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="offboardUsersModalTitle" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-scrollable">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <h5 class="modal-title" id="offboardUsersModalTitle">Offboard Users</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                          <p>You are about to offboard the following users:</p>
+                          <ul id="usernamesConfirmationList"></ul>
+                          <p>If you continue this will REMOVE the users from UMP.</p>
+                          <p>To proceed click 'Submit' and the request will be sent to UMP.</p>
+                      </div>
+                      <div class="modal-footer">
+                           @csrfFormField
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <button id="submitOffboardingRequest" class="btn btn-success" type="submit">Submit</button>
+                      </div>
+                  </div>
+              </div>
+            </div>
+    }
+    </section>
+}
+
+<!-- Search Multi Select Autocomplete -->
+<script @CSPNonce.attr>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const items = @Html("[" + usernames.map(name => s""""$name"""").mkString(",") + "]");
+
+        const selectedItems = [];
+        const searchInput = document.getElementById('searchInput');
+        const searchContainer = document.getElementById('searchContainer');
+        const autocompleteResults = document.getElementById('autocompleteResults');
+        const selectedItemsInput = document.getElementById('selectedUsernamesInput');
+        const showSelectedButton = document.getElementById('showSelectedButton');
+        const usernamesConfirmationList = document.getElementById("usernamesConfirmationList");
+
+        let highlightedIndex = -1; // Track the highlighted item
+
+        // Disable browser autocomplete so arrows keys work on drop down
+        searchInput.setAttribute("autocomplete", "off");
+
+        searchInput.addEventListener('input', handleSearch);
+        searchInput.addEventListener('focus', showResults);
+        searchInput.addEventListener('keydown', handleKeyDown);
+        searchInput.addEventListener('paste', handlePaste);  // Handle paste event
+        document.addEventListener('click', handleOutsideClick);
+        showSelectedButton.addEventListener('click', showSelected);
+
+        function handleSearch() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredItems = items.filter(item =>
+                item.toLowerCase().includes(searchTerm) && !selectedItems.includes(item)
+            );
+
+            autocompleteResults.innerHTML = ''; // Clear previous results
+            highlightedIndex = -1; // Reset highlight on new search
+
+            if (filteredItems.length > 0 && searchTerm.length > 2) {
+                filteredItems.forEach((item, index) => {
+                    const resultItem = document.createElement('div');
+                    resultItem.classList.add('autocomplete-item');
+                    resultItem.textContent = item;
+                    resultItem.setAttribute('data-index', index);
+
+                    resultItem.addEventListener('click', function() {
+                        addSelectedItem(item);
+                        searchInput.value = '';
+                        searchInput.focus();
+                        hideResults();
+                    });
+
+                    autocompleteResults.appendChild(resultItem);
+                });
+
+                showResults();
+            } else {
+                hideResults();
+            }
+        }
+
+        // Key navigation for drop down
+        function handleKeyDown(event) {
+            const items = autocompleteResults.querySelectorAll('.autocomplete-item');
+            if (items.length === 0) return;
+
+            if (event.key === 'ArrowDown') {
+                event.preventDefault(); // Prevent browser history dropdown
+                highlightedIndex = (highlightedIndex + 1) % items.length;
+                updateHighlightedItem(items);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                highlightedIndex = (highlightedIndex - 1 + items.length) % items.length;
+                updateHighlightedItem(items);
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+                    addSelectedItem(items[highlightedIndex].textContent);
+                    searchInput.value = '';
+                    hideResults();
+                }
+            }
+        }
+
+        // Highlight the selected item and scroll it into view if needed
+        function updateHighlightedItem(resultItems) {
+            resultItems.forEach(item => item.classList.remove('highlighted'));
+            if (highlightedIndex >= 0) {
+                const highlightedItem = resultItems[highlightedIndex];
+                highlightedItem.classList.add('highlighted');
+                highlightedItem.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }
+        }
+
+        function showResults() {
+            if (autocompleteResults.children.length > 0) {
+                autocompleteResults.classList.add('show');
+            }
+        }
+
+        function hideResults() {
+            autocompleteResults.classList.remove('show');
+            highlightedIndex = -1;
+        }
+
+        function handleOutsideClick(event) {
+            if (!searchContainer.contains(event.target) && !autocompleteResults.contains(event.target)) {
+                hideResults();
+            }
+        }
+
+        function addSelectedItem(item) {
+            if (!selectedItems.includes(item)) {
+                selectedItems.push(item);
+
+                const pillElement = document.createElement('div');
+                pillElement.classList.add('selected-pill');
+
+                const pillText = document.createElement('span');
+                pillText.textContent = item;
+
+                const removeButton = document.createElement('span');
+                removeButton.classList.add('remove-pill');
+                removeButton.innerHTML = '&times;';
+                removeButton.addEventListener('click', function() {
+                    removeSelectedItem(item, pillElement);
+                });
+
+                pillElement.appendChild(pillText);
+                pillElement.appendChild(removeButton);
+
+                searchContainer.insertBefore(pillElement, searchInput);
+                updateHiddenInput();
+            }
+        }
+
+        function removeSelectedItem(item, pillElement) {
+            const index = selectedItems.indexOf(item);
+            if (index !== -1) {
+                selectedItems.splice(index, 1);
+                pillElement.remove();
+                updateHiddenInput();
+            }
+        }
+
+        // Update hidden input with selected items (for form submission)
+        function updateHiddenInput() {
+            selectedItemsInput.value = selectedItems.join(',');
+            updateModalUsernames();
+            document.getElementById("openModalButton").disabled = selectedItems.length === 0;
+        }
+
+        function updateModalUsernames() {
+            usernamesConfirmationList.innerHTML = "";
+            selectedItems.forEach(item => {
+                const username = document.createElement("li");
+                username.textContent = item;
+                usernamesConfirmationList.appendChild(username);
+            });
+        }
+
+        function handlePaste(event) {
+            // Prevent default paste behavior to handle the usernames ourselves
+            event.preventDefault();
+            const pastedText = event.clipboardData.getData('text');
+            const usernames = pastedText.split(/[\s,]+/) // Split on any whitespace or comma
+                                        .map(name => name.trim())
+                                        .filter(name => name.length > 0);
+
+            usernames.forEach(username => {
+                if (items.includes(username) && !selectedItems.includes(username)) {
+                    addSelectedItem(username);
+                }
+            });
+        }
+    });
+</script>

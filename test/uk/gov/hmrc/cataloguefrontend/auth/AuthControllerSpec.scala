@@ -95,9 +95,9 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
-      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource]))
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
 
       val result = controller.postSignIn(targetUrl = None)(request)
 
@@ -112,9 +112,9 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
-      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*")))))
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*"))) ~ Set.empty[Resource]))
 
       val result = controller.postSignIn(targetUrl = None)(request)
 
@@ -129,9 +129,9 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
-      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource]))
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
 
       val result = controller.postSignIn(targetUrl = None)(request)
 
@@ -146,9 +146,9 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
-      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource]))
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
 
       val result = controller.postSignIn(targetUrl = Some(RedirectUrl("/my-url")))(request)
 
@@ -163,13 +163,68 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
-      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource]))
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
 
       val result = controller.postSignIn(targetUrl = Some(RedirectUrl("http://other-site/my-url")))(request)
 
       redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
+    }
+
+    "put canManagerUsers into session as true if user is a member of the group, admins" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
+
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
+        )
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*")))))
+
+      val result = controller.postSignIn(targetUrl = None)(request)
+
+      redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
+
+      Helpers.session(result).apply(AuthController.CAN_MANAGE_USERS) shouldBe "true"
+    }
+
+    "put canManagerUsers into session as false if user is not a member of the group, admins" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
+
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
+        )
+      ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
+
+      val result = controller.postSignIn(targetUrl = None)(request)
+
+      redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
+
+      Helpers.session(result).apply(AuthController.CAN_MANAGE_USERS) shouldBe "false"
+    }
+
+    "put multiple grants into the session when a user has multiple permissions" in new Setup {
+      val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
+
+      when(
+        authStubBehaviour.stubAuth(
+          None,
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
+        )
+      ).thenReturn(Future.successful(Retrieval.Username("user.name")
+        ~ Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*")))
+        ~ Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*"))))
+      )
+
+      val result = controller.postSignIn(targetUrl = None)(request)
+
+      redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
+
+      Helpers.session(result).apply(AuthController.CAN_CREATE_USERS)   shouldBe "true"
+      Helpers.session(result).apply(AuthController.CAN_MANAGE_USERS) shouldBe "true"
     }
   }
 
@@ -196,6 +251,11 @@ class AuthControllerSpec
     val createUserRetrieval = Retrieval.locations(
       resourceType = Some(ResourceType("catalogue-frontend")),
       action = Some(IAAction("CREATE_USER"))
+    )
+
+    val manageUserRetrieval = Retrieval.locations(
+     resourceType = Some(ResourceType("catalogue-frontend")),
+     action       = Some(IAAction("MANAGE_USER"))
     )
   }
 }

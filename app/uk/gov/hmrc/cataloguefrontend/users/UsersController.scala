@@ -21,14 +21,14 @@ import cats.implicits.*
 import play.api.Logging
 import play.api.data.validation.{Constraint, Constraints, Invalid, Valid}
 import play.api.data.{Form, Forms}
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Writes}
 import play.api.mvc.*
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.users.view.html.{LdapResetRequestSentPage, UserInfoPage, UserListPage, UserSearchResults, VpnRequestSentPage}
+import uk.gov.hmrc.cataloguefrontend.users.view.html.{LdapResetRequestSentPage, OffBoardUsersPage, UserInfoPage, UserListPage, UserSearchResults, VpnRequestSentPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
@@ -47,6 +47,7 @@ class UsersController @Inject()(
 , userSearchResults       : UserSearchResults
 , vpnRequestSentPage      : VpnRequestSentPage
 , ldapResetRequestSentPage: LdapResetRequestSentPage
+, offBoardUsersPage       : OffBoardUsersPage
 , umpConfig               : UserManagementPortalConfig
 , teamsAndReposConnector  : TeamsAndRepositoriesConnector
 , override val mcc        : MessagesControllerComponents
@@ -305,7 +306,55 @@ class UsersController @Inject()(
           val usernames = matches.map(_.username.asString)
           Ok(Json.toJson(usernames))
 
+
+  private val manageUserPermission: Predicate =
+    Predicate.Permission(Resource.from("catalogue-frontend", "teams/*"), IAAction("MANAGE_USER"))
+
+  def offBoardUsersLanding: Action[AnyContent] =
+    auth.authorizedAction(
+      continueUrl = routes.UsersController.offBoardUsersLanding,
+      predicate   = manageUserPermission
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Unit] = request
+      for
+        users     <- userManagementConnector.getAllUsers()
+        usernames =  users.map(_.username.asString)
+      yield
+        Ok(offBoardUsersPage(OffBoardUserForm.form, usernames))
+
+  def offBoardUsers: Action[AnyContent] =
+    auth.authorizedAction(
+      continueUrl = routes.UsersController.offBoardUsersLanding,
+      predicate   = manageUserPermission
+    ).async: request =>
+      given AuthenticatedRequest[AnyContent, Unit] = request
+      (for
+        users <- EitherT.liftF[Future, Result, Seq[User]]:
+                   userManagementConnector.getAllUsers()
+        form  <- EitherT.fromEither[Future]:
+                   OffBoardUserForm.form.bindFromRequest()
+                     .fold(
+                       formWithErrors => Left(BadRequest(offBoardUsersPage(form = formWithErrors, usernames = users.map(_.username.asString))))
+                     , validForm      => Right(validForm)
+                     )
+        res   <- EitherT.right[Result](userManagementConnector.offBoardUsers(form))
+        msg   =  s"Request to offboard ${form.usernames.size} user(s) has been submitted successfully. Changes may take some time to appear in the Catalogue."
+       yield Redirect(routes.UsersController.offBoardUsersLanding)
+               .flashing(s"success" -> msg)
+      ).merge
+
 end UsersController
+
+object OffBoardUserForm:
+  val form: Form[OffBoardUsers] =
+    Form(
+      Forms.mapping(
+        "usernames" -> Forms.nonEmptyText.transform[Set[String]](
+            _.split(",").map(_.trim).toSet
+          , _.mkString(",")
+        )
+      )(OffBoardUsers.apply)(f => Some(f.usernames))
+    )
 
 object LdapResetForm:
   val form: Form[ResetLdapPassword] =
