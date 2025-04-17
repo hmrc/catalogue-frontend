@@ -73,10 +73,6 @@
     background-color: #f8f9fa;
 }
 
-.hidden-input {
-    display: none;
-}
-
 .autocomplete-item.highlighted {
     background-color: rgb(255, 243, 205);
     color: black;

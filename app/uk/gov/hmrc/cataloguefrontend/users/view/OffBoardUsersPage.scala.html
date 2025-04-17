@@ -25,7 +25,7 @@
 
 @standard_layout("Offboard Users", active = "users") {
   <section class="section-wrapper">
-    <link rel="stylesheet" href="@routes.Assets.versioned("bootstrap.5.3.0.multi-select.autocomplete.css")" />
+    <link rel="stylesheet" href="@routes.Assets.versioned("search-multi-select.autocomplete.css")" />
     <h1 class="page-heading mt-4">Offboard Users</h1>
 
   @request.flash.get("success").map { msg =>
@@ -57,7 +57,7 @@
                 </div>
             </div>
 
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#offboardUsersModal">Offboard Users</button>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#offboardUsersModal" id="openModalButton" disabled>Offboard Users</button>
             <div class="modal fade" id="offboardUsersModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="offboardUsersModalTitle" aria-hidden="true">
               <div class="modal-dialog modal-dialog-scrollable">
                   <div class="modal-content">
@@ -118,7 +118,7 @@
             autocompleteResults.innerHTML = ''; // Clear previous results
             highlightedIndex = -1; // Reset highlight on new search
 
-            if (filteredItems.length > 0 && searchTerm.length > 0) {
+            if (filteredItems.length > 0 && searchTerm.length > 2) {
                 filteredItems.forEach((item, index) => {
                     const resultItem = document.createElement('div');
                     resultItem.classList.add('autocomplete-item');
@@ -225,11 +225,11 @@
             }
         }
 
-
         // Update hidden input with selected items (for form submission)
         function updateHiddenInput() {
             selectedItemsInput.value = selectedItems.join(',');
             updateModalUsernames();
+            document.getElementById("openModalButton").disabled = selectedItems.length === 0;
         }
 
         function updateModalUsernames() {
@@ -242,6 +242,8 @@
         }
 
         function handlePaste(event) {
+            // Prevent default paste behavior to handle the usernames ourselves
+            event.preventDefault();
             const pastedText = event.clipboardData.getData('text');
             const usernames = pastedText.split(/[\s,]+/) // Split on any whitespace or comma
                                         .map(name => name.trim())
@@ -252,9 +254,6 @@
                     addSelectedItem(username);
                 }
             });
-
-            // Prevent default paste behavior to handle the usernames ourselves
-            event.preventDefault();
         }
     });
 </script>
