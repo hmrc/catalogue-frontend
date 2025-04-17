@@ -95,7 +95,7 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval ~ offboardUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
       ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
 
@@ -112,7 +112,7 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval ~ offboardUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
       ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*"))) ~ Set.empty[Resource]))
 
@@ -129,7 +129,7 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval ~ offboardUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
       ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
 
@@ -146,7 +146,7 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval ~ offboardUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
       ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
 
@@ -163,7 +163,7 @@ class AuthControllerSpec
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval ~ offboardUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
       ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
 
@@ -172,13 +172,13 @@ class AuthControllerSpec
       redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
     }
 
-    "put canOffboardUsers into session as true if user is a member of the group, admins" in new Setup {
+    "put canManagerUsers into session as true if user is a member of the group, admins" in new Setup {
       val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
 
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval ~ offboardUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
       ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*")))))
 
@@ -186,16 +186,16 @@ class AuthControllerSpec
 
       redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
 
-      Helpers.session(result).apply(AuthController.CAN_OFFBOARD_USERS) shouldBe "true"
+      Helpers.session(result).apply(AuthController.CAN_MANAGE_USERS) shouldBe "true"
     }
 
-    "put canOffboardUsers into session as false if user is not a member of the group, admins" in new Setup {
+    "put canManagerUsers into session as false if user is not a member of the group, admins" in new Setup {
       val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
 
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval ~ offboardUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
       ).thenReturn(Future.successful(Retrieval.Username("user.name") ~ Set.empty[Resource] ~ Set.empty[Resource]))
 
@@ -203,16 +203,16 @@ class AuthControllerSpec
 
       redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
 
-      Helpers.session(result).apply(AuthController.CAN_OFFBOARD_USERS) shouldBe "false"
+      Helpers.session(result).apply(AuthController.CAN_MANAGE_USERS) shouldBe "false"
     }
 
-    "put multiple resource into the session when a user has multiple permissions" in new Setup {
+    "put multiple grants into the session when a user has multiple permissions" in new Setup {
       val request = FakeRequest().withSession(SessionKeys.authToken -> "Token token")
 
       when(
         authStubBehaviour.stubAuth(
           None,
-          Retrieval.username ~ createUserRetrieval ~ offboardUserRetrieval
+          Retrieval.username ~ createUserRetrieval ~ manageUserRetrieval
         )
       ).thenReturn(Future.successful(Retrieval.Username("user.name")
         ~ Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*")))
@@ -224,7 +224,7 @@ class AuthControllerSpec
       redirectLocation(result) shouldBe Some(appRoutes.CatalogueController.index.url)
 
       Helpers.session(result).apply(AuthController.CAN_CREATE_USERS)   shouldBe "true"
-      Helpers.session(result).apply(AuthController.CAN_OFFBOARD_USERS) shouldBe "true"
+      Helpers.session(result).apply(AuthController.CAN_MANAGE_USERS) shouldBe "true"
     }
   }
 
@@ -253,9 +253,9 @@ class AuthControllerSpec
       action = Some(IAAction("CREATE_USER"))
     )
 
-    val offboardUserRetrieval = Retrieval.locations(
+    val manageUserRetrieval = Retrieval.locations(
      resourceType = Some(ResourceType("catalogue-frontend")),
-     action       = Some(IAAction("OFFBOARD_USER"))
+     action       = Some(IAAction("MANAGE_USER"))
     )
   }
 }

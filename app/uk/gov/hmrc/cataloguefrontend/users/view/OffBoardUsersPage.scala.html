@@ -42,7 +42,7 @@
       Symbol("class")      -> "needs-validation",
       Symbol("novalidate") -> ""
     ) {
-    @csrfFormField
+
         <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
             <div class="form-group mb-4">
                 <div class="col-md-6 d-grid gap-2">
@@ -56,8 +56,28 @@
                     </div>
                 </div>
             </div>
-            <div>
-                <button type=submit class="btn btn-success" id="submitOffboardingRequest">Submit</button>
+
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#offboardUsersModal">Offboard Users</button>
+            <div class="modal fade" id="offboardUsersModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="offboardUsersModalTitle" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-scrollable">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <h5 class="modal-title" id="offboardUsersModalTitle">Offboard Users</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                          <p>You are about to offboard the following users:</p>
+                          <ul id="usernamesConfirmationList"></ul>
+                          <p>If you continue this will REMOVE the users from UMP.</p>
+                          <p>To proceed click 'Submit' and the request will be sent to UMP.</p>
+                      </div>
+                      <div class="modal-footer">
+                           @csrfFormField
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <button id="submitOffboardingRequest" class="btn btn-success" type="submit">Submit</button>
+                      </div>
+                  </div>
+              </div>
             </div>
     }
     </section>
@@ -65,6 +85,7 @@
 
 <!-- Bootstrap 5 Multi Select Autocomplete -->
 <script @CSPNonce.attr>
+
     document.addEventListener('DOMContentLoaded', function() {
         const items = @Html("[" + usernames.map(name => s""""$name"""").mkString(",") + "]");
 
@@ -74,6 +95,7 @@
         const autocompleteResults = document.getElementById('autocompleteResults');
         const selectedItemsInput = document.getElementById('selectedUsernamesInput');
         const showSelectedButton = document.getElementById('showSelectedButton');
+        const usernamesConfirmationList = document.getElementById("usernamesConfirmationList");
 
         let highlightedIndex = -1; // Track the highlighted item
 
@@ -203,18 +225,27 @@
             }
         }
 
+
         // Update hidden input with selected items (for form submission)
         function updateHiddenInput() {
             selectedItemsInput.value = selectedItems.join(',');
+            updateModalUsernames();
+        }
+
+        function updateModalUsernames() {
+            usernamesConfirmationList.innerHTML = "";
+            selectedItems.forEach(item => {
+                const username = document.createElement("li");
+                username.textContent = item;
+                usernamesConfirmationList.appendChild(username);
+            });
         }
 
         function handlePaste(event) {
             const pastedText = event.clipboardData.getData('text');
-            const usernames = pastedText
-                                .split(/[\s,]+/) // Split on any whitespace or comma
-                                .map(name => name.trim())
-                    .filter(name => name.length > 0);
-
+            const usernames = pastedText.split(/[\s,]+/) // Split on any whitespace or comma
+                                        .map(name => name.trim())
+                                        .filter(name => name.length > 0);
 
             usernames.forEach(username => {
                 if (items.includes(username) && !selectedItems.includes(username)) {
@@ -227,6 +258,3 @@
         }
     });
 </script>
-
-
-

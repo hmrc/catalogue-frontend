@@ -123,7 +123,7 @@
                             <ul id="users-menu" class="dropdown-menu">
                                 <li><a id="link-to-create-user" class="dropdown-item" href="@userRoutes.CreateUserController.createUserLanding(false)">Create a User</a></li>
                                 <li><a id="link-to-create-service-user" class="dropdown-item" href="@userRoutes.CreateUserController.createUserLanding(true)">Create a Service User</a></li>
-                                @if(request.session.get(AuthController.CAN_OFFBOARD_USERS).contains("true")){
+                                @if(request.session.get(AuthController.CAN_MANAGE_USERS).contains("true")){
                                      <li><a id="link-to-offboard-users" class="dropdown-item" href="@userRoutes.UsersController.offBoardUsersLanding">Offboard Users</a></li>
                                 }
                             </ul>

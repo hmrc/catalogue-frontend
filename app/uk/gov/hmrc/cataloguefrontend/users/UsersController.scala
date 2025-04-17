@@ -307,13 +307,13 @@ class UsersController @Inject()(
           Ok(Json.toJson(usernames))
 
 
-  private val offBoardUserPermission: Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", "teams/*"), IAAction("OFFBOARD_USER"))
+  private val manageUserPermission: Predicate =
+    Predicate.Permission(Resource.from("catalogue-frontend", "teams/*"), IAAction("MANAGE_USER"))
 
   def offBoardUsersLanding: Action[AnyContent] =
     auth.authorizedAction(
       continueUrl = routes.UsersController.offBoardUsersLanding,
-      predicate   = offBoardUserPermission
+      predicate   = manageUserPermission
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Unit] = request
       for
@@ -325,7 +325,7 @@ class UsersController @Inject()(
   def offBoardUsers: Action[AnyContent] =
     auth.authorizedAction(
       continueUrl = routes.UsersController.offBoardUsersLanding,
-      predicate   = offBoardUserPermission
+      predicate   = manageUserPermission
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Unit] = request
       (for
@@ -338,7 +338,7 @@ class UsersController @Inject()(
                      , validForm      => Right(validForm)
                      )
         res   <- EitherT.right[Result](userManagementConnector.offBoardUsers(form))
-        msg   =  s"Request to offboard users: ${form.usernames.map(username => s"<b>$username</b>").mkString(", ")} sent successfully. This may take a while to be reflected in the Catalogue"
+        msg   =  s"Request to offboard ${form.usernames.size} user(s) has been submitted successfully. Changes may take some time to appear in the Catalogue."
        yield Redirect(routes.UsersController.offBoardUsersLanding)
                .flashing(s"success" -> msg)
       ).merge
