@@ -30,6 +30,7 @@
 , configChanges              : ConfigChanges
 , configWarnings             : Seq[ServiceConfigsService.ConfigWarning]        = Nil
 , oVulnerabilities           : Option[Seq[VulnerabilitySummary]]               = None
+, showReferenceConfInfo      : Boolean                                         = true
 , showConfigWarnings         : Boolean                                         = true
 , showVulnerabilities        : Boolean                                         = true
 )(implicit
@@ -183,8 +184,8 @@
     <div class="accordion-item">
       <div class="accordion-header" id="headingConfigUpdates">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(nonRefConfigChanges.isEmpty) {disabled} >
-          Config Updates @if(refConfigChanges.nonEmpty) {
-            (plus @refConfigChanges.size <code class="p-1">reference.conf</code> changes)
+          Config Updates @if(showReferenceConfInfo && nonRefConfigChanges.isEmpty && refConfigChanges.nonEmpty) {
+            (excluding <code class="p-1">reference.conf</code> changes)
           }
           @changesBadge(nonRefConfigChanges.size)
         </button>

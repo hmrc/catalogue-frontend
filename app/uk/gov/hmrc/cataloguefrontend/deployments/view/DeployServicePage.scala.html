@@ -130,15 +130,16 @@
         </div>
         <label class="form-label fw-bold">Please review before deploying:</label>
         @evaluationsPartial(
-          serviceName      = form.get.serviceName
-        , environment      = form.get.environment
-        , previousVersion  = releases.find(_.environment == form.get.environment).map(_.version)
-        , deployedVersion  = form.get.version
-        , oGitHubCompare   = oGitHubCompare
-        , jvmChanges       = jvmChanges
-        , configChanges    = configChanges
-        , configWarnings   = configWarnings
-        , oVulnerabilities = oVulnerabilities
+          serviceName           = form.get.serviceName
+        , environment           = form.get.environment
+        , previousVersion       = releases.find(_.environment == form.get.environment).map(_.version)
+        , deployedVersion       = form.get.version
+        , oGitHubCompare        = oGitHubCompare
+        , jvmChanges            = jvmChanges
+        , configChanges         = configChanges
+        , configWarnings        = configWarnings
+        , oVulnerabilities      = oVulnerabilities
+        , showReferenceConfInfo = false
         )
 
         @helper.form(
