@@ -181,6 +181,8 @@ class DeployServiceController @Inject()(
                                    .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
          vulnerabilities      <- EitherT
                                    .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired)))
+         violations           <- EitherT
+                                   .right[Result](serviceDependenciesConnector.getRepositoryModules(formObject.serviceName.asString, formObject.version))
        yield
          Ok(deployServicePage(
            form,
@@ -189,7 +191,7 @@ class DeployServiceController @Inject()(
            latest,
            releases,
            environments,
-           Some((gitHubCompare, jvmChanges, configChanges, configWarnings, vulnerabilities))
+           Some((gitHubCompare, jvmChanges, configChanges, configWarnings, vulnerabilities, violations))
          ))
       ).merge
 

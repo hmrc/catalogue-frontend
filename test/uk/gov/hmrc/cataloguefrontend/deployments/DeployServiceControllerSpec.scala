@@ -18,7 +18,7 @@ package uk.gov.hmrc.cataloguefrontend.deployments
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.when
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
@@ -28,23 +28,23 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
-import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, GitHubProxyConnector, Organisation, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.connector.model.{Kind, Vendor}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, GitRepository, Organisation, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependency, DependencyScope, Kind, RepositoryModule, RepositoryModules, Vendor}
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, DeployServiceStep4Page}
-import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, ServiceConfigsService}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ConfigChanges, ServiceConfigsService}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.{Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
-import uk.gov.hmrc.internalauth.client.syntax._
+import uk.gov.hmrc.internalauth.client.syntax.*
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 
-import java.time.Instant
+import java.time.{Instant, LocalDate}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -167,6 +167,11 @@ class DeployServiceControllerSpec
         curationStatus = eqTo(Some(CurationStatus.ActionRequired))
       )(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
+      when(mockServiceDependenciesConnector.getRepositoryModules(
+        repositoryName = eqTo("some-service"),
+        version = eqTo(Version("0.3.0"))
+      )(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(violations)))
 
       val futResult = underTest.step2()(
         FakeRequest()
@@ -189,6 +194,7 @@ class DeployServiceControllerSpec
       jsoupDocument.select("#config-warnings-rows").first.children.size shouldBe 1
       jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
       jsoupDocument.select("#deployment-config-updates-rows").first.children.size shouldBe 1
+      jsoupDocument.select("div.row.dependency-row").size shouldBe 1
       jsoupDocument.select("#deploy-btn").size shouldBe 1
     }
   }
@@ -351,6 +357,47 @@ class DeployServiceControllerSpec
                             )
   , occurrences           = Nil
   , teams                 = Seq("some-team")
+  )
+
+  private val violations = RepositoryModules(
+    "some-service",
+    Some(Version("0.3.0")),
+    Seq.empty,
+    Seq(
+      RepositoryModule(
+        "some-service",
+        "some-group",
+        Seq(
+          Dependency(
+            "some-dependency",
+            "some-group",
+            Version("0.0.1"),
+            None,
+            Seq(
+              BobbyRuleViolation(
+                "some-reason",
+                VersionRange(
+                  None,
+                  None,
+                  None,
+                  "0.0.1 <= 0.0.2"
+                ),
+                LocalDate.MIN
+              )
+            ),
+            Seq.empty,
+            None,
+            DependencyScope.Compile
+          )
+        ),
+        Seq.empty,
+        Seq.empty,
+        Seq.empty,
+        Seq.empty,
+        Seq.empty,
+        Seq.empty
+      )
+    )
   )
 
   private trait Setup {
