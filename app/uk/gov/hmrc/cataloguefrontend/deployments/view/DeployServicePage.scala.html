@@ -20,6 +20,7 @@
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ServiceConfigsService}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
+@import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
 
 @import views.html.helper.{FieldConstructor, select}
 
@@ -37,6 +38,7 @@
                  , ConfigChanges
                  , Seq[ServiceConfigsService.ConfigWarning]
                  , Option[Seq[VulnerabilitySummary]]
+                 , Option[RepositoryModules]
                  )]
 )(implicit
   messages     : Messages
@@ -119,7 +121,7 @@
       </div>
     </div>
     <div class="col-md-8">
-      @evaluations.map { case (oGitHubCompare, jvmChanges, configChanges, configWarnings, oVulnerabilities) =>
+      @evaluations.map { case (oGitHubCompare, jvmChanges, configChanges, configWarnings, oVulnerabilities, oViolations) =>
         <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
           You are about to deploy <strong>@form.get.serviceName.asString:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
           @if(releases.isEmpty || !releases.map(_.environment).contains(form.get.environment)) {
@@ -139,6 +141,7 @@
         , configChanges         = configChanges
         , configWarnings        = configWarnings
         , oVulnerabilities      = oVulnerabilities
+        , oViolations           = oViolations
         , showReferenceConfInfo = false
         )
 
