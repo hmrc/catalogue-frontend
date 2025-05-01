@@ -34,7 +34,7 @@ dependenciesPartial: TEMPDependenciesPartial
 
 @standard_layout("Deployment Timeline", active = "deployments", showNavBar = false) {
   <div class="mt-3 mr-1">
-    @evaluationsPartial(
+    @evaluationsPartial(dependenciesPartial)(
       serviceName             = serviceName
     , environment             = environment
     , previousVersion         = previousVersion

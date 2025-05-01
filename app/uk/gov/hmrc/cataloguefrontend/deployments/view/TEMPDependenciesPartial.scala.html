@@ -33,7 +33,7 @@
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-9">
+            <div class="col-12">
                 @if(dependencies.nonEmpty) {
                     <div class="row">
                         <div class="col-4">
@@ -57,11 +57,6 @@
                     <p class="card-text dependency-row">No dependencies available</p>
                 }
             </div>
-            @if(dependencies.nonEmpty && showLegend) {
-                <div class="col-3">
-                    @partials.dependency_legend(showNewVersionAvailable = true, showVulnerabilitity = true)
-                </div>
-            }
         </div>
         <div class="row">
             <div class="col-3 offset-9">

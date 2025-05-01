@@ -51,16 +51,6 @@ dependenciesPartial: TEMPDependenciesPartial
 
 @standard_layout("Deploy Service", "deployments") {
   <h1 class="page-heading mt-4">Deploy Service</h1>
-
-
-@dependenciesPartial(
-Seq.empty
-, s"build-dependencies-test"
-, "test"
-, None
-)
-
-
   <div class="row">
     <div class="col-md-4">
       <div class="sticky-container">
@@ -143,7 +133,7 @@ Seq.empty
           }
         </div>
         <label class="form-label fw-bold">Please review before deploying:</label>
-        @evaluationsPartial(
+        @evaluationsPartial(dependenciesPartial)(
           serviceName           = form.get.serviceName
         , environment           = form.get.environment
         , previousVersion       = releases.find(_.environment == form.get.environment).map(_.version)
