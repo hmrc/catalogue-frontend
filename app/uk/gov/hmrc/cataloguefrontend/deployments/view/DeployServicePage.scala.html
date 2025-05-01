@@ -24,7 +24,9 @@
 
 @import views.html.helper.{FieldConstructor, select}
 
-@this()
+@this(
+dependenciesPartial: TEMPDependenciesPartial
+)
 
 @(form         : Form[DeployServiceForm]
 , hasPerm      : Boolean
@@ -49,6 +51,16 @@
 
 @standard_layout("Deploy Service", "deployments") {
   <h1 class="page-heading mt-4">Deploy Service</h1>
+
+
+@dependenciesPartial(
+Seq.empty
+, s"build-dependencies-test"
+, "test"
+, None
+)
+
+
   <div class="row">
     <div class="col-md-4">
       <div class="sticky-container">

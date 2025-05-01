@@ -21,6 +21,13 @@
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityDetails
 @import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
 
+@*
+@this(
+dependenciesPartial: TEMPDependenciesPartial
+)
+*@
+
+
 @(
   serviceName                : ServiceName
 , environment                : Environment
@@ -335,6 +342,15 @@
       <div class="accordion-body">
 
         @oViolations
+
+@*
+        @dependenciesPartial(
+        oViolations.map(_.dependenciesBuild).getOrElse(Seq.empty)
+        , s"build-dependencies-test"
+        , "test"
+        , None
+        )
+*@
 
       </div>
     </div>
