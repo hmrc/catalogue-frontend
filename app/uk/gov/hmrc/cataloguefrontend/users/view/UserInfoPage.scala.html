@@ -381,9 +381,10 @@
                                           </button>
                                       }
 
-                                      @if(canEditUsers && userAccess.vpn) {
+                                      @if(canEditUsers) {
                                           <button type="button" class="btn btn-success w-100"
-                                          data-bs-toggle="modal" data-bs-target="#vpnModal">
+                                          data-bs-toggle="modal" data-bs-target="#vpnModal"
+                                          @if(!userAccess.vpn){disabled}>
                                               Request VPN Certificate
                                           </button>
                                       }
@@ -507,10 +508,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <form id="vpn-form" method="post" action="@userRoutes.UsersController.requestNewVpnCert">
+                <form id="vpn-cert-form" method="post" action="@userRoutes.UsersController.requestNewVpnCert">
                     @csrfFormField
                     <input name="username" type="hidden" value="@user.username.asString">
-                    <button id="vpn-submit" class="btn btn-success" type="submit">Submit</button>
+                    <button id="vpn-cert-submit" class="btn btn-success" type="submit">Submit</button>
                 </form>
             </div>
         </div>
