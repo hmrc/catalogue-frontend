@@ -18,10 +18,10 @@ package uk.gov.hmrc.cataloguefrontend.util
 
 object CsvUtils:
   /** generate csv */
-  def toCsv(rows: Seq[Seq[(String, String)]]): String =
+  def toCsv(rows: Seq[Seq[(String, String)]], includeTitle: Boolean = true): String =
     rows.headOption
       .map: first =>
         val keys                       = first.map(_._1)
         val dataRows: Seq[Seq[String]] = rows.map(row => keys.map(key => row.find(_._1 == key).fold("")(_._2)))
-        (keys +: dataRows).map(_.mkString(",")).mkString("\n")
+        ((if includeTitle then keys else Nil) +: dataRows).map(_.mkString(",")).mkString("\n")
       .getOrElse("No data")

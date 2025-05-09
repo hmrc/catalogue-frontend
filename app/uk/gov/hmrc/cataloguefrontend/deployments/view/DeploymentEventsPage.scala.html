@@ -180,29 +180,29 @@
 }
 
 @pageNavigation() = {
-  <tr>
-      <td>
-          @if(pagination.page <= 0) {
-              <a class="btn btn-outline-secondary" href="#">Prev</a>
-          }else {
-              <a class="btn btn-outline-secondary" href="@Pagination.uriForPage(request.uri, pagination.page - 1)">Prev</a>
-          }
-      </td>
-      <td colspan="3">
-          @if(pagination.total > 0) {
-              <span style="color: #6f777b;margin-left: 25%;">Showing @{(pagination.page * pagination.pageSize) + 1} to @{(pagination.page * pagination.pageSize) + deployments.length} of @{pagination.total}</span>
-          } else {
-              <span style="color: #6f777b;margin-left: 25%;">No matches found</span>
-          }
-      </td>
-      <td style="text-align: right">
-          @if((pagination.page * pagination.pageSize) + deployments.length >= pagination.total) {
-              <a class="btn btn-outline-secondary" href="#">Next</a>
-          } else {
-              <a class="btn btn-outline-secondary" href="@Pagination.uriForPage(request.uri, pagination.page + 1)">Next</a>
-          }
-      </td>
-  </tr>
+    <tr>
+        <td colspan="5" style="text-align: center;">
+            <a data-toggle="tooltip" data-placement="top" title="Tooltip on top" class="btn btn-outline-secondary float-start @if(pagination.page <= 1) { disabled }" href="@Pagination.uriForPage(request.uri, pagination.page - 1)">Prev</a>
+            <a class="btn btn-outline-secondary float-end @if((pagination.page * pagination.pageSize) + deployments.length >= pagination.total) { disabled }" href="@Pagination.uriForPage(request.uri, pagination.page + 1)">Next</a>
+            @if(pagination.total > 0) {
+                @helper.form(
+                  action           =  routes.DeploymentEventsController.csv(selectedEnv)
+                , Symbol("method") -> "POST"
+                , Symbol("class")  -> "mt-0"
+                ) {
+                    <span>Showing @{(pagination.page * pagination.pageSize) + 1} to @{(pagination.page * pagination.pageSize) + deployments.length} of @{pagination.total}</span>
+                    @csrfFormField
+                        <input type="hidden" name="service" value='@form("service").value'>
+                        <input type="hidden" name="team" value='@form("team").value'>
+                        <input type="hidden" name="from" value='@form("from").value'>
+                        <input type="hidden" name="to" value='@form("to").value'>
+                        <input type="submit" class="btn btn-outline-secondary ms-2" value="Export as CSV"/>
+                    }
+            } else {
+                <span>No matches found</span>
+            }
+        </td>
+    </tr>
 }
 
 @userLink(username: UserName) = {
