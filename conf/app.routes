@@ -117,6 +117,7 @@ GET        /shutter-events/list                         uk.gov.hmrc.cataloguefro
 
 GET        /whats-running-where        uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereController.releases(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 GET        /deployments/:env           uk.gov.hmrc.cataloguefrontend.deployments.DeploymentEventsController.deploymentEvents(env: Environment)
+POST       /deployments/:env/csv      uk.gov.hmrc.cataloguefrontend.deployments.DeploymentEventsController.csv(env: Environment)
 
 GET        /platform-initiatives                        uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesController.platformInitiatives(display: DisplayType ?= DisplayType.Chart, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 

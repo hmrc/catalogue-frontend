@@ -17,14 +17,18 @@
 package uk.gov.hmrc.cataloguefrontend.deployments
 
 import cats.implicits._
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.util.ByteString
 import play.api.data.{Form, Forms}
+import play.api.http.HttpEntity
 import play.api.mvc._
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.DeploymentEventsPage
 import uk.gov.hmrc.cataloguefrontend.model.Environment
 import uk.gov.hmrc.cataloguefrontend.model.Environment.Production
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Pagination, ReleasesConnector}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentHistory, Pagination, ReleasesConnector}
+import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -77,9 +81,40 @@ class DeploymentEventsController @Inject()(
             )
         )
 
+  def csv(env: Environment): Action[AnyContent] =
+    BasicAuthAction.apply: request =>
+      given MessagesRequest[AnyContent] = request
+      form
+        .bindFromRequest()
+        .fold(
+          formErrors => BadRequest(deploymentEventsPage(env, Seq.empty, Seq.empty, Pagination(0, pageSize, 0), formErrors))
+        , formObject =>
+            val stream =
+              Source
+                .unfoldAsync(0): skip =>
+                  releasesConnector.deploymentHistory(
+                    environment = env
+                  , from        = Some(formObject.from)
+                  , to          = Some(formObject.to)
+                  , team        = formObject.team
+                  , service     = formObject.service
+                  , skip        = Some(skip)
+                  , limit       = Some(500) // max backend allows
+                  ).map:
+                    case page if page.history.isEmpty => None
+                    case page                         => Some((skip + page.history.size, CsvUtils.toCsv(toRows(page.history), includeTitle = skip == 0)))
+                .flatMapConcat(xs => Source.single(ByteString(xs,  "UTF-8")))
+
+            Result(
+              header = ResponseHeader(200, Map("Content-Disposition" -> s"attachment; filename=\"mdtp-deployment-events-${env.asString}-${formObject.from}-${formObject.to}.csv\""))
+            , body   = HttpEntity.Streamed(stream, None, Some("text/csv"))
+            )
+        )
+
 end DeploymentEventsController
 
 object DeploymentEventsController:
+
 
   case class SearchForm(
     from   : LocalDate,
@@ -110,5 +145,15 @@ object DeploymentEventsController:
         )(SearchForm.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying("To Date must be greater than or equal to From Date", f => !f.to.isBefore(f.from))
     )
+
+  def toRows(seq: Seq[DeploymentHistory]): Seq[Seq[(String, String)]] =
+    seq.map: x =>
+      Seq(
+        "Service"     -> x.name.asString
+      , "Teams"       -> x.teams.map(_.asString).mkString("\"", ", ", "\"")
+      , "Version"     -> x.version.original
+      , "Deploy time" -> x.time.time.toString
+      , "Deployer"    -> x.username.asString
+      )
 
 end DeploymentEventsController
