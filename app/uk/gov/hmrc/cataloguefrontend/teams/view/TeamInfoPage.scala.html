@@ -38,11 +38,11 @@
 
 @(
   teamName       : TeamName
+, umpTeam        : UmpTeam
 , teamDetailsForm: Form[EditTeamDetails]
 , umpMyTeamsUrl  : String
 , results        : ( Option[String]
                   , Seq[GitRepository]
-                  , UmpTeam
                   , (Int, URL) // Open PRs raised by the team
                   , (Int, URL) // Open PRs for repos owned by the team
                   , Seq[LeakDetectionRepositorySummary]
@@ -91,7 +91,7 @@
         <h1 class="page-heading mt-4">@teamName.asString</h1>
     }
 
-  @defining(results) { case (gitHubUrl, repos, umpTeam, openPrsRaisedByTeamMembers, openPrsForRepos, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, productionVulnerabilities, latestVulnerabilities, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs) =>
+  @defining(results) { case (gitHubUrl, repos, openPrsRaisedByTeamMembers, openPrsForRepos, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, productionVulnerabilities, latestVulnerabilities, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs) =>
 
     <section class="section-wrapper">
       <div class="row mb-3">

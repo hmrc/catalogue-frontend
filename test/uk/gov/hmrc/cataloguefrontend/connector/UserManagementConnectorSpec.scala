@@ -65,7 +65,7 @@ class UserManagementConnectorSpec
           )
       )
 
-      connector.getTeam(team).futureValue shouldBe UmpTeam(Seq.empty[Member], team, None, None, None, None)
+      connector.getTeam(team).futureValue shouldBe Some(UmpTeam(Seq.empty[Member], team, None, None, None, None))
     }
   }
 
@@ -337,7 +337,7 @@ class UserManagementConnectorSpec
         |  "isExistingLDAPUser": true
         |}
         |""".stripMargin
-    
+
     "return Unit when UMP response is 200 for human user" in:
       stubFor(
         post(urlPathEqualTo(s"/user-management/edit-user-access"))
@@ -688,8 +688,8 @@ class UserManagementConnectorSpec
 
       an[RuntimeException] shouldBe thrownBy {
         connector.manageDevToolsAccess(UserName("joe.bloggs"), enableDevTools = true).futureValue
-      }    
-      
+      }
+
   "restLdapPassword" should:
     val resetLdapPassword =
       ResetLdapPassword("joe.bloggs", "tes@email.com")
