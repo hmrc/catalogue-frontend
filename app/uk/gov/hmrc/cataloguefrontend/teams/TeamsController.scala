@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.cataloguefrontend.teams
 
+import cats.data.EitherT
 import cats.implicits.*
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, RequestHeader, Result}
 import play.api.Logging
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.data.{Form, Forms}
+import play.api.i18n.I18nSupport
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
@@ -32,10 +34,10 @@ import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissio
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsConnector
 import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterType}
 import uk.gov.hmrc.cataloguefrontend.teams.view.html.{DigitalServicePage, TeamInfoPage, TeamsListPage}
-import uk.gov.hmrc.cataloguefrontend.users.ManageTeamMembersRequest
+import uk.gov.hmrc.cataloguefrontend.users.{ManageTeamMembersRequest,UmpTeam}
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ReleasesConnector
-import uk.gov.hmrc.cataloguefrontend.view.html.OutOfDateTeamDependenciesPage
+import uk.gov.hmrc.cataloguefrontend.view.html.{OutOfDateTeamDependenciesPage, error_404_template}
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -66,7 +68,8 @@ class TeamsController @Inject()(
   override val ec: ExecutionContext
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders
-     with Logging:
+     with Logging
+     with I18nSupport:
 
   private def canCreateAndDeleteTeams(retrieval: Option[Set[Resource]]): Boolean =
     val teams = retrieval.fold(Set.empty[String])(_.map(_.resourceLocation.value))
@@ -77,42 +80,46 @@ class TeamsController @Inject()(
     resultType: Html => Result,
     teamDetailsForm: Form[EditTeamDetails]
   )(using HeaderCarrier, RequestHeader): Future[Result] =
-    for
-      editR   <- auth.verify:
-                   Retrieval.locations(
-                     resourceType = Some(ResourceType("catalogue-frontend")),
-                     action       = Some(IAAction("EDIT_TEAM"))
-                   )
-      deleteR <- auth.verify:
-                   Retrieval.locations(
-                     resourceType = Some(ResourceType("catalogue-frontend")),
-                     action       = Some(IAAction("MANAGE_TEAM"))
-                   )
-      results <- ( teamsAndRepositoriesConnector.allTeams(Some(teamName)).map(_.headOption.map(_.githubUrl))
-                 , teamsAndRepositoriesConnector.allRepositories(team = Some(teamName), archived = Some(false))
-                 , userManagementConnector.getTeam(teamName)
-                 , teamsAndRepositoriesConnector.openPullRequestsRaisedByMembersOfTeam(teamName).map: openPrs =>
-                    val githubUrl = s"https://github.com/search?q=org:hmrc+is:pr+is:open+archived:false+${openPrs.map(_.author).distinct.map { a => s"author:$a" }.mkString("+")}&type=pullrequests"
-                    (openPrs.size, url"$githubUrl")
-                 , teamsAndRepositoriesConnector.openPullRequestsForReposOwnedByTeam(teamName).map: openPrs =>
-                    val githubUrl = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open&type=pullrequests"
-                    (openPrs.size, url"$githubUrl")
-                 , leakDetectionService.repoSummaries(team = Some(teamName), includeWarnings = false, includeExemptions = false, includeViolations = true, includeNonIssues = false)
-                 , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.ForEnvironment(Environment.Production))
-                 , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.Latest)
-                 , ( shutterService.getShutterStates(ShutterType.Frontend, Environment.Production, teamName = Some(teamName))
-                   , shutterService.getShutterStates(ShutterType.Api     , Environment.Production, teamName = Some(teamName))
-                   ).tupled.map(x => x._1 ++ x._2)
-                 , platformInitiativesConnector.getInitiatives(teamName = Some(teamName))
-                 , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.ForEnvironment(Environment.Production), team = Some(teamName))
-                 , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest                                , team = Some(teamName))
-                 , serviceCommissioningStatusConnector.cachedCommissioningStatus(teamName = Some(teamName))
-                 , serviceMetricsConnector.metrics(Some(Environment.Production), teamName = Some(teamName))
-                 , releasesConnector.releases(teamName = Some(teamName))
-                 , teamsAndRepositoriesConnector.findTestJobs(teamName = Some(teamName))
-                 ).tupled
-    yield
-      resultType(teamInfoPage(teamName, teamDetailsForm, umpMyTeamsUrl = umpConfig.umpMyTeamsPageUrl(teamName), results, canEditTeam(editR, teamName), canCreateAndDeleteTeams(deleteR)))
+    (for
+      umpTeam <- EitherT.fromOptionF[Future, Result, UmpTeam](userManagementConnector.getTeam(teamName), NotFound(error_404_template()))
+      editR   <- EitherT.right:
+                   auth.verify:
+                    Retrieval.locations(
+                      resourceType = Some(ResourceType("catalogue-frontend")),
+                      action       = Some(IAAction("EDIT_TEAM"))
+                    )
+      deleteR <- EitherT.right:
+                   auth.verify:
+                     Retrieval.locations(
+                       resourceType = Some(ResourceType("catalogue-frontend")),
+                       action       = Some(IAAction("MANAGE_TEAM"))
+                     )
+      results <- EitherT.right:
+                   ( teamsAndRepositoriesConnector.allTeams(Some(teamName)).map(_.headOption.map(_.githubUrl))
+                   , teamsAndRepositoriesConnector.allRepositories(team = Some(teamName), archived = Some(false))
+                   , teamsAndRepositoriesConnector.openPullRequestsRaisedByMembersOfTeam(teamName).map: openPrs =>
+                       val githubUrl = s"https://github.com/search?q=org:hmrc+is:pr+is:open+archived:false+${openPrs.map(_.author).distinct.map { a => s"author:$a" }.mkString("+")}&type=pullrequests"
+                       (openPrs.size, url"$githubUrl")
+                   , teamsAndRepositoriesConnector.openPullRequestsForReposOwnedByTeam(teamName).map: openPrs =>
+                       val githubUrl = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open&type=pullrequests"
+                       (openPrs.size, url"$githubUrl")
+                   , leakDetectionService.repoSummaries(team = Some(teamName), includeWarnings = false, includeExemptions = false, includeViolations = true, includeNonIssues = false)
+                   , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.ForEnvironment(Environment.Production))
+                   , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.Latest)
+                   , ( shutterService.getShutterStates(ShutterType.Frontend, Environment.Production, teamName = Some(teamName))
+                     , shutterService.getShutterStates(ShutterType.Api     , Environment.Production, teamName = Some(teamName))
+                     ).tupled.map(x => x._1 ++ x._2)
+                   , platformInitiativesConnector.getInitiatives(teamName = Some(teamName))
+                   , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.ForEnvironment(Environment.Production), team = Some(teamName))
+                   , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest                                , team = Some(teamName))
+                   , serviceCommissioningStatusConnector.cachedCommissioningStatus(teamName = Some(teamName))
+                   , serviceMetricsConnector.metrics(Some(Environment.Production), teamName = Some(teamName))
+                   , releasesConnector.releases(teamName = Some(teamName))
+                   , teamsAndRepositoriesConnector.findTestJobs(teamName = Some(teamName))
+                   ).tupled
+     yield
+       resultType(teamInfoPage(teamName, umpTeam, teamDetailsForm, umpMyTeamsUrl = umpConfig.umpMyTeamsPageUrl(teamName), results, canEditTeam(editR, teamName), canCreateAndDeleteTeams(deleteR)))
+    ).merge
 
   def team(teamName: TeamName): Action[AnyContent] =
     BasicAuthAction.async: request =>
@@ -150,7 +157,7 @@ class TeamsController @Inject()(
       ( userManagementConnector.getAllTeams()
       , teamsAndRepositoriesConnector.allTeams()
         // This retrieval is not happening in original auth call to make unauthenticated testing easier
-      , auth.verify(Retrieval.locations(Some(ResourceType("catalogue-frontend")), Some(IAAction("MANAGE_TEAM")))) 
+      , auth.verify(Retrieval.locations(Some(ResourceType("catalogue-frontend")), Some(IAAction("MANAGE_TEAM"))))
       ).mapN: (umpTeams, gitHubTeams, retrieval) =>
         Ok(TeamsListPage(
           teams = umpTeams.map(umpTeam => (umpTeam, gitHubTeams.find(_.name == umpTeam.teamName))),

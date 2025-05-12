@@ -42,11 +42,11 @@ class UserManagementConnector @Inject()(
 
   private val baseUrl = servicesConfig.baseUrl("user-management")
 
-  def getTeam(team: TeamName)(using HeaderCarrier): Future[UmpTeam] =
+  def getTeam(team: TeamName)(using HeaderCarrier): Future[Option[UmpTeam]] =
     given Reads[UmpTeam] = UmpTeam.reads
     httpClientV2
       .get(url"$baseUrl/user-management/teams/${team.asString}?includeNonHuman=true")
-      .execute[UmpTeam]
+      .execute[Option[UmpTeam]]
 
   def getAllTeams()(using HeaderCarrier): Future[Seq[UmpTeam]] =
     given Reads[UmpTeam] = UmpTeam.reads
@@ -138,7 +138,7 @@ class UserManagementConnector @Inject()(
       .flatMap:
         case Right(res) => Future.successful(res)
         case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
-        
+
   def createTeam(teamRequest: CreateTeamRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/create-team"
     httpClientV2
