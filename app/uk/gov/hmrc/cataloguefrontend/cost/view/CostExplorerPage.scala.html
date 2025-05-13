@@ -108,9 +108,9 @@
                 <tbody class="list" id="matches">
                 @serviceNameAndConfigs.toSeq.sortBy(_._1).zipWithIndex.map { case ((serviceName, configs), index) =>
                 <tr>
-                    <td class="repo-name" id="row@{
-                        index
-                    }_name"><a id="link-to-@serviceName-page" href="/repositories/@serviceName.asString">@serviceName.asString</a></td>
+                    <td class="repo-name" id="row@{index}_name">
+                        <a id="link-to-@serviceName-page" href="@uk.gov.hmrc.cataloguefrontend.routes.CatalogueController.service(serviceName)">@serviceName.asString</a>
+                    </td>
                     @Environment.values.map { env =>
                         <td style="text-align: center">@configs.find(_.environment == env).map(_.deploymentSize.slots)</td>
                         <td style="text-align: center">@configs.find(_.environment == env).map(_.deploymentSize.instances)</td>
