@@ -1,0 +1,112 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.createrepository.{CreateExternal, Organisation}
+
+@this()
+
+@(form     : Form[CreateExternal],
+  teamNames: Seq[TeamName]
+)(implicit
+  messages : Messages,
+  request  : RequestHeader
+)
+
+@standard_layout("Create an External Repository (Non MDTP)", "create an external repository") {
+
+    <section class="section-wrapper">
+        <h1 class="page-heading mt-4">Create an External repository</h1>
+        <p class="col-md-6">
+            External repositories are non-MDTP hosted in the HMRC organisation for coding in the open.
+        </p>
+        <p class="col-md-6">
+            Use the form below to create a new repository. Make sure to follow the guidance for each field.
+        </p>
+
+        @partials.form_global_errors(form)
+
+        @helper.form(
+            action               =  uk.gov.hmrc.cataloguefrontend.createrepository.routes.CreateRepositoryController.createRepoPost(),
+            Symbol("id")         -> "createRepoForm",
+            Symbol("method")     -> "post",
+            Symbol("class")      -> "needs-validation",
+            Symbol("novalidate") -> ""
+        ) {
+            @csrfFormField
+
+            <input type="hidden" id="formErrors" value="@form.errorsAsJson"/>
+            <div class="form-group row mb-4">
+                <div class="col-md-6 d-grid gap-2">
+                    <label class="fw-bold" for="repoNameInput">Repository name:</label>
+                    <div id="repositoryName" class="mb-2">
+                        <div class="mb-2">
+                            You must comply with established naming conventions when naming your repository:
+                        </div>
+                        <ul>
+                            <li>separate words with hyphens; don't use spaces or slashes</li>
+                            <li>maximum 47 characters</li>
+                            <li>lowercase only</li>
+                            <li>describe the domain</li>
+                            <li>avoid time-limited words, such as 'new'</li>
+                            <li>avoid unnecessary words, such as 'service'</li>
+                        </ul>
+                        <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row mb-4">
+                <div id="teamName" class="col-md-6">
+                    <label class="fw-bold" for="teamInput">Team name:</label>
+                    @if(teamNames.nonEmpty){
+                        <p class="mt-2">Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+                    } else {
+                        <p class="alert alert-danger mt-2">There are currently no teams that you have permissions to create a repository for. Ensure you are signed in to the MDTP Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
+                           If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
+                        </p>
+                    }
+                    <select class="form-select" id="teamInput" name="teamName">
+                        @teamNames.map { tn =>
+                            <option value="@{tn.asString}"
+                                    @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}
+                            >@tn.asString</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row mb-4">
+                <div id="organisation" class="col-md-6">
+                    <label class="fw-bold" for="organisationInput">Organisation:</label>
+                    <p class="mt-2">
+                        Select the organisation which best fits this repositories purpose. Contact PlatOps to add more options.
+                    </p>
+                    <select class="form-select" id="teInput" name="organisation">
+                        <option value="" @if(form.data.getOrElse("organisation", "").isEmpty) { selected="selected" } >
+                            Select an Organisation
+                        </option>
+                        @Organisation.values.map { x  =>
+                            <option value="@{x.asString}" @if(form.data.getOrElse("organisation", "").equals(x.asString)) { selected="selected" else ""}>
+                                @x.asString
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button id="createExternalSubmitBtn" class="btn btn-success" type="submit">Build</button>
+            </div>
+       }
+    </section>
+}
