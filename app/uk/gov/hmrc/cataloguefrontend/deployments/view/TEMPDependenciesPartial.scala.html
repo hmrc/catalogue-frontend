@@ -28,9 +28,9 @@
 )
 
 <div id="@rootId" class="card mb-3">
-    <div class="card-header">
-      <div class="h4 mb-0">@title</div>
-    </div>
+<!--    <div class="card-header">-->
+<!--      <div class="h4 mb-0">@title</div>-->
+<!--    </div>-->
     <div class="card-body">
         <div class="row">
             <div class="col-12">
@@ -46,13 +46,13 @@
                             <p class="fw-bold">Latest Version</p>
                         </div>
                         <div class="col-2">
-                            <p class="fw-bold">Vulnerability</p>
+                            <p class="fw-bold">Scopes</p>
                         </div>
                         <div class="col-2">
                             <p class="fw-bold">Violation</p>
                         </div>
                     </div>
-                    @partials.dependency_section(dependencies, rootId, false)
+                    @TEMPdependency_section(dependencies, rootId, false, true)
                 } else {
                     <p class="card-text dependency-row">No dependencies available</p>
                 }

@@ -341,69 +341,19 @@ dependenciesPartial: TEMPDependenciesPartial
       <div class="accordion-body">
 
         @defining(oViolations.map(_.allDependencies.filter(_.bobbyRuleViolations.nonEmpty)).getOrElse(Seq.empty)){ filteredDependencies =>
-          @defining(filteredDependencies.filter(_.scope == DependencyScope.Build)){ dependencies =>
-            @if(dependencies.nonEmpty) {
-            <div class="row">
-              <div class="col-md-12">
-                @dependenciesPartial(
-                dependencies
-                , s"build-dependencies-test"
-                , "Build"
-                , None
-                , false
-                )
-              </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              @dependenciesPartial(
+              filteredDependencies
+              , s"build-dependencies-all"
+              , "All"
+              , None
+              , false
+              )
             </div>
-            }
+          </div>
 
-            @defining(filteredDependencies.filter(_.scope == DependencyScope.Compile)){ dependencies =>
-              @if(dependencies.nonEmpty) {
-              <div class="row">
-                <div class="col-md-12">
-                  @dependenciesPartial(
-                  dependencies
-                  , s"compile-dependencies-test"
-                  , "Compile"
-                  , None
-                  , false
-                  )
-                </div>
-              </div>
-              }
-            }
-
-            @defining(filteredDependencies.filter(_.scope == DependencyScope.Test)){ dependencies =>
-              @if(dependencies.nonEmpty) {
-              <div class="row">
-                <div class="col-md-12">
-                  @dependenciesPartial(
-                  dependencies
-                  , s"test-dependencies-test"
-                  , "Test"
-                  , None
-                  , false
-                  )
-                </div>
-              </div>
-              }
-            }
-
-            @defining(filteredDependencies.filter(_.scope == DependencyScope.It)){ dependencies =>
-              @if(dependencies.nonEmpty) {
-              <div class="row">
-                <div class="col-md-12">
-                  @dependenciesPartial(
-                  dependencies
-                  , s"it-dependencies-test"
-                  , "It"
-                  , None
-                  , false
-                  )
-                </div>
-              </div>
-              }
-            }
-          }
         }
       </div>
     </div>

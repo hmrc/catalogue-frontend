@@ -1,0 +1,104 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.bobby.{routes => bobbyRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{ routes => vulnerabilityRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, ImportedBy, VersionState}
+@import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope
+@import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope.It
+@import uk.gov.hmrc.cataloguefrontend.connector.model.DependencyScope.Compile
+
+@(dependencies           : Seq[Dependency],
+  rootId                 : String,
+  showOutOfDateOnly      : Boolean          = false,
+  showVulnerabilityColumn: Boolean          = true
+)
+
+@for(
+    (dependency, scopes) <- dependencies
+                            .groupBy(d => d.group + d.name)
+                            .map(d => (d._2.head, d._2.map(_.scope)))
+) {
+    @dependencyRow(dependency, scopes)
+}
+
+@dependencyRow(dependency: Dependency, scopes: Seq[DependencyScope]) = {
+    <div class="row dependency-row @{getColourClass(dependency)}" id="@{dependency.name}-@{rootId}">
+        <div class="col-4">
+            @if(dependency.importBy.isDefined) {
+                <span class="transitive"></span>
+            }
+            @icon(dependency)
+            @if(!dependency.isExternal) {
+              <a id="link-to-@{dependency.name}-@{rootId}" class="@getLinkColourClass(dependency) " href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
+                <span class="dep-group">@dependency.group:</span>
+                <span class="dep-name">@dependency.name</span>
+              </a>
+            } else {
+              <span class="dep-group">@dependency.group:</span><span class="dep-name">@dependency.name</span>
+            }
+        </div>
+        <div id="@{dependency.name}-@{rootId}-current-version" class="@{if(showVulnerabilityColumn) "col-2" else "col-3"}">@dependency.currentVersion.toString</div>
+        <div id="@{dependency.name}-@{rootId}-latestVersion-version" class="@{if(showVulnerabilityColumn) "col-2" else "col-3"}">
+            @dependency.latestVersion.map(lv => {
+                <span class="glyphicon medium-glyphicon glyphicon-arrow-right pe-2"></span>
+                <span>{lv.toString}</span>
+            }).getOrElse("")
+        </div>
+
+        @if(showVulnerabilityColumn){
+            <div id="@{dependency.name}-scopes" class="col-2">@scopes.mkString(", ")</div>
+        }
+        <div id="@{dependency.name}-@{rootId}-bobbyrule" class="col-2">
+        @dependency.versionState match {
+            case Some(VersionState.BobbyRulePending (violation)) => { <a id="see-pending-bobby-rule-@dependency.group:@dependency.name" href="@{bobbyRoutes.BobbyExplorerController.list().withFragment(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}")}">See rule</a> }
+            case Some(VersionState.BobbyRuleViolated(violation)) => { <a href="@{bobbyRoutes.BobbyExplorerController.list().withFragment(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}")}">See rule</a> }
+            case _                                               => { }
+        }
+        </div>
+    </div>
+}
+
+@getColourClass(dependency: Dependency) = @{
+    dependency.versionState match {
+        case _ if dependency.vulnerabilityIds.nonEmpty => "text-danger"
+        case Some(_: VersionState.BobbyRuleViolated)   => "text-danger"
+        case Some(_: VersionState.BobbyRulePending )   => "text-warning"
+        case Some(VersionState.NewVersionAvailable )   => "text-secondary"
+        case _                                         => "text-success"
+    }
+}
+
+@getLinkColourClass(dependency: Dependency) = @{
+    dependency.versionState match {
+        case _ if dependency.vulnerabilityIds.nonEmpty => "link-danger"
+        case Some(_: VersionState.BobbyRuleViolated)   => "link-danger"
+        case Some(_: VersionState.BobbyRulePending )   => "link-warning"
+        case Some(VersionState.NewVersionAvailable )   => "link-secondary"
+        case _                                         => "link-success"
+    }
+}
+
+@icon(dependency: Dependency) = {
+  @dependency.versionState match {
+    case _ if dependency.vulnerabilityIds.nonEmpty => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="has vulnerability"></span>     }
+    case Some(_: VersionState.BobbyRuleViolated)   => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-remove"   title="bobby rule violated"></span>   }
+    case Some(_: VersionState.BobbyRulePending )   => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-alert"    title="bobby rule pending"></span>    }
+    case Some(VersionState.NewVersionAvailable )   => { <span id="@{dependency.name}-@{rootId}-icon" class="medium-glyphicon glyphicon glyphicon-arrow-up" title="new version available"></span> }
+    case _                                         => { }
+  }
+}
