@@ -25,7 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.ChangePrototypePassword.PrototypePassword
 import uk.gov.hmrc.cataloguefrontend.config.BuildDeployApiConfig
 import uk.gov.hmrc.cataloguefrontend.connector.BuildDeployApiConnector.*
 import uk.gov.hmrc.cataloguefrontend.createappconfigs.CreateAppConfigsForm
-import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototype, CreateService, CreateTest}
+import uk.gov.hmrc.cataloguefrontend.createrepository.{CreatePrototype, CreateService, CreateTest, CreateExternal}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
@@ -146,7 +146,7 @@ class BuildDeployApiConnector @Inject() (
       repositoryType = payload.serviceType,
     ))
 
-    logger.info(s"Calling the B&D Create Repository API with the following payload: ${body}")
+    logger.info(s"Calling the B&D Create Repository API with the following payload: $body")
 
     executeRequest(
       endpoint = "create-service-repository",
@@ -189,12 +189,34 @@ class BuildDeployApiConnector @Inject() (
         repositoryType = payload.testType,
       ))
 
-    logger.info(s"Calling the B&D Create Test Repository API with the following payload: ${body}")
+    logger.info(s"Calling the B&D Create Test Repository API with the following payload: $body")
 
     executeRequest(
       endpoint = "create-test-repository",
       body     = body
     ).map(_.map(resp => AsyncRequestId(resp.details)))
+
+  def createExternalRepository(
+    payload: CreateExternal
+  )(using
+    HeaderCarrier
+  ): Future[Either[String, AsyncRequestId]] =
+    given Writes[CreateExternalRepoRequest] = CreateExternalRepoRequest.writes
+    val body =
+      Json.toJson(CreateExternalRepoRequest(
+        repositoryName = payload.repositoryName,
+        teamName       = payload.teamName,
+        makePrivate    = false,
+        organisation   = payload.organisation.asString.toLowerCase
+      ))
+
+    logger.info(s"Calling the B&D Create External Repository API with the following payload: $body")
+
+    executeRequest(
+      endpoint = "create-external-repository",
+      body     = body
+    ).map(_.map(resp => AsyncRequestId(resp.details)))
+
 
   def createAppConfigs(
     payload      : CreateAppConfigsForm,
@@ -340,19 +362,35 @@ object BuildDeployApiConnector:
       )(r => Tuple.fromProductTyped(r))
 
   case class CreateTestRepoRequest(
-    repositoryName       : String,
-    teamName             : TeamName,
-    makePrivate          : Boolean,
-    repositoryType       : String
+    repositoryName: String,
+    teamName      : TeamName,
+    makePrivate   : Boolean,
+    repositoryType: String
   )
 
   object CreateTestRepoRequest:
     val writes: Writes[CreateTestRepoRequest] =
-      ( (__ \ "repositoryName"       ).write[String]
-      ~ (__ \ "teamName"             ).write[TeamName]
-      ~ (__ \ "makePrivate"          ).write[Boolean]
-      ~ (__ \ "repositoryType"       ).write[String]
+      ( (__ \ "repositoryName").write[String]
+      ~ (__ \ "teamName"      ).write[TeamName]
+      ~ (__ \ "makePrivate"   ).write[Boolean]
+      ~ (__ \ "repositoryType").write[String]
       )(r => Tuple.fromProductTyped(r))
+
+  case class CreateExternalRepoRequest(
+    repositoryName: String,
+    teamName      : TeamName,
+    makePrivate   : Boolean,
+    organisation  : String
+  )
+
+  object CreateExternalRepoRequest:
+    val writes: Writes[CreateExternalRepoRequest] =
+      ( (__ \ "repositoryName").write[String]
+      ~ (__ \ "teamName"      ).write[TeamName]
+      ~ (__ \ "makePrivate"   ).write[Boolean]
+      ~ (__ \ "organisation"  ).write[String]
+      )(r => Tuple.fromProductTyped(r))
+
 
   case class CreateAppConfigsRequest(
     microserviceName: ServiceName,
