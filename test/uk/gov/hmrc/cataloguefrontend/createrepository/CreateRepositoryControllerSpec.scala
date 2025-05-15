@@ -199,6 +199,7 @@ class CreateRepositoryControllerSpec
         app.injector.instanceOf[CreateServicePage],
         app.injector.instanceOf[CreatePrototypePage],
         app.injector.instanceOf[CreateTestPage],
+        app.injector.instanceOf[CreateExternalPage],
         app.injector.instanceOf[CreateRepositoryConfirmationPage],
         mockBuildDeployApiConnector,
         mockTeamsAndReposConnector
