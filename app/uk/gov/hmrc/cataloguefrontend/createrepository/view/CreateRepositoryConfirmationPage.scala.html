@@ -58,6 +58,8 @@
                         <li>For performance tests add your repository to <a id="link-to-performance-jobs" href="https://github.com/hmrc/performance-test-jobs/blob/main/README.md" target="_blank" rel="noreferrer noopener">performance test jobs<span class="glyphicon glyphicon-new-window"></span></a> to set up job builder</li>
                     </ul>
                 }
+                case RepoType.External => {
+                }
             }
         </ul>
     </section>
@@ -68,17 +70,22 @@
             @repoType match {
                 case RepoType.Service => {
                     <li><a id="link-to-build-and-deploy" href="https://hmrcdigital.slack.com/messages/team-build-and-deploy" target="_blank" rel="noreferrer noopener">Team build and deploy slack<span class="glyphicon glyphicon-new-window"></span></a> for help with Jenkins builds and deployments</li>
+                    <li><a id="link-to-platops" href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">Team platops slack<span class="glyphicon glyphicon-new-window"></span></a> for general enquiries and technical guidance when creating microservices</li>
                 }
                 case RepoType.Prototype => {
                     <li><a id="link-to-prototype-guide" href="https://confluence.tools.tax.service.gov.uk/display/PROT/Prototyping+User+Guide" target="_blank" rel="noreferrer noopener">Prototype user guide<span class="glyphicon glyphicon-new-window"></span></a> for additional information around prototyping and Heroku </li>
                     <li><a id="link-to-prototype-slack" href="https://hmrcdigital.slack.com/messages/community-prototype" target="_blank" rel="noreferrer noopener">Prototype community slack<span class="glyphicon glyphicon-new-window"></span></a> for general discussions and troubleshooting prototypes</li>
+                    <li><a id="link-to-platops" href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">Team platops slack<span class="glyphicon glyphicon-new-window"></span></a> for general enquiries</li>
                 }
                 case RepoType.Test => {
                      <li><a id="link-to-community-testing" href="https://hmrcdigital.slack.com/messages/community-testing" target="_blank" rel="noreferrer noopener">Test community slack<span class="glyphicon glyphicon-new-window"></span></a> for general discussions and troubleshooting test services </li>
                      <li><a id="link-to-mdtp-guide" href="https://confluence.tools.tax.service.gov.uk/display/DTRG/MDTP+test+approach" target="_blank" rel="noreferrer noopener">MDTP test approach<span class="glyphicon glyphicon-new-window"></span></a> for testing principles and strategy</li>
+                     <li><a id="link-to-platops" href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">Team platops slack<span class="glyphicon glyphicon-new-window"></span></a> for general enquiries</li>
+                }
+                case RepoType.External => {
+                     <li><a id="link-to-platops" href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">Team platops slack<span class="glyphicon glyphicon-new-window"></span></a> for general enquiries</li>
                 }
             }
-            <li><a id="link-to-platops" href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">Team platops slack<span class="glyphicon glyphicon-new-window"></span></a> for general enquiries and technical guidance when creating microservices</li>
         </ul>
     </section>
 }

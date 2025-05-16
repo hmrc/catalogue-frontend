@@ -6,7 +6,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     majorVersion := 5,
-    scalaVersion := "3.3.5",
+    scalaVersion := "3.3.6",
     PlayKeys.playDefaultPort := 9017,
     libraryDependencies ++= compile ++ test,
     RoutesKeys.routesImport ++= Seq(
@@ -39,7 +39,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "9.11.0"
+val bootstrapPlayVersion = "9.12.0"
 val hmrcMongoVersion     = "2.6.0"
 
 val compile = Seq(

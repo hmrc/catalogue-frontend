@@ -26,7 +26,7 @@ import play.api.libs.json.{Format, Json, Reads, Writes}
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{BuildDeployApiConnector, GitHubTeam, TeamsAndRepositoriesConnector}
-import uk.gov.hmrc.cataloguefrontend.createrepository.view.html.{CreatePrototypePage, CreateRepositoryConfirmationPage, CreateServicePage, CreateTestPage, SelectRepoTypePage}
+import uk.gov.hmrc.cataloguefrontend.createrepository.view.html._
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
@@ -48,6 +48,7 @@ class CreateRepositoryController @Inject()(
   createServicePage               : CreateServicePage,
   createPrototypePage             : CreatePrototypePage,
   createTestPage                  : CreateTestPage,
+  createExternalPage              : CreateExternalPage,
   createRepositoryConfirmationPage: CreateRepositoryConfirmationPage,
   buildDeployApiConnector         : BuildDeployApiConnector,
   teamsAndReposConnector          : TeamsAndRepositoriesConnector
@@ -120,6 +121,7 @@ class CreateRepositoryController @Inject()(
                                case RepoType.Prototype => Ok(createPrototypePage(CreatePrototype.form, userGithubTeams.filterNot(_ == TeamName("Designers"))))
                                case RepoType.Test      => Ok(createTestPage(CreateTest.form, userGithubTeams))
                                case RepoType.Service   => Ok(createServicePage(CreateService.form, userGithubTeams))
+                               case RepoType.External  => Ok(createExternalPage(CreateExternal.form, userGithubTeams))
        yield result
       ).merge
 
@@ -127,8 +129,8 @@ class CreateRepositoryController @Inject()(
     bindForm        : Form[T],
     createPage      : (Form[T], Seq[TeamName]) => Html,
     bndApiCreateRepo: T => Future[Either[String, BuildDeployApiConnector.AsyncRequestId]],
-  )(using request: AuthenticatedRequest[_, Set[Resource]]): Future[Result] =
-    (for
+  )(using request: AuthenticatedRequest[_, Set[Resource]]): EitherT[Future, Result, Result] =
+    for
       repoTypeOut       <- getRepoTypeOut()
       githubTeams       <- EitherT.liftF(teamsAndReposConnector.allTeams())
       userGithubTeams   <- EitherT.pure[Future, Result](cleanseUserTeams(request.retrieval, githubTeams))
@@ -143,8 +145,7 @@ class CreateRepositoryController @Inject()(
                                logger.info(s"CreateRepository request for ${validForm.repositoryName} failed with message: $error")
                                BadRequest(createPage(submittedForm.withGlobalError(s"Repository creation failed! Error: $error"), userGithubTeams))
       _                 =  logger.info(s"CreateRepository request for ${validForm.repositoryName} successfully sent. Bnd api request id: $id:")
-     yield Redirect(routes.CreateRepositoryController.createRepoConfirmation(repoTypeOut.repoType, validForm.repositoryName))
-    ).merge
+    yield Redirect(routes.CreateRepositoryController.createRepoConfirmation(repoTypeOut.repoType, validForm.repositoryName))
 
   // Step Two POST
   val createRepoPost: Action[AnyContent] =
@@ -155,26 +156,31 @@ class CreateRepositoryController @Inject()(
       given AuthenticatedRequest[_, Set[Resource]] = request
       (for
         repoTypeOut <- getRepoTypeOut()
-        result      <- EitherT(repoTypeOut.repoType match
+        result      <- repoTypeOut.repoType match
                          case RepoType.Prototype =>
                            createRepo(
                              bindForm         = CreatePrototype.form,
                              createPage       = (form: Form[CreatePrototype], teams: Seq[TeamName]) => createPrototypePage(form, teams),
                              bndApiCreateRepo = (form: CreatePrototype) => buildDeployApiConnector.createPrototypeRepository(form),
-                           ).map(Right.apply)
+                           )
                          case RepoType.Test =>
                            createRepo(
                              bindForm         = CreateTest.form,
                              createPage       = (form: Form[CreateTest], teams: Seq[TeamName]) => createTestPage(form, teams),
                              bndApiCreateRepo = (form: CreateTest) => buildDeployApiConnector.createTestRepository(form),
-                           ).map(Right.apply)
+                           )
                          case RepoType.Service =>
                            createRepo(
                              bindForm         = CreateService.form,
                              createPage       = (form: Form[CreateService], teams: Seq[TeamName]) => createServicePage(form, teams),
                              bndApiCreateRepo = (form: CreateService) => buildDeployApiConnector.createServiceRepository(form),
-                           ).map(Right.apply)
-                       )
+                           )
+                         case RepoType.External =>
+                           createRepo(
+                             bindForm         = CreateExternal.form,
+                             createPage       = (form: Form[CreateExternal], teams: Seq[TeamName]) => createExternalPage(form, teams),
+                             bndApiCreateRepo = (form: CreateExternal) => buildDeployApiConnector.createExternalRepository(form),
+                           )
         _           <- EitherT.liftF(deleteFromSession(repoTypeKey)) // stops user accessing page 2 on completion
        yield result
       ).merge
@@ -201,7 +207,7 @@ class CreateRepositoryController @Inject()(
       getFromSession(repoTypeKey),
       Redirect(routes.CreateRepositoryController.createRepoLandingGet())
     )
-      
+
   private def cleanseUserTeams(resources: Set[Resource], githubTeams: Seq[GitHubTeam]): Seq[TeamName] =
     resources
       .map(_.resourceLocation.value.stripPrefix("teams/"))
