@@ -155,6 +155,28 @@ object CreatePrototype:
     )
 end CreatePrototype
 
+case class CreateExternal(
+  repositoryName: String,
+  teamName      : TeamName,
+  organisation  : Organisation
+) extends CreateRepo
+
+object CreateExternal:
+  val writes: Writes[CreateExternal] =
+    ( (__ \ "repositoryName").write[String]
+    ~ (__ \ "teamName"      ).write[TeamName]
+    ~ (__ \ "organisation"  ).write[Organisation]
+    )(r => Tuple.fromProductTyped(r))
+
+  val form: Form[CreateExternal] =
+    Form(
+      Forms.mapping(
+        "repositoryName" -> Forms.nonEmptyText.verifying(CreateRepoConstraints.createRepoNameConstraints(100, None)*),
+        "teamName"       -> Forms.of[TeamName],
+        "organisation"   -> Forms.of[Organisation]
+      )(CreateExternal.apply)(r => Some(Tuple.fromProductTyped(r)))
+    )
+end CreateExternal
 object CreateRepoConstraints:
   def mkConstraint[T](constraintName: String)(constraint: T => Boolean, error: String): Constraint[T] =
     Constraint(constraintName): toBeValidated =>

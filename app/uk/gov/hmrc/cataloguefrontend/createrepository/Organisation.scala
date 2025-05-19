@@ -22,13 +22,11 @@ import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.cataloguefrontend.util.FromStringEnum.*
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, Parser}
 
-given Parser[RepoType] = Parser.parser(RepoType.values)
+given Parser[Organisation] = Parser.parser(Organisation.values)
 
-enum RepoType(
+enum Organisation(
   override val asString: String,
 ) extends FromString
   derives Ordering, Reads, Writes, FormFormat, QueryStringBindable:
-  case Service   extends RepoType(asString = "Service"            )
-  case Prototype extends RepoType(asString = "Prototype"          )
-  case Test      extends RepoType(asString = "Test"               )
-  case External  extends RepoType(asString = "External (Non MDTP)")
+  case Pega       extends Organisation(asString = "Pega"     )
+  case Salesforce extends Organisation(asString = "Saleforce")
