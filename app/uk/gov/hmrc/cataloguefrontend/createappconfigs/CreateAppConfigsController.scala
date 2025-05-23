@@ -57,9 +57,9 @@ class CreateAppConfigsController @Inject()(
   import scala.jdk.CollectionConverters._
 
   private val envsToHide: Set[Environment] =
-    configuration.underlying.getStringList("environmentsToHideByDefault").asScala.toSet
+    configuration.underlying.getStringList("createAppConfig.hideEnvironments").asScala.toSet
       .map: str =>
-        Parser[Environment].parse(str).getOrElse(sys.error(s"config 'environmentsToHideByDefault' contains an invalid environment: $str"))
+        Parser[Environment].parse(str).getOrElse(sys.error(s"config 'createAppConfig.hideEnvironments' contains an invalid environment: $str"))
 
   private def checkAppConfigBaseExists(checks: List[Check]): Boolean =
     checks.exists:
