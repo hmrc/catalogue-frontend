@@ -94,7 +94,7 @@
       <div class="col-md-6">
         <input type="checkbox" id="appConfig@env" name="appConfig@env"
           @if(envsConfig.contains(env)){checked disabled} value="@{!envsConfig.contains(env)}"
-          @if(form(s"appConfig$env").value) {checked}
+          @if(form(s"appConfig$env").value.fold(false)(_.toBoolean)) {checked}
         >
         <label class="fw-bold" for="appConfig@env">App Config @env</label>
         @if(!envsConfig.contains(env)) {
