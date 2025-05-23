@@ -372,7 +372,7 @@ class CreateAppConfigsControllerSpec
 
   private trait Setup {
     private val config = Configuration(
-      "environmentsToHideByDefault" -> List("integration", "development")
+      "createAppConfig.hideEnvironments" -> List("integration", "development")
     )
 
     given HeaderCarrier = HeaderCarrier()
