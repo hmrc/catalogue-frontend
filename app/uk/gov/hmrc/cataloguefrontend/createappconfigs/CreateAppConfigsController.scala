@@ -106,7 +106,7 @@ class CreateAppConfigsController @Inject()(
                              then
                                f.withGlobalError(s"You do not have permission to create App Configs for: ${serviceName.asString}")
                              else
-                               f.fill(CreateAppConfigsForm(true, true, true, true, true))
+                               f.fill(CreateAppConfigsForm(true, true, true, true, appConfigExternalTest = false, true))
                            }
         yield
           Ok(
@@ -194,6 +194,7 @@ case class CreateAppConfigsForm(
   appConfigDevelopment : Boolean,
   appConfigQA          : Boolean,
   appConfigStaging     : Boolean,
+  appConfigExternalTest: Boolean,
   appConfigProduction  : Boolean
 )
 
@@ -205,6 +206,7 @@ object CreateAppConfigsForm:
         "appConfigDevelopment"  -> Forms.boolean,
         "appConfigQA"           -> Forms.boolean,
         "appConfigStaging"      -> Forms.boolean,
+        "appConfigExternalTest" -> Forms.boolean,
         "appConfigProduction"   -> Forms.boolean
       )(CreateAppConfigsForm.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying("No update requested", form =>
@@ -213,6 +215,7 @@ object CreateAppConfigsForm:
             form.appConfigDevelopment,
             form.appConfigQA,
             form.appConfigStaging,
+            form.appConfigExternalTest,
             form.appConfigProduction
           ).contains(true)
         )

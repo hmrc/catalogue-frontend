@@ -234,11 +234,12 @@ class BuildDeployApiConnector @Inject() (
         case ServiceType.Backend          => ("Backend microservice" , "protected")
 
     val appConfigEnvironments = Seq(
-        ("base"                          , payload.appConfigBase),
-        (Environment.Development.asString, payload.appConfigDevelopment),
-        (Environment.QA.asString         , payload.appConfigQA),
-        (Environment.Staging.asString    , payload.appConfigStaging),
-        (Environment.Production.asString, payload.appConfigProduction),
+        ("base"                           , payload.appConfigBase),
+        (Environment.Development.asString , payload.appConfigDevelopment),
+        (Environment.QA.asString          , payload.appConfigQA),
+        (Environment.Staging.asString     , payload.appConfigStaging),
+        (Environment.ExternalTest.asString, payload.appConfigExternalTest),
+        (Environment.Production.asString  , payload.appConfigProduction),
       ).collect { case (env, flag) if flag => env }
 
     given Writes[CreateAppConfigsRequest] = CreateAppConfigsRequest.writes

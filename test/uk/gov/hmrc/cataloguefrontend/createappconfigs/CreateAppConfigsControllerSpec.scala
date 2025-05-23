@@ -429,11 +429,12 @@ class CreateAppConfigsControllerSpec
 
     val form: CreateAppConfigsForm =
       CreateAppConfigsForm(
-        appConfigBase        = false,
-        appConfigDevelopment = false,
-        appConfigQA          = false,
-        appConfigStaging     = false,
-        appConfigProduction  = false
+        appConfigBase         = false,
+        appConfigDevelopment  = false,
+        appConfigQA           = false,
+        appConfigStaging      = false,
+        appConfigExternalTest = false,
+        appConfigProduction   = false
     )
 
     val asyncRequestIdResponse = AsyncRequestId(JsObject(Seq(

@@ -336,11 +336,12 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
     "return the Async request id when the request is accepted by the B&D async api" in {
       val payload = CreateAppConfigsForm(
-        appConfigBase        = false,
-        appConfigDevelopment = false,
-        appConfigQA          = false,
-        appConfigStaging     = false,
-        appConfigProduction  = false
+        appConfigBase         = false,
+        appConfigDevelopment  = false,
+        appConfigQA           = false,
+        appConfigStaging      = false,
+        appConfigExternalTest = false,
+        appConfigProduction   = false
       )
 
       val expectedBody =
@@ -386,11 +387,12 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
 
     "return an UpstreamErrorResponse when the B&D async api returns a 5XX code" in {
       val payload = CreateAppConfigsForm(
-        appConfigBase        = false,
-        appConfigDevelopment = false,
-        appConfigQA          = false,
-        appConfigStaging     = false,
-        appConfigProduction  = false
+        appConfigBase         = false,
+        appConfigDevelopment  = false,
+        appConfigQA           = false,
+        appConfigStaging      = false,
+        appConfigExternalTest = false,
+        appConfigProduction   = false
       )
 
       val expectedBody =
@@ -428,11 +430,12 @@ class BuildDeployApiConnectorSpec extends UnitSpec with HttpClientV2Support with
     //This may however change in the future, so we are testing the desired future behaviour below.
     "return an error message when the B&D async api returns a 4XX code" in {
        val payload = CreateAppConfigsForm(
-         appConfigBase        = false,
-         appConfigDevelopment = false,
-         appConfigQA          = false,
-         appConfigStaging     = false,
-         appConfigProduction  = false
+         appConfigBase         = false,
+         appConfigDevelopment  = false,
+         appConfigQA           = false,
+         appConfigStaging      = false,
+         appConfigExternalTest = false,
+         appConfigProduction   = false
        )
 
        val expectedBody =
