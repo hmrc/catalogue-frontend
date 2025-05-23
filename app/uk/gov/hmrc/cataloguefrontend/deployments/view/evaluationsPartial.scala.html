@@ -19,6 +19,10 @@
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChanges, ConfigChange, ServiceConfigsService, routes => serviceConfigsRoutes }
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{VulnerabilitySummary, routes => vulnerabilityRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityDetails
+@import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope}
+@import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
+@import uk.gov.hmrc.cataloguefrontend.bobby.{routes => bobbyRoutes}
 
 @(
   serviceName                : ServiceName
@@ -30,9 +34,11 @@
 , configChanges              : ConfigChanges
 , configWarnings             : Seq[ServiceConfigsService.ConfigWarning]        = Nil
 , oVulnerabilities           : Option[Seq[VulnerabilitySummary]]               = None
+, oViolations                : Option[RepositoryModules]                       = None
 , showReferenceConfInfo      : Boolean                                         = true
 , showConfigWarnings         : Boolean                                         = true
 , showVulnerabilities        : Boolean                                         = true
+, showViolations             : Boolean                                         = true
 )(implicit
   request                    : RequestHeader
 )
@@ -317,6 +323,96 @@
       </div>
     </div>
   }
+
+  @if(showViolations) {
+    @defining(oViolations.map(_.allDependencies.filter(_.bobbyRuleViolations.nonEmpty)).getOrElse(Seq.empty)){ violations =>
+      <div class="accordion-item">
+        <div class="accordion-header" id="headingViolations">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseViolations" aria-expanded="false" aria-controls="collapseViolations" @if(violations.isEmpty) {disabled} >
+            Bobby rule violations
+            @changesBadge(violations.size)
+          </button>
+        </div>
+        <div id="collapseViolations" class="accordion-collapse collapse" aria-labelledby="headingViolations" data-bs-parent="#accordion">
+          <div class="accordion-body">
+            <div class="row">
+              <div class="col-md-12">
+                <div id="violations" class="card mb-3">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        @if(violations.nonEmpty) {
+                          <div class="row">
+                            <div class="col-3">
+                              <p class="fw-bold">Libraries</p>
+                            </div>
+                            <div class="col-3">
+                              <p class="fw-bold">Pulled In Via</p>
+                            </div>
+                            <div class="col">
+                              <p class="fw-bold">Current Version</p>
+                            </div>
+                            <div class="col">
+                              <p class="fw-bold">Latest Version</p>
+                            </div>
+                            <div class="col">
+                              <p class="fw-bold">Scopes</p>
+                            </div>
+                            <div class="col">
+                              <p class="fw-bold">Violation</p>
+                            </div>
+                          </div>
+                          @for(
+                            (dependency, scopes) <- violations
+                                                      .groupBy(d => d.group + d.name)
+                                                      .map(d => (d._2.head, d._2.map(_.scope)))
+                                                      .toSeq.sortBy(d => d._1.group + d._1.name)
+                          ) {
+                            @dependencyRow(dependency, scopes)
+                          }
+                        } else {
+                          <p class="card-text dependency-row">No dependencies available</p>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+@dependencyRow(dependency: Dependency, scopes: Seq[DependencyScope]) = {
+  <div class="row dependency-row" id="@{dependency.name}">
+    <div class="col-3">
+      @if(!dependency.isExternal) {
+      <a id="link-to-@{dependency.name}" href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
+        <span class="dep-group">@dependency.group:</span>
+        <span class="dep-name">@dependency.name</span>
+      </a>
+      } else {
+      <span class="dep-group">@dependency.group:</span><span class="dep-name">@dependency.name</span>
+      }
+    </div>
+    <div id="@{dependency.name}-pulled-in-via" class="col-3">@dependency.importBy.map(parentDependency => parentDependency.group + parentDependency.name).getOrElse("-")</div>
+    <div id="@{dependency.name}-current-version" class="col">@dependency.currentVersion.toString</div>
+    <div id="@{dependency.name}-latestVersion-version" class="col">
+      @dependency.latestVersion.map(lv => {
+      <span class="glyphicon medium-glyphicon glyphicon-arrow-right pe-2"></span>
+      <span>{lv.toString}</span>
+      }).getOrElse("")
+    </div>
+    <div id="@{dependency.name}-scopes" class="col">@scopes.mkString(", ")</div>
+    <div id="@{dependency.name}-bobbyrule" class="col">
+      @dependency.bobbyRuleViolations.headOption.map{ violation =>
+      <a href="@{bobbyRoutes.BobbyExplorerController.list().withFragment(s"${dependency.group}:${dependency.name}:${violation.range.range}:${violation.from}")}">See rule</a>
+      }
+    </div>
+  </div>
+}
 
 @displayConfigSourceValue(configKey: ServiceConfigsService.KeyName, env: Environment, configSourceValue: ServiceConfigsService.ConfigSourceValue, isStriked: Boolean) = {
   <span
