@@ -100,7 +100,7 @@ class ServiceConfigsService @Inject()(
                                       configByKey.getOrElse(k, Map.empty).getOrElse(e, Seq.empty) match
                                         case Nil => vs.lastOption.map(n => e -> Seq(n -> true))
                                         case xs  => Some(e -> xs)
-    yield newConfig
+    yield configByKey ++ newConfig
 
   def serviceRelationships(serviceName: ServiceName)(using HeaderCarrier): Future[ServiceRelationshipsEnriched] =
     for
