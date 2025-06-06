@@ -49,14 +49,14 @@ class ServiceConfigsController @Inject()(
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  def configExplorer(serviceName: ServiceName, showWarnings: Boolean): Action[AnyContent] =
+  def configExplorer(serviceName: ServiceName, showWarnings: Boolean, showReferenceConf: Boolean): Action[AnyContent] =
     BasicAuthAction.async { implicit request =>
       for
         deployments      <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
         configByKey      <- serviceConfigsService.configByKeyWithNextDeployment(serviceName)
         warnings         <- serviceConfigsService.configWarnings(serviceName, deployments.map(_.environment), version = None, latest = true)
         deploymentConfig <- serviceConfigsService.deploymentConfigByKeyWithNextDeployment(serviceName)
-      yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, warnings, deploymentConfig))
+      yield Ok(configExplorerPage(serviceName, configByKey, deployments, showWarnings, showReferenceConf, warnings, deploymentConfig))
     }
 
   val searchLanding: Action[AnyContent] =

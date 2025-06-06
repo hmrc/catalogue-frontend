@@ -283,7 +283,7 @@
 @displayConfigSourceValue(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, result: Option[ServiceConfigsService.ConfigSourceValue]) = {
     @result match {
         case None => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, false).withFragment(configKey.asString)"
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings = false, showReferenceConf = false).withFragment(configKey.asString)"
                aria-label="Not deployed in environment"
                data-bs-toggle="popover"
                data-bs-trigger="hover"
@@ -294,7 +294,7 @@
             </a>
         }
         case Some(envData) => {
-            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, false).withFragment(configKey.asString)"
+            <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings = false, showReferenceConf = false).withFragment(configKey.asString)"
                aria-label="Environment data"
                data-bs-toggle="popover"
                data-bs-trigger="hover"

@@ -39,7 +39,7 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "9.12.0"
+val bootstrapPlayVersion = "9.13.0"
 val hmrcMongoVersion     = "2.6.0"
 
 val compile = Seq(
