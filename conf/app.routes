@@ -82,7 +82,7 @@ GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefro
 GET        /sbtexplorer/environment                     uk.gov.hmrc.cataloguefrontend.SbtVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SbtVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 
-GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name: ServiceName, showWarnings: Boolean ?= false)
+GET        /service/:name/config                        uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configExplorer(name: ServiceName, showWarnings: Boolean ?= false, showReferenceConf: Boolean ?= false)
 GET        /config/search                               uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchLanding()
 GET        /config/search/results                       uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.searchResults(configKey: Option[String] ?= None)
 GET        /config/warnings/search                      uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsController.configWarningLanding()

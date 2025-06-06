@@ -141,7 +141,7 @@
             @configWarnings.map { envData =>
                 <ul class="list-unstyled mb-0">
                     <li>
-                        <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true).withFragment(configKey.asString)"
+                        <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings = true, showReferenceConf = envData.value.isReferenceConf).withFragment(configKey.asString)"
                            data-bs-toggle="popover"
                            data-bs-trigger="hover"
                            data-bs-placement="bottom"

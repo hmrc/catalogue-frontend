@@ -158,7 +158,7 @@
               <tr>
                 <td>
                   <code>
-                    <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true).withFragment(key.asString)" target="_blank">
+                    <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings = true, showReferenceConf = false).withFragment(key.asString)" target="_blank">
                       @if(from.nonEmpty && to.isEmpty) {
                         <del>@key.asString</del>
                       } else {
@@ -210,7 +210,7 @@
                 <tr>
                   <td>
                     <code>
-                      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true).withFragment(key.asString)" target="_blank">
+                      <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings = true, showReferenceConf = false).withFragment(key.asString)" target="_blank">
                         @if(from.nonEmpty && to.isEmpty) {
                           <del>@key.asString</del>
                         } else {
@@ -435,7 +435,7 @@
 }
 
 @displayConfigWarning(serviceName: ServiceName, configKey: ServiceConfigsService.KeyName, env: Environment, configWarning: ServiceConfigsService.ConfigWarning) = {
-  <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, true).withFragment(configKey.asString)"
+  <a href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings = true, showReferenceConf = configWarning.value.isReferenceConf).withFragment(configKey.asString)"
       target="_blank"
       data-bs-toggle="popover"
       data-bs-trigger="hover"
