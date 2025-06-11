@@ -464,26 +464,45 @@
 }
 
     <!-- Modal -->
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="staticBackdropLabel">Delete Team</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this team?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                @helper.form(action= uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.deleteTeam(teamName)) {
-                    @csrfFormField
-                    <button type="submit" class="btn btn-danger">Yes</button>
-                }
-            </div>
-        </div>
-    </div>
-</div>
+@defining(results) { case (_, repos, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+  <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="staticBackdropLabel">Delete Team</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+            @if(repos.exists(_.owningTeams == Seq(teamName))) {
+                <div class="modal-body">
+                    <p><span class="glyphicon glyphicon-alert text-danger"></span> This team cannot be deleted because the following repositories are not owned by any other team:</p>
+                    <ul>
+                        @for(repo <- repos.filter(_.owningTeams == Seq(teamName))) {<li>@repo.name</li>}
+                    </ul>
+                    <p>You can either:</p>
+                    <ul>
+                        <li>Decommission the repositories - <a href=https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/index.html target="_blank" rel="noreferrer noopener">See steps<i class="glyphicon glyphicon-new-window"></i></a></li>
+                        <li>Transfer ownership - <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/create-and-manage-a-github-repository/transfer-a-repository.html" target="_blank" rel="noreferrer noopener">See steps<i class="glyphicon glyphicon-new-window"></i></a></li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            } else {
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this team?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    @helper.form(action = uk.gov.hmrc.cataloguefrontend.teams.routes.TeamsController.deleteTeam(teamName)) {
+                        @csrfFormField
+                        <button type="submit" class="btn btn-danger">Yes</button>
+                    }
+                </div>
+            }
+          </div>
+      </div>
+  </div>
+}
 
 <script @CSPNonce.attr>
         document.addEventListener("DOMContentLoaded", function () {
