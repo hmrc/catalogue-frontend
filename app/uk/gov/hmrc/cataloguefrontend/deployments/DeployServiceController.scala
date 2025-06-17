@@ -117,7 +117,10 @@ class DeployServiceController @Inject()(
                                         .flatten
                                     .map(_.sorted)
         _                    <- serviceName match
-                                  case Some(_) => EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
+                                  case Some(_) => EitherT.fromOption[Future](
+                                                    environments.headOption,
+                                                    BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
+                                                  )
                                   case None    => EitherT.right[Result](Future.unit)
        yield
          Ok(deployServicePage(form, hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
@@ -208,11 +211,11 @@ class DeployServiceController @Inject()(
          accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(locations))
          accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
          form                 =  DeployServiceForm.form.bindFromRequest()
-         formObject           <- EitherT
-                                   .fromEither[Future](form.fold(
+         formObject           <- EitherT.fromEither[Future]:
+                                   form.fold(
                                      formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, accessibleServices, None, Nil, Nil, evaluations = None)))
                                    , validForm      => Right(validForm)
-                                   ))
+                                   )
          hasPerm              <- EitherT
                                    .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName)), predicate = None))
          _                    <- EitherT
@@ -225,13 +228,13 @@ class DeployServiceController @Inject()(
                                      serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
                                    , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
                                    )
-         queueUrl             <- EitherT
-                                   .right[Result](buildJobsConnector.deployMicroservice(
+         queueUrl             <- EitherT.right[Result]:
+                                   buildJobsConnector.deployMicroservice(
                                      serviceName = formObject.serviceName
                                    , version     = formObject.version
                                    , environment = formObject.environment
                                    , user        = username
-                                   ))
+                                   )
        yield
         Redirect(routes.DeployServiceController.step4(
           serviceName = formObject.serviceName

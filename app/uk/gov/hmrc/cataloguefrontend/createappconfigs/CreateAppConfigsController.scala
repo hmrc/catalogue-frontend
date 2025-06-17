@@ -81,7 +81,7 @@ class CreateAppConfigsController @Inject()(
     auth.authenticatedAction(
       continueUrl = routes.CreateAppConfigsController.createAppConfigsLanding(serviceName),
       retrieval   = Retrieval.hasPredicate(createAppConfigsPermission(serviceName))
-    ) .async: request =>
+    ).async: request =>
       given RequestHeader = request
       (
         for

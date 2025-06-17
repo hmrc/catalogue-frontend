@@ -188,12 +188,13 @@ class UsersController @Inject()(
           formWithErrors =>
             showUserInfoPage(username, BadRequest(_), formWithErrors, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
         , formData =>
-            userManagementConnector.resetLdapPassword(formData).map: ticketOpt =>
-              Ok(ldapResetRequestSentPage(username, ticketOpt))
-            .recover:
-              case NonFatal(e) =>
-                logger.error(s"Error requesting LDAP password reset: ${e.getMessage}", e)
-                Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting LDAP password reset. Contact #team-platops")
+            userManagementConnector.resetLdapPassword(formData)
+              .map: ticketOpt =>
+                Ok(ldapResetRequestSentPage(username, ticketOpt))
+              .recover:
+                case NonFatal(e) =>
+                  logger.error(s"Error requesting LDAP password reset: ${e.getMessage}", e)
+                  Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting LDAP password reset. Contact #team-platops")
         )
 
   def requestGoogleReset(username: UserName): Action[AnyContent] =
@@ -204,14 +205,15 @@ class UsersController @Inject()(
         given AuthenticatedRequest[AnyContent, Set[Resource]] = request
         GoogleResetForm.form.bindFromRequest().fold(
           formWithErrors =>
-              showUserInfoPage(username, BadRequest(_), LdapResetForm.form, formWithErrors, EditUserDetailsForm.form, EditUserRolesForm.form)
-          , formData =>
-            userManagementConnector.resetGooglePassword(formData).map: _ =>
-              Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to reset Google password for ${username.asString} sent successfully.")
-            .recover:
-              case NonFatal(e) =>
-                logger.error(s"Error requesting Google password reset: ${e.getMessage}", e)
-                Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting Google password reset. Contact #team-platops")
+            showUserInfoPage(username, BadRequest(_), LdapResetForm.form, formWithErrors, EditUserDetailsForm.form, EditUserRolesForm.form)
+        , formData =>
+            userManagementConnector.resetGooglePassword(formData)
+              .map: _ =>
+                Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to reset Google password for ${username.asString} sent successfully.")
+              .recover:
+                case NonFatal(e) =>
+                  logger.error(s"Error requesting Google password reset: ${e.getMessage}", e)
+                  Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting Google password reset. Contact #team-platops")
         )
 
   private def isAdminForUser(retrieval: Option[Set[Resource]], user: User): Boolean =
@@ -235,14 +237,15 @@ class UsersController @Inject()(
         formWithErrors =>
           showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
       , formData =>
-          userManagementConnector.addToGithubTeam(formData).map: _ =>
-            Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to Github team: ${formData.team} sent successfully.")
-          .recover:
-            case NonFatal(e) =>
-              logger.error(s"Error requesting user ${formData.username} be added to github team ${formData.team} - ${e.getMessage}", e)
-              Redirect(routes.UsersController.user(username)).flashing("error" -> "Error processing request. Contact #team-platops")
+          userManagementConnector.addToGithubTeam(formData)
+            .map: _ =>
+              Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to Github team: ${formData.team} sent successfully.")
+            .recover:
+              case NonFatal(e) =>
+                logger.error(s"Error requesting user ${formData.username} be added to github team ${formData.team} - ${e.getMessage}", e)
+                Redirect(routes.UsersController.user(username)).flashing("error" -> "Error processing request. Contact #team-platops")
       )
-  
+
   val requestNewVpnCert: Action[AnyContent] =
     BasicAuthAction.async: request =>
       given RequestHeader = request
@@ -395,26 +398,26 @@ object EditUserRolesForm:
 object EditUserDetailsForm:
   val form: Form[EditUserDetailsRequest] = Form(
     Forms.mapping(
-      "username" -> Forms.nonEmptyText,
-      "attribute" -> Forms.nonEmptyText.transform[UserAttribute](UserAttribute.fromString(_).get, _.name),
-      "displayName" -> Forms.optional(Forms.text),
-      "phoneNumber" -> Forms.optional(Forms.text),
-      "github" -> Forms.optional(Forms.text),
+      "username"     -> Forms.nonEmptyText,
+      "attribute"    -> Forms.nonEmptyText.transform[UserAttribute](UserAttribute.fromString(_).get, _.name),
+      "displayName"  -> Forms.optional(Forms.text),
+      "phoneNumber"  -> Forms.optional(Forms.text),
+      "github"       -> Forms.optional(Forms.text),
       "organisation" -> Forms.optional(Forms.text)
     ) { (username, attribute, displayNameOpt, phoneNumberOpt, githubOpt, organisationOpt) =>
       val value = attribute match
-        case UserAttribute.DisplayName  => displayNameOpt.getOrElse("")
-        case UserAttribute.PhoneNumber  => phoneNumberOpt.getOrElse("")
-        case UserAttribute.Github       => githubOpt.getOrElse("")
-        case UserAttribute.Organisation => organisationOpt.getOrElse("")
-      EditUserDetailsRequest(username, attribute, value)
+        case UserAttribute.DisplayName  => displayNameOpt
+        case UserAttribute.PhoneNumber  => phoneNumberOpt
+        case UserAttribute.Github       => githubOpt
+        case UserAttribute.Organisation => organisationOpt
+      EditUserDetailsRequest(username, attribute, value.getOrElse(""))
     } { editUserDetailsRequest =>
       Some((
         editUserDetailsRequest.username,
         editUserDetailsRequest.attribute,
-        if editUserDetailsRequest.attribute == UserAttribute.DisplayName then Some(editUserDetailsRequest.value) else None,
-        if editUserDetailsRequest.attribute == UserAttribute.PhoneNumber then Some(editUserDetailsRequest.value) else None,
-        if editUserDetailsRequest.attribute == UserAttribute.Github then Some(editUserDetailsRequest.value) else None,
+        if editUserDetailsRequest.attribute == UserAttribute.DisplayName  then Some(editUserDetailsRequest.value) else None,
+        if editUserDetailsRequest.attribute == UserAttribute.PhoneNumber  then Some(editUserDetailsRequest.value) else None,
+        if editUserDetailsRequest.attribute == UserAttribute.Github       then Some(editUserDetailsRequest.value) else None,
         if editUserDetailsRequest.attribute == UserAttribute.Organisation then Some(editUserDetailsRequest.value) else None
       ))
     }.verifying(UserConstraints.validateByAttribute)
@@ -447,7 +450,7 @@ object UserConstraints:
 
     mkConstraint(s"constraints.displayNameLengthCheck")(
       constraint = nameLengthValidation,
-      error = "Name should be between 2 and 30 characters long"
+      error      = "Name should be between 2 and 30 characters long"
     )
 
   private val phoneNumberConstraint: Constraint[String] =
@@ -456,7 +459,7 @@ object UserConstraints:
 
     mkConstraint("constraints.phoneNumber")(
       constraint = phoneNumberValidation,
-      error = "Phone number can only contain digits, spaces, plus signs, or slashes."
+      error      = "Phone number can only contain digits, spaces, plus signs, or slashes."
     )
 
   private val githubUsernameConstraint: Constraint[String] =
@@ -465,7 +468,7 @@ object UserConstraints:
 
     mkConstraint("constraints.githubUsername")(
       constraint = githubUsernameValidation,
-      error = "GitHub username cannot be set to empty once it has been provided."
+      error      = "GitHub username cannot be set to empty once it has been provided."
     )
 
   private val organisationConstraint: Constraint[String] =
@@ -474,14 +477,15 @@ object UserConstraints:
 
     mkConstraint("constraints.organisation")(
       constraint = organisationValidation,
-      error = "Organisation must be MDTP, VOA, or Other."
+      error      = "Organisation must be MDTP, VOA, or Other."
     )
 
-  def validateByAttribute: Constraint[EditUserDetailsRequest] = Constraint("constraints.editUserDetailsRequest") { editUserDetailsRequest =>
-    editUserDetailsRequest.attribute match
-      case UserAttribute.DisplayName  => nameConstraints(editUserDetailsRequest.value)
-      case UserAttribute.PhoneNumber  => phoneNumberConstraint(editUserDetailsRequest.value)
-      case UserAttribute.Github       => githubUsernameConstraint(editUserDetailsRequest.value)
-      case UserAttribute.Organisation => organisationConstraint(editUserDetailsRequest.value)
-  }
-
+  def validateByAttribute: Constraint[EditUserDetailsRequest] =
+    Constraint("constraints.editUserDetailsRequest"): editUserDetailsRequest =>
+      val constraint =
+        editUserDetailsRequest.attribute match
+          case UserAttribute.DisplayName  => nameConstraints
+          case UserAttribute.PhoneNumber  => phoneNumberConstraint
+          case UserAttribute.Github       => githubUsernameConstraint
+          case UserAttribute.Organisation => organisationConstraint
+      constraint(editUserDetailsRequest.value)
