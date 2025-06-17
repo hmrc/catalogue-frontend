@@ -186,7 +186,7 @@
   </div>
 
 
-  @defining(configChanges.configChanges.partition(c => c._2.from.exists(_.isReferenceConf) || c._2.to.exists(_.isReferenceConf))) { case (refConfigChanges, nonRefConfigChanges) =>
+  @defining(configChanges.configChanges.partition(c => c._2.from.fold(true)(_.isReferenceConf) && c._2.to.fold(true)(_.isReferenceConf))) { case (refConfigChanges, nonRefConfigChanges) =>
     <div class="accordion-item">
       <div class="accordion-header" id="headingConfigUpdates">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfigUpdates" aria-expanded="false" aria-controls="collapseConfigUpdates" @if(nonRefConfigChanges.isEmpty) {disabled} >
