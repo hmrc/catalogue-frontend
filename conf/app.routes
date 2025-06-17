@@ -164,3 +164,4 @@ POST       /offboard-users                              uk.gov.hmrc.cataloguefro
 GET        /tests                                        uk.gov.hmrc.cataloguefrontend.test.TestJobController.allTests(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 
 GET        /service-metrics                              uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsController.serviceMetrics(environment: Environment ?= Environment.Production, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, metricType: Option[LogMetricId] ?= None)
+GET        /service-provision                            uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsController.serviceProvision(environment: Environment ?= Environment.Production, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)

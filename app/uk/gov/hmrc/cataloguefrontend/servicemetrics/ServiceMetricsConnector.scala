@@ -63,3 +63,15 @@ class ServiceMetricsConnector @Inject() (
     httpClientV2
       .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/log-metrics?from=$from")
       .execute[Seq[LogMetric]]
+
+  def serviceProvision(
+    environment   : Option[Environment]    = None
+  , teamName      : Option[TeamName]       = None
+  , digitalService: Option[DigitalService] = None
+  , from          : Option[Instant]        = None
+  , to            : Option[Instant]        = None
+  )(using HeaderCarrier): Future[Seq[ServiceProvision]] =
+    given Reads[ServiceProvision] = ServiceProvision.reads
+    httpClientV2
+      .get(url"$serviceMetricsBaseUrl/service-metrics/service-provision?team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&environment=${environment.map(_.asString)}&from=$from&to=$to")
+      .execute[Seq[ServiceProvision]]

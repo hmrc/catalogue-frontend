@@ -1,0 +1,171 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
+@import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.{LogMetricId, ServiceProvision}
+@import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvisionFilter
+@import views.html.helper.{FieldConstructor, select}
+@import scala.concurrent.duration.Duration
+@import java.time.YearMonth
+@import scala.math.Ordered.orderingToOrdered
+
+@this(
+  configuration: play.api.Configuration
+)
+
+@(form           : Form[ServiceProvisionFilter]
+, results        : Seq[ServiceProvision]
+, teams          : Seq[GitHubTeam]
+, digitalServices: Seq[DigitalService]
+)(implicit
+  messages: Messages
+, request : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@serviceMetricsLogDuration: Duration = @{
+  configuration.get[Duration]("service-metrics.logDuration")
+}
+
+@standard_layout("Service Provision", "service provision") {
+    <h1 class="page-heading mt-4">Service Provision</h1>
+
+    @if(form.hasErrors) {
+        <div class="alert alert-danger" role="alert">
+            <ul class="list">
+            @form.errors.map { error =>
+                <li class="alert-danger"> @Messages(error.message, error.args*)</li>
+            }
+            </ul>
+        </div>
+    }
+
+    <div id="service-metrics-list">
+        <form id="form" method="get">
+            <div class="row">
+                <div class="col-md-4">
+                    <dl id="search_field">
+                        <dt><label for="search" class="form-label">Name</label></dt>
+                        <dd><input class="search form-control" id="search" type="search" name="serviceName" value='@form("serviceName").value' autofocus></dd>
+                    </dl>
+                </div>
+                <div class="col-md-2">
+                  @select(
+                    field                 = form("team")
+                  , options               = teams.map(t => t.name.asString -> t.name.asString)
+                  , Symbol("_default")    -> "All"
+                  , Symbol("_label")      -> "Team"
+                  , Symbol("_labelClass") -> "form-label"
+                  , Symbol("id")          -> "select-team"
+                  , Symbol("class")       -> "form-select"
+                  )
+                </div>
+                <div class="col-md-2">
+                  @select(
+                    field                 =  form("digitalService")
+                  , options               =  digitalServices.map(ds => ds.asString -> ds.asString)
+                  , Symbol("_default")    -> "All"
+                  , Symbol("_label")      -> "Digital Service"
+                  , Symbol("_labelClass") -> "form-label"
+                  , Symbol("id")          -> "select-digital-service"
+                  , Symbol("class")       -> "form-select"
+                  )
+                </div>
+                <div class="col-md-2">
+                  @select(
+                    field                 =  form("environment")
+                  , options               =  Environment.values.toSeq.filterNot(_ == Environment.Integration).map(env => env.asString -> env.displayString)
+                  , Symbol("_label")      -> "Environment"
+                  , Symbol("_labelClass") -> "form-label"
+                  , Symbol("id")          -> "select-environment"
+                  , Symbol("class")       -> "form-select"
+                  )
+                </div>
+                <div class="col-md-2">
+                  @select(
+                    field                 =  form("yearMonth")
+                  , options               =  (1 to 24).map(i => YearMonth.now().minusMonths(i)).filter(ym => ym >= YearMonth.parse("2025-05")).toSeq.map(ym => (ym.toString -> s"${ym.getMonth.toString.toLowerCase.capitalize} ${ym.getYear}"))
+                  , Symbol("_label")      -> "Month"
+                  , Symbol("_labelClass") -> "form-label"
+                  , Symbol("id")          -> "select-year-month"
+                  , Symbol("class")       -> "form-select"
+                  )
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-striped sticky-header">
+            <thead id="repo-table-headings">
+                <tr>
+                    <th class="col-lg-3"><button role="button" data-sort="col-service-name" class="fw-bold sort no-border">Name</button></th>
+                    <th class=""><button role="button" data-sort="col-instances" class="fw-bold sort no-border">Avg Instances</button></th>
+                    <th class=""><button role="button" data-sort="col-slots" class="fw-bold sort no-border">Total Avg Slots</button></th>
+                    <th class=""><button role="button" data-sort="col-requests" class="fw-bold sort no-border">Requests</button></th>
+                    <th class=""><button role="button" data-sort="col-time" class="fw-bold sort no-border">Mean Request Time (seconds)</button></th>
+                    <th class=""><button role="button" data-sort="col-memory" class="fw-bold sort no-border">Max Used Container Memory (% of available)</button></th>
+                    <th class=""><button role="button" data-sort="col-cost-per-instance" class="fw-bold sort no-border">Est. Cost Per Instance (&pound;)</button></th>
+                    <th class=""><button role="button" data-sort="col-cost-per-request" class="fw-bold sort no-border">Est. Cost Per Request (&pound;)</button></th>
+                    <th class=""><button role="button" data-sort="col-cost-per-time" class="fw-bold sort no-border">Est. Cost Per Request Time (&pound;/second)</button></th>
+                </tr>
+            </thead>
+            <tbody class="list">
+              @for(serviceProvision <- results) {
+                <tr>
+                  <td class="col-service-name"><a aria-label="Link to page info for @{serviceProvision.service}" id="link-to-info-page-for-@{serviceProvision.service}" href="@appRoutes.CatalogueController.service(ServiceName(serviceProvision.service))">@serviceProvision.service</a></td>
+                  <td class="text-end col-instances"><span class="pe-4">@serviceProvision.metrics.get("instances").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="text-end col-slots"><span class="pe-4">@serviceProvision.metrics.get("slots").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="text-end col-requests"><span class="pe-4">@serviceProvision.metrics.get("requests")</span></td>
+                  <td class="text-end col-time"><span class="pe-4">@serviceProvision.metrics.get("time").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="text-end col-memory"><span class="pe-4">@serviceProvision.percentageOfMaxMemoryUsed.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="text-end col-cost-per-instance"><span class="pe-4">@serviceProvision.costPerInstance.map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="text-end col-cost-per-request"><span class="pe-4">@serviceProvision.costPerRequest.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="text-end col-cost-per-time"><span class="pe-4">@serviceProvision.costPerTime.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                </tr>
+              }
+          </tbody>
+        </table>
+    </div>
+}
+<!-- listjs configuration -->
+<script @CSPNonce.attr>
+  ['select-digital-service', 'select-team', 'select-environment', 'select-year-month']
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+
+  @if(results.nonEmpty) {
+    let options = {
+      valueNames: ['col-service-name', 'col-instances', 'col-slots', 'col-requests', 'col-time', 'col-memory', 'col-cost-per-instance', 'col-cost-per-request', 'col-cost-per-time'],
+      searchColumns: ['col-service-name'],
+      searchDelay: 350
+    };
+
+    let pageListJs = new List('service-metrics-list', options);
+    let searchBox = document.getElementById('search');
+    // set autofocus cursor to right of text in search box
+    let length = searchBox.value.length;
+    searchBox.focus();
+    searchBox.setSelectionRange(length, length);
+    // re-search the list upon page load.
+    pageListJs.search(searchBox.value);
+  }
+</script>
+
