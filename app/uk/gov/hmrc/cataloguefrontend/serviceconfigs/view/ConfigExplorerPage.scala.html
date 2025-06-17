@@ -167,9 +167,9 @@
                                             </span>
                                         } else {
                                             @defining(
-                                            ( envSources.getOrElse(env, Seq.empty).filterNot(_._2).size != idx+1
-                                            , configWarnings.filter(x => x.key == key && ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env && x.value.source == sourceValue.source )
-                                            )
+                                              ( envSources.getOrElse(env, Seq.empty).filterNot(_._2).size != idx+1
+                                              , configWarnings.filter(x => x.key == key && ServiceConfigsService.ConfigEnvironment.ForEnvironment(x.environment) == env && x.value.source == sourceValue.source )
+                                              )
                                             ) { case (isStrikethrough, warnings) =>
                                             <span class="truncate-content-overflow
                                                         @if(sourceValue.isSuppressed) {suppressed}
@@ -191,9 +191,8 @@
                     </div>
                     <script @CSPNonce.attr>
                         var elmt = document.getElementById("config-url-" + "@key.asString");
-                        if(elmt) {
+                        if (elmt) {
                             elmt.addEventListener("click", function () {
-
                                 navigator.clipboard.writeText(elmt.href);
                             }
                           );

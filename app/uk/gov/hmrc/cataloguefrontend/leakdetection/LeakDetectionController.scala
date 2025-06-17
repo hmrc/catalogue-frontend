@@ -110,17 +110,18 @@ class LeakDetectionController @Inject()(
   def report(repository: String, branch: String): Action[AnyContent] =
     auth
       .authenticatedAction(
-        continueUrl = AuthController.continueUrl(routes.LeakDetectionController.report(repository, branch))
+        continueUrl = AuthController.continueUrl(routes.LeakDetectionController.report(repository, branch)),
+        retrieval   = Retrieval.hasPredicate(leaksPermission(repository, "READ"))
       )
       .async: request =>
-        given AuthenticatedRequest[AnyContent, Unit] = request
+        given AuthenticatedRequest[AnyContent, Boolean] = request
+        val isAuthorised  = request.retrieval
         for
-          isAuthorised          <- auth.authorised(None, Retrieval.hasPredicate(leaksPermission(repository, "READ")))
-          report                <- leakDetectionService.report(repository, branch)
-          leaks                 <- leakDetectionService.reportLeaks(report.id)
-          warnings              <- leakDetectionService.reportWarnings(report.id)
-          resolutionUrl          = leakDetectionService.resolutionUrl
-          removeSensitiveInfoUrl = leakDetectionService.removeSensitiveInfoUrl
+          report                 <- leakDetectionService.report(repository, branch)
+          leaks                  <- leakDetectionService.reportLeaks(report.id)
+          warnings               <- leakDetectionService.reportWarnings(report.id)
+          resolutionUrl          =  leakDetectionService.resolutionUrl
+          removeSensitiveInfoUrl =  leakDetectionService.removeSensitiveInfoUrl
         yield Ok(leaksPage(report, report.exclusions, leaks, warnings, resolutionUrl, removeSensitiveInfoUrl, isAuthorised))
 
   def reportExemptions(repository: String, branch: String): Action[AnyContent] =

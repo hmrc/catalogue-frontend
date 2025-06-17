@@ -190,33 +190,35 @@ class TeamsController @Inject()(
   def editTeamDetails(teamName: TeamName, fieldBeingEdited: Option[String]): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.TeamsController.team(teamName),
-      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("EDIT_TEAM")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("EDIT_TEAM")))
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       TeamDetailsForm.form(fieldBeingEdited).bindFromRequest().fold(
         formWithErrors =>
           showTeamPage(teamName, BadRequest(_), formWithErrors)
-        , formData =>
-          userManagementConnector.editTeamDetails(formData).map: _ =>
-            Redirect(routes.TeamsController.team(teamName)).flashing("success" -> s"Request to edit team details for ${formData.team} sent successfully.")
-          .recover:
-            case NonFatal(e) =>
-              logger.error(s"Error updating team details for team ${formData.team} - ${e.getMessage}", e)
-              Redirect(routes.TeamsController.team(teamName)).flashing("error" -> "Error processing request. Contact #team-platops")
+      , formData =>
+          userManagementConnector.editTeamDetails(formData)
+            .map: _ =>
+              Redirect(routes.TeamsController.team(teamName)).flashing("success" -> s"Request to edit team details for ${formData.team} sent successfully.")
+            .recover:
+              case NonFatal(e) =>
+                logger.error(s"Error updating team details for team ${formData.team} - ${e.getMessage}", e)
+                Redirect(routes.TeamsController.team(teamName)).flashing("error" -> "Error processing request. Contact #team-platops")
       )
 
   def deleteTeam(teamName: TeamName): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.TeamsController.team(teamName),
-      retrieval = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_TEAM")))
+      retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_TEAM")))
     ).async: request =>
-       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
-       userManagementConnector.deleteTeam(teamName).map: _ =>
-         Redirect(routes.TeamsController.allTeams()).flashing("success" -> s"Request to delete team ${teamName.asString} sent successfully.")
-       .recover:
-         case NonFatal(e) =>
-           logger.error(s"Error deleting team ${teamName.asString} - ${e.getMessage}", e)
-           Redirect(routes.TeamsController.team(teamName)).flashing("error" -> "Error processing request to delete team. Contact #team-platops")
+      given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+      userManagementConnector.deleteTeam(teamName)
+        .map: _ =>
+          Redirect(routes.TeamsController.allTeams()).flashing("success" -> s"Request to delete team ${teamName.asString} sent successfully.")
+        .recover:
+          case NonFatal(e) =>
+            logger.error(s"Error deleting team ${teamName.asString} - ${e.getMessage}", e)
+            Redirect(routes.TeamsController.team(teamName)).flashing("error" -> "Error processing request to delete team. Contact #team-platops")
 
   def addUserToTeam(teamName: TeamName): Action[AnyContent] =
     auth.authenticatedAction(
@@ -229,12 +231,13 @@ class TeamsController @Inject()(
           logger.error(s"Unexpected error reading Add User To Team form - $formWithErrors")
           showTeamPage(teamName, BadRequest(_), TeamDetailsForm.form())
       , formData =>
-          userManagementConnector.addUserToTeam(formData).map: _ =>
-            Redirect(routes.TeamsController.team(teamName)).flashing("success" -> s"Request to add user to team: ${formData.team} sent successfully.")
-          .recover:
-            case NonFatal(e) =>
-              logger.error(s"Error requesting user ${formData.username} be added to team ${formData.team} - ${e.getMessage}", e)
-              Redirect(routes.TeamsController.team(teamName)).flashing("error" -> "Error processing request. Contact #team-platops")
+          userManagementConnector.addUserToTeam(formData)
+            .map: _ =>
+              Redirect(routes.TeamsController.team(teamName)).flashing("success" -> s"Request to add user to team: ${formData.team} sent successfully.")
+            .recover:
+              case NonFatal(e) =>
+                logger.error(s"Error requesting user ${formData.username} be added to team ${formData.team} - ${e.getMessage}", e)
+                Redirect(routes.TeamsController.team(teamName)).flashing("error" -> "Error processing request. Contact #team-platops")
       )
 
   def removeUserFromTeam(teamName: TeamName): Action[AnyContent] =
@@ -247,27 +250,28 @@ class TeamsController @Inject()(
         formWithErrors =>
           logger.error(s"Unexpected error handling Remove User From Team form - $formWithErrors")
           showTeamPage(teamName, BadRequest(_), TeamDetailsForm.form())
-        , formData =>
-          userManagementConnector.getUser(UserName(formData.username)).flatMap:
-            case None =>
-              Future.successful(
+      , formData =>
+          userManagementConnector.getUser(UserName(formData.username))
+            .flatMap:
+              case None =>
+                Future.successful(
+                  Redirect(routes.TeamsController.team(teamName))
+                    .flashing("error" -> "Unable to determine if the user belongs to more than one team. Contact #team-platops")
+                )
+              case Some(user) if user.teamNames.length <= 1 =>
+                Future.successful(
+                  Redirect(routes.TeamsController.team(teamName))
+                    .flashing("error" -> s"Cannot remove user from their only team. Please add them to another team first.")
+                )
+              case Some(_) =>
+                userManagementConnector.removeUserFromTeam(formData).map: _ =>
+                  Redirect(routes.TeamsController.team(teamName))
+                    .flashing("success" -> s"Request to remove user from team: ${formData.team} sent successfully.")
+            .recover:
+              case NonFatal(e) =>
+                logger.error(s"Error requesting user ${formData.username} be removed from team ${formData.team} - ${e.getMessage}", e)
                 Redirect(routes.TeamsController.team(teamName))
-                  .flashing("error" -> "Unable to determine if the user belongs to more than one team. Contact #team-platops")
-              )
-            case Some(user) if user.teamNames.length <= 1 =>
-              Future.successful(
-                Redirect(routes.TeamsController.team(teamName))
-                  .flashing("error" -> s"Cannot remove user from their only team. Please add them to another team first.")
-              )
-            case Some(_) =>
-              userManagementConnector.removeUserFromTeam(formData).map: _ =>
-                Redirect(routes.TeamsController.team(teamName))
-                  .flashing("success" -> s"Request to remove user from team: ${formData.team} sent successfully.")
-          .recover:
-            case NonFatal(e) =>
-              logger.error(s"Error requesting user ${formData.username} be removed from team ${formData.team} - ${e.getMessage}", e)
-              Redirect(routes.TeamsController.team(teamName))
-                .flashing("error" -> "Error processing request. Contact #team-platops")
+                  .flashing("error" -> "Error processing request. Contact #team-platops")
       )
 
 end TeamsController
@@ -285,10 +289,10 @@ object TeamDetailsForm:
   def form(fieldBeingEdited: Option[String] = None): Form[EditTeamDetails] =
     Form(
       Forms.mapping(
-        "team" -> Forms.nonEmptyText,
-        "description" -> Forms.optional(Forms.text).verifying(TeamConstraints.descriptionConstraint(fieldBeingEdited): _*),
-        "documentation" -> Forms.optional(Forms.text).verifying(TeamConstraints.documentationConstraint(fieldBeingEdited): _*),
-        "slack" -> Forms.optional(Forms.text).verifying(TeamConstraints.slackTeamConstraint(fieldBeingEdited): _*),
+        "team"              -> Forms.nonEmptyText,
+        "description"       -> Forms.optional(Forms.text).verifying(TeamConstraints.descriptionConstraint(fieldBeingEdited): _*),
+        "documentation"     -> Forms.optional(Forms.text).verifying(TeamConstraints.documentationConstraint(fieldBeingEdited): _*),
+        "slack"             -> Forms.optional(Forms.text).verifying(TeamConstraints.slackTeamConstraint(fieldBeingEdited): _*),
         "slackNotification" -> Forms.optional(Forms.text).verifying(TeamConstraints.slackNotificationConstraint(fieldBeingEdited): _*)
       )(EditTeamDetails.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
@@ -305,7 +309,9 @@ object TeamConstraints:
     val slackNameValidation: String => Boolean =
       _.matches("^[a-z0-9._-]+$")
 
-    val slackLengthValidation: String => Boolean = _.length < 80
+    val slackLengthValidation: String => Boolean =
+      _.length < 80
+
     Seq(
       mkConstraint("constraints.nonEmptySlackCheck")(
         constraint = _.exists(nonEmptyValidation),

@@ -22,7 +22,6 @@ import play.api.libs.json._
 import play.api.libs.ws.writeableOf_JsValue
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.cataloguefrontend.config.Constant
-import uk.gov.hmrc.cataloguefrontend.cost.Zone
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser, FormFormat}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
