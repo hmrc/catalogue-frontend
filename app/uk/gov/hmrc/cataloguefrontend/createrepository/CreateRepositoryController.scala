@@ -86,7 +86,7 @@ class CreateRepositoryController @Inject()(
   val createRepoLandingGet: Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createRepoLandingGet()
-    ): request =>
+    )(): request =>
       given RequestHeader = request
       Ok(selectRepoTypePage(SelectRepoType.form))
 
@@ -189,7 +189,7 @@ class CreateRepositoryController @Inject()(
   def createRepoConfirmation(repoType: RepoType, repoName: String): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.CreateRepositoryController.createRepoConfirmation(repoType, repoName)
-    ): request =>
+    )(): request =>
       given Request[AnyContent] = request
       Ok(createRepositoryConfirmationPage(repoType, repoName))
 

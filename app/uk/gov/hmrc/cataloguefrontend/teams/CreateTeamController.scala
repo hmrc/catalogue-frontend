@@ -51,7 +51,7 @@ class CreateTeamController @Inject()(
     auth.authenticatedAction(
       continueUrl = routes.CreateTeamController.createTeamLanding,
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_TEAM")))
-    ): request =>
+    )(): request =>
       given RequestHeader = request
       Ok(createTeamPage(CreateTeamForm.form, Organisation.values.toSeq))
 
