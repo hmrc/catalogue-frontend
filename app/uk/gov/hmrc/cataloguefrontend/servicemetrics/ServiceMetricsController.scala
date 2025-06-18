@@ -22,17 +22,20 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.servicemetrics.view.html.ServiceMetricsListPage
+import uk.gov.hmrc.cataloguefrontend.servicemetrics.view.html.{ServiceProvisionListPage, ServiceMetricsListPage}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 
 import javax.inject.{Inject, Singleton}
+import java.time.{YearMonth, LocalTime, ZoneOffset}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class ServiceMetricsController @Inject() (
   serviceMetricsPage            : ServiceMetricsListPage
+, serviceProvisionPage          : ServiceProvisionListPage
 , serviceMetricsConnector       : ServiceMetricsConnector
 , teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
 , override val auth             : FrontendAuthComponents
@@ -65,6 +68,30 @@ class ServiceMetricsController @Inject() (
           Ok(serviceMetricsPage(form.fill(filter), results, teams, digitalServices))
       ).merge
 
+
+  /**
+    * @param environment for reverse routing
+    * @param team for reverse routing
+    * @param digitalService for reverse routing
+    */
+  def serviceProvision(environment: Environment, team: Option[TeamName], digitalService: Option[DigitalService]): Action[AnyContent] =
+    BasicAuthAction.async: request =>
+      given MessagesRequest[AnyContent] = request
+      ( for
+         teams           <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams())
+         digitalServices <- EitherT.right[Result](teamsAndRepositoriesConnector.allDigitalServices())
+         form            =  ServiceProvisionFilter.form.bindFromRequest()
+         filter          <- EitherT.fromEither[Future](form.fold(
+                              formErrors => Left(BadRequest(serviceProvisionPage(formErrors, Seq.empty, teams, digitalServices)))
+                            , formObject => Right(formObject)
+                            ))
+         from            =  filter.yearMonth.atDay(1).atStartOfDay(ZoneOffset.UTC).toInstant
+         to              =  filter.yearMonth.atEndOfMonth.atTime(LocalTime.MAX   ).toInstant(ZoneOffset.UTC)
+         results         <- EitherT.right[Result](serviceMetricsConnector.serviceProvision(Some(filter.environment), filter.team, filter.digitalService, from = Some(from), to = Some(to)))
+        yield
+          Ok(serviceProvisionPage(form.fill(filter), results, teams, digitalServices))
+      ).merge
+
 case class ServiceMetricsFilter(
   serviceName   : Option[ServiceName]    = None
 , team          : Option[TeamName]       = None
@@ -75,7 +102,7 @@ case class ServiceMetricsFilter(
 
 object ServiceMetricsFilter:
   lazy val form: Form[ServiceMetricsFilter] =
-    Form(
+    Form:
       Forms.mapping(
         "serviceName"    -> Forms.optional(Forms.of[ServiceName   ])
       , "team"           -> Forms.optional(Forms.of[TeamName      ])
@@ -83,4 +110,30 @@ object ServiceMetricsFilter:
       , "metricType"     -> Forms.optional(Forms.of[LogMetricId   ])
       , "environment"    -> Forms.default (Forms.of[Environment   ], Environment.Production)
       )(ServiceMetricsFilter.apply)(f => Some(Tuple.fromProductTyped(f)))
-    )
+
+case class ServiceProvisionFilter(
+  serviceName   : Option[ServiceName]    = None
+, team          : Option[TeamName]       = None
+, digitalService: Option[DigitalService] = None
+, environment   : Environment
+, yearMonth     : YearMonth
+)
+
+object ServiceProvisionFilter:
+  import play.api.data.format.Formats._
+  lazy val form: Form[ServiceProvisionFilter] =
+    import play.api.data.format.Formatter
+    import uk.gov.hmrc.cataloguefrontend.binders.Binders
+    import cats.implicits.catsSyntaxEither
+
+    given Formatter[YearMonth] =
+      Binders.formFormatFromString(s => Try(YearMonth.parse(s)).toEither.leftMap(_ => "Invalid YearMonth format"), _.toString)
+
+    Form:
+      Forms.mapping(
+        "serviceName"    -> Forms.optional(Forms.of[ServiceName   ])
+      , "team"           -> Forms.optional(Forms.of[TeamName      ])
+      , "digitalService" -> Forms.optional(Forms.of[DigitalService])
+      , "environment"    -> Forms.default (Forms.of[Environment   ], Environment.Production)
+      , "yearMonth"      -> Forms.default (Forms.of[YearMonth     ], YearMonth.now().minusMonths(1))
+      )(ServiceProvisionFilter.apply)(f => Some(Tuple.fromProductTyped(f)))

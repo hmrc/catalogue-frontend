@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.auth
 
-import play.api.mvc.{AnyContent, Call, MessagesControllerComponents, RequestHeader}
+import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.routes as appRoutes
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl.*
@@ -34,26 +34,26 @@ class AuthController @Inject() (
 
   import AuthController.*
 
-  def signIn(targetUrl: Option[RedirectUrl]) =
+  def signIn(targetUrl: Option[RedirectUrl]): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.AuthController.postSignIn(sanitize(targetUrl))
-    )(Redirect(routes.AuthController.postSignIn(sanitize(targetUrl))))
+    )()(Redirect(routes.AuthController.postSignIn(sanitize(targetUrl))))
 
   // endpoint exists to run retrievals and store the results in the session after logging in
   // (opposed to running retrievals on every page and make results available to standard_layout)
-  def postSignIn(targetUrl: Option[RedirectUrl]) =
+  def postSignIn(targetUrl: Option[RedirectUrl]): Action[AnyContent] =
     auth.authenticatedAction(
       continueUrl = routes.AuthController.signIn(sanitize(targetUrl)),
       retrieval   = Retrieval.username
                   ~ Retrieval.locations(
                       resourceType = Some(ResourceType("catalogue-frontend")),
                       action       = Some(IAAction("CREATE_USER"))
-                    ) 
+                    )
                   ~ Retrieval.locations(
                       resourceType = Some(ResourceType("catalogue-frontend")),
                       action       = Some(IAAction("MANAGE_USER"))
-                    ) 
-    ): (request: AuthenticatedRequest[AnyContent, Retrieval.Username ~ Set[Resource] ~ Set[Resource]]) =>
+                    )
+    )(): (request: AuthenticatedRequest[AnyContent, Retrieval.Username ~ Set[Resource] ~ Set[Resource]]) =>
       given RequestHeader = request
       val usernameRetrieval ~ createUserResource ~ manageUserResource = request.retrieval
       val canCreateUsers   = createUserResource.nonEmpty.toString
