@@ -99,8 +99,7 @@ case class ServiceProvision(
     , metrics.get("memory")
   ) match
       case (Some(0               ), _           ) => None
-                                                     // max memory used is converted from bytes to megabytes, a slot has 128mb of memory
-      case (Some(slotsForInstance), Some(memory)) => Some(memory / 1000000 / (slotsForInstance * 128) * 100)
+      case (Some(slotsForInstance), Some(memory)) => Some(memory / (slotsForInstance * 128) * 100) // a slot has 128mb of memory
       case _                                      => None
 
   val costPerInstance: Option[BigDecimal] =
