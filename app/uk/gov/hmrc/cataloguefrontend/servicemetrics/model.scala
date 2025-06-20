@@ -83,8 +83,8 @@ case class ServiceProvision(
 , metrics    : Map[String, BigDecimal]
 ):
 
-  private val costPerSlot    = 6.25    // £
-  private val secondsInMonth = 2628000 // 365/12*24*60*60
+  private val costPerSlotInPence = 625
+  private val secondsInMonth     = 2628000L // 365/12*24*60*60
 
   val slotsPerInstance: Option[BigDecimal] =
     ( metrics.get("slots")
@@ -102,27 +102,31 @@ case class ServiceProvision(
       case (Some(slotsForInstance), Some(memory)) => Some(memory / (slotsForInstance * 128) * 100) // a slot has 128mb of memory
       case _                                      => None
 
-  val costPerInstance: Option[BigDecimal] =
+  val costPerInstanceInPence: Option[BigDecimal] =
     ( slotsPerInstance
     , metrics.get("memory")
     ) match
-      case (Some(slotsForInstance), Some(memory)) => Some(slotsForInstance * costPerSlot)
+      case (Some(slotsForInstance), Some(memory)) => Some(slotsForInstance * costPerSlotInPence)
       case _                                      => None
 
-  val costPerRequest: Option[BigDecimal] =
+  val costPerRequestInPence: Option[BigDecimal] =
     ( metrics.get("slots")
     , metrics.get("requests")
     ) match
       case (_          , Some(0       )) => None
-      case (Some(slots), Some(requests)) => Some(costPerSlot * slots / requests)
+      case (Some(slots), Some(requests)) => Some((costPerSlotInPence * slots / requests))
       case _                             => None
 
-  val costPerTime: Option[BigDecimal] =
+  val timeInSeconds: Option[BigDecimal] =
+    metrics.get("time").map: millis =>
+      millis / 1000
+
+  val costPerTimeInPence: Option[BigDecimal] =
     ( metrics.get("slots")
-    , metrics.get("time")
+    , timeInSeconds
     ) match
-      case (Some(slots), Some(time)) => Some((costPerSlot * slots / secondsInMonth) * time)
-      case _                         => None
+      case (Some(slots), Some(timeInSeconds)) => Some((costPerSlotInPence * slots / secondsInMonth) * timeInSeconds)
+      case _                                  => None
 
 
 object ServiceProvision:

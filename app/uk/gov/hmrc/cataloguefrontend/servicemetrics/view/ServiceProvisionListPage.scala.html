@@ -116,26 +116,26 @@
                     <th class="col-lg-3"><button role="button" data-sort="col-service-name" class="fw-bold sort no-border">Name</button></th>
                     <th class=""><button role="button" data-sort="col-instances" class="fw-bold sort no-border">Avg Instances</button></th>
                     <th class=""><button role="button" data-sort="col-slots" class="fw-bold sort no-border">Total Avg Slots</button></th>
+                    <th class=""><button role="button" data-sort="col-cost-per-instance" class="fw-bold sort no-border">Est. Cost Per Instance (Pence)</button></th>
                     <th class=""><button role="button" data-sort="col-requests" class="fw-bold sort no-border">Requests</button></th>
-                    <th class=""><button role="button" data-sort="col-time" class="fw-bold sort no-border">Mean Request Time (seconds)</button></th>
+                    <th class=""><button role="button" data-sort="col-time" class="fw-bold sort no-border">Mean Request Time (Seconds)</button></th>
                     <th class=""><button role="button" data-sort="col-memory" class="fw-bold sort no-border">Max Used Container Memory (% of available)</button></th>
-                    <th class=""><button role="button" data-sort="col-cost-per-instance" class="fw-bold sort no-border">Est. Cost Per Instance (&pound;)</button></th>
-                    <th class=""><button role="button" data-sort="col-cost-per-request" class="fw-bold sort no-border">Est. Cost Per Request (&pound;)</button></th>
-                    <th class=""><button role="button" data-sort="col-cost-per-time" class="fw-bold sort no-border">Est. Cost Per Request Time (&pound;/second)</button></th>
+                    <th class=""><button role="button" data-sort="col-cost-per-request" class="fw-bold sort no-border">Est. Cost Per Request (Pence)</button></th>
+                    <th class=""><button role="button" data-sort="col-cost-per-time" class="fw-bold sort no-border">Est. Cost Per Request Time (Pence/Second)</button></th>
                 </tr>
             </thead>
             <tbody class="list">
               @for(serviceProvision <- results) {
                 <tr>
                   <td class="col-service-name"><a aria-label="Link to page info for @{serviceProvision.service}" id="link-to-info-page-for-@{serviceProvision.service}" href="@appRoutes.CatalogueController.service(ServiceName(serviceProvision.service))">@serviceProvision.service</a></td>
-                  <td class="text-end col-instances"><span class="pe-4">@serviceProvision.metrics.get("instances").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
-                  <td class="text-end col-slots"><span class="pe-4">@serviceProvision.metrics.get("slots").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
-                  <td class="text-end col-requests"><span class="pe-4">@serviceProvision.metrics.get("requests")</span></td>
-                  <td class="text-end col-time"><span class="pe-4">@serviceProvision.metrics.get("time").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
-                  <td class="text-end col-memory"><span class="pe-4">@serviceProvision.percentageOfMaxMemoryUsed.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</span></td>
-                  <td class="text-end col-cost-per-instance"><span class="pe-4">@serviceProvision.costPerInstance.map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
-                  <td class="text-end col-cost-per-request"><span class="pe-4">@serviceProvision.costPerRequest.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
-                  <td class="text-end col-cost-per-time"><span class="pe-4">@serviceProvision.costPerTime.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="font-monospace text-end col-instances"><span class="pe-4">@serviceProvision.metrics.get("instances").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="font-monospace text-end col-slots"><span class="pe-4">@serviceProvision.metrics.get("slots").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="font-monospace text-end col-cost-per-instance"><span class="pe-4">@serviceProvision.costPerInstanceInPence.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="font-monospace text-end col-requests"><span class="pe-4">@serviceProvision.metrics.get("requests")</span></td>
+                  <td class="font-monospace text-end col-time"><span class="pe-4">@serviceProvision.timeInSeconds.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="font-monospace text-end col-memory"><span class="pe-4">@serviceProvision.percentageOfMaxMemoryUsed.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="font-monospace text-end col-cost-per-request"><span class="pe-4">@serviceProvision.costPerRequestInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="font-monospace text-end col-cost-per-time"><span class="pe-4">@serviceProvision.costPerTimeInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
                 </tr>
               }
           </tbody>
