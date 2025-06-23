@@ -303,6 +303,10 @@ case class OutagePage(
 
       html.getElementById("main-content").html(mainContent)
 
+      val stylesheet = html.selectFirst("link[href*='hmrc-frontend']")
+      val oldHref = stylesheet.attr("href")
+      stylesheet.attr("href", s"https://www.tax.service.gov.uk$oldHref") // required because the relative assets url doesn't work in catalogue environments
+
       templatedMessage.map:
         message =>
           html.getElementById("templatedMessage").text(message)
