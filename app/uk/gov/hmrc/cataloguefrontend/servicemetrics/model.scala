@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.servicemetrics
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 import play.api.mvc.QueryStringBindable
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}, FromStringEnum.*
 
 import java.time.Instant
@@ -48,7 +48,7 @@ object LogMetric:
     )(apply)
 
 case class ServiceMetric(
-  service    : String
+  serviceName: ServiceName
 , id         : LogMetricId
 , environment: Environment
 , kibanaLink : String
@@ -57,7 +57,7 @@ case class ServiceMetric(
 
 object ServiceMetric:
   val reads: Reads[ServiceMetric] =
-    ( (__ \ "service"     ).read[String]
+    ( (__ \ "service"     ).read[ServiceName]
     ~ (__ \ "id"          ).read[LogMetricId]
     ~ (__ \ "environment" ).read[Environment]
     ~ (__ \ "kibanaLink"  ).read[String]
@@ -78,7 +78,7 @@ enum LogMetricId(
 case class ServiceProvision(
   from       : Instant
 , to         : Instant
-, service    : String
+, serviceName: ServiceName
 , environment: Environment
 , metrics    : Map[String, BigDecimal]
 ):
@@ -133,7 +133,7 @@ object ServiceProvision:
   val reads: Reads[ServiceProvision] =
     ( (__ \ "from"       ).read[Instant]
     ~ (__ \ "to"         ).read[Instant]
-    ~ (__ \ "service"    ).read[String]
+    ~ (__ \ "service"    ).read[ServiceName]
     ~ (__ \ "environment").read[Environment]
     ~ (__ \ "metrics"    ).read[Map[String, BigDecimal]]
     )(ServiceProvision.apply _)

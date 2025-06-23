@@ -27,9 +27,10 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class TelemetryLinks @Inject()(configuration: Configuration):
 
-  private val grafanaDashboardTemplate           = configuration.get[String]("telemetry.templates.metrics")
-  private val kibanaDashboardTemplate            = configuration.get[String]("telemetry.templates.logs.dashBoard")
-  private val kibanaDeploymentLogsTemplate       = configuration.get[String]("telemetry.templates.logs.deploymentLogs")
+  private val grafanaDashboardTemplate        = configuration.get[String]("telemetry.templates.grafana.dashboard")
+  private val grafanaServiceProvisionTemplate = configuration.get[String]("telemetry.templates.grafana.serviceProvision")
+  private val kibanaDashboardTemplate         = configuration.get[String]("telemetry.templates.kibana.dashboard")
+  private val kibanaDeploymentLogsTemplate    = configuration.get[String]("telemetry.templates.kibana.deploymentLogs")
 
   // Same as https://github.com/hmrc/grafana-dashboards/blob/main/src/main/scala/uk/gov/hmrc/grafanadashboards/domain/dashboard/DashboardBuilder.scala#L49-L57
   private def toDashBoardUid(name: String): String =
@@ -48,6 +49,15 @@ class TelemetryLinks @Inject()(configuration: Configuration):
       name        = "Grafana Dashboard"
     , displayName = "Grafana Dashboard"
     , url        =  grafanaDashboardTemplate
+                      .replace(s"$${env}",     UrlUtils.encodePathParam(env.asString))
+                      .replace(s"$${service}", UrlUtils.encodePathParam(toDashBoardUid(serviceName.asString)))
+    )
+
+  def grafanaServiceProvision(env: Environment, serviceName: ServiceName): Link =
+   Link(
+      name        = "Grafana Service Provision"
+    , displayName = "Grafana Service Provision"
+    , url        =  grafanaServiceProvisionTemplate
                       .replace(s"$${env}",     UrlUtils.encodePathParam(env.asString))
                       .replace(s"$${service}", UrlUtils.encodePathParam(toDashBoardUid(serviceName.asString)))
     )

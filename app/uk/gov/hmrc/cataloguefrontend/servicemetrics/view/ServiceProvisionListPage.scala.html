@@ -16,11 +16,10 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.servicemetrics.{LogMetricId, ServiceProvision}
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvision
 @import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 @import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvisionFilter
 @import views.html.helper.{FieldConstructor, select}
-@import scala.concurrent.duration.Duration
 @import java.time.YearMonth
 @import scala.math.Ordered.orderingToOrdered
 
@@ -32,6 +31,7 @@
 , results        : Seq[ServiceProvision]
 , teams          : Seq[GitHubTeam]
 , digitalServices: Seq[DigitalService]
+, telemetryLinks : TelemetryLinks
 )(implicit
   messages: Messages
 , request : RequestHeader
@@ -39,9 +39,6 @@
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
-@serviceMetricsLogDuration: Duration = @{
-  configuration.get[Duration]("service-metrics.logDuration")
-}
 
 @standard_layout("Service Provision", "service provision") {
     <h1 class="page-heading mt-4">Service Provision</h1>
@@ -122,12 +119,13 @@
                     <th class=""><button role="button" data-sort="col-memory" class="fw-bold sort no-border">Max Used Container Memory (% of available)</button></th>
                     <th class=""><button role="button" data-sort="col-cost-per-request" class="fw-bold sort no-border">Est. Cost Per Request (Pence)</button></th>
                     <th class=""><button role="button" data-sort="col-cost-per-time" class="fw-bold sort no-border">Est. Cost Per Request Time (Pence/Second)</button></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody class="list">
               @for(serviceProvision <- results) {
                 <tr>
-                  <td class="col-service-name"><a aria-label="Link to page info for @{serviceProvision.service}" id="link-to-info-page-for-@{serviceProvision.service}" href="@appRoutes.CatalogueController.service(ServiceName(serviceProvision.service))">@serviceProvision.service</a></td>
+                  <td class="col-service-name"><a aria-label="Link to page info for @{serviceProvision.serviceName.asString}" id="link-to-info-page-for-@{serviceProvision.serviceName.asString}" href="@appRoutes.CatalogueController.service(serviceProvision.serviceName)">@serviceProvision.serviceName.asString</a></td>
                   <td class="font-monospace text-end col-instances"><span class="pe-4">@serviceProvision.metrics.get("instances").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
                   <td class="font-monospace text-end col-slots"><span class="pe-4">@serviceProvision.metrics.get("slots").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
                   <td class="font-monospace text-end col-cost-per-instance"><span class="pe-4">@serviceProvision.costPerInstanceInPence.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</span></td>
@@ -136,6 +134,7 @@
                   <td class="font-monospace text-end col-memory"><span class="pe-4">@serviceProvision.percentageOfMaxMemoryUsed.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</span></td>
                   <td class="font-monospace text-end col-cost-per-request"><span class="pe-4">@serviceProvision.costPerRequestInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
                   <td class="font-monospace text-end col-cost-per-time"><span class="pe-4">@serviceProvision.costPerTimeInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td><a href="@telemetryLinks.grafanaServiceProvision(serviceProvision.environment, serviceProvision.serviceName).url" target="_blank">Grafana</a></td>
                 </tr>
               }
           </tbody>

@@ -22,10 +22,11 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.view.html.{ServiceProvisionListPage, ServiceMetricsListPage}
+import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 
 import javax.inject.{Inject, Singleton}
 import java.time.{YearMonth, LocalTime, ZoneOffset}
@@ -34,10 +35,11 @@ import scala.util.Try
 
 @Singleton
 class ServiceMetricsController @Inject() (
-  serviceMetricsPage            : ServiceMetricsListPage
-, serviceProvisionPage          : ServiceProvisionListPage
-, serviceMetricsConnector       : ServiceMetricsConnector
+  serviceMetricsConnector       : ServiceMetricsConnector
 , teamsAndRepositoriesConnector : TeamsAndRepositoriesConnector
+, telemetryLinks                : TelemetryLinks
+, serviceMetricsPage            : ServiceMetricsListPage
+, serviceProvisionPage          : ServiceProvisionListPage
 , override val auth             : FrontendAuthComponents
 , override val mcc              : MessagesControllerComponents
 )(using
@@ -82,14 +84,14 @@ class ServiceMetricsController @Inject() (
          digitalServices <- EitherT.right[Result](teamsAndRepositoriesConnector.allDigitalServices())
          form            =  ServiceProvisionFilter.form.bindFromRequest()
          filter          <- EitherT.fromEither[Future](form.fold(
-                              formErrors => Left(BadRequest(serviceProvisionPage(formErrors, Seq.empty, teams, digitalServices)))
+                              formErrors => Left(BadRequest(serviceProvisionPage(formErrors, Seq.empty, teams, digitalServices, telemetryLinks)))
                             , formObject => Right(formObject)
                             ))
          from            =  filter.yearMonth.atDay(1).atStartOfDay(ZoneOffset.UTC).toInstant
          to              =  filter.yearMonth.atEndOfMonth.atTime(LocalTime.MAX   ).toInstant(ZoneOffset.UTC)
          results         <- EitherT.right[Result](serviceMetricsConnector.serviceProvision(Some(filter.environment), filter.team, filter.digitalService, from = Some(from), to = Some(to)))
         yield
-          Ok(serviceProvisionPage(form.fill(filter), results, teams, digitalServices))
+          Ok(serviceProvisionPage(form.fill(filter), results, teams, digitalServices, telemetryLinks))
       ).merge
 
 case class ServiceMetricsFilter(
