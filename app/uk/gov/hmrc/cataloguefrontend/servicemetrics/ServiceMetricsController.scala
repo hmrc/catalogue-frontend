@@ -19,12 +19,13 @@ package uk.gov.hmrc.cataloguefrontend.servicemetrics
 import cats.data.EitherT
 import play.api.data.{Form, Forms}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
+import play.api.http.HttpEntity
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result, ResponseHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, Environment, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.view.html.{ServiceProvisionListPage, ServiceMetricsListPage}
-import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
+import uk.gov.hmrc.cataloguefrontend.util.{CsvUtils, TelemetryLinks}
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -91,8 +92,31 @@ class ServiceMetricsController @Inject() (
          to              =  filter.yearMonth.atEndOfMonth.atTime(LocalTime.MAX   ).toInstant(ZoneOffset.UTC)
          results         <- EitherT.right[Result](serviceMetricsConnector.serviceProvision(Some(filter.environment), filter.team, filter.digitalService, from = Some(from), to = Some(to)))
         yield
-          Ok(serviceProvisionPage(form.fill(filter), results, teams, digitalServices, telemetryLinks))
+          if filter.asCsv
+          then
+            val rows   = toRows(results)
+            val csv    = CsvUtils.toCsv(rows)
+            val source = org.apache.pekko.stream.scaladsl.Source.single(org.apache.pekko.util.ByteString(csv, "UTF-8"))
+            Result(
+              header = ResponseHeader(200, Map("Content-Disposition" -> s"attachment; filename=\"service-provision-${filter.environment.asString}-${filter.yearMonth}.csv\""))
+            , body   = HttpEntity.Streamed(source, None, Some("text/csv"))
+            )
+          else
+            Ok(serviceProvisionPage(form.fill(filter), results, teams, digitalServices, telemetryLinks))
       ).merge
+
+  private def toRows(results: Seq[ServiceProvision]): Seq[Seq[(String, String)]] =
+    results.map: serviceProvision =>
+      ("Name"                                           , serviceProvision.serviceName.asString)                                                                             ::
+      ("Avg Instances"                                  , serviceProvision.metrics.get("instances")      .fold("")(_.setScale(2, BigDecimal.RoundingMode.HALF_UP)).toString) ::
+      ("Total Avg Slots"                                , serviceProvision.metrics.get("slots")          .fold("")(_.setScale(2, BigDecimal.RoundingMode.HALF_UP)).toString) ::
+      ("Est. Cost Per Instance (Pence)"                 , serviceProvision.costPerInstanceInPence        .fold("")(_.setScale(0, BigDecimal.RoundingMode.HALF_UP)).toString) ::
+      ("Requests"                                       , serviceProvision.metrics.get("requests")       .getOrElse("")                                           .toString) ::
+      ("Total Request Time (Seconds)"                   , serviceProvision.totalRequestTime              .fold("")(_.setScale(0, BigDecimal.RoundingMode.HALF_UP)).toString) ::
+      ("Max Used Container Memory (% of available)"     , serviceProvision.percentageOfMaxMemoryUsed     .fold("")(_.setScale(0, BigDecimal.RoundingMode.HALF_UP)).toString) ::
+      ("Est. Cost Per Request (Pence)"                  , serviceProvision.costPerRequestInPence         .fold("")(_.setScale(4, BigDecimal.RoundingMode.HALF_UP)).toString) ::
+      ("Est. Cost Per Total Request Time (Pence/Second)", serviceProvision.costPerTotalRequestTimeInPence.fold("")(_.setScale(4, BigDecimal.RoundingMode.HALF_UP)).toString) ::
+      Nil
 
 case class ServiceMetricsFilter(
   serviceName   : Option[ServiceName]    = None
@@ -119,6 +143,7 @@ case class ServiceProvisionFilter(
 , digitalService: Option[DigitalService] = None
 , environment   : Environment
 , yearMonth     : YearMonth
+, asCsv         : Boolean                = false
 )
 
 object ServiceProvisionFilter:
@@ -138,4 +163,5 @@ object ServiceProvisionFilter:
       , "digitalService" -> Forms.optional(Forms.of[DigitalService])
       , "environment"    -> Forms.default (Forms.of[Environment   ], Environment.Production)
       , "yearMonth"      -> Forms.default (Forms.of[YearMonth     ], YearMonth.now().minusMonths(1))
+      , "asCsv"          -> Forms.boolean
       )(ServiceProvisionFilter.apply)(f => Some(Tuple.fromProductTyped(f)))

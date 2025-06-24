@@ -64,21 +64,21 @@
                             <tr class="fw-bold">
                                 <th>Environment</th>
                                 <th class="text-end">Requests</th>
-                                <th>Mean Request Time (Seconds)</th>
+                                <th>Total Request Time (Seconds)</th>
                                 <th>Max Used Memory (%)</th>
                                 <th>Cost/Request (Pence)</th>
-                                <th>Cost/Request Time (Pence/Second)</th>
+                                <th>Cost/Total Request Time (Pence/Second)</th>
                             </tr>
                         </thead>
                         <tbody class="list">
                             @for(serviceProvision <- serviceProvisions.filter(_.metrics.nonEmpty)) {
                                 <tr>
                                     <td class="col-environment">@serviceProvision.environment.displayString</td>
-                                    <td class="font-monospace text-end col-requests">@serviceProvision.metrics.get("requests")</td>
-                                    <td class="font-monospace text-end col-time">@serviceProvision.timeInSeconds.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</td>
-                                    <td class="font-monospace text-end col-memory">@serviceProvision.percentageOfMaxMemoryUsed.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</td>
-                                    <td class="font-monospace text-end col-cost-per-request">@serviceProvision.costPerRequestInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</td>
-                                    <td class="font-monospace text-end col-cost-per-time">@serviceProvision.costPerTimeInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</td>
+                                    <td class="font-monospace text-end">@serviceProvision.metrics.get("requests")</td>
+                                    <td class="font-monospace text-end">@serviceProvision.totalRequestTime.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</td>
+                                    <td class="font-monospace text-end">@serviceProvision.percentageOfMaxMemoryUsed.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</td>
+                                    <td class="font-monospace text-end">@serviceProvision.costPerRequestInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</td>
+                                    <td class="font-monospace text-end">@serviceProvision.costPerTotalRequestTimeInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</td>
                                 </tr>
                             }
                         </tbody>

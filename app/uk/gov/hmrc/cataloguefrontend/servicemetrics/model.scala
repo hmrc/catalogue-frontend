@@ -84,7 +84,6 @@ case class ServiceProvision(
 ):
 
   private val costPerSlotInPence = 625
-  private val secondsInMonth     = 2628000L // 365/12*24*60*60
 
   val slotsPerInstance: Option[BigDecimal] =
     ( metrics.get("slots")
@@ -117,16 +116,23 @@ case class ServiceProvision(
       case (Some(slots), Some(requests)) => Some((costPerSlotInPence * slots / requests))
       case _                             => None
 
-  val timeInSeconds: Option[BigDecimal] =
+  private val timeInSeconds: Option[BigDecimal] =
     metrics.get("time").map: millis =>
       millis / 1000
 
-  val costPerTimeInPence: Option[BigDecimal] =
-    ( metrics.get("slots")
-    , timeInSeconds
+  val totalRequestTime: Option[BigDecimal] =
+    ( timeInSeconds
+    , metrics.get("requests")
     ) match
-      case (Some(slots), Some(timeInSeconds)) => Some((costPerSlotInPence * slots / secondsInMonth) * timeInSeconds)
-      case _                                  => None
+      case (Some(time), Some(requests)) => Some((time * requests))
+      case _                            => None
+
+  val costPerTotalRequestTimeInPence: Option[BigDecimal] =
+    ( metrics.get("slots")
+    , totalRequestTime
+    ) match
+      case (Some(slots), Some(totalRequestTime)) => Some((costPerSlotInPence * slots / totalRequestTime))
+      case _                                     => None
 
 
 object ServiceProvision:
