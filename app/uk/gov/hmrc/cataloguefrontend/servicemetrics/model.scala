@@ -131,6 +131,7 @@ case class ServiceProvision(
     ( metrics.get("slots")
     , totalRequestTime
     ) match
+      case (_          , Some(0       ))         => None
       case (Some(slots), Some(totalRequestTime)) => Some((costPerSlotInPence * slots / totalRequestTime))
       case _                                     => None
 
