@@ -46,6 +46,7 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
     serviceEndpoint(GET, "/api/v2/repositories", willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=repo1", willRespondWith = (200, Some(JsonData.deploymentConfigsService1)))
     serviceEndpoint(GET, "/service-configs/deployment-config?serviceName=service-1", willRespondWith = (200, Some(JsonData.deploymentConfigsService1)))
+    serviceEndpoint(GET, "/service-metrics/service-provision?serviceName=service-1", willRespondWith = (200, Some("[]")))
     import com.github.tomakehurst.wiremock.client.WireMock
     wireMockServer.stubFor(
       WireMock.get(WireMock.urlMatching("/service-metrics/service-1/log-metrics.*"))

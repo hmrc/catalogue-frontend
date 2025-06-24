@@ -203,6 +203,7 @@ class CatalogueController @Inject() (
       inconsistentRoutes        =  routeRulesService.inconsistentRoutes(routes)
       optLatestServiceInfo      <- serviceDependenciesConnector.getSlugInfo(serviceName)
       serviceCostEstimate       <- costEstimationService.estimateServiceCost(serviceName)
+      serviceProvisions         <- serviceMetricsConnector.serviceProvision(serviceName = Some(serviceName))
       commenterReport           <- prCommenterConnector.report(repositoryName)
       latestVulnerabilitiesCount<- vulnerabilitiesConnector
                                     .vulnerabilityCounts(flag = SlugInfoFlag.Latest, serviceName = Some(serviceName))
@@ -228,6 +229,7 @@ class CatalogueController @Inject() (
         jenkinsJobs                  = jenkinsJobs,
         zone                         = zone,
         serviceCostEstimate          = serviceCostEstimate,
+        serviceProvisions            = serviceProvisions,
         costEstimateConfig           = costEstimateConfig,
         repositoryCreationDate       = repositoryDetails.createdDate,
         envDatas                     = optLatestData.fold(envDatas)(envDatas + _),

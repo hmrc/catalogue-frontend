@@ -16,6 +16,7 @@
 
 @import uk.gov.hmrc.cataloguefrontend.connector.GitRepository
 @import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, HistoricEstimatedCostCharts, ServiceCostEstimate}
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvision
 
 @this()
 
@@ -23,6 +24,7 @@
   repositoryDetails           : GitRepository,
   costEstimate                : ServiceCostEstimate,
   costEstimateConfig          : CostEstimateConfig,
+  serviceProvisions           : Seq[ServiceProvision],
   historicEstimatedCostCharts : HistoricEstimatedCostCharts
 )(implicit
   request                     : RequestHeader
@@ -39,7 +41,7 @@
     <section class="section-wrapper">
         <div class="row">
             <div class="col-md-12">
-                @partials.costEstimation(costEstimate, costEstimateConfig, serviceName, linkToCostsPage = false)
+                @partials.costEstimation(serviceName, costEstimate, costEstimateConfig, serviceProvisions, linkToCostsPage = false)
             </div>
         </div>
     </section>
