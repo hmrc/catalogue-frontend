@@ -158,10 +158,13 @@ POST       /users/reset-ldap-password                    uk.gov.hmrc.cataloguefr
 POST       /users/reset-google-password                  uk.gov.hmrc.cataloguefrontend.users.UsersController.requestGoogleReset(username: UserName)
 POST       /users/add-to-github-team                     uk.gov.hmrc.cataloguefrontend.users.UsersController.addToGithubTeam(username: UserName)
 
-GET        /offboard-users                              uk.gov.hmrc.cataloguefrontend.users.UsersController.offBoardUsersLanding
-POST       /offboard-users                              uk.gov.hmrc.cataloguefrontend.users.UsersController.offBoardUsers
+GET        /offboard-users                               uk.gov.hmrc.cataloguefrontend.users.UsersController.offBoardUsersLanding
+POST       /offboard-users                               uk.gov.hmrc.cataloguefrontend.users.UsersController.offBoardUsers
 
 GET        /tests                                        uk.gov.hmrc.cataloguefrontend.test.TestJobController.allTests(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 
 GET        /service-metrics                              uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsController.serviceMetrics(environment: Environment ?= Environment.Production, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, metricType: Option[LogMetricId] ?= None)
+
 GET        /service-provision                            uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsController.serviceProvision(environment: Environment ?= Environment.Production, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
+
+GET        /health-metrics/timeline                      uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetricsController.healthMetricsTimeline(team: TeamName, healthMetric: HealthMetric = HealthMetric.OpenPRForReposOwnedByTeam, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
