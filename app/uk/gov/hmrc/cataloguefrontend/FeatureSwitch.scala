@@ -38,3 +38,6 @@ object CatalogueFrontendSwitches:
 
   def showIncludeNonHumanUsers: FeatureSwitch =
     FeatureSwitch.forName("show-include-non-human-users")
+
+  def showServiceProvision: FeatureSwitch =
+    FeatureSwitch.forName("show-service-provision")
