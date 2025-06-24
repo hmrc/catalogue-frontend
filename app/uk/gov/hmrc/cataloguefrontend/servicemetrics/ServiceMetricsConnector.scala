@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.Instant
+import java.time.{Clock, Instant}
 import java.time.temporal.ChronoUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration
@@ -34,6 +34,7 @@ class ServiceMetricsConnector @Inject() (
   httpClientV2  : HttpClientV2
 , servicesConfig: ServicesConfig
 , configuration : Configuration
+, clock         : Clock
 )(using
   ec: ExecutionContext
 ):
@@ -52,14 +53,14 @@ class ServiceMetricsConnector @Inject() (
   , metricType    : Option[LogMetricId]    = None
   )(using HeaderCarrier): Future[Seq[ServiceMetric]] =
     given Reads[ServiceMetric] = ServiceMetric.reads
-    val from = Instant.now().minus(logDuration.toMillis, ChronoUnit.MILLIS)
+    val from = Instant.now(clock).minus(logDuration.toMillis, ChronoUnit.MILLIS)
     httpClientV2
       .get(url"$serviceMetricsBaseUrl/service-metrics/log-metrics?team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&metricType=${metricType.map(_.asString)}&environment=${environment.map(_.asString)}&from=$from")
       .execute[Seq[ServiceMetric]]
 
   def logMetrics(service: ServiceName)(using HeaderCarrier): Future[Seq[LogMetric]] =
     given Reads[LogMetric] = LogMetric.reads
-    val from = Instant.now().minus(logDuration.toMillis, ChronoUnit.MILLIS)
+    val from = Instant.now(clock).minus(logDuration.toMillis, ChronoUnit.MILLIS)
     httpClientV2
       .get(url"$serviceMetricsBaseUrl/service-metrics/${service.asString}/log-metrics?from=$from")
       .execute[Seq[LogMetric]]
@@ -70,8 +71,9 @@ class ServiceMetricsConnector @Inject() (
   , digitalService: Option[DigitalService] = None
   , from          : Option[Instant]        = None
   , to            : Option[Instant]        = None
+  , serviceName   : Option[ServiceName]    = None
   )(using HeaderCarrier): Future[Seq[ServiceProvision]] =
     given Reads[ServiceProvision] = ServiceProvision.reads
     httpClientV2
-      .get(url"$serviceMetricsBaseUrl/service-metrics/service-provision?team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&environment=${environment.map(_.asString)}&from=$from&to=$to")
+      .get(url"$serviceMetricsBaseUrl/service-metrics/service-provision?team=${teamName.map(_.asString)}&digitalService=${digitalService.map(_.asString)}&serviceName=${serviceName.map(_.asString)}&environment=${environment.map(_.asString)}&from=$from&to=$to")
       .execute[Seq[ServiceProvision]]
