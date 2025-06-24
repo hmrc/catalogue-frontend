@@ -30,14 +30,5 @@ object CatalogueFrontendSwitches:
   def requiresLogin: FeatureSwitch =
     FeatureSwitch.forName("requires-login")
 
-  def showTestRepoRelationships: FeatureSwitch =
-    FeatureSwitch.forName("show-test-repo-relationships")
-
-  def showIncludeDeletedUsers: FeatureSwitch =
-    FeatureSwitch.forName("show-include-deleted-users")
-
-  def showIncludeNonHumanUsers: FeatureSwitch =
-    FeatureSwitch.forName("show-include-non-human-users")
-
   def showServiceProvision: FeatureSwitch =
     FeatureSwitch.forName("show-service-provision")

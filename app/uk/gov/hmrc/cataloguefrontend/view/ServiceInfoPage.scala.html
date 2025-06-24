@@ -128,13 +128,11 @@
             </div>
         </div>
 
-        @if(CatalogueFrontendSwitches.showTestRepoRelationships.isEnabled) {
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                @partials.tests(testJobMap)
-                </div>
+        <div class="row">
+            <div class="col-md-12 mb-3">
+            @partials.tests(testJobMap)
             </div>
-        }
+        </div>
 
         @dependenciesByEnvironmentPartial(serviceName, envDatas)
     </section>
