@@ -161,26 +161,18 @@
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
-                            @* TODO remove once date has elapsed *@
-                            @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2025-03-01T00:00:00Z"))) { isNew =>
-                                <a id="health-dropdown" class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Health
-                                    @if(isNew) { <span style="color: violet;">*<span class="visually-hidden">new pages in dropdown</span></span> }
-                                </a>
-                            }
+                            <a id="health-dropdown" class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Health
+                            </a>
                             <ul id="health-menu" class="dropdown-menu">
                                 <li><a id="link-to-platform-initiatives" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a id="link-to-bobby-rules" class="dropdown-item" href="@bobbyRoutes.BobbyExplorerController.list()">Bobby Rules</a></li>
-                                @* TODO remove once date has elapsed *@
-                                @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2025-03-01T00:00:00Z"))) { isNew =>
-                                    <li>
-                                        <a id="link-to-bobby-violations" class="dropdown-item" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations()">
-                                            Bobby Violations
-                                            @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
-                                        </a>
-                                    </li>
-                                }
+                                <li>
+                                    <a id="link-to-bobby-violations" class="dropdown-item" href="@bobbyRoutes.BobbyExplorerController.bobbyViolations()">
+                                        Bobby Violations
+                                    </a>
+                                </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a id="link-to-leak-detection-rules" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.ruleSummaries">Leak Detection - Rules</a></li>
                                 <li><a id="link-to-leak-detection-repositories" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.leakdetection.routes.LeakDetectionController.repoSummaries(includeWarnings = false, includeExemptions = false, includeViolations = true)">Leak Detection - Repositories</a></li>
@@ -193,14 +185,12 @@
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
-                            @* TODO remove once date has elapsed *@
-                            @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2025-03-01T00:00:00Z"))) { isNew =>
+                            @defining(CatalogueFrontendSwitches.showServiceProvision.isEnabled && java.time.Instant.now.isBefore(java.time.Instant.parse("2025-09-01T00:00:00Z"))) { isNew =>
                                 <a id="explore-dropdown" class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Explore
                                     @if(isNew) { <span style="color: violet;">*<span class="visually-hidden">new pages in dropdown</span></span> }
                                 </a>
                             }
-                            </a>
                             <ul id="explore-menu" class="dropdown-menu">
                                 <li><a id="link-to-dependency-explorer" class="dropdown-item" href="@dependencyRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
                                 <li><a id="link-to-jdk-explorer" class="dropdown-item" href="@appRoutes.JdkVersionController.compareAllEnvironments()">JDK Explorer</a></li>
@@ -216,21 +206,16 @@
                                         Search Commissioning State
                                     </a>
                                 </li>
-                                @* TODO remove once date has elapsed *@
-                                @defining(java.time.Instant.now.isBefore(java.time.Instant.parse("2025-03-01T00:00:00Z"))) { isNew =>
-                                    <li>
-                                        <a id="link-to-search-service-metrics" class="dropdown-item" href="@serviceMetricsRoutes.ServiceMetricsController.serviceMetrics()">
-                                            Service Metrics
-                                            @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a id="link-to-search-service-metrics" class="dropdown-item" href="@testJobRoutes.TestJobController.allTests()">
-                                            Test Results
-                                            @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
-                                        </a>
-                                    </li>
-                                }
+                                <li>
+                                    <a id="link-to-search-service-metrics" class="dropdown-item" href="@serviceMetricsRoutes.ServiceMetricsController.serviceMetrics()">
+                                        Service Metrics
+                                    </a>
+                                </li>
+                                <li>
+                                    <a id="link-to-search-service-metrics" class="dropdown-item" href="@testJobRoutes.TestJobController.allTests()">
+                                        Test Results
+                                    </a>
+                                </li>
                                 <li>
                                     <a id="link-to-search-config" class="dropdown-item" href="@serviceConfigsRoutes.ServiceConfigsController.configWarningLanding()">
                                         Config Warnings
@@ -241,6 +226,15 @@
                                         Cost Explorer
                                     </a>
                                 </li>
+                                @* TODO remove once date has elapsed *@
+                                @defining(CatalogueFrontendSwitches.showServiceProvision.isEnabled && java.time.Instant.now.isBefore(java.time.Instant.parse("2025-09-01T00:00:00Z"))) { isNew =>
+                                    <li>
+                                        <a id="link-to-search-service-provision" class="dropdown-item" href="@serviceMetricsRoutes.ServiceMetricsController.serviceProvision()">
+                                            Service Provision
+                                            @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
+                                        </a>
+                                    </li>
+                                }
                             </ul>
                         </li>
                         <li class="nav-item dropdown">

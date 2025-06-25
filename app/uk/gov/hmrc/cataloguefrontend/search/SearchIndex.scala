@@ -21,6 +21,7 @@ import play.api.Configuration
 import uk.gov.hmrc.cataloguefrontend.routes as catalogueRoutes
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.bobby.routes as bobbyRoutes
+import uk.gov.hmrc.cataloguefrontend.cost.{routes => costRoutes}
 import uk.gov.hmrc.cataloguefrontend.createrepository.routes as createRepoRoutes
 import uk.gov.hmrc.cataloguefrontend.dependency.routes as dependencyRoutes
 import uk.gov.hmrc.cataloguefrontend.deployments.routes as deployRoutes
@@ -86,6 +87,8 @@ class SearchIndex @Inject()(
     SearchTerm("page", "pr-commenter-recommendations", prcommenterRoutes.PrCommenterController.recommendations().url,                         1.0f),
     SearchTerm("page", "search config",                serviceConfigsRoutes.ServiceConfigsController.searchLanding().url,                     1.0f),
     SearchTerm("page", "config warnings",              serviceConfigsRoutes.ServiceConfigsController.configWarningLanding().url,              1.0f),
+    SearchTerm("page", "cost explorer",                costRoutes.CostController.costExplorer().url,                                          1.0f),
+    SearchTerm("page", "service provision",            serviceMetricsRoutes.ServiceMetricsController.serviceProvision().url,                  1.0f),
     SearchTerm("page", "create repository",            createRepoRoutes.CreateRepositoryController.createRepoLandingGet().url,                1.0f),
     SearchTerm("page", "deploy service",               deployRoutes.DeployServiceController.step1(None).url,                                  1.0f),
     SearchTerm("page", "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f),
@@ -96,7 +99,10 @@ class SearchIndex @Inject()(
     SearchTerm("page", "test results",                 testJobRoutes.TestJobController.allTests().url,                                        1.0f),
     SearchTerm("docs", "mdtp-handbook",                config.get[String]("docs.handbookUrl"),                                                1.0f, openInNewWindow = true),
     SearchTerm("docs", "blog posts",                   config.get[String]("confluence.allBlogsUrl"),                                          1.0f, openInNewWindow = true)
-  )
+  ).filter:
+    case x if x.name == "service provision" => uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showServiceProvision.isEnabled
+    case _                                  => true
+
 
   def updateIndexes(): Future[Unit] =
     given HeaderCarrier = HeaderCarrier()

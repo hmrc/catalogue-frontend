@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.servicemetrics
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Reads, __}
 import play.api.mvc.QueryStringBindable
-import uk.gov.hmrc.cataloguefrontend.model.Environment
+import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, FromStringEnum, Parser}, FromStringEnum.*
 
 import java.time.Instant
@@ -48,7 +48,7 @@ object LogMetric:
     )(apply)
 
 case class ServiceMetric(
-  service    : String
+  serviceName: ServiceName
 , id         : LogMetricId
 , environment: Environment
 , kibanaLink : String
@@ -57,7 +57,7 @@ case class ServiceMetric(
 
 object ServiceMetric:
   val reads: Reads[ServiceMetric] =
-    ( (__ \ "service"     ).read[String]
+    ( (__ \ "service"     ).read[ServiceName]
     ~ (__ \ "id"          ).read[LogMetricId]
     ~ (__ \ "environment" ).read[Environment]
     ~ (__ \ "kibanaLink"  ).read[String]
@@ -78,13 +78,12 @@ enum LogMetricId(
 case class ServiceProvision(
   from       : Instant
 , to         : Instant
-, service    : String
+, serviceName: ServiceName
 , environment: Environment
 , metrics    : Map[String, BigDecimal]
 ):
 
   private val costPerSlotInPence = 625
-  private val secondsInMonth     = 2628000L // 365/12*24*60*60
 
   val slotsPerInstance: Option[BigDecimal] =
     ( metrics.get("slots")
@@ -117,23 +116,31 @@ case class ServiceProvision(
       case (Some(slots), Some(requests)) => Some((costPerSlotInPence * slots / requests))
       case _                             => None
 
-  val timeInSeconds: Option[BigDecimal] =
+  private val timeInSeconds: Option[BigDecimal] =
     metrics.get("time").map: millis =>
       millis / 1000
 
-  val costPerTimeInPence: Option[BigDecimal] =
-    ( metrics.get("slots")
-    , timeInSeconds
+  val totalRequestTime: Option[BigDecimal] =
+    ( timeInSeconds
+    , metrics.get("requests")
     ) match
-      case (Some(slots), Some(timeInSeconds)) => Some((costPerSlotInPence * slots / secondsInMonth) * timeInSeconds)
-      case _                                  => None
+      case (Some(time), Some(requests)) => Some((time * requests))
+      case _                            => None
+
+  val costPerTotalRequestTimeInPence: Option[BigDecimal] =
+    ( metrics.get("slots")
+    , totalRequestTime
+    ) match
+      case (_          , Some(0       ))         => None
+      case (Some(slots), Some(totalRequestTime)) => Some((costPerSlotInPence * slots / totalRequestTime))
+      case _                                     => None
 
 
 object ServiceProvision:
   val reads: Reads[ServiceProvision] =
     ( (__ \ "from"       ).read[Instant]
     ~ (__ \ "to"         ).read[Instant]
-    ~ (__ \ "service"    ).read[String]
+    ~ (__ \ "service"    ).read[ServiceName]
     ~ (__ \ "environment").read[Environment]
     ~ (__ \ "metrics"    ).read[Map[String, BigDecimal]]
     )(ServiceProvision.apply _)

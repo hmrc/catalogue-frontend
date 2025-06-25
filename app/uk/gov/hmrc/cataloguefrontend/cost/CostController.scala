@@ -28,6 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, TeamsAndRepositoriesCo
 import uk.gov.hmrc.cataloguefrontend.cost.view.html.{CostEstimationPage, CostExplorerPage}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, DigitalService, ServiceName, TeamName}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsConnector
+import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsConnector
 import uk.gov.hmrc.cataloguefrontend.util.CsvUtils
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -39,6 +40,7 @@ import scala.concurrent.ExecutionContext
 
 class CostController @Inject() (
   serviceConfigsConnector      : ServiceConfigsConnector,
+  serviceMetricsConnector      : ServiceMetricsConnector,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
   costEstimationService        : CostEstimationService,
   costExplorerPage             : CostExplorerPage,
@@ -99,6 +101,7 @@ class CostController @Inject() (
          repositoryDetails           <- OptionT(teamsAndRepositoriesConnector.repositoryDetails(serviceName.asString))
          if repositoryDetails.repoType == RepoType.Service
          serviceCostEstimation       <- OptionT.liftF(costEstimationService.estimateServiceCost(serviceName))
+         serviceProvisions           <- OptionT.liftF(serviceMetricsConnector.serviceProvision(serviceName = Some(serviceName)))
          historicEstimatedCostCharts <- OptionT.liftF(costEstimationService.historicEstimatedCostChartsForService(serviceName))
        yield
          Ok(costEstimationPage(
@@ -106,6 +109,7 @@ class CostController @Inject() (
            repositoryDetails,
            serviceCostEstimation,
            costEstimateConfig,
+           serviceProvisions,
            historicEstimatedCostCharts
          ))
       ).getOrElse(NotFound(error_404_template()))

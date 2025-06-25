@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.{Route, RouteType}
 @import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvision
 @import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
 
 @import java.time.Instant
@@ -35,6 +36,7 @@
   jenkinsJobs                  : Seq[JenkinsJob],
   zone                         : Option[Zone],
   serviceCostEstimate          : ServiceCostEstimate,
+  serviceProvisions            : Seq[ServiceProvision],
   costEstimateConfig           : CostEstimateConfig,
   repositoryCreationDate       : Instant,
   envDatas                     : Map[SlugInfoFlag, EnvData],
@@ -90,7 +92,7 @@
                 @partials.details(repositoryDetails, zone = zone, canMarkForDecommissioning = canMarkForDecommissioning, lifecycle = lifecycle, isGuest = isGuest, hideDecommissioning = false)
             </div>
             <div class="col-md-6">
-                @partials.costEstimation(serviceCostEstimate, costEstimateConfig, serviceName, linkToCostsPage = true)
+                @partials.costEstimation(serviceName, serviceCostEstimate, costEstimateConfig, serviceProvisions, linkToCostsPage = true)
             </div>
         </div>
 
@@ -126,13 +128,11 @@
             </div>
         </div>
 
-        @if(CatalogueFrontendSwitches.showTestRepoRelationships.isEnabled) {
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                @partials.tests(testJobMap)
-                </div>
+        <div class="row">
+            <div class="col-md-12 mb-3">
+            @partials.tests(testJobMap)
             </div>
-        }
+        </div>
 
         @dependenciesByEnvironmentPartial(serviceName, envDatas)
     </section>

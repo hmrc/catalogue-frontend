@@ -16,22 +16,20 @@
 
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-@import uk.gov.hmrc.cataloguefrontend.servicemetrics.{LogMetricId, ServiceProvision}
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvision
 @import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 @import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvisionFilter
 @import views.html.helper.{FieldConstructor, select}
-@import scala.concurrent.duration.Duration
 @import java.time.YearMonth
 @import scala.math.Ordered.orderingToOrdered
 
-@this(
-  configuration: play.api.Configuration
-)
+@this()
 
 @(form           : Form[ServiceProvisionFilter]
 , results        : Seq[ServiceProvision]
 , teams          : Seq[GitHubTeam]
 , digitalServices: Seq[DigitalService]
+, telemetryLinks : TelemetryLinks
 )(implicit
   messages: Messages
 , request : RequestHeader
@@ -39,9 +37,6 @@
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
-@serviceMetricsLogDuration: Duration = @{
-  configuration.get[Duration]("service-metrics.logDuration")
-}
 
 @standard_layout("Service Provision", "service provision") {
     <h1 class="page-heading mt-4">Service Provision</h1>
@@ -59,7 +54,7 @@
     <div id="service-metrics-list">
         <form id="form" method="get">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <dl id="search_field">
                         <dt><label for="search" class="form-label">Name</label></dt>
                         <dd><input class="search form-control" id="search" type="search" name="serviceName" value='@form("serviceName").value' autofocus></dd>
@@ -107,6 +102,10 @@
                   , Symbol("class")       -> "form-select"
                   )
                 </div>
+                <div class="col-md-1 align-self-end" style="padding-bottom: 1rem">
+                    <input type="hidden" id="asCsv" name="asCsv" value="false" />
+                    <input type="button" id="export-as-csv-btn" class="btn btn-outline-secondary" value="Export as CSV"/>
+                </div>
             </div>
         </form>
 
@@ -118,24 +117,26 @@
                     <th class=""><button role="button" data-sort="col-slots" class="fw-bold sort no-border">Total Avg Slots</button></th>
                     <th class=""><button role="button" data-sort="col-cost-per-instance" class="fw-bold sort no-border">Est. Cost Per Instance (Pence)</button></th>
                     <th class=""><button role="button" data-sort="col-requests" class="fw-bold sort no-border">Requests</button></th>
-                    <th class=""><button role="button" data-sort="col-time" class="fw-bold sort no-border">Mean Request Time (Seconds)</button></th>
+                    <th class=""><button role="button" data-sort="col-total-request-time" class="fw-bold sort no-border">Total Request Time (Seconds)</button></th>
                     <th class=""><button role="button" data-sort="col-memory" class="fw-bold sort no-border">Max Used Container Memory (% of available)</button></th>
                     <th class=""><button role="button" data-sort="col-cost-per-request" class="fw-bold sort no-border">Est. Cost Per Request (Pence)</button></th>
-                    <th class=""><button role="button" data-sort="col-cost-per-time" class="fw-bold sort no-border">Est. Cost Per Request Time (Pence/Second)</button></th>
+                    <th class=""><button role="button" data-sort="col-cost-per-total-request-time" class="fw-bold sort no-border">Est. Cost Per Total Request Time (Pence/Second)</button></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody class="list">
               @for(serviceProvision <- results) {
                 <tr>
-                  <td class="col-service-name"><a aria-label="Link to page info for @{serviceProvision.service}" id="link-to-info-page-for-@{serviceProvision.service}" href="@appRoutes.CatalogueController.service(ServiceName(serviceProvision.service))">@serviceProvision.service</a></td>
+                  <td class="col-service-name"><a aria-label="Link to page info for @{serviceProvision.serviceName.asString}" id="link-to-info-page-for-@{serviceProvision.serviceName.asString}" href="@appRoutes.CatalogueController.service(serviceProvision.serviceName)">@serviceProvision.serviceName.asString</a></td>
                   <td class="font-monospace text-end col-instances"><span class="pe-4">@serviceProvision.metrics.get("instances").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
                   <td class="font-monospace text-end col-slots"><span class="pe-4">@serviceProvision.metrics.get("slots").map(_.setScale(2, BigDecimal.RoundingMode.HALF_UP))</span></td>
                   <td class="font-monospace text-end col-cost-per-instance"><span class="pe-4">@serviceProvision.costPerInstanceInPence.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</span></td>
                   <td class="font-monospace text-end col-requests"><span class="pe-4">@serviceProvision.metrics.get("requests")</span></td>
-                  <td class="font-monospace text-end col-time"><span class="pe-4">@serviceProvision.timeInSeconds.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="font-monospace text-end col-total-request-time"><span class="pe-4">@serviceProvision.totalRequestTime.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</span></td>
                   <td class="font-monospace text-end col-memory"><span class="pe-4">@serviceProvision.percentageOfMaxMemoryUsed.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</span></td>
                   <td class="font-monospace text-end col-cost-per-request"><span class="pe-4">@serviceProvision.costPerRequestInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
-                  <td class="font-monospace text-end col-cost-per-time"><span class="pe-4">@serviceProvision.costPerTimeInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td class="font-monospace text-end col-cost-per-total-request-time"><span class="pe-4">@serviceProvision.costPerTotalRequestTimeInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</span></td>
+                  <td><a href="@telemetryLinks.grafanaServiceProvision(serviceProvision.environment, serviceProvision.serviceName).url" target="_blank">Grafana</a></td>
                 </tr>
               }
           </tbody>
@@ -153,7 +154,7 @@
 
   @if(results.nonEmpty) {
     let options = {
-      valueNames: ['col-service-name', 'col-instances', 'col-slots', 'col-requests', 'col-time', 'col-memory', 'col-cost-per-instance', 'col-cost-per-request', 'col-cost-per-time'],
+      valueNames: ['col-service-name', 'col-instances', 'col-slots', 'col-requests', 'col-total-request-time', 'col-memory', 'col-cost-per-instance', 'col-cost-per-request', 'col-cost-per-total-request-time'],
       searchColumns: ['col-service-name'],
       searchDelay: 350
     };
@@ -166,6 +167,14 @@
     searchBox.setSelectionRange(length, length);
     // re-search the list upon page load.
     pageListJs.search(searchBox.value);
+
+    document
+      .getElementById("export-as-csv-btn")
+      .addEventListener("click", () => {
+        document.getElementById('asCsv').value = true;
+        document.getElementById('form').submit();
+        document.getElementById('asCsv').value = false;   // fixes browser back button issue
+      });
   }
 </script>
 

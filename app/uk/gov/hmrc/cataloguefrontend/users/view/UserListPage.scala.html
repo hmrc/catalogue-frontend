@@ -60,7 +60,7 @@
             </dd>
           </dl>
         </div>
-        @if(canCreateUsers && CatalogueFrontendSwitches.showIncludeDeletedUsers.isEnabled) {
+        @if(canCreateUsers) {
           <div class="col-md-2 col-form-label" style="margin-top: 35px;">
             <div class="form-check form-switch">
                 <input aria-label="Include deleted users" class="form-check-input" type="checkbox" role="switch" id="include-deleted">
@@ -68,14 +68,12 @@
             </div>
           </div>
         }
-        @if(CatalogueFrontendSwitches.showIncludeNonHumanUsers.isEnabled) {
-          <div class="col-md-2 col-form-label" style="margin-top: 35px;">
-            <div class="form-check form-switch">
-              <input aria-label="Include non human users" class="form-check-input" type="checkbox" role="switch" id="include-non-human">
-              <label class="form-check-label" for="include-non-human">Include Non Human Users</label>
-            </div>
+        <div class="col-md-2 col-form-label" style="margin-top: 35px;">
+          <div class="form-check form-switch">
+            <input aria-label="Include non human users" class="form-check-input" type="checkbox" role="switch" id="include-non-human">
+            <label class="form-check-label" for="include-non-human">Include Non Human Users</label>
           </div>
-        }
+        </div>
       </div>
 
     <table class="table table-striped sticky-header" id="users-table">

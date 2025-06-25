@@ -121,13 +121,13 @@
               @for(serviceMetric <- results) {
                 <tr>
                   <td class="col-service-name">
-                      <a aria-label="Link to page info for @{serviceMetric.service}" id="link-to-info-page-for-@{serviceMetric.service}" href="@appRoutes.CatalogueController.service(ServiceName(serviceMetric.service))">@serviceMetric.service</a>
+                      <a aria-label="Link to page info for @{serviceMetric.serviceName.asString}" id="link-to-info-page-for-@{serviceMetric.serviceName.asString}" href="@appRoutes.CatalogueController.service(serviceMetric.serviceName)">@serviceMetric.serviceName.asString</a>
                   </td>
                   <td class="col-metric-type">
                       @serviceMetric.id.displayString
                   </td>
                   <td class="text-center">
-                      <a class="col-occurrences" aria-label="Link to kibana logs for @{serviceMetric.service}" id="link-to-kibana-logs-for-@{serviceMetric.service}" href="@serviceMetric.kibanaLink" target="_blank" rel="noreferrer noopener">@serviceMetric.logCount</a>
+                      <a class="col-occurrences" aria-label="Link to kibana logs for @{serviceMetric.serviceName.asString}" id="link-to-kibana-logs-for-@{serviceMetric.serviceName.asString}" href="@serviceMetric.kibanaLink" target="_blank" rel="noreferrer noopener">@serviceMetric.logCount</a>
                   </td>
                 </tr>
               }

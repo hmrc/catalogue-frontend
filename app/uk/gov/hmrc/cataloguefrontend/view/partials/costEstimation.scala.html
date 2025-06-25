@@ -15,39 +15,82 @@
  *@
 
 @import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate, routes => costRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvision
 @import uk.gov.hmrc.cataloguefrontend.util.CurrencyFormatter.formatGbp
 
-@(serviceCostEstimate: ServiceCostEstimate,
+@(serviceName        : ServiceName,
+  serviceCostEstimate: ServiceCostEstimate,
   costEstimateConfig : CostEstimateConfig,
-  serviceName        : ServiceName,
-  linkToCostsPage    : Boolean
+  serviceProvisions  : Seq[ServiceProvision],
+  linkToCostsPage    : Boolean,
 )(implicit
   request            : RequestHeader
 )
 
     <div id="cost-estimation" class="card">
         <div class="card-header"><div class="h4 mb-0">Estimated Cost</div></div>
-        <div class="card-body">
-            <p>
-                <b id="service-costs">@formatGbp(serviceCostEstimate.totalYearlyCostGbp(costEstimateConfig))</b> per year.
-                @if(linkToCostsPage) {
-                    <a id="link-to-service-costs" href="@costRoutes.CostController.costEstimation(serviceName)">
-                        See costs over time.
-                    </a>
-                }
-            </p>
+        <div @if(CatalogueFrontendSwitches.showServiceProvision.isEnabled && linkToCostsPage){ class="content-grow content-grow-gradient" style="height:320px;"}>
+            <div class="card-body content-grow-wrapper">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p>
+                            <strong id="service-costs">@formatGbp(serviceCostEstimate.totalYearlyCostGbp(costEstimateConfig))</strong> per year.
+                            <br/>
+                            @if(linkToCostsPage) {
+                                <a id="link-to-service-costs" href="@costRoutes.CostController.costEstimation(serviceName)">See costs over time.</a>
+                            }
+                        </p>
 
-            <p>This is based on a usage of @serviceCostEstimate.totalSlots.asInt slots across all environments, where
-               each slot is estimated to cost
-               <em data-bs-toggle="tooltip"
-                   data-bs-placement="bottom"
-                   data-bs-title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
-                                  @costEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
-                                  services across all environments" style="border-bottom: dotted 1px">
-                   @formatGbp(costEstimateConfig.slotCostPerYear) per year
-               </em>.</p>
-            <div id="chart"></div>
+                        <p style="margin-bottom: 0px;">
+                            Based on a usage of @serviceCostEstimate.totalSlots.asInt slots for all environments, where each slot is estimated to cost
+                            <em data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="We arrive at this figure, very roughly, by dividing MDTP's yearly AWS spend of
+                                                @costEstimateConfig.totalAwsCostPerYear by the total number of slots used by all
+                                                services across all environments" style="border-bottom: dotted 1px">
+                                @formatGbp(costEstimateConfig.slotCostPerYear) per year
+                            </em>.
+                        </p>
+                    </div>
+                    <div class="col-md-8">
+                        <div id="chart"></div>
+                    </div>
+                </div>
+
+                @if(CatalogueFrontendSwitches.showServiceProvision.isEnabled && serviceProvisions.nonEmpty) {
+                    <h4>Looking at last month:</h4>
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr class="fw-bold">
+                                <th>Environment</th>
+                                <th class="text-end">Requests</th>
+                                <th>Total Request Time (Seconds)</th>
+                                <th>Max Used Memory (%)</th>
+                                <th>Cost/Request (Pence)</th>
+                                <th>Cost/Total Request Time (Pence/Second)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="list">
+                            @for(serviceProvision <- serviceProvisions.filter(_.metrics.nonEmpty)) {
+                                <tr>
+                                    <td class="col-environment">@serviceProvision.environment.displayString</td>
+                                    <td class="font-monospace text-end">@serviceProvision.metrics.get("requests")</td>
+                                    <td class="font-monospace text-end">@serviceProvision.totalRequestTime.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</td>
+                                    <td class="font-monospace text-end">@serviceProvision.percentageOfMaxMemoryUsed.map(_.setScale(0, BigDecimal.RoundingMode.HALF_UP))</td>
+                                    <td class="font-monospace text-end">@serviceProvision.costPerRequestInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</td>
+                                    <td class="font-monospace text-end">@serviceProvision.costPerTotalRequestTimeInPence.map(_.setScale(4, BigDecimal.RoundingMode.HALF_UP))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
         </div>
+        @if(CatalogueFrontendSwitches.showServiceProvision.isEnabled && linkToCostsPage) {
+            <footer class="text-center">
+                <a id="see-all-expand-link" href="#" title="See all" class="content-grow-expand-link glyphicon glyphicon-chevron-down"></a>
+            </footer>
+        }
     </div>
 
 <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>

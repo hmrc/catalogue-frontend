@@ -70,7 +70,7 @@
       <div class="col-md-6">
         @partials.repo_owning_teams(repository)
 
-        @if(servicesUnderTest.nonEmpty && CatalogueFrontendSwitches.showTestRepoRelationships.isEnabled) {
+        @if(servicesUnderTest.nonEmpty) {
           <div class="card mt-3">
               <div class="card-header">
                   <div class="h4 mb-0">Services Under Test</div>
