@@ -20,14 +20,9 @@
 @import uk.gov.hmrc.cataloguefrontend.teams.{RepoAndDependencies, routes => teamRoutes}
 @import uk.gov.hmrc.cataloguefrontend.users.{UmpTeam, SlackInfo, routes => userRoutes}
 @import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionRepositorySummary
-@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiative
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterComment
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.CachedServiceCheck
-@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetric
-@import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
+@import uk.gov.hmrc.cataloguefrontend.healthmetrics.LatestHealthMetrics
+@import uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetric
 @import java.net.URL
 @import scala.concurrent.duration.Duration
 
@@ -37,28 +32,17 @@
 )
 
 @(
-  teamName       : TeamName
-, umpTeam        : UmpTeam
-, teamDetailsForm: Form[EditTeamDetails]
-, umpMyTeamsUrl  : String
-, results        : ( Option[String]
-                  , Seq[GitRepository]
-                  , (Int, URL) // Open PRs raised by the team
-                  , (Int, URL) // Open PRs for repos owned by the team
-                  , Seq[LeakDetectionRepositorySummary]
-                  , Seq[BobbyReport] // Production
-                  , Seq[BobbyReport] // Latest
-                  , Seq[ShutterState]
-                  , Seq[PlatformInitiative]
-                  , Seq[TotalVulnerabilityCount]
-                  , Seq[TotalVulnerabilityCount]
-                  , Seq[CachedServiceCheck]
-                  , Seq[ServiceMetric]
-                  , Seq[WhatsRunningWhere]
-                  , Seq[JenkinsJob]
-                  )
-, canEditTeam    : Boolean
-, canDeleteTeams : Boolean
+  teamName                       : TeamName
+, umpTeam                        : UmpTeam
+, teamDetailsForm                : Form[EditTeamDetails]
+, umpMyTeamsUrl                  : String
+, gitHubUrl                      : Option[String]
+, repos                          : Seq[GitRepository]
+, healthMetrics                  : LatestHealthMetrics
+, openPRsRaisedByMembersOfTeamUrl: URL
+, openPRsForReposOwnedByTeamUrl  : URL
+, canEditTeam                    : Boolean
+, canDeleteTeams                 : Boolean
 )(implicit
   request: RequestHeader
 )
@@ -90,8 +74,6 @@
     } else {
         <h1 class="page-heading mt-4">@teamName.asString</h1>
     }
-
-  @defining(results) { case (gitHubUrl, repos, openPrsRaisedByTeamMembers, openPrsForRepos, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, productionVulnerabilities, latestVulnerabilities, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs) =>
 
     <section class="section-wrapper">
       <div class="row mb-3">
@@ -231,7 +213,6 @@
                 </footer>
               }
             </div>
-          }
         </div>
       </div>
 
@@ -258,10 +239,21 @@
             </div>
           </div>
           <div class="col md-3">
-            @shutteringPartial(teamName = Some(teamName), digitalService = None, shutterStates)
+            @shutteringPartial(
+              teamName       = Some(teamName)
+            , digitalService = None
+            , shutterStates  = healthMetrics
+            )
           </div>
           <div class="col md-3">
-            @healthPartial(teamName = Some(teamName), digitalService = None, leaks, productionBobbyReports, latestBobbyReports, platformInitiatives, productionVulnerabilities, latestVulnerabilities, Some(openPrsRaisedByTeamMembers), Some(openPrsForRepos), commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs, serviceMetricsLogDuration)
+            @healthPartial(
+              healthMetrics                   = healthMetrics
+            , openPRsRaisedByMembersOfTeamUrl = Some(openPRsRaisedByMembersOfTeamUrl)
+            , openPRsForOwnedRepos            = Some(openPRsForReposOwnedByTeamUrl)
+            , teamName                        = Some(teamName)
+            , digitalService                  = None
+            , serviceMetricsLogDuration       = serviceMetricsLogDuration
+            )
           </div>
           <div class="col md-3">
             @explorePartial(teamName = Some(teamName), digitalService = None)
@@ -463,8 +455,8 @@
   </div>
 }
 
-    <!-- Modal -->
-@defining(results) { case (_, repos, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+<!-- Modal -->
+@defining(repos) { repos =>
   <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
       <div class="modal-dialog">
           <div class="modal-content">

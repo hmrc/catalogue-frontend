@@ -25,7 +25,6 @@
 
 @this()
 
-
 @(teams   : Seq[TeamName]
 , result  : Seq[HealthMetricTimelineCount]
 , form    : Form[?]
@@ -36,7 +35,7 @@
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
 
-@standard_layout("Health Metrics Timeline", active = "health") {
+@standard_layout("Health Metrics Timeline") {
     <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script @CSPNonce.attr type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});
@@ -136,7 +135,7 @@
             <div class="col-md-6">
                 @select(
                     field                 =  form("healthMetric"),
-                    options               =  HealthMetric.values.filterNot(_ == HealthMetric.OpenPRForReposOwnedByDigitalService).sortBy(_.asString).map(hm => hm.asString -> hm.displayString),
+                    options               =  HealthMetric.values.toIndexedSeq.sortBy(_.asString).map(hm => hm.asString -> hm.displayString),
                     Symbol("_label")      -> "Health metric:",
                     Symbol("_labelClass") -> "form-label",
                     Symbol("id")          -> "health-metric-filter",
@@ -166,7 +165,6 @@
         </div>
     </form>
 
-
     @if(result.isEmpty) {
         <p>No data was returned based on the provided filters</p>
     } else if(result.size == 1) {
@@ -175,7 +173,6 @@
     } else {
         <div id="timeline-chart" style="height: 300px"></div>
     }
-
 }
 
 <script @CSPNonce.attr>

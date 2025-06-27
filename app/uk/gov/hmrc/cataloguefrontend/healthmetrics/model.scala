@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.healthmetrics
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Reads, __}
+import play.api.libs.json.{KeyReads, Reads, __}
 
 import java.time.LocalDate
 
@@ -31,3 +31,10 @@ object HealthMetricTimelineCount:
     ( (__ \ "date" ).read[LocalDate]
     ~ (__ \ "count").read[Int]
     )(HealthMetricTimelineCount.apply)
+
+
+case class LatestHealthMetrics(metrics: Map[HealthMetric, Int])
+
+object LatestHealthMetrics:
+  val reads: Reads[LatestHealthMetrics] =
+     (__ \ "metrics").read[Map[HealthMetric, Int]].map(LatestHealthMetrics.apply)

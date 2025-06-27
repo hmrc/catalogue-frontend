@@ -21,7 +21,6 @@ import play.api.data.{Form, Forms}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
-import uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetric.OpenPRForReposOwnedByTeam
 import uk.gov.hmrc.cataloguefrontend.healthmetrics.view.html.HealthMetricsTimelinePage
 import uk.gov.hmrc.cataloguefrontend.model.TeamName
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
@@ -45,7 +44,7 @@ class HealthMetricsController @Inject() (
 
   def healthMetricsTimeline(
     teamName    : TeamName
-  , healthMetric: HealthMetric = HealthMetric.OpenPRForReposOwnedByTeam
+  , healthMetric: HealthMetric = HealthMetric.OpenPRForOwnedRepos
   , from        : LocalDate
   , to          : LocalDate
   ): Action[AnyContent] =
@@ -89,7 +88,7 @@ object HealthMetricsFilter:
     Form(
       Forms.mapping(
         "team"         -> Forms.of[TeamName]
-      , "healthMetric" -> Forms.default(Forms.of[HealthMetric], HealthMetric.OpenPRForReposOwnedByTeam)
+      , "healthMetric" -> Forms.default(Forms.of[HealthMetric], HealthMetric.OpenPRForOwnedRepos)
       , "from"         -> Forms.default(Forms.localDate(dateFormat), defaultFromTime())
       , "to"           -> Forms.default(Forms.localDate(dateFormat), defaultToTime())
       )(HealthMetricsFilter.apply)(f => Some(Tuple.fromProductTyped(f)))

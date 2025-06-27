@@ -19,7 +19,6 @@ package uk.gov.hmrc.cataloguefrontend.healthmetrics
 
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
-import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -51,3 +50,23 @@ class HealthMetricsConnector @Inject() (
     httpClientV2
       .get(url"$url/health-metrics/timeline?team=${team.asString}&healthMetric=${healthMetric.asString}&from=$from&to=$to")
       .execute[Seq[HealthMetricTimelineCount]]
+
+  def latestTeamHealthMetrics(
+    team: TeamName
+  )(using
+    HeaderCarrier
+  ): Future[LatestHealthMetrics] =
+    given Reads[LatestHealthMetrics] = LatestHealthMetrics.reads
+    httpClientV2
+      .get(url"$url/health-metrics/teams/${team.asString}/health-metrics/latest")
+      .execute[LatestHealthMetrics]
+  
+  def latestDigitalServiceHealthMetrics(
+    digitalService: DigitalService
+  )(using
+    HeaderCarrier
+  ): Future[LatestHealthMetrics] =
+    given Reads[LatestHealthMetrics] = LatestHealthMetrics.reads
+    httpClientV2
+      .get(url"$url/health-metrics/digital-services/${digitalService.asString}/health-metrics/latest")
+      .execute[LatestHealthMetrics]

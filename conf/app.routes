@@ -167,4 +167,4 @@ GET        /service-metrics                              uk.gov.hmrc.cataloguefr
 
 GET        /service-provision                            uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsController.serviceProvision(environment: Environment ?= Environment.Production, team: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 
-GET        /health-metrics/timeline                      uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetricsController.healthMetricsTimeline(team: TeamName, healthMetric: HealthMetric = HealthMetric.OpenPRForReposOwnedByTeam, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
+GET        /health-metrics/timeline                      uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetricsController.healthMetricsTimeline(team: TeamName, healthMetric: HealthMetric = HealthMetric.OpenPRForOwnedRepos, from: java.time.LocalDate ?= java.time.LocalDate.now().minusMonths(6), to: java.time.LocalDate ?= java.time.LocalDate.now())
