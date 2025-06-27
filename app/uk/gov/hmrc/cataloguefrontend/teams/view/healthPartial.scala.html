@@ -14,36 +14,27 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.connector.JenkinsJob
-@import uk.gov.hmrc.cataloguefrontend.connector.model.BobbyReport
 @import uk.gov.hmrc.cataloguefrontend.teams.{routes => teamRoutes}
 @import uk.gov.hmrc.cataloguefrontend.bobby.{routes => bobbyRoutes}
-@import uk.gov.hmrc.cataloguefrontend.leakdetection.{LeakDetectionRepositorySummary, routes => leakDetectionRoutes}
-@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{PlatformInitiative, routes => platforminitiativesRoutes}
-@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{CachedServiceCheck, routes => serviceCommissioningStatusRoutes}
-@import uk.gov.hmrc.cataloguefrontend.servicemetrics.{ServiceMetric, LogMetricId, routes => serviceMetricsRoutes}
+@import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => leakDetectionRoutes}
+@import uk.gov.hmrc.cataloguefrontend.platforminitiatives.{routes => platforminitiativesRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{routes => serviceCommissioningStatusRoutes}
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.{LogMetricId, routes => serviceMetricsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.test.{routes => testJobRoutes}
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, TotalVulnerabilityCount, routes => vulnerabilityRoutes}
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhere, routes => whatsRunningWhereRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, routes => vulnerabilityRoutes}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{routes => whatsRunningWhereRoutes}
+@import uk.gov.hmrc.cataloguefrontend.healthmetrics.LatestHealthMetrics
+@import uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetric
 @import java.net.URL
 
 @(
-  teamName                  : Option[TeamName]
-, digitalService            : Option[DigitalService]
-, leaks                     : Seq[LeakDetectionRepositorySummary]
-, productionBobbyReports    : Seq[BobbyReport]
-, latestBobbyReports        : Seq[BobbyReport]
-, platformInitiatives       : Seq[PlatformInitiative]
-, productionVulnerabilities : Seq[TotalVulnerabilityCount]
-, latestVulnerabilities     : Seq[TotalVulnerabilityCount]
-, openPrsRaisedByTeamMembers: Option[(Int, URL)]
-, openPrsForRepos           : Option[(Int, URL)]
-, commissioningChecks       : Seq[CachedServiceCheck]
-, serviceMetrics            : Seq[ServiceMetric]
-, whatsRunningWhere         : Seq[WhatsRunningWhere]
-, testJobs                  : Seq[JenkinsJob]
-, serviceMetricsLogDuration : scala.concurrent.duration.Duration
-, now                       : java.time.LocalDate = java.time.LocalDate.now()
+  teamName                       : Option[TeamName]
+, digitalService                 : Option[DigitalService]
+, healthMetrics                  : LatestHealthMetrics
+, openPRsRaisedByMembersOfTeamUrl: Option[URL] = None
+, openPRsForOwnedRepos           : Option[URL] = None // Either Team or Digital Service
+, serviceMetricsLogDuration      : scala.concurrent.duration.Duration
+, now                            : java.time.LocalDate = java.time.LocalDate.now()
 )(implicit
   request: RequestHeader
 )
@@ -55,141 +46,139 @@
   <div class="card-body">
     <table style="width:100%;border-collapse:separate;border-spacing:2px 0px;">
       <tbody>
-        <tr>
-          @defining(leaks.map(_.unresolvedCount).sum) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
-          }
-          <td style="width: 100%;"><a href="@leakDetectionRoutes.LeakDetectionController.repoSummaries(team = teamName, digitalService = digitalService, includeWarnings = false, includeExemptions = false, includeViolations = true)">Leaks</a></td>
-        </tr>
-        <tr>
-          @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
-          }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(true))">Bobby Errors - Production</a></td>
-        </tr>
-        <tr>
-          @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && now.isAfter(v.from))).size) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
-          }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest), isActive = Some(true))">Bobby Errors - Latest</a></td>
-        </tr>
-        <tr>
-          @defining(productionVulnerabilities.map(_.actionRequired).sum) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
-          }
-          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)))"> Service Vulnerabilities - Production</a></td>
-        </tr>
-        <tr>
-          @defining(latestVulnerabilities.map(_.actionRequired).sum) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
-          }
-          <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest))"> Service Vulnerabilities - Latest</a></td>
-        </tr>
-        <tr>
-          <td colspan="2"><hr/></td>
-        </tr>
-        <tr>
-          @defining(productionBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
-          }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(false))">Bobby Warnings - Production</a></td>
-        </tr>
-        <tr>
-          @defining(latestBobbyReports.flatMap(_.violations.filter(v => !v.exempt && (now.isBefore(v.from) || now.isEqual(v.from)))).size) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
-          }
-          <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest), isActive = Some(false))">Bobby Warnings - Latest</a></td>
-        </tr>
-        <tr>
-          @defining(commissioningChecks.filter(_.warnings).size) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
-          }
-          <td><a href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName, digitalService = digitalService, warningFilter = Some(true))">Service Commissioning State Warnings</a></td>
-        </tr>
-        <tr>
-            @defining(
-              whatsRunningWhere.map { wrw =>
-                ( wrw.versions.maxBy(_.version)
-                , wrw.versions.find(_.environment == Environment.Production)
-                ) match {
-                  case (v1, Some(v2))
-                    if v2.version.patch > 0
-                    || v2.version.major <  v1.version.major
-                    || v2.version.minor <= v1.version.minor - 1
-                         => { 1 }
-                  case _ => { 0 }
-                }
-              }
-          ) { counts =>
-            <td><span class="badge rounded-pill @if(counts.sum == 0) { text-bg-secondary } else { text-bg-warning }">@counts.sum</span></td>
-          }
-          <td><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases(teamName = teamName, digitalService = digitalService)">Outdated or Hotfixed Production Deployments</a></td>
-        </tr>
-        <tr>
-          @defining(platformInitiatives.filter(_.progress.percent < 100).size) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-info }">@count</span></td>
-          }
-          <td><a href="@platforminitiativesRoutes.PlatformInitiativesController.platformInitiatives(team = teamName, digitalService = digitalService)">Platform Initiatives</a></td>
-        </tr>
-        @openPrsRaisedByTeamMembers.map { (count, link) =>
-          @if(count > 0) {
-            <tr>
-              <td><span class="badge rounded-pill text-bg-info">@count</span></td>
-              <td>
-                <a href=@link target="_blank" rel="noreferrer noopener">
-                  Open
-                  <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
-                  PRs raised by team members<span class="glyphicon glyphicon-new-window"/>
-                </a>
-              </td>
-            </tr>
-          }
-        }
-        @openPrsForRepos.map { (count, link) =>
-          @if(count > 0) {
-            <tr>
-              <td><span class="badge rounded-pill text-bg-info">@count</span></td>
-              <td>
-                <a href=@link target="_blank" rel="noreferrer noopener">
-                  Open
-                  <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
-                  PRs for owned repositories<span class="glyphicon glyphicon-new-window"/>
-                </a>
-              </td>
-            </tr>
-          }
-        }
-        <tr>
-          <td colspan="2"><hr/></td>
-        </tr>
-        <tr>
-          @defining(testJobs.flatMap(_.latestBuild).filter(_.result == Some("FAILURE")).size) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
-          }
-          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName, digitalService = digitalService)">Test Failures</a></td>
-        </tr>
-        <tr>
-          @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numAccessibilityViolations).sum) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
-          }
-          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName, digitalService = digitalService)">Accessibility Assessment Violations</a></td>
-        </tr>
-        <tr>
-          @defining(testJobs.flatMap(_.latestBuild).flatMap(_.testJobResults).flatMap(_.numSecurityAlerts).sum) { count =>
-            <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
-          }
-          <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName, digitalService = digitalService)">Security Assessment Alerts</a></td>
-        </tr>
-        <tr>
-          <td colspan="2"><div class="separator">Last @serviceMetricsLogDuration.toDays Days</div></td>
-        </tr>
-        @for(logMetricId <- LogMetricId.values) {
-          <tr>
-            @defining(serviceMetrics.collect { case x if x.id == logMetricId => x.logCount }.sum) { count =>
-              <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+        @for((metric, count) <- healthMetrics.metrics.toSeq.sorted) {
+          @metric match {
+            case HealthMetric.LeakDetectionSummaries => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                <td style="width: 100%;"><a href="@leakDetectionRoutes.LeakDetectionController.repoSummaries(team = teamName, digitalService = digitalService, includeWarnings = false, includeExemptions = false, includeViolations = true)">@metric.displayString</a></td>
+              </tr>
             }
-            <td><a href="@serviceMetricsRoutes.ServiceMetricsController.serviceMetrics(environment = Environment.Production, team = teamName, digitalService = digitalService, metricType = Some(logMetricId))">@logMetricId.displayString</a></td>
-          </tr>
+            case HealthMetric.ProductionBobbyErrors => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(true))">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.LatestBobbyErrors => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest), isActive = Some(true))">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.ProductionActionRequiredVulnerabilities => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)))">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.LatestActionRequiredVulnerabilities => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest))"> @metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.ProductionBobbyWarnings => {
+              <tr>
+                <td colspan="2"><hr/></td>
+              </tr>
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+                <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)), isActive = Some(false))">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.LatestBobbyWarnings => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+                <td><a href="@bobbyRoutes.BobbyExplorerController.bobbyViolations(teamName = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest), isActive = Some(false))">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.ServiceCommissioningStateWarnings => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+                <td><a href="@serviceCommissioningStatusRoutes.ServiceCommissioningStatusController.searchResults(team = teamName, digitalService = digitalService, warningFilter = Some(true))">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.OutdatedOrHotFixedProductionDeployments => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+                <td><a href="@whatsRunningWhereRoutes.WhatsRunningWhereController.releases(teamName = teamName, digitalService = digitalService)">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.PlatformInitiatives => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-info }">@count</span></td>
+                <td><a href="@platforminitiativesRoutes.PlatformInitiativesController.platformInitiatives(team = teamName, digitalService = digitalService)">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.OpenPRRaisedByMembersOfTeam => {
+              @if(count > 0) {
+                <td><span class="badge rounded-pill text-bg-info">@count</span></td>
+                <td>
+                  <a href=@openPRsRaisedByMembersOfTeamUrl target="_blank" rel="noreferrer noopener">
+                    <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
+                    @metric.displayString<span class="glyphicon glyphicon-new-window"/>
+                  </a>
+                </td>
+              }
+            }
+            case HealthMetric.OpenPRForOwnedRepos => {
+              @if(count > 0) {
+                <tr>
+                  <td><span class="badge rounded-pill text-bg-info">@count</span></td>
+                  <td>
+                    <a href=@openPRsForOwnedRepos target="_blank" rel="noreferrer noopener">
+                      <img class="list-item" src="@routes.Assets.versioned("githubicon-green.svg")" alt="Link to Github Open PRs" />
+                      @metric.displayString<span class="glyphicon glyphicon-new-window"/>
+                    </a>
+                  </td>
+                </tr>
+              }
+            }
+            case HealthMetric.TestFailures => {
+              <tr>
+                <td colspan="2"><hr/></td>
+              </tr>
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName, digitalService = digitalService)">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.AccessibilityAssessmentViolations => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName, digitalService = digitalService)">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.SecurityAssessmentAlerts => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                <td><a href="@testJobRoutes.TestJobController.allTests(teamName = teamName, digitalService = digitalService)">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.ContainerKills => {
+              <tr>
+                <td colspan="2"><div class="separator">Last @serviceMetricsLogDuration.toDays Days</div></td>
+              </tr>
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+                <td><a href="@serviceMetricsRoutes.ServiceMetricsController.serviceMetrics(environment = Environment.Production, team = teamName, digitalService = digitalService, metricType = Some(LogMetricId.ContainerKills))">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.NonIndexedQueries => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+                <td><a href="@serviceMetricsRoutes.ServiceMetricsController.serviceMetrics(environment = Environment.Production, team = teamName, digitalService = digitalService, metricType = Some(LogMetricId.NonIndexedQuery))">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.SlowRunningQueries => {
+              <tr>
+                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-warning }">@count</span></td>
+                <td><a href="@serviceMetricsRoutes.ServiceMetricsController.serviceMetrics(environment = Environment.Production, team = teamName, digitalService = digitalService, metricType = Some(LogMetricId.SlowRunningQuery))">@metric.displayString</a></td>
+              </tr>
+            }
+            case HealthMetric.ApiShutterStates | HealthMetric.FrontendShutterStates => {}
+          }
         }
       </tbody>
     </table>

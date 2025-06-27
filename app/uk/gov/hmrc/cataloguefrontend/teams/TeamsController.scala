@@ -27,16 +27,10 @@ import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
-import uk.gov.hmrc.cataloguefrontend.leakdetection.LeakDetectionService
-import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, EditTeamDetails, Environment, ServiceName, SlugInfoFlag, TeamName, UserName}
-import uk.gov.hmrc.cataloguefrontend.platforminitiatives.PlatformInitiativesConnector
-import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.ServiceCommissioningStatusConnector
-import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsConnector
-import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterService, ShutterType}
+import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, EditTeamDetails, Environment, SlugInfoFlag, TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.teams.view.html.{DigitalServicePage, TeamInfoPage, TeamsListPage}
-import uk.gov.hmrc.cataloguefrontend.users.{ManageTeamMembersRequest,UmpTeam}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
-import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ReleasesConnector
+import uk.gov.hmrc.cataloguefrontend.users.{ManageTeamMembersRequest, UmpTeam}
+import uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetricsConnector
 import uk.gov.hmrc.cataloguefrontend.view.html.{OutOfDateTeamDependenciesPage, error_404_template}
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.internalauth.client.*
@@ -50,14 +44,8 @@ import scala.util.control.NonFatal
 class TeamsController @Inject()(
   userManagementConnector            : UserManagementConnector
 , teamsAndRepositoriesConnector      : TeamsAndRepositoriesConnector
-, platformInitiativesConnector       : PlatformInitiativesConnector
 , serviceDependenciesConnector       : ServiceDependenciesConnector
-, serviceCommissioningStatusConnector: ServiceCommissioningStatusConnector
-, serviceMetricsConnector            : ServiceMetricsConnector
-, vulnerabilitiesConnector           : VulnerabilitiesConnector
-, releasesConnector                  : ReleasesConnector
-, leakDetectionService               : LeakDetectionService
-, shutterService                     : ShutterService
+, healthMetricsConnector             : HealthMetricsConnector
 , umpConfig                          : UserManagementPortalConfig
 , teamInfoPage                       : TeamInfoPage
 , digitalServicePage                 : DigitalServicePage
@@ -98,27 +86,28 @@ class TeamsController @Inject()(
                    ( teamsAndRepositoriesConnector.allTeams(Some(teamName)).map(_.headOption.map(_.githubUrl))
                    , teamsAndRepositoriesConnector.allRepositories(team = Some(teamName), archived = Some(false))
                    , teamsAndRepositoriesConnector.openPullRequestsRaisedByMembersOfTeam(teamName).map: openPrs =>
-                       val githubUrl = s"https://github.com/search?q=org:hmrc+is:pr+is:open+archived:false+${openPrs.map(_.author).distinct.map { a => s"author:$a" }.mkString("+")}&type=pullrequests"
-                       (openPrs.size, url"$githubUrl")
+                       val openPRsRaisedByMembersOfTeamUrl = s"https://github.com/search?q=org:hmrc+is:pr+is:open+archived:false+${openPrs.map(_.author).distinct.map { a => s"author:$a" }.mkString("+")}&type=pullrequests"
+                       url"$openPRsRaisedByMembersOfTeamUrl"
                    , teamsAndRepositoriesConnector.openPullRequestsForReposOwnedByTeam(teamName).map: openPrs =>
-                       val githubUrl = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open&type=pullrequests"
-                       (openPrs.size, url"$githubUrl")
-                   , leakDetectionService.repoSummaries(team = Some(teamName), includeWarnings = false, includeExemptions = false, includeViolations = true, includeNonIssues = false)
-                   , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.ForEnvironment(Environment.Production))
-                   , serviceDependenciesConnector.bobbyReports(teamName = Some(teamName), flag = SlugInfoFlag.Latest)
-                   , ( shutterService.getShutterStates(ShutterType.Frontend, Environment.Production, teamName = Some(teamName))
-                     , shutterService.getShutterStates(ShutterType.Api     , Environment.Production, teamName = Some(teamName))
-                     ).tupled.map(x => x._1 ++ x._2)
-                   , platformInitiativesConnector.getInitiatives(teamName = Some(teamName))
-                   , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.ForEnvironment(Environment.Production), team = Some(teamName))
-                   , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest                                , team = Some(teamName))
-                   , serviceCommissioningStatusConnector.cachedCommissioningStatus(teamName = Some(teamName))
-                   , serviceMetricsConnector.metrics(Some(Environment.Production), teamName = Some(teamName))
-                   , releasesConnector.releases(teamName = Some(teamName))
-                   , teamsAndRepositoriesConnector.findTestJobs(teamName = Some(teamName))
+                       val openPRsForReposOwnedByTeamUrl   = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open&type=pullrequests"
+                       url"$openPRsForReposOwnedByTeamUrl"
+                   , healthMetricsConnector.latestTeamHealthMetrics(teamName)
                    ).tupled
      yield
-       resultType(teamInfoPage(teamName, umpTeam, teamDetailsForm, umpMyTeamsUrl = umpConfig.umpMyTeamsPageUrl(teamName), results, canEditTeam(editR, teamName), canCreateAndDeleteTeams(deleteR)))
+       resultType(
+         teamInfoPage(
+           teamName                        = teamName
+         , umpTeam                         = umpTeam
+         , teamDetailsForm                 = teamDetailsForm
+         , umpMyTeamsUrl                   = umpConfig.umpMyTeamsPageUrl(teamName)
+         , gitHubUrl                       = results._1
+         , repos                           = results._2
+         , openPRsRaisedByMembersOfTeamUrl = results._3
+         , openPRsForReposOwnedByTeamUrl   = results._4
+         , healthMetrics                   = results._5
+         , canEditTeam                     = canEditTeam(editR, teamName)
+         , canDeleteTeams                  = canCreateAndDeleteTeams(deleteR))
+         )
     ).merge
 
   def team(teamName: TeamName): Action[AnyContent] =
@@ -132,24 +121,17 @@ class TeamsController @Inject()(
       for
         results <- ( teamsAndRepositoriesConnector.allRepositories(digitalService = Some(digitalService), archived = Some(false))
                    , teamsAndRepositoriesConnector.openPullRequestsForReposOwnedByDigitalService(digitalService).map: openPrs =>
-                       val githubUrl = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open&type=pullrequests"
-                       (openPrs.size, url"$githubUrl")
-                   , leakDetectionService.repoSummaries(digitalService = Some(digitalService), includeWarnings = false, includeExemptions = false, includeViolations = true, includeNonIssues = false)
-                   , serviceDependenciesConnector.bobbyReports(digitalService = Some(digitalService), flag = SlugInfoFlag.ForEnvironment(Environment.Production))
-                   , serviceDependenciesConnector.bobbyReports(digitalService = Some(digitalService), flag = SlugInfoFlag.Latest)
-                   , ( shutterService.getShutterStates(ShutterType.Frontend, Environment.Production, digitalService = Some(digitalService))
-                     , shutterService.getShutterStates(ShutterType.Api     , Environment.Production, digitalService = Some(digitalService))
-                     ).tupled.map(x => x._1 ++ x._2)
-                   , platformInitiativesConnector.getInitiatives(digitalService = Some(digitalService))
-                   , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.ForEnvironment(Environment.Production), digitalService = Some(digitalService))
-                   , vulnerabilitiesConnector.vulnerabilityCounts(SlugInfoFlag.Latest                                , digitalService = Some(digitalService))
-                   , serviceCommissioningStatusConnector.cachedCommissioningStatus(digitalService = Some(digitalService))
-                   , serviceMetricsConnector.metrics(Some(Environment.Production), digitalService = Some(digitalService))
-                   , releasesConnector.releases(digitalService = Some(digitalService))
-                   , teamsAndRepositoriesConnector.findTestJobs(digitalService = Some(digitalService))
+                       val openPRsForReposOwnedByDigitalServiceUrl = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open&type=pullrequests"
+                       url"$openPRsForReposOwnedByDigitalServiceUrl"
+                   , healthMetricsConnector.latestDigitalServiceHealthMetrics(digitalService)
                    ).tupled
       yield
-        Ok(digitalServicePage(digitalService, results))
+        Ok(digitalServicePage(
+          digitalService          = digitalService
+        , repos                   = results._1
+        , openPRsForOwnedReposUrl = results._2
+        , healthMetrics           = results._3
+        ))
 
   def allTeams(name: Option[String]): Action[AnyContent] =
     BasicAuthAction.async: request =>
