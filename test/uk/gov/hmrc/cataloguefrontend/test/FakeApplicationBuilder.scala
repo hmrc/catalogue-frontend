@@ -82,7 +82,9 @@ trait FakeApplicationBuilder
           "microservice.services.service-metrics.port"              -> wireMockPort,
           "microservice.services.service-metrics.host"              -> wireMockHost,
           "microservice.services.service-commissioning-status.port" -> wireMockPort,
-          "microservice.services.service-commissioning-status.host" -> wireMockHost
+          "microservice.services.service-commissioning-status.host" -> wireMockHost,
+          "microservice.services.health-metrics.port"               -> wireMockPort,
+          "microservice.services.health-metrics.host"               -> wireMockHost
         )
       )
 
