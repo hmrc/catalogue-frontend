@@ -28,6 +28,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
+@import uk.gov.hmrc.cataloguefrontend.healthmetrics.LatestHealthMetrics
 @import java.net.URL
 @import scala.concurrent.duration.Duration
 
@@ -37,21 +38,10 @@
 )
 
 @(
-  digitalService: DigitalService
-, results       : ( Seq[GitRepository]
-                  , (Int, URL) // Open PRs for repos owned by the digital service
-                  , Seq[LeakDetectionRepositorySummary]
-                  , Seq[BobbyReport] // Production
-                  , Seq[BobbyReport] // Latest
-                  , Seq[ShutterState]
-                  , Seq[PlatformInitiative]
-                  , Seq[TotalVulnerabilityCount]
-                  , Seq[TotalVulnerabilityCount]
-                  , Seq[CachedServiceCheck]
-                  , Seq[ServiceMetric]
-                  , Seq[WhatsRunningWhere]
-                  , Seq[JenkinsJob]
-                  )
+  digitalService         : DigitalService
+, repos                  : Seq[GitRepository]
+, healthMetrics          : LatestHealthMetrics
+, openPRsForOwnedReposUrl: URL
 )(implicit
   request: RequestHeader
 )
@@ -62,7 +52,6 @@
 
 @standard_layout(digitalService.asString, active = "teams") {
   <h1 class="page-heading mt-4">Digital Service: @digitalService.asString</h1>
-  @defining(results) { case (repos, openPrsForRepos, leaks, productionBobbyReports, latestBobbyReports, shutterStates, platformInitiatives, productionVulnerabilities, latestVulnerabilities, commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs) =>
     <section class="section-wrapper">
         <div class="row mb-3">
           <div class="col-md-3">
@@ -82,10 +71,17 @@
             </div>
           </div>
           <div class="col md-3">
-            @shutteringPartial(teamName = None, digitalService = Some(digitalService), shutterStates)
+            @shutteringPartial(teamName = None, digitalService = Some(digitalService), healthMetrics)
           </div>
           <div class="col md-3">
-            @healthPartial(teamName = None, digitalService = Some(digitalService), leaks, productionBobbyReports, latestBobbyReports, platformInitiatives, productionVulnerabilities, latestVulnerabilities, openPrsRaisedByTeamMembers = None, Some(openPrsForRepos), commissioningChecks, serviceMetrics, whatsRunningWhere, testJobs, serviceMetricsLogDuration)
+            @healthPartial(
+              teamName                        = None
+            , digitalService                  = Some(digitalService)
+            , healthMetrics                   = healthMetrics
+            , openPRsRaisedByMembersOfTeamUrl = None
+            , openPRsForOwnedRepos            = Some(openPRsForOwnedReposUrl)
+            , serviceMetricsLogDuration       = serviceMetricsLogDuration
+            )
           </div>
           <div class="col md-3">
             @explorePartial(teamName = None, digitalService = Some(digitalService))
@@ -94,5 +90,4 @@
 
         @repositoriesPartial(repos, viewMessages)
     </section>
-  }
 }

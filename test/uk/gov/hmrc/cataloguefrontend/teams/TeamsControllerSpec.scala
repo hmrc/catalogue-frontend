@@ -39,21 +39,12 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
   override def beforeEach(): Unit =
     super.beforeEach()
     serviceEndpoint(POST, "/internal-auth/auth"                                                             , willRespondWith = (200, Some("""{"retrievals": [[]]}""")))
-    serviceEndpoint(GET , "/releases-api/whats-running-where?teamName=teamA"                                , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/service-commissioning-status/cached-status?teamName=teamA"                      , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/pr-commenter/reports?teamName=teamA"                                            , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/api/repositories/summary?team=teamA&excludeNonIssues=true&includeBranches=false", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/vulnerabilities/api/reports/production/counts?team=teamA"                       , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/vulnerabilities/api/reports/latest/counts?team=teamA"                           , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/user-management/users?team=teamA"                                               , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/api/open-pull-requests?reposOwnedByTeam=teamA"                                  , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/api/open-pull-requests?raisedByMembersOfTeam=teamA"                             , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/api/test-jobs?teamName=teamA"                                                   , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/shutter-api/production/frontend/states?teamName=teamA"                          , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/shutter-api/production/api/states?teamName=teamA"                               , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/api/bobbyReports?team=teamA&flag=production"                                    , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/api/bobbyReports?team=teamA&flag=latest"                                        , willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/platform-initiatives/initiatives?teamName=teamA"                                , willRespondWith = (200, Some("[]")))
+    serviceEndpoint(GET , "/health-metrics/teams/teamA/health-metrics/latest"                               , willRespondWith = (200, Some("""{"metrics": {}}""")))
+    serviceEndpoint(GET , "/health-metrics/digital-services/digitalServiceA/health-metrics/latest"          , willRespondWith = (200, Some("""{"metrics": {}}""")))
 
     import com.github.tomakehurst.wiremock.client.WireMock
     wireMockServer.stubFor(

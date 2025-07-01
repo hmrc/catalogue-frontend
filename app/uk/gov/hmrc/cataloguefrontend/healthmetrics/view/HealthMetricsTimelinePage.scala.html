@@ -1,0 +1,184 @@
+@*
+ * Copyright 2025 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetric
+@import uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetricTimelineCount
+@import uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetricsFilter
+@import views.html.helper.{FieldConstructor, select}
+@import java.time.LocalDate
+@import java.time.ZoneOffset
+
+@import java.time.temporal.ChronoUnit
+
+@this()
+
+@(teams   : Seq[TeamName]
+, result  : Seq[HealthMetricTimelineCount]
+, form    : Form[?]
+)(implicit
+  messages: Messages
+, request : RequestHeader
+)
+
+@implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
+
+@standard_layout("Health Metrics Timeline") {
+    <script @CSPNonce.attr type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script @CSPNonce.attr type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            let data = [
+                @result.map { d =>
+                    [
+                        new Date(@{d.date.getYear}, @{d.date.getMonthValue - 1}, @{d.date.getDayOfMonth}),
+                        @{d.count}
+                    ],
+                }
+            ];
+
+            let container = document.getElementById('timeline-chart');
+
+            let dataTable = new google.visualization.DataTable();
+            dataTable.addColumn({ type: 'date', id: 'week', label: 'week' });
+                @form("healthMetric").value.flatMap(HealthMetric.fromString) match {
+                    case Some(metric) => {
+                                  dataTable.addColumn({
+                                      type: 'number',
+                                      id: '@{metric.asString}',
+                                      label: '@{metric.displayString}'
+                                  });
+                    }
+
+                    case _ => {
+                        dataTable.addColumn({ type: 'number', id: 'Total', label: 'Total' });
+                    }
+                }
+            dataTable.addRows(data);
+
+          var lineOptions = {
+            tooltip: {isHtml: true},
+            pointSize: 5,
+            lineWidth: 3,
+            height: 400,
+            legend: { position: 'bottom', maxLines: 3 },
+            colors: ['#F7696b'],
+            vAxis: { title: 'Health Metric Count', color: '#FF0000', baselineColor: 'black', format: 0, viewWindow: {min: 0, max: dataTable.getColumnRange(1).max}, },
+            hAxis: {
+              gridlines: {
+                count: -1,
+                units: {
+                  months: {format: ['MMM yyyy'] },
+                }
+              },
+              maxTextLines: 1,
+              baselineColor: 'black',
+              minorGridlines: {
+                minSpacing: 80,
+                units: {
+                  months: {format: ['dd MMM'] },
+                  days: {format: ['dd MMM'] },
+                }
+              },
+            }
+          };
+
+          var lineChart = new google.visualization.LineChart(container);
+
+          function chartDisplayOptions() {
+            lineChart.draw(dataTable, lineOptions);
+          }
+
+          chartDisplayOptions();
+        }
+    </script>
+
+    <h1 class="page-heading mt-4">Health Metrics Timeline</h1>
+
+    @if(form.hasErrors) {
+    <div class="alert alert-danger" role="alert">
+        <ul class="list">
+            @form.errors.map { error =>
+            <li class="alert-danger"> @Messages(error.message, error.args*)</li>
+            }
+        </ul>
+    </div>
+    }
+
+    <form id="form" method="get">
+        <div class="row">
+            <div class="col-md-6">
+                @select(
+                    field                 =  form("team"),
+                    options               =  teams.map(t => t.asString -> t.asString),
+                    Symbol("_label")      -> "Team:",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "team-filter",
+                    Symbol("class")       -> "form-select"
+                )
+            </div>
+            <div class="col-md-6">
+                @select(
+                    field                 =  form("healthMetric"),
+                    options               =  HealthMetric.values.toIndexedSeq.sortBy(_.displayString).map(hm => hm.asString -> hm.displayString),
+                    Symbol("_label")      -> "Health metric:",
+                    Symbol("_labelClass") -> "form-label",
+                    Symbol("id")          -> "health-metric-filter",
+                    Symbol("class")       -> "form-select"
+                )
+            </div>
+            <div class="col-md-3">
+                <dl>
+                    <dt>
+                        <label for="from" class="form-label">Date From: </label>
+                    </dt>
+                    <dd>
+                        <input type="date" id="from" name="from" value='@form("from").value' class="form-control">
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-3">
+                <dl>
+                    <dt>
+                        <label for="to" class="form-label">Date To: </label>
+                    </dt>
+                    <dd>
+                        <input type="date" id="to" name="to" value='@form("to").value' class="form-control">
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </form>
+
+    @if(result.isEmpty) {
+        <p>No data was returned based on the provided filters</p>
+    } else if(result.size == 1) {
+        <p>Only one data point was returned - so unable to draw timeline. </p>
+        <p>Please expand the date filter criteria.</p>
+    } else {
+        <div id="timeline-chart" style="height: 300px"></div>
+    }
+}
+
+<script @CSPNonce.attr>
+  ["team-filter", "health-metric-filter", "from", "to"]
+    .forEach(function(id) {
+      document.getElementById(id).addEventListener("change", function() {
+        document.getElementById("form").submit();
+      });
+    });
+</script>
