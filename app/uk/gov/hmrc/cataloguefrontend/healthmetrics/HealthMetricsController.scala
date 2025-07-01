@@ -44,29 +44,39 @@ class HealthMetricsController @Inject() (
 
   def healthMetricsTimeline(
     teamName    : TeamName
-  , healthMetric: HealthMetric = HealthMetric.OpenPRForOwnedRepos
+  , healthMetric: HealthMetric = HealthMetric.AccessibilityAssessmentViolations
   , from        : LocalDate
   , to          : LocalDate
   ): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
       (for
-         teams     <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams()).map(_.map(_.name))
-         form      =  HealthMetricsFilter.form.bindFromRequest()
-         filter    <- EitherT.fromEither[Future]:
-                        form.fold(
-                          formWithErrors => Left(BadRequest(healthMetricsTimelinePage(teams = teams, result = Seq.empty, formWithErrors)))
-                        , formObject     => Right(formObject)
-                        )
-         counts    <- EitherT.right[Result]:
-                        healthMetricsConnector.healthMetricsTimelineCounts(
-                          team         = filter.team
-                        , healthMetric = filter.healthMetric
-                        , from         = filter.from
-                        , to           = filter.to
-                        )
+         teams         <- EitherT.right[Result](teamsAndRepositoriesConnector.allTeams()).map(_.map(_.name))
+         form          =  HealthMetricsFilter.form.bindFromRequest()
+         filter        <- EitherT.fromEither[Future]:
+                            form.fold(
+                              formWithErrors => Left(BadRequest(healthMetricsTimelinePage(teams = teams, result = Seq.empty, formWithErrors)))
+                            , formObject     => Right(formObject)
+                            )
+         counts        <- EitherT.right[Result]:
+                            healthMetricsConnector.healthMetricsTimelineCounts(
+                              team         = filter.team
+                            , healthMetric = filter.healthMetric
+                            , from         = filter.from
+                            , to           = filter.to
+                            )
+         dedupeCounts  =  counts match
+                            case Nil    => Seq.empty
+                            case points => points.head +:
+                                             points
+                                               .sliding(2)
+                                               .collect:
+                                                 case Seq(prev, curr) if prev.count != curr.count => Seq(prev, curr)
+                                               .flatten
+                                               .toSeq :+
+                                             points.last
        yield
-         Ok(healthMetricsTimelinePage(teams = teams, result = counts, form.fill(filter)))
+         Ok(healthMetricsTimelinePage(teams = teams, result = dedupeCounts, form.fill(filter)))
       ).merge
 
 case class HealthMetricsFilter(
@@ -88,7 +98,7 @@ object HealthMetricsFilter:
     Form(
       Forms.mapping(
         "team"         -> Forms.of[TeamName]
-      , "healthMetric" -> Forms.default(Forms.of[HealthMetric], HealthMetric.OpenPRForOwnedRepos)
+      , "healthMetric" -> Forms.default(Forms.of[HealthMetric], HealthMetric.AccessibilityAssessmentViolations)
       , "from"         -> Forms.default(Forms.localDate(dateFormat), defaultFromTime())
       , "to"           -> Forms.default(Forms.localDate(dateFormat), defaultToTime())
       )(HealthMetricsFilter.apply)(f => Some(Tuple.fromProductTyped(f)))

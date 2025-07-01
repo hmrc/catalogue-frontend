@@ -97,7 +97,6 @@
             }
           };
 
-
           var lineChart = new google.visualization.LineChart(container);
 
           function chartDisplayOptions() {
@@ -135,7 +134,7 @@
             <div class="col-md-6">
                 @select(
                     field                 =  form("healthMetric"),
-                    options               =  HealthMetric.values.toIndexedSeq.sortBy(_.asString).map(hm => hm.asString -> hm.displayString),
+                    options               =  HealthMetric.values.toIndexedSeq.sortBy(_.displayString).map(hm => hm.asString -> hm.displayString),
                     Symbol("_label")      -> "Health metric:",
                     Symbol("_labelClass") -> "form-label",
                     Symbol("id")          -> "health-metric-filter",
