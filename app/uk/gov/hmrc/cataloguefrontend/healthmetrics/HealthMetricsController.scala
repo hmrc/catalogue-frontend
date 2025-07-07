@@ -42,9 +42,16 @@ class HealthMetricsController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
+  /**
+    * @param teamName for reverse routing
+    * @param healthMetric for reverse routing
+    * @param curationStatus for reverse routing
+    * @param from for reverse routing
+    * @param to for reverse routing
+    */
   def healthMetricsTimeline(
-    teamName    : TeamName
-  , healthMetric: HealthMetric = HealthMetric.AccessibilityAssessmentViolations
+    teamName    : Option[TeamName]
+  , healthMetric: HealthMetric
   , from        : LocalDate
   , to          : LocalDate
   ): Action[AnyContent] =
@@ -59,12 +66,16 @@ class HealthMetricsController @Inject() (
                             , formObject     => Right(formObject)
                             )
          counts        <- EitherT.right[Result]:
-                            healthMetricsConnector.healthMetricsTimelineCounts(
-                              team         = filter.team
-                            , healthMetric = filter.healthMetric
-                            , from         = filter.from
-                            , to           = filter.to
-                            )
+                            filter
+                              .team
+                              .orElse(teams.headOption) // matches initial dropdown selection
+                              .fold(Future.successful(Nil)): team =>
+                                healthMetricsConnector.healthMetricsTimelineCounts(
+                                  team         = team
+                                , healthMetric = filter.healthMetric
+                                , from         = filter.from
+                                , to           = filter.to
+                                )
          dedupeCounts  =  counts match
                             case Nil    => Seq.empty
                             case points => points.head +:
@@ -80,7 +91,7 @@ class HealthMetricsController @Inject() (
       ).merge
 
 case class HealthMetricsFilter(
-  team        : TeamName
+  team        : Option[TeamName]
 , healthMetric: HealthMetric
 , from        : LocalDate
 , to          : LocalDate
@@ -97,7 +108,7 @@ object HealthMetricsFilter:
     val dateFormat = "yyyy-MM-dd"
     Form(
       Forms.mapping(
-        "team"         -> Forms.of[TeamName]
+        "team"         -> Forms.optional(Forms.of[TeamName])
       , "healthMetric" -> Forms.default(Forms.of[HealthMetric], HealthMetric.AccessibilityAssessmentViolations)
       , "from"         -> Forms.default(Forms.localDate(dateFormat), defaultFromTime())
       , "to"           -> Forms.default(Forms.localDate(dateFormat), defaultToTime())

@@ -125,7 +125,7 @@ class VulnerabilitiesController @Inject() (
     * @param vulnerability for reverse routing
     * @param curationStatus for reverse routing
     * @param from for reverse routing
-    * @param from for reverse routing
+    * @param to for reverse routing
     */
   def vulnerabilitiesTimeline(
     service       : Option[ServiceName]
