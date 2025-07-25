@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.search
 
 import org.apache.pekko.actor.ActorSystem
+import org.slf4j.MDC
 import play.api.Logger
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.cataloguefrontend.config.SearchConfig
@@ -42,6 +43,7 @@ class IndexScheduler @Inject()(
     val cancellable =
       actorSystem.scheduler.scheduleAtFixedRate(1.second, searchConfig.indexRebuildInterval):
         () =>
+          MDC.clear()
           logger.info("rebuilding search indexes")
           searchIndex.updateIndexes()
 

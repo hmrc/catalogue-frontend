@@ -31,19 +31,21 @@ trait CatalogueAuthBuilders:
   private val readPerm =
     Predicate.Permission(Resource(ResourceType("catalogue-frontend"), ResourceLocation("*")), IAAction("READ"))
 
-  def BasicAuthAction =
-    new ActionBuilder[MessagesRequest, AnyContent]:
-      override def executionContext: ExecutionContext =
-        ec
+  def BasicAuthAction: ActionBuilder[MessagesRequest, AnyContent] =
+    if CatalogueFrontendSwitches.requiresLogin.isEnabled
+    then
+      mcc.actionBuilder.andThen(
+        new ActionBuilder[MessagesRequest, AnyContent]:
+          override def executionContext: ExecutionContext =
+            ec
 
-      override def parser: BodyParser[AnyContent] =
-        mcc.parsers.anyContent
+          override def parser: BodyParser[AnyContent] =
+            mcc.parsers.anyContent
 
-      override def invokeBlock[A](request: Request[A], block: MessagesRequest[A] => Future[Result]): Future[Result] =
-        if CatalogueFrontendSwitches.requiresLogin.isEnabled
-        then
-          auth
-            .authorizedAction(AuthController.continueUrl(Call("GET", request.uri)), readPerm) // Other HTTP methods are not suported in targetUrl
-            .invokeBlock[A](request, ar => block(MessagesRequest[A](ar.request, mcc.messagesApi)))
-        else
-          block(MessagesRequest[A](request, mcc.messagesApi))
+          override def invokeBlock[A](request: Request[A], block: MessagesRequest[A] => Future[Result]): Future[Result] =
+            auth
+              .authorizedAction(AuthController.continueUrl(Call("GET", request.uri)), readPerm) // Other HTTP methods are not suported in targetUrl
+              .invokeBlock[A](request, ar => block(MessagesRequest[A](ar.request, mcc.messagesApi)))
+      )
+    else
+      mcc.messagesActionBuilder
