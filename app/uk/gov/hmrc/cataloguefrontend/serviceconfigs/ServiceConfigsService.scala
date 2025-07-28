@@ -382,6 +382,7 @@ object ServiceConfigsService:
       case "TestOnlyRoutes"      => "Use of test only routes. This should not be enabled in Production"
       case "ReactiveMongoConfig" => "Use of obsolete reactivemongo config"
       case "Unencrypted"         => "Value looks like it should be encrypted"
+      case "ReusedSecret"        => "A platform secret has been reused. This may break when the Platform rotates it."
       case _                     => ""
 
   case class AppliedConfig(
