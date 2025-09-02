@@ -26,6 +26,7 @@
 @import uk.gov.hmrc.cataloguefrontend.shuttering.ShutterType
 @import uk.gov.hmrc.cataloguefrontend.test.{routes => testJobRoutes}
 @import uk.gov.hmrc.cataloguefrontend.users.{routes => userRoutes}
+@import uk.gov.hmrc.cataloguefrontend.healthmetrics.{routes => healthMetricsRoutes}
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.CurationStatus
 @import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 @import uk.gov.hmrc.cataloguefrontend.auth.AuthController
@@ -161,9 +162,12 @@
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
-                            <a id="health-dropdown" class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Health
-                            </a>
+                            @defining(CatalogueFrontendSwitches.showHealthMetricsTimeline.isEnabled && java.time.Instant.now.isBefore(java.time.Instant.parse("2025-10-01T00:00:00Z"))) { isNew =>
+                                <a id="health-dropdown" class="nav-link dropdown-toggle @if(active == "health") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Health
+                                    @if(isNew) { <span style="color: violet;">*<span class="visually-hidden">new pages in dropdown</span></span> }
+                                </a>
+                            }
                             <ul id="health-menu" class="dropdown-menu">
                                 <li><a id="link-to-platform-initiatives" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.platforminitiatives.routes.PlatformInitiativesController.platformInitiatives()">Platform Initiatives</a></li>
                                 <li><hr class="dropdown-divider"></li>
@@ -182,15 +186,20 @@
                                 <li><a id="link-to-vulnerabilities-timeline" class="dropdown-item" href="@uk.gov.hmrc.cataloguefrontend.vulnerabilities.routes.VulnerabilitiesController.vulnerabilitiesTimeline(None, None, None, curationStatus = Some(CurationStatus.ActionRequired))">Vulnerabilities - Timeline</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a id="link-to-pr-commenter-recommendations" class="dropdown-item" href="@prcommenterRoutes.PrCommenterController.recommendations()">PR-Commenter Recommendations</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                @* TODO remove once date has elapsed *@
+                                @defining(CatalogueFrontendSwitches.showHealthMetricsTimeline.isEnabled && java.time.Instant.now.isBefore(java.time.Instant.parse("2025-10-01T00:00:00Z"))) { isNew =>
+                                    <li>
+                                        <a id="link-to-health-metrics-timeline" class="dropdown-item" href="@healthMetricsRoutes.HealthMetricsController.healthMetricsTimeline(team = None)">
+                                            Health Metrics - Timeline
+                                                @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
+                                        </a>
+                                    </li>
+                                }
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
-                            @defining(CatalogueFrontendSwitches.showServiceProvision.isEnabled && java.time.Instant.now.isBefore(java.time.Instant.parse("2025-09-01T00:00:00Z"))) { isNew =>
-                                <a id="explore-dropdown" class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Explore
-                                    @if(isNew) { <span style="color: violet;">*<span class="visually-hidden">new pages in dropdown</span></span> }
-                                </a>
-                            }
+                            <a id="explore-dropdown" class="nav-link dropdown-toggle @if(active == "explore") {active}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Explore</a>
                             <ul id="explore-menu" class="dropdown-menu">
                                 <li><a id="link-to-dependency-explorer" class="dropdown-item" href="@dependencyRoutes.DependencyExplorerController.landing">Dependency Explorer</a></li>
                                 <li><a id="link-to-jdk-explorer" class="dropdown-item" href="@appRoutes.JdkVersionController.compareAllEnvironments()">JDK Explorer</a></li>
@@ -226,15 +235,11 @@
                                         Cost Explorer
                                     </a>
                                 </li>
-                                @* TODO remove once date has elapsed *@
-                                @defining(CatalogueFrontendSwitches.showServiceProvision.isEnabled && java.time.Instant.now.isBefore(java.time.Instant.parse("2025-09-01T00:00:00Z"))) { isNew =>
-                                    <li>
-                                        <a id="link-to-search-service-provision" class="dropdown-item" href="@serviceMetricsRoutes.ServiceMetricsController.serviceProvision()">
-                                            Service Provision
-                                            @if(isNew) { <span class="badge rounded-pill position-relative" style="background-color: violet; top: -3px">New</span> }
-                                        </a>
-                                    </li>
-                                }
+                                <li>
+                                    <a id="link-to-search-service-provision" class="dropdown-item" href="@serviceMetricsRoutes.ServiceMetricsController.serviceProvision()">
+                                        Service Provision
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">

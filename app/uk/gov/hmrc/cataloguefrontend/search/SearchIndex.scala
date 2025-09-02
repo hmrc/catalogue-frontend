@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.cost.{routes => costRoutes}
 import uk.gov.hmrc.cataloguefrontend.createrepository.routes as createRepoRoutes
 import uk.gov.hmrc.cataloguefrontend.dependency.routes as dependencyRoutes
 import uk.gov.hmrc.cataloguefrontend.deployments.routes as deployRoutes
+import uk.gov.hmrc.cataloguefrontend.healthmetrics.routes as healthMetricsRoutes
 import uk.gov.hmrc.cataloguefrontend.leakdetection.routes as leakRoutes
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName}
 import uk.gov.hmrc.cataloguefrontend.prcommenter.{PrCommenterConnector, routes as prcommenterRoutes}
@@ -93,16 +94,14 @@ class SearchIndex @Inject()(
     SearchTerm("page", "deploy service",               deployRoutes.DeployServiceController.step1(None).url,                                  1.0f),
     SearchTerm("page", "search commissioning state",   commissioningRoutes.ServiceCommissioningStatusController.searchLanding().url,          1.0f),
     SearchTerm("page", "service metrics",              serviceMetricsRoutes.ServiceMetricsController.serviceMetrics().url,                    1.0f),
+    SearchTerm("page", "health metrics timeline",      healthMetricsRoutes.HealthMetricsController.healthMetricsTimeline(team = None).url,    1.0f),
     SearchTerm("page", "vulnerabilities",              vulnerabilitiesRoutes.VulnerabilitiesController.vulnerabilitiesList().url,             1.0f),
     SearchTerm("page", "vulnerabilities services",     vulnerabilitiesRoutes.VulnerabilitiesController.vulnerabilitiesForServices().url,      1.0f),
     SearchTerm("page", "vulnerabilities timeline ",    vulnerabilitiesRoutes.VulnerabilitiesController.vulnerabilitiesTimeline().url,         1.0f),
     SearchTerm("page", "test results",                 testJobRoutes.TestJobController.allTests().url,                                        1.0f),
     SearchTerm("docs", "mdtp-handbook",                config.get[String]("docs.handbookUrl"),                                                1.0f, openInNewWindow = true),
     SearchTerm("docs", "blog posts",                   config.get[String]("confluence.allBlogsUrl"),                                          1.0f, openInNewWindow = true)
-  ).filter:
-    case x if x.name == "service provision" => uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches.showServiceProvision.isEnabled
-    case _                                  => true
-
+  )
 
   def updateIndexes(): Future[Unit] =
     given HeaderCarrier = HeaderCarrier()
