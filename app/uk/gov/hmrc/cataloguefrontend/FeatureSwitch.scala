@@ -30,5 +30,5 @@ object CatalogueFrontendSwitches:
   def requiresLogin: FeatureSwitch =
     FeatureSwitch.forName("requires-login")
 
-  def showServiceProvision: FeatureSwitch =
-    FeatureSwitch.forName("show-service-provision")
+  def showHealthMetricsTimeline: FeatureSwitch =
+    FeatureSwitch.forName("show-health-metrics-timeline")
