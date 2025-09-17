@@ -45,7 +45,7 @@
                 <select class="form-select" id="teamName" name="teamName">
                     <option value="" @{if(selectedTeamName.isEmpty) "selected" else ""}>All</option>
                     @teams.map { team =>
-                        <option value="@{team.name.asString}" @{if(selectedTeamName.contains(team)) "selected" else ""}>
+                        <option value="@{team.name.asString}" @{if(selectedTeamName.contains(team.name)) "selected" else ""}>
                             @team.name.asString
                         </option>
                     }
