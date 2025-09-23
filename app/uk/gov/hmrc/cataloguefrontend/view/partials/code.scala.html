@@ -45,6 +45,7 @@
             @if(repo.repoType == RepoType.Service) {
                 <li><a id="link-to-timeline" href="@deploymentRoutes.DeploymentTimelineController.graph(serviceName)">Deployment Timeline</a></li>
                 <li><a id="link-to-@{repo.name}-config" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName.getOrElse(ServiceName(repo.name)))" target="_blank" rel="noreferrer noopener">Config Explorer<span class="glyphicon glyphicon-new-window"/></a></li>
+                <li><a id="link-to-deploy-a-service" href="@deploymentRoutes.DeployServiceController.step1(serviceName)">Deploy</a></li>
                 <li><a id="link-to-dependency-list" href="@dependencyRoutes.DependenciesController.services(serviceName.getOrElse(ServiceName(repo.name)))">Service Dependencies</a></li>
                 <li><a id="link-to-frontend-route-warnings" href="@ShutterOverviewController.frontendRouteWarnings(Environment.Production, serviceName.getOrElse(ServiceName(repo.name)))">Frontend Route Warnings</a></li>
             }
