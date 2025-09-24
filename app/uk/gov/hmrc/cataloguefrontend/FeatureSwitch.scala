@@ -32,3 +32,6 @@ object CatalogueFrontendSwitches:
 
   def showHealthMetricsTimeline: FeatureSwitch =
     FeatureSwitch.forName("show-health-metrics-timeline")
+
+  def disableDeployment: FeatureSwitch =
+    FeatureSwitch.forName("disable-deployments")
