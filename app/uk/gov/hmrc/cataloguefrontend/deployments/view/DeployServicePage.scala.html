@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 @import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
+@import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @import views.html.helper.{FieldConstructor, select}
 
@@ -59,7 +60,13 @@
         , Symbol("id")     -> "service-name-form"
         , Symbol("method") -> "GET"
         ) {
-          <dl>
+            @if(CatalogueFrontendSwitches.disableDeployment.isEnabled) {
+                <div class="alert alert-warning">
+                  <p><strong>Deploy Service feature currently disabled</strong></p>
+                  <p>Deployments have been temporally disabled please check slack for announcements. Sorry for the inconvenience.</p>
+                </div>
+            }
+          <dl class="@if(CatalogueFrontendSwitches.disableDeployment.isEnabled) {d-none}">
             <dt><label class="form-label" for="service-name">Service Name:</label></dt>
             <dd>
               <input type="text" id="service-name" name="serviceName" value='@form("serviceName").value' class="form-control" required="required" autocomplete="off">
