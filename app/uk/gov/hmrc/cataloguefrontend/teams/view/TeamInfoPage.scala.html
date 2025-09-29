@@ -143,9 +143,12 @@
               </dl>
               @if(canEditTeam && umpTeam.slack.isEmpty) {
                 @addSlackInfo("Slack Team", SlackInfo(""))
-                @addSlackInfo("Slack Notification", SlackInfo(""))
               } else {
                 @umpTeam.slack.map(addSlackInfo("Slack Team", _))
+              }
+              @if(canEditTeam && umpTeam.slackNotification.isEmpty) {
+                @addSlackInfo("Slack Notification", SlackInfo(""))
+              } else {
                 @umpTeam.slackNotification.map(addSlackInfo("Slack Notification", _))
               }
               <dl id="github" class="row mb-0">
