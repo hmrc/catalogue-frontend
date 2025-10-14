@@ -137,7 +137,7 @@ class LeakDetectionService @Inject() (
         val filtered = leaks.filter(predicate)
         Future
           .traverse(filtered): leak =>
-            fixGithubUrlAsync(leak.urlToSource).map: fixedUrl =>
+            fixGithubUrl(leak.urlToSource).map: fixedUrl =>
               leak.copy(urlToSource = fixedUrl)
           .map: fixedLeaks =>
             fixedLeaks
@@ -160,13 +160,13 @@ class LeakDetectionService @Inject() (
 
   /**
    * Fixes broken GitHub blame URLs where branch name is encoded as 'n%2Fa'
-   * Enhanced asynchronous version that detects actual default branch from repository info
+   * Enhanced version that detects actual default branch from repository info
    * Example: 
    * - Input: https://github.com/hmrc/vault/blame/n%2Fa%2Fbuiltin%2Fcredential%2Faws%2Fbackend_test.go#L475
    * - Output: https://github.com/hmrc/vault/blame/master/builtin/credential/aws/backend_test.go#L475 (if master is default)
    * - Output: https://github.com/hmrc/vault/blame/main/builtin/credential/aws/backend_test.go#L475 (if main is default)
    */
-  private def fixGithubUrlAsync(originalUrl: String)(using HeaderCarrier): Future[String] =
+  private def fixGithubUrl(originalUrl: String)(using HeaderCarrier): Future[String] =
     // Pattern to match GitHub URLs with n%2Fa encoding issue
     val brokenUrlPattern = "(https://github\\.com/([^/]+)/([^/]+)/blame/)n%2Fa(%2F.+)".r
 
@@ -175,18 +175,18 @@ class LeakDetectionService @Inject() (
         // Decode the file path
         val decodedPath = java.net.URLDecoder.decode(encodedPath, "UTF-8")
 
-        // Get the actual default branch from repository info asynchronously
-        getDefaultBranchAsync(repo).map: defaultBranch =>
+        // Get the actual default branch from repository info
+        getDefaultBranch(repo).map: defaultBranch =>
           s"$prefix$defaultBranch$decodedPath"
       case _ =>
         // Return the original URL if it doesn't match the broken pattern
         Future.successful(originalUrl)
 
   /**
-   * Gets the default branch for a repository from TeamsAndRepositoriesConnector asynchronously
+   * Gets the default branch for a repository from TeamsAndRepositoriesConnector
    * Falls back to 'main' if repository info not available
    */
-  private def getDefaultBranchAsync(repoName: String)(using HeaderCarrier): Future[String] =
+  private def getDefaultBranch(repoName: String)(using HeaderCarrier): Future[String] =
     teamsAndRepositoriesConnector.repositoryDetails(repoName)
       .map:
         case Some(repo) if repo.defaultBranch.nonEmpty => repo.defaultBranch
