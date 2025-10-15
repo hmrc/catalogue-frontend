@@ -49,7 +49,7 @@ val compile = Seq(
   "uk.gov.hmrc.mongo"         %% "hmrc-mongo-play-30"           % hmrcMongoVersion,
   "uk.gov.hmrc"               %% "internal-auth-client-play-30" % "4.1.0",
   "org.typelevel"             %% "cats-core"                    % "2.13.0",
-  "org.yaml"                  %  "snakeyaml"                    % "2.3",
+  "org.yaml"                  %  "snakeyaml"                    % "2.5",
   "org.planet42"              %% "laika-core"                   % "0.19.5",
   "org.jsoup"                 %  "jsoup"                        % "1.17.2"
 )
