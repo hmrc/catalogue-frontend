@@ -40,8 +40,8 @@ lazy val microservice = Project("catalogue-frontend", file("."))
     pipelineStages := Seq(digest)
   )
 
-val bootstrapPlayVersion = "10.1.0"
-val hmrcMongoVersion     = "2.7.0"
+val bootstrapPlayVersion = "10.3.0"
+val hmrcMongoVersion     = "2.8.0"
 
 val compile = Seq(
   caffeine,
@@ -51,12 +51,12 @@ val compile = Seq(
   "org.typelevel"             %% "cats-core"                    % "2.13.0",
   "org.yaml"                  %  "snakeyaml"                    % "2.5",
   "org.planet42"              %% "laika-core"                   % "0.19.5",
-  "org.jsoup"                 %  "jsoup"                        % "1.17.2"
+  "org.jsoup"                 %  "jsoup"                        % "1.18.1"
 )
 
 val test = Seq(
   "uk.gov.hmrc"            %% "bootstrap-test-play-30"   % bootstrapPlayVersion % Test,
   "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"  % hmrcMongoVersion     % Test,
-  "org.scalatestplus"      %% "scalacheck-1-17"          % "3.2.17.0"           % Test,
+  "org.scalatestplus"      %% "scalacheck-1-17"          % "3.2.18.0"           % Test,
   ws
 )
