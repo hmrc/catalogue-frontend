@@ -61,7 +61,7 @@ class AuthControllerSpec
 
       val result = controller.signIn(targetUrl = None)(request)
 
-      redirectLocation(result) shouldBe Some("/internal-auth-frontend/sign-in?continue_url=%2Fpost-sign-in")
+      redirectLocation(result) shouldBe Some("http://localhost:8471/test-only/sign-in?test_only_base_url=http://localhost:9000&continue_url=%2Fpost-sign-in")
     }
 
     "forward target Url" in new Setup {
@@ -69,7 +69,7 @@ class AuthControllerSpec
 
       val result = controller.signIn(targetUrl = Some(RedirectUrl("/my-url")))(request)
 
-      redirectLocation(result) shouldBe Some("/internal-auth-frontend/sign-in?continue_url=%2Fpost-sign-in%3FtargetUrl%3D%252Fmy-url")
+      redirectLocation(result) shouldBe Some("http://localhost:8471/test-only/sign-in?test_only_base_url=http://localhost:9000&continue_url=%2Fpost-sign-in%3FtargetUrl%3D%252Fmy-url")
     }
 
     "redirect to requested page if already logged in" in new Setup {
