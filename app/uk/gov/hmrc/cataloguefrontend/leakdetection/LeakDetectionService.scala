@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.leakdetection
 
 import play.api.Configuration
+import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
 import uk.gov.hmrc.cataloguefrontend.leakdetection.{routes => appRoutes}
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -27,8 +28,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class LeakDetectionService @Inject() (
-  leakDetectionConnector: LeakDetectionConnector,
-  configuration         : Configuration
+  leakDetectionConnector       : LeakDetectionConnector,
+  configuration                : Configuration,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
 )(using
   ExecutionContext
 ):
@@ -36,7 +38,7 @@ class LeakDetectionService @Inject() (
     configuration
       .get[String]("leakDetection.resolution.url")
 
-  def removeSensitiveInfoUrl: String =
+  def removeSensitiveInfoUrl(): String =
     configuration
       .get[String]("leakDetection.removeSensitiveInfo.url")
 
@@ -98,7 +100,7 @@ class LeakDetectionService @Inject() (
                                || (includeViolations && (s.unresolvedCount >  0))
     yield filteredSummaries.sortBy(_.repository.toLowerCase)
 
-  def rules()(using HeaderCarrier) =
+  def rules()(using HeaderCarrier): Future[Seq[LeakDetectionRule]] =
     leakDetectionConnector.leakDetectionRules()
 
   def branchSummaries(repo: String, includeNonIssues: Boolean)(using HeaderCarrier): Future[Seq[LeakDetectionBranchSummary]] =
@@ -117,30 +119,32 @@ class LeakDetectionService @Inject() (
     leakDetectionConnector.leakDetectionDraftReports(ruleId)
 
   def reportLeaks(reportId: String)(using HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] =
-    leakDetectionConnector.leakDetectionLeaks(reportId)
-      .map:
-        _
-          .filterNot(_.isExcluded)
-          .groupBy(_.ruleId)
-          .map((ruleId, leaks) => mapLeak(ruleId, leaks))
-          .toSeq
-          .sorted
+    buildLeaksByRule(reportId, leak => !leak.isExcluded)
 
   def reportExemptions(reportId: String)(using HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] =
-    leakDetectionConnector.leakDetectionLeaks(reportId)
-      .map:
-        _
-          .filter(_.isExcluded)
-          .groupBy(_.ruleId)
-          .map((ruleId, leaks) => mapLeak(ruleId, leaks))
-          .toSeq
-          .sorted
+    buildLeaksByRule(reportId, _.isExcluded)
 
   def reportWarnings(reportId: String)(using HeaderCarrier): Future[Seq[LeakDetectionWarning]] =
     leakDetectionConnector.leakDetectionWarnings(reportId)
 
-  def rescan(repository: String, branch: String)(using HeaderCarrier) =
+  def rescan(repository: String, branch: String)(using HeaderCarrier): Future[LeakDetectionReport] =
    leakDetectionConnector.rescan(repository, branch)
+
+  private def buildLeaksByRule(reportId: String, predicate: LeakDetectionLeak => Boolean)(using HeaderCarrier): Future[Seq[LeakDetectionLeaksByRule]] =
+    leakDetectionConnector
+      .leakDetectionLeaks(reportId)
+      .flatMap: leaks =>
+        val filtered = leaks.filter(predicate)
+        Future
+          .traverse(filtered): leak =>
+            fixGithubUrl(leak.urlToSource).map: fixedUrl =>
+              leak.copy(urlToSource = fixedUrl)
+          .map: fixedLeaks =>
+            fixedLeaks
+              .groupBy(_.ruleId)
+              .map((ruleId, leaks) => mapLeak(ruleId, leaks))
+              .toSeq
+              .sorted
 
   private def mapLeak(ruleId: String, leaks: Seq[LeakDetectionLeak]): LeakDetectionLeaksByRule =
     LeakDetectionLeaksByRule(
@@ -149,10 +153,48 @@ class LeakDetectionService @Inject() (
       leaks.head.scope,
       leaks.head.priority,
       leaks
-        .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches))
+        .map(l => LeakDetectionLeakDetails(l.filePath, l.lineNumber, l.urlToSource, l.lineText, l.matches)) // URLs already fixed
         .sortBy(_.lineNumber)
         .sortBy(_.filePath)
     )
+
+  /**
+   * Fixes broken GitHub blame URLs where branch name is encoded as 'n%2Fa'
+   * Enhanced version that detects actual default branch from repository info
+   * Example: 
+   * - Input: https://github.com/hmrc/vault/blame/n%2Fa%2Fbuiltin%2Fcredential%2Faws%2Fbackend_test.go#L475
+   * - Output: https://github.com/hmrc/vault/blame/master/builtin/credential/aws/backend_test.go#L475 (if master is default)
+   * - Output: https://github.com/hmrc/vault/blame/main/builtin/credential/aws/backend_test.go#L475 (if main is default)
+   */
+  private def fixGithubUrl(originalUrl: String)(using HeaderCarrier): Future[String] =
+    // Pattern to match GitHub URLs with n%2Fa encoding issue
+    val brokenUrlPattern = "(https://github\\.com/([^/]+)/([^/]+)/blame/)n%2Fa(%2F.+)".r
+
+    originalUrl match
+      case brokenUrlPattern(prefix, org, repo, encodedPath) =>
+        // Decode the file path
+        val decodedPath = java.net.URLDecoder.decode(encodedPath, "UTF-8")
+
+        // Get the actual default branch from repository info
+        getDefaultBranch(repo).map: defaultBranch =>
+          s"$prefix$defaultBranch$decodedPath"
+      case _ =>
+        // Return the original URL if it doesn't match the broken pattern
+        Future.successful(originalUrl)
+
+  /**
+   * Gets the default branch for a repository from TeamsAndRepositoriesConnector
+   * Falls back to 'main' if repository info not available
+   */
+  private def getDefaultBranch(repoName: String)(using HeaderCarrier): Future[String] =
+    teamsAndRepositoriesConnector.repositoryDetails(repoName)
+      .map:
+        case Some(repo) if repo.defaultBranch.nonEmpty => repo.defaultBranch
+        case _ => "main" // Fallback to 'main' if no info available
+      .recover:
+        case _: Exception =>
+          // If any error occurs (API unavailable, etc.), fallback to 'main'
+          "main"
 
 end LeakDetectionService
 

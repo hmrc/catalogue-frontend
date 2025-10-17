@@ -121,7 +121,7 @@ class LeakDetectionController @Inject()(
           leaks                  <- leakDetectionService.reportLeaks(report.id)
           warnings               <- leakDetectionService.reportWarnings(report.id)
           resolutionUrl          =  leakDetectionService.resolutionUrl
-          removeSensitiveInfoUrl =  leakDetectionService.removeSensitiveInfoUrl
+          removeSensitiveInfoUrl = leakDetectionService.removeSensitiveInfoUrl()
         yield Ok(leaksPage(report, report.exclusions, leaks, warnings, resolutionUrl, removeSensitiveInfoUrl, isAuthorised))
 
   def reportExemptions(repository: String, branch: String): Action[AnyContent] =
