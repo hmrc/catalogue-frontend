@@ -156,7 +156,7 @@ object CreateUserConstraints:
     )
 
   private val digitalEmailValidation: String => Boolean =
-    _.matches(".*digital\\.hmrc\\.gov\\.uk.*")
+    _.matches("^[^@]+@digital\\.hmrc\\.gov\\.uk$")
 
   val digitalEmailConstraint: Constraint[String] =
     mkConstraint("constraints.digitalEmailCheck")(
