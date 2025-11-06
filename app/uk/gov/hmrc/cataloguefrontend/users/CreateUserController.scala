@@ -155,12 +155,11 @@ object CreateUserConstraints:
       error      = "Should not contain 'service' - if you are trying to create a non human user, please use <a href=\"/create-service-user\"'>Create A Service Account</a> instead"
     )
 
-  def contactEmailConstraint(isServiceAccount: Boolean): Constraint[String] = {
+  def contactEmailConstraint(isServiceAccount: Boolean): Constraint[String] =
     val serviceAccountValidation: String => Boolean = _.matches("^[^@]+@digital\\.hmrc\\.gov\\.uk$")
     val nonServiceAccountValidation: String => Boolean = !_.matches(".*digital\\.hmrc\\.gov\\.uk.*")
 
-    if isServiceAccount
-    then
+    if isServiceAccount then
       mkConstraint("constraints.contactEmailCheck")(
         constraint = serviceAccountValidation,
         error      = "Must be HMRC Digital e.g. email@digital.hmrc.gov.uk"
@@ -170,6 +169,5 @@ object CreateUserConstraints:
         constraint = nonServiceAccountValidation,
         error      = "Cannot be a digital email such as: digital.hmrc.gov.uk"
       )
-  }
 
 end CreateUserConstraints
