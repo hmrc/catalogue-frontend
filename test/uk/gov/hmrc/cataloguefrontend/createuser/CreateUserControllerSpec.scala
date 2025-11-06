@@ -215,7 +215,7 @@ class CreateUserControllerSpec
         givenName        = "test",
         familyName       = "user",
         organisation     = Organisation.Mdtp.asString,
-        contactEmail     = "test.user@digital.hmrc.gov.uk",
+        contactEmail     = "test.user@email.gov.uk",
         contactComments  = "test123",
         team             = TeamName("TestTeam"),
         isReturningUser  = false,
