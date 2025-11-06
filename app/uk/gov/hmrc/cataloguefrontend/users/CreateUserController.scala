@@ -65,7 +65,7 @@ class CreateUserController @Inject()(
                    userManagementConnector.getAllTeams().map(_.map(_.teamName))
                  else
                    Future.successful(cleanseUserTeams(request.retrieval))
-      yield Ok(createUserPage(CreateUserForm.form, teams, Organisation.values.toSeq, isServiceAccount))
+      yield Ok(createUserPage(CreateUserForm.form(isServiceAccount), teams, Organisation.values.toSeq, isServiceAccount))
 
   def createUser(isServiceAccount: Boolean): Action[AnyContent] =
     auth.authenticatedAction(
@@ -80,7 +80,7 @@ class CreateUserController @Inject()(
                     else
                       Future.successful(cleanseUserTeams(request.retrieval))
          form  <- EitherT.fromEither[Future]:
-                    CreateUserForm.form.bindFromRequest()
+                    CreateUserForm.form(isServiceAccount).bindFromRequest()
                       .fold(
                         formWithErrors =>
                           Left(
@@ -111,14 +111,14 @@ class CreateUserController @Inject()(
 end CreateUserController
 
 object CreateUserForm:
-  val form: Form[CreateUserRequest] =
+  def form(isServiceAccount: Boolean): Form[CreateUserRequest] =
     Form(
       Forms.mapping(
         "givenName"        -> Forms.text.verifying(CreateUserConstraints.containsServiceConstraint)
                                         .verifying(CreateUserConstraints.nameConstraints("givenName")*),
         "familyName"       -> Forms.text.verifying(CreateUserConstraints.nameConstraints("familyName")*),
         "organisation"     -> Forms.nonEmptyText,
-        "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.digitalEmailConstraint),
+        "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.contactEmailConstraint(isServiceAccount)),
         "contactComments"  -> Forms.default(Forms.text, "").verifying(Constraints.maxLength(512)),
         "team"             -> Forms.of[TeamName],
         "isReturningUser"  -> Forms.boolean,
@@ -155,13 +155,21 @@ object CreateUserConstraints:
       error      = "Should not contain 'service' - if you are trying to create a non human user, please use <a href=\"/create-service-user\"'>Create A Service Account</a> instead"
     )
 
-  private val digitalEmailValidation: String => Boolean =
-    !_.matches(".*digital\\.hmrc\\.gov\\.uk.*")
+  def contactEmailConstraint(isServiceAccount: Boolean): Constraint[String] = {
+    val serviceAccountValidation: String => Boolean = _.matches("^[^@]+@digital\\.hmrc\\.gov\\.uk$")
+    val nonServiceAccountValidation: String => Boolean = !_.matches(".*digital\\.hmrc\\.gov\\.uk.*")
 
-  val digitalEmailConstraint: Constraint[String] =
-    mkConstraint("constraints.digitalEmailCheck")(
-      constraint = digitalEmailValidation,
-      error      = "Cannot be a digital email such as: digital.hmrc.gov.uk"
-    )
+    if isServiceAccount
+    then
+      mkConstraint("constraints.contactEmailCheck")(
+        constraint = serviceAccountValidation,
+        error      = "Must be HMRC Digital e.g. email@digital.hmrc.gov.uk"
+      )
+    else
+      mkConstraint("constraints.contactEmailCheck")(
+        constraint = nonServiceAccountValidation,
+        error      = "Cannot be a digital email such as: digital.hmrc.gov.uk"
+      )
+  }
 
 end CreateUserConstraints
