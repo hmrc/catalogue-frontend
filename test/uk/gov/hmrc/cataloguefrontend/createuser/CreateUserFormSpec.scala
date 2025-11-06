@@ -61,8 +61,12 @@ class CreateUserFormSpec extends AnyWordSpec with Matchers {
       CreateUserConstraints.containsServiceConstraint("service-user") shouldBe Invalid("Should not contain 'service' - if you are trying to create a non human user, please use <a href=\"/create-service-user\"'>Create A Service Account</a> instead")
     }
 
-    "return Invalid when email is a hmrc digital email" in {
-      CreateUserConstraints.digitalEmailConstraint("test.user@digital.hmrc.gov.uk") shouldBe Invalid("Cannot be a digital email such as: digital.hmrc.gov.uk")
+    "return Invalid when non-service account contact email is a HMRC Digital email" in {
+      CreateUserConstraints.contactEmailConstraint(isServiceAccount = false)("test.user@digital.hmrc.gov.uk") shouldBe Invalid("Cannot be a digital email such as: digital.hmrc.gov.uk")
+    }
+    
+    "return Invalid when service account contact email is not a HMRC Digital email" in {
+      CreateUserConstraints.contactEmailConstraint(isServiceAccount = true)("test.user@hmrc.gov.uk") shouldBe Invalid("Must be HMRC Digital e.g. email@digital.hmrc.gov.uk")
     }
   }
 

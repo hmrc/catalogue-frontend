@@ -180,7 +180,7 @@ class CreateUserControllerSpec
               "familyName"   -> user.familyName,
               "organisation" -> user.organisation,
               "team"         -> user.team.asString,
-              "contactEmail" -> user.contactEmail
+              "contactEmail" -> "test.user@digital.hmrc.gov.uk"
             )
         )
 
