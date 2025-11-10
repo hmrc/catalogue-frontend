@@ -18,6 +18,8 @@ package uk.gov.hmrc.cataloguefrontend.users
 
 import play.api.libs.json.*
 import play.api.libs.functional.syntax.*
+import java.net.URI
+import scala.util.Try
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.util.FromString
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
@@ -48,20 +50,41 @@ object Member:
     ~ (__ \ "isNonHuman" ).read[Boolean]
     )(Member.apply)
 
-case class SlackInfo(url: String):
+case class SlackInfo(url: String, isPrivate: Boolean):
   val name: String =
     url.split("/").lastOption.getOrElse(url)
 
-  val hasValidUrl: Boolean =
-    url.startsWith("http://") || url.startsWith("https://")
+  val hasValidUrl: Boolean = 
+    Try(URI.create(url).toURL).isSuccess && 
+    (url.startsWith("http://") || url.startsWith("https://"))
 
-  val hasValidName: Boolean =
-    "^[A-Z0-9]+$".r.findFirstIn(name).isEmpty
-end SlackInfo
+  val hasValidName: Boolean = 
+    name.matches("^[a-zA-Z0-9._-]+$")
 
 object SlackInfo:
+  def unapply(slackInfo: SlackInfo): Option[(String, Boolean)] =
+    Some((slackInfo.url, slackInfo.isPrivate))
+
+  // Accept both legacy string URL and object { "channel_url": String, "is_private": Boolean }
   val reads: Reads[SlackInfo] =
-    summon[Reads[String]].map(SlackInfo.apply)
+    Reads { json =>
+      // Legacy format: slack fields provided as a plain string URL
+      json.validate[String].map(url => SlackInfo(url = url, isPrivate = false))
+        .orElse {
+          // New format: explicit object with fields
+          ( (__ \ "channel_url").read[String]
+          ~ (__ \ "is_private").read[Boolean]
+          )(SlackInfo.apply).reads(json)
+        }
+    }
+
+  val writes: Writes[SlackInfo] = 
+    ( (__ \ "channel_url").write[String]
+    ~ (__ \ "is_private").write[Boolean]
+    )(unlift(SlackInfo.unapply))
+    
+  implicit val format: Format[SlackInfo] = Format(reads, writes)
+
 
 case class UmpTeam(
   members          : Seq[Member]

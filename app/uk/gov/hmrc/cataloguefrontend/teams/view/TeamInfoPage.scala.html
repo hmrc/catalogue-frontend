@@ -141,12 +141,12 @@
                 </form>
               </dl>
               @if(canEditTeam && umpTeam.slack.isEmpty) {
-                @addSlackInfo("Slack Team", SlackInfo(""))
+                @addSlackInfo("Slack Team", SlackInfo("", isPrivate = false))
               } else {
                 @umpTeam.slack.map(addSlackInfo("Slack Team", _))
               }
               @if(canEditTeam && umpTeam.slackNotification.isEmpty) {
-                @addSlackInfo("Slack Notification", SlackInfo(""))
+                @addSlackInfo("Slack Notification", SlackInfo("", isPrivate = false))
               } else {
                 @umpTeam.slackNotification.map(addSlackInfo("Slack Notification", _))
               }
@@ -408,7 +408,10 @@
     <dl id="@{label.toLowerCase.replace(" ","-")}" class="row border-bottom border-light-subtle pb-0 mb-2">
       <dt class="col-sm-4">@label:</dt>
       <dd class="col-sm-8 d-flex justify-content-between">
-        <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window" /></a>
+        <div>
+          <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window" /></a>
+          @if(slackInfo.isPrivate) { <span class="badge bg-secondary ms-2" title="Private channel">Private</span> }
+        </div>
         @if(canEditTeam) {<a href="#" id="edit-@{label.toLowerCase.replace(" ","-")}-link" class="ms-2 d-none">Edit</a>}
       </dd>
     </dl>
@@ -427,13 +430,24 @@
               https://hmrcdigital.slack.com/messages/@{slackInfo.name}<span class="glyphicon glyphicon-new-window"/>
             </a>
           </div>
-          <div class="d-flex align-items-center">
+          <div class="d-flex align-items-center mb-2">
             <input type="text" id="field-@{label.toLowerCase.replace(" ","-")}"
             class="form-control me-2 @if(teamDetailsForm(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}").hasErrors) {is-invalid}"
-            name="@{if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}" value="@teamDetailsForm.data.getOrElse(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}", slackInfo.name)">
+            name="@{if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}" 
+            value="@teamDetailsForm.data.getOrElse(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}", slackInfo.name)"
+            placeholder="channel-name">
             @saveAndCancelButtons(s"${label.toLowerCase.replace(" ","-")}")
           </div>
-            @teamDetailsForm(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}").errors.map { error => <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> }
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="is-private-@{label.toLowerCase.replace(" ","-")}" 
+              name="is_private" @if(slackInfo.isPrivate) { checked }>
+            <label class="form-check-label" for="is-private-@{label.toLowerCase.replace(" ","-")}">
+              Private channel
+            </label>
+          </div>
+          @teamDetailsForm(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}").errors.map { error => 
+            <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> 
+          }
         </fieldset>
       </div>
     </form>
@@ -599,28 +613,37 @@
 
           function updateSlackLink(inputId, linkId) {
             const input = document.getElementById(inputId);
+            if (!input) return;
+
             const link = document.getElementById(linkId);
+            if (!link) return;
 
-            if (input && link) {
-              input.addEventListener(
-                      "input",
-                      debounce(function () {
-                        const slackName = input.value.trim();
-                        link.href = `https://hmrcdigital.slack.com/messages/${slackName}`;
-                        link.textContent = `https://hmrcdigital.slack.com/messages/${slackName}`;
+            const updateLink = () => {
+              const value = input.value.trim();
+              const baseUrl = 'https://hmrcdigital.slack.com/messages/';
+              const newHref = value ? `${baseUrl}${value}` : `${baseUrl}${input.placeholder || 'channel-name'}`;
+              link.href = newHref;
+              link.textContent = value ? `${baseUrl}${value}` : `${baseUrl}${input.placeholder || 'channel-name'}`;
+              
+              // Update the privacy indicator in the preview
+              const privacyBadge = link.parentElement.querySelector('.privacy-badge');
+              if (privacyBadge) {
+                const isPrivate = document.querySelector(`#${inputId}-container .form-check-input`).checked;
+                privacyBadge.textContent = isPrivate ? 'Private' : 'Public';
+                privacyBadge.className = `badge ms-2 ${isPrivate ? 'bg-secondary' : 'bg-primary'}`;
+              }
+            };
 
-                        if (!link.querySelector(".glyphicon-new-window")) {
-                          const iconSpan = document.createElement("span");
-                          iconSpan.className = "glyphicon glyphicon-new-window ms-1";
-                          link.appendChild(iconSpan);
-                        }
-                      }, 300)
-              );
+            // Add privacy toggle handler
+            const privacyToggle = document.querySelector(`#${inputId}-container .form-check-input`);
+            if (privacyToggle) {
+              privacyToggle.addEventListener('change', debounce(function() {
+                updateLink();
+              }, 300));
             }
-          }
 
           updateSlackLink("field-slack-team", "slack-team-link");
           updateSlackLink("field-slack-notification", "slack-notification-link");
-
-        });
+          } // Close updateSlackLink function
+        }); // Close document ready
 </script>
