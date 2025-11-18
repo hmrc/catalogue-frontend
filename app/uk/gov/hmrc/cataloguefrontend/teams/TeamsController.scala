@@ -96,7 +96,7 @@ class TeamsController @Inject()(
      yield
        resultType(
          teamInfoPage(
-           teamName                        = teamName
+           teamName                        = umpTeam.teamName
          , umpTeam                         = umpTeam
          , teamDetailsForm                 = teamDetailsForm
          , umpMyTeamsUrl                   = umpConfig.umpMyTeamsPageUrl(teamName)
