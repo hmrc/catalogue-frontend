@@ -92,4 +92,147 @@ class WhatsRunningWhereServiceSpec
       )
     }
   }
+
+  "whatsRunningWhereService.releases" should {
+    "enrich releases with deployment type from deployment config" in {
+      given HeaderCarrier = HeaderCarrier()
+
+      val releasesData = Seq(
+        WhatsRunningWhere(
+          ServiceName("test-service"),
+          List(
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil),
+            WhatsRunningWhereVersion(Environment.Production, Version("1.0.0"), Nil)
+          )
+        )
+      )
+
+      when(releasesConnector.releases(None, None, None)).thenReturn(Future.successful(releasesData))
+      when(serviceConfigsConnector.deploymentConfig()).thenReturn(
+        Future.successful(Seq(
+          DeploymentConfig(
+            serviceName = ServiceName("test-service"),
+            environment = Environment.Development,
+            deploymentSize = DeploymentSize(slots = 2, instances = 1),
+            zone = Zone.Protected,
+            envVars = Map("deployment.type" -> "appmesh"),
+            jvm = Map.empty
+          ),
+          DeploymentConfig(
+            serviceName = ServiceName("test-service"),
+            environment = Environment.Production,
+            deploymentSize = DeploymentSize(slots = 4, instances = 2),
+            zone = Zone.Protected,
+            envVars = Map("deploymentType" -> "consul"),
+            jvm = Map.empty
+          )
+        ))
+      )
+
+      val result = testService.releases(None, None, None).futureValue
+
+      result should have size 1
+      result.head.serviceName shouldBe ServiceName("test-service")
+      result.head.versions should have size 2
+
+      val devVersion = result.head.versions.find(_.environment == Environment.Development).get
+      devVersion.deploymentType shouldBe Some(DeploymentType.Appmesh)
+
+      val prodVersion = result.head.versions.find(_.environment == Environment.Production).get
+      prodVersion.deploymentType shouldBe Some(DeploymentType.Consul)
+    }
+
+    "handle missing deployment type gracefully" in {
+      given HeaderCarrier = HeaderCarrier()
+
+      val releasesData = Seq(
+        WhatsRunningWhere(
+          ServiceName("test-service"),
+          List(
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+          )
+        )
+      )
+
+      when(releasesConnector.releases(None, None, None)).thenReturn(Future.successful(releasesData))
+      when(serviceConfigsConnector.deploymentConfig()).thenReturn(
+        Future.successful(Seq(
+          DeploymentConfig(
+            serviceName = ServiceName("test-service"),
+            environment = Environment.Development,
+            deploymentSize = DeploymentSize(slots = 2, instances = 1),
+            zone = Zone.Protected,
+            envVars = Map.empty,
+            jvm = Map.empty
+          )
+        ))
+      )
+
+      val result = testService.releases(None, None, None).futureValue
+
+      result.head.versions.head.deploymentType shouldBe None
+    }
+
+    "detect Appmesh deployment type from different flag names" in {
+      given HeaderCarrier = HeaderCarrier()
+
+      val releasesData = Seq(
+        WhatsRunningWhere(
+          ServiceName("test-service"),
+          List(
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+          )
+        )
+      )
+
+      when(releasesConnector.releases(None, None, None)).thenReturn(Future.successful(releasesData))
+      when(serviceConfigsConnector.deploymentConfig()).thenReturn(
+        Future.successful(Seq(
+          DeploymentConfig(
+            serviceName = ServiceName("test-service"),
+            environment = Environment.Development,
+            deploymentSize = DeploymentSize(slots = 2, instances = 1),
+            zone = Zone.Protected,
+            envVars = Map("deployment_type" -> "appmesh"),
+            jvm = Map.empty
+          )
+        ))
+      )
+
+      val result = testService.releases(None, None, None).futureValue
+
+      result.head.versions.head.deploymentType shouldBe Some(DeploymentType.Appmesh)
+    }
+
+    "detect Consul deployment type" in {
+      given HeaderCarrier = HeaderCarrier()
+
+      val releasesData = Seq(
+        WhatsRunningWhere(
+          ServiceName("test-service"),
+          List(
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+          )
+        )
+      )
+
+      when(releasesConnector.releases(None, None, None)).thenReturn(Future.successful(releasesData))
+      when(serviceConfigsConnector.deploymentConfig()).thenReturn(
+        Future.successful(Seq(
+          DeploymentConfig(
+            serviceName = ServiceName("test-service"),
+            environment = Environment.Development,
+            deploymentSize = DeploymentSize(slots = 2, instances = 1),
+            zone = Zone.Protected,
+            envVars = Map("deployment.type" -> "consul"),
+            jvm = Map.empty
+          )
+        ))
+      )
+
+      val result = testService.releases(None, None, None).futureValue
+
+      result.head.versions.head.deploymentType shouldBe Some(DeploymentType.Consul)
+    }
+  }
 }

@@ -138,10 +138,16 @@
 
     let searchBox = document.getElementById("search");
 
-    let options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
-    let serviceList = new List('whats-running-where-list', options);
-    // re-search the list upon page load.
-    serviceList.search(searchBox.value);
+    // Only initialize List.js if there are items in the list
+    let listContainer = document.getElementById('whats-running-where-list');
+    let hasItems = listContainer && listContainer.querySelector('tbody.list tr');
+    
+    if (hasItems) {
+        let options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
+        let serviceList = new List('whats-running-where-list', options);
+        // re-search the list upon page load.
+        serviceList.search(searchBox.value);
+    }
 
     // set autofocus cursor to right of text in search box
     let length = searchBox.value.length;

@@ -14,10 +14,12 @@
  * limitations under the License.
  *@
 
-@import play.twirl.api.TwirlFeatureImports.defining
+@import play.twirl.api.{Html, TwirlFeatureImports}
+@import TwirlFeatureImports.defining
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.deployments.{routes => depRoutes}
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhere
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentType, WhatsRunningWhere}
+@import controllers.routes.Assets
 
 @(whatsRunning: Seq[WhatsRunningWhere])
 
@@ -34,7 +36,7 @@
             case (env, Some(current)) => {
               @defining(current.version.patch > 0) { isPatchedVersion =>
                 @if(current.version == latestVersion && !isPatchedVersion ) {
-                  <td id="row@{i}_version_@{env.asString}">@current.version.toString</td>
+                  <td id="row@{i}_version_@{env.asString}">@current.version.toString @deploymentTypeSymbol(current.deploymentType)</td>
                 } else {
                   @defining(opacity(current.version, latestVersion, sortedVersions.distinct, isPatchedVersion)) { opacity =>
                     <td id="row@{i}_version_@{env.asString}" class="@if(isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}" style="--bs-bg-opacity: @opacity">
@@ -43,7 +45,7 @@
                             data-bs-placement="bottom"
                             data-bs-html="true"
                             data-bs-content='@{popoverContent(current.version, latestVersion)}'>
-                              @current.version.toString
+                              @current.version.toString @deploymentTypeSymbol(current.deploymentType)
                       </span>
                     </td>
                   }
@@ -71,6 +73,17 @@
         val majorOrMinorOpacity = if(version.major < latestVersion.major) 1 else 0.5
         val age = uniqueVersions.indexOf(version)
         (1 - (age.toDouble / uniqueVersions.length)) * majorOrMinorOpacity
+    }
+}
+
+@deploymentTypeSymbol(deploymentType: Option[DeploymentType]) = @{
+    deploymentType match {
+        case Some(DeploymentType.Appmesh) => 
+            <img class="emoticon" src="https://jira.tools.tax.service.gov.uk/images/icons/emoticons/star_yellow.png" height="16" width="16" align="absmiddle" alt="Appmesh" border="0" title="Deployed on Appmesh"/>
+        case Some(DeploymentType.Consul) => 
+            <img class="list-item" src={Assets.versioned("consulicon.svg").url} alt="Consul" height="16" width="16" title="Deployed on Consul"/>
+        case None => 
+            Html("")
     }
 }
 
