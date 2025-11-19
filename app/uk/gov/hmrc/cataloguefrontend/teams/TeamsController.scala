@@ -91,7 +91,7 @@ class TeamsController @Inject()(
                    , teamsAndRepositoriesConnector.openPullRequestsForReposOwnedByTeam(teamName).map: openPrs =>
                        val openPRsForReposOwnedByTeamUrl   = s"https://github.com/search?q=${openPrs.map(_.repoName).distinct.map { r => s"repo:hmrc/$r" }.mkString("+")}+is:pr+is:open&type=pullrequests"
                        url"$openPRsForReposOwnedByTeamUrl"
-                   , healthMetricsConnector.latestTeamHealthMetrics(teamName)
+                   , healthMetricsConnector.latestTeamHealthMetrics(umpTeam.teamName)
                    ).tupled
      yield
        resultType(
@@ -99,7 +99,6 @@ class TeamsController @Inject()(
            teamName                        = umpTeam.teamName
          , umpTeam                         = umpTeam
          , teamDetailsForm                 = teamDetailsForm
-         , umpMyTeamsUrl                   = umpConfig.umpMyTeamsPageUrl(teamName)
          , gitHubUrl                       = results._1
          , repos                           = results._2
          , openPRsRaisedByMembersOfTeamUrl = results._3
