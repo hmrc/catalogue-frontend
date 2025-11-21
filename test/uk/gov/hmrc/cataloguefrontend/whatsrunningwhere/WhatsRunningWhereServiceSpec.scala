@@ -115,7 +115,7 @@ class WhatsRunningWhereServiceSpec
             environment = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
             zone = Zone.Protected,
-            envVars = Map("deployment.type" -> "appmesh"),
+            envVars = Map("consul_migration_stage" -> "0"), // Stage 0: AppMesh (standard, no icon)
             jvm = Map.empty
           ),
           DeploymentConfig(
@@ -123,7 +123,7 @@ class WhatsRunningWhereServiceSpec
             environment = Environment.Production,
             deploymentSize = DeploymentSize(slots = 4, instances = 2),
             zone = Zone.Protected,
-            envVars = Map("deploymentType" -> "consul"),
+            envVars = Map("consul_migration_stage" -> "2"), // Stage 2: Consul (show icon)
             jvm = Map.empty
           )
         ))
@@ -174,7 +174,7 @@ class WhatsRunningWhereServiceSpec
       result.head.versions.head.deploymentType shouldBe None
     }
 
-    "detect Appmesh deployment type from different flag names" in {
+    "do not show icon for Appmesh (stage 0 or 1, or no migration stage)" in {
       given HeaderCarrier = HeaderCarrier()
 
       val releasesData = Seq(
@@ -194,7 +194,7 @@ class WhatsRunningWhereServiceSpec
             environment = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
             zone = Zone.Protected,
-            envVars = Map("deployment_type" -> "appmesh"),
+            envVars = Map.empty, // No migration stage = AppMesh (standard, no icon)
             jvm = Map.empty
           )
         ))
