@@ -183,10 +183,9 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
       response.status shouldBe 200
       response.body should include("appmesh-service")
       response.body should include("consul-service")
-      // Check for Appmesh icon (yellow star)
-      response.body should include("star_yellow.png")
-      // Check for Consul icon
-      response.body should include("consulicon.svg")
+      // Appmesh is standard, so no icon shown
+      // Check for Consul icon (only shown for stage 2 & 3)
+      response.body should include("consulicon-green.svg")
     }
   }
 }

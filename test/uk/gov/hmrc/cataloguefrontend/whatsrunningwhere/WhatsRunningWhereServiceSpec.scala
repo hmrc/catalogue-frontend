@@ -136,7 +136,8 @@ class WhatsRunningWhereServiceSpec
       result.head.versions should have size 2
 
       val devVersion = result.head.versions.find(_.environment == Environment.Development).get
-      devVersion.deploymentType shouldBe Some(DeploymentType.Appmesh)
+      // Appmesh is standard, so deploymentType should be None (no icon shown)
+      devVersion.deploymentType shouldBe None
 
       val prodVersion = result.head.versions.find(_.environment == Environment.Production).get
       prodVersion.deploymentType shouldBe Some(DeploymentType.Consul)
@@ -201,10 +202,11 @@ class WhatsRunningWhereServiceSpec
 
       val result = testService.releases(None, None, None).futureValue
 
-      result.head.versions.head.deploymentType shouldBe Some(DeploymentType.Appmesh)
+      // Appmesh is standard, so deploymentType should be None (no icon shown)
+      result.head.versions.head.deploymentType shouldBe None
     }
 
-    "detect Consul deployment type" in {
+    "detect Consul deployment type from consul_migration_stage stage 2" in {
       given HeaderCarrier = HeaderCarrier()
 
       val releasesData = Seq(
@@ -224,7 +226,7 @@ class WhatsRunningWhereServiceSpec
             environment = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
             zone = Zone.Protected,
-            envVars = Map("deployment.type" -> "consul"),
+            envVars = Map("consul_migration_stage" -> "2"),
             jvm = Map.empty
           )
         ))
@@ -233,6 +235,101 @@ class WhatsRunningWhereServiceSpec
       val result = testService.releases(None, None, None).futureValue
 
       result.head.versions.head.deploymentType shouldBe Some(DeploymentType.Consul)
+    }
+
+    "detect Consul deployment type from consul_migration_stage stage 3" in {
+      given HeaderCarrier = HeaderCarrier()
+
+      val releasesData = Seq(
+        WhatsRunningWhere(
+          ServiceName("test-service"),
+          List(
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+          )
+        )
+      )
+
+      when(releasesConnector.releases(None, None, None)).thenReturn(Future.successful(releasesData))
+      when(serviceConfigsConnector.deploymentConfig()).thenReturn(
+        Future.successful(Seq(
+          DeploymentConfig(
+            serviceName = ServiceName("test-service"),
+            environment = Environment.Development,
+            deploymentSize = DeploymentSize(slots = 2, instances = 1),
+            zone = Zone.Protected,
+            envVars = Map("consul_migration_stage" -> "3"),
+            jvm = Map.empty
+          )
+        ))
+      )
+
+      val result = testService.releases(None, None, None).futureValue
+
+      result.head.versions.head.deploymentType shouldBe Some(DeploymentType.Consul)
+    }
+
+    "do not show icon for consul_migration_stage stage 0" in {
+      given HeaderCarrier = HeaderCarrier()
+
+      val releasesData = Seq(
+        WhatsRunningWhere(
+          ServiceName("test-service"),
+          List(
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+          )
+        )
+      )
+
+      when(releasesConnector.releases(None, None, None)).thenReturn(Future.successful(releasesData))
+      when(serviceConfigsConnector.deploymentConfig()).thenReturn(
+        Future.successful(Seq(
+          DeploymentConfig(
+            serviceName = ServiceName("test-service"),
+            environment = Environment.Development,
+            deploymentSize = DeploymentSize(slots = 2, instances = 1),
+            zone = Zone.Protected,
+            envVars = Map("consul_migration_stage" -> "0"),
+            jvm = Map.empty
+          )
+        ))
+      )
+
+      val result = testService.releases(None, None, None).futureValue
+
+      // Stage 0: AppMesh (standard, no icon)
+      result.head.versions.head.deploymentType shouldBe None
+    }
+
+    "do not show icon for consul_migration_stage stage 1" in {
+      given HeaderCarrier = HeaderCarrier()
+
+      val releasesData = Seq(
+        WhatsRunningWhere(
+          ServiceName("test-service"),
+          List(
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+          )
+        )
+      )
+
+      when(releasesConnector.releases(None, None, None)).thenReturn(Future.successful(releasesData))
+      when(serviceConfigsConnector.deploymentConfig()).thenReturn(
+        Future.successful(Seq(
+          DeploymentConfig(
+            serviceName = ServiceName("test-service"),
+            environment = Environment.Development,
+            deploymentSize = DeploymentSize(slots = 2, instances = 1),
+            zone = Zone.Protected,
+            envVars = Map("consul_migration_stage" -> "1"),
+            jvm = Map.empty
+          )
+        ))
+      )
+
+      val result = testService.releases(None, None, None).futureValue
+
+      // Stage 1: AppMesh (standard, no icon)
+      result.head.versions.head.deploymentType shouldBe None
     }
   }
 }

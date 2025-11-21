@@ -46,7 +46,8 @@ class WhatsRunningWhereService @Inject()(
       deploymentConfigs <- serviceConfigsConnector.deploymentConfig()
       deploymentTypeMap = buildDeploymentTypeMap(deploymentConfigs)
       enrichedReleases = enrichReleasesWithDeploymentType(releasesData, deploymentTypeMap)
-    yield enrichedReleases
+    yield
+      enrichedReleases
 
   private def buildDeploymentTypeMap(deploymentConfigs: Seq[uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig]): Map[(ServiceName, Environment), DeploymentType] =
     deploymentConfigs
@@ -56,20 +57,15 @@ class WhatsRunningWhereService @Inject()(
       .toMap
 
   private def determineDeploymentType(config: uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig): Option[DeploymentType] =
-    // Check envVars for deployment type flag
-    // Common flag names: deployment.type, deploymentType, deployment_type
-    val deploymentTypeValue = config.envVars
-      .get("deployment.type")
-      .orElse(config.envVars.get("deploymentType"))
-      .orElse(config.envVars.get("deployment_type"))
-      .orElse(config.jvm.get("deployment.type"))
-      .orElse(config.jvm.get("deploymentType"))
-      .map(_.toLowerCase)
+    val migrationStage = config.envVars
+      .get("consul_migration_stage")
+      .orElse(config.envVars.get("consul-migration-stage"))
+      .orElse(config.jvm.get("consul_migration_stage"))
+      .flatMap(_.toIntOption)
 
-    deploymentTypeValue match
-      case Some("appmesh") | Some("app-mesh") => Some(DeploymentType.Appmesh)
-      case Some("consul")                     => Some(DeploymentType.Consul)
-      case _                                  => None // Unknown or not set
+    migrationStage match
+      case Some(2) | Some(3) => Some(DeploymentType.Consul)
+      case _                  => None
 
   private def enrichReleasesWithDeploymentType(
     releases      : Seq[WhatsRunningWhere],
