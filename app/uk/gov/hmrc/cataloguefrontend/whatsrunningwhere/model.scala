@@ -167,8 +167,8 @@ enum DeploymentType(
   override val asString: String
 ) extends FromString
   derives FormFormat:
-  case Appmesh           extends DeploymentType("appmesh")
-  case Consul            extends DeploymentType("consul")
+  case Appmesh extends DeploymentType("appmesh")
+  case Consul  extends DeploymentType("consul")
 
 
 case class Profile(
@@ -217,8 +217,6 @@ object Pagination:
     import sttp.model.Uri.UriContext
     val u = uri"$uri"
     u.withParams(u.paramsMap ++ Map("page" -> page.toString)).toJavaUri // ensures existing page param is replaced
-
-
 
 case class DeploymentTimelineEvent(
   env                    : Environment,

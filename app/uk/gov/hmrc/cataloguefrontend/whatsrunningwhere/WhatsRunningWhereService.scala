@@ -44,8 +44,8 @@ class WhatsRunningWhereService @Inject()(
     for
       releasesData      <- releasesConnector.releases(teamName, digitalService, sm2Profile)
       deploymentConfigs <- serviceConfigsConnector.deploymentConfig()
-      deploymentTypeMap  =  buildDeploymentTypeMap(deploymentConfigs)
-      enrichedReleases   =  enrichReleasesWithDeploymentType(releasesData, deploymentTypeMap)
+      deploymentTypeMap =  buildDeploymentTypeMap(deploymentConfigs)
+      enrichedReleases  =  enrichReleasesWithDeploymentType(releasesData, deploymentTypeMap)
     yield
       enrichedReleases
 
@@ -65,7 +65,7 @@ class WhatsRunningWhereService @Inject()(
 
     migrationStage match
       case Some(2) | Some(3) => Some(DeploymentType.Consul)
-      case _                  => None
+      case _                 => None
 
   private def enrichReleasesWithDeploymentType(
     releases      : Seq[WhatsRunningWhere],
@@ -79,10 +79,10 @@ class WhatsRunningWhereService @Inject()(
 
   def releasesForService(service: ServiceName)(using HeaderCarrier): Future[WhatsRunningWhere] =
     for
-      releaseData        <- releasesConnector.releasesForService(service)
+      releaseData       <- releasesConnector.releasesForService(service)
       deploymentConfigs <- serviceConfigsConnector.deploymentConfig(service = Some(service))
-      deploymentTypeMap  =  buildDeploymentTypeMap(deploymentConfigs)
-      enrichedRelease    =  enrichReleasesWithDeploymentType(Seq(releaseData), deploymentTypeMap).head
+      deploymentTypeMap =  buildDeploymentTypeMap(deploymentConfigs)
+      enrichedRelease   =  enrichReleasesWithDeploymentType(Seq(releaseData), deploymentTypeMap).head
     yield enrichedRelease
 
   def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(using HeaderCarrier): Future[Seq[ServiceDeploymentConfigSummary]] =

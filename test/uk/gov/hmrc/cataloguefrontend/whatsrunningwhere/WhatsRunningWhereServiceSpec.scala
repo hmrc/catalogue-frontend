@@ -61,8 +61,8 @@ class WhatsRunningWhereServiceSpec
 
   val testService = WhatsRunningWhereService(releasesConnector, serviceConfigsConnector)
 
-  "whatsRunningWhereService.allReleases" should {
-    "return the expected data structure and be filtered by releases" in {
+  "whatsRunningWhereService.allReleases" should:
+    "return the expected data structure and be filtered by releases" in:
       given HeaderCarrier = HeaderCarrier()
 
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
@@ -90,11 +90,9 @@ class WhatsRunningWhereServiceSpec
           Environment.Production -> DeploymentSize(slots = 8, instances = 4)
         ))
       )
-    }
-  }
 
-  "whatsRunningWhereService.releases" should {
-    "enrich releases with deployment type from deployment config" in {
+  "whatsRunningWhereService.releases" should:
+    "enrich releases with deployment type from deployment config" in:
       given HeaderCarrier = HeaderCarrier()
 
       val releasesData = Seq(
@@ -141,9 +139,8 @@ class WhatsRunningWhereServiceSpec
 
       val prodVersion = result.head.versions.find(_.environment == Environment.Production).get
       prodVersion.deploymentType shouldBe Some(DeploymentType.Consul)
-    }
 
-    "handle missing deployment type gracefully" in {
+    "handle missing deployment type gracefully" in:
       given HeaderCarrier = HeaderCarrier()
 
       val releasesData = Seq(
@@ -172,9 +169,8 @@ class WhatsRunningWhereServiceSpec
       val result = testService.releases(None, None, None).futureValue
 
       result.head.versions.head.deploymentType shouldBe None
-    }
 
-    "do not show icon for Appmesh (stage 0 or 1, or no migration stage)" in {
+    "do not show icon for Appmesh (stage 0 or 1, or no migration stage)" in:
       given HeaderCarrier = HeaderCarrier()
 
       val releasesData = Seq(
@@ -204,9 +200,8 @@ class WhatsRunningWhereServiceSpec
 
       // Appmesh is standard, so deploymentType should be None (no icon shown)
       result.head.versions.head.deploymentType shouldBe None
-    }
 
-    "detect Consul deployment type from consul_migration_stage stage 2" in {
+    "detect Consul deployment type from consul_migration_stage stage 2" in:
       given HeaderCarrier = HeaderCarrier()
 
       val releasesData = Seq(
@@ -235,9 +230,8 @@ class WhatsRunningWhereServiceSpec
       val result = testService.releases(None, None, None).futureValue
 
       result.head.versions.head.deploymentType shouldBe Some(DeploymentType.Consul)
-    }
 
-    "detect Consul deployment type from consul_migration_stage stage 3" in {
+    "detect Consul deployment type from consul_migration_stage stage 3" in:
       given HeaderCarrier = HeaderCarrier()
 
       val releasesData = Seq(
@@ -266,9 +260,8 @@ class WhatsRunningWhereServiceSpec
       val result = testService.releases(None, None, None).futureValue
 
       result.head.versions.head.deploymentType shouldBe Some(DeploymentType.Consul)
-    }
 
-    "do not show icon for consul_migration_stage stage 0" in {
+    "do not show icon for consul_migration_stage stage 0" in:
       given HeaderCarrier = HeaderCarrier()
 
       val releasesData = Seq(
@@ -298,9 +291,8 @@ class WhatsRunningWhereServiceSpec
 
       // Stage 0: AppMesh (standard, no icon)
       result.head.versions.head.deploymentType shouldBe None
-    }
 
-    "do not show icon for consul_migration_stage stage 1" in {
+    "do not show icon for consul_migration_stage stage 1" in:
       given HeaderCarrier = HeaderCarrier()
 
       val releasesData = Seq(
@@ -330,6 +322,5 @@ class WhatsRunningWhereServiceSpec
 
       // Stage 1: AppMesh (standard, no icon)
       result.head.versions.head.deploymentType shouldBe None
-    }
-  }
+
 end WhatsRunningWhereServiceSpec
