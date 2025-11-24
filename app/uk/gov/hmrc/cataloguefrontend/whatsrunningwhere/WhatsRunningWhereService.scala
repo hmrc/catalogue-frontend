@@ -41,10 +41,49 @@ class WhatsRunningWhereService @Inject()(
   , digitalService: Option[DigitalService]
   , sm2Profile    : Option[String]
   )(using HeaderCarrier): Future[Seq[WhatsRunningWhere]] =
-    releasesConnector.releases(teamName, digitalService, sm2Profile)
+    for
+      releasesData      <- releasesConnector.releases(teamName, digitalService, sm2Profile)
+      deploymentConfigs <- serviceConfigsConnector.deploymentConfig()
+      deploymentTypeMap =  buildDeploymentTypeMap(deploymentConfigs)
+      enrichedReleases  =  enrichReleasesWithDeploymentType(releasesData, deploymentTypeMap)
+    yield
+      enrichedReleases
+
+  private def buildDeploymentTypeMap(deploymentConfigs: Seq[uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig]): Map[(ServiceName, Environment), DeploymentType] =
+    deploymentConfigs
+      .flatMap: config =>
+        val deploymentType = determineDeploymentType(config)
+        deploymentType.map(dt => (config.serviceName, config.environment) -> dt)
+      .toMap
+
+  private def determineDeploymentType(config: uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig): Option[DeploymentType] =
+    val migrationStage = config.envVars
+      .get("consul_migration_stage")
+      .orElse(config.envVars.get("consul-migration-stage"))
+      .orElse(config.jvm.get("consul_migration_stage"))
+      .flatMap(_.toIntOption)
+
+    migrationStage match
+      case Some(2) | Some(3) => Some(DeploymentType.Consul)
+      case _                 => None
+
+  private def enrichReleasesWithDeploymentType(
+    releases      : Seq[WhatsRunningWhere],
+    deploymentTypeMap: Map[(ServiceName, Environment), DeploymentType]
+  ): Seq[WhatsRunningWhere] =
+    releases.map: release =>
+      val enrichedVersions = release.versions.map: version =>
+        val deploymentType = deploymentTypeMap.get((release.serviceName, version.environment))
+        version.copy(deploymentType = deploymentType)
+      release.copy(versions = enrichedVersions)
 
   def releasesForService(service: ServiceName)(using HeaderCarrier): Future[WhatsRunningWhere] =
-    releasesConnector.releasesForService(service)
+    for
+      releaseData       <- releasesConnector.releasesForService(service)
+      deploymentConfigs <- serviceConfigsConnector.deploymentConfig(service = Some(service))
+      deploymentTypeMap =  buildDeploymentTypeMap(deploymentConfigs)
+      enrichedRelease   =  enrichReleasesWithDeploymentType(Seq(releaseData), deploymentTypeMap).head
+    yield enrichedRelease
 
   def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(using HeaderCarrier): Future[Seq[ServiceDeploymentConfigSummary]] =
     val releasesPerEnv = releases.map(r => (r.serviceName, r.versions.map(_.environment))).toMap

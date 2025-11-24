@@ -68,7 +68,8 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
 
       serviceEndpoint(
         GET,
-        url="/deployment-config",
+        url="/service-configs/deployment-config",
+        queryParameters = Seq("applied" -> "true"),
         willRespondWith = (
           200,
           Some("""[
@@ -76,25 +77,28 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
                  |    "name": "alert-simulator",
                  |    "environment": "integration",
                  |    "zone": "public",
-                 |    "type": "microservice",
                  |    "slots": 2,
-                 |    "instances": 1
+                 |    "instances": 1,
+                 |    "envVars": {},
+                 |    "jvm": {}
                  |  },
                  |  {
                  |    "name": "api-definition",
                  |    "environment": "integration",
                  |    "zone": "protected",
-                 |    "type": "microservice",
                  |    "slots": 4,
-                 |    "instances": 0
+                 |    "instances": 0,
+                 |    "envVars": {},
+                 |    "jvm": {}
                  |  },
                  |  {
                  |    "name": "api-documentation-frontend",
                  |    "environment": "integration",
                  |    "zone": "public",
-                 |    "type": "frontend",
                  |    "slots": 6,
-                 |    "instances": 2
+                 |    "instances": 2,
+                 |    "envVars": {},
+                 |    "jvm": {}
                  |  }
                  |]""".stripMargin)
         )
@@ -107,6 +111,85 @@ class WhatsRunningWhereSpec extends UnitSpec with BeforeAndAfter with FakeApplic
       response.body should include("api-documentation")
       response.body should include("0.41.0")
       response.body should include("Integration")
+    }
+
+    "show deployment type icons for Consul (stage 2 & 3)" in {
+      serviceEndpoint(GET, "/api/v2/teams", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+      serviceEndpoint(GET, "/api/v2/digital-services", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.digitalServicesData)))
+      serviceEndpoint(GET, "/releases-api/profiles", willRespondWith = (200, Some(JsonData.profiles)))
+
+      serviceEndpoint(
+        GET,
+        "/releases-api/whats-running-where",
+        queryParameters = Seq.empty,
+        willRespondWith = (
+          200,
+          Some("""[
+                 |  {
+                 |    "applicationName": "appmesh-service",
+                 |    "versions": [
+                 |      {
+                 |        "environment": "integration",
+                 |        "versionNumber": "1.0.0",
+                 |        "lastSeen": "2019-05-29T14:09:48Z",
+                 |        "config": []
+                 |      }
+                 |    ]
+                 |  },
+                 |  {
+                 |    "applicationName": "consul-service",
+                 |    "versions": [
+                 |      {
+                 |        "environment": "integration",
+                 |        "versionNumber": "2.0.0",
+                 |        "lastSeen": "2019-05-29T14:09:46Z",
+                 |        "config": []
+                 |      }
+                 |    ]
+                 |  }
+                 |]""".stripMargin))
+      )
+
+      serviceEndpoint(
+        GET,
+        url="/service-configs/deployment-config",
+        queryParameters = Seq("applied" -> "true"),
+        willRespondWith = (
+          200,
+          Some("""[
+                 |  {
+                 |    "name": "appmesh-service",
+                 |    "environment": "integration",
+                 |    "zone": "public",
+                 |    "slots": 2,
+                 |    "instances": 1,
+                 |    "envVars": {
+                 |      "consul_migration_stage": "0"
+                 |    },
+                 |    "jvm": {}
+                 |  },
+                 |  {
+                 |    "name": "consul-service",
+                 |    "environment": "integration",
+                 |    "zone": "public",
+                 |    "slots": 2,
+                 |    "instances": 1,
+                 |    "envVars": {
+                 |      "consul_migration_stage": "2"
+                 |    },
+                 |    "jvm": {}
+                 |  }
+                 |]""".stripMargin)
+        )
+      )
+
+      val response = wsClient.url(s"http://localhost:$port/whats-running-where").withAuthToken("Token token").get().futureValue
+      response.status shouldBe 200
+      response.body should include("appmesh-service")
+      response.body should include("consul-service")
+      // Appmesh is standard (stage 0), so no icon shown
+      // Check for Consul icon (only shown for stage 2 & 3)
+      response.body should include("consulicon.svg")
     }
   }
 }

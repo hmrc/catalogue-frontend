@@ -30,9 +30,10 @@ case class WhatsRunningWhere(
 )
 
 case class WhatsRunningWhereVersion(
-  environment: Environment,
-  version    : Version,
-  config     : List[WhatsRunningWhereConfig]
+  environment   : Environment,
+  version       : Version,
+  config        : List[WhatsRunningWhereConfig],
+  deploymentType: Option[DeploymentType] = None
 )
 
 case class WhatsRunningWhereConfig(
@@ -63,7 +64,7 @@ object JsonCodecs:
     ( (__ \ "environment"  ).read[Environment]
     ~ (__ \ "versionNumber").read[Version](Version.format)
     ~ (__ \ "config"       ).read[List[WhatsRunningWhereConfig]]
-    )(WhatsRunningWhereVersion.apply)
+    )((env, version, config) => WhatsRunningWhereVersion(env, version, config, None))
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] =
     given Reads[WhatsRunningWhereVersion] = whatsRunningWhereVersionReads
@@ -160,6 +161,15 @@ enum ProfileType(
   case Team           extends ProfileType("team")
   case ServiceManager extends ProfileType("servicemanager")
 
+given Parser[DeploymentType] = Parser.parser(DeploymentType.values)
+
+enum DeploymentType(
+  override val asString: String
+) extends FromString
+  derives FormFormat:
+  case Appmesh extends DeploymentType("appmesh")
+  case Consul  extends DeploymentType("consul")
+
 
 case class Profile(
   profileType: ProfileType,
@@ -207,8 +217,6 @@ object Pagination:
     import sttp.model.Uri.UriContext
     val u = uri"$uri"
     u.withParams(u.paramsMap ++ Map("page" -> page.toString)).toJavaUri // ensures existing page param is replaced
-
-
 
 case class DeploymentTimelineEvent(
   env                    : Environment,
