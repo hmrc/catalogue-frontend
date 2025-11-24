@@ -167,8 +167,8 @@ enum DeploymentType(
   override val asString: String
 ) extends FromString
   derives FormFormat:
-  case Appmesh extends DeploymentType("appmesh")
-  case Consul   extends DeploymentType("consul")
+  case Appmesh           extends DeploymentType("appmesh")
+  case Consul            extends DeploymentType("consul")
 
 
 case class Profile(

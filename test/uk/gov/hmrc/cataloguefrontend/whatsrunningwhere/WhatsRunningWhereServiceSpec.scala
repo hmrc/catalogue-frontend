@@ -33,7 +33,7 @@ class WhatsRunningWhereServiceSpec
   extends AnyWordSpec
      with Matchers
      with MockitoSugar
-     with ScalaFutures {
+     with ScalaFutures:
 
   private val release1 =
     WhatsRunningWhere(
@@ -111,20 +111,20 @@ class WhatsRunningWhereServiceSpec
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
           DeploymentConfig(
-            serviceName = ServiceName("test-service"),
-            environment = Environment.Development,
+            serviceName    = ServiceName("test-service"),
+            environment    = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
-            zone = Zone.Protected,
-            envVars = Map("consul_migration_stage" -> "0"), // Stage 0: AppMesh (standard, no icon)
-            jvm = Map.empty
+            zone           = Zone.Protected,
+            envVars        = Map("consul_migration_stage" -> "0"), // Stage 0: AppMesh (standard, no icon)
+            jvm            = Map.empty
           ),
           DeploymentConfig(
-            serviceName = ServiceName("test-service"),
-            environment = Environment.Production,
+            serviceName    = ServiceName("test-service"),
+            environment    = Environment.Production,
             deploymentSize = DeploymentSize(slots = 4, instances = 2),
-            zone = Zone.Protected,
-            envVars = Map("consul_migration_stage" -> "2"), // Stage 2: Consul (show icon)
-            jvm = Map.empty
+            zone           = Zone.Protected,
+            envVars        = Map("consul_migration_stage" -> "2"), // Stage 2: Consul (show icon)
+            jvm            = Map.empty
           )
         ))
       )
@@ -159,12 +159,12 @@ class WhatsRunningWhereServiceSpec
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
           DeploymentConfig(
-            serviceName = ServiceName("test-service"),
-            environment = Environment.Development,
+            serviceName    = ServiceName("test-service"),
+            environment    = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
-            zone = Zone.Protected,
-            envVars = Map.empty,
-            jvm = Map.empty
+            zone           = Zone.Protected,
+            envVars        = Map.empty,
+            jvm            = Map.empty
           )
         ))
       )
@@ -190,12 +190,12 @@ class WhatsRunningWhereServiceSpec
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
           DeploymentConfig(
-            serviceName = ServiceName("test-service"),
-            environment = Environment.Development,
+            serviceName    = ServiceName("test-service"),
+            environment    = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
-            zone = Zone.Protected,
-            envVars = Map.empty, // No migration stage = AppMesh (standard, no icon)
-            jvm = Map.empty
+            zone           = Zone.Protected,
+            envVars        = Map.empty, // No migration stage = AppMesh (standard, no icon)
+            jvm            = Map.empty
           )
         ))
       )
@@ -222,12 +222,12 @@ class WhatsRunningWhereServiceSpec
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
           DeploymentConfig(
-            serviceName = ServiceName("test-service"),
-            environment = Environment.Development,
+            serviceName    = ServiceName("test-service"),
+            environment    = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
-            zone = Zone.Protected,
-            envVars = Map("consul_migration_stage" -> "2"),
-            jvm = Map.empty
+            zone           = Zone.Protected,
+            envVars        = Map("consul_migration_stage" -> "2"),
+            jvm            = Map.empty
           )
         ))
       )
@@ -253,12 +253,12 @@ class WhatsRunningWhereServiceSpec
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
           DeploymentConfig(
-            serviceName = ServiceName("test-service"),
-            environment = Environment.Development,
+            serviceName    = ServiceName("test-service"),
+            environment    = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
-            zone = Zone.Protected,
-            envVars = Map("consul_migration_stage" -> "3"),
-            jvm = Map.empty
+            zone           = Zone.Protected,
+            envVars        = Map("consul_migration_stage" -> "3"),
+            jvm            = Map.empty
           )
         ))
       )
@@ -284,12 +284,12 @@ class WhatsRunningWhereServiceSpec
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
           DeploymentConfig(
-            serviceName = ServiceName("test-service"),
-            environment = Environment.Development,
+            serviceName    = ServiceName("test-service"),
+            environment    = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
-            zone = Zone.Protected,
-            envVars = Map("consul_migration_stage" -> "0"),
-            jvm = Map.empty
+            zone           = Zone.Protected,
+            envVars        = Map("consul_migration_stage" -> "0"),
+            jvm            = Map.empty
           )
         ))
       )
@@ -316,12 +316,12 @@ class WhatsRunningWhereServiceSpec
       when(serviceConfigsConnector.deploymentConfig()).thenReturn(
         Future.successful(Seq(
           DeploymentConfig(
-            serviceName = ServiceName("test-service"),
-            environment = Environment.Development,
+            serviceName    = ServiceName("test-service"),
+            environment    = Environment.Development,
             deploymentSize = DeploymentSize(slots = 2, instances = 1),
-            zone = Zone.Protected,
-            envVars = Map("consul_migration_stage" -> "1"),
-            jvm = Map.empty
+            zone           = Zone.Protected,
+            envVars        = Map("consul_migration_stage" -> "1"),
+            jvm            = Map.empty
           )
         ))
       )
@@ -332,4 +332,4 @@ class WhatsRunningWhereServiceSpec
       result.head.versions.head.deploymentType shouldBe None
     }
   }
-}
+end WhatsRunningWhereServiceSpec
