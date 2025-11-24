@@ -44,8 +44,8 @@ class WhatsRunningWhereService @Inject()(
     for
       releasesData      <- releasesConnector.releases(teamName, digitalService, sm2Profile)
       deploymentConfigs <- serviceConfigsConnector.deploymentConfig()
-      deploymentTypeMap  = buildDeploymentTypeMap(deploymentConfigs)
-      enrichedReleases   = enrichReleasesWithDeploymentType(releasesData, deploymentTypeMap)
+      deploymentTypeMap  =  buildDeploymentTypeMap(deploymentConfigs)
+      enrichedReleases   =  enrichReleasesWithDeploymentType(releasesData, deploymentTypeMap)
     yield
       enrichedReleases
 
@@ -81,8 +81,8 @@ class WhatsRunningWhereService @Inject()(
     for
       releaseData        <- releasesConnector.releasesForService(service)
       deploymentConfigs <- serviceConfigsConnector.deploymentConfig(service = Some(service))
-      deploymentTypeMap  = buildDeploymentTypeMap(deploymentConfigs)
-      enrichedRelease    = enrichReleasesWithDeploymentType(Seq(releaseData), deploymentTypeMap).head
+      deploymentTypeMap  =  buildDeploymentTypeMap(deploymentConfigs)
+      enrichedRelease    =  enrichReleasesWithDeploymentType(Seq(releaseData), deploymentTypeMap).head
     yield enrichedRelease
 
   def allDeploymentConfigs(releases: Seq[WhatsRunningWhere])(using HeaderCarrier): Future[Seq[ServiceDeploymentConfigSummary]] =
