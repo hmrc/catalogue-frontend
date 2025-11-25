@@ -133,17 +133,17 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize dropdown change listeners
         ["select-team", "select-digital-service", "select-sm2-profile", "select-view-mode"]
-          .forEach(function(id) {
-            var element = document.getElementById(id);
-            if (element) {
-              element.addEventListener("change", function() {
-                var form = document.getElementById("form");
-                if (form) {
-                  form.submit();
+            .forEach(function(id) {
+                var element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener("change", function() {
+                        var form = document.getElementById("form");
+                        if (form) {
+                            form.submit();
+                        }
+                    });
                 }
-              });
-            }
-          });
+            });
 
         // Initialize search box
         let searchBox = document.getElementById("search");
