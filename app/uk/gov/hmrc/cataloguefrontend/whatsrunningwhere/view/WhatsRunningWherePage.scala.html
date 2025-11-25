@@ -129,40 +129,58 @@
     </div>
 }
 <script @CSPNonce.attr>
-    ["select-team", "select-digital-service", "select-sm2-profile", "select-view-mode"]
-      .forEach(function(id) {
-        document.getElementById(id).addEventListener("change", function() {
-          document.getElementById("form").submit();
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize dropdown change listeners
+        ["select-team", "select-digital-service", "select-sm2-profile", "select-view-mode"]
+          .forEach(function(id) {
+            var element = document.getElementById(id);
+            if (element) {
+              element.addEventListener("change", function() {
+                var form = document.getElementById("form");
+                if (form) {
+                  form.submit();
+                }
+              });
+            }
+          });
+
+        // Initialize search box
+        let searchBox = document.getElementById("search");
+        if (searchBox) {
+            // Only initialize List.js if there are items in the list
+            let listContainer = document.getElementById('whats-running-where-list');
+            let hasItems = listContainer && listContainer.querySelector('tbody.list tr');
+            
+            if (hasItems) {
+                let options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
+                let serviceList = new List('whats-running-where-list', options);
+                // re-search the list upon page load.
+                serviceList.search(searchBox.value);
+                
+                // Manually bind search box to List.js if not already bound
+                // List.js should auto-bind to elements with class "search", but ensure it works
+                searchBox.addEventListener('input', function() {
+                    serviceList.search(searchBox.value);
+                });
+            }
+
+            // set autofocus cursor to right of text in search box
+            let length = searchBox.value.length;
+            searchBox.focus();
+            searchBox.setSelectionRange(length, length);
+        }
+
+        // Initialize Bootstrap tooltips for Consul icons
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
-      });
 
-    let searchBox = document.getElementById("search");
-
-    // Only initialize List.js if there are items in the list
-    let listContainer = document.getElementById('whats-running-where-list');
-    let hasItems = listContainer && listContainer.querySelector('tbody.list tr');
-    
-    if (hasItems) {
-        let options = { valueNames: [ 'application-name', 'development', 'integration', 'qa', 'staging', 'externaltest', 'production'] };
-        let serviceList = new List('whats-running-where-list', options);
-        // re-search the list upon page load.
-        serviceList.search(searchBox.value);
-    }
-
-    // set autofocus cursor to right of text in search box
-    let length = searchBox.value.length;
-    searchBox.focus();
-    searchBox.setSelectionRange(length, length);
-
-    // Initialize Bootstrap tooltips for Consul icons
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Initialize Bootstrap popovers for version information
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
+        // Initialize Bootstrap popovers for version information
+        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+            return new bootstrap.Popover(popoverTriggerEl);
+        });
     });
 </script>
