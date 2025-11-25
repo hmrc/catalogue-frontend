@@ -73,19 +73,19 @@
                 </div>
                 <div class="col-md-2">
                     @select(
-                    field                   =  form("digitalService")
-                    , options               =  digitalServices.map(x => x.asString -> x.asString)
-                    , Symbol("_default")    -> "All"
-                    , Symbol("_label")      -> "Digital Service"
-                    , Symbol("_labelClass") -> "form-label"
-                    , Symbol("id")          -> "select-digital-service"
-                    , Symbol("class")       -> "form-select"
+                        field                 = form("digitalService"),
+                        options               = digitalServices.map(x => x.asString -> x.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Digital Service",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "select-digital-service",
+                        Symbol("class")       -> "form-select"
                     )
                 </div>
                 <div class="col-md-2">
                     @select(
-                        field                 =  form("sm2Profile"),
-                        options               =  sm2Profiles.map(x => x.profileName.asString -> x.profileName.asString),
+                        field                 = form("sm2Profile"),
+                        options               = sm2Profiles.map(x => x.profileName.asString -> x.profileName.asString),
                         Symbol("_default")    -> "All",
                         Symbol("_label")      -> "Service Manager Profile",
                         Symbol("_labelClass") -> "form-label",
@@ -95,8 +95,8 @@
                 </div>
                 <div class="col-md-2">
                     @select(
-                        field                 =  form("viewMode"),
-                        options               =  ViewMode.values.toSeq.map(x => x.asString -> x.asString),
+                        field                 = form("viewMode"),
+                        options               = ViewMode.values.toSeq.map(x => x.asString -> x.asString),
                         Symbol("_label")      -> "Display",
                         Symbol("_labelClass") -> "form-label",
                         Symbol("id")          -> "select-view-mode",
@@ -172,15 +172,13 @@
         }
 
         // Initialize Bootstrap tooltips for Consul icons
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
+        [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')).forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
         });
 
         // Initialize Bootstrap popovers for version information
-        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-        var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-            return new bootstrap.Popover(popoverTriggerEl);
+        [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]')).forEach(function (popoverTriggerEl) {
+            new bootstrap.Popover(popoverTriggerEl);
         });
     });
 </script>
