@@ -73,7 +73,7 @@
                 </div>
                 <div class="col-md-2">
                     @select(
-                    field                 =  form("digitalService")
+                    field                   =  form("digitalService")
                     , options               =  digitalServices.map(x => x.asString -> x.asString)
                     , Symbol("_default")    -> "All"
                     , Symbol("_label")      -> "Digital Service"
