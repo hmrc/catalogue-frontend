@@ -73,34 +73,34 @@
                 </div>
                 <div class="col-md-2">
                     @select(
-                        field                 =  form("digitalService")
-                        , options               =  digitalServices.map(x => x.asString -> x.asString)
-                        , Symbol("_default")    -> "All"
-                        , Symbol("_label")      -> "Digital Service"
-                        , Symbol("_labelClass") -> "form-label"
-                        , Symbol("id")          -> "select-digital-service"
-                        , Symbol("class")       -> "form-select"
+                    field                 =  form("digitalService")
+                    , options               =  digitalServices.map(x => x.asString -> x.asString)
+                    , Symbol("_default")    -> "All"
+                    , Symbol("_label")      -> "Digital Service"
+                    , Symbol("_labelClass") -> "form-label"
+                    , Symbol("id")          -> "select-digital-service"
+                    , Symbol("class")       -> "form-select"
                     )
                 </div>
                 <div class="col-md-2">
                     @select(
-                        field                 =  form("sm2Profile")
-                        , options               =  sm2Profiles.map(x => x.profileName.asString -> x.profileName.asString)
-                        , Symbol("_default")    -> "All"
-                        , Symbol("_label")      -> "Service Manager Profile"
-                        , Symbol("_labelClass") -> "form-label"
-                        , Symbol("id")          -> "select-sm2-profile"
-                        , Symbol("class")       -> "form-select"
+                        field                 =  form("sm2Profile"),
+                        options               =  sm2Profiles.map(x => x.profileName.asString -> x.profileName.asString),
+                        Symbol("_default")    -> "All",
+                        Symbol("_label")      -> "Service Manager Profile",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "select-sm2-profile",
+                        Symbol("class")       -> "form-select"
                     )
                 </div>
                 <div class="col-md-2">
                     @select(
-                        field                 =  form("viewMode")
-                        , options               =  ViewMode.values.toSeq.map(x => x.asString -> x.asString)
-                        , Symbol("_label")      -> "Display"
-                        , Symbol("_labelClass") -> "form-label"
-                        , Symbol("id")          -> "select-view-mode"
-                        , Symbol("class")       -> "form-select"
+                        field                 =  form("viewMode"),
+                        options               =  ViewMode.values.toSeq.map(x => x.asString -> x.asString),
+                        Symbol("_label")      -> "Display",
+                        Symbol("_labelClass") -> "form-label",
+                        Symbol("id")          -> "select-view-mode",
+                        Symbol("class")       -> "form-select"
                     )
                 </div>
             </div>
