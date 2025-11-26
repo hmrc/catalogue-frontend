@@ -36,7 +36,7 @@
             case (env, Some(current)) => {
               @defining(current.version.patch > 0) { isPatchedVersion =>
                 @if(current.version == latestVersion && !isPatchedVersion ) {
-                  <td id="row@{i}_version_@{env.asString}"><span style="display: inline-flex; align-items: center; gap: 4px;">@current.version.toString @deploymentTypeSymbol(current.deploymentType)</span></td>
+                  <td id="row@{i}_version_@{env.asString}"><span style="display: flex; justify-content: space-between; align-items: center; width: 100%;"><span>@current.version.toString</span>@deploymentTypeSymbol(current.deploymentType)</span></td>
                 } else {
                   @defining(opacity(current.version, latestVersion, sortedVersions.distinct, isPatchedVersion)) { opacity =>
                     <td id="row@{i}_version_@{env.asString}" class="@if(isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}" style="--bs-bg-opacity: @opacity">
@@ -45,8 +45,8 @@
                             data-bs-placement="bottom"
                             data-bs-html="true"
                             data-bs-content='@{popoverContent(current.version, latestVersion)}'
-                            style="display: inline-flex; align-items: center; gap: 4px;">
-                              @current.version.toString @deploymentTypeSymbol(current.deploymentType)
+                            style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                              <span>@current.version.toString</span>@deploymentTypeSymbol(current.deploymentType)
                       </span>
                     </td>
                   }
