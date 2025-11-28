@@ -36,7 +36,7 @@
             case (env, Some(current)) => {
               @defining(current.version.patch > 0) { isPatchedVersion =>
                 @if(current.version == latestVersion && !isPatchedVersion ) {
-                  <td id="row@{i}_version_@{env.asString}"><span style="display: flex; align-items: center; width: 100%; position: relative;"><span>@current.version.toString</span><span style="position: absolute; right: 4px;">@deploymentTypeSymbol(current.deploymentType)</span></span></td>
+                  <td id="row@{i}_version_@{env.asString}"><span style="display: flex; align-items: center; gap: 4px;">@deploymentTypeSymbol(current.deploymentType)<span>@current.version.toString</span></span></td>
                 } else {
                   @defining(opacity(current.version, latestVersion, sortedVersions.distinct, isPatchedVersion)) { opacity =>
                     <td id="row@{i}_version_@{env.asString}" class="@if(isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}" style="--bs-bg-opacity: @opacity">
@@ -45,8 +45,8 @@
                             data-bs-placement="bottom"
                             data-bs-html="true"
                             data-bs-content='@{popoverContent(current.version, latestVersion)}'
-                            style="display: flex; align-items: center; width: 100%; position: relative;">
-                              <span>@current.version.toString</span><span style="position: absolute; right: 4px;">@deploymentTypeSymbol(current.deploymentType)</span>
+                            style="display: flex; align-items: center; gap: 4px;">
+                              @deploymentTypeSymbol(current.deploymentType)<span>@current.version.toString</span>
                       </span>
                     </td>
                   }
@@ -91,8 +91,8 @@
                  data-bs-trigger="hover" 
                  title="Deployed on Consul"/>
         case _ => 
-            // Appmesh is standard/default, so no icon needed
-            Html("")
+            // Appmesh is standard/default, no icon but keep spacing consistent
+            Html("<span style='display: inline-block; width: 16px;'></span>")
     }
 }
 
