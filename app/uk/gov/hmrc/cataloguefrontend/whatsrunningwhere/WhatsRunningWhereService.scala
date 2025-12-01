@@ -73,7 +73,8 @@ class WhatsRunningWhereService @Inject()(
   ): Seq[WhatsRunningWhere] =
     releases.map: release =>
       val enrichedVersions = release.versions.map: version =>
-        val deploymentType = deploymentTypeMap.get((release.serviceName, version.environment))
+        // Prefer deploymentType from releases API, fallback to service-configs
+        val deploymentType = version.deploymentType.orElse(deploymentTypeMap.get((release.serviceName, version.environment)))
         version.copy(deploymentType = deploymentType)
       release.copy(versions = enrichedVersions)
 
