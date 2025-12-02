@@ -51,12 +51,12 @@ class WhatsRunningWhereService @Inject()(
 
   private def buildIsConsulMap(deploymentConfigs: Seq[uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig]): Map[(ServiceName, Environment), Boolean] =
     deploymentConfigs
-      .flatMap: config =>
+      .map: config =>
         val isConsul = determineIsConsul(config)
-        isConsul.map(consul => (config.serviceName, config.environment) -> consul)
+        (config.serviceName, config.environment) -> isConsul
       .toMap
 
-  private def determineIsConsul(config: uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig): Option[Boolean] =
+  private def determineIsConsul(config: uk.gov.hmrc.cataloguefrontend.cost.DeploymentConfig): Boolean =
     val migrationStage = config.envVars
       .get("consul_migration_stage")
       .orElse(config.envVars.get("consul-migration-stage"))
@@ -64,8 +64,8 @@ class WhatsRunningWhereService @Inject()(
       .flatMap(_.toIntOption)
 
     migrationStage match
-      case Some(2) | Some(3) => Some(true)  // Consul
-      case _                 => None        // Appmesh or unknown
+      case Some(2) | Some(3) => true   // Consul
+      case _                 => false  // Appmesh or unknown
 
   private def enrichReleasesWithDeploymentType(
     releases      : Seq[WhatsRunningWhere],
@@ -74,7 +74,7 @@ class WhatsRunningWhereService @Inject()(
     releases.map: release =>
       val enrichedVersions = release.versions.map: version =>
         // Prefer isConsul from releases API, fallback to service-configs
-        val isConsul = version.isConsul.orElse(isConsulMap.get((release.serviceName, version.environment)))
+        val isConsul = version.isConsul || isConsulMap.getOrElse((release.serviceName, version.environment), false)
         version.copy(isConsul = isConsul)
       release.copy(versions = enrichedVersions)
 

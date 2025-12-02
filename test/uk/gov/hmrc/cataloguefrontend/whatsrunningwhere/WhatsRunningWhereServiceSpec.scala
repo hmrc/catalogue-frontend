@@ -135,10 +135,10 @@ class WhatsRunningWhereServiceSpec
 
       val devVersion = result.head.versions.find(_.environment == Environment.Development).get
       // Appmesh is standard, so deploymentType should be None (no icon shown)
-      devVersion.isConsul shouldBe None
+      devVersion.isConsul shouldBe false
 
       val prodVersion = result.head.versions.find(_.environment == Environment.Production).get
-      prodVersion.isConsul shouldBe Some(true)
+      prodVersion.isConsul shouldBe true
 
     "handle missing deployment type gracefully" in:
       given HeaderCarrier = HeaderCarrier()
@@ -168,7 +168,7 @@ class WhatsRunningWhereServiceSpec
 
       val result = testService.releases(None, None, None).futureValue
 
-      result.head.versions.head.isConsul shouldBe None
+      result.head.versions.head.isConsul shouldBe false
 
     "do not show icon for Appmesh (stage 0 or 1, or no migration stage)" in:
       given HeaderCarrier = HeaderCarrier()
@@ -199,7 +199,7 @@ class WhatsRunningWhereServiceSpec
       val result = testService.releases(None, None, None).futureValue
 
       // Appmesh is standard, so deploymentType should be None (no icon shown)
-      result.head.versions.head.isConsul shouldBe None
+      result.head.versions.head.isConsul shouldBe false
 
     "detect Consul deployment type from consul_migration_stage stage 2" in:
       given HeaderCarrier = HeaderCarrier()
@@ -229,7 +229,7 @@ class WhatsRunningWhereServiceSpec
 
       val result = testService.releases(None, None, None).futureValue
 
-      result.head.versions.head.isConsul shouldBe Some(true)
+      result.head.versions.head.isConsul shouldBe true
 
     "detect Consul deployment type from consul_migration_stage stage 3" in:
       given HeaderCarrier = HeaderCarrier()
@@ -259,7 +259,7 @@ class WhatsRunningWhereServiceSpec
 
       val result = testService.releases(None, None, None).futureValue
 
-      result.head.versions.head.isConsul shouldBe Some(true)
+      result.head.versions.head.isConsul shouldBe true
 
     "do not show icon for consul_migration_stage stage 0" in:
       given HeaderCarrier = HeaderCarrier()
@@ -290,7 +290,7 @@ class WhatsRunningWhereServiceSpec
       val result = testService.releases(None, None, None).futureValue
 
       // Stage 0: AppMesh (standard, no icon)
-      result.head.versions.head.isConsul shouldBe None
+      result.head.versions.head.isConsul shouldBe false
 
     "do not show icon for consul_migration_stage stage 1" in:
       given HeaderCarrier = HeaderCarrier()
@@ -321,6 +321,6 @@ class WhatsRunningWhereServiceSpec
       val result = testService.releases(None, None, None).futureValue
 
       // Stage 1: AppMesh (standard, no icon)
-      result.head.versions.head.isConsul shouldBe None
+      result.head.versions.head.isConsul shouldBe false
 
 end WhatsRunningWhereServiceSpec

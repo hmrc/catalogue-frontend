@@ -77,23 +77,21 @@
     }
 }
 
-@deploymentTypeSymbol(isConsul: Option[Boolean]) = @{
-    isConsul match {
-        case Some(true) => 
-            <img class="list-item" 
-                 src={Assets.versioned("consulicon.svg").url} 
-                 alt="Consul" 
-                 height="16" 
-                 width="16" 
-                 style="vertical-align: text-bottom; display: inline-block; margin-bottom: 2px; cursor: help;" 
-                 data-bs-toggle="tooltip" 
-                 data-bs-placement="top" 
-                 data-bs-trigger="hover" 
-                 title="Deployed on Consul"/>
-        case _ => 
-            // Appmesh is standard/default, no icon but keep spacing consistent
-            Html("<span style='display: inline-block; width: 16px;'></span>")
-    }
+@deploymentTypeSymbol(isConsul: Boolean) = @{
+    if isConsul then
+        <img class="list-item" 
+             src={Assets.versioned("consulicon.svg").url} 
+             alt="Consul" 
+             height="16" 
+             width="16" 
+             style="vertical-align: text-bottom; display: inline-block; margin-bottom: 2px; cursor: help;" 
+             data-bs-toggle="tooltip" 
+             data-bs-placement="top" 
+             data-bs-trigger="hover" 
+             title="Deployed on Consul"/>
+    else
+        // Appmesh is standard/default, no icon but keep spacing consistent
+        Html("<span style='display: inline-block; width: 16px;'></span>")
 }
 
 @popoverContent(version: Version, latestVersion: Version) = @{
