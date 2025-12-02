@@ -33,7 +33,7 @@ case class WhatsRunningWhereVersion(
   environment   : Environment,
   version       : Version,
   config        : List[WhatsRunningWhereConfig],
-  deploymentType: Option[DeploymentType] = None
+  isConsul      : Option[Boolean] = None
 )
 
 case class WhatsRunningWhereConfig(
@@ -54,12 +54,6 @@ object JsonCodecs:
   private val timeSeenFormat        : Format[TimeSeen]         = format(TimeSeen.apply        , _.time    )
   private val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, _.asString)
 
-  given Format[DeploymentType] =
-    Format.of[String].inmap(
-      s => DeploymentType.values.find(_.asString == s.toLowerCase).getOrElse(DeploymentType.Appmesh),
-      _.asString
-    )
-
   private val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] =
     given Reads[WhatsRunningWhereConfig] =
       ( (__ \ "repoName").read[String]
@@ -70,8 +64,8 @@ object JsonCodecs:
     ( (__ \ "environment"  ).read[Environment]
     ~ (__ \ "versionNumber").read[Version](Version.format)
     ~ (__ \ "config"       ).read[List[WhatsRunningWhereConfig]]
-    ~ (__ \ "deploymentType").readNullable[DeploymentType]
-    )((env, version, config, deploymentType) => WhatsRunningWhereVersion(env, version, config, deploymentType))
+    ~ (__ \ "isConsul"     ).readNullable[Boolean]
+    )((env, version, config, isConsul) => WhatsRunningWhereVersion(env, version, config, isConsul))
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] =
     given Reads[WhatsRunningWhereVersion] = whatsRunningWhereVersionReads
@@ -168,14 +162,6 @@ enum ProfileType(
   case Team           extends ProfileType("team")
   case ServiceManager extends ProfileType("servicemanager")
 
-given Parser[DeploymentType] = Parser.parser(DeploymentType.values)
-
-enum DeploymentType(
-  override val asString: String
-) extends FromString
-  derives FormFormat:
-  case Appmesh extends DeploymentType("appmesh")
-  case Consul  extends DeploymentType("consul")
 
 
 case class Profile(

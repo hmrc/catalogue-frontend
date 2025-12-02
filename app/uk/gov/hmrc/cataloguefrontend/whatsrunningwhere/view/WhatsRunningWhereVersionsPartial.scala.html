@@ -18,7 +18,7 @@
 @import TwirlFeatureImports.defining
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.deployments.{routes => depRoutes}
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentType, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhere}
 @import controllers.routes.Assets
 
 @(whatsRunning: Seq[WhatsRunningWhere])
@@ -36,7 +36,7 @@
             case (env, Some(current)) => {
               @defining(current.version.patch > 0) { isPatchedVersion =>
                 @if(current.version == latestVersion && !isPatchedVersion ) {
-                  <td id="row@{i}_version_@{env.asString}"><span style="display: flex; align-items: center; gap: 4px;">@deploymentTypeSymbol(current.deploymentType)<span>@current.version.toString</span></span></td>
+                  <td id="row@{i}_version_@{env.asString}"><span style="display: flex; align-items: center; gap: 4px;">@deploymentTypeSymbol(current.isConsul)<span>@current.version.toString</span></span></td>
                 } else {
                   @defining(opacity(current.version, latestVersion, sortedVersions.distinct, isPatchedVersion)) { opacity =>
                     <td id="row@{i}_version_@{env.asString}" class="@if(isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}" style="--bs-bg-opacity: @opacity">
@@ -46,7 +46,7 @@
                             data-bs-html="true"
                             data-bs-content='@{popoverContent(current.version, latestVersion)}'
                             style="display: flex; align-items: center; gap: 4px;">
-                              @deploymentTypeSymbol(current.deploymentType)<span>@current.version.toString</span>
+                              @deploymentTypeSymbol(current.isConsul)<span>@current.version.toString</span>
                       </span>
                     </td>
                   }
@@ -77,9 +77,9 @@
     }
 }
 
-@deploymentTypeSymbol(deploymentType: Option[DeploymentType]) = @{
-    deploymentType match {
-        case Some(DeploymentType.Consul) => 
+@deploymentTypeSymbol(isConsul: Option[Boolean]) = @{
+    isConsul match {
+        case Some(true) => 
             <img class="list-item" 
                  src={Assets.versioned("consulicon.svg").url} 
                  alt="Consul" 
