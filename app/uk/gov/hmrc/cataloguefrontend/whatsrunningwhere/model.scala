@@ -33,7 +33,7 @@ case class WhatsRunningWhereVersion(
   environment   : Environment,
   version       : Version,
   config        : List[WhatsRunningWhereConfig],
-  deploymentType: Option[DeploymentType] = None
+  isConsul      : Boolean = false
 )
 
 case class WhatsRunningWhereConfig(
@@ -51,10 +51,10 @@ object JsonCodecs:
       case Right(r) => JsSuccess(r)
       case Left(l)  => JsError(__, l)
 
-  val timeSeenFormat        : Format[TimeSeen]         = format(TimeSeen.apply        , _.time    )
-  val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, _.asString)
+  private val timeSeenFormat        : Format[TimeSeen]         = format(TimeSeen.apply        , _.time    )
+  private val deploymentStatusFormat: Format[DeploymentStatus] = format(DeploymentStatus.apply, _.asString)
 
-  val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] =
+  private val whatsRunningWhereVersionReads: Reads[WhatsRunningWhereVersion] =
     given Reads[WhatsRunningWhereConfig] =
       ( (__ \ "repoName").read[String]
       ~ (__ \ "fileName").read[String]
@@ -64,7 +64,8 @@ object JsonCodecs:
     ( (__ \ "environment"  ).read[Environment]
     ~ (__ \ "versionNumber").read[Version](Version.format)
     ~ (__ \ "config"       ).read[List[WhatsRunningWhereConfig]]
-    )((env, version, config) => WhatsRunningWhereVersion(env, version, config, None))
+    ~ (__ \ "isConsul"     ).readWithDefault[Boolean](false)
+    )((env, version, config, isConsul) => WhatsRunningWhereVersion(env, version, config, isConsul))
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] =
     given Reads[WhatsRunningWhereVersion] = whatsRunningWhereVersionReads
@@ -72,7 +73,7 @@ object JsonCodecs:
     ~ (__ \ "versions"       ).read[List[WhatsRunningWhereVersion]]
     )(WhatsRunningWhere.apply)
 
-  val profileTypeFormat: Format[ProfileType] =
+  private val profileTypeFormat: Format[ProfileType] =
     new Format[ProfileType]:
       override def reads(js: JsValue): JsResult[ProfileType] =
         js.validate[String]
@@ -81,7 +82,7 @@ object JsonCodecs:
       override def writes(et: ProfileType): JsValue =
         JsString(et.asString)
 
-  val profileNameFormat: Format[ProfileName] =
+  private val profileNameFormat: Format[ProfileName] =
     format(ProfileName.apply, _.asString)
 
   val profileFormat: Format[Profile] =
@@ -90,7 +91,7 @@ object JsonCodecs:
     )(Profile.apply, p => Tuple.fromProductTyped(p))
 
   // Deployment Event
-  val deploymentEventFormat: Format[DeploymentEvent] =
+  private val deploymentEventFormat: Format[DeploymentEvent] =
     ( (__ \ "deploymentId").format[String]
     ~ (__ \ "status"      ).format[DeploymentStatus](deploymentStatusFormat)
     ~ (__ \ "version"     ).format[Version](Version.format)
@@ -161,14 +162,6 @@ enum ProfileType(
   case Team           extends ProfileType("team")
   case ServiceManager extends ProfileType("servicemanager")
 
-given Parser[DeploymentType] = Parser.parser(DeploymentType.values)
-
-enum DeploymentType(
-  override val asString: String
-) extends FromString
-  derives FormFormat:
-  case Appmesh extends DeploymentType("appmesh")
-  case Consul  extends DeploymentType("consul")
 
 
 case class Profile(

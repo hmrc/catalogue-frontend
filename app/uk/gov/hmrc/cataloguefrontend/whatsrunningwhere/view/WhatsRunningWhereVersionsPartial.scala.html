@@ -18,7 +18,7 @@
 @import TwirlFeatureImports.defining
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.deployments.{routes => depRoutes}
-@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{DeploymentType, WhatsRunningWhere}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{WhatsRunningWhere}
 @import controllers.routes.Assets
 
 @(whatsRunning: Seq[WhatsRunningWhere])
@@ -36,7 +36,7 @@
             case (env, Some(current)) => {
               @defining(current.version.patch > 0) { isPatchedVersion =>
                 @if(current.version == latestVersion && !isPatchedVersion ) {
-                  <td id="row@{i}_version_@{env.asString}"><span style="display: inline-flex; align-items: center; gap: 4px;">@current.version.toString @deploymentTypeSymbol(current.deploymentType)</span></td>
+                  <td id="row@{i}_version_@{env.asString}"><span style="display: flex; align-items: center; gap: 4px;">@deploymentTypeSymbol(current.isConsul)<span>@current.version.toString</span></span></td>
                 } else {
                   @defining(opacity(current.version, latestVersion, sortedVersions.distinct, isPatchedVersion)) { opacity =>
                     <td id="row@{i}_version_@{env.asString}" class="@if(isPatchedVersion) {wrw-version-outdated-patch} else {wrw-version-outdated}" style="--bs-bg-opacity: @opacity">
@@ -45,8 +45,8 @@
                             data-bs-placement="bottom"
                             data-bs-html="true"
                             data-bs-content='@{popoverContent(current.version, latestVersion)}'
-                            style="display: inline-flex; align-items: center; gap: 4px;">
-                              @current.version.toString @deploymentTypeSymbol(current.deploymentType)
+                            style="display: flex; align-items: center; gap: 4px;">
+                              @deploymentTypeSymbol(current.isConsul)<span>@current.version.toString</span>
                       </span>
                     </td>
                   }
@@ -77,23 +77,21 @@
     }
 }
 
-@deploymentTypeSymbol(deploymentType: Option[DeploymentType]) = @{
-    deploymentType match {
-        case Some(DeploymentType.Consul) => 
-            <img class="list-item" 
-                 src={Assets.versioned("consulicon.svg").url} 
-                 alt="Consul" 
-                 height="16" 
-                 width="16" 
-                 style="vertical-align: text-bottom; display: inline-block; margin-bottom: 2px; cursor: help;" 
-                 data-bs-toggle="tooltip" 
-                 data-bs-placement="top" 
-                 data-bs-trigger="hover" 
-                 title="Deployed on Consul"/>
-        case _ => 
-            // Appmesh is standard/default, so no icon needed
-            Html("")
-    }
+@deploymentTypeSymbol(isConsul: Boolean) = @{
+    if isConsul then
+        <img class="list-item" 
+             src={Assets.versioned("consulicon.svg").url} 
+             alt="Consul" 
+             height="16" 
+             width="16" 
+             style="vertical-align: text-bottom; display: inline-block; margin-bottom: 2px; cursor: help;" 
+             data-bs-toggle="tooltip" 
+             data-bs-placement="top" 
+             data-bs-trigger="hover" 
+             title="Deployed on Consul"/>
+    else
+        // Appmesh is standard/default, no icon but keep spacing consistent
+        Html("<span style='display: inline-block; width: 16px;'></span>")
 }
 
 @popoverContent(version: Version, latestVersion: Version) = @{
