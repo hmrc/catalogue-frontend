@@ -315,8 +315,8 @@ class DeployServiceControllerSpec
 
   private val someReleasesForService = WhatsRunningWhere(
     serviceName = ServiceName("some-service")
-  , versions    = WhatsRunningWhereVersion(Environment.QA        , Version("0.2.0"), Nil) ::
-                  WhatsRunningWhereVersion(Environment.Production, Version("0.1.0"), Nil) ::
+  , versions    = WhatsRunningWhereVersion(Environment.QA        , Version("0.2.0"), Nil, false) ::
+                  WhatsRunningWhereVersion(Environment.Production, Version("0.1.0"), Nil, false) ::
                   Nil
   )
 

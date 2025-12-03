@@ -39,8 +39,8 @@ class WhatsRunningWhereServiceSpec
     WhatsRunningWhere(
       ServiceName("address-lookup"),
       List(
-        WhatsRunningWhereVersion(Environment.Development, Version("1.011"), Nil),
-        WhatsRunningWhereVersion(Environment.Production,  Version("1.011"), Nil)
+        WhatsRunningWhereVersion(Environment.Development, Version("1.011"), Nil, false),
+        WhatsRunningWhereVersion(Environment.Production,  Version("1.011"), Nil, false)
       )
     )
 
@@ -48,9 +48,9 @@ class WhatsRunningWhereServiceSpec
     WhatsRunningWhere(
       ServiceName("health-indicators"),
       List(
-        WhatsRunningWhereVersion(Environment.QA,         Version("1.011"), Nil),
-        WhatsRunningWhereVersion(Environment.Staging,    Version("1.011"), Nil),
-        WhatsRunningWhereVersion(Environment.Production, Version("1.011"), Nil)
+        WhatsRunningWhereVersion(Environment.QA,         Version("1.011"), Nil, false),
+        WhatsRunningWhereVersion(Environment.Staging,    Version("1.011"), Nil, false),
+        WhatsRunningWhereVersion(Environment.Production, Version("1.011"), Nil, false)
       )
     )
 
@@ -99,8 +99,8 @@ class WhatsRunningWhereServiceSpec
         WhatsRunningWhere(
           ServiceName("test-service"),
           List(
-            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil),
-            WhatsRunningWhereVersion(Environment.Production, Version("1.0.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil, false),
+            WhatsRunningWhereVersion(Environment.Production, Version("1.0.0"), Nil, false)
           )
         )
       )
@@ -147,7 +147,7 @@ class WhatsRunningWhereServiceSpec
         WhatsRunningWhere(
           ServiceName("test-service"),
           List(
-            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil, false)
           )
         )
       )
@@ -177,7 +177,7 @@ class WhatsRunningWhereServiceSpec
         WhatsRunningWhere(
           ServiceName("test-service"),
           List(
-            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil, false)
           )
         )
       )
@@ -208,7 +208,7 @@ class WhatsRunningWhereServiceSpec
         WhatsRunningWhere(
           ServiceName("test-service"),
           List(
-            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil, false)
           )
         )
       )
@@ -238,7 +238,7 @@ class WhatsRunningWhereServiceSpec
         WhatsRunningWhere(
           ServiceName("test-service"),
           List(
-            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil, false)
           )
         )
       )
@@ -268,7 +268,7 @@ class WhatsRunningWhereServiceSpec
         WhatsRunningWhere(
           ServiceName("test-service"),
           List(
-            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil, false)
           )
         )
       )
@@ -299,7 +299,7 @@ class WhatsRunningWhereServiceSpec
         WhatsRunningWhere(
           ServiceName("test-service"),
           List(
-            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil)
+            WhatsRunningWhereVersion(Environment.Development, Version("1.0.0"), Nil, false)
           )
         )
       )
