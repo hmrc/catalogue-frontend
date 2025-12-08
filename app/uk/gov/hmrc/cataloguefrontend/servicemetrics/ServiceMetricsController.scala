@@ -66,7 +66,7 @@ class ServiceMetricsController @Inject() (
                               formErrors => Left(BadRequest(serviceMetricsPage(formErrors, Seq.empty, teams, digitalServices)))
                             , formObject => Right(formObject)
                             ))
-         results         <- EitherT.right[Result](serviceMetricsConnector.metrics(Some(filter.environment), filter.team, filter.digitalService, filter.metricType))
+         results         <- EitherT.right[Result](serviceMetricsConnector.metrics(Some(filter.environment), filter.team, filter.digitalService, filter.metricType)).map(_.filterNot(_.serviceName.asString.isBlank))
         yield
           Ok(serviceMetricsPage(form.fill(filter), results, teams, digitalServices))
       ).merge
