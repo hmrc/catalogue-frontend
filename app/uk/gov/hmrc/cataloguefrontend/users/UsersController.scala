@@ -320,7 +320,7 @@ class UsersController @Inject()(
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Unit] = request
       for
-        users     <- userManagementConnector.getAllUsers()
+        users     <- userManagementConnector.getActiveUsers()
         usernames =  users.map(_.username.asString)
       yield
         Ok(offBoardUsersPage(OffBoardUserForm.form, usernames))
@@ -333,7 +333,7 @@ class UsersController @Inject()(
       given AuthenticatedRequest[AnyContent, Unit] = request
       (for
         users <- EitherT.liftF[Future, Result, Seq[User]]:
-                   userManagementConnector.getAllUsers()
+                   userManagementConnector.getActiveUsers()
         form  <- EitherT.fromEither[Future]:
                    OffBoardUserForm.form.bindFromRequest()
                      .fold(

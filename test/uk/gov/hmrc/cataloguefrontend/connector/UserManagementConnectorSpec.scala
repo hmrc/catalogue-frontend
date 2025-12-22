@@ -69,10 +69,10 @@ class UserManagementConnectorSpec
     }
   }
 
-  "getAllUsers" should {
+  "getActiveUsers" should {
     "return a list of users" in {
       stubFor(
-        get(urlPathEqualTo("/user-management/users"))
+        get(urlPathEqualTo("/user-management/active-users"))
           .willReturn(
             aResponse()
               .withBody("""[
@@ -96,7 +96,7 @@ class UserManagementConnectorSpec
           )
       )
 
-      connector.getAllUsers().futureValue should contain theSameElementsAs
+      connector.getActiveUsers().futureValue should contain theSameElementsAs
         Seq(
           User(
             displayName    = Some("Joe Bloggs"),
@@ -115,91 +115,16 @@ class UserManagementConnectorSpec
         )
     }
 
-    "return a list of users in a team" in {
-      stubFor(
-        get(urlEqualTo("/user-management/users?team=TestTeam"))
-          .willReturn(
-            aResponse()
-              .withBody("""[
-                {
-                   "displayName" : "Joe Bloggs",
-                   "familyName" : "Bloggs",
-                   "givenName" : "Joe",
-                   "organisation" : "MDTP",
-                   "primaryEmail" : "joe.bloggs@digital.hmrc.gov.uk",
-                   "username" : "joe.bloggs",
-                   "github" : "https://github.com/joebloggs",
-                   "phoneNumber" : "07123456789",
-                   "role" : "user",
-                   "teamNames" : [
-                        "TestTeam"
-                   ],
-                   "isDeleted": false,
-                   "isNonHuman": false
-                },
-                {
-                   "displayName" : "Jane Doe",
-                   "familyName" : "Doe",
-                   "givenName" : "Jane",
-                   "organisation" : "MDTP",
-                   "primaryEmail" : "jane.doe@digital.hmrc.gov.uk",
-                   "username" : "jane.doe",
-                   "github" : "https://github.com/janedoe",
-                   "phoneNumber" : "07123456789",
-                   "role" : "user",
-                   "teamNames" : [
-                        "TestTeam"
-                   ],
-                   "isDeleted": false,
-                   "isNonHuman": false
-                }
-              ]""".stripMargin)
-          )
-      )
-
-      connector.getAllUsers(team = Some(TeamName("TestTeam"))).futureValue should contain theSameElementsAs
-        Seq(
-          User(
-            displayName    = Some("Joe Bloggs"),
-            familyName     = "Bloggs",
-            givenName      = Some("Joe"),
-            organisation   = Some("MDTP"),
-            primaryEmail   = "joe.bloggs@digital.hmrc.gov.uk",
-            username       = UserName("joe.bloggs"),
-            githubUsername = None,
-            phoneNumber    = Some("07123456789"),
-            role           = Role("user"),
-            teamNames      = Seq(TeamName("TestTeam")),
-            isDeleted      = false,
-            isNonHuman     = false
-          ),
-          User(
-            displayName    = Some("Jane Doe"),
-            familyName     = "Doe",
-            givenName      = Some("Jane"),
-            organisation   = Some("MDTP"),
-            primaryEmail   = "jane.doe@digital.hmrc.gov.uk",
-            username       = UserName("jane.doe"),
-            githubUsername = None,
-            phoneNumber    = Some("07123456789"),
-            role           = Role("user"),
-            teamNames      = Seq(TeamName("TestTeam")),
-            isDeleted      = false,
-            isNonHuman     = false
-          )
-        )
-    }
-
     "return empty list when encountered an error" in {
       stubFor(
-        get(urlPathEqualTo("/user-management/users"))
+        get(urlPathEqualTo("/user-management/active-users"))
           .willReturn(
             aResponse()
               .withStatus(500)
           )
       )
 
-      connector.getAllUsers().futureValue.isEmpty shouldBe true
+      connector.getActiveUsers().futureValue.isEmpty shouldBe true
     }
   }
 
