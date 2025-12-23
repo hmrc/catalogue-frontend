@@ -128,7 +128,7 @@ class SearchIndex @Inject()(
                                       )
       comments        <- prCommenterConnector.search(None, None, None)
       commentLinks    =  comments.flatMap(x => List(SearchTerm(s"recommendations", x.name,  prcommenterRoutes.PrCommenterController.recommendations(name = Some(x.name)).url, 0.5f)))
-      users           <- userManagementConnector.getAllUsers(None)
+      users           <- userManagementConnector.getActiveUsers()
       userLinks       =  users.map(u => SearchTerm("users", u.username.asString, userRoutes.UsersController.user(u.username).url, 0.5f))
       allLinks        =  hardcodedLinks ++ teamPageLinks ++ digitalLinks ++ repoLinks ++ serviceLinks ++ commentLinks ++ userLinks
     yield cachedIndex.set(optimizeIndex(allLinks))

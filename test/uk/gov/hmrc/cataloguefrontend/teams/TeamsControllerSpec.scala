@@ -40,7 +40,6 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
     super.beforeEach()
     serviceEndpoint(POST, "/internal-auth/auth"                                                             , willRespondWith = (200, Some("""{"retrievals": [[]]}""")))
     serviceEndpoint(GET , "/api/repositories/summary?team=teamA&excludeNonIssues=true&includeBranches=false", willRespondWith = (200, Some("[]")))
-    serviceEndpoint(GET , "/user-management/users?team=teamA"                                               , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/api/open-pull-requests?reposOwnedByTeam=teamA"                                  , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/api/open-pull-requests?raisedByMembersOfTeam=teamA"                             , willRespondWith = (200, Some("[]")))
     serviceEndpoint(GET , "/health-metrics/teams/teamA/health-metrics/latest"                               , willRespondWith = (200, Some("""{"metrics": {}}""")))

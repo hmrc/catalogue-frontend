@@ -54,8 +54,8 @@ class UserManagementConnector @Inject()(
       .get(url"$baseUrl/user-management/teams?includeNonHuman=true")
       .execute[Seq[UmpTeam]]
 
-  def getAllUsers(team: Option[TeamName] = None)(using HeaderCarrier): Future[Seq[User]] =
-    val url: URL = url"$baseUrl/user-management/users?team=${team.map(_.asString)}"
+  def getActiveUsers(team: Option[TeamName] = None)(using HeaderCarrier): Future[Seq[User]] =
+    val url: URL = url"$baseUrl/user-management/active-users"
     given Reads[User] = User.reads
     httpClientV2
       .get(url)
