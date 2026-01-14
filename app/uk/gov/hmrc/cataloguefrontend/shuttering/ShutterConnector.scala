@@ -84,10 +84,9 @@ class ShutterConnector @Inject() (
         )
       )
       .execute[Either[UpstreamErrorResponse, Unit]]
-      .flatMap {
+      .flatMap:
         case Left(err) => Future.failed(err)
         case Right(_)  => Future.successful(())
-      }
 
   /**
     * GET

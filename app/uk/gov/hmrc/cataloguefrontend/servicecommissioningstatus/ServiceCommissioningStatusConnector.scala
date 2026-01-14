@@ -73,10 +73,9 @@ class ServiceCommissioningStatusConnector @Inject() (
       .post(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/${serviceName.asString}/lifecycleStatus")
       .withBody(Json.obj("lifecycleStatus" -> lifecycleStatus.asString, "username" -> username))
       .execute[Either[UpstreamErrorResponse, Unit]]
-      .flatMap {
+      .flatMap:
         case Left(err) => Future.failed(err)
         case Right(_)  => Future.successful(())
-      }
 
   def getLifecycle(serviceName: ServiceName)(using HeaderCarrier): Future[Option[Lifecycle]] =
     given Reads[Lifecycle] = Lifecycle.reads
