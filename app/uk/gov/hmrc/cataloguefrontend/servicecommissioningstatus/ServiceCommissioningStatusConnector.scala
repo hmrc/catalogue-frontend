@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus
 
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.http.client.HttpClientV2
 import HttpReads.Implicits._
 import play.api.libs.json._
@@ -72,7 +72,11 @@ class ServiceCommissioningStatusConnector @Inject() (
     httpClientV2
       .post(url"$serviceCommissioningBaseUrl/service-commissioning-status/services/${serviceName.asString}/lifecycleStatus")
       .withBody(Json.obj("lifecycleStatus" -> lifecycleStatus.asString, "username" -> username))
-      .execute[Unit]
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap {
+        case Left(err) => Future.failed(err)
+        case Right(_)  => Future.successful(())
+      }
 
   def getLifecycle(serviceName: ServiceName)(using HeaderCarrier): Future[Option[Lifecycle]] =
     given Reads[Lifecycle] = Lifecycle.reads

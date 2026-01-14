@@ -83,7 +83,11 @@ class ShutterConnector @Inject() (
         , "shutterStatus" -> Json.toJson(status)
         )
       )
-      .execute[Unit](HttpReads.Implicits.throwOnFailure(summon[HttpReads[Either[UpstreamErrorResponse, Unit]]]), summon[ExecutionContext])
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap {
+        case Left(err) => Future.failed(err)
+        case Right(_)  => Future.successful(())
+      }
 
   /**
     * GET

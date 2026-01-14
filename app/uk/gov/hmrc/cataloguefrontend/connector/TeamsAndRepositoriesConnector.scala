@@ -432,4 +432,8 @@ class TeamsAndRepositoriesConnector @Inject()(
     httpClientV2
       .post(url"$teamsAndServicesBaseUrl/api/v2/repositories/$repoName/branch-protection/enabled")
       .withBody(JsBoolean(true))
-      .execute[Unit](HttpReads.Implicits.throwOnFailure(summon[HttpReads[Either[UpstreamErrorResponse, Unit]]]), summon[ExecutionContext])
+      .execute[Either[UpstreamErrorResponse, Unit]]
+      .flatMap {
+        case Left(err) => Future.failed(err)
+        case Right(_)  => Future.successful(())
+      }
