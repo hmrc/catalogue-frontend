@@ -250,8 +250,8 @@
                                         .filter(name => name.length > 0);
 
             usernames.forEach(username => {
-                if (items.includes(username) && !selectedItems.includes(username)) {
-                    addSelectedItem(username);
+                if (items.includes(username.toLowerCase()) && !selectedItems.includes(username.toLowerCase())) {
+                    addSelectedItem(username.toLowerCase());
                 }
             });
         }
