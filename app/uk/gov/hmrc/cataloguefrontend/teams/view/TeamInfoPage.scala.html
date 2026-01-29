@@ -410,7 +410,11 @@
       <dd class="col-sm-8 d-flex justify-content-between">
         <div>
           <a href="@slackInfo.url" target="_blank" rel="noreferrer noopener">#@slackInfo.name<span class="glyphicon glyphicon-new-window" /></a>
-          @if(slackInfo.isPrivate) { <span class="badge bg-secondary ms-2" title="Private channel">Private</span> }
+          @if(slackInfo.isPrivate) { <span
+          class="badge bg-danger ms-2"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="This is a private Slack Channel, public channels should be used here for communication purposes.">Private</span> }
         </div>
         @if(canEditTeam) {<a href="#" id="edit-@{label.toLowerCase.replace(" ","-")}-link" class="ms-2 d-none">Edit</a>}
       </dd>
@@ -630,7 +634,7 @@
               if (privacyBadge) {
                 const isPrivate = document.querySelector(`#${inputId}-container .form-check-input`).checked;
                 privacyBadge.textContent = isPrivate ? 'Private' : 'Public';
-                privacyBadge.className = `badge ms-2 ${isPrivate ? 'bg-secondary' : 'bg-primary'}`;
+                privacyBadge.className = `badge ms-2 ${isPrivate ? 'bg-danger' : 'bg-primary'}`;
               }
             };
 
