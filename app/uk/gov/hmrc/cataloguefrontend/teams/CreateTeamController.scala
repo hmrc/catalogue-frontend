@@ -28,7 +28,7 @@ import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 @Singleton
@@ -51,9 +51,10 @@ class CreateTeamController @Inject()(
     auth.authenticatedAction(
       continueUrl = routes.CreateTeamController.createTeamLanding,
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("MANAGE_TEAM")))
-    )(): request =>
+    ).async: request =>
       given RequestHeader = request
-      Ok(createTeamPage(CreateTeamForm.form, Organisation.values.toSeq))
+      userManagementConnector.getAvailablePlatforms().map: platforms =>
+        Ok(createTeamPage(CreateTeamForm.form, platforms, Organisation.values.toSeq))
 
   def createTeam: Action[AnyContent] =
     auth.authenticatedAction(
@@ -63,7 +64,8 @@ class CreateTeamController @Inject()(
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       CreateTeamForm.form.bindFromRequest().fold(
         formWithErrors =>
-          Future.successful(BadRequest(createTeamPage(formWithErrors, Organisation.values.toSeq)))
+          userManagementConnector.getAvailablePlatforms().map: platforms =>
+            BadRequest(createTeamPage(formWithErrors, platforms, Organisation.values.toSeq))
       , validForm =>
           for
             _      <- auth.authorised(Some(createTeamPermission))

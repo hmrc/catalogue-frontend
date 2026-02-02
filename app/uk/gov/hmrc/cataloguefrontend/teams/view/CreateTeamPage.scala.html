@@ -19,6 +19,7 @@
 @this()
 
 @(form            : Form[?],
+  platforms       : Seq[String],
   organisations   : Seq[Organisation]
 )(implicit
   request         : RequestHeader,
@@ -48,6 +49,20 @@
     ) {
     @csrfFormField
 
+      <div class="form-group row mb-2">
+        <div class="col-md-6 d-grid gap-2">
+          <label class="fw-bold" for="platformInput">Platform:</label>
+          <div class="mb-2">
+            <select class="form-select" id="platformInput" name="platform">
+            @platforms.map { platform =>
+              <option value="@{platform}" @if(form.data.getOrElse("platform", "").equals(platform)) { selected="selected" else ""}>
+            @platform
+            </option>
+            }
+            </select>
+          </div>
+        </div>
+      </div>
       <div class="form-group row mb-2">
         <div class="col-md-6 d-grid gap-2">
           <label class="fw-bold" for="organisationInput">Organisation:</label>
