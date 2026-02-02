@@ -139,6 +139,11 @@ class UserManagementConnector @Inject()(
         case Right(res) => Future.successful(res)
         case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
+  def getAvailablePlatforms()(using HeaderCarrier): Future[Seq[String]] =
+    httpClientV2
+      .get(url"$baseUrl/user-management/platforms")
+      .execute[Seq[String]]
+
   def createTeam(teamRequest: CreateTeamRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/create-team"
     httpClientV2

@@ -25,7 +25,6 @@ import play.api.data.{Form, Forms}
 import play.api.i18n.I18nSupport
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
-import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{ServiceDependenciesConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, EditTeamDetails, Environment, SlugInfoFlag, TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.teams.view.html.{DigitalServicePage, TeamInfoPage, TeamsListPage}
@@ -46,7 +45,6 @@ class TeamsController @Inject()(
 , teamsAndRepositoriesConnector      : TeamsAndRepositoriesConnector
 , serviceDependenciesConnector       : ServiceDependenciesConnector
 , healthMetricsConnector             : HealthMetricsConnector
-, umpConfig                          : UserManagementPortalConfig
 , teamInfoPage                       : TeamInfoPage
 , digitalServicePage                 : DigitalServicePage
 , outOfDateTeamDependenciesPage      : OutOfDateTeamDependenciesPage
