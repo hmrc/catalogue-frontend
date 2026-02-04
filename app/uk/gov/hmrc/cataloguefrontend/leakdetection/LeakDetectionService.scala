@@ -167,10 +167,12 @@ class LeakDetectionService @Inject() (
    * - Output: https://github.com/hmrc/vault/blame/main/builtin/credential/aws/backend_test.go#L475 (if main is default)
    */
   private def fixGithubUrl(originalUrl: String)(using HeaderCarrier): Future[String] =
+    val url = originalUrl.replaceFirst("^https://api\\.github\\.com/repos/", "https://github.com/")
+
     // Pattern to match GitHub URLs with n%2Fa encoding issue
     val brokenUrlPattern = "(https://github\\.com/([^/]+)/([^/]+)/blame/)n%2Fa(%2F.+)".r
 
-    originalUrl match
+    url match
       case brokenUrlPattern(prefix, org, repo, encodedPath) =>
         // Decode the file path
         val decodedPath = java.net.URLDecoder.decode(encodedPath, "UTF-8")
@@ -179,8 +181,7 @@ class LeakDetectionService @Inject() (
         getDefaultBranch(repo).map: defaultBranch =>
           s"$prefix$defaultBranch$decodedPath"
       case _ =>
-        // Return the original URL if it doesn't match the broken pattern
-        Future.successful(originalUrl)
+        Future.successful(url)
 
   /**
    * Gets the default branch for a repository from TeamsAndRepositoriesConnector
