@@ -507,6 +507,47 @@ class LeakDetectionServiceSpec extends UnitSpec with MockitoSugar {
       )
     }
 
+    "convert api.github.com URLs to github.com before fixing paths" in new Setup {
+      when(teamsAndRepositoriesConnector.repositoryDetails("test-repo"))
+        .thenReturn(Future.successful(Some(GitRepository(
+          name = "test-repo",
+          organisation = None,
+          description = "Repository from API URL",
+          githubUrl = "https://api.github.com/repos/hmrc/test-repo",
+          createdDate = Instant.now(),
+          lastActiveDate = Instant.now(),
+          repoType = RepoType.Service,
+          language = Some("Scala"),
+          isArchived = false,
+          defaultBranch = "main"
+        ))))
+
+      when(connector.leakDetectionLeaks("reportId")).thenReturn(
+        Future.successful(
+          Seq(
+            LeakDetectionLeak(
+              "rule1",
+              "description1",
+              "/src/test.scala",
+              "fileContent",
+              10,
+              "https://api.github.com/repos/hmrc/test-repo/blame/n%2Fa%2Fsrc%2Ftest.scala#L10",
+              "secret=123",
+              List(Match(1, 6)),
+              Priority.High,
+              false
+            )
+          )
+        )
+      )
+
+      val results: Seq[LeakDetectionLeaksByRule] =
+        service.reportLeaks("reportId").futureValue
+
+      results.head.leaks.head.urlToSource shouldBe
+        "https://github.com/hmrc/test-repo/blame/main/src/test.scala#L10"
+    }
+
     "URL validation and performance" should {
 
       "handle batch URL fixing efficiently" in new Setup {
