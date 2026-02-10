@@ -277,8 +277,8 @@ case class GitHubTeam(
     val teamName = name
      .asString
      .toLowerCase
-     .replace(" - ", "-")
-     .replace(" ", "-")
+     .replaceAll("\\s*-\\s*", "-")
+     .replaceAll("\\s+", "-")
 
     s"https://github.com/orgs/hmrc/teams/$teamName"
   }
