@@ -273,8 +273,15 @@ case class GitHubTeam(
   lastActiveDate : Option[Instant],
   repos          : Seq[String]
 ):
-  val githubUrl =
-    s"https://github.com/orgs/hmrc/teams/${name.asString.toLowerCase.replace(" ", "-")}"
+  val githubUrl = {
+    val teamName = name
+     .asString
+     .toLowerCase
+     .replace(" - ", "-")
+     .replace(" ", "-")
+
+    s"https://github.com/orgs/hmrc/teams/$teamName"
+  }
 
 object GitHubTeam:
   val reads: Reads[GitHubTeam] =
