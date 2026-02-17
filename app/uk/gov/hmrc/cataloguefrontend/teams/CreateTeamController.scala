@@ -22,8 +22,7 @@ import play.api.data.{Form, Forms}
 import play.api.mvc.*
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
-import uk.gov.hmrc.cataloguefrontend.teams.view.html.{CreateTeamPage}
-import uk.gov.hmrc.cataloguefrontend.users.Organisation
+import uk.gov.hmrc.cataloguefrontend.teams.view.html.CreateTeamPage
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -54,7 +53,7 @@ class CreateTeamController @Inject()(
     ).async: request =>
       given RequestHeader = request
       userManagementConnector.getAvailablePlatforms().map: platforms =>
-        Ok(createTeamPage(CreateTeamForm.form, platforms, Organisation.values.toSeq))
+        Ok(createTeamPage(CreateTeamForm.form, platforms))
 
   def createTeam: Action[AnyContent] =
     auth.authenticatedAction(
@@ -65,12 +64,12 @@ class CreateTeamController @Inject()(
       CreateTeamForm.form.bindFromRequest().fold(
         formWithErrors =>
           userManagementConnector.getAvailablePlatforms().map: platforms =>
-            BadRequest(createTeamPage(formWithErrors, platforms, Organisation.values.toSeq))
+            BadRequest(createTeamPage(formWithErrors, platforms))
       , validForm =>
           for
             _      <- auth.authorised(Some(createTeamPermission))
             result <- userManagementConnector.createTeam(validForm).map: _ =>
-                        Redirect(routes.TeamsController.allTeams()).flashing("success" -> s"Request to create team ${validForm.team} in the ${validForm.organisation} organisation sent successfully.")
+                        Redirect(routes.TeamsController.allTeams()).flashing("success" -> s"Request to create team ${validForm.team} in the ${validForm.platform} platform sent successfully.")
                       .recover:
                         case NonFatal(e) =>
                           logger.error(s"Error requesting Team Creation: ${e.getMessage}", e)

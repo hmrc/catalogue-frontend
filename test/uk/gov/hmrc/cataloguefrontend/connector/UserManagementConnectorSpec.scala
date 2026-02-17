@@ -487,13 +487,13 @@ class UserManagementConnectorSpec
 
     val createTeamRequest =
       CreateTeamRequest(
-        organisation = "MDTP",
-        team         = "Test"
+        platform = "MDTP",
+        team     = "Test"
       )
 
     val actualTeamRequest =
       """{
-        |  "organisation": "MDTP",
+        |  "platform": "MDTP",
         |  "team": "Test"
         |}
         |""".stripMargin
