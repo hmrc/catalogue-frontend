@@ -20,12 +20,12 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.*
 
 case class CreateTeamRequest(
-  organisation: String,
+  platform    : String,
   team        : String
 )
 
 object CreateTeamRequest:
   val writes: Writes[CreateTeamRequest] =
-    ( (__ \ "organisation").write[String]
+    ((__ \ "platform").write[String]
     ~ (__ \ "team"        ).write[String]
     )(r => Tuple.fromProductTyped(r))

@@ -19,8 +19,7 @@
 @this()
 
 @(form            : Form[?],
-  platforms       : Seq[String],
-  organisations   : Seq[Organisation]
+  platforms       : Seq[String]
 )(implicit
   request         : RequestHeader,
   messagesProvider: MessagesProvider
@@ -59,20 +58,6 @@
             @platform
             </option>
             }
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="form-group row mb-2">
-        <div class="col-md-6 d-grid gap-2">
-          <label class="fw-bold" for="organisationInput">Organisation:</label>
-          <div class="mb-2">
-            <select class="form-select" id="organisationInput" name="organisation">
-              @organisations.map { org =>
-                <option value="@{org.asString}" @if(form.data.getOrElse("organisation", "").equals(org.asString)) { selected="selected" else ""}>
-                  @org.asString
-                </option>
-              }
             </select>
           </div>
         </div>
