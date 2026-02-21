@@ -83,10 +83,10 @@ object CreateTeamForm:
   val form: Form[CreateTeamRequest] =
     Form(
       Forms.mapping(
-        "organisation"     -> Forms.nonEmptyText,
-        "team"             -> Forms.text
-                                .verifying(CreateTeamConstraints.teamNameConstraints: _*)
-                                .transform(_.trim, _.toString)
+        "platform"  -> Forms.nonEmptyText,
+        "team"      -> Forms.text
+                      .verifying(CreateTeamConstraints.teamNameConstraints: _*)
+                      .transform(_.trim, _.toString)
       )(CreateTeamRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
