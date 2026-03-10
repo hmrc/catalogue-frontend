@@ -132,7 +132,7 @@ object DeploymentEventsController:
   def defaultToTime(referenceDate: LocalDate = LocalDate.now()): LocalDate =
     referenceDate
 
-  lazy val form: Form[SearchForm] =
+  def form: Form[SearchForm] =
     val dateFormat = "yyyy-MM-dd"
     Form(
       Forms
