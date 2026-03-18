@@ -26,6 +26,6 @@ case class CreateTeamRequest(
 
 object CreateTeamRequest:
   val writes: Writes[CreateTeamRequest] =
-    ((__ \ "platform").write[String]
+    ( (__ \ "platform"    ).write[String]
     ~ (__ \ "team"        ).write[String]
     )(r => Tuple.fromProductTyped(r))
