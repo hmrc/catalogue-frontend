@@ -96,21 +96,31 @@ object CreateTeamConstraints:
       if constraint(toBeValidated) then Valid else Invalid(error)
 
   val teamNameConstraints: Seq[Constraint[String]] =
-    val nonEmptyValidation: String => Boolean = _.trim.nonEmpty
-    val validPattern: String => Boolean = _.matches("^[a-zA-Z0-9_\\- ]+$")
-    val validLength: String => Boolean = _.length <= 30
+    val nonEmptyValidation  : String => Boolean = _.trim.nonEmpty
+    val validLength         : String => Boolean = _.length <= 30
+    val validChars          : String => Boolean = _.matches("^[A-Za-z0-9_\\- ]+$")
+    val validHyphenSpacing  : String => Boolean = _.matches("^(?!.* -[^ ])(?!.*[^ ]- ).*$")
+    val validHyphenPlacement: String => Boolean = s => !s.startsWith("-") && !s.endsWith("-") && !s.contains("--")
 
     Seq(
       mkConstraint("constraints.nonEmptyTeamNameCheck")(
         constraint = nonEmptyValidation,
-        error = "Team name cannot be empty"
+        error      = "Team name cannot be empty"
       ),
       mkConstraint("constraints.teamNameLengthCheck")(
         constraint = validLength,
-        error = "Team name must be less than 30 characters long"
+        error      = "Team name must be no greater than 30 characters long"
       ),
-      mkConstraint("constraints.teamNameValidCheck")(
-        constraint = validPattern,
-        error = "Team name can only contain letters, numbers, spaces, underscores (_), or hyphens (-)"
+      mkConstraint("constraints.teamNameCharsCheck")(
+        constraint = validChars,
+        error      = "Team name can only contain letters, numbers, spaces, underscores (_), or hyphens (-)."
+      ),
+      mkConstraint("constraints.teamNameHyphenSpacingCheck")(
+        constraint = validHyphenSpacing,
+        error      = "Hyphens must either have no spaces or spaces on both sides (e.g. TEAM-ONE or TEAM - ONE)."
+      ),
+      mkConstraint("constraints.teamNameHyphenPlacementCheck")(
+        constraint = validHyphenPlacement,
+        error      = "Team names cannot start or end with a hyphen or contain consecutive hyphens (--)."
       )
     )
