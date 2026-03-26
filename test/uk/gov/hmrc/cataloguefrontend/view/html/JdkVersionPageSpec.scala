@@ -67,6 +67,22 @@ class JdkVersionPageSpec
 
       link.attr("href") shouldBe "/repositories/thing-service"
     }
+
+    "show the selected team filter as selected" in {
+      given Request[?] = FakeRequest()
+
+      val versions = List(JdkVersion(ServiceName("test-slug"), Version("1.181.0"), Vendor.OpenJDK, Kind.JDK))
+      val teams    = List(
+        GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one")),
+        GitHubTeam(name = TeamName("Team 2"), lastActiveDate = None, repos = Seq("repo-two"))
+      )
+      val document = asDocument(JdkVersionPage()(versions, teams, digitalServices = Nil, SlugInfoFlag.Latest, Some(TeamName("Team 2")), None))
+
+      val selectedOptions = document.select("#teamName option[selected]")
+      selectedOptions.size()       shouldBe 1
+      selectedOptions.attr("value") shouldBe "Team 2"
+      selectedOptions.text()        shouldBe "Team 2"
+    }
   }
 
   private def asDocument(html: Html) =
