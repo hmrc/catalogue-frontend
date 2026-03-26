@@ -93,6 +93,7 @@ case class UmpTeam(
 , documentation    : Option[String]
 , slack            : Option[SlackInfo]
 , slackNotification: Option[SlackInfo]
+, platform         : Seq[String]
 ):
   val humanMembers   : Seq[Member] = members.filter(_.isNonHuman == false).sortBy(_.username.asString)
   val nonHumanMembers: Seq[Member] = members.filter(_.isNonHuman == true).sortBy(_.username.asString)
@@ -107,6 +108,7 @@ object UmpTeam:
     ~ (__ \ "documentation"    ).readNullable[String]
     ~ (__ \ "slack"            ).readNullable[SlackInfo]
     ~ (__ \ "slackNotification").readNullable[SlackInfo]
+    ~ (__ \ "platform"         ).read[Seq[String]]
     )(UmpTeam.apply)
 
 case class User(

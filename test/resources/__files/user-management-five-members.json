@@ -1,5 +1,6 @@
 {
   "teamName": "teamA",
+  "platform": ["MDTP"],
   "members": [
     {
       "username": "k.s",

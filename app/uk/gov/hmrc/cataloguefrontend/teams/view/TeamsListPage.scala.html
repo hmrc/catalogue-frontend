@@ -68,6 +68,9 @@
                     <th class="col-lg-5">
                         <button role="button" class="fw-bold sort no-border" data-sort="team-name">Team</button>
                     </th>
+                    <th class="col-lg-2">
+                        <button role="button" class="fw-bold sort no-border" data-sort="platform">Platform</button>
+                    </th>
                     <th class="col-lg-1">
                         <button role="button" class="fw-bold sort no-border" data-sort="members" title="Team members in user management portal">Members</button>
                     </th>
@@ -87,6 +90,13 @@
             <tr class="@github.fold("no-github")(_ => "github")" id="row@i">
                 <td class="team-name" id="row@{i}_name">
                     <a href="@teamsRoutes.TeamsController.team(team.teamName)">@team.teamName.asString</a>
+                </td>
+                <td class="platform" id="row@{i}_platform">
+                @if(team.platform.nonEmpty) {
+                    @team.platform.mkString(", ")
+                } else {
+                    Unknown
+                }
                 </td>
                 <td class="members" id="row@{i}_members">
                     @if(team.nonHumanMembers.nonEmpty) {
@@ -115,7 +125,7 @@
 
 <script @CSPNonce.attr>
     let options = {
-        valueNames: ['team-name', 'members', 'github', 'last-active', 'repo-count'],
+        valueNames: ['team-name', 'platform', 'members', 'github', 'last-active', 'repo-count'],
         searchColumns: ['team-name', 'github']
     };
 

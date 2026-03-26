@@ -60,12 +60,13 @@ class UserManagementConnectorSpec
             aResponse()
               .withBody(s"""{
                 "members": [],
-                "teamName": "${team.asString}"
+                "teamName": "${team.asString}",
+                "platform": []
               }""")
           )
       )
 
-      connector.getTeam(team).futureValue shouldBe Some(UmpTeam(Seq.empty[Member], team, None, None, None, None))
+      connector.getTeam(team).futureValue shouldBe Some(UmpTeam(Seq.empty[Member], team, None, None, None, None, Seq.empty[String]))
     }
   }
 

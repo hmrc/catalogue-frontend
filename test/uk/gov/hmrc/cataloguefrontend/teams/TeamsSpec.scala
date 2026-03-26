@@ -58,7 +58,8 @@ class TeamsSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder
                     "members": [],
                     "teamName":"teamA",
                     "description": "team a",
-                    "documentation": "stuff"
+                    "documentation": "stuff",
+                    "platform": ["MDTP"]
                   }
                 ]
             """

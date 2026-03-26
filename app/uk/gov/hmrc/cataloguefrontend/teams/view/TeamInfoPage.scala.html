@@ -112,6 +112,14 @@
                 </div>
                 </form>
               </dl>
+              @if(umpTeam.platform.nonEmpty) {
+                  <dl id="platform" class="row border-bottom border-light-subtle pb-0 mb-2">
+                      <dt class="col-sm-4">Platform:</dt>
+                      <dd class="col-sm-8">
+                      @umpTeam.platform.mkString(", ")
+                      </dd>
+                  </dl>
+              }
               <dl id="team-documentation" class="row border-bottom border-light-subtle pb-0 mb-2">
                 <dt class="col-sm-4">Documentation:</dt>
                 <dd class="col-sm-8 d-flex justify-content-between">
