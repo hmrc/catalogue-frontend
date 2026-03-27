@@ -4,6 +4,7 @@
   "documentation": "https://some.documentation.url",
   "slack": "https://slack.host/messages/team-A",
   "slackNotification": "https://slack.host/messages/team-A-NOTIFICATION",
+  "platform": ["MDTP"],
   "members": [
     {
       "username": "a.b",
