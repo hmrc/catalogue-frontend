@@ -471,7 +471,7 @@ object UserConstraints:
       !_.isBlank
 
     val notGithubUrlValidation: String => Boolean =
-      !_.toLowerCase.contains("github.com/")
+      !_.toLowerCase.contains("/")
 
     Seq(
       mkConstraint("constraints.githubUsername")(
@@ -480,7 +480,7 @@ object UserConstraints:
       ),
       mkConstraint(s"constraints.notGithubUrl")(
         constraint = notGithubUrlValidation,
-        error = "GitHub username must not include the URL (https://github.com/)."
+        error      = "GitHub username must not include the URL or any forward slashes (/)."
       )
     )
 
