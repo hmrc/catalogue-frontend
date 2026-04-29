@@ -445,47 +445,66 @@ object UserConstraints:
       )
     )
 
-  private val nameConstraints: Constraint[String] =
+  private val nameConstraints: Seq[Constraint[String]] =
     val nameLengthValidation: String => Boolean = str => str.length >= 2 && str.length <= 30
 
-    mkConstraint(s"constraints.displayNameLengthCheck")(
+    Seq(
+      mkConstraint(s"constraints.displayNameLengthCheck")(
       constraint = nameLengthValidation,
       error      = "Name should be between 2 and 30 characters long"
+      )
     )
 
-  private val phoneNumberConstraint: Constraint[String] =
+  private val phoneNumberConstraint: Seq[Constraint[String]] =
     val phoneNumberValidation: String => Boolean =
       _.matches("""^(?=.*\d)[\d\s/+]*$""")
 
-    mkConstraint("constraints.phoneNumber")(
+    Seq(
+      mkConstraint("constraints.phoneNumber")(
       constraint = phoneNumberValidation,
       error      = "Phone number can only contain digits, spaces, plus signs, or slashes."
+      )
     )
 
-  private val githubUsernameConstraint: Constraint[String] =
+  private val githubUsernameConstraint: Seq[Constraint[String]] =
     val githubUsernameValidation: String => Boolean =
       !_.isBlank
 
-    mkConstraint("constraints.githubUsername")(
-      constraint = githubUsernameValidation,
-      error      = "GitHub username cannot be set to empty once it has been provided."
+    val notGithubUrlValidation: String => Boolean =
+      !_.toLowerCase.contains("github.com/")
+
+    Seq(
+      mkConstraint("constraints.githubUsername")(
+        constraint = githubUsernameValidation,
+        error      = "GitHub username cannot be set to empty once it has been provided."
+      ),
+      mkConstraint(s"constraints.notGithubUrl")(
+        constraint = notGithubUrlValidation,
+        error = "GitHub username must not include the URL (https://github.com/)."
+      )
     )
 
-  private val organisationConstraint: Constraint[String] =
+  private val organisationConstraint: Seq[Constraint[String]] =
     val organisationValidation: String => Boolean =
       Organisation.values.map(_.asString).contains(_)
 
-    mkConstraint("constraints.organisation")(
+    Seq(
+      mkConstraint("constraints.organisation")(
       constraint = organisationValidation,
       error      = "Organisation must be MDTP, VOA, or Other."
+      )
     )
 
   def validateByAttribute: Constraint[EditUserDetailsRequest] =
     Constraint("constraints.editUserDetailsRequest"): editUserDetailsRequest =>
-      val constraint =
+      val constraints: Seq[Constraint[String]] =
         editUserDetailsRequest.attribute match
           case UserAttribute.DisplayName  => nameConstraints
           case UserAttribute.PhoneNumber  => phoneNumberConstraint
           case UserAttribute.Github       => githubUsernameConstraint
           case UserAttribute.Organisation => organisationConstraint
-      constraint(editUserDetailsRequest.value)
+      constraints
+        .view
+        .map(_(editUserDetailsRequest.value))
+        .find(_.isInstanceOf[Invalid])
+        .getOrElse(Valid)
