@@ -346,7 +346,7 @@ class DeployServiceControllerSpec
                             , id                         = "some-id"
                             , score                      = None
                             , summary                    = "summary"
-                            , description                = "some-description"
+                            , description                = Some("some-description")
                             , fixedVersions              = None
                             , references                 = Seq("some-reference")
                             , publishedDate              = Instant.now
