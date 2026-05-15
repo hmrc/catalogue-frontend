@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{Reads, __}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{JsArray, JsNull, JsSuccess, Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version, VersionRange}
 
 import java.time.Instant
@@ -58,7 +58,7 @@ case class DistinctVulnerability(
   id                        : String,
   score                     : Option[Double],
   summary                   : String,
-  description               : String,
+  description               : Option[String],
   fixedVersions             : Option[Seq[String]],
   references                : Seq[String],
   publishedDate             : Instant,
@@ -87,9 +87,9 @@ object DistinctVulnerability {
     ~ (__ \ "id"                        ).read[String]
     ~ (__ \ "score"                     ).readNullable[Double]
     ~ (__ \ "summary"                   ).read[String]
-    ~ (__ \ "description"               ).read[String]
+    ~ (__ \ "description"               ).readNullable[String]
     ~ (__ \ "fixedVersions"             ).readNullable[Seq[String]]
-    ~ (__ \ "references"                ).read[Seq[String]]
+    ~ (__ \ "references"                ).readWithDefault[Seq[String]](Nil)
     ~ (__ \ "publishedDate"             ).read[Instant]
     ~ (__ \ "firstDetected"             ).readNullable[Instant]
     ~ (__ \ "assessment"                ).readNullable[String]

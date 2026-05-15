@@ -68,66 +68,92 @@ class VulnerabilitiesConnectorSpec
     }
   }
 
-  "vulnerabilitySummaries" should {
-    "return a sequence of vulnerabilitySummaries" in {
-      stubFor(
-        get(urlMatching("/vulnerabilities/api/summaries"))
-          .willReturn(aResponse().withBody(
-            """[{
-              "distinctVulnerability": {
-                "vulnerableComponentName": "deb://ubuntu/xenial:test",
-                "vulnerableComponentVersion": "1.2.5.4-1",
-                "vulnerableComponents": [{"component": "deb://ubuntu/xenial:test", "version": "1.2.5.4-1"}],
-                "id": "CVE-123",
-                "score": 10,
-                "summary": "summary",
-                "description": "testing",
-                "fixedVersions": ["2.5.2"],
-                "references": ["http://test.com"],
-                "publishedDate": "2019-08-20T10:53:37.00Z",
-                "firstDetected": "2019-08-20T10:53:37.00Z",
-                "assessment": "Serious",
-                "curationStatus": "ACTION_REQUIRED",
-                "ticket": "ticket1"
-              },
-              "occurrences": [{
-                "service": "service1",
-                "serviceVersion": "2.0",
-                "componentPathInSlug": "some/test/path",
-                "importedBy": {"group": "some-group", "artefact": "some-artefact", "version": "0.1.0"}
-              }],
-              "teams": ["TeamA", "TeamB"]
-            }]""".stripMargin
-          ))
-      )
+  "vulnerabilitySummaries" when {
+    def summariesBaseResponse(extraFields: Option[String] = None) = s"""[{
+                         "distinctVulnerability": {
+                           "vulnerableComponentName": "deb://ubuntu/xenial:test",
+                           "vulnerableComponentVersion": "1.2.5.4-1",
+                           "vulnerableComponents": [{"component": "deb://ubuntu/xenial:test", "version": "1.2.5.4-1"}],
+                           "id": "CVE-123",
+                           "score": 10,
+                           "summary": "summary",
+                           "fixedVersions": ["2.5.2"],
+                           "publishedDate": "2019-08-20T10:53:37.00Z",
+                           "firstDetected": "2019-08-20T10:53:37.00Z",
+                           "assessment": "Serious",
+                           "curationStatus": "ACTION_REQUIRED",
+                           "ticket": "ticket1"
+                           ${extraFields.map("," + _).getOrElse("")}
+                         },
+                         "occurrences": [{
+                           "service": "service1",
+                           "serviceVersion": "2.0",
+                           "componentPathInSlug": "some/test/path",
+                           "importedBy": {"group": "some-group", "artefact": "some-artefact", "version": "0.1.0"}
+                         }],
+                         "teams": ["TeamA", "TeamB"]
+                       }]""".stripMargin
 
-      vulnerabilitiesConnector.vulnerabilitySummaries(None, None, None, None, None).futureValue shouldBe Some(Seq(
-        VulnerabilitySummary(
-          distinctVulnerability = DistinctVulnerability(
-                                    vulnerableComponentName    = "deb://ubuntu/xenial:test",
-                                    vulnerableComponentVersion = "1.2.5.4-1",
-                                    vulnerableComponents       = Seq(VulnerableComponent("deb://ubuntu/xenial:test", Version("1.2.5.4-1"))),
-                                    id                         = "CVE-123",
-                                    score                      = Some(10.0),
-                                    summary                    = "summary",
-                                    description                = "testing",
-                                    fixedVersions              = Some(Seq("2.5.2")),
-                                    references                 = Seq("http://test.com"),
-                                    publishedDate              = Instant.parse("2019-08-20T10:53:37.00Z"),
-                                    firstDetected              = Some(Instant.parse("2019-08-20T10:53:37.00Z")),
-                                    assessment                 = Some("Serious"),
-                                    curationStatus             = Some(CurationStatus.ActionRequired),
-                                    ticket                     = Some("ticket1")
-                                  ),
-          occurrences           = Seq(VulnerabilityOccurrence(
-                                    service             = ServiceName("service1"),
-                                    serviceVersion      = "2.0",
-                                    componentPathInSlug = "some/test/path",
-                                    importedBy          = Some(ImportedBy(group = "some-group", artefact = "some-artefact", version = Version("0.1.0")))
-                                  )),
-          teams                 = Seq("TeamA", "TeamB")
+    val expectedSummary = VulnerabilitySummary(
+      distinctVulnerability = DistinctVulnerability(
+        vulnerableComponentName = "deb://ubuntu/xenial:test",
+        vulnerableComponentVersion = "1.2.5.4-1",
+        vulnerableComponents = Seq(VulnerableComponent("deb://ubuntu/xenial:test", Version("1.2.5.4-1"))),
+        id = "CVE-123",
+        score = Some(10.0),
+        summary = "summary",
+        description = Some("testing"),
+        fixedVersions = Some(Seq("2.5.2")),
+        references = Seq("http://test.com"),
+        publishedDate = Instant.parse("2019-08-20T10:53:37.00Z"),
+        firstDetected = Some(Instant.parse("2019-08-20T10:53:37.00Z")),
+        assessment = Some("Serious"),
+        curationStatus = Some(CurationStatus.ActionRequired),
+        ticket = Some("ticket1")
+      ),
+      occurrences = Seq(VulnerabilityOccurrence(
+        service = ServiceName("service1"),
+        serviceVersion = "2.0",
+        componentPathInSlug = "some/test/path",
+        importedBy = Some(ImportedBy(group = "some-group", artefact = "some-artefact", version = Version("0.1.0")))
+      )),
+      teams = Seq("TeamA", "TeamB")
+    )
+
+
+    "Using V1 VulnsService with additional vulnerability detail fields" should {
+      "return a sequence of vulnerabilitySummaries" in {
+        val v1SummariesResponseWithDescription = summariesBaseResponse(
+          Some(
+            """
+              |  "description": "testing",
+              |  "references": ["http://test.com"]
+              |
+              |""".stripMargin))
+        stubFor(
+          get(urlMatching("/vulnerabilities/api/summaries"))
+            .willReturn(aResponse().withBody(
+              v1SummariesResponseWithDescription
+            ))
         )
-      ))
+
+        vulnerabilitiesConnector.vulnerabilitySummaries(None, None, None, None, None).futureValue shouldBe Some(Seq(
+          expectedSummary
+        ))
+      }
+
+    }
+    "Using V2 VulnsService without vulnerability detail fields" should {
+      val v2SummariesResponse = summariesBaseResponse()
+
+      "return a sequence of vulnerabilitySummaries" in {
+        stubFor(
+          get(urlMatching("/vulnerabilities/api/summaries"))
+            .willReturn(aResponse().withBody(
+              v2SummariesResponse
+            ))
+        )
+      }
     }
   }
 
