@@ -307,7 +307,11 @@ class DeployServiceController @Inject()(
             )
             .mapAsync(parallelism = 1): _ =>
               (qUrl, bUrl) match
-                case (u, None)    => buildJobsConnector.queueStatus(u).map(x => Json.obj("queueStatus" -> Json.toJson(x)).toString)
+                case (u, None)    =>  buildJobsConnector.queueStatus(u).map:
+                                        case Some(x) =>
+                                          Json.obj("queueStatus" -> Json.toJson(x)).toString
+                                        case None =>
+                                          Json.obj("error" -> "QUEUE-ID-NOT-FOUND").toString
                 case (_, Some(u)) => buildJobsConnector.buildStatus(u).map(x => Json.obj("buildStatus" -> Json.toJson(x)).toString)
             .via(EventSource.flow)
 

@@ -119,9 +119,14 @@
         const sse  = new EventSource(url);
         displayLastCheck();
 
-        sse.onerror = function(event) {
-          displayStatus('QUEUE-ID-NOT-FOUND', 'Could not find Jenkins queue. Deployment job may already have been started.');
-        };
+        if (json.error === 'QUEUE-ID-NOT-FOUND') {
+          displayStatus(
+            'QUEUE-ID-NOT-FOUND',
+            'Could not find Jenkins queue. Deployment job may already have been started.'
+          );
+          sse.close();
+          return;
+        }
 
         sse.onmessage = function(event) {
           const json = JSON.parse(event.data);
