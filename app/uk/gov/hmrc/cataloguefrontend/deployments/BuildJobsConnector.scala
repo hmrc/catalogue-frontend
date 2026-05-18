@@ -79,7 +79,7 @@ class BuildJobsConnector @Inject()(
         case Right(res) => Future.successful(res)
         case Left(err)  => Future.failed(RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
 
-  def queueStatus(queueUrl: SafeRedirectUrl)(using HeaderCarrier): Future[BuildJobsConnector.QueueStatus] =
+  def queueStatus(queueUrl: SafeRedirectUrl)(using HeaderCarrier): Future[Option[BuildJobsConnector.QueueStatus]] =
     val url = url"${queueUrl.url}api/json?tree=cancelled,executable[number,url]"
     given Reads[BuildJobsConnector.QueueStatus] = BuildJobsConnector.QueueStatus.format
 
@@ -88,8 +88,10 @@ class BuildJobsConnector @Inject()(
       .setHeader("Authorization" -> authorizationHeader)
       .execute[Either[UpstreamErrorResponse, BuildJobsConnector.QueueStatus]]
       .flatMap:
-        case Right(res) => Future.successful(res)
-        case Left(err)  => Future.failed(RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
+        case Right(res)                         => Future.successful(Some(res))
+        case Left(err) if err.statusCode == 404 => logger.warn(s"Queue $queueUrl not found or expired: $err")
+                                                   Future.successful(None)
+        case Left(err)                          => Future.failed(RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
 
   def buildStatus(buildUrl: SafeRedirectUrl)(using HeaderCarrier): Future[BuildJobsConnector.BuildStatus] =
     val url = url"${buildUrl.url}api/json?tree=number,url,timestamp,result"

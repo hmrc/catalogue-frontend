@@ -121,6 +121,7 @@
 
         sse.onerror = function(event) {
           displayStatus('QUEUE-ID-NOT-FOUND', 'Could not find Jenkins queue. Deployment job may already have been started.');
+          sse.close();
         };
 
         sse.onmessage = function(event) {
