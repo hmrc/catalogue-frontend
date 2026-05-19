@@ -438,8 +438,8 @@
           <div class="mb-2">Please enter the channel name only.</div>
           <div class="mb-2">Before saving, click below to check that the URL matches the Slack channel associated with this team:</div>
           <div class="mb-2 text-break">
-            <a id="@{label.toLowerCase.replace(" ","-")}-link" href="https://hmrcdigital.slack.com/messages/@{slackInfo.name}" target="_blank" rel="noreferrer noopener">
-              https://hmrcdigital.slack.com/messages/@{slackInfo.name}<span class="glyphicon glyphicon-new-window"/>
+            <a id="@{label.toLowerCase.replace(" ","-")}-link" href="https://hmrcdigital.slack.com/app_redirect?channel=@{slackInfo.name}" target="_blank" rel="noreferrer noopener">
+              https://hmrcdigital.slack.com/app_redirect?channel=@{slackInfo.name}<span class="glyphicon glyphicon-new-window"/>
             </a>
           </div>
           <div class="d-flex align-items-center mb-2">
@@ -449,13 +449,6 @@
             value="@teamDetailsForm.data.getOrElse(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}", slackInfo.name)"
             placeholder="channel-name">
             @saveAndCancelButtons(s"${label.toLowerCase.replace(" ","-")}")
-          </div>
-          <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" id="is-private-@{label.toLowerCase.replace(" ","-")}" 
-              name="is_private" @if(slackInfo.isPrivate) { checked }>
-            <label class="form-check-label" for="is-private-@{label.toLowerCase.replace(" ","-")}">
-              Private channel
-            </label>
           </div>
           @teamDetailsForm(s"${if(label.toLowerCase.contains("team")){"slack"}else{"slackNotification"}}").errors.map { error => 
             <div class="invalid-feedback d-block w-100 mt-2">@error.message</div> 
@@ -625,37 +618,28 @@
 
           function updateSlackLink(inputId, linkId) {
             const input = document.getElementById(inputId);
-            if (!input) return;
-
             const link = document.getElementById(linkId);
-            if (!link) return;
 
-            const updateLink = () => {
-              const value = input.value.trim();
-              const baseUrl = 'https://hmrcdigital.slack.com/messages/';
-              const newHref = value ? `${baseUrl}${value}` : `${baseUrl}${input.placeholder || 'channel-name'}`;
-              link.href = newHref;
-              link.textContent = value ? `${baseUrl}${value}` : `${baseUrl}${input.placeholder || 'channel-name'}`;
-              
-              // Update the privacy indicator in the preview
-              const privacyBadge = link.parentElement.querySelector('.privacy-badge');
-              if (privacyBadge) {
-                const isPrivate = document.querySelector(`#${inputId}-container .form-check-input`).checked;
-                privacyBadge.textContent = isPrivate ? 'Private' : 'Public';
-                privacyBadge.className = `badge ms-2 ${isPrivate ? 'bg-danger' : 'bg-primary'}`;
-              }
-            };
+            if (input && link) {
+                input.addEventListener(
+                  "input",
+                  debounce(function () {
+                      const slackName = input.value.trim();
+                      link.href = `https://hmrcdigital.slack.com/app_redirect?channel=${slackName}`;
+                      link.textContent = `https://hmrcdigital.slack.com/app_redirect?channel=${slackName}`;
 
-            // Add privacy toggle handler
-            const privacyToggle = document.querySelector(`#${inputId}-container .form-check-input`);
-            if (privacyToggle) {
-              privacyToggle.addEventListener('change', debounce(function() {
-                updateLink();
-              }, 300));
+                      if (!link.querySelector(".glyphicon-new-window")) {
+                          const iconSpan = document.createElement("span");
+                          iconSpan.className = "glyphicon glyphicon-new-window ms-1";
+                          link.appendChild(iconSpan);
+                      }
+                  }, 300)
+                );
             }
+          }
 
           updateSlackLink("field-slack-team", "slack-team-link");
           updateSlackLink("field-slack-notification", "slack-notification-link");
-          } // Close updateSlackLink function
-        }); // Close document ready
+
+        });
 </script>

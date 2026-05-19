@@ -52,7 +52,7 @@ object Member:
 
 case class SlackInfo(url: String, isPrivate: Boolean):
   val name: String =
-    url.split("/").lastOption.getOrElse(url)
+    url.split("=").lastOption.getOrElse(url)
 
   val hasValidUrl: Boolean = 
     Try(URI.create(url).toURL).isSuccess && 
@@ -65,18 +65,22 @@ object SlackInfo:
   def unapply(slackInfo: SlackInfo): Option[(String, Boolean)] =
     Some((slackInfo.url, slackInfo.isPrivate))
 
-  // Accept both legacy string URL and object { "channel_url": String, "is_private": Boolean }
   val reads: Reads[SlackInfo] =
     Reads { json =>
       // Legacy format: slack fields provided as a plain string URL
-      json.validate[String].map(url => SlackInfo(url = url, isPrivate = false))
+      json.validate[String].map(url => SlackInfo(url = normalise(url), isPrivate = false))
         .orElse {
           // New format: explicit object with fields
-          ( (__ \ "channel_url").read[String]
+          ( (__ \ "channel_url").read[String].map(normalise)
           ~ (__ \ "is_private").read[Boolean]
           )(SlackInfo.apply).reads(json)
         }
     }
+
+  // Temporary normalisation to convert legacy URL format to the new format. Can be removed when UMP starts sending the new URL or Channel ID.
+  private def normalise(url: String): String =
+    val name = url.split("/").lastOption.getOrElse(url)
+    s"https://hmrcdigital.slack.com/app_redirect?channel=$name"
 
   val writes: Writes[SlackInfo] = 
     ( (__ \ "channel_url").write[String]

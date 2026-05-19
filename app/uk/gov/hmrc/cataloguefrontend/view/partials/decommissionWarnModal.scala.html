@@ -33,7 +33,7 @@
                     This action will let MDTP users know that the  <a href="https://docs.tax.service.gov.uk/mdtp-handbook/documentation/decommission-a-microservice/prepare-for-decommissioning.html#alert-teams-that-own-dependent-services">decommission process</a> has started. Please ensure that you want to decommission @serviceName.asString before proceeding.
                 </p>
                 <p class="body">
-                    If you have flagged this service by mistake, please contact <a href="https://hmrcdigital.slack.com/messages/team-platops" target="_blank" rel="noreferrer noopener">#team-platops<i class="glyphicon glyphicon-new-window"></i></a>.
+                    If you have flagged this service by mistake, please contact <a href="https://hmrcdigital.slack.com/archives/C0GS60DK2" target="_blank" rel="noreferrer noopener">#team-platops<i class="glyphicon glyphicon-new-window"></i></a>.
                 </p>
                 <form id="mark-for-decommissioning" action="@{catalogueRoutes.CatalogueController.markForDecommissioning(serviceName)}" method="post">
                 @csrfFormField

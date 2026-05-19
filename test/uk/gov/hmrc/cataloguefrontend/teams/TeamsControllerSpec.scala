@@ -141,11 +141,11 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
       )
 
       document.select("#slack-team").toString() should include(
-        """href="https://slack.host/messages/team-A" target="_blank" rel="noreferrer noopener">#team-A<span class="glyphicon glyphicon-new-window"></span></a>"""
+        """href="https://hmrcdigital.slack.com/app_redirect?channel=team-A" target="_blank" rel="noreferrer noopener">#team-A<span class="glyphicon glyphicon-new-window"></span></a>"""
       )
 
       document.select("#slack-notification").toString() should include(
-        """href="https://slack.host/messages/team-A-NOTIFICATION" target="_blank" rel="noreferrer noopener">#team-A-NOTIFICATION<span class="glyphicon glyphicon-new-window"></span></a>"""
+        """href="https://hmrcdigital.slack.com/app_redirect?channel=team-A-NOTIFICATION" target="_blank" rel="noreferrer noopener">#team-A-NOTIFICATION<span class="glyphicon glyphicon-new-window"></span></a>"""
       )
 
       document.select("#github").toString() should include(

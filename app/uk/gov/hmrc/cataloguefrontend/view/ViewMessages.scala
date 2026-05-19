@@ -24,7 +24,7 @@ class ViewMessages @Inject()(configuration: Configuration):
   def noRepoOfTypeForTeam(item: String): String =
     s"""This team doesn't have any $item repositories, or our <a href="/#maintenance">$item repository detection strategy</a> needs
       improving. In case of the latter, let us know in
-      <a href="https://hmrcdigital.slack.com/messages/team-platops/" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"/></a>"""
+      <a href="https://hmrcdigital.slack.com/archives/C0GS60DK2" target="_blank" rel="noreferrer noopener">#team-platops<span class="glyphicon glyphicon-new-window"/></a>"""
 
   val informationalText: String =
     configuration.get[String](s"info-panel-text")
