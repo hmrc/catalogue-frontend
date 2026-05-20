@@ -70,32 +70,29 @@ class VulnerabilitiesConnectorSpec
 
   "vulnerabilitySummaries" when:
     def summariesBaseResponse(extraFields: Option[String] = None) =
-      s"""
-         |[{
-         |                         "distinctVulnerability": {
-         |                           "vulnerableComponentName": "deb://ubuntu/xenial:test",
-         |                           "vulnerableComponentVersion": "1.2.5.4-1",
-         |                           "vulnerableComponents": [{"component": "deb://ubuntu/xenial:test", "version": "1.2.5.4-1"}],
-         |                           "id": "CVE-123",
-         |                           "score": 10,
-         |                           "summary": "summary",
-         |                           "fixedVersions": ["2.5.2"],
-         |                           "publishedDate": "2019-08-20T10:53:37.00Z",
-         |                           "firstDetected": "2019-08-20T10:53:37.00Z",
-         |                           "assessment": "Serious",
-         |                           "curationStatus": "ACTION_REQUIRED",
-         |                           "ticket": "ticket1"
-         |                           ${extraFields.map("," + _).getOrElse("")}
-         |                         },
-         |                         "occurrences": [{
-         |                           "service": "service1",
-         |                           "serviceVersion": "2.0",
-         |                           "componentPathInSlug": "some/test/path",
-         |                           "importedBy": {"group": "some-group", "artefact": "some-artefact", "version": "0.1.0"}
-         |                         }],
-         |                         "teams": ["TeamA", "TeamB"]
-         |                       }]
-         |""".stripMargin
+      """"distinctVulnerability": {
+        |    "vulnerableComponentName": "deb://ubuntu/xenial:test",
+        |    "vulnerableComponentVersion": "1.2.5.4-1",
+        |    "vulnerableComponents": [{"component": "deb://ubuntu/xenial:test", "version": "1.2.5.4-1"}],
+        |    "id": "CVE-123",
+        |    "score": 10,
+        |    "summary": "summary",
+        |    "fixedVersions": ["2.5.2"],
+        |    "publishedDate": "2019-08-20T10:53:37.00Z",
+        |    "firstDetected": "2019-08-20T10:53:37.00Z",
+        |    "assessment": "Serious",
+        |    "curationStatus": "ACTION_REQUIRED",
+        |    "ticket": "ticket1"
+        |    ${extraFields.map("," + _).getOrElse("")}
+        |  },
+        |  "occurrences": [{
+        |    "service": "service1",
+        |    "serviceVersion": "2.0",
+        |    "componentPathInSlug": "some/test/path",
+        |    "importedBy": {"group": "some-group", "artefact": "some-artefact", "version": "0.1.0"}
+        |  }],
+        |  "teams": ["TeamA", "TeamB"]
+        |}""".stripMargin
 
     val expectedSummary = VulnerabilitySummary(
       distinctVulnerability        = DistinctVulnerability(
