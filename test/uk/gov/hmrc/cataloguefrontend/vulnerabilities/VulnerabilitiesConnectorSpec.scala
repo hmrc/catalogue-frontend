@@ -70,7 +70,8 @@ class VulnerabilitiesConnectorSpec
 
   "vulnerabilitySummaries" when:
     def summariesBaseResponse(extraFields: Option[String] = None) =
-      """"distinctVulnerability": {
+      s"""[{
+        |"distinctVulnerability": {
         |    "vulnerableComponentName": "deb://ubuntu/xenial:test",
         |    "vulnerableComponentVersion": "1.2.5.4-1",
         |    "vulnerableComponents": [{"component": "deb://ubuntu/xenial:test", "version": "1.2.5.4-1"}],
@@ -92,7 +93,7 @@ class VulnerabilitiesConnectorSpec
         |    "importedBy": {"group": "some-group", "artefact": "some-artefact", "version": "0.1.0"}
         |  }],
         |  "teams": ["TeamA", "TeamB"]
-        |}""".stripMargin
+        |}]""".stripMargin
 
     val expectedSummary = VulnerabilitySummary(
       distinctVulnerability        = DistinctVulnerability(
