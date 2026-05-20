@@ -35,7 +35,7 @@ class VulnerabilitiesConnectorSpec
     with ScalaFutures
     with IntegrationPatience
     with HttpClientV2Support
-    with WireMockSupport {
+    with WireMockSupport:
 
   val servicesConfig = ServicesConfig(
     Configuration(
@@ -68,7 +68,7 @@ class VulnerabilitiesConnectorSpec
     }
   }
 
-  "vulnerabilitySummaries" when {
+  "vulnerabilitySummaries" when:
     def summariesBaseResponse(extraFields: Option[String] = None) = s"""[{
                          "distinctVulnerability": {
                            "vulnerableComponentName": "deb://ubuntu/xenial:test",
@@ -121,8 +121,8 @@ class VulnerabilitiesConnectorSpec
     )
 
 
-    "Using V1 VulnsService with additional vulnerability detail fields" should {
-      "return a sequence of vulnerabilitySummaries" in {
+    "Using V1 VulnsService with additional vulnerability detail fields" should:
+      "return a sequence of vulnerabilitySummaries" in:
         val v1SummariesResponseWithDescription = summariesBaseResponse(
           Some(
             """
@@ -140,25 +140,21 @@ class VulnerabilitiesConnectorSpec
         vulnerabilitiesConnector.vulnerabilitySummaries(None, None, None, None, None).futureValue shouldBe Some(Seq(
           expectedSummary
         ))
-      }
 
-    }
-    "Using V2 VulnsService without vulnerability detail fields" should {
+
+    "Using V2 VulnsService without vulnerability detail fields" should:
       val v2SummariesResponse = summariesBaseResponse()
 
-      "return a sequence of vulnerabilitySummaries" in {
+      "return a sequence of vulnerabilitySummaries" in:
         stubFor(
           get(urlMatching("/vulnerabilities/api/summaries"))
             .willReturn(aResponse().withBody(
               v2SummariesResponse
             ))
         )
-      }
-    }
-  }
 
-  "vulnerabilitiesCounts" should {
-    "return a sequence of TotalVulnerabilityCounts" in {
+  "vulnerabilitiesCounts" should:
+    "return a sequence of TotalVulnerabilityCounts" in:
       stubFor(
         get(urlMatching("/vulnerabilities/api/reports/latest/counts"))
           .willReturn(aResponse().withBody(
@@ -181,6 +177,3 @@ class VulnerabilitiesConnectorSpec
           uncurated            = 2
         )
       )
-    }
-  }
-}

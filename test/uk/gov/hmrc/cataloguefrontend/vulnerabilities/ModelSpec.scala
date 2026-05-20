@@ -23,11 +23,12 @@ import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json.{JsError, JsResult, JsSuccess, JsValue, Json, Reads}
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 
-class ModelSpec extends AnyWordSpec with Matchers with OptionValues{
+class ModelSpec
+  extends AnyWordSpec
+    with Matchers
+    with OptionValues:
 
-
-
-  "Internal model for Vulnerabilties list" can {
+  "Internal model for Vulnerabilties list" can:
 
     import DistinctVulnerability._
     val asJson = """{
@@ -48,14 +49,10 @@ class ModelSpec extends AnyWordSpec with Matchers with OptionValues{
               }"""
 
 
-    "deserialize from valid json to the entity" in {
+    "deserialize from valid json to the entity" in:
       val entityOpt: Option[DistinctVulnerability] = jsonToDistinctVulnModel(asJson)
 
-
       entityOpt.value.id shouldBe "CVE-123"
-
-
-    }
 
     val missingReferncesFields =
       """{
@@ -74,10 +71,9 @@ class ModelSpec extends AnyWordSpec with Matchers with OptionValues{
         |  "ticket": "ticket1"
         | }""".stripMargin
 
-    "deser from valid json when 'references' field has been omitted" in {
+    "deser from valid json when 'references' field has been omitted" in:
       val entityOpt: Option[DistinctVulnerability] = jsonToDistinctVulnModel(missingReferncesFields)
       entityOpt.value.references should be (empty)
-    }
 
     val referenceFieldAsEmptyList: String = """{
                 "vulnerableComponentName": "deb://ubuntu/xenial:test",
@@ -96,16 +92,11 @@ class ModelSpec extends AnyWordSpec with Matchers with OptionValues{
                 "ticket": "ticket1"
               }""".stripMargin
 
-      "deser from valid json when 'references' field is empty list" in {
+      "deser from valid json when 'references' field is empty list" in:
         val entityOpt: Option[DistinctVulnerability] = jsonToDistinctVulnModel(referenceFieldAsEmptyList)
         entityOpt.value.references should be(empty)
-      }
 
-
-
-  }
-
-  private def jsonToDistinctVulnModel(asJson: String) = {
+  private def jsonToDistinctVulnModel(asJson: String) =
     val jsValue: JsValue = Json.parse(asJson)
     implicit val reads: Reads[DistinctVulnerability] = DistinctVulnerability.reads
     val entityResult: JsResult[DistinctVulnerability] = Json.fromJson(jsValue)
@@ -118,5 +109,3 @@ class ModelSpec extends AnyWordSpec with Matchers with OptionValues{
         Some(value)
     }
     entityOpt
-  }
-}
