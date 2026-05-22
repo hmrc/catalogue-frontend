@@ -39,6 +39,7 @@
 )
 
 @isCurrentUser = @{request.session.get(AuthController.SESSION_USERNAME).fold(false)(_ == user.username.asString)}
+@hasTeams = @{user.teamNames.nonEmpty}
 
 @saveAndCancelButtons(fieldName: String) = {
     <div class="ms-auto d-flex gap-2">
@@ -54,6 +55,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   }
+
+    <div id="no-team-edit-alert" class="alert alert-danger mt-2 d-none" role="alert">
+        <div class="d-flex justify-content-between align-items-center">
+            <span>The user <b>@user.username.asString</b> must be added to a team before their details or tooling can be edited. A Team Admin can do this on their <a href=@teamRoutes.TeamsController.allTeams()>Team Page</a>.</span>
+            <button type="button" class="btn-close" id="close-no-team-alert" aria-label="Close"></button>
+        </div>
+    </div>
+
   @request.flash.get("success").map { msg =>
       <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
           @msg @if(request.flash.get("attribute").contains("github")) {
@@ -73,7 +82,7 @@
                       <div class="h4 mb-0 float-start">Details</div>
                       @if(canEditUsers || isCurrentUser || canManageUsers) {
                           <div class="float-end">
-                              <button type="button" class="btn btn-success btn-sm" id="edit-details">Edit</button>
+                              <button type="button" class="btn btn-success btn-sm" id="edit-details" @if(!hasTeams) {data-no-teams="true"}>Edit</button>
                           </div>
                       }
                   </div>
@@ -312,7 +321,11 @@
                               <div class="h4 mb-0">Tooling</div>
                               @if(canEditUsers) {
                                   <div>
+                                  @if(hasTeams) {
                                       <a class="btn btn-success" href="@userRoutes.EditUserController.editUserLanding(user.username, user.organisation)">Edit</a>
+                                  } else {
+                                      <button type="button" class="btn btn-success" id="edit-tooling">Edit</button>
+                                  }
                                   </div>
                               }
                           </div>
@@ -655,7 +668,14 @@
             };
 
             const editButton = document.getElementById("edit-details");
+            const toolingEditButton = document.getElementById("edit-tooling");
+            const noTeamAlert = document.getElementById("no-team-edit-alert");
+            const closeNoTeamAlert = document.getElementById("close-no-team-alert");
             const editLinks = document.querySelectorAll("a[id^='edit-']");
+
+            closeNoTeamAlert?.addEventListener("click", function () {
+                noTeamAlert?.classList.add("d-none");
+            });
 
             function toggleForm(contentId, formId, show) {
                 const contentDiv = document.getElementById(contentId);
@@ -682,8 +702,17 @@
                 });
             }
 
+            function showNoTeamAlert() {
+                noTeamAlert?.classList.remove("d-none");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
             if (editButton) {
                 editButton.addEventListener("click", function () {
+                    if (editButton.dataset.noTeams === "true") {
+                        showNoTeamAlert();
+                        return;
+                    }
                     const isEditing = editButton.classList.contains("btn-secondary");
 
                     editLinks.forEach(link => link.classList.toggle("d-none", isEditing));
@@ -695,6 +724,12 @@
                     editButton.textContent = isEditing ? "Edit" : "Cancel";
                     editButton.classList.toggle("btn-success", isEditing);
                     editButton.classList.toggle("btn-secondary", !isEditing);
+                });
+            }
+
+            if (toolingEditButton) {
+                toolingEditButton.addEventListener("click", function () {
+                    showNoTeamAlert();
                 });
             }
 
