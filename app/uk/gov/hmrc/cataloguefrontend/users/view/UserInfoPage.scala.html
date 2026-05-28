@@ -609,24 +609,36 @@
                   <h5 class="modal-title" id="addToGithubTeamModalTitle">Add to Github Team</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <form id="add-to-github-team-form" method="post" action="@userRoutes.UsersController.addToGithubTeam(user.username)">
-                  @csrfFormField
+              @if(!user.organisation.contains("MDTP")) {
                   <div class="modal-body">
-                      <input name="username" type="hidden" value="@user.username.asString">
-                      <div class="mb-3">
-                          <label for="team-select" class="form-label fw-bold">Please select a team</label>
-                          <select id="team-select" name="team" class="form-select" required>
-                              @for(team <- adminGithubTeams.toSeq.sorted) {
-                                  <option value="@team.asString">@team.asString</option>
-                              }
-                          </select>
+                      <div class="alert alert-warning mb-0">
+                          <p><strong>@user.username.asString</strong> cannot be added to a GitHub team because they are not a member of the MDTP organisation.</p>
+                          <p>If this user should belong to MDTP, please raise a <a href="https://jira.tools.tax.service.gov.uk/servicedesk/customer/portals" target="_blank" rel="noreferrer noopener">Team Support Request (TSR)</a> to move the user to the MDTP organisation.</p>
                       </div>
                   </div>
                   <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <button id="add-to-github-team-submit" class="btn btn-success" type="submit">Submit</button>
                   </div>
-              </form>
+              } else {
+                  <form id="add-to-github-team-form" method="post" action="@userRoutes.UsersController.addToGithubTeam(user.username)">
+                      @csrfFormField
+                      <div class="modal-body">
+                          <input name="username" type="hidden" value="@user.username.asString">
+                          <div class="mb-3">
+                              <label for="team-select" class="form-label fw-bold">Please select a team</label>
+                              <select id="team-select" name="team" class="form-select" required>
+                                  @for(team <- adminGithubTeams.toSeq.sorted) {
+                                      <option value="@team.asString">@team.asString</option>
+                                  }
+                              </select>
+                          </div>
+                      </div>
+                      <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <button id="add-to-github-team-submit" class="btn btn-success" type="submit">Submit</button>
+                      </div>
+                  </form>
+              }
           </div>
       </div>
   </div>
