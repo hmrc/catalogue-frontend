@@ -26,7 +26,7 @@ import play.api.mvc.*
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{LdapResetRequestSentPage, OffBoardUsersPage, UserInfoPage, UserListPage, UserSearchResults, VpnRequestSentPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
@@ -50,6 +50,7 @@ class UsersController @Inject()(
 , offBoardUsersPage       : OffBoardUsersPage
 , umpConfig               : UserManagementPortalConfig
 , teamsAndReposConnector  : TeamsAndRepositoriesConnector
+, gitHubProxyConnector    : GitHubProxyConnector
 , override val mcc        : MessagesControllerComponents
 , override val auth       : FrontendAuthComponents
 )(using
@@ -102,6 +103,13 @@ class UsersController @Inject()(
       given RequestHeader = request
       showUserInfoPage(username, Ok(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
 
+  private def githubUsernameValidationError(editRequest: EditUserDetailsRequest)(using HeaderCarrier): Future[Option[Form[EditUserDetailsRequest]]] =
+    if editRequest.attribute == UserAttribute.Github then
+      gitHubProxyConnector.githubUsernameExists(editRequest.value).map:
+        Option.unless(_)(EditUserDetailsForm.form.fill(editRequest).withError("github", "GitHub user not found. Please check the username."))
+    else
+      Future.successful(None)
+
   def updateUserDetails(username: UserName): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
@@ -109,17 +117,19 @@ class UsersController @Inject()(
         formWithErrors =>
           showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, formWithErrors, EditUserRolesForm.form)
         , editRequest =>
-          userManagementConnector.editUserDetails(editRequest)
-            .map: _ =>
-              Redirect(routes.UsersController.user(UserName(editRequest.username)))
-                .flashing(
-                  "success"   -> s"${editRequest.attribute.description} has been updated successfully for ${username.asString}.",
-                  "attribute" -> editRequest.attribute.name
-                )
-            .recover:
-              case NonFatal(e) =>
-                Redirect(routes.UsersController.user(UserName(editRequest.username)))
-                  .flashing(s"error" -> s"Error updating User Details for user's ${editRequest.attribute.description}. Contact #team-platops")
+            githubUsernameValidationError(editRequest).flatMap:
+              case Some(formWithErrors) => showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, formWithErrors, EditUserRolesForm.form)
+              case None                 => userManagementConnector.editUserDetails(editRequest)
+                                             .map: _ =>
+                                               Redirect(routes.UsersController.user(UserName(editRequest.username)))
+                                                 .flashing(
+                                                   "success"   -> s"${editRequest.attribute.description} has been updated successfully for ${username.asString}.",
+                                                   "attribute" -> editRequest.attribute.name
+                                                 )
+                                             .recover:
+                                               case NonFatal(e) =>
+                                                 Redirect(routes.UsersController.user(UserName(editRequest.username)))
+                                                   .flashing(s"error" -> s"Error updating User Details for user's ${editRequest.attribute.description}. Contact #team-platops")
       )
 
   def updateUserRoles(username: UserName): Action[AnyContent] =
