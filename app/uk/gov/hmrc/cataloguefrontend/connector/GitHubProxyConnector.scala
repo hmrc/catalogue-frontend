@@ -67,6 +67,16 @@ class GitHubProxyConnector @Inject()(
         case Left(UpstreamErrorResponse.WithStatusCode(404)) => Future.successful(None)
         case Left(err)                                       => Future.failed(RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
 
+  def githubUsernameExists(username: String)(using HeaderCarrier): Future[Boolean] =
+    val url = java.net.URI(s"https://github.com/$username").toURL
+    httpClientV2
+      .get(url)
+      .execute[Either[UpstreamErrorResponse, HttpResponse]]
+      .flatMap:
+        case Right(_)                                        => Future.successful(true)
+        case Left(UpstreamErrorResponse.WithStatusCode(404)) => Future.successful(false)
+        case Left(err)                                       => Future.failed(RuntimeException(s"Check github username exists for $url failed with upstream error: ${err.message}"))
+
 object GitHubProxyConnector:
   case class Compare(
     aheadBy     : Int

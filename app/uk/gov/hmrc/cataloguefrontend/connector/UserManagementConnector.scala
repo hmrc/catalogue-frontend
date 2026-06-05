@@ -116,7 +116,7 @@ class UserManagementConnector @Inject()(
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def getUserRoles(username: UserName)(using HeaderCarrier): Future[UserRoles] =
     given Reads[UserRoles] = UserRoles.reads
@@ -137,7 +137,7 @@ class UserManagementConnector @Inject()(
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def getAvailablePlatforms()(using HeaderCarrier): Future[Seq[String]] =
     httpClientV2
@@ -152,7 +152,7 @@ class UserManagementConnector @Inject()(
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def editTeamDetails(editTeamDetails: EditTeamDetails)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/edit-team-details"
@@ -162,7 +162,7 @@ class UserManagementConnector @Inject()(
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def deleteTeam(teamName: TeamName)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/delete-team/${teamName.asString}"
@@ -171,7 +171,7 @@ class UserManagementConnector @Inject()(
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def manageVpnAccess(username: UserName, enableVpn: Boolean)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/users/${username.asString}/vpn/$enableVpn"
@@ -180,7 +180,7 @@ class UserManagementConnector @Inject()(
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def manageDevToolsAccess(username: UserName, enableDevTools: Boolean)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/users/${username.asString}/dev-tools/$enableDevTools"
@@ -189,7 +189,7 @@ class UserManagementConnector @Inject()(
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
   def requestNewVpnCert(username: UserName)(using HeaderCarrier): Future[Option[String]] =
     val url: URL = url"$baseUrl/user-management/users/${username.asString}/vpn"
@@ -218,17 +218,18 @@ class UserManagementConnector @Inject()(
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
         case Right(res) => Future.successful(res)
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        case Left(err)  => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
 
-  def addToGithubTeam(request: AddToGithubTeamRequest)(using HeaderCarrier): Future[Unit] =
-    val url: URL = url"$baseUrl/user-management/add-user-to-github-team"
+  def addToGithubTeam(request: AddToGithubTeamRequest)(using HeaderCarrier): Future[Either[String, Unit]] =
+    val url = url"$baseUrl/user-management/add-user-to-github-team"
     httpClientV2
       .post(url)
       .withBody(Json.toJson(request)(AddToGithubTeamRequest.writes))
       .execute[Either[UpstreamErrorResponse, Unit]]
       .flatMap:
-        case Right(_)  => Future.unit
-        case Left(err) => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${err.message}"))
+        case Right(_)                               => Future.successful(Right(()))
+        case Left(error) if error.statusCode == 400 => Future.successful(Left("GitHub username not found. Please check the username exists in GitHub before adding them to a team."))
+        case Left(error)                            => Future.failed(RuntimeException(s"Request to $url failed with upstream error: ${error.message}"))
 
   def removeUserFromTeam(request: ManageTeamMembersRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/remove-user-from-team"

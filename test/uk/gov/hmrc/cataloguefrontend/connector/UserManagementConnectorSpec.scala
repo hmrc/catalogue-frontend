@@ -284,9 +284,9 @@ class UserManagementConnectorSpec
 
     val editUserDetailsRequest =
       EditUserDetailsRequest(
-        username = "joe.bloggs",
+        username  = "joe.bloggs",
         attribute = UserAttribute.DisplayName,
-        value = "Joe Bloggs"
+        value     = "Joe Bloggs"
       )
 
     val actualEditUserDetailsRequest =
@@ -733,10 +733,10 @@ class UserManagementConnectorSpec
     "return Unit when sending a single field and UMP response is 200" in :
       val editTeamDetailsRequest =
         EditTeamDetails(
-          team = "team-name",
-          description = Some("description"),
-          documentation = None,
-          slack = None,
+          team              = "team-name",
+          description       = Some("description"),
+          documentation     = None,
+          slack             = None,
           slackNotification = None
         )
 
@@ -789,4 +789,70 @@ class UserManagementConnectorSpec
       verify(
         postRequestedFor(urlPathEqualTo("/user-management/offboard-users"))
           .withRequestBody(equalToJson(actualOffboardUsersRequest))
+      )
+
+  "addToGithubTeam" should:
+    "return Unit when user with a linked github username can be added to a github team" in:
+
+      val addToGithubTeamRequest =
+        AddToGithubTeamRequest(
+          username = "user.one"
+        , team     = "Team-One"
+        )
+
+      val actualAddToGithubTeamRequest =
+        """{
+          |  "username": "user.one",
+          |  "team"    : "Team-One"
+          |}
+          |""".stripMargin
+
+      stubFor(
+        post(urlPathEqualTo("/user-management/add-user-to-github-team"))
+         .withRequestBody(equalToJson(actualAddToGithubTeamRequest))
+         .willReturn(
+           aResponse()
+             .withStatus(200)
+         )
+      )
+
+      connector.addToGithubTeam(addToGithubTeamRequest).futureValue shouldBe Right(())
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/add-user-to-github-team"))
+          .withRequestBody(equalToJson(actualAddToGithubTeamRequest))
+      )
+
+    "return String when user has no linked github username and cannot be added to a github team" in:
+
+      val addToGithubTeamRequest =
+        AddToGithubTeamRequest(
+          username = "user.one"
+        , team     = "Team-One"
+        )
+
+      val actualAddToGithubTeamRequest =
+        """{
+          |  "username": "user.one",
+          |  "team"    : "Team-One"
+          |}
+          |""".stripMargin
+
+      val response = "GitHub username not found. Please check the username exists in GitHub before adding them to a team."
+
+      stubFor(
+        post(urlPathEqualTo("/user-management/add-user-to-github-team"))
+          .withRequestBody(equalToJson(actualAddToGithubTeamRequest))
+          .willReturn(
+            aResponse()
+              .withStatus(400)
+              .withBody(response)
+          )
+      )
+
+      connector.addToGithubTeam(addToGithubTeamRequest).futureValue shouldBe Left(response)
+
+      verify(
+        postRequestedFor(urlPathEqualTo("/user-management/add-user-to-github-team"))
+          .withRequestBody(equalToJson(actualAddToGithubTeamRequest))
       )

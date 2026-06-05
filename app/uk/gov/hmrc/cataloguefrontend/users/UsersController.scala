@@ -26,7 +26,7 @@ import play.api.mvc.*
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
-import uk.gov.hmrc.cataloguefrontend.connector.{TeamsAndRepositoriesConnector, UserManagementConnector}
+import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{LdapResetRequestSentPage, OffBoardUsersPage, UserInfoPage, UserListPage, UserSearchResults, VpnRequestSentPage}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
@@ -50,6 +50,7 @@ class UsersController @Inject()(
 , offBoardUsersPage       : OffBoardUsersPage
 , umpConfig               : UserManagementPortalConfig
 , teamsAndReposConnector  : TeamsAndRepositoriesConnector
+, gitHubProxyConnector    : GitHubProxyConnector
 , override val mcc        : MessagesControllerComponents
 , override val auth       : FrontendAuthComponents
 )(using
@@ -60,14 +61,14 @@ class UsersController @Inject()(
      with Logging:
 
   private def showUserInfoPage(
-    username       : UserName,
-    resultType     : Html => Result,
-    ldapForm       : Form[ResetLdapPassword],
-    googleForm     : Form[ResetGooglePassword],
-    userDetailsForm: Form[EditUserDetailsRequest],
-    userRolesForm  : Form[UserRoles]
+    username           : UserName
+  , resultType         : Html => Result
+  , ldapForm           : Form[ResetLdapPassword]
+  , googleForm         : Form[ResetGooglePassword]
+  , userDetailsForm    : Form[EditUserDetailsRequest]
+  , userRolesForm      : Form[UserRoles]
+  , addToGithubTeamForm: Form[AddToGithubTeamRequest] = AddToGithubTeamForm.form
   )(using HeaderCarrier, RequestHeader): Future[Result] =
-
 
     for
       userOpt              <- userManagementConnector.getUser(username)
@@ -93,7 +94,7 @@ class UsersController @Inject()(
       userOpt match
         case Some(user) =>
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-          resultType(userInfoPage(ldapForm, googleForm, userDetailsForm, userRolesForm, isAdminForUser(editR, user), canManageUsers, currentRoles, userTooling, UserRoles(UserRole.values.toSeq), user, umpProfileUrl, adminGithubTeams))
+          resultType(userInfoPage(ldapForm, googleForm, userDetailsForm, addToGithubTeamForm, userRolesForm, isAdminForUser(editR, user), canManageUsers, currentRoles, userTooling, UserRoles(UserRole.values.toSeq), user, umpProfileUrl, adminGithubTeams))
         case None =>
           NotFound(error_404_template())
 
@@ -102,6 +103,13 @@ class UsersController @Inject()(
       given RequestHeader = request
       showUserInfoPage(username, Ok(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
 
+  private def githubUsernameValidationError(editRequest: EditUserDetailsRequest)(using HeaderCarrier): Future[Option[Form[EditUserDetailsRequest]]] =
+    if editRequest.attribute == UserAttribute.Github then
+      gitHubProxyConnector.githubUsernameExists(editRequest.value).map:
+        Option.unless(_)(EditUserDetailsForm.form.fill(editRequest).withError("github", "GitHub user not found. Please check the username."))
+    else
+      Future.successful(None)
+
   def updateUserDetails(username: UserName): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
@@ -109,17 +117,19 @@ class UsersController @Inject()(
         formWithErrors =>
           showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, formWithErrors, EditUserRolesForm.form)
         , editRequest =>
-          userManagementConnector.editUserDetails(editRequest)
-            .map: _ =>
-              Redirect(routes.UsersController.user(UserName(editRequest.username)))
-                .flashing(
-                  "success"   -> s"${editRequest.attribute.description} has been updated successfully for ${username.asString}.",
-                  "attribute" -> editRequest.attribute.name
-                )
-            .recover:
-              case NonFatal(e) =>
-                Redirect(routes.UsersController.user(UserName(editRequest.username)))
-                  .flashing(s"error" -> s"Error updating User Details for user's ${editRequest.attribute.description}. Contact #team-platops")
+            githubUsernameValidationError(editRequest).flatMap:
+              case Some(formWithErrors) => showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, formWithErrors, EditUserRolesForm.form)
+              case None                 => userManagementConnector.editUserDetails(editRequest)
+                                             .map: _ =>
+                                               Redirect(routes.UsersController.user(UserName(editRequest.username)))
+                                                 .flashing(
+                                                   "success"   -> s"${editRequest.attribute.description} has been updated successfully for ${username.asString}.",
+                                                   "attribute" -> editRequest.attribute.name
+                                                 )
+                                             .recover:
+                                               case NonFatal(e) =>
+                                                 Redirect(routes.UsersController.user(UserName(editRequest.username)))
+                                                   .flashing(s"error" -> s"Error updating User Details for user's ${editRequest.attribute.description}. Contact #team-platops")
       )
 
   def updateUserRoles(username: UserName): Action[AnyContent] =
@@ -234,16 +244,18 @@ class UsersController @Inject()(
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       AddToGithubTeamForm.form.bindFromRequest().fold(
-        formWithErrors =>
-          showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
-      , formData =>
-          userManagementConnector.addToGithubTeam(formData)
-            .map: _ =>
-              Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to Github team: ${formData.team} sent successfully.")
-            .recover:
-              case NonFatal(e) =>
-                logger.error(s"Error requesting user ${formData.username} be added to github team ${formData.team} - ${e.getMessage}", e)
-                Redirect(routes.UsersController.user(username)).flashing("error" -> "Error processing request. Contact #team-platops")
+        formWithErrors => showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
+      , formData       => userManagementConnector.addToGithubTeam(formData).flatMap:
+                            case Right(_)    => Future.successful(Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to Github team: ${formData.team} sent successfully."))
+                            case Left(error) => showUserInfoPage(
+                                                  username            = username
+                                                , resultType          = BadRequest(_)
+                                                , ldapForm            = LdapResetForm.form
+                                                , googleForm          = GoogleResetForm.form
+                                                , userDetailsForm     = EditUserDetailsForm.form
+                                                , userRolesForm       = EditUserRolesForm.form
+                                                , addToGithubTeamForm = AddToGithubTeamForm.form.fill(formData).withError("team", error)
+                                                )
       )
 
   val requestNewVpnCert: Action[AnyContent] =
