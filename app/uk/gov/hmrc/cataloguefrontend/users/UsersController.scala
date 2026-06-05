@@ -61,14 +61,14 @@ class UsersController @Inject()(
      with Logging:
 
   private def showUserInfoPage(
-    username       : UserName,
-    resultType     : Html => Result,
-    ldapForm       : Form[ResetLdapPassword],
-    googleForm     : Form[ResetGooglePassword],
-    userDetailsForm: Form[EditUserDetailsRequest],
-    userRolesForm  : Form[UserRoles]
+    username           : UserName
+  , resultType         : Html => Result
+  , ldapForm           : Form[ResetLdapPassword]
+  , googleForm         : Form[ResetGooglePassword]
+  , userDetailsForm    : Form[EditUserDetailsRequest]
+  , userRolesForm      : Form[UserRoles]
+  , addToGithubTeamForm: Form[AddToGithubTeamRequest] = AddToGithubTeamForm.form
   )(using HeaderCarrier, RequestHeader): Future[Result] =
-
 
     for
       userOpt              <- userManagementConnector.getUser(username)
@@ -94,7 +94,7 @@ class UsersController @Inject()(
       userOpt match
         case Some(user) =>
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-          resultType(userInfoPage(ldapForm, googleForm, userDetailsForm, userRolesForm, isAdminForUser(editR, user), canManageUsers, currentRoles, userTooling, UserRoles(UserRole.values.toSeq), user, umpProfileUrl, adminGithubTeams))
+          resultType(userInfoPage(ldapForm, googleForm, userDetailsForm, addToGithubTeamForm, userRolesForm, isAdminForUser(editR, user), canManageUsers, currentRoles, userTooling, UserRoles(UserRole.values.toSeq), user, umpProfileUrl, adminGithubTeams))
         case None =>
           NotFound(error_404_template())
 
@@ -244,16 +244,18 @@ class UsersController @Inject()(
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       AddToGithubTeamForm.form.bindFromRequest().fold(
-        formWithErrors =>
-          showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
-      , formData =>
-          userManagementConnector.addToGithubTeam(formData)
-            .map: _ =>
-              Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to Github team: ${formData.team} sent successfully.")
-            .recover:
-              case NonFatal(e) =>
-                logger.error(s"Error requesting user ${formData.username} be added to github team ${formData.team} - ${e.getMessage}", e)
-                Redirect(routes.UsersController.user(username)).flashing("error" -> "Error processing request. Contact #team-platops")
+        formWithErrors => showUserInfoPage(username, BadRequest(_), LdapResetForm.form, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
+      , formData       => userManagementConnector.addToGithubTeam(formData).flatMap:
+                            case Right(_)    => Future.successful(Redirect(routes.UsersController.user(username)).flashing("success" -> s"Request to add user to Github team: ${formData.team} sent successfully."))
+                            case Left(error) => showUserInfoPage(
+                                                  username            = username
+                                                , resultType          = BadRequest(_)
+                                                , ldapForm            = LdapResetForm.form
+                                                , googleForm          = GoogleResetForm.form
+                                                , userDetailsForm     = EditUserDetailsForm.form
+                                                , userRolesForm       = EditUserRolesForm.form
+                                                , addToGithubTeamForm = AddToGithubTeamForm.form.fill(formData).withError("team", error)
+                                                )
       )
 
   val requestNewVpnCert: Action[AnyContent] =

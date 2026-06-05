@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.users.{User, UserAccess, ResetLdapPassword, ResetGooglePassword, EditUserDetailsRequest, UserRoles}
+@import uk.gov.hmrc.cataloguefrontend.users.{User, UserAccess, ResetLdapPassword, ResetGooglePassword, EditUserDetailsRequest, UserRoles, AddToGithubTeamRequest}
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
 @import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
 @import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
@@ -22,20 +22,22 @@
 
 @this()
 
-@(ldapForm        : Form[ResetLdapPassword],
-  googleForm      : Form[ResetGooglePassword],
-  userDetailsForm : Form[EditUserDetailsRequest],
-  userRolesForm   : Form[UserRoles],
-  canEditUsers    : Boolean,
-  canManageUsers  : Boolean,
-  currentUserRoles: UserRoles,
-  userTooling     : Either[String, UserAccess],
-  userRoles       : UserRoles,
-  user            : User,
-  umpProfileUrl   : String,
-  adminGithubTeams: Set[TeamName]
+@(
+   ldapForm           : Form[ResetLdapPassword]
+,  googleForm         : Form[ResetGooglePassword]
+,  userDetailsForm    : Form[EditUserDetailsRequest]
+,  addToGithubTeamForm: Form[AddToGithubTeamRequest]
+,  userRolesForm      : Form[UserRoles]
+,  canEditUsers       : Boolean
+,  canManageUsers     : Boolean
+,  currentUserRoles   : UserRoles
+,  userTooling        : Either[String, UserAccess]
+,  userRoles          : UserRoles
+,  user               : User
+,  umpProfileUrl      : String
+,  adminGithubTeams   : Set[TeamName]
 )(implicit
-  request         : RequestHeader
+  request            : RequestHeader
 )
 
 @isCurrentUser = @{request.session.get(AuthController.SESSION_USERNAME).fold(false)(_ == user.username.asString)}
@@ -173,7 +175,7 @@
                                     <div class="flex-grow-1">
                                         <fieldset class="form-field-group mb-0">
                                             <div class="mb-2">
-                                                For access to HMRC GitHub code repositories, provide the user's personal GitHub account username — this is the handle that appears in their profile URL (github.com/github-username), not their display name. Before saving, use the link below to confirm it points to the correct profile:
+                                                For access to HMRC GitHub code repositories, provide the user's personal public facing GitHub account username — this is the handle that appears in their profile URL (github.com/github-username), not their display name. Before saving, use the link below to confirm it points to the correct profile:
                                             </div>
                                             @defining(userDetailsForm.data.getOrElse("github", user.githubUsername.getOrElse(""))) { githubValue =>
                                                 <div class="mb-2">
@@ -628,11 +630,14 @@
                           <input name="username" type="hidden" value="@user.username.asString">
                           <div class="mb-3">
                               <label for="team-select" class="form-label fw-bold">Please select a team</label>
-                              <select id="team-select" name="team" class="form-select" required>
-                                  @for(team <- adminGithubTeams.toSeq.sorted) {
-                                      <option value="@team.asString">@team.asString</option>
-                                  }
+                              <select id="team-select" name="team" class="form-select @if(addToGithubTeamForm.hasErrors){is-invalid}" required>
+                              @for(team <- adminGithubTeams.toSeq.sorted) {
+                                  <option value="@team.asString">@team.asString</option>
+                              }
                               </select>
+                              @addToGithubTeamForm.errors("team").map { error =>
+                                  <div class="invalid-feedback">@error.message</div>
+                              }
                           </div>
                       </div>
                       <div class="modal-footer">
@@ -644,6 +649,15 @@
           </div>
       </div>
   </div>
+
+  @if(addToGithubTeamForm.hasErrors) {
+      <script @CSPNonce.attr>
+              document.addEventListener('DOMContentLoaded', function() {
+                  var modal = new bootstrap.Modal(document.getElementById('addToGithubTeamModal'));
+                  modal.show();
+              });
+      </script>
+  }
 
   @if(ldapForm.hasErrors) {
       <script @CSPNonce.attr>
