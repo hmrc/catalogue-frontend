@@ -79,6 +79,9 @@ class ServiceConfigsService @Inject()(
   ): Future[ConfigChanges] =
     serviceConfigsConnector.configChangesNextDeployment(serviceName, environment, version)
 
+  def serviceRepoMappings(using HeaderCarrier): Future[List[ServiceToRepoName]] =
+    serviceConfigsConnector.serviceRepoMappings
+
   def configByKeyWithNextDeployment(
     serviceName : ServiceName,
     environments: Seq[Environment] = Nil,
