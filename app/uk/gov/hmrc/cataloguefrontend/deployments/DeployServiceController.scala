@@ -25,7 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, DeployServiceStep4Page}
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsService, ServiceToRepoName}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesConnector}
@@ -62,8 +62,8 @@ class DeployServiceController @Inject()(
   with I18nSupport
   with Logging:
 
-  private def predicate(serviceName: ServiceName): Predicate =
-    Predicate.Permission(Resource.from("catalogue-frontend", s"services/${serviceName.asString}"), IAAction("DEPLOY_SERVICE"))
+  private def predicate(repoName: String): Predicate =
+    Predicate.Permission(Resource.from("catalogue-frontend", s"services/$repoName"), IAAction("DEPLOY_SERVICE"))
 
   private val failedPredicateMsg = "You do not have permission to deploy this service"
 
@@ -77,6 +77,25 @@ class DeployServiceController @Inject()(
       .toSeq
       .sorted
 
+  private def repoNameFor(serviceName: ServiceName, serviceToRepoNames: Seq[ServiceToRepoName]): String =
+    serviceToRepoNames
+      .find(_.serviceName == serviceName.asString)
+      .fold(serviceName.asString)(_.repoName)
+
+  private def accessibleServiceNames(
+    allServiceRepoNames : Seq[String],
+    accessibleRepoNames: Seq[String],
+    serviceToRepoNames : Seq[ServiceToRepoName]
+  ): Seq[ServiceName] =
+    val serviceRepoNames       = allServiceRepoNames.toSet
+    val serviceNamesByRepoName = serviceToRepoNames.groupMap(_.repoName)(mapping => ServiceName(mapping.serviceName))
+
+    accessibleRepoNames
+      .filter(serviceRepoNames)
+      .flatMap(repoName => serviceNamesByRepoName.getOrElse(repoName, Seq(ServiceName(repoName))))
+      .distinct
+      .sorted
+
   // Display form options
   def step1(serviceName: Option[ServiceName]): Action[AnyContent] =
     auth.authenticatedAction(
@@ -86,10 +105,11 @@ class DeployServiceController @Inject()(
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       (for
         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
+        serviceToRepoNames   <- EitherT.right[Result](serviceConfigsService.serviceRepoMappings)
         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
-        accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
+        accessibleServices   =  accessibleServiceNames(allServices.map(_.name), accessibleRepos, serviceToRepoNames)
         hasPerm              <- serviceName match
-                                  case Some(sn) => EitherT.right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(sn)), predicate = None))
+                                  case Some(sn) => EitherT.right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(repoNameFor(sn, serviceToRepoNames))), predicate = None))
                                   case None     => EitherT.pure[Future, Result](true)
         form                 =  serviceName.fold(DeployServiceForm.form): s =>
                                   DeployServiceForm.form.bind(Map("serviceName" -> s.asString)).discardingErrors
@@ -135,23 +155,25 @@ class DeployServiceController @Inject()(
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       (for
          allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
+         serviceToRepoNames   <- EitherT.right[Result](serviceConfigsService.serviceRepoMappings)
          accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
-         accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
+         accessibleServices   =  accessibleServiceNames(allServices.map(_.name), accessibleRepos, serviceToRepoNames)
          form                 =  DeployServiceForm.form.bindFromRequest()
          formObject           <- EitherT
                                    .fromEither[Future](form.fold(
                                      formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, accessibleServices, None, Nil, Nil, evaluations = None)))
                                    , validForm      => Right(validForm)
                                    ))
+         repoName             =  repoNameFor(formObject.serviceName, serviceToRepoNames)
          hasPerm              <- EitherT
-                                   .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName)), predicate = None))
+                                   .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(repoName)), predicate = None))
          _                    <- EitherT
                                    .fromOption[Future](
                                      Option.when(hasPerm)(())
                                    , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
                                    )
          _                    <- EitherT
-                                   .right[Result](auth.verify(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName))))
+                                   .right[Result](auth.verify(retrieval = Retrieval.hasPredicate(predicate(repoName))))
          latest               <- EitherT
                                    .fromOptionF(
                                      serviceDependenciesConnector.getSlugInfo(formObject.serviceName)
@@ -174,7 +196,7 @@ class DeployServiceController @Inject()(
          gitHubCompare        <- EitherT
                                    .right[Result]:
                                      gitHubProxyConnector
-                                       .compare(formObject.serviceName.asString, v1 = currentSlug.fold(Version("0.1.0"))(_.version), v2 = formObject.version)
+                                       .compare(repoName, v1 = currentSlug.fold(Version("0.1.0"))(_.version), v2 = formObject.version)
                                        .recover:
                                          case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
          jvmChanges           =  (currentSlug.map(_.java), slugToDeploy.java)
@@ -185,7 +207,7 @@ class DeployServiceController @Inject()(
          vulnerabilities      <- EitherT
                                    .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired)))
          violations           <- EitherT
-                                   .right[Result](serviceDependenciesConnector.getRepositoryModules(formObject.serviceName.asString, formObject.version))
+                                   .right[Result](serviceDependenciesConnector.getRepositoryModules(repoName, formObject.version))
        yield
          Ok(deployServicePage(
            form,
@@ -208,16 +230,18 @@ class DeployServiceController @Inject()(
       val username ~ locations = request.retrieval
       (for
          allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
+         serviceToRepoNames   <- EitherT.right[Result](serviceConfigsService.serviceRepoMappings)
          accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(locations))
-         accessibleServices   =  allServices.map(_.name).intersect(accessibleRepos).map(ServiceName.apply)
+         accessibleServices   =  accessibleServiceNames(allServices.map(_.name), accessibleRepos, serviceToRepoNames)
          form                 =  DeployServiceForm.form.bindFromRequest()
          formObject           <- EitherT.fromEither[Future]:
                                    form.fold(
                                      formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, accessibleServices, None, Nil, Nil, evaluations = None)))
                                    , validForm      => Right(validForm)
                                    )
+         repoName             =  repoNameFor(formObject.serviceName, serviceToRepoNames)
          hasPerm              <- EitherT
-                                   .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(formObject.serviceName)), predicate = None))
+                                   .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(repoName)), predicate = None))
          _                    <- EitherT
                                    .fromOption[Future](
                                      Option.when(hasPerm)(())

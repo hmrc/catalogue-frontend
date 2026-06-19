@@ -34,12 +34,12 @@ import uk.gov.hmrc.cataloguefrontend.deployments.view.html.{DeployServicePage, D
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVersion}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
-import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ConfigChanges, ServiceConfigsService}
+import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ConfigChanges, ServiceConfigsService, ServiceToRepoName}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
-import uk.gov.hmrc.internalauth.client.{Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
+import uk.gov.hmrc.internalauth.client.{IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
 import uk.gov.hmrc.internalauth.client.syntax.*
 import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
@@ -79,6 +79,33 @@ class DeployServiceControllerSpec
       jsoupDocument.select("#create-app-configs-submit-button").size shouldBe 0
     }
 
+    "show service names mapped to repositories the user can deploy" in new Setup {
+      when(mockTeamsAndRepositoriesConnector.allRepositories(
+        name               = any
+      , team               = any
+      , digitalService     = any
+      , archived           = eqTo(Some(false))
+      , repoType           = eqTo(Some(RepoType.Service))
+      , serviceType        = any
+      )(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Seq(someService, mappedServiceRepo)))
+      when(mockServiceConfigsService.serviceRepoMappings(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(List(mappedServiceToRepoName)))
+      when(mockAuthStubBehaviour.stubAuth(eqTo(None), eqTo(deployableServicesRetrieval)))
+        .thenReturn(Future.successful(Set(
+          Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")),
+          Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/mapped-service-repo"))
+        )))
+
+      val futResult = underTest.step1(None)(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
+
+      Helpers.status(futResult) shouldBe Helpers.OK
+      val content = Helpers.contentAsString(futResult)
+      content should include("'some-service'")
+      content should include("'mapped-service'")
+      content should not include "'mapped-service-repo'"
+    }
+
     "allow a service to be provided" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
         name               = any
@@ -115,6 +142,37 @@ class DeployServiceControllerSpec
       jsoupDocument.select("#version-environment-form").select("#service-name").attr("version") shouldBe ""
       jsoupDocument.select("#version-environment-form").select("#service-name").attr("environment") shouldBe ""
       jsoupDocument.select("#create-app-configs-submit-button").size shouldBe 0
+    }
+
+    "allow a mapped service to be provided when the user has deploy permission for its repository" in new Setup {
+      when(mockTeamsAndRepositoriesConnector.allRepositories(
+        name               = any
+      , team               = any
+      , digitalService     = any
+      , archived           = eqTo(Some(false))
+      , repoType           = eqTo(Some(RepoType.Service))
+      , serviceType        = any
+      )(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Seq(mappedServiceRepo)))
+      when(mockServiceConfigsService.serviceRepoMappings(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(List(mappedServiceToRepoName)))
+      when(mockAuthStubBehaviour.stubAuth(eqTo(None), eqTo(deployableServicesRetrieval)))
+        .thenReturn(Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/mapped-service-repo")))))
+      when(mockAuthStubBehaviour.stubAuth(eqTo(None), eqTo(Retrieval.hasPredicate(deployServicePermission("mapped-service-repo")))))
+        .thenReturn(Future.successful(true))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("mapped-service")), any)(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(mappedServiceSlugInfo)))
+      when(mockReleasesConnector.releasesForService(ServiceName(eqTo("mapped-service")))(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(mappedServiceReleasesForService))
+      when(mockServiceCommissioningConnector.commissioningStatus(ServiceName(eqTo("mapped-service")))(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(mappedServiceCommissioningStatus))
+
+      val futResult = underTest.step1(Some(ServiceName("mapped-service")))(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
+
+      Helpers.status(futResult) shouldBe Helpers.OK
+      val jsoupDocument = futResult.toDocument
+      jsoupDocument.select("#service-name-form").select("#service-name").attr("value") shouldBe "mapped-service"
+      jsoupDocument.select("#version-environment-form").select("#helpful-versions").first.child(0).attr("data-content") shouldBe "1.2.3"
     }
   }
 
@@ -246,6 +304,52 @@ class DeployServiceControllerSpec
       , buildUrl    = None).url
       )
     }
+
+    "deploy mapped service when the user has deploy permission for its repository" in new Setup {
+      when(mockTeamsAndRepositoriesConnector.allRepositories(
+        name               = any
+      , team               = any
+      , digitalService     = any
+      , archived           = eqTo(Some(false))
+      , repoType           = eqTo(Some(RepoType.Service))
+      , serviceType        = any
+      )(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Seq(mappedServiceRepo)))
+      when(mockServiceConfigsService.serviceRepoMappings(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(List(mappedServiceToRepoName)))
+      when(mockAuthStubBehaviour.stubAuth(eqTo(None), eqTo(Retrieval.username ~ deployableServicesRetrieval)))
+        .thenReturn(Future.successful(
+          Retrieval.Username("some-user") ~
+            Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/mapped-service-repo")))
+        ))
+      when(mockAuthStubBehaviour.stubAuth(eqTo(None), eqTo(Retrieval.hasPredicate(deployServicePermission("mapped-service-repo")))))
+        .thenReturn(Future.successful(true))
+      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("mapped-service")), eqTo(Some(Version("1.2.3"))))(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(mappedServiceSlugInfo)))
+      when(mockBuildJobsConnector.deployMicroservice(
+        serviceName = ServiceName(eqTo("mapped-service")),
+        version     = eqTo(Version("1.2.3")),
+        environment = eqTo(Environment.QA),
+        user        = Retrieval.Username(eqTo("some-user"))
+      )(using any[HeaderCarrier]))
+        .thenReturn(Future.successful("http://localhost:8461/some/queue/url"))
+
+      val futResult = underTest.step3()(
+        FakeRequest()
+          .withMethod(Helpers.POST)
+          .withSession(SessionKeys.authToken -> "Token token")
+          .withFormUrlEncodedBody("serviceName" -> "mapped-service", "version" -> "1.2.3", "environment" -> "qa")
+      )
+
+      Helpers.status(futResult) shouldBe 303
+      Helpers.redirectLocation(futResult) shouldBe Some(routes.DeployServiceController.step4(
+        serviceName = ServiceName("mapped-service")
+      , version     = "1.2.3"
+      , environment = "qa"
+      , queueUrl    = RedirectUrl("http://localhost:8461/some/queue/url")
+      , buildUrl    = None).url
+      )
+    }
   }
 
   "Deploy Service Page step4" should {
@@ -288,6 +392,25 @@ class DeployServiceControllerSpec
     someService.copy(name = "some-service-2")
   )
 
+  private val mappedServiceRepo =
+    someService.copy(name = "mapped-service-repo")
+
+  private val mappedServiceToRepoName =
+    ServiceToRepoName(
+      serviceName  = "mapped-service",
+      artefactName = "mapped-service",
+      repoName     = "mapped-service-repo"
+    )
+
+  private val deployableServicesRetrieval =
+    Retrieval.locations(
+      resourceType = Some(ResourceType("catalogue-frontend")),
+      action       = Some(IAAction("DEPLOY_SERVICE"))
+    )
+
+  private def deployServicePermission(repoName: String): Predicate.Permission =
+    Predicate.Permission(Resource.from("catalogue-frontend", s"services/$repoName"), IAAction("DEPLOY_SERVICE"))
+
   private val someSlugInfo = ServiceDependencies(
     uri           = "some-uri"
   , name          = "some-service"
@@ -297,6 +420,12 @@ class DeployServiceControllerSpec
   , classpath     = "some-classpath"
   , dependencies  = Nil
   )
+
+  private val mappedServiceSlugInfo =
+    someSlugInfo.copy(
+      name    = "mapped-service",
+      version = Version("1.2.3")
+    )
 
   private val someConfigChanges = ConfigChanges(
     app               = ConfigChanges.App(from = Some(Version("0.2.0")), to = Version("0.3.0"))
@@ -320,6 +449,12 @@ class DeployServiceControllerSpec
                   Nil
   )
 
+  private val mappedServiceReleasesForService =
+    someReleasesForService.copy(
+      serviceName = ServiceName("mapped-service"),
+      versions    = WhatsRunningWhereVersion(Environment.QA, Version("1.2.2"), Nil, false) :: Nil
+    )
+
   private val someCommissioningStatus = List(Check.EnvCheck(
     title        = "App Config Environment"
   , checkResults = Map(
@@ -329,6 +464,14 @@ class DeployServiceControllerSpec
   , helpText     = "some-help-text"
   , linkToDocs   = Some("some-link-to-docs")
   ))
+
+  private val mappedServiceCommissioningStatus =
+    List(Check.EnvCheck(
+      title        = "App Config Environment",
+      checkResults = Map(Environment.QA -> Right(Check.Present("some-evidence-link"))),
+      helpText     = "some-help-text",
+      linkToDocs   = Some("some-link-to-docs")
+    ))
 
   private val someConfigWarning = ConfigWarning(
     serviceName = ServiceName("some-service")
@@ -412,6 +555,9 @@ class DeployServiceControllerSpec
     val mockVulnerabilitiesConnector      = mock[VulnerabilitiesConnector]
     val mockServiceConfigsService         = mock[ServiceConfigsService]
     val mockGitHubProxyConnector          = mock[GitHubProxyConnector]
+    when(mockServiceConfigsService.serviceRepoMappings(using any[HeaderCarrier]))
+      .thenReturn(Future.successful(Nil))
+
     val underTest                         = DeployServiceController(
                                               auth                          = FrontendAuthComponentsStub(mockAuthStubBehaviour)
                                             , mcc                           = mcc
