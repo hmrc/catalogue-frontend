@@ -105,11 +105,15 @@ class UsersController @Inject()(
 
   private def githubUsernameValidationError(editRequest: EditUserDetailsRequest)(using HeaderCarrier): Future[Option[Form[EditUserDetailsRequest]]] =
     if editRequest.attribute == UserAttribute.Github then
-      gitHubProxyConnector.githubUsernameExists(editRequest.value).map:
-        Option.unless(_)(EditUserDetailsForm.form.fill(editRequest).withError("github", "GitHub user not found. Please check the username."))
+      gitHubProxyConnector.githubUsernameExists(editRequest.value).map: exists =>
+        Option.unless(exists)(
+          EditUserDetailsForm.form
+            .fill(editRequest)
+            .withError("github", "GitHub user not found. Please check the username.")
+        )
     else
-      Future.successful(None)
-
+      Future.successful(None)    
+  
   def updateUserDetails(username: UserName): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request

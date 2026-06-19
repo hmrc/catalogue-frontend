@@ -131,3 +131,20 @@ class GitHubProxyConnectorSpec
         , commits      = commits
         , htmlUrl      = "https://github.com/hmrc/platops-example-frontend-microservice/compare/v2.358.0...v2.359.0"
         ))
+
+  "githubUsernameExists" should:
+    val githubUser: String = "user-1"
+
+    "return successful and true when github username exists" in:
+      stubFor:
+        get(urlEqualTo(s"/platops-github-proxy/github-user/$githubUser"))
+          .willReturn(aResponse().withStatus(200).withBody("""{"exists": true}"""))
+
+      gitHubProxyConnector.githubUsernameExists(githubUser).futureValue shouldBe true
+
+    "return successful and false when github username does not exist" in:
+      stubFor:
+        get(urlEqualTo(s"/platops-github-proxy/github-user/$githubUser"))
+         .willReturn(aResponse().withStatus(200).withBody("""{"exists": false}"""))
+
+      gitHubProxyConnector.githubUsernameExists(githubUser).futureValue shouldBe false
