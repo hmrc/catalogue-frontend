@@ -112,8 +112,8 @@ class UsersController @Inject()(
             .withError("github", "GitHub user not found. Please check the username.")
         )
     else
-      Future.successful(None)    
-  
+      Future.successful(None)
+
   def updateUserDetails(username: UserName): Action[AnyContent] =
     BasicAuthAction.async: request =>
       given MessagesRequest[AnyContent] = request
