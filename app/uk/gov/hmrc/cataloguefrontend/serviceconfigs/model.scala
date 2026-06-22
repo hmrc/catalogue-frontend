@@ -110,7 +110,8 @@ object DeploymentConfigEvent {
 case class ServiceToRepoName(
   serviceName : String,
   artefactName: String,
-  repoName    : String
+  repoName    : String,
+  disabled    : Boolean = false
 )
 
 object ServiceToRepoName:
@@ -118,4 +119,5 @@ object ServiceToRepoName:
     ( (__ \ "serviceName" ).read[String]
     ~ (__ \ "artefactName").read[String]
     ~ (__ \ "repoName"    ).read[String]
+    ~ (__ \ "disabled"    ).readWithDefault[Boolean](false)
     )(ServiceToRepoName.apply _)
