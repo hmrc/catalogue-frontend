@@ -17,8 +17,9 @@
 package uk.gov.hmrc.cataloguefrontend.connector
 
 import play.api.Logging
-import play.api.libs.functional.syntax._
+import play.api.libs.functional.syntax.*
 import play.api.libs.json.{Reads, __}
+import uk.gov.hmrc.cataloguefrontend.connector.GitHubProxyConnector.GithubUserLookup
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -68,16 +69,21 @@ class GitHubProxyConnector @Inject()(
         case Left(err)                                       => Future.failed(RuntimeException(s"Call to $url failed with upstream error: ${err.message}"))
 
   def githubUsernameExists(username: String)(using HeaderCarrier): Future[Boolean] =
-    val url = java.net.URI(s"https://github.com/$username").toURL
+    val url = java.net.URI(s"$gitHubProxyBaseURL/platops-github-proxy/github-user/$username").toURL
     httpClientV2
       .get(url)
-      .execute[Either[UpstreamErrorResponse, HttpResponse]]
+      .execute[Either[UpstreamErrorResponse, GithubUserLookup]]
       .flatMap:
-        case Right(_)                                        => Future.successful(true)
-        case Left(UpstreamErrorResponse.WithStatusCode(404)) => Future.successful(false)
-        case Left(err)                                       => Future.failed(RuntimeException(s"Check github username exists for $url failed with upstream error: ${err.message}"))
+        case Right(result) => Future.successful(result.exists)
+        case Left(err)     => Future.failed(RuntimeException(s"Github username lookup for $url failed with upstream error: ${err.message}"))
 
 object GitHubProxyConnector:
+  case class GithubUserLookup(exists: Boolean)
+
+  object GithubUserLookup:
+    given Reads[GithubUserLookup] =
+      (__ \ "exists").read[Boolean].map(GithubUserLookup.apply)
+
   case class Compare(
     aheadBy     : Int
   , behindBy    : Int
