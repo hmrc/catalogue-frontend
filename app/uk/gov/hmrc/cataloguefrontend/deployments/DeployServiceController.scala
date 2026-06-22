@@ -79,6 +79,7 @@ class DeployServiceController @Inject()(
 
   private def repoNameFor(serviceName: ServiceName, serviceToRepoNames: Seq[ServiceToRepoName]): String =
     serviceToRepoNames
+      .filterNot(_.disabled)
       .find(_.serviceName == serviceName.asString)
       .fold(serviceName.asString)(_.repoName)
 
@@ -88,11 +89,13 @@ class DeployServiceController @Inject()(
     serviceToRepoNames : Seq[ServiceToRepoName]
   ): Seq[ServiceName] =
     val serviceRepoNames       = allServiceRepoNames.toSet
-    val serviceNamesByRepoName = serviceToRepoNames.groupMap(_.repoName)(mapping => ServiceName(mapping.serviceName))
+    val serviceNamesByRepoName = serviceToRepoNames
+                                  .filterNot(_.disabled)
+                                  .groupMap(_.repoName)(mapping => ServiceName(mapping.serviceName))
 
     accessibleRepoNames
       .filter(serviceRepoNames)
-      .flatMap(repoName => serviceNamesByRepoName.getOrElse(repoName, Seq(ServiceName(repoName))))
+      .flatMap(repoName => ServiceName(repoName) +: serviceNamesByRepoName.getOrElse(repoName, Seq.empty))
       .distinct
       .sorted
 

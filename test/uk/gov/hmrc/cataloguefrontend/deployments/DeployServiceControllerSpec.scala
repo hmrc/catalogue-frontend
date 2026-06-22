@@ -103,7 +103,33 @@ class DeployServiceControllerSpec
       val content = Helpers.contentAsString(futResult)
       content should include("'some-service'")
       content should include("'mapped-service'")
-      content should not include "'mapped-service-repo'"
+      content should include("'mapped-service-repo'")
+    }
+
+    "show both the repo service and an enabled service mapped to the same repo" in new Setup {
+      when(mockTeamsAndRepositoriesConnector.allRepositories(
+        name               = any
+      , team               = any
+      , digitalService     = any
+      , archived           = eqTo(Some(false))
+      , repoType           = eqTo(Some(RepoType.Service))
+      , serviceType        = any
+      )(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Seq(saFilingServiceRepo)))
+      when(mockServiceConfigsService.serviceRepoMappings(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(List(saFilingHelpdeskToRepoName, disabledSaFilingHelpdeskToRepoName)))
+      when(mockAuthStubBehaviour.stubAuth(eqTo(None), eqTo(deployableServicesRetrieval)))
+        .thenReturn(Future.successful(Set(
+          Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/sa-filing-2324"))
+        )))
+
+      val futResult = underTest.step1(None)(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
+
+      Helpers.status(futResult) shouldBe Helpers.OK
+      val content = Helpers.contentAsString(futResult)
+      content should include("'sa-filing-2324'")
+      content should include("'sa-filing-2324-helpdesk'")
+      content should not include "'sa-filing-2324-disabled-helpdesk'"
     }
 
     "allow a service to be provided" in new Setup {
@@ -400,6 +426,24 @@ class DeployServiceControllerSpec
       serviceName  = "mapped-service",
       artefactName = "mapped-service",
       repoName     = "mapped-service-repo"
+    )
+
+  private val saFilingServiceRepo =
+    someService.copy(name = "sa-filing-2324")
+
+  private val saFilingHelpdeskToRepoName =
+    ServiceToRepoName(
+      serviceName  = "sa-filing-2324-helpdesk",
+      artefactName = "sa-filing-2324-helpdesk",
+      repoName     = "sa-filing-2324"
+    )
+
+  private val disabledSaFilingHelpdeskToRepoName =
+    ServiceToRepoName(
+      serviceName  = "sa-filing-2324-disabled-helpdesk",
+      artefactName = "sa-filing-2324-disabled-helpdesk",
+      repoName     = "sa-filing-2324",
+      disabled     = true
     )
 
   private val deployableServicesRetrieval =
