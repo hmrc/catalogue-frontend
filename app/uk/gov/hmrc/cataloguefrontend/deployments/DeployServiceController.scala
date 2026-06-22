@@ -72,6 +72,12 @@ class DeployServiceController @Inject()(
     action       = Some(IAAction("DEPLOY_SERVICE"))
   )
 
+  private val repoNameOptionsExcluded =
+    configuration
+      .getOptional[Seq[String]]("deploy-service.repo-name-options-excluded")
+      .getOrElse(Seq.empty)
+      .toSet
+
   private def cleanseServices(resources: Set[Resource]): Seq[String] =
     resources.map(_.resourceLocation.value.stripPrefix("services/"))
       .toSeq
@@ -95,7 +101,10 @@ class DeployServiceController @Inject()(
 
     accessibleRepoNames
       .filter(serviceRepoNames)
-      .flatMap(repoName => ServiceName(repoName) +: serviceNamesByRepoName.getOrElse(repoName, Seq.empty))
+      .flatMap: repoName =>
+        val repoServiceName =
+          Option.when(!repoNameOptionsExcluded.contains(repoName))(ServiceName(repoName)).toSeq
+        repoServiceName ++ serviceNamesByRepoName.getOrElse(repoName, Seq.empty)
       .distinct
       .sorted
 

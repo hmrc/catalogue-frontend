@@ -132,6 +132,35 @@ class DeployServiceControllerSpec
       content should not include "'sa-filing-2324-disabled-helpdesk'"
     }
 
+    "not show excluded repo service names when mapped service names are deployable" in new Setup {
+      override def configuration: Configuration =
+        Configuration("deploy-service.repo-name-options-excluded" -> Seq("forms-adobe-experience-manager"))
+          .withFallback(app.injector.instanceOf[Configuration])
+
+      when(mockTeamsAndRepositoriesConnector.allRepositories(
+        name               = any
+      , team               = any
+      , digitalService     = any
+      , archived           = eqTo(Some(false))
+      , repoType           = eqTo(Some(RepoType.Service))
+      , serviceType        = any
+      )(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Seq(formsAemServiceRepo)))
+      when(mockServiceConfigsService.serviceRepoMappings(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(List(formsAemPublisherToRepoName)))
+      when(mockAuthStubBehaviour.stubAuth(eqTo(None), eqTo(deployableServicesRetrieval)))
+        .thenReturn(Future.successful(Set(
+          Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/forms-adobe-experience-manager"))
+        )))
+
+      val futResult = underTest.step1(None)(FakeRequest().withSession(SessionKeys.authToken -> "Token token"))
+
+      Helpers.status(futResult) shouldBe Helpers.OK
+      val content = Helpers.contentAsString(futResult)
+      content should include("'forms-aem-publisher'")
+      content should not include "'forms-adobe-experience-manager'"
+    }
+
     "allow a service to be provided" in new Setup {
       when(mockTeamsAndRepositoriesConnector.allRepositories(
         name               = any
@@ -446,6 +475,16 @@ class DeployServiceControllerSpec
       disabled     = true
     )
 
+  private val formsAemServiceRepo =
+    someService.copy(name = "forms-adobe-experience-manager")
+
+  private val formsAemPublisherToRepoName =
+    ServiceToRepoName(
+      serviceName  = "forms-aem-publisher",
+      artefactName = "forms-aem-publisher",
+      repoName     = "forms-adobe-experience-manager"
+    )
+
   private val deployableServicesRetrieval =
     Retrieval.locations(
       resourceType = Some(ResourceType("catalogue-frontend")),
@@ -602,10 +641,13 @@ class DeployServiceControllerSpec
     when(mockServiceConfigsService.serviceRepoMappings(using any[HeaderCarrier]))
       .thenReturn(Future.successful(Nil))
 
+    def configuration: Configuration =
+      app.injector.instanceOf[Configuration]
+
     val underTest                         = DeployServiceController(
                                               auth                          = FrontendAuthComponentsStub(mockAuthStubBehaviour)
                                             , mcc                           = mcc
-                                            , configuration                 = app.injector.instanceOf[Configuration]
+                                            , configuration                 = configuration
                                             , buildJobsConnector            = mockBuildJobsConnector
                                             , teamsAndRepositoriesConnector = mockTeamsAndRepositoriesConnector
                                             , serviceDependenciesConnector  = mockServiceDependenciesConnector
