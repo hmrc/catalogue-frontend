@@ -441,3 +441,8 @@ svg > g:last-child > g.google-visualization-tooltip { pointer-events: none }
 .separator:not(:empty)::after {
     margin-left: .25em;
 }
+
+.highlighted {
+  background-color: #FFF3A3;
+  font-size: large;
+}
