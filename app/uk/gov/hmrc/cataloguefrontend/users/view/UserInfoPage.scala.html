@@ -14,7 +14,7 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.cataloguefrontend.users.{User, UserAccess, ResetLdapPassword, ResetGooglePassword, EditUserDetailsRequest, UserRoles, AddToGithubTeamRequest, LdapResetForm}
+@import uk.gov.hmrc.cataloguefrontend.users.{User, UserAccess, ResetLdapPassword, ResetGooglePassword, EditUserDetailsRequest, UserRoles, AddToGithubTeamRequest}
 @import uk.gov.hmrc.cataloguefrontend.teams.{ routes => teamRoutes }
 @import uk.gov.hmrc.cataloguefrontend.users.{ routes => userRoutes }
 @import uk.gov.hmrc.cataloguefrontend.config.CatalogueConfig
@@ -560,7 +560,7 @@
                       <input name="username" type="hidden" value="@user.username.asString">
                       <div class="mb-3">
                           <label for="emailInput" class="form-label">Secondary Email Address</label>
-                          <input class="form-control @if(ldapForm.hasErrors) {is-invalid}" type="email" id="emailInput" name="email" value="@ldapForm("email").value.getOrElse("")" data-primary-email="@user.primaryEmail" data-primary-email-error="@LdapResetForm.secondaryEmailMustNotMatchPrimaryEmail">
+                          <input class="form-control @if(ldapForm.hasErrors) {is-invalid}" type="text" id="emailInput" name="email" value="@ldapForm("email").value.getOrElse("")">
                           @ldapForm.error("email").map { error =>
                               <div class="invalid-feedback">@error.message</div>
                           }
@@ -815,21 +815,6 @@
                             githubLink.appendChild(iconSpan);
                         }, 300)
                 );
-            }
-
-            const ldapEmailInput = document.getElementById("emailInput");
-
-            if (ldapEmailInput) {
-                const primaryEmail = (ldapEmailInput.dataset.primaryEmail || "").trim().toLowerCase();
-                const primaryEmailError = ldapEmailInput.dataset.primaryEmailError || "";
-
-                function validateLdapSecondaryEmail() {
-                    const secondaryEmail = ldapEmailInput.value.trim().toLowerCase();
-                    ldapEmailInput.setCustomValidity(secondaryEmail === primaryEmail ? primaryEmailError : "");
-                }
-
-                ldapEmailInput.addEventListener("input", validateLdapSecondaryEmail);
-                validateLdapSecondaryEmail();
             }
         });
 </script>
