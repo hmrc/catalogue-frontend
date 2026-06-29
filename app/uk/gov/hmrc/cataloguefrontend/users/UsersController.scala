@@ -202,13 +202,22 @@ class UsersController @Inject()(
           formWithErrors =>
             showUserInfoPage(username, BadRequest(_), formWithErrors, GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
         , formData =>
-            userManagementConnector.resetLdapPassword(formData)
-              .map: ticketOpt =>
-                Ok(ldapResetRequestSentPage(username, ticketOpt))
-              .recover:
-                case NonFatal(e) =>
-                  logger.error(s"Error requesting LDAP password reset: ${e.getMessage}", e)
-                  Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting LDAP password reset. Contact #team-platops")
+          (userManagementConnector.getUser(username)
+            .recover:
+              case NonFatal(e) =>
+                logger.warn(s"Unable to retrieve user $username before LDAP password reset validation: ${e.getMessage}", e)
+                None
+            .flatMap:
+              case Some(user) if LdapResetForm.isPrimaryEmail(formData, user.primaryEmail) =>
+                showUserInfoPage(username, BadRequest(_), LdapResetForm.withPrimaryEmailError(formData), GoogleResetForm.form, EditUserDetailsForm.form, EditUserRolesForm.form)
+              case _ =>
+                userManagementConnector.resetLdapPassword(formData)
+                  .map: ticketOpt =>
+                    Ok(ldapResetRequestSentPage(username, ticketOpt))
+          ).recover:
+            case NonFatal(e) =>
+              logger.error(s"Error requesting LDAP password reset: ${e.getMessage}", e)
+              Redirect(routes.UsersController.user(username)).flashing("error" -> "Error requesting LDAP password reset. Contact #team-platops")
         )
 
   def requestGoogleReset(username: UserName): Action[AnyContent] =
@@ -376,6 +385,17 @@ object OffBoardUserForm:
     )
 
 object LdapResetForm:
+  val secondaryEmailMustNotMatchPrimaryEmail =
+    "Secondary email address must be different from the user's primary email."
+
+  def isPrimaryEmail(resetLdapPassword: ResetLdapPassword, primaryEmail: String): Boolean =
+    resetLdapPassword.email.trim.equalsIgnoreCase(primaryEmail.trim)
+
+  def withPrimaryEmailError(resetLdapPassword: ResetLdapPassword): Form[ResetLdapPassword] =
+    form
+      .fill(resetLdapPassword)
+      .withError("email", secondaryEmailMustNotMatchPrimaryEmail)
+
   val form: Form[ResetLdapPassword] =
     Form(
       Forms.mapping(
