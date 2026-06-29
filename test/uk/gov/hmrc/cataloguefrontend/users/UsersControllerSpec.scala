@@ -79,6 +79,7 @@ class UsersControllerSpec
 
       status(result) shouldBe BAD_REQUEST
       val document = Jsoup.parse(contentAsString(result))
+      document.select("#emailInput").attr("type") shouldBe "text"
       document.select("#emailInput").hasClass("is-invalid") shouldBe true
       document.select("#ldapModal .invalid-feedback").text() shouldBe LdapResetForm.secondaryEmailMustNotMatchPrimaryEmail
       verify(mockUMConnector, never()).resetLdapPassword(any[ResetLdapPassword])(using any[HeaderCarrier])
