@@ -19,10 +19,11 @@ package uk.gov.hmrc.cataloguefrontend.service
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cataloguefrontend.connector.RepoType.Service
-import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.connector.model.*
 import uk.gov.hmrc.cataloguefrontend.connector.ServiceDependenciesConnector
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
 import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.ReleasesConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -101,7 +102,10 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getJdkVersions(teamName = None, digitalService = None, flag = SlugInfoFlag.Latest))
         .thenReturn(Future.successful(List(jdk1, jdk2, jdk3, jdk4)))
 
-      val res = boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None, digitalService = None).futureValue
+      when(boot.mockedReleasesConnector.profiles())
+        .thenReturn(Future.successful(Nil))
+
+      val res = boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None, digitalService = None, sm2Profile = None).futureValue
 
       res.usage((Version("1.181.1"), Vendor.Oracle, Kind.JDK)) shouldBe 2
       res.usage((Version("1.191.1"), Vendor.OpenJDK, Kind.JRE)) shouldBe 1
@@ -114,7 +118,10 @@ class SlugInfoServiceSpec
       when(boot.mockedServiceDependenciesConnector.getJdkVersions(teamName = None, digitalService = None, flag = SlugInfoFlag.Latest))
         .thenReturn(Future.successful(List.empty[JdkVersion]))
 
-      boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None, digitalService = None).futureValue shouldBe JdkUsageByEnv(SlugInfoFlag.Latest, Map.empty[(Version, Vendor, Kind), Int])
+      when(boot.mockedReleasesConnector.profiles())
+        .thenReturn(Future.successful(Nil))
+
+      boot.service.getJdkCountsForEnv(env = SlugInfoFlag.Latest, teamName = None, digitalService = None, sm2Profile = None).futureValue shouldBe JdkUsageByEnv(SlugInfoFlag.Latest, Map.empty[(Version, Vendor, Kind), Int])
     }
   }
 
@@ -163,14 +170,17 @@ class SlugInfoServiceSpec
 
   case class Boot(
     mockedServiceDependenciesConnector: ServiceDependenciesConnector,
+    mockedReleasesConnector           : ReleasesConnector,
     service                           : DependenciesService)
 
   object Boot {
     def init: Boot =
       val mockedServiceDependenciesConnector = mock[ServiceDependenciesConnector]
-      val dependenciesService = DependenciesService(mockedServiceDependenciesConnector)
+      val mockedReleasesConnector = mock[ReleasesConnector]
+      val dependenciesService = DependenciesService(mockedServiceDependenciesConnector, mockedReleasesConnector)
       Boot(
         mockedServiceDependenciesConnector,
+        mockedReleasesConnector,
         dependenciesService
       )
   }

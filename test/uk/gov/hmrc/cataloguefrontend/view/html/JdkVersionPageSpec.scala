@@ -24,8 +24,9 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.twirl.api.Html
 import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
-import uk.gov.hmrc.cataloguefrontend.connector.model._
+import uk.gov.hmrc.cataloguefrontend.connector.model.*
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, SlugInfoFlag, TeamName, Version}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Profile, ProfileName, ProfileType}
 
 
 class JdkVersionPageSpec
@@ -44,7 +45,7 @@ class JdkVersionPageSpec
 
       val teams = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one", "repo-two")))
 
-      val document = asDocument(JdkVersionPage()(versions, teams, digitalServices = Nil, SlugInfoFlag.Latest, None, None))
+      val document = asDocument(JdkVersionPage()(versions, teams, digitalServices = Nil, sm2Profiles = Nil, SlugInfoFlag.Latest, None, None, None))
 
       val slug1 = document.select("#jdk-slug-test-slug")
       val slug2 = document.select("#jdk-slug-thing-service")
@@ -60,7 +61,7 @@ class JdkVersionPageSpec
 
       val versions = List(JdkVersion(ServiceName("thing-service"), Version("1.171.0"), Vendor.Oracle, Kind.JDK))
       val teams    = List(GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one")))
-      val document = asDocument(JdkVersionPage()(versions, teams, digitalServices = Nil, SlugInfoFlag.Latest, None, None))
+      val document = asDocument(JdkVersionPage()(versions, teams, digitalServices = Nil, sm2Profiles = Nil, SlugInfoFlag.Latest, None, None, None))
 
       val slug = document.select("#jdk-slug-thing-service")
       val link = slug.select("a[href*='/repositories/thing-service']")
@@ -76,12 +77,28 @@ class JdkVersionPageSpec
         GitHubTeam(name = TeamName("Team 1"), lastActiveDate = None, repos = Seq("repo-one")),
         GitHubTeam(name = TeamName("Team 2"), lastActiveDate = None, repos = Seq("repo-two"))
       )
-      val document = asDocument(JdkVersionPage()(versions, teams, digitalServices = Nil, SlugInfoFlag.Latest, Some(TeamName("Team 2")), None))
+      val document = asDocument(JdkVersionPage()(versions, teams, digitalServices = Nil, sm2Profiles = Nil, SlugInfoFlag.Latest, Some(TeamName("Team 2")), None, None))
 
       val selectedOptions = document.select("#teamName option[selected]")
       selectedOptions.size()       shouldBe 1
       selectedOptions.attr("value") shouldBe "Team 2"
       selectedOptions.text()        shouldBe "Team 2"
+    }
+
+    "show the selected sm2 profile filter as selected" in {
+      given Request[?] = FakeRequest()
+
+      val versions = List(JdkVersion(ServiceName("test-slug"), Version("1.181.0"), Vendor.OpenJDK, Kind.JDK))
+      val sm2Profiles = List(
+        Profile(ProfileType.ServiceManager, profileName = ProfileName("PROFILE_ONE"), serviceNames = List(ServiceName("repo-one"))),
+        Profile(ProfileType.ServiceManager, profileName = ProfileName("PROFILE_TWO"), serviceNames = List(ServiceName("repo-two")))
+      )
+      val document = asDocument(JdkVersionPage()(versions, teams = Nil, digitalServices = Nil, sm2Profiles, SlugInfoFlag.Latest, None, None, Some("PROFILE_TWO")))
+
+      val selectedOptions = document.select("#sm2Profile option[selected]")
+      selectedOptions.size() shouldBe 1
+      selectedOptions.attr("value") shouldBe "PROFILE_TWO"
+      selectedOptions.text() shouldBe "PROFILE_TWO"
     }
   }
 

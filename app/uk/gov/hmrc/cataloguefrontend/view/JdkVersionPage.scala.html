@@ -18,15 +18,18 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.connector.model.JdkVersion
 @import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, TeamName}
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Profile
 
 @this()
 
 @(jdkVersions           : Seq[JdkVersion],
   teams                 : Seq[GitHubTeam],
   digitalServices       : Seq[DigitalService],
+  sm2Profiles           : Seq[Profile],
   selectedFlag          : SlugInfoFlag,
   selectedTeamName      : Option[TeamName],
-  selectedDigitalService: Option[DigitalService]
+  selectedDigitalService: Option[DigitalService],
+  selectedSm2Profile    : Option[String]
 )(implicit
   request         : RequestHeader
 )
@@ -51,7 +54,7 @@
     <div>
         <form id="form">
             <div class="row mb-3">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="flag" class="form-label fw-bold">Environment:</label>
                     <select class="form-select" id="flag" name="env">
                         @SlugInfoFlag.values.toSeq.map { flag =>
@@ -61,7 +64,7 @@
                         }
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="teamName" class="form-label fw-bold">Team:</label>
                     <select class="form-select" id="teamName" name="teamName">
                         <option value="" @{if(selectedTeamName.isEmpty) "selected" else ""}>All</option>
@@ -72,7 +75,18 @@
                         }
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <label for="sm2Profile" class="form-label fw-bold">Service Manager Profile:</label>
+                    <select class="form-select" id="sm2Profile" name="sm2Profile">
+                        <option value="" @{if(selectedSm2Profile.isEmpty) "selected" else ""}>All</option>
+                        @sm2Profiles.map { profile =>
+                            <option value="@profile.profileName.asString" @{if(selectedSm2Profile.contains(profile.profileName.asString)) "selected" else ""}>
+                                @profile.profileName.asString
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label for="teamName" class="form-label fw-bold">Digital Service:</label>
                     <select class="form-select" id="digitalService" name="digitalService">
                         <option value="" @{if(selectedDigitalService.isEmpty) "selected" else ""}>All</option>
@@ -159,7 +173,7 @@
         }
     </script>
     <script @CSPNonce.attr>
-      ["teamName", "digitalService", "flag"]
+      ["teamName", "digitalService", "sm2Profile", "flag"]
         .forEach(function(id) {
           document.getElementById(id).addEventListener("change", function() {
             document.getElementById("form").submit();
