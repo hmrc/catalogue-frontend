@@ -76,8 +76,8 @@ GET        /dependencies/:name/:version/graphs          uk.gov.hmrc.cataloguefro
 GET        /dependencyexplorer                          uk.gov.hmrc.cataloguefrontend.dependency.DependencyExplorerController.landing
 GET        /dependencyexplorer/results                  uk.gov.hmrc.cataloguefrontend.dependency.DependencyExplorerController.search(group: String ?= "", artefact: String ?= "", versionRange: Option[String] ?= None, team: Option[TeamName] ?= None, flag: Option[String] ?= None, `scope[]`: Option[Seq[String]] ?= None, `repoType[]`: Option[Seq[String]] ?= None, asCsv: Boolean ?= false)
 
-GET        /jdkexplorer/environment                     uk.gov.hmrc.cataloguefrontend.JdkVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
-GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JdkVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
+GET        /jdkexplorer/environment                     uk.gov.hmrc.cataloguefrontend.JdkVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, sm2Profile: Option[String] ?= None)
+GET        /jdkexplorer                                 uk.gov.hmrc.cataloguefrontend.JdkVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None, sm2Profile: Option[String] ?= None)
 
 GET        /sbtexplorer/environment                     uk.gov.hmrc.cataloguefrontend.SbtVersionController.findLatestVersions(env: String, teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)
 GET        /sbtexplorer                                 uk.gov.hmrc.cataloguefrontend.SbtVersionController.compareAllEnvironments(teamName: Option[TeamName] ?= None, digitalService: Option[DigitalService] ?= None)

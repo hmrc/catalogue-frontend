@@ -21,6 +21,7 @@ import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.connector.{RepoType, ServiceDependenciesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model._
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, DigitalService, ServiceName, SlugInfoFlag, TeamName, Version, VersionRange}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ProfileType, ReleasesConnector}
 import uk.gov.hmrc.cataloguefrontend.util.DependencyGraphParser
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 import uk.gov.hmrc.http.HeaderCarrier
@@ -31,7 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DependenciesService @Inject() (
-  serviceDependenciesConnector: ServiceDependenciesConnector
+  serviceDependenciesConnector: ServiceDependenciesConnector,
+  releasesConnector           : ReleasesConnector
 )(using ExecutionContext):
 
   def search(
@@ -83,13 +85,26 @@ class DependenciesService @Inject() (
       .map(_.map(g => g.copy(artefacts = g.artefacts.sorted)))
       .map(_.sortBy(_.group))
 
-  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService])(using HeaderCarrier): Future[List[JdkVersion]] =
-    serviceDependenciesConnector.getJdkVersions(flag, teamName, digitalService)
+  private def sm2ProfileLookup()(using HeaderCarrier): Future[Map[String, Set[ServiceName]]] =
+    releasesConnector
+      .profiles()
+      .map(_.filter(_.profileType == ProfileType.ServiceManager))
+      .map(_.map(p => p.profileName.asString -> p.serviceNames.toSet).toMap)
 
-  def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService])(using HeaderCarrier): Future[JdkUsageByEnv] =
+  def getJdkVersions(flag: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService], sm2Profile: Option[String])(using HeaderCarrier): Future[List[JdkVersion]] =
     for
-      versions <- serviceDependenciesConnector.getJdkVersions(env, teamName, digitalService)
-      counts   =  versions.groupBy(v => (v.version, v.vendor, v.kind)).view.mapValues(_.length).toMap
+      versions        <- serviceDependenciesConnector.getJdkVersions(flag, teamName, digitalService)
+      profileMap      <- sm2ProfileLookup()
+      allowedServices =  sm2Profile.flatMap(profileMap.get)
+      filtered        =  allowedServices match
+                           case Some(allowed) => versions.filter(v => allowed.contains(v.serviceName))
+                           case None          => versions
+    yield filtered
+
+  def getJdkCountsForEnv(env: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService], sm2Profile: Option[String])(using HeaderCarrier): Future[JdkUsageByEnv] =
+    for
+      versions <- getJdkVersions(env, teamName, digitalService, sm2Profile)
+      counts   =  versions.groupBy(v => (v.version, v.vendor, v.kind)).view.mapValues(_.size).toMap
     yield JdkUsageByEnv(env, counts)
 
   def getSbtVersions(flag: SlugInfoFlag, teamName: Option[TeamName], digitalService: Option[DigitalService])(using HeaderCarrier): Future[List[SbtVersion]] =

@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.GitHubTeam
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{JdkUsageByEnv, Vendor, Kind}
 @import uk.gov.hmrc.cataloguefrontend.model.DigitalService
+@import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.Profile
 
 @this()
 
@@ -25,8 +26,10 @@
   jdks                  : Seq[(Version, Vendor, Kind)],
   teams                 : Seq[GitHubTeam],
   digitalServices       : Seq[DigitalService],
+  sm2Profiles           : Seq[Profile],
   selectedTeamName      : Option[TeamName],
-  selectedDigitalService: Option[DigitalService]
+  selectedDigitalService: Option[DigitalService],
+  selectedSm2Profile    : Option[String]
 )(implicit
   request               : RequestHeader
 )
@@ -52,12 +55,23 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label for="teamName" class="form-label fw-bold">Digital Service:</label>
+                <label for="digitalService" class="form-label fw-bold">Digital Service:</label>
                 <select class="form-select" id="digitalService" name="digitalService">
                     <option value="" @{if(selectedDigitalService.isEmpty) "selected" else ""}>All</option>
                     @digitalServices.map { digitalService =>
                         <option value="@{digitalService.asString}" @{if(selectedDigitalService.contains(digitalService)) "selected" else ""}>
                             @digitalService.asString
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="sm2Profile" class="form-label fw-bold">Service Manager Profile:</label>
+                <select class="form-select" id="sm2Profile" name="sm2Profile">
+                    <option value="" @{if(selectedSm2Profile.isEmpty) "selected" else ""}>All</option>
+                    @sm2Profiles.map { profile =>
+                        <option value="@profile.profileName.asString" @{if(selectedSm2Profile.contains(profile.profileName.asString)) "selected" else ""}>
+                        @profile.profileName.asString
                         </option>
                     }
                 </select>
@@ -88,7 +102,7 @@
 
         @for(d <- envdata) {
           <tr>
-              <td><a href="@appRoutes.JdkVersionController.findLatestVersions(d.env.asString, selectedTeamName, selectedDigitalService)">@d.env.displayString</a></td>
+              <td><a href="@appRoutes.JdkVersionController.findLatestVersions(d.env.asString, selectedTeamName, selectedDigitalService, selectedSm2Profile)">@d.env.displayString</a></td>
               @for((version, vendor) <- jdks.map(j => (j._1, j._2)).distinct) {
                   <td>@{d.usage.getOrElse((version, vendor, Kind.JRE), 0) + d.usage.getOrElse((version, vendor, Kind.JDK), 0)}</td>
               }
@@ -150,7 +164,7 @@
         });
     </script>
     <script @CSPNonce.attr>
-        ["teamName", "digitalService"]
+        ["teamName", "digitalService", "sm2Profile"]
         .forEach(function(id) {
           document.getElementById(id).addEventListener("change", function() {
             document.getElementById("form").submit();

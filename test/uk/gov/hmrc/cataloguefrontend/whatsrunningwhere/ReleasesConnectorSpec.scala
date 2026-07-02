@@ -169,9 +169,9 @@ class ReleasesConnectorSpec
         releasesConnector.profiles().futureValue
 
       response should contain theSameElementsAs Seq(
-        Profile(ProfileType.ServiceManager, ProfileName("tcs_all")),
-        Profile(ProfileType.ServiceManager, ProfileName("tpsa")),
-        Profile(ProfileType.Team, ProfileName("trusts"))
+        Profile(ProfileType.ServiceManager, ProfileName("tcs_all"), List(ServiceName("identity-verification-frontend"), ServiceName("identity-verification"))),
+        Profile(ProfileType.ServiceManager, ProfileName("tpsa"), List(ServiceName("dtxe"), ServiceName("dtxe-validator"))),
+        Profile(ProfileType.Team, ProfileName("trusts"), List(ServiceName("trust-registration-api"), ServiceName("trust-registration-stub")))
       )
     }
   }

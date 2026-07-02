@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.cataloguefrontend.whatsrunningwhere
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
 import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, TeamName, UserName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.{FormFormat, FromString, Parser}
 
@@ -88,6 +88,7 @@ object JsonCodecs:
   val profileFormat: Format[Profile] =
     ( (__ \ "type").format[ProfileType](profileTypeFormat)
     ~ (__ \ "name").format[ProfileName](profileNameFormat)
+    ~ (__ \ "apps").formatWithDefault[List[ServiceName]](Nil)
     )(Profile.apply, p => Tuple.fromProductTyped(p))
 
   // Deployment Event
@@ -165,8 +166,9 @@ enum ProfileType(
 
 
 case class Profile(
-  profileType: ProfileType,
-  profileName: ProfileName
+  profileType : ProfileType,
+  profileName : ProfileName,
+  serviceNames: List[ServiceName]
 )
 
 case class DeploymentStatus(asString: String) extends AnyVal

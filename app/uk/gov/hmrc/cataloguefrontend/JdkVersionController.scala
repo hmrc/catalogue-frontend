@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend
 
-import cats.implicits._
+import cats.implicits.*
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.TeamsAndRepositoriesConnector
@@ -24,17 +24,20 @@ import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, SlugInfoFlag, TeamNa
 import uk.gov.hmrc.cataloguefrontend.service.DependenciesService
 import uk.gov.hmrc.cataloguefrontend.util.Parser
 import uk.gov.hmrc.cataloguefrontend.view.html.{JdkAcrossEnvironmentsPage, JdkVersionPage}
+import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{Profile, ProfileType, ReleasesConnector}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.FrontendAuthComponents
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class JdkVersionController @Inject() (
   override val mcc             : MessagesControllerComponents,
   dependenciesService          : DependenciesService,
   teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector,
+  releasesConnector            : ReleasesConnector,
   jdkVersionPage               : JdkVersionPage,
   jdkAcrossEnvironmentsPage    : JdkAcrossEnvironmentsPage,
   override val auth            : FrontendAuthComponents
@@ -43,26 +46,34 @@ class JdkVersionController @Inject() (
 ) extends FrontendController(mcc)
      with CatalogueAuthBuilders:
 
-  def findLatestVersions(flag: String, teamName: Option[TeamName], digitalService: Option[DigitalService]) =
+  private def sm2Profiles()(using HeaderCarrier): Future[Seq[Profile]] =
+    releasesConnector
+      .profiles()
+      .map(_.filter(_.profileType == ProfileType.ServiceManager))
+      .map(_.sortBy(_.profileName.asString))
+  
+  def findLatestVersions(flag: String, teamName: Option[TeamName], digitalService: Option[DigitalService], sm2Profile: Option[String]) =
     BasicAuthAction.async: request =>
       given RequestHeader = request
       for
         teams            <- teamsAndRepositoriesConnector.allTeams()
         digitalServices  <- teamsAndRepositoriesConnector.allDigitalServices()
+        sm2Profiles      <- sm2Profiles()
         selectedFlag     =  Parser[SlugInfoFlag].parse(flag.toLowerCase).getOrElse(SlugInfoFlag.Latest)
         jdkVersions      <- dependenciesService
-                              .getJdkVersions(selectedFlag, teamName, digitalService)
+                              .getJdkVersions(selectedFlag, teamName, digitalService, sm2Profile)
                               .map(_.sortBy(j => (j.version, j.serviceName)))
-      yield Ok(jdkVersionPage(jdkVersions, teams, digitalServices, selectedFlag, teamName, digitalService))
+      yield Ok(jdkVersionPage(jdkVersions, teams, digitalServices, sm2Profiles, selectedFlag, teamName, digitalService, sm2Profile))
 
-  def compareAllEnvironments(teamName: Option[TeamName], digitalService: Option[DigitalService]) =
+  def compareAllEnvironments(teamName: Option[TeamName], digitalService: Option[DigitalService], sm2Profile: Option[String]) =
     BasicAuthAction.async: request =>
       given RequestHeader = request
       for
         teams            <- teamsAndRepositoriesConnector.allTeams()
         digitalServices  <- teamsAndRepositoriesConnector.allDigitalServices()
-        envs             <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getJdkCountsForEnv(env, teamName, digitalService))
+        sm2Profiles      <- sm2Profiles()
+        envs             <- SlugInfoFlag.values.toSeq.traverse(env => dependenciesService.getJdkCountsForEnv(env, teamName, digitalService, sm2Profile))
         jdks             =  envs.flatMap(_.usage.keys).distinct.sortBy(_._1)
-      yield Ok(jdkAcrossEnvironmentsPage(envs, jdks, teams, digitalServices, teamName, digitalService))
+      yield Ok(jdkAcrossEnvironmentsPage(envs, jdks, teams, digitalServices, sm2Profiles, teamName, digitalService, sm2Profile))
 
 end JdkVersionController
