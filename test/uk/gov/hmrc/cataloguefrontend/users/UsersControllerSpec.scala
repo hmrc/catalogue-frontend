@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{BAD_REQUEST, POST, contentAsString, defaultAwaitTimeout, status}
+import play.api.test.Helpers.*
 import uk.gov.hmrc.cataloguefrontend.config.UserManagementPortalConfig
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, TeamsAndRepositoriesConnector, UserManagementConnector}
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
@@ -38,6 +38,7 @@ import uk.gov.hmrc.internalauth.client.test.{FrontendAuthComponentsStub, StubBeh
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.ArgumentMatchers
 
 class UsersControllerSpec
   extends AnyWordSpec
@@ -83,6 +84,39 @@ class UsersControllerSpec
       document.select("#emailInput").hasClass("is-invalid") shouldBe true
       document.select("#ldapModal .invalid-feedback").text() shouldBe LdapResetForm.secondaryEmailMustNotMatchPrimaryEmail
       verify(mockUMConnector, never()).resetLdapPassword(any[ResetLdapPassword])(using any[HeaderCarrier])
+
+  "UsersController.user" should:
+    "lowercase the username before calling User Management" in new Setup:
+      when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Any]]))
+        .thenReturn(
+          Future.successful(
+            Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/TestTeam"))) ~
+            Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("teams/*")))
+          )
+        )
+
+      when(mockUMConnector.getUser(any[UserName])(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(user)))
+
+      when(mockUMConnector.getUserRoles(any[UserName])(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(UserRoles(Seq.empty)))
+
+      when(mockUMConnector.getUserAccess(any[UserName])(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(UserAccess.empty))
+
+      when(mockTeamsAndRepos.allTeams(any)(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Seq.empty))
+
+      val mixedCaseUsername = UserName("John.Smith")
+
+      val result =
+        controller.user(mixedCaseUsername)(
+          FakeRequest(GET, s"/users/${mixedCaseUsername.asString}")
+            .withSession(SessionKeys.authToken -> "Token token")
+        )
+
+      status(result) shouldBe OK
+      verify(mockUMConnector).getUser(ArgumentMatchers.eq("john.smith").asInstanceOf[UserName])(using any[HeaderCarrier])
 
   private trait Setup:
     given HeaderCarrier = HeaderCarrier()
