@@ -53,7 +53,8 @@ package object model:
       )
 
 
-  case class UserName(asString: String) extends AnyVal
+  case class UserName(asString: String) extends AnyVal:
+    def toLowerCase: UserName = UserName(asString.toLowerCase)
 
   object UserName extends StringAnyValUtils(UserName.apply, _.asString)
 

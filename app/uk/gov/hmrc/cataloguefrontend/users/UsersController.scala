@@ -71,7 +71,7 @@ class UsersController @Inject()(
   )(using HeaderCarrier, RequestHeader): Future[Result] =
 
     for
-      userOpt              <- userManagementConnector.getUser(username)
+      userOpt              <- userManagementConnector.getUser(username.toLowerCase)
       retrieval            <- auth.verify(
                                 Retrieval.locations(Some(ResourceType("catalogue-frontend")), Some(IAAction("EDIT_USER"))) ~
                                 Retrieval.locations(Some(ResourceType("catalogue-frontend")), Some(IAAction("MANAGE_USER")))
