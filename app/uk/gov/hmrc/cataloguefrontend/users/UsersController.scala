@@ -400,7 +400,9 @@ object LdapResetForm:
     Form(
       Forms.mapping(
         "username" -> Forms.nonEmptyText,
-        "email"    -> Forms.text.verifying(Constraints.emailAddress(errorMessage = "Please provide a valid email address."))
+        "email"    -> Forms.text
+                      .transform(_.toLowerCase, identity)
+                      .verifying(Constraints.emailAddress(errorMessage = "Please provide a valid email address."))
       )(ResetLdapPassword.apply)(f => Some(Tuple.fromProductTyped(f)))
     )
 
