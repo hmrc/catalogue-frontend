@@ -118,7 +118,9 @@ object CreateUserForm:
                                         .verifying(CreateUserConstraints.nameConstraints("givenName")*),
         "familyName"       -> Forms.text.verifying(CreateUserConstraints.nameConstraints("familyName")*),
         "organisation"     -> Forms.nonEmptyText,
-        "contactEmail"     -> Forms.email.verifying(CreateUserConstraints.contactEmailConstraint(isServiceAccount)),
+        "contactEmail"     -> Forms.email
+                              .transform(_.toLowerCase, identity)
+                              .verifying(CreateUserConstraints.contactEmailConstraint(isServiceAccount)),
         "contactComments"  -> Forms.default(Forms.text, "").verifying(Constraints.maxLength(512)),
         "team"             -> Forms.of[TeamName],
         "isReturningUser"  -> Forms.boolean,
