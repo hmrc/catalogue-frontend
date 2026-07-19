@@ -53,7 +53,7 @@ class SearchByUrlController @Inject() (
           query          => searchByUrlService
                               .searchFrontendPath(query.name)
                               .map: results =>
-                                Ok(searchByUrlPage(UrlSearchFilter.form.bindFromRequest(), results, query.name))
+                                Ok(searchByUrlPage(UrlSearchFilter.form.bindFromRequest(), results))
         )
 
   case class UrlSearchFilter(name: Option[String] = None):
