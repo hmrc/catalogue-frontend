@@ -86,6 +86,7 @@
                         <tr>
                             <td>
                                 <a id="link-to-@{route.serviceName.asString}" href="@appRoutes.CatalogueController.service(route.serviceName)">@{route.serviceName.asString}</a>
+                                    @if(route.redirection) {(redirection)}
                             </td>
                             <td>
                                 @if(route.isRegex) {

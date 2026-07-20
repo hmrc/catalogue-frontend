@@ -106,6 +106,7 @@ object RouteConfigurationConnector:
   , isRegex             : Boolean = false
   , routeType           : RouteType
   , environment         : Environment
+  , redirection         : Boolean = false
   )
 
   object Route:
@@ -116,5 +117,6 @@ object RouteConfigurationConnector:
       ~ (__ \ "isRegex"             ).readWithDefault[Boolean](false)
       ~ (__ \ "routeType"           ).read[RouteType]
       ~ (__ \ "environment"         ).read[Environment]
+      ~ (__ \ "redirection"         ).readWithDefault[Boolean](false)
       )(Route.apply)
 end RouteConfigurationConnector
