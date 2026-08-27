@@ -329,7 +329,7 @@
                         ).map(cell => cell.dataset.effectiveValue);
 
                         const allVisibleValuesAreEqual =
-                            visibleValues.length < 2 ||
+                            visibleValues.length >= 2 &&
                             new Set(visibleValues).size === 1;
 
                         row.classList.toggle(
