@@ -186,6 +186,10 @@ aside ul label {
   padding-bottom: 0.2em;
 }
 
+.grid-row.hidden {
+  display: none;
+}
+
 .grid-row:not(.grid-sub-header):hover {
   background-color: #f9f9f9;
 }
