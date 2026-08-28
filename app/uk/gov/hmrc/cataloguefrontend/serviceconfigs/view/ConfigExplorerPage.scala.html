@@ -260,6 +260,37 @@
                     <label for="show-differences-only">Show differences only</label>
                 </li>
             </ul>
+            <div class="cfgH5 h5">Search</div>
+            <div class="config-search">
+                <label for="config-key-search">Key</label>
+                <input
+                    type="text"
+                    id="config-key-search"
+                    class="form-control"
+                    autocomplete="off">
+
+                <label for="config-value-search">Value</label>
+                <input
+                    type="text"
+                    id="config-value-search"
+                    class="form-control"
+                    autocomplete="off">
+
+                <button type="button" id="apply-config-search">
+                    Search
+                </button>
+
+                <button type="button" id="clear-config-search">
+                    Clear
+                </button>
+
+                <div
+                    id="config-search-message"
+                    class="config-search-message"
+                    role="status"
+                    aria-live="polite">
+                </div>
+            </div>
         </aside>
         <aside id="help" aria-label="help">
             <div class="cfgH5">What am I seeing?</div>
