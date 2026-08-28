@@ -397,3 +397,13 @@ aside ul label {
   font-weight: bold;
   font-size: 1.2em;
 }
+
+.grid-row.search-hidden {
+    display: none;
+}
+
+.config-search-message {
+    color: #d4351c;
+    font-weight: bold;
+    margin-top: 0.5rem;
+}
