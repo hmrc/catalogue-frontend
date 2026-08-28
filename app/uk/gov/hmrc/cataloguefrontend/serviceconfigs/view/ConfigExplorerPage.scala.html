@@ -278,7 +278,10 @@
                     autocomplete="off">
 
                 <div id="config-value-search-help" class="form-text">
-                    Searches visible environment columns only. Select all columns to search all environments.
+                    Searches visible environment columns only.
+                </div>
+                <div id="config-value-search-help" class="form-text">
+                    Select all columns to search all environments.
                 </div>
 
                 <button type="button" id="apply-config-search">
@@ -543,6 +546,22 @@
 
                     return "Key with value not found";
                 }
+
+                document
+                    .querySelectorAll(
+                        "#config-key-search, #config-value-search"
+                    )
+                    .forEach(input => {
+                        input.addEventListener("keydown", event => {
+                            if (event.key === "Enter") {
+                                event.preventDefault();
+
+                                document
+                                    .querySelector("#apply-config-search")
+                                    .click();
+                            }
+                        });
+                    });
 
                 document
                     .querySelector("#apply-config-search")
