@@ -520,6 +520,30 @@
                     });
                 }
 
+                function exactSearchErrorMessage(rows, searches) {
+                    const hasMatchingKey =
+                        !searches.hasKeySearch ||
+                        rows.some(row =>
+                            rowMatchesExactKey(row, searches)
+                        );
+
+                    if (!hasMatchingKey) {
+                        return "Key not found";
+                    }
+
+                    const hasMatchingValue =
+                        !searches.hasValueSearch ||
+                        rows.some(row =>
+                            rowMatchesExactValue(row, searches)
+                        );
+
+                    if (!hasMatchingValue) {
+                        return "Value not found in visible environment columns";
+                    }
+
+                    return "Key with value not found";
+                }
+
                 document
                     .querySelector("#apply-config-search")
                     .addEventListener("click", () => {
@@ -540,7 +564,13 @@
                         );
 
                         if (matchingRows.length === 0) {
-                            console.log("No matching rows");
+                            document.querySelector(
+                                "#config-search-message"
+                            ).textContent = exactSearchErrorMessage(
+                                rows,
+                                searches
+                            );
+
                             return;
                         }
 
@@ -557,9 +587,6 @@
                             "#config-search-message"
                         ).textContent = "";
 
-                        console.log("Key search:", searches.keySearch);
-                        console.log("Value search:", searches.valueSearch);
-                        console.log("Matching rows:", matchingRows);
                     });
 
                 document
