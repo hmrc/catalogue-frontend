@@ -385,7 +385,11 @@
                         Array.from(document.getElementsByClassName(input.id.replace("show-", "column-"))).forEach(item => {
                             item.classList.toggle("hidden", !e.target.checked);
                         });
-                        filterRowsByDifference();
+                        const searches = readConfigSearchInputs();
+
+                        if (searches.hasValueSearch) {
+                            applyExactConfigSearch(true);
+                        }
                     });
                     setCheckboxWithQueryParam(input, input.id);
                 });
@@ -547,6 +551,54 @@
                     return "Key with value not found";
                 }
 
+                function applyExactConfigSearch(hideAllOnNoMatch = false) {
+                    const searches = readConfigSearchInputs();
+
+                    if (!searches.hasKeySearch && !searches.hasValueSearch) {
+                        clearConfigSearch();
+                        return;
+                    }
+
+                    const rows = Array.from(
+                        document.querySelectorAll(".config-data-row")
+                    );
+
+                    const matchingRows = rows.filter(row =>
+                        rowMatchesExactKey(row, searches) &&
+                        rowMatchesExactValue(row, searches)
+                    );
+
+                    if (matchingRows.length === 0) {
+                        if (hideAllOnNoMatch) {
+                            rows.forEach(row => {
+                              row.classList.add("search-hidden");
+                            });
+                        }
+
+                        document.querySelector(
+                            "#config-search-message"
+                        ).textContent = exactSearchErrorMessage(
+                            rows,
+                            searches
+                        );
+
+                        return;
+                    }
+
+                    const matchingRowSet = new Set(matchingRows);
+
+                    rows.forEach(row => {
+                        row.classList.toggle(
+                            "search-hidden",
+                            !matchingRowSet.has(row)
+                        );
+                    });
+
+                    document.querySelector(
+                        "#config-search-message"
+                    ).textContent = "";
+                }
+
                 document
                     .querySelectorAll(
                         "#config-key-search, #config-value-search"
@@ -555,10 +607,7 @@
                         input.addEventListener("keydown", event => {
                             if (event.key === "Enter") {
                                 event.preventDefault();
-
-                                document
-                                    .querySelector("#apply-config-search")
-                                    .click();
+                                applyExactConfigSearch();
                             }
                         });
                     });
@@ -566,46 +615,7 @@
                 document
                     .querySelector("#apply-config-search")
                     .addEventListener("click", () => {
-                        const searches = readConfigSearchInputs();
-
-                        if (!searches.hasKeySearch && !searches.hasValueSearch) {
-                            clearConfigSearch();
-                            return;
-                        }
-
-                        const rows = Array.from(
-                            document.querySelectorAll(".config-data-row")
-                        );
-
-                        const matchingRows = rows.filter(row =>
-                            rowMatchesExactKey(row, searches) &&
-                            rowMatchesExactValue(row, searches)
-                        );
-
-                        if (matchingRows.length === 0) {
-                            document.querySelector(
-                                "#config-search-message"
-                            ).textContent = exactSearchErrorMessage(
-                                rows,
-                                searches
-                            );
-
-                            return;
-                        }
-
-                        const matchingRowSet = new Set(matchingRows);
-
-                        rows.forEach(row => {
-                            row.classList.toggle(
-                                "search-hidden",
-                                !matchingRowSet.has(row)
-                            );
-                        });
-
-                        document.querySelector(
-                            "#config-search-message"
-                        ).textContent = "";
-
+                        applyExactConfigSearch();
                     });
 
                 document
