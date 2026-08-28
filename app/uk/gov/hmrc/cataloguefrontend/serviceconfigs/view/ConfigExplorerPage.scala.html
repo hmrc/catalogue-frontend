@@ -52,7 +52,7 @@
         <script @CSPNonce.attr src="@routes.Assets.versioned("bootstrap.5.3.0.min.js")"></script>
         <script @CSPNonce.attr src="@routes.Assets.versioned("config-explorer.js")"></script>
     </head>
-    <body class="@if(!showReferenceConf){hide-refconf-only} word-wrap @if(showWarnings){show-warnings}">
+    <body class="sidebar-open @if(!showReferenceConf){hide-refconf-only} word-wrap @if(showWarnings){show-warnings}">
         <header class="opaque">
             <h1 class="capitalize" id="service-header">Config: @serviceName.asString</h1>
             <i class="glyphicon glyphicon-question-sign help-icon"></i>
