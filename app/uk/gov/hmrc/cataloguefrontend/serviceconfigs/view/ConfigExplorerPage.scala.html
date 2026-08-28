@@ -46,6 +46,7 @@
         <link rel="stylesheet" href="@routes.Assets.versioned("bootstrap.5.3.0.min.css")" />
         <link rel="stylesheet" href="@routes.Assets.versioned("glyphicon-bootstrap.3.4.1.css")" />
         <link rel="stylesheet" href="@routes.Assets.versioned("config-explorer.css")" />
+        <link rel="shortcut icon" href="@routes.Assets.versioned("favicon.ico")" type="image/x-icon">
         <script @CSPNonce.attr src="@routes.Assets.versioned("split.js")"></script>
         <script @CSPNonce.attr src="@routes.Assets.versioned("popper.2.11.8.min.js")"></script>
         <script @CSPNonce.attr src="@routes.Assets.versioned("bootstrap.5.3.0.min.js")"></script>
@@ -94,7 +95,7 @@
                     </div>
                 </div>
                 @for((key, envSources) <- deploymentConfig.toSeq.sortBy(_._1)(KeyName.deploymentConfigOrder)) {
-                  <div id="config-row-@key.asString" class="grid-row deployment-config">
+                  <div id="config-row-@key.asString" class="grid-row config-data-row deployment-config">
                     <div id="config-key-@key.asString" class="grid-item sticky-column truncate-content" style="width:310px;">
                         <a aria-label="config for @key.asString" id="config-url-@key.asString" href="@serviceConfigsRoutes.ServiceConfigsController.configExplorer(serviceName, showWarnings, showReferenceConf).withFragment(key.asString)" class="glyphicon glyphicon-link float-start"></a>
                         <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@key.asString'>
@@ -102,7 +103,16 @@
                         </span>
                     </div>
                     @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
-                      <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
+                      <div class="grid-item config-environment-value column-@env.asString @if(!show(env)){hidden}"
+                           data-effective-value="@{
+                              envSources
+                                .getOrElse(env, Seq.empty)
+                                .filterNot(_._2)
+                                .lastOption
+                                .map(_._1.displayString)
+                                .getOrElse("")
+                            }"
+                            style="width:510px;">
                         <ul class="list-unstyled">
                             @for(((sourceValue, nextDeployment), idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
                                 <li class="config-value">
@@ -147,7 +157,7 @@
                 </div>
                 @for((key, envSources) <- configByKey.toSeq.sortBy(_._1.asString)) {
 
-                    <div id="config-row-@key.asString" class="grid-row @if(envSources.forall(_._2.map(_._1).forall(_.isReferenceConf))) {refconf-only}">
+                    <div id="config-row-@key.asString" class="grid-row config-data-row @if(envSources.forall(_._2.map(_._1).forall(_.isReferenceConf))) {refconf-only}">
                         <div id="config-key-@key.asString" class="grid-item sticky-column truncate-content" style="width:310px;">
                             <a aria-label="config for @key.asString" id="config-url-@key.asString" href="#@key.asString" class="glyphicon glyphicon-link float-start"></a>
                             <span data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="bottom" data-bs-html="true" data-bs-content='@key.asString'>
@@ -156,7 +166,16 @@
                             <a aria-label="search for @key.asString" href="@{serviceConfigsRoutes.ServiceConfigsController.searchResults(Some(key.asString)).url}" class="glyphicon glyphicon-search pull-right"></a>
                         </div>
                         @for(env <- ServiceConfigsService.ConfigEnvironment.values) {
-                            <div class="grid-item column-@env.asString @if(!show(env)){hidden}" style="width:510px;">
+                            <div class="grid-item config-environment-value column-@env.asString @if(!show(env)){hidden}"
+                                 data-effective-value="@{
+                                    envSources
+                                      .getOrElse(env, Seq.empty)
+                                      .filterNot(_._2)
+                                      .lastOption
+                                      .map(_._1.displayString)
+                                      .getOrElse("")
+                                  }"
+                                 style="width:510px;">
                                 <ul class="list-unstyled">
                                     @for(((sourceValue, nextDeployment), idx) <- envSources.getOrElse(env, Seq.empty).zipWithIndex) {
                                     <li class="config-value">
@@ -234,6 +253,13 @@
                     <label for="show-warnings">Show warnings</label>
                 </li>
             </ul>
+            <div class="cfgH5 h5">Diffs</div>
+            <ul class="list-unstyled">
+                <li>
+                    <input type="checkbox" id="show-differences-only">
+                    <label for="show-differences-only">Show differences only</label>
+                </li>
+            </ul>
         </aside>
         <aside id="help" aria-label="help">
             <div class="cfgH5">What am I seeing?</div>
@@ -287,15 +313,54 @@
                     body.classList.remove("help-open");
                 });
 
+                function filterRowsByDifference() {
+                    const differencesOnly =
+                        document.querySelector("#show-differences-only").checked;
+
+                    document.querySelectorAll(".config-data-row").forEach(row => {
+                        if (!differencesOnly) {
+                            row.classList.remove("hidden");
+                            return;
+                        }
+
+                        const visibleValues = Array.from(
+                            row.querySelectorAll(
+                                ".config-environment-value:not(.hidden)"
+                            )
+                        ).map(cell => cell.dataset.effectiveValue);
+
+                        const allVisibleValuesAreEqual =
+                            visibleValues.length >= 2 &&
+                            new Set(visibleValues).size === 1;
+
+                        row.classList.toggle(
+                            "hidden",
+                            allVisibleValuesAreEqual
+                        );
+                    });
+                }
+
                 Array.from(document.querySelectorAll(".column-filter")).forEach(input => {
                     input.addEventListener("change", e => {
                         addQueryParam(input.id, e.target.checked);
                         Array.from(document.getElementsByClassName(input.id.replace("show-", "column-"))).forEach(item => {
-                            item.classList.toggle("hidden");
+                            item.classList.toggle("hidden", !e.target.checked);
                         });
+                        filterRowsByDifference();
                     });
                     setCheckboxWithQueryParam(input, input.id);
                 });
+
+                const differencesOnlyInput = document.querySelector("#show-differences-only");
+                differencesOnlyInput.addEventListener("change", e => {
+                    addQueryParam("show-differences-only", e.target.checked);
+                    filterRowsByDifference();
+                });
+
+                setCheckboxWithQueryParam(
+                    differencesOnlyInput,
+                    "show-differences-only"
+                );
 
                 document.querySelector("#show-referenceConf").addEventListener("change", e => {
                     addQueryParam("showReferenceConf", e.target.checked);
