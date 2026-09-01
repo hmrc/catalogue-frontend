@@ -388,7 +388,7 @@
                         const searches = readConfigSearchInputs();
 
                         if (searches.hasValueSearch) {
-                            applyExactConfigSearch(true);
+                            applyConfigSearch(true);
                         }
                     });
                     setCheckboxWithQueryParam(input, input.id);
@@ -456,25 +456,79 @@
                     }
                 }
 
-                function readConfigSearchInputs() {
-                    const keySearch = document
-                        .querySelector("#config-key-search")
-                        .value
+                function parseConfigSearch(rawInput) {
+                    const input = rawInput
                         .trim()
                         .toLowerCase();
 
-                    const valueSearch = document
-                        .querySelector("#config-value-search")
-                        .value
-                        .trim()
-                        .toLowerCase();
+                    if (input.length === 0) {
+                        return {
+                            active: false,
+                            exact: false,
+                            text: "",
+                            terms: []
+                        };
+                    }
+
+                    const isExactSearch =
+                        input.length >= 2 &&
+                        input.startsWith("'") &&
+                        input.endsWith("'");
+
+                    if (isExactSearch) {
+                        return {
+                            active: true,
+                            exact: true,
+                            text: input
+                                .slice(1, -1)
+                                .trim(),
+                            terms: []
+                        };
+                    }
+
+                    return {
+                        active: true,
+                        exact: false,
+                        text: input,
+                        terms: input
+                            .split(/\s+/)
+                            .filter(term => term.length > 0)
+                    };
+                }
+
+                function readConfigSearchInputs() {
+                    const keySearch = parseConfigSearch(
+                        document.querySelector("#config-key-search").value
+                    );
+
+                    const valueSearch = parseConfigSearch(
+                        document.querySelector("#config-value-search").value
+                    );
 
                     return {
                         keySearch,
-                        valueSearch, 
-                        hasKeySearch: keySearch.length > 0, 
-                        hasValueSearch: valueSearch.length > 0
+                        valueSearch,
+                        hasKeySearch: keySearch.active,
+                        hasValueSearch: valueSearch.active
                     };
+                }
+
+                function textMatchesSearch(text, search) {
+                    if (!search.active) {
+                        return true;
+                    }
+
+                    const candidate = (text || "")
+                        .trim()
+                        .toLowerCase();
+
+                    if (search.exact) {
+                        return candidate === search.text;
+                    }
+
+                    return search.terms.every(term =>
+                        candidate.includes(term)
+                    );
                 }
 
                 function clearConfigSearch() {
@@ -489,7 +543,7 @@
                         });
                 }
 
-                function rowMatchesExactKey(row, searches) {
+                function rowMatchesKey(row, searches) {
                     if (!searches.hasKeySearch) {
                         return true;
                     }
@@ -500,14 +554,13 @@
                         return false;
                     }
 
-                    const key = keyCell.dataset.configKey
-                        .trim()
-                        .toLowerCase();
-
-                    return key === searches.keySearch;
+                    return textMatchesSearch(
+                        keyCell.dataset.configKey,
+                        searches.keySearch
+                    );
                 }
 
-                function rowMatchesExactValue(row, searches) {
+                function rowMatchesValue(row, searches) {
                     if (!searches.hasValueSearch) {
                         return true;
                     }
@@ -518,20 +571,19 @@
                         )
                     );
 
-                    return visibleValueCells.some(cell => {
-                        const value = (cell.dataset.effectiveValue || "")
-                            .trim()
-                            .toLowerCase();
-
-                        return value === searches.valueSearch;
-                    });
+                    return visibleValueCells.some(cell =>
+                        textMatchesSearch(
+                            cell.dataset.effectiveValue,
+                            searches.valueSearch
+                        )
+                    );
                 }
 
-                function exactSearchErrorMessage(rows, searches) {
+                function searchErrorMessage(rows, searches) {
                     const hasMatchingKey =
                         !searches.hasKeySearch ||
                         rows.some(row =>
-                            rowMatchesExactKey(row, searches)
+                            rowMatchesKey(row, searches)
                         );
 
                     if (!hasMatchingKey) {
@@ -541,7 +593,7 @@
                     const hasMatchingValue =
                         !searches.hasValueSearch ||
                         rows.some(row =>
-                            rowMatchesExactValue(row, searches)
+                            rowMatchesValue(row, searches)
                         );
 
                     if (!hasMatchingValue) {
@@ -551,7 +603,7 @@
                     return "Key with value not found";
                 }
 
-                function applyExactConfigSearch(hideAllOnNoMatch = false) {
+                function applyConfigSearch(hideAllOnNoMatch = false) {
                     const searches = readConfigSearchInputs();
 
                     if (!searches.hasKeySearch && !searches.hasValueSearch) {
@@ -564,20 +616,20 @@
                     );
 
                     const matchingRows = rows.filter(row =>
-                        rowMatchesExactKey(row, searches) &&
-                        rowMatchesExactValue(row, searches)
+                        rowMatchesKey(row, searches) &&
+                        rowMatchesValue(row, searches)
                     );
 
                     if (matchingRows.length === 0) {
                         if (hideAllOnNoMatch) {
                             rows.forEach(row => {
-                              row.classList.add("search-hidden");
+                                row.classList.add("search-hidden");
                             });
                         }
 
                         document.querySelector(
                             "#config-search-message"
-                        ).textContent = exactSearchErrorMessage(
+                        ).textContent = searchErrorMessage(
                             rows,
                             searches
                         );
@@ -607,7 +659,7 @@
                         input.addEventListener("keydown", event => {
                             if (event.key === "Enter") {
                                 event.preventDefault();
-                                applyExactConfigSearch();
+                                applyConfigSearch();
                             }
                         });
                     });
@@ -615,7 +667,7 @@
                 document
                     .querySelector("#apply-config-search")
                     .addEventListener("click", () => {
-                        applyExactConfigSearch();
+                        applyConfigSearch();
                     });
 
                 document
