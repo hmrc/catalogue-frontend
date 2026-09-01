@@ -295,6 +295,17 @@
                     Clear
                 </button>
 
+                <button type="button" id="copy-config-explorer-url">
+                    Copy URL
+                </button>
+
+                <div
+                    id="config-copy-message"
+                    class="form-text"
+                    role="status"
+                    aria-live="polite">
+                </div>
+
                 <div
                     id="config-search-message"
                     class="config-search-message"
@@ -331,6 +342,9 @@
                 Split(["#header-0", "#header-1", "#header-2", "#header-3", "#header-4", "#header-5", "#header-6", "#header-7"], {
                     sizes: [300, 500, 500, 500, 500, 500, 500, 500]
                 });
+
+                const configKeySearchQueryParam = "configKeySearch";
+                const configValueSearchQueryParam = "configValueSearch";
 
                 const body = document.querySelector("body");
                 document.querySelector(".menu-icon").addEventListener("click", e => {
@@ -461,6 +475,82 @@
                     }
                 }
 
+                function setOptionalQueryParam(
+                    url,
+                    queryParamName,
+                    queryParamValue
+                ) {
+                    if (queryParamValue.trim().length === 0) {
+                        url.searchParams.delete(queryParamName);
+                        return;
+                    }
+
+                    url.searchParams.set(
+                        queryParamName,
+                        queryParamValue
+                    );
+                }
+
+                function addConfigSearchToUrl(url) {
+                    setOptionalQueryParam(
+                        url,
+                        configKeySearchQueryParam,
+                        document.querySelector("#config-key-search").value
+                    );
+
+                    setOptionalQueryParam(
+                        url,
+                        configValueSearchQueryParam,
+                        document.querySelector("#config-value-search").value
+                    );
+                }
+
+                function addConfigExplorerControlsToUrl(url) {
+                    const checkboxQueryParams = [
+                        ["#show-referenceConf", "showReferenceConf"],
+                        ["#show-deploymentConf", "show-deploymentConf"],
+                        ["#show-evictions", "show-evictions"],
+                        ["#word-wrap", "word-wrap"],
+                        ["#show-warnings", "showWarnings"],
+                        ["#show-differences-only", "show-differences-only"]
+                    ];
+
+                    checkboxQueryParams.forEach(
+                        ([selector, queryParamName]) => {
+                            const checkbox =
+                                document.querySelector(selector);
+
+                            url.searchParams.set(
+                                queryParamName,
+                                checkbox.checked
+                            );
+                        }
+                    );
+
+                    document
+                        .querySelectorAll(".column-filter")
+                        .forEach(checkbox => {
+                            url.searchParams.set(
+                                checkbox.id,
+                                checkbox.checked
+                            );
+                        });
+
+                    addConfigSearchToUrl(url);
+                }
+
+                function updateConfigSearchUrl() {
+                    const url = new URL(window.location);
+
+                    addConfigSearchToUrl(url);
+
+                    window.history.replaceState(
+                        {},
+                        document.title,
+                        url
+                    );
+                }
+
                 function parseConfigSearch(rawInput) {
                     const input = rawInput
                         .trim()
@@ -537,15 +627,29 @@
                 }
 
                 function clearConfigSearch() {
-                    document.querySelector("#config-key-search").value = "";
-                    document.querySelector("#config-value-search").value = "";
-                    document.querySelector("#config-search-message").textContent = "";
+                    document.querySelector(
+                        "#config-key-search"
+                    ).value = "";
+
+                    document.querySelector(
+                        "#config-value-search"
+                    ).value = "";
+
+                    document.querySelector(
+                        "#config-search-message"
+                    ).textContent = "";
+
+                    document.querySelector(
+                        "#config-copy-message"
+                    ).textContent = "";
 
                     document
                         .querySelectorAll(".config-data-row")
                         .forEach(row => {
                             row.classList.remove("search-hidden");
                         });
+
+                    updateConfigSearchUrl();
                 }
 
                 function rowMatchesKey(row, searches) {
@@ -609,6 +713,7 @@
                 }
 
                 function applyConfigSearch(hideAllOnNoMatch = false) {
+                    updateConfigSearchUrl();
                     const searches = readConfigSearchInputs();
 
                     if (!searches.hasKeySearch && !searches.hasValueSearch) {
@@ -658,6 +763,55 @@
                     ).textContent = "";
                 }
 
+                function restoreConfigSearchFromQueryParams() {
+                    const keySearch =
+                        onloadParams.get(configKeySearchQueryParam);
+
+                    const valueSearch =
+                        onloadParams.get(configValueSearchQueryParam);
+
+                    if (keySearch !== null) {
+                        document.querySelector(
+                            "#config-key-search"
+                        ).value = keySearch;
+                    }
+
+                    if (valueSearch !== null) {
+                        document.querySelector(
+                            "#config-value-search"
+                        ).value = valueSearch;
+                    }
+
+                    const searches = readConfigSearchInputs();
+
+                    if (
+                        searches.hasKeySearch ||
+                        searches.hasValueSearch
+                    ) {
+                        applyConfigSearch();
+                    }
+                }
+
+                async function copyConfigExplorerUrl() {
+                    const url = new URL(window.location);
+
+                    addConfigExplorerControlsToUrl(url);
+
+                    const copyMessage = document.querySelector(
+                        "#config-copy-message"
+                    );
+
+                    try {
+                        await navigator.clipboard.writeText(
+                            url.toString()
+                        );
+
+                        copyMessage.textContent = "URL copied";
+                    } catch (error) {
+                        copyMessage.textContent = "Unable to copy URL";
+                    }
+                }
+
                 document
                     .querySelectorAll(
                         "#config-key-search, #config-value-search"
@@ -679,7 +833,20 @@
 
                 document
                     .querySelector("#clear-config-search")
-                    .addEventListener("click", clearConfigSearch);
+                    .addEventListener(
+                        "click",
+                        clearConfigSearch
+                    );
+
+                document
+                    .querySelector("#copy-config-explorer-url")
+                    .addEventListener(
+                        "click",
+                        copyConfigExplorerUrl
+                    );
+
+                // Restore search inputs and apply the search from a copied URL.
+                restoreConfigSearchFromQueryParams();
 
                 // Requires all setCheckboxWithQueryParam to be run first e.g show-referenceConf
                 (window.onhashchange = function () {
