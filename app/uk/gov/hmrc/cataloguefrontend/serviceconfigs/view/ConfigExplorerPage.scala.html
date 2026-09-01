@@ -267,6 +267,7 @@
                     type="text"
                     id="config-key-search"
                     class="form-control"
+                    aria-describedby="config-search-help"
                     autocomplete="off">
 
                 <label for="config-value-search">Value</label>
@@ -274,14 +275,16 @@
                     type="text"
                     id="config-value-search"
                     class="form-control"
-                    aria-describedby="config-value-search-help"
+                    aria-describedby="config-value-search-help config-search-help"
                     autocomplete="off">
 
                 <div id="config-value-search-help" class="form-text">
                     Searches visible environment columns only.
                 </div>
-                <div id="config-value-search-help" class="form-text">
-                    Select all columns to search all environments.
+
+                <div id="config-search-help" class="form-text">
+                    Searches are partial by default. Use single quotes for an exact match,
+                    for example <code>'run.mode'</code>.
                 </div>
 
                 <button type="button" id="apply-config-search">
@@ -385,6 +388,8 @@
                         Array.from(document.getElementsByClassName(input.id.replace("show-", "column-"))).forEach(item => {
                             item.classList.toggle("hidden", !e.target.checked);
                         });
+
+                        filterRowsByDifference();
                         const searches = readConfigSearchInputs();
 
                         if (searches.hasValueSearch) {
@@ -621,6 +626,8 @@
                     );
 
                     if (matchingRows.length === 0) {
+                        // A manual failed search preserves the current results. When visible
+                        // columns change, hide stale results that no longer match.
                         if (hideAllOnNoMatch) {
                             rows.forEach(row => {
                                 row.classList.add("search-hidden");
