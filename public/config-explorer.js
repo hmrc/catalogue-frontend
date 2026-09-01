@@ -2,8 +2,8 @@
  * Config Explorer page behaviour.
  *
  * Handles grid sizing, side panels, environment columns, difference
- * filtering, display controls, config searching, popovers, URL state,
- * and hash navigation.
+ * filtering, display controls, config searching, copied URL state,
+ * popovers, and hash navigation.
  */
 
 function ready(fn) {
@@ -24,9 +24,10 @@ ready(function () {
     // -------------------------------------------------------------------------
 
     const body = document.querySelector("body");
-    const onloadParams = new URLSearchParams(
-        window.location.search
-    );
+    const onloadParams = new URLSearchParams(window.location.search);
+
+    const configKeySearchQueryParam = "configKeySearch";
+    const configValueSearchQueryParam = "configValueSearch";
 
     // -------------------------------------------------------------------------
     // URL query parameters
@@ -51,18 +52,119 @@ ready(function () {
         inputElement,
         queryParamName
     ) {
-        if (
-            onloadParams.has(queryParamName) &&
-            onloadParams.get(queryParamName) !==
-                inputElement.value.toString()
-        ) {
-            inputElement.checked =
-                onloadParams.get(queryParamName) === "true";
-
-            inputElement.dispatchEvent(
-                new Event("change")
-            );
+        if (!onloadParams.has(queryParamName)) {
+            return;
         }
+
+        const checked =
+            onloadParams.get(queryParamName) === "true";
+
+        if (inputElement.checked === checked) {
+            return;
+        }
+
+        inputElement.checked = checked;
+        inputElement.dispatchEvent(
+            new Event("change")
+        );
+    }
+
+    function setOptionalQueryParam(
+        url,
+        queryParamName,
+        queryParamValue
+    ) {
+        if (queryParamValue.trim().length === 0) {
+            url.searchParams.delete(queryParamName);
+            return;
+        }
+
+        url.searchParams.set(
+            queryParamName,
+            queryParamValue
+        );
+    }
+
+    function addConfigSearchToUrl(url) {
+        setOptionalQueryParam(
+            url,
+            configKeySearchQueryParam,
+            document.querySelector(
+                "#config-key-search"
+            ).value
+        );
+
+        setOptionalQueryParam(
+            url,
+            configValueSearchQueryParam,
+            document.querySelector(
+                "#config-value-search"
+            ).value
+        );
+    }
+
+    function addConfigExplorerControlsToUrl(url) {
+        const checkboxQueryParams = [
+            [
+                "#show-referenceConf",
+                "showReferenceConf"
+            ],
+            [
+                "#show-deploymentConf",
+                "show-deploymentConf"
+            ],
+            [
+                "#show-evictions",
+                "show-evictions"
+            ],
+            [
+                "#word-wrap",
+                "word-wrap"
+            ],
+            [
+                "#show-warnings",
+                "showWarnings"
+            ],
+            [
+                "#show-differences-only",
+                "show-differences-only"
+            ]
+        ];
+
+        checkboxQueryParams.forEach(
+            ([selector, queryParamName]) => {
+                const checkbox =
+                    document.querySelector(selector);
+
+                url.searchParams.set(
+                    queryParamName,
+                    checkbox.checked
+                );
+            }
+        );
+
+        document
+            .querySelectorAll(".column-filter")
+            .forEach(checkbox => {
+                url.searchParams.set(
+                    checkbox.id,
+                    checkbox.checked
+                );
+            });
+
+        addConfigSearchToUrl(url);
+    }
+
+    function updateConfigSearchUrl() {
+        const url = new URL(window.location);
+
+        addConfigSearchToUrl(url);
+
+        window.history.replaceState(
+            {},
+            document.title,
+            url
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -70,9 +172,10 @@ ready(function () {
     // -------------------------------------------------------------------------
 
     function filterRowsByDifference() {
-        const differencesOnly = document.querySelector(
-            "#show-differences-only"
-        ).checked;
+        const differencesOnly =
+            document.querySelector(
+                "#show-differences-only"
+            ).checked;
 
         document
             .querySelectorAll(".config-data-row")
@@ -219,7 +322,7 @@ ready(function () {
             )
         );
 
-        // All partial terms must occur in the same environment value.
+        // All partial terms must occur in one environment value.
         return visibleValueCells.some(cell =>
             textMatchesSearch(
                 cell.dataset.effectiveValue,
@@ -267,6 +370,10 @@ ready(function () {
             "#config-search-message"
         ).textContent = "";
 
+        document.querySelector(
+            "#config-copy-message"
+        ).textContent = "";
+
         document
             .querySelectorAll(".config-data-row")
             .forEach(row => {
@@ -274,12 +381,17 @@ ready(function () {
                     "search-hidden"
                 );
             });
+
+        updateConfigSearchUrl();
     }
 
     function applyConfigSearch(
         hideAllOnNoMatch = false
     ) {
-        const searches = readConfigSearchInputs();
+        updateConfigSearchUrl();
+
+        const searches =
+            readConfigSearchInputs();
 
         if (
             !searches.hasKeySearch &&
@@ -303,7 +415,7 @@ ready(function () {
         if (matchingRows.length === 0) {
             /*
              * A failed manual search preserves the current results.
-             * When visible columns change, stale results that no longer
+             * When visible columns change, stale results which no longer
              * match should be hidden.
              */
             if (hideAllOnNoMatch) {
@@ -324,11 +436,10 @@ ready(function () {
             return;
         }
 
-        const matchingRowSet = new Set(
-            matchingRows
-        );
+        const matchingRowSet =
+            new Set(matchingRows);
 
-        // Filtering only changes visibility; it preserves the table order.
+        // Filtering changes visibility without changing table order.
         rows.forEach(row => {
             row.classList.toggle(
                 "search-hidden",
@@ -339,6 +450,68 @@ ready(function () {
         document.querySelector(
             "#config-search-message"
         ).textContent = "";
+    }
+
+    function restoreConfigSearchFromQueryParams() {
+        const keySearch = onloadParams.get(
+            configKeySearchQueryParam
+        );
+
+        const valueSearch = onloadParams.get(
+            configValueSearchQueryParam
+        );
+
+        if (keySearch !== null) {
+            document.querySelector(
+                "#config-key-search"
+            ).value = keySearch;
+        }
+
+        if (valueSearch !== null) {
+            document.querySelector(
+                "#config-value-search"
+            ).value = valueSearch;
+        }
+
+        const searches =
+            readConfigSearchInputs();
+
+        if (
+            searches.hasKeySearch ||
+            searches.hasValueSearch
+        ) {
+            applyConfigSearch();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Copy Config Explorer URL
+    // -------------------------------------------------------------------------
+
+    async function copyConfigExplorerUrl() {
+        const url = new URL(window.location);
+
+        /*
+         * Read the current controls directly instead of relying on the
+         * address bar to already contain every current setting.
+         */
+        addConfigExplorerControlsToUrl(url);
+
+        const copyMessage =
+            document.querySelector(
+                "#config-copy-message"
+            );
+
+        try {
+            await navigator.clipboard.writeText(
+                url.toString()
+            );
+
+            copyMessage.textContent = "URL copied";
+        } catch (error) {
+            copyMessage.textContent =
+                "Unable to copy URL";
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -416,8 +589,13 @@ ready(function () {
     document.body.addEventListener(
         "click",
         () => {
-            body.classList.remove("sidebar-open");
-            body.classList.remove("help-open");
+            body.classList.remove(
+                "sidebar-open"
+            );
+
+            body.classList.remove(
+                "help-open"
+            );
         }
     );
 
@@ -425,53 +603,54 @@ ready(function () {
     // Environment column visibility
     // -------------------------------------------------------------------------
 
-    Array.from(
-        document.querySelectorAll(".column-filter")
-    ).forEach(input => {
-        input.addEventListener(
-            "change",
-            event => {
-                addQueryParam(
-                    input.id,
-                    event.target.checked
-                );
-
-                const columnClass = input.id.replace(
-                    "show-",
-                    "column-"
-                );
-
-                Array.from(
-                    document.getElementsByClassName(
-                        columnClass
-                    )
-                ).forEach(item => {
-                    item.classList.toggle(
-                        "hidden",
-                        !event.target.checked
+    document
+        .querySelectorAll(".column-filter")
+        .forEach(input => {
+            input.addEventListener(
+                "change",
+                event => {
+                    addQueryParam(
+                        input.id,
+                        event.target.checked
                     );
-                });
 
-                /*
-                 * Difference filtering and value searching both depend
-                 * on which environment columns are currently visible.
-                 */
-                filterRowsByDifference();
+                    const columnClass =
+                        input.id.replace(
+                            "show-",
+                            "column-"
+                        );
 
-                const searches =
-                    readConfigSearchInputs();
+                    Array.from(
+                        document.getElementsByClassName(
+                            columnClass
+                        )
+                    ).forEach(item => {
+                        item.classList.toggle(
+                            "hidden",
+                            !event.target.checked
+                        );
+                    });
 
-                if (searches.hasValueSearch) {
-                    applyConfigSearch(true);
+                    /*
+                     * Difference filtering and value searching both depend
+                     * on the currently visible environment columns.
+                     */
+                    filterRowsByDifference();
+
+                    const searches =
+                        readConfigSearchInputs();
+
+                    if (searches.hasValueSearch) {
+                        applyConfigSearch(true);
+                    }
                 }
-            }
-        );
+            );
 
-        setCheckboxWithQueryParam(
-            input,
-            input.id
-        );
-    });
+            setCheckboxWithQueryParam(
+                input,
+                input.id
+            );
+        });
 
     // -------------------------------------------------------------------------
     // Difference filter control
@@ -519,6 +698,11 @@ ready(function () {
             }
         );
 
+    /*
+     * showReferenceConf is initially handled server-side because changing it
+     * affects the content rendered by the controller.
+     */
+
     const deploymentConfInput =
         document.querySelector(
             "#show-deploymentConf"
@@ -556,15 +740,13 @@ ready(function () {
                 event.target.checked
             );
 
-            Array.from(
-                document.querySelectorAll(
-                    ".strikethrough"
-                )
-            ).forEach(item => {
-                item.classList.toggle(
-                    "hide-evictions"
-                );
-            });
+            document
+                .querySelectorAll(".strikethrough")
+                .forEach(item => {
+                    item.classList.toggle(
+                        "hide-evictions"
+                    );
+                });
         }
     );
 
@@ -593,10 +775,6 @@ ready(function () {
         "word-wrap"
     );
 
-    /*
-     * show-warnings and show-referenceConf are initially handled
-     * server-side, so their initial state is not reapplied here.
-     */
     document
         .querySelector("#show-warnings")
         .addEventListener(
@@ -613,8 +791,13 @@ ready(function () {
             }
         );
 
+    /*
+     * showWarnings is initially handled server-side through the rendered
+     * body class, so it is not reapplied with setCheckboxWithQueryParam.
+     */
+
     // -------------------------------------------------------------------------
-    // Search event handlers
+    // Search and Copy URL event handlers
     // -------------------------------------------------------------------------
 
     document
@@ -649,6 +832,21 @@ ready(function () {
             clearConfigSearch
         );
 
+    document
+        .querySelector(
+            "#copy-config-explorer-url"
+        )
+        .addEventListener(
+            "click",
+            copyConfigExplorerUrl
+        );
+
+    /*
+     * Column and checkbox state has been restored above. Restore the search
+     * afterwards because value searches depend on visible environments.
+     */
+    restoreConfigSearchFromQueryParams();
+
     // -------------------------------------------------------------------------
     // Bootstrap popovers
     // -------------------------------------------------------------------------
@@ -676,8 +874,8 @@ ready(function () {
         }
 
         /*
-         * Decode config keys because they may contain characters such
-         * as the quotation marks in logger."uk.hmrc".
+         * Decode config keys because they may contain characters such as
+         * the quotation marks in logger."uk.hmrc".
          */
         const rowId = decodeURI(
             window.location.hash.replace(
@@ -686,19 +884,16 @@ ready(function () {
             )
         );
 
-        const row = document.getElementById(
-            rowId
-        );
+        const row =
+            document.getElementById(rowId);
 
-        Array.from(
-            document.getElementsByClassName(
-                "highlight-amber"
-            )
-        ).forEach(element => {
-            element.classList.remove(
-                "highlight-amber"
-            );
-        });
+        document
+            .querySelectorAll(".highlight-amber")
+            .forEach(element => {
+                element.classList.remove(
+                    "highlight-amber"
+                );
+            });
 
         if (row) {
             row.scrollIntoView({
