@@ -826,13 +826,6 @@ ready(function () {
         );
 
     document
-        .querySelector("#clear-config-search")
-        .addEventListener(
-            "click",
-            clearConfigSearch
-        );
-
-    document
         .querySelector(
             "#copy-config-explorer-url"
         )

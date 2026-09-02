@@ -54,7 +54,7 @@
     </head>
     <body class="sidebar-open @if(!showReferenceConf){hide-refconf-only} word-wrap @if(showWarnings){show-warnings}">
         <header class="opaque">
-            <h1 class="capitalize" id="service-header">Config: @serviceName.asString</h1>
+            <h1 id="service-header">@serviceName.asString.toLowerCase</h1>
             <i class="glyphicon glyphicon-question-sign help-icon"></i>
             <i class="glyphicon glyphicon-menu-hamburger menu-icon"></i>
         </header>
@@ -288,17 +288,21 @@
                     for example <code>'run.mode'</code>.
                 </div>
 
-                <button type="button" id="apply-config-search">
-                    Search
-                </button>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button
+                        type="button"
+                        id="apply-config-search"
+                        class="btn btn-primary btn-sm">
+                        Search
+                    </button>
 
-                <button type="button" id="clear-config-search">
-                    Clear
-                </button>
-
-                <button type="button" id="copy-config-explorer-url">
-                    Copy URL
-                </button>
+                    <button
+                        type="button"
+                        id="copy-config-explorer-url"
+                        class="btn btn-outline-config-explorer btn-sm">
+                        Copy URL
+                    </button>
+                </div>
 
                 <div
                     id="config-copy-message"

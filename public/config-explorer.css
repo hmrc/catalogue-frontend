@@ -402,6 +402,21 @@ aside ul label {
     display: none;
 }
 
+.btn-outline-config-explorer {
+  --bs-btn-color: #008770;
+  --bs-btn-border-color: #008770;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #008770;
+  --bs-btn-hover-border-color: #008770;
+  --bs-btn-focus-shadow-rgb: 0, 135, 112;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #006b59;
+  --bs-btn-active-border-color: #006b59;
+  --bs-btn-disabled-color: #008770;
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: #008770;
+}
+
 .config-search-message {
     color: #d4351c;
     font-weight: bold;
