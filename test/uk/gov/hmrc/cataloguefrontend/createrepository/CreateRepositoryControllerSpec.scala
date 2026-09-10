@@ -161,7 +161,7 @@ class CreateRepositoryControllerSpec
         .thenReturn(Future.successful(Left("Some error")))
 
       val fakeRequest: FakeRequest[AnyContent] = FakeRequest(POST, "/create-repo/2")
-        .withFormUrlEncodedBody("teamName" -> "TestTeam", "repositoryName" -> "repo-test", "makePrivate" -> "false", "testType" -> "UI Journey Test")
+        .withFormUrlEncodedBody("teamName" -> "TestTeam", "repositoryName" -> "repo-ui-tests", "makePrivate" -> "false", "testType" -> "UI Journey Test")
         .withSession(SessionKeys.authToken -> "Token token")
 
       val result: Future[Result] =

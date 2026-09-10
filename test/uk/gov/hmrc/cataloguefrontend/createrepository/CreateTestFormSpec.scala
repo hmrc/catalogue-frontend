@@ -22,7 +22,7 @@ import uk.gov.hmrc.cataloguefrontend.test.UnitSpec
 class CreateTestFormSpec extends UnitSpec {
 
   "repoNameTestConstraint" when {
-    "the repo name should end in 'test' or 'tests'" should {
+    "the repo name should end in '-ui-tests', '-api-tests', '-contract-tests', or '-performance-tests'" should {
       "return false" in {
         CreateTest.repoNameTestConstraint(
           CreateTest(
@@ -30,6 +30,15 @@ class CreateTestFormSpec extends UnitSpec {
             makePrivate    = false,
             teamName       = TeamName("test"),
             testType       = TestType.UITest.asString
+          )
+        ) shouldBe false
+
+        CreateTest.repoNameTestConstraint(
+          CreateTest(
+            repositoryName = "test-service-tests",
+            makePrivate = false,
+            teamName = TeamName("test"),
+            testType = TestType.UITest.asString
           )
         ) shouldBe false
       }
@@ -45,10 +54,28 @@ class CreateTestFormSpec extends UnitSpec {
 
         CreateTest.repoNameTestConstraint(
           CreateTest(
-            repositoryName = "test-service-ui-test",
+            repositoryName = "test-service-api-tests",
             makePrivate = false,
             teamName = TeamName("test"),
-            testType = TestType.UITest.asString
+            testType = TestType.APITest.asString
+          )
+        ) shouldBe true
+
+        CreateTest.repoNameTestConstraint(
+          CreateTest(
+            repositoryName = "test-service-contract-tests",
+            makePrivate = false,
+            teamName = TeamName("test"),
+            testType = TestType.ContractTest.asString
+          )
+        ) shouldBe true
+
+        CreateTest.repoNameTestConstraint(
+          CreateTest(
+            repositoryName = "test-service-performance-tests",
+            makePrivate = false,
+            teamName = TeamName("test"),
+            testType = TestType.PerformanceTest.asString
           )
         ) shouldBe true
       }

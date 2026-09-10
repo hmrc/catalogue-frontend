@@ -94,10 +94,14 @@ object CreateTest:
     )(r => Tuple.fromProductTyped(r))
 
   private[createrepository] val repoNameTestConstraint: CreateTest => Boolean =
-    crf => crf.repositoryName.toLowerCase.endsWith("-tests") || crf.repositoryName.toLowerCase.endsWith("-test")
+    crf =>
+      crf.repositoryName.toLowerCase.endsWith("-ui-tests"         ) ||
+      crf.repositoryName.toLowerCase.endsWith("-api-tests"        ) ||
+      crf.repositoryName.toLowerCase.endsWith("-contract-tests"   ) ||
+      crf.repositoryName.toLowerCase.endsWith("-performance-tests")
 
   private val testTypeAndNameConstraints = Seq(
-    mkConstraint("constraints.conflictingFields1")(constraint = repoNameTestConstraint, error = "Repository name can only end in '-test' or '-tests'"),
+    mkConstraint("constraints.conflictingFields1")(constraint = repoNameTestConstraint, error = "Repository name can only end in '-ui-tests', '-api-tests', '-contract-tests' or '-performance-tests'"),
   )
 
   val form: Form[CreateTest] =
