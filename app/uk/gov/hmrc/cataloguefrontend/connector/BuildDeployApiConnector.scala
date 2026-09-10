@@ -31,7 +31,7 @@ import uk.gov.hmrc.cataloguefrontend.util.{FromString, FromStringEnum, Parser}
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps, UpstreamErrorResponse}
-
+import uk.gov.hmrc.cataloguefrontend.createrepository.{TestType as TT}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -186,7 +186,7 @@ class BuildDeployApiConnector @Inject() (
         repositoryName = payload.repositoryName,
         teamName       = payload.teamName,
         makePrivate    = payload.makePrivate,
-        repositoryType = payload.testType,
+        repositoryType = if payload.testType == TT.ContractTest.asString then TT.APITest.asString else payload.testType
       ))
 
     logger.info(s"Calling the B&D Create Test Repository API with the following payload: $body")

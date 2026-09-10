@@ -28,4 +28,5 @@ enum TestType(
   derives Ordering, FormFormat:
   case UITest          extends TestType("UI Journey Test" )
   case APITest         extends TestType("API Test"        )
+  case ContractTest    extends TestType("Contract Test"   )
   case PerformanceTest extends TestType("Performance Test")
