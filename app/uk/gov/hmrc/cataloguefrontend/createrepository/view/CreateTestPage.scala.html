@@ -57,7 +57,13 @@
                             <li>lowercase only</li>
                             <li>avoid uncommon initialisms or acronyms</li>
                             <li>prefix the test repository with the name of the relevant service</li>
-                            <li>suffix test repository with the type of tests it will include, such as: -ui-tests, -api-tests, -contract-tests, -performance-tests</li>
+                            <li>
+                                suffix the test repository with the type of tests it will include, which must be one of:<br>
+                                <span class="border rounded px-1">-ui-tests</span>,
+                                <span class="border rounded px-1">-api-tests</span>,
+                                <span class="border rounded px-1">-contract-tests</span>,
+                                <span class="border rounded px-1">-performance-tests</span>
+                            </li>
                         </ul>
                         <input class="form-control" type="text" id="repoNameInput" name="repositoryName" value="@form.data.getOrElse("repositoryName", "")">
                     </div>
