@@ -193,9 +193,6 @@
             </div>
           </div>
 
-          <div class="mb-2">
-            <button id="selectAllButton" class="btn btn-success btn-sm">Select All</button>
-          </div>
         </div>
       </div>
 
@@ -234,7 +231,6 @@
   <script @CSPNonce.attr>
 
     document.addEventListener('DOMContentLoaded', function () {
-      const selectAllButton = document.getElementById('selectAllButton');
       const groupCheckboxes = document.querySelectorAll('.toolingAccessCheckbox');
       const googleAppsAlert = document.getElementById('googleAppsAlert');
       const organisationInput = document.getElementById('organisationInput');
@@ -258,8 +254,6 @@
         disableAndUntick(devToolsCheckbox, selectedOrganisation === 'Other');
         disableAndUntick(googleAppsCheckbox, selectedOrganisation === 'Other', googleAppsAlert);
         disableAndUntick(bitwardenCheckbox, selectedOrganisation === 'VOA' || selectedOrganisation === 'Other');
-
-        updateButtonText();
       }
 
       function toggleAlert(checkboxId, alertId) {
@@ -271,35 +265,8 @@
         });
       }
 
-      // Update button text based on checkbox states
-      function updateButtonText() {
-        const allChecked = Array.from(groupCheckboxes).every(c => c.checked || c.disabled);
-        selectAllButton.innerHTML = allChecked ? 'Deselect All' : 'Select All';
-      }
-
-      selectAllButton.addEventListener('click', function (event) {
-        event.preventDefault();
-
-        const isChecked = Array.from(groupCheckboxes).some(c => !c.checked && !c.disabled);
-
-        groupCheckboxes.forEach(function (checkbox) {
-          if (!checkbox.disabled) checkbox.checked = isChecked;
-        });
-
-        googleAppsAlert.classList.toggle('d-none', !googleAppsCheckbox.checked);
-        updateButtonText();
-      });
-
-      selectAllButton.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-        }
-      });
-
       groupCheckboxes.forEach(function (checkbox) {
         checkbox.addEventListener('click', function () {
-          // Update the button text if any of the group checkboxes are unchecked
-          updateButtonText();
         });
       });
 
