@@ -171,11 +171,6 @@
             searchBox.setSelectionRange(length, length);
         }
 
-        // Initialize Bootstrap tooltips for Consul icons
-        [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')).forEach(function (tooltipTriggerEl) {
-            new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-
         // Initialize Bootstrap popovers for version information
         [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]')).forEach(function (popoverTriggerEl) {
             new bootstrap.Popover(popoverTriggerEl);

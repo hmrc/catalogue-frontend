@@ -30,10 +30,9 @@ case class WhatsRunningWhere(
 )
 
 case class WhatsRunningWhereVersion(
-  environment   : Environment,
-  version       : Version,
-  config        : List[WhatsRunningWhereConfig],
-  isConsul      : Boolean = false
+  environment: Environment,
+  version    : Version,
+  config     : List[WhatsRunningWhereConfig]
 )
 
 case class WhatsRunningWhereConfig(
@@ -64,8 +63,7 @@ object JsonCodecs:
     ( (__ \ "environment"  ).read[Environment]
     ~ (__ \ "versionNumber").read[Version](Version.format)
     ~ (__ \ "config"       ).read[List[WhatsRunningWhereConfig]]
-    ~ (__ \ "isConsul"     ).readWithDefault[Boolean](false)
-    )((env, version, config, isConsul) => WhatsRunningWhereVersion(env, version, config, isConsul))
+    )(WhatsRunningWhereVersion.apply)
 
   val whatsRunningWhereReads: Reads[WhatsRunningWhere] =
     given Reads[WhatsRunningWhereVersion] = whatsRunningWhereVersionReads

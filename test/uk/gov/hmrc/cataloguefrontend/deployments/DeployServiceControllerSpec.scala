@@ -527,15 +527,15 @@ class DeployServiceControllerSpec
 
   private val someReleasesForService = WhatsRunningWhere(
     serviceName = ServiceName("some-service")
-  , versions    = WhatsRunningWhereVersion(Environment.QA        , Version("0.2.0"), Nil, false) ::
-                  WhatsRunningWhereVersion(Environment.Production, Version("0.1.0"), Nil, false) ::
+  , versions    = WhatsRunningWhereVersion(Environment.QA        , Version("0.2.0"), Nil) ::
+                  WhatsRunningWhereVersion(Environment.Production, Version("0.1.0"), Nil) ::
                   Nil
   )
 
   private val mappedServiceReleasesForService =
     someReleasesForService.copy(
       serviceName = ServiceName("mapped-service"),
-      versions    = WhatsRunningWhereVersion(Environment.QA, Version("1.2.2"), Nil, false) :: Nil
+      versions    = WhatsRunningWhereVersion(Environment.QA, Version("1.2.2"), Nil) :: Nil
     )
 
   private val someCommissioningStatus = List(Check.EnvCheck(
