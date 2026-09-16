@@ -75,13 +75,13 @@ class ReleasesConnectorSpec
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, Version("1.57.0"), Nil, false)
+            WhatsRunningWhereVersion(Environment.Integration, Version("1.57.0"), Nil)
           )
         ),
         WhatsRunningWhere(
           ServiceName("api-documentation"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, Version("0.44.0"), Nil, false)
+            WhatsRunningWhereVersion(Environment.Integration, Version("0.44.0"), Nil)
           )
         )
       )
@@ -119,7 +119,7 @@ class ReleasesConnectorSpec
         WhatsRunningWhere(
           ServiceName("api-definition"),
           List(
-            WhatsRunningWhereVersion(Environment.Integration, Version("1.57.0"), Nil, false)
+            WhatsRunningWhereVersion(Environment.Integration, Version("1.57.0"), Nil)
           )
         )
       )
