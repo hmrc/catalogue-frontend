@@ -32,7 +32,8 @@ class EditUserAccessFormSpec extends AnyWordSpec with Matchers:
       confluence = false,
       googleApps = false,
       environments = false,
-      bitwarden = false
+      bitwarden = false,
+      pagerduty = false
     )
 
   "EditUserConstraints" should:

@@ -62,7 +62,7 @@ class EditUserControllerSpec
         .thenReturn(Future.successful(Set(Resource(ResourceType("test-service"), ResourceLocation("teams/TestTeam")))))
 
       when(mockUMConnector.getUserAccess(any[UserName])(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = true)))
+        .thenReturn(Future.successful(UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = true, pagerduty = true)))
 
       val result = controller
         .editUserLanding(UserName("joe.bloggs"), Some("MDTP"))(
@@ -83,7 +83,7 @@ class EditUserControllerSpec
         .thenReturn(Future.unit)
 
       when(mockUMConnector.getUserAccess(any[UserName])(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = true)))
+        .thenReturn(Future.successful(UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = true, pagerduty = true)))
 
       when(mockUMConnector.getUser(any[UserName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(user)))
@@ -104,6 +104,7 @@ class EditUserControllerSpec
               "environments" -> editUserAccess.environments.toString,
               "googleApps"   -> editUserAccess.googleApps.toString,
               "bitwarden"    -> editUserAccess.bitwarden.toString,
+              "pagerduty"    -> editUserAccess.bitwarden.toString
             )
         )
 
@@ -139,7 +140,8 @@ class EditUserControllerSpec
         confluence       = true,
         googleApps       = true,
         environments     = true,
-        bitwarden        = true
+        bitwarden        = true,
+        pagerduty        = true
       )
 
     val user: User =

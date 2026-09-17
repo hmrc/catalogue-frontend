@@ -204,7 +204,8 @@ class UserManagementConnectorSpec
                   "jira": false,
                   "confluence": false,
                   "googleApps": true,
-                  "devTools": true
+                  "devTools": true,
+                  "pagerduty": true
                 }""".stripMargin)
           )
       )
@@ -215,7 +216,8 @@ class UserManagementConnectorSpec
           jira             = false,
           confluence       = false,
           googleApps       = true,
-          devTools         = true
+          devTools         = true,
+          pagerduty        = true
         )
     }
 
@@ -245,7 +247,8 @@ class UserManagementConnectorSpec
         confluence = true,
         googleApps = true,
         environments = true,
-        bitwarden = true
+        bitwarden = true,
+        pagerduty = true
       )
 
     val actualEditUserAccessRequest =
@@ -258,7 +261,8 @@ class UserManagementConnectorSpec
         |    "confluence": true,
         |    "googleApps": true,
         |    "environments": true,
-        |    "bitwarden": true
+        |    "bitwarden": true,
+        |    "pagerduty": true
         |  },
         |  "isExistingLDAPUser": true
         |}
@@ -386,7 +390,8 @@ class UserManagementConnectorSpec
         confluence       = true,
         googleApps       = true,
         environments     = true,
-        bitwarden        = true
+        bitwarden        = true,
+        pagerduty        = true
       )
 
     val actualUserRequest =
@@ -407,6 +412,7 @@ class UserManagementConnectorSpec
         |    "googleApps": true,
         |    "environments": true,
         |    "bitwarden": true,
+        |    "pagerduty": true,
         |    "ldap": true
         |  },
         |  "userDisplayName": "Joe Bloggs",
@@ -432,6 +438,7 @@ class UserManagementConnectorSpec
         |    "googleApps": true,
         |    "environments": true,
         |    "bitwarden": true,
+        |    "pagerduty": true,
         |    "ldap": true
         |  },
         |  "userDisplayName": "service_joe bloggs",

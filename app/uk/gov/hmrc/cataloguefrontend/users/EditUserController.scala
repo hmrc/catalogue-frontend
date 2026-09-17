@@ -100,8 +100,9 @@ class EditUserController @Inject()(
                              confluence   = form.confluence && !existingTooling.confluence,
                              googleApps   = form.googleApps && !existingTooling.googleApps,
                              environments = form.environments && !existingTooling.devTools,
-                             bitwarden    = form.bitwarden
-                           )
+                             bitwarden    = form.bitwarden,
+                             pagerduty    = form.pagerduty && !existingTooling.pagerduty
+        )
         _               <- EitherT.liftF(auth.authorised(Some(editUserPermission(teams))))
         res             <- EitherT.right[Result](userManagementConnector.editUserAccess(changesToSubmit))
         _               =  logger.info(s"user management result: $res:")
@@ -121,7 +122,8 @@ object EditUserAccessForm:
         "confluence"   -> Forms.boolean,
         "googleApps"   -> Forms.boolean,
         "environments" -> Forms.boolean,
-        "bitwarden"    -> Forms.boolean
+        "bitwarden"    -> Forms.boolean,
+        "pagerduty"    -> Forms.boolean
       )(EditUserAccessRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying(EditUserConstraints.accessHasChanged)
 
@@ -139,7 +141,8 @@ object EditUserConstraints:
         access.confluence,
         access.googleApps,
         access.environments,
-        access.bitwarden
+        access.bitwarden,
+        access.pagerduty
       ).contains(true)
 
   val accessHasChanged: Constraint[EditUserAccessRequest] =

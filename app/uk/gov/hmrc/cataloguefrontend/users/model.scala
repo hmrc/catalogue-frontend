@@ -151,12 +151,13 @@ case class UserAccess(
   jira: Boolean,
   confluence: Boolean,
   devTools: Boolean,
-  googleApps: Boolean
+  googleApps: Boolean,
+  pagerduty: Boolean,
 )
 
 object UserAccess:
   def empty: UserAccess =
-    UserAccess(vpn = false, jira = false, confluence = false, devTools = false, googleApps = false)
+    UserAccess(vpn = false, jira = false, confluence = false, devTools = false, googleApps = false, pagerduty = false)
   
   val reads: Reads[UserAccess] =
     ( (__ \ "vpn"       ).read[Boolean]
@@ -164,6 +165,7 @@ object UserAccess:
     ~ (__ \ "confluence").read[Boolean]
     ~ (__ \ "devTools"  ).read[Boolean]
     ~ (__ \ "googleApps").read[Boolean]
+    ~ (__ \ "pagerduty" ).read[Boolean]
     )(UserAccess.apply _)
 
   val writes: Writes[UserAccess] =
@@ -172,7 +174,8 @@ object UserAccess:
       "jira"       -> userAccess.jira,
       "confluence" -> userAccess.confluence,
       "devTools"   -> userAccess.devTools,
-      "googleApps" -> userAccess.googleApps
+      "googleApps" -> userAccess.googleApps,
+      "pagerduty"  -> userAccess.pagerduty
     )
 
   val format: Format[UserAccess] =
@@ -199,7 +202,8 @@ case class CreateUserRequest(
   confluence        : Boolean,
   googleApps        : Boolean,
   environments      : Boolean,
-  bitwarden         : Boolean
+  bitwarden         : Boolean,
+  pagerduty         : Boolean
 )
 
 
@@ -221,6 +225,7 @@ object CreateUserRequest:
       ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
       ~ (__ \ "access" \ "environments" ).write[Boolean]
       ~ (__ \ "access" \ "bitwarden"    ).write[Boolean]
+      ~ (__ \ "access" \ "pagerduty"    ).write[Boolean]
       )(r => Tuple.fromProductTyped(r))
     ): (req, json) =>
       val givenName   = if req.isServiceAccount then s"service_${req.givenName}"     else req.givenName
@@ -240,7 +245,8 @@ case class EditUserAccessRequest(
   confluence        : Boolean,
   googleApps        : Boolean,
   environments      : Boolean,
-  bitwarden         : Boolean
+  bitwarden         : Boolean,
+  pagerduty         : Boolean
 )
 
 object EditUserAccessRequest:
@@ -254,6 +260,7 @@ object EditUserAccessRequest:
       ~ (__ \ "access" \ "googleApps"   ).write[Boolean]
       ~ (__ \ "access" \ "environments" ).write[Boolean]
       ~ (__ \ "access" \ "bitwarden"    ).write[Boolean]
+      ~ (__ \ "access" \ "pagerduty"    ).write[Boolean]
       )(r => Tuple.fromProductTyped(r))
     ): (req, json) =>
       json ++ Json.obj(

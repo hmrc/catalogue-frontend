@@ -373,6 +373,12 @@
                                       </abbr>
                                       <strong>Bitwarden</strong>
                                   </li>
+                                  <li>
+                                      <span class="glyphicon glyphicon-@{
+                                          if(userAccess.pagerduty) "ok text-success" else "minus text-secondary"
+                                      } me-2"></span>
+                                      <strong>PagerDuty</strong>
+                                  </li>
                               </ul>
                           </div>
                           @if(canEditUsers || isCurrentUser || canManageUsers) {

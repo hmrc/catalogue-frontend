@@ -226,7 +226,8 @@ class CreateUserControllerSpec
         confluence       = true,
         googleApps       = true,
         environments     = true,
-        bitwarden        = true
+        bitwarden        = true,
+        pagerduty        = true
       )
   }
 }

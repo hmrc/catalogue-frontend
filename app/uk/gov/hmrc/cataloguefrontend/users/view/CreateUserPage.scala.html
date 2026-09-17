@@ -193,12 +193,21 @@
             </div>
           </div>
 
+          <div class="mb-2">
+              <div class="form-check form-check-inline">
+                  <input class="form-check-input toolingAccessCheckbox" type="checkbox" id="pagerdutyCheckbox" name="pagerduty" value=true @form.data.get("pagerduty").map{ _ => checked }>
+                  <label class="form-check-label" for="pagerduty"><strong>PagerDuty</strong></label>
+              </div>
+          </div>
+
+          <div id="pagerdutyAlert" class="border-dark-subtle border-start ms-4 mb-2 d-none" role="alert">
+              <div class="ms-3">
+                  Note that this is for a <strong>stakeholder</strong> licence. If a <strong>full member</strong> licence is required, please see (TODO link here)
+              </div>
+          </div>
+
         </div>
       </div>
-
-
-
-
 
       <div>
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
@@ -237,6 +246,8 @@
       const devToolsCheckbox = document.getElementById('environmentsCheckbox');
       const googleAppsCheckbox = document.getElementById('googleAppsCheckbox');
       const bitwardenCheckbox= document.getElementById('bitwardenCheckbox');
+      const pagerdutyCheckbox = document.getElementById('pagerdutyCheckbox');
+      const pagerdutyAlert = document.getElementById('pagerdutyAlert');
 
       function disableAndUntick(checkbox, shouldDisable, alert = null) {
         if (shouldDisable) {
@@ -254,6 +265,7 @@
         disableAndUntick(devToolsCheckbox, selectedOrganisation === 'Other');
         disableAndUntick(googleAppsCheckbox, selectedOrganisation === 'Other', googleAppsAlert);
         disableAndUntick(bitwardenCheckbox, selectedOrganisation === 'VOA' || selectedOrganisation === 'Other');
+        disableAndUntick(pagerdutyCheckbox, selectedOrganisation === 'Other', pagerdutyAlert);
       }
 
       function toggleAlert(checkboxId, alertId) {
@@ -271,6 +283,7 @@
       });
 
       toggleAlert('googleAppsCheckbox', 'googleAppsAlert');
+      toggleAlert('pagerdutyCheckbox', 'pagerdutyAlert');
       updateToolingAccessVisibility();
     });
   </script>
