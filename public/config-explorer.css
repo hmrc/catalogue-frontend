@@ -55,6 +55,26 @@ header i {
   cursor: pointer;
 }
 
+.menu-hint {
+  position: relative;
+  top: 1px;
+  z-index: 10;
+  flex-shrink: 0;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0.3em 1.25em 0.3em 0.5em;
+  color: #008770;
+  border-bottom: 3px solid #008770;
+  font-size: 0.9em;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.menu-hint .glyphicon {
+  margin: 0 0.25em;
+}
+
 a {
   color: #008770;
   text-decoration: none;
