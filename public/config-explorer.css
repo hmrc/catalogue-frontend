@@ -89,6 +89,12 @@ aside#help {
   width: 35em;
 }
 
+aside#menu {
+  width: 24em;
+  box-sizing: border-box;
+  font-size: 0.9em;
+}
+
 aside {
   transition: all 0.2s ease-in;
   transform: translate3d(100%, 0, 0);
@@ -113,6 +119,11 @@ aside ul:not(.list-unstyled) {
 aside ul li.jump-to,
 aside ul label {
   cursor: pointer;
+}
+
+.config-search .form-text {
+  font-size: 0.85em;
+  line-height: 1.25;
 }
 
 .hidden {
