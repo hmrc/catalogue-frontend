@@ -126,6 +126,7 @@ case class User(
   phoneNumber   : Option[String],
   role          : Role,
   teamNames     : Seq[TeamName],
+  tools         : UserAccess,
   isDeleted     : Boolean,
   isNonHuman    : Boolean
 )
@@ -142,6 +143,7 @@ object User:
     ~ ( __ \ "phoneNumber"   ).readNullable[String]
     ~ ( __ \ "role"          ).read[Role](Role.reads)
     ~ ( __ \ "teamNames"     ).read[Seq[TeamName]]
+    ~ ( __ \ "tools"         ).read[UserAccess](UserAccess.reads)
     ~ ( __ \ "isDeleted"     ).read[Boolean]
     ~ ( __ \ "isNonHuman"    ).read[Boolean]
     )(User.apply)

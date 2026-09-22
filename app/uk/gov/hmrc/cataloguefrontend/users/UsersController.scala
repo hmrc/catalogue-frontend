@@ -81,11 +81,6 @@ class UsersController @Inject()(
                                 case None              => (None, None)
       canManageUsers       =  manageUserR.exists(_.exists(_.resourceLocation.value.contains("teams/*")))
       currentRoles         <- if canManageUsers then userManagementConnector.getUserRoles(username) else Future.successful(UserRoles(Seq.empty[UserRole]))
-      userTooling          <- userManagementConnector.getUserAccess(username).map(Right(_)).recover:
-                                case e: UpstreamErrorResponse =>
-                                  logger.warn(s"Received a ${e.statusCode} response when getting access for user: $username. " +
-                                    s"Error: ${e.message}.")
-                                  Left("Unable to access User Management Portal to retrieve tooling. Please check again later.")
       adminGithubTeams     <- editR match
                                 case None            => Future.successful(Set.empty[TeamName])
                                 case Some(resources) =>
@@ -94,7 +89,7 @@ class UsersController @Inject()(
       userOpt match
         case Some(user) =>
           val umpProfileUrl = s"${umpConfig.userManagementProfileBaseUrl}/${user.username.asString}"
-          resultType(userInfoPage(ldapForm, googleForm, userDetailsForm, addToGithubTeamForm, userRolesForm, isAdminForUser(editR, user), canManageUsers, currentRoles, userTooling, UserRoles(UserRole.values.toSeq), user, umpProfileUrl, adminGithubTeams))
+          resultType(userInfoPage(ldapForm, googleForm, userDetailsForm, addToGithubTeamForm, userRolesForm, isAdminForUser(editR, user), canManageUsers, currentRoles, user.tools, UserRoles(UserRole.values.toSeq), user, umpProfileUrl, adminGithubTeams))
         case None =>
           NotFound(error_404_template())
 

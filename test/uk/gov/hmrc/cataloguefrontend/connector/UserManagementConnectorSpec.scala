@@ -90,6 +90,14 @@ class UserManagementConnectorSpec
                   "teamNames" : [
                        "TestTeam"
                   ],
+                  "tools" : {
+                    "vpn" : true,
+                    "jira" : true,
+                    "confluence" : true,
+                    "devTools" : true,
+                    "googleApps" : true,
+                    "pagerduty" : true
+                },
                   "isDeleted": false,
                   "isNonHuman": false
                 }
@@ -110,6 +118,7 @@ class UserManagementConnectorSpec
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
             teamNames      = Seq(TeamName("TestTeam")),
+            tools          = UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = true, pagerduty = true),
             isDeleted      = false,
             isNonHuman     = false
           )
@@ -150,6 +159,14 @@ class UserManagementConnectorSpec
                 "teamNames" : [
                     "TestTeam"
                 ],
+                "tools" : {
+                    "vpn" : true,
+                    "jira" : true,
+                    "confluence" : true,
+                    "devTools" : true,
+                    "googleApps" : false,
+                    "pagerduty" : true
+                },
                 "isDeleted": false,
                 "isNonHuman": false
               }""".stripMargin)
@@ -169,6 +186,7 @@ class UserManagementConnectorSpec
             phoneNumber    = Some("07123456789"),
             role           = Role("user"),
             teamNames      = Seq(TeamName("TestTeam")),
+            tools          = UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = false, pagerduty = true),
             isDeleted      = false,
             isNonHuman     = false
           )
@@ -187,52 +205,6 @@ class UserManagementConnectorSpec
       )
 
       connector.getUser(username).futureValue shouldBe None
-    }
-  }
-
-  "getUserAccess" should {
-    "return userAccess when found" in {
-      val username = UserName("joe.bloggs")
-
-      stubFor(
-        get(urlPathEqualTo(s"/user-management/users/${username.asString}/access"))
-          .willReturn(
-            aResponse()
-              .withBody(
-                """{
-                  "vpn": true,
-                  "jira": false,
-                  "confluence": false,
-                  "googleApps": true,
-                  "devTools": true,
-                  "pagerduty": true
-                }""".stripMargin)
-          )
-      )
-
-      connector.getUserAccess(username).futureValue shouldBe
-        UserAccess(
-          vpn              = true,
-          jira             = false,
-          confluence       = false,
-          googleApps       = true,
-          devTools         = true,
-          pagerduty        = true
-        )
-    }
-
-    "return empty UserAccess when not found" in {
-      val username = UserName("non.existent")
-
-      stubFor(
-        get(urlPathEqualTo(s"/user-management/users/${username.asString}/access"))
-          .willReturn(
-            aResponse()
-              .withStatus(404)
-          )
-      )
-
-      connector.getUserAccess(username).futureValue shouldBe UserAccess.empty
     }
   }
 

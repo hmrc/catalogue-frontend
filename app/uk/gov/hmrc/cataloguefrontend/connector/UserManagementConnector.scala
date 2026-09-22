@@ -81,13 +81,6 @@ class UserManagementConnector @Inject()(
       .get(url"$baseUrl/user-management/users/${username.asString}")
       .execute[Option[User]]
 
-  def getUserAccess(username: UserName)(using HeaderCarrier): Future[UserAccess] =
-    given Reads[UserAccess] = UserAccess.format
-    httpClientV2
-      .get(url"$baseUrl/user-management/users/${username.asString}/access")
-      .execute[Option[UserAccess]]
-      .map(_.getOrElse(UserAccess.empty))
-
   def editUserAccess(userRequest: EditUserAccessRequest)(using HeaderCarrier): Future[Unit] =
     val url: URL = url"$baseUrl/user-management/edit-user-access"
     httpClientV2
