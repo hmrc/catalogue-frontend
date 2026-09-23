@@ -108,10 +108,14 @@ class SearchIndex @Inject()(
     for
       repos           <- teamsAndRepositoriesConnector.allRepositories(None, None, None, None, None)
       teams           <- teamsAndRepositoriesConnector.allTeams()
+      umpTeams        <- userManagementConnector.getAllTeams()
       digitalServices <- teamsAndRepositoriesConnector.allDigitalServices()
-      teamPageLinks   =  teams.flatMap: t =>
-                           List(SearchTerm("team"              , t.name.asString, teamRoutes.TeamsController.team(t.name).url, 0.5f),
-                                SearchTerm("deployments (team)", t.name.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(teamName = Some(t.name)).url}"))
+      teamPageLinks   = 
+        umpTeams.flatMap: 
+          t => List(SearchTerm("team", t.teamName.asString, teamRoutes.TeamsController.team(t.teamName).url, 0.5f)) 
+        ++
+        teams.flatMap: 
+          t => List(SearchTerm("deployments (team)", t.name.asString, wrwRoutes.WhatsRunningWhereController.releases(teamName = Some(t.name)).url))
       digitalLinks    =  digitalServices.flatMap: x =>
                            List(SearchTerm("digital service"              , x.asString, teamRoutes.TeamsController.digitalService(x).url, 0.5f),
                                 SearchTerm("deployments (digital service)", x.asString, s"${wrwRoutes.WhatsRunningWhereController.releases(digitalService = Some(x)).url}"))
