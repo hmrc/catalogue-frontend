@@ -25,6 +25,7 @@ import uk.gov.hmrc.cataloguefrontend.auth.CatalogueAuthBuilders
 import uk.gov.hmrc.cataloguefrontend.connector.UserManagementConnector
 import uk.gov.hmrc.cataloguefrontend.model.{TeamName, UserName}
 import uk.gov.hmrc.cataloguefrontend.users.view.html.{EditUserAccessPage, EditUserRequestSentPage}
+import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -63,8 +64,10 @@ class EditUserController @Inject()(
       retrieval   = Retrieval.locations(resourceType = Some(ResourceType("catalogue-frontend")), action = Some(IAAction("EDIT_USER")))
     ).async: request =>
       given RequestHeader = request
-      userManagementConnector.getUserAccess(username).map: existingAccess =>
-        Ok(editUserAccessPage(EditUserAccessForm.form, username, organisation, existingAccess))
+      userManagementConnector.getUser(username.toLowerCase).map {
+        case Some(user) => Ok(editUserAccessPage(EditUserAccessForm.form, username, organisation, user.tools))
+        case None       => NotFound(error_404_template())
+      }
 
   def editUserAccess(username: UserName, organisation: Option[String]): Action[AnyContent] =
     auth.authenticatedAction(
@@ -73,8 +76,8 @@ class EditUserController @Inject()(
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       (for
-        existingTooling <- EitherT.liftF(userManagementConnector.getUserAccess(username))
         userOpt         <- EitherT.liftF[Future, Result, Option[User]](userManagementConnector.getUser(username))
+        existingTooling =  userOpt.fold(UserAccess.empty)(_.tools)
         teams           =  userOpt.fold(Seq.empty)(_.teamNames)
         form            <- EitherT.fromEither[Future]:
                              EditUserAccessForm.form.bindFromRequest()
@@ -100,8 +103,9 @@ class EditUserController @Inject()(
                              confluence   = form.confluence && !existingTooling.confluence,
                              googleApps   = form.googleApps && !existingTooling.googleApps,
                              environments = form.environments && !existingTooling.devTools,
-                             bitwarden    = form.bitwarden
-                           )
+                             bitwarden    = form.bitwarden,
+                             pagerduty    = form.pagerduty && !existingTooling.pagerduty
+        )
         _               <- EitherT.liftF(auth.authorised(Some(editUserPermission(teams))))
         res             <- EitherT.right[Result](userManagementConnector.editUserAccess(changesToSubmit))
         _               =  logger.info(s"user management result: $res:")
@@ -121,7 +125,8 @@ object EditUserAccessForm:
         "confluence"   -> Forms.boolean,
         "googleApps"   -> Forms.boolean,
         "environments" -> Forms.boolean,
-        "bitwarden"    -> Forms.boolean
+        "bitwarden"    -> Forms.boolean,
+        "pagerduty"    -> Forms.boolean
       )(EditUserAccessRequest.apply)(f => Some(Tuple.fromProductTyped(f)))
         .verifying(EditUserConstraints.accessHasChanged)
 
@@ -139,7 +144,8 @@ object EditUserConstraints:
         access.confluence,
         access.googleApps,
         access.environments,
-        access.bitwarden
+        access.bitwarden,
+        access.pagerduty
       ).contains(true)
 
   val accessHasChanged: Constraint[EditUserAccessRequest] =

@@ -61,8 +61,8 @@ class EditUserControllerSpec
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Set[Resource]]]))
         .thenReturn(Future.successful(Set(Resource(ResourceType("test-service"), ResourceLocation("teams/TestTeam")))))
 
-      when(mockUMConnector.getUserAccess(any[UserName])(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = true)))
+      when(mockUMConnector.getUser(any[UserName])(using any[HeaderCarrier]))
+        .thenReturn(Future.successful(Some(user)))
 
       val result = controller
         .editUserLanding(UserName("joe.bloggs"), Some("MDTP"))(
@@ -81,9 +81,6 @@ class EditUserControllerSpec
 
       when(authStubBehaviour.stubAuth(any[Option[Predicate.Permission]], eqTo(Retrieval.EmptyRetrieval)))
         .thenReturn(Future.unit)
-
-      when(mockUMConnector.getUserAccess(any[UserName])(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = true)))
 
       when(mockUMConnector.getUser(any[UserName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(user)))
@@ -104,6 +101,7 @@ class EditUserControllerSpec
               "environments" -> editUserAccess.environments.toString,
               "googleApps"   -> editUserAccess.googleApps.toString,
               "bitwarden"    -> editUserAccess.bitwarden.toString,
+              "pagerduty"    -> editUserAccess.bitwarden.toString
             )
         )
 
@@ -139,7 +137,8 @@ class EditUserControllerSpec
         confluence       = true,
         googleApps       = true,
         environments     = true,
-        bitwarden        = true
+        bitwarden        = true,
+        pagerduty        = true
       )
 
     val user: User =
@@ -154,6 +153,7 @@ class EditUserControllerSpec
         phoneNumber    = None,
         role           = Role("user"),
         teamNames      = Seq(TeamName("TestTeam")),
+        tools          = UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = true, pagerduty = true),
         isDeleted      = false,
         isNonHuman     = false
       )

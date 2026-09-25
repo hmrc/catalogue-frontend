@@ -61,8 +61,6 @@ class UsersControllerSpec
 
       when(mockUMConnector.getUser(any[UserName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Some(user)))
-      when(mockUMConnector.getUserAccess(any[UserName])(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(UserAccess.empty))
       when(mockTeamsAndRepos.allTeams(any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq.empty))
       when(mockUMConnector.resetLdapPassword(any[ResetLdapPassword])(using any[HeaderCarrier]))
@@ -100,9 +98,6 @@ class UsersControllerSpec
 
       when(mockUMConnector.getUserRoles(any[UserName])(using any[HeaderCarrier]))
         .thenReturn(Future.successful(UserRoles(Seq.empty)))
-
-      when(mockUMConnector.getUserAccess(any[UserName])(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(UserAccess.empty))
 
       when(mockTeamsAndRepos.allTeams(any)(using any[HeaderCarrier]))
         .thenReturn(Future.successful(Seq.empty))
@@ -156,6 +151,7 @@ class UsersControllerSpec
         phoneNumber    = None,
         role           = Role("user"),
         teamNames      = Seq(TeamName("TestTeam")),
+        tools          = UserAccess(vpn = true, jira = true, confluence = true, devTools = true, googleApps = true, pagerduty = true),
         isDeleted      = false,
         isNonHuman     = false
       )
