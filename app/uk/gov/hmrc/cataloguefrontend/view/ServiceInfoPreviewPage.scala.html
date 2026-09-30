@@ -1,0 +1,78 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilityView
+@import uk.gov.hmrc.cataloguefrontend.{EnableBranchProtection, EnvData, MarkForDecommissioning}
+@import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
+@import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
+@import uk.gov.hmrc.cataloguefrontend.cost.{CostEstimateConfig, ServiceCostEstimate, Zone}
+@import uk.gov.hmrc.cataloguefrontend.connector.RouteConfigurationConnector.Route
+@import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.Lifecycle
+@import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
+@import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvision
+
+@import java.time.Instant
+
+@this(currentPage: uk.gov.hmrc.cataloguefrontend.view.html.ServiceInfoPage)
+
+@(serviceName                  : ServiceName,
+  repositoryDetails            : GitRepository,
+  jenkinsJobs                  : Seq[JenkinsJob],
+  zone                         : Option[Zone],
+  serviceCostEstimate          : ServiceCostEstimate,
+  serviceProvisions            : Seq[ServiceProvision],
+  costEstimateConfig           : CostEstimateConfig,
+  repositoryCreationDate       : Instant,
+  envDatas                     : Map[SlugInfoFlag, EnvData],
+  linkToLeakDetection          : Option[String],
+  prodRoutes                   : Seq[Route],
+  inconsistentRoutes           : Seq[Route],
+  hasBranchProtectionAuth      : EnableBranchProtection.HasAuthorisation,
+  commenterReport              : Option[PrCommenterReport],
+  serviceRelationships         : ServiceConfigsService.ServiceRelationshipsEnriched,
+  canMarkForDecommissioning    : MarkForDecommissioning.HasAuthorisation,
+  lifecycle                    : Option[Lifecycle],
+  testJobMap                   : Map[String, Seq[JenkinsJob]],
+  isGuest                      : Boolean
+)(implicit
+  vulnerabilityView: VulnerabilityView,
+  messages                     : Messages,
+  request                      : RequestHeader,
+)
+
+@* The preview starts with the current content and its preview controls.
+   The service vulnerability page story can replace this template independently. *@
+@currentPage(
+  serviceName = serviceName,
+  repositoryDetails = repositoryDetails,
+  jenkinsJobs = jenkinsJobs,
+  zone = zone,
+  serviceCostEstimate = serviceCostEstimate,
+  serviceProvisions = serviceProvisions,
+  costEstimateConfig = costEstimateConfig,
+  repositoryCreationDate = repositoryCreationDate,
+  envDatas = envDatas,
+  linkToLeakDetection = linkToLeakDetection,
+  prodRoutes = prodRoutes,
+  inconsistentRoutes = inconsistentRoutes,
+  hasBranchProtectionAuth = hasBranchProtectionAuth,
+  commenterReport = commenterReport,
+  serviceRelationships = serviceRelationships,
+  canMarkForDecommissioning = canMarkForDecommissioning,
+  lifecycle = lifecycle,
+  testJobMap = testJobMap,
+  isGuest = isGuest
+)

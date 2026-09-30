@@ -35,3 +35,6 @@ object CatalogueFrontendSwitches:
 
   def disableDeployment: FeatureSwitch =
     FeatureSwitch.forName("disable-deployments")
+
+  def vulnerabilityViewPreview: FeatureSwitch =
+    FeatureSwitch.forName("vulnerability-view-preview")

@@ -20,7 +20,8 @@ import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import org.jsoup.nodes.{Document, Element}
 import org.scalatest.BeforeAndAfter
-import play.api.libs.ws.readableAsString
+import play.api.libs.ws.{DefaultWSCookie, readableAsString, writeableOf_urlEncodedForm}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{VulnerabilityView, VulnerabilityViewTestSupport}
 import uk.gov.hmrc.cataloguefrontend.jsondata.TeamsAndRepositoriesJsonData
 import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
 import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
@@ -61,6 +62,43 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
     )
 
   "Team services page" should {
+    for (enabled, cookieValue, expectedControl) <- Seq(
+      (false, "preview", ""),
+      (true, "unknown", "Try the new vulnerability views"),
+      (true, "preview", "Return to current views")
+    ) do
+      s"select vulnerability controls with availability=$enabled and cookie=$cookieValue" in {
+        VulnerabilityViewTestSupport.withPreview(enabled) {
+          serviceEndpoint(GET, "/user-management/teams/teamA?includeNonHuman=true", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
+          serviceEndpoint(GET, "/api/v2/teams?name=teamA", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
+          serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("owningTeam" -> "teamA", "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
+          val response = wsClient.url(s"http://localhost:$port/teams/teamA")
+            .withAuthToken("Token token")
+            .withCookies(DefaultWSCookie(VulnerabilityView.cookieName, cookieValue)).get().futureValue
+          response.status shouldBe 200
+          asDocument(response.body).select("#vulnerability-view-switch").text() shouldBe expectedControl
+          if enabled then
+            val form = asDocument(response.body).select("#vulnerability-view-preference form")
+            val csrfToken = form.select("input[name=csrfToken]").attr("value")
+            csrfToken should not be empty
+            val changed = wsClient.url(s"http://localhost:$port${form.attr("action")}")
+              .withFollowRedirects(false)
+              .withCookies(response.cookies.toList*)
+              .post(Map(
+                "view" -> Seq(form.select("input[name=view]").attr("value")),
+                "returnTo" -> Seq(form.select("input[name=returnTo]").attr("value")),
+                "csrfToken" -> Seq(csrfToken)
+              )).futureValue
+            changed.status shouldBe 303
+            changed.header("Location").value shouldBe "/teams/teamA"
+            val preference = changed.cookies.find(_.name == VulnerabilityView.cookieName).value
+            if cookieValue == "preview" then preference.maxAge.value should be <= 0L
+            else preference.value shouldBe "preview"
+          import com.github.tomakehurst.wiremock.client.WireMock.*
+          wireMockServer.verify(0, getRequestedFor(urlPathMatching("/vulnerabilities/.*v2.*")))
+        }
+      }
+
     "show a list of libraries, services, prototypes and repositories" in {
       val teamName = "teamA"
 
