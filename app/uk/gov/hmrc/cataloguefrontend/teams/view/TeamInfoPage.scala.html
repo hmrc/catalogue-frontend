@@ -14,6 +14,7 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilityView
 @import uk.gov.hmrc.cataloguefrontend.{routes => appRoutes}
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob, RepoType}
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyReport, Dependency}
@@ -27,6 +28,7 @@
 @import scala.concurrent.duration.Duration
 
 @this(
+  vulnerabilityViewPreference: uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityViewPreference,
   configuration : play.api.Configuration
 , viewMessages  : ViewMessages
 )
@@ -43,6 +45,7 @@
 , canEditTeam                    : Boolean
 , canDeleteTeams                 : Boolean
 )(implicit
+  vulnerabilityView: VulnerabilityView,
   request: RequestHeader
 )
 
@@ -51,6 +54,7 @@
 }
 
 @standard_layout(teamName.asString, active = "teams") {
+  @vulnerabilityViewPreference(vulnerabilityView, Some(teamRoutes.TeamsController.team(teamName).url))
   @request.flash.get("error").map { msg =>
     <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
         @msg

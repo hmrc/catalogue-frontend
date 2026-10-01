@@ -19,7 +19,8 @@ package uk.gov.hmrc.cataloguefrontend
 import com.github.tomakehurst.wiremock.http.RequestMethod._
 import org.jsoup.Jsoup
 import play.api.libs.json.Reads
-import play.api.libs.ws.readableAsString
+import play.api.libs.ws.{DefaultWSCookie, readableAsString}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{VulnerabilityView, VulnerabilityViewTestSupport}
 import uk.gov.hmrc.cataloguefrontend.jsondata.{JsonData, TeamsAndRepositoriesJsonData}
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper._
 import uk.gov.hmrc.cataloguefrontend.test.{FakeApplicationBuilder, UnitSpec}
@@ -154,6 +155,24 @@ class ServicePageSpec extends UnitSpec with FakeApplicationBuilder {
       response.body should include(JsonData.createdAt.displayFormat)
       response.body should include(JsonData.lastActiveAt.displayFormat)
     }
+
+    for (enabled, cookieValue, expectedControl) <- Seq(
+      (false, "preview", ""),
+      (true, "unknown", "Try the new vulnerability views"),
+      (true, "preview", "Return to current views")
+    ) do
+      s"select vulnerability controls with availability=$enabled and cookie=$cookieValue" in new Setup {
+        VulnerabilityViewTestSupport.withPreview(enabled) {
+          val response = wsClient.url(s"http://localhost:$port/service/$serviceName")
+            .withAuthToken("Token token")
+            .withCookies(DefaultWSCookie(VulnerabilityView.cookieName, cookieValue)).get().futureValue
+          response.status shouldBe 200
+          Jsoup.parse(response.body).select("#vulnerability-view-switch").text() shouldBe expectedControl
+          response.cookies.find(_.name == VulnerabilityView.cookieName) shouldBe None
+          import com.github.tomakehurst.wiremock.client.WireMock.*
+          wireMockServer.verify(0, getRequestedFor(urlPathMatching("/vulnerabilities/.*v2.*")))
+        }
+      }
 
     "show shuttered environments when they are shuttered" in new Setup {
       val response = wsClient.url(s"http://localhost:$port/service/$serviceName").withAuthToken("Token token").get().futureValue

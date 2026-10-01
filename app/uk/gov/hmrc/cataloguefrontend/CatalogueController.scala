@@ -40,12 +40,12 @@ import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{LifecycleStatus, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceMetricsConnector
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereService}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{VulnerabilitiesConnector, VulnerabilityView}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.cataloguefrontend.view.html.{IndexPage, LibraryInfoPage, PrototypeInfoPage, RepositoryInfoPage, ServiceInfoPage, TestRepoInfoPage, error_404_template}
+import uk.gov.hmrc.cataloguefrontend.view.html.{IndexPage, LibraryInfoPage, PrototypeInfoPage, RepositoryInfoPage, ServiceInfoPage, ServiceInfoPreviewPage, TestRepoInfoPage, error_404_template}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -79,6 +79,7 @@ class CatalogueController @Inject() (
   telemetryLinks                     : TelemetryLinks,
   indexPage                          : IndexPage,
   serviceInfoPage                    : ServiceInfoPage,
+  serviceInfoPreviewPage             : ServiceInfoPreviewPage,
   libraryInfoPage                    : LibraryInfoPage,
   prototypeInfoPage                  : PrototypeInfoPage,
   testRepoInfoPage                   : TestRepoInfoPage,
@@ -146,6 +147,9 @@ class CatalogueController @Inject() (
   )(using
     request : RequestHeader
   ): Future[Result] =
+    given vulnerabilityView: VulnerabilityView = VulnerabilityView.select(request)
+    val renderPage = if vulnerabilityView.isPreview then serviceInfoPreviewPage.f else serviceInfoPage.f
+    // Future connector integrations must use this same selection before fetching preview data.
     for
       deployments               <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
       repositoryName            =  repositoryDetails.name
@@ -223,27 +227,27 @@ class CatalogueController @Inject() (
       lifecycle                 <- serviceCommissioningStatusConnector.getLifecycle(serviceName)
       isGuest                   =  request.session.get(AuthController.SESSION_USERNAME).exists(_.startsWith("guest-"))
     yield
-      Ok(serviceInfoPage(
-        serviceName                  = serviceName,
-        repositoryDetails            = repositoryDetails,
-        jenkinsJobs                  = jenkinsJobs,
-        zone                         = zone,
-        serviceCostEstimate          = serviceCostEstimate,
-        serviceProvisions            = serviceProvisions,
-        costEstimateConfig           = costEstimateConfig,
-        repositoryCreationDate       = repositoryDetails.createdDate,
-        envDatas                     = optLatestData.fold(envDatas)(envDatas + _),
-        linkToLeakDetection          = urlIfLeaksFound,
-        prodRoutes                   = allProdRoutes,
-        inconsistentRoutes           = inconsistentRoutes,
-        hasBranchProtectionAuth      = hasBranchProtectionAuth,
-        commenterReport              = commenterReport,
-        serviceRelationships         = serviceRelationships,
-        canMarkForDecommissioning    = canMarkForDecommissioning,
-        lifecycle                    = lifecycle,
-        testJobMap                   = testJobMap,
-        isGuest                      = isGuest
-      ))
+      Ok(renderPage(
+        serviceName,
+        repositoryDetails,
+        jenkinsJobs,
+        zone,
+        serviceCostEstimate,
+        serviceProvisions,
+        costEstimateConfig,
+        repositoryDetails.createdDate,
+        optLatestData.fold(envDatas)(envDatas + _),
+        urlIfLeaksFound,
+        allProdRoutes,
+        inconsistentRoutes,
+        hasBranchProtectionAuth,
+        commenterReport,
+        serviceRelationships,
+        canMarkForDecommissioning,
+        lifecycle,
+        testJobMap,
+        isGuest
+      )(vulnerabilityView, messagesApi.preferred(request), request))
 
   def library(name: String): Action[AnyContent] =
     Action(Redirect(routes.CatalogueController.repository(name)))

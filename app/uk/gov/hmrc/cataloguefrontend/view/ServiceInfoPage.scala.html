@@ -14,6 +14,7 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilityView
 @import uk.gov.hmrc.cataloguefrontend.{EnableBranchProtection, EnvData, MarkForDecommissioning}
 @import uk.gov.hmrc.cataloguefrontend.connector.{GitRepository, JenkinsJob}
 @import uk.gov.hmrc.cataloguefrontend.prcommenter.PrCommenterReport
@@ -27,6 +28,7 @@
 @import java.time.Instant
 
 @this(
+  vulnerabilityViewPreference: uk.gov.hmrc.cataloguefrontend.vulnerabilities.view.html.VulnerabilityViewPreference,
   dependenciesByEnvironmentPartial: partials.DependenciesByEnvironmentPartial,
   viewMessages                    : ViewMessages
 )
@@ -51,11 +53,13 @@
   testJobMap                   : Map[String, Seq[JenkinsJob]],
   isGuest                      : Boolean
 )(implicit
+  vulnerabilityView: VulnerabilityView,
   messages                     : Messages,
   request                      : RequestHeader,
 )
 
 @standard_layout(serviceName.asString, active = "repositories") {
+  @vulnerabilityViewPreference(vulnerabilityView, Some(request.uri))
     <header class="header-with-github-badge">
         <div>
             <h1 id="service-header" class="page-heading mt-4 position-relative">

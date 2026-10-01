@@ -30,6 +30,7 @@ import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, EditTeamDetails, Env
 import uk.gov.hmrc.cataloguefrontend.teams.view.html.{DigitalServicePage, TeamInfoPage, TeamsListPage}
 import uk.gov.hmrc.cataloguefrontend.users.{ManageTeamMembersRequest, UmpTeam}
 import uk.gov.hmrc.cataloguefrontend.healthmetrics.HealthMetricsConnector
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilityView
 import uk.gov.hmrc.cataloguefrontend.view.html.{OutOfDateTeamDependenciesPage, error_404_template}
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.internalauth.client.*
@@ -66,6 +67,7 @@ class TeamsController @Inject()(
     resultType: Html => Result,
     teamDetailsForm: Form[EditTeamDetails]
   )(using HeaderCarrier, RequestHeader): Future[Result] =
+    given VulnerabilityView = VulnerabilityView.select(summon[RequestHeader])
     (for
       umpTeam <- EitherT.fromOptionF[Future, Result, UmpTeam](userManagementConnector.getTeam(teamName), NotFound(error_404_template()))
       editR   <- EitherT.right:

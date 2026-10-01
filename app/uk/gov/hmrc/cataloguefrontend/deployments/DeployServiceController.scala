@@ -28,7 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.model.{Environment, ServiceName, Version}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ServiceConfigsService, ServiceToRepoName}
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesConnector}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, VulnerabilitiesConnector, VulnerabilityView}
 import uk.gov.hmrc.cataloguefrontend.view.html.error_404_template
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhereVersion}
 import uk.gov.hmrc.internalauth.client._
@@ -115,6 +115,7 @@ class DeployServiceController @Inject()(
       retrieval   = servicesRetrieval
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+      given VulnerabilityView = VulnerabilityView.select(request)
       (for
         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
         serviceToRepoNames   <- EitherT.right[Result](serviceConfigsService.serviceRepoMappings)
@@ -165,6 +166,7 @@ class DeployServiceController @Inject()(
     , retrieval   = servicesRetrieval
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
+      given VulnerabilityView = VulnerabilityView.select(request)
       (for
          allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
          serviceToRepoNames   <- EitherT.right[Result](serviceConfigsService.serviceRepoMappings)
@@ -239,6 +241,7 @@ class DeployServiceController @Inject()(
     , retrieval   = Retrieval.username ~ servicesRetrieval
     ).async: request =>
       given AuthenticatedRequest[AnyContent, Retrieval.Username ~ Set[Resource]] = request
+      given VulnerabilityView = VulnerabilityView.select(request)
       val username ~ locations = request.retrieval
       (for
          allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))

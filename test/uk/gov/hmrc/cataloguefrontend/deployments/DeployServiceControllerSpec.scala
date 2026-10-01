@@ -26,7 +26,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
-import play.api.mvc.{MessagesControllerComponents, Result}
+import play.api.mvc.{Cookie, MessagesControllerComponents, Result}
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
 import uk.gov.hmrc.cataloguefrontend.connector.{GitHubProxyConnector, GitRepository, Organisation, RepoType, ServiceDependenciesConnector, TeamsAndRepositoriesConnector}
 import uk.gov.hmrc.cataloguefrontend.connector.model.{BobbyRuleViolation, Dependency, DependencyScope, Kind, RepositoryModule, RepositoryModules, Vendor}
@@ -36,7 +36,7 @@ import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVer
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ConfigChanges, ServiceConfigsService, ServiceToRepoName}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary, VulnerabilityView, VulnerabilityViewTestSupport}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.{IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
@@ -233,83 +233,93 @@ class DeployServiceControllerSpec
 
   import ServiceConfigsService._
   "Deploy Service Page step2" should {
-    "help evaluate deployment" in new Setup {
-      when(mockTeamsAndRepositoriesConnector.allRepositories(
-        name               = any
-      , team               = any
-      , digitalService     = any
-      , archived           = eqTo(Some(false))
-      , repoType           = eqTo(Some(RepoType.Service))
-      , serviceType        = any
-      )(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(allServices))
-      // This gets called twice
-      // Matching on retrieval ANY since the type is erased and the mocks get confused
-      when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Any]]))
-        .thenReturn(
-          Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))),
-          Future.successful(true)
-        )
+    for (enabled, cookieValue) <- Seq((false, "preview"), (true, "current"), (true, "preview")) do
+      s"help evaluate deployment with availability=$enabled and cookie=$cookieValue" in new Setup {
+        VulnerabilityViewTestSupport.withPreview(enabled) {
+          when(mockTeamsAndRepositoriesConnector.allRepositories(
+            name               = any
+          , team               = any
+          , digitalService     = any
+          , archived           = eqTo(Some(false))
+          , repoType           = eqTo(Some(RepoType.Service))
+          , serviceType        = any
+          )(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(allServices))
+          // This gets called twice
+          // Matching on retrieval ANY since the type is erased and the mocks get confused
+          when(mockAuthStubBehaviour.stubAuth(any[Option[Predicate.Permission]], any[Retrieval[Any]]))
+            .thenReturn(
+              Future.successful(Set(Resource(ResourceType("catalogue-frontend"), ResourceLocation("services/some-service")))),
+              Future.successful(true)
+            )
 
-      when(mockGitHubProxyConnector.compare(eqTo("some-service"), eqTo(Version("0.2.0")), eqTo(Version("0.3.0")))(using any[HeaderCarrier]))
-        .thenReturn(Future.failed(RuntimeException("Some error calling github")): Future[GitHubProxyConnector.Compare] )
-      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(someReleasesForService))
-      when(mockServiceCommissioningConnector.commissioningStatus(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(someCommissioningStatus))
-      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.2.0"))))(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(someSlugInfo.copy(version = Version("0.2.0")))))
-      when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(someSlugInfo)))
-      when(mockServiceConfigsService.configChangesNextDeployment(ServiceName(eqTo("some-service")), eqTo(Environment.QA), eqTo(Version("0.3.0")))(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(someConfigChanges))
-      when(mockServiceConfigsService.configWarnings(
-        ServiceName(eqTo("some-service")),
-        eqTo(List(Environment.QA)),
-        eqTo(Some(Version("0.3.0"))),
-        eqTo(true)
-      )(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Seq(someConfigWarning)))
-      when(mockVulnerabilitiesConnector.vulnerabilitySummaries(
-        flag           = any[Option[SlugInfoFlag]],
-        serviceQuery   = eqTo(Some("some-service")),
-        version        = eqTo(Some(Version("0.3.0"))),
-        team           = any[Option[TeamName]],
-        curationStatus = eqTo(Some(CurationStatus.ActionRequired))
-      )(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
-      when(mockServiceDependenciesConnector.getRepositoryModules(
-        repositoryName = eqTo("some-service"),
-        version = eqTo(Version("0.3.0"))
-      )(using any[HeaderCarrier]))
-        .thenReturn(Future.successful(Some(violations)))
+          when(mockGitHubProxyConnector.compare(eqTo("some-service"), eqTo(Version("0.2.0")), eqTo(Version("0.3.0")))(using any[HeaderCarrier]))
+            .thenReturn(Future.failed(RuntimeException("Some error calling github")): Future[GitHubProxyConnector.Compare] )
+          when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), any)(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(Some(someSlugInfo)))
+          when(mockReleasesConnector.releasesForService(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(someReleasesForService))
+          when(mockServiceCommissioningConnector.commissioningStatus(ServiceName(eqTo("some-service")))(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(someCommissioningStatus))
+          when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.2.0"))))(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(Some(someSlugInfo.copy(version = Version("0.2.0")))))
+          when(mockServiceDependenciesConnector.getSlugInfo(ServiceName(eqTo("some-service")), eqTo(Some(Version("0.3.0"))))(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(Some(someSlugInfo)))
+          when(mockServiceConfigsService.configChangesNextDeployment(ServiceName(eqTo("some-service")), eqTo(Environment.QA), eqTo(Version("0.3.0")))(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(someConfigChanges))
+          when(mockServiceConfigsService.configWarnings(
+            ServiceName(eqTo("some-service")),
+            eqTo(List(Environment.QA)),
+            eqTo(Some(Version("0.3.0"))),
+            eqTo(true)
+          )(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(Seq(someConfigWarning)))
+          when(mockVulnerabilitiesConnector.vulnerabilitySummaries(
+            flag           = any[Option[SlugInfoFlag]],
+            serviceQuery   = eqTo(Some("some-service")),
+            version        = eqTo(Some(Version("0.3.0"))),
+            team           = any[Option[TeamName]],
+            curationStatus = eqTo(Some(CurationStatus.ActionRequired))
+          )(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
+          when(mockServiceDependenciesConnector.getRepositoryModules(
+            repositoryName = eqTo("some-service"),
+            version = eqTo(Version("0.3.0"))
+          )(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(Some(violations)))
 
-      val futResult = underTest.step2()(
-        FakeRequest()
-          .withMethod(Helpers.POST)
-          .withSession(SessionKeys.authToken -> "Token token")
-          .withFormUrlEncodedBody("serviceName" -> "some-service", "version" -> "0.3.0", "environment" -> "qa")
-      )
+          val futResult = underTest.step2()(
+            FakeRequest()
+              .withMethod(Helpers.POST)
+              .withCookies(Cookie(VulnerabilityView.cookieName, cookieValue))
+              .withSession(SessionKeys.authToken -> "Token token")
+              .withFormUrlEncodedBody("serviceName" -> "some-service", "version" -> "0.3.0", "environment" -> "qa")
+          )
 
-      Helpers.status(futResult) shouldBe Helpers.OK
-      val jsoupDocument = futResult.toDocument
-      jsoupDocument.select("h1").text() shouldBe "Deploy Service"
-      jsoupDocument.select("#service-name-form").select("#service-name").attr("value") shouldBe "some-service"
-      jsoupDocument.select("#version-environment-form").select("#helpful-versions").first.child(0).attr("data-content") shouldBe "0.3.0" // Latest
-      jsoupDocument.select("#version-environment-form").select("#helpful-versions").first.child(1).attr("data-content") shouldBe "0.2.0" // QA
-      jsoupDocument.select("#version-environment-form").select("#helpful-versions").first.child(2).attr("data-content") shouldBe "0.1.0" // Production
-      jsoupDocument.select("#version-environment-form").select("#service-name").attr("version") shouldBe ""
-      jsoupDocument.select("#version-environment-form").select("#service-name").attr("environment") shouldBe ""
+          Helpers.status(futResult) shouldBe Helpers.OK
+          val jsoupDocument = futResult.toDocument
+          jsoupDocument.select("h1").text() shouldBe "Deploy Service"
+          jsoupDocument.select("#service-name-form").select("#service-name").attr("value") shouldBe "some-service"
+          jsoupDocument.select("#version-environment-form").select("#helpful-versions").first.child(0).attr("data-content") shouldBe "0.3.0" // Latest
+          jsoupDocument.select("#version-environment-form").select("#helpful-versions").first.child(1).attr("data-content") shouldBe "0.2.0" // QA
+          jsoupDocument.select("#version-environment-form").select("#helpful-versions").first.child(2).attr("data-content") shouldBe "0.1.0" // Production
+          jsoupDocument.select("#version-environment-form").select("#service-name").attr("version") shouldBe ""
+          jsoupDocument.select("#version-environment-form").select("#service-name").attr("environment") shouldBe ""
 
-      jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 3
-      jsoupDocument.select("#config-warnings-rows").first.children.size shouldBe 1
-      jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
-      jsoupDocument.select("#deployment-config-updates-rows").first.children.size shouldBe 1
-      jsoupDocument.select("div.row.dependency-row").size shouldBe 1
-      jsoupDocument.select("#deploy-btn").size shouldBe 1
-    }
+          jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 3
+          jsoupDocument.select("#config-warnings-rows").first.children.size shouldBe 1
+          jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
+          jsoupDocument.select("#deployment-config-updates-rows").first.children.size shouldBe 1
+          jsoupDocument.select("div.row.dependency-row").size shouldBe 1
+          jsoupDocument.select("#deploy-btn").size shouldBe 1
+          jsoupDocument.select("#vulnerability-view-switch").size shouldBe 0
+          jsoupDocument.select("form[action='/preferences/vulnerability-view']").size shouldBe 0
+          jsoupDocument.select("#vulnerability-view-feedback").size shouldBe (if enabled && cookieValue == "preview" then 1 else 0)
+          jsoupDocument.select("#deployServiceForm input[name=serviceName]").attr("value") shouldBe "some-service"
+          jsoupDocument.select("#deployServiceForm input[name=version]").attr("value") shouldBe "0.3.0"
+          jsoupDocument.select("#deployServiceForm input[name=environment]").attr("value") shouldBe "qa"
+        }
+      }
   }
 
   "Deploy Service Page step3" should {
