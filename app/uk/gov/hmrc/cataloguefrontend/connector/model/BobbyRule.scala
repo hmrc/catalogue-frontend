@@ -17,10 +17,24 @@
 package uk.gov.hmrc.cataloguefrontend.connector.model
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Json, Reads, __}
+import play.api.libs.json.{
+  Json,
+  Reads,
+  JsString,
+  JsSuccess,
+  JsObject,
+  JsError,
+  JsValue,
+  __
+}
 import uk.gov.hmrc.cataloguefrontend.model.VersionRange
 
 import java.time.LocalDate
+
+case class Exemption(
+  projectName: String,
+  expiryDate : Option[LocalDate]
+)
 
 case class BobbyRule(
   group         : String,
@@ -28,10 +42,28 @@ case class BobbyRule(
   range         : VersionRange,
   reason        : String,
   from          : LocalDate,
-  exemptProjects: Seq[String]
+  exemptProjects: Seq[Exemption]
 ):
   def id: String =
     s"$group:$artefact:${range.range}:$from"
+
+object Exemption:
+  given Reads[Exemption] =
+    Reads {
+      case JsString(projectName) =>
+        JsSuccess(
+          Exemption(
+            projectName = projectName,
+            expiryDate = None
+          )
+        )
+
+      case obj: JsObject =>
+        Json.reads[Exemption].reads(obj)
+
+      case _ =>
+        JsError("Expected project name string or exemption object")
+    }
 
 object BobbyRule:
   val reads: Reads[BobbyRule] =
@@ -40,7 +72,7 @@ object BobbyRule:
     ~ (__ \ "range"        ).read[VersionRange](VersionRange.format)
     ~ (__ \ "reason"       ).read[String]
     ~ (__ \ "from"         ).read[LocalDate]
-    ~(__ \ "exemptProjects").read[Seq[String]]
+    ~(__ \ "exemptProjects").read[Seq[Exemption]]
     )(BobbyRule.apply)
 
 case class BobbyRuleSet(
