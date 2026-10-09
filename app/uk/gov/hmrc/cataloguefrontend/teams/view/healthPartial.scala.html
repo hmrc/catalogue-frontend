@@ -35,6 +35,8 @@
 , openPRsForOwnedRepos           : Option[URL] = None // Either Team or Digital Service
 , serviceMetricsLogDuration      : scala.concurrent.duration.Duration
 , now                            : java.time.LocalDate = java.time.LocalDate.now()
+, vulnBaseUrl                    : Option[String] = None
+, vulnV2Summary                  : Option[TeamVulnerabilitySummary] = None
 )(implicit
   request: RequestHeader
 )
@@ -67,16 +69,20 @@
               </tr>
             }
             case HealthMetric.ProductionActionRequiredVulnerabilities => {
-              <tr>
-                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
-                <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)))">@metric.displayString</a></td>
-              </tr>
+              @if(vulnBaseUrl.isEmpty) {
+                <tr>
+                  <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                  <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.ForEnvironment(Environment.Production)))">@metric.displayString</a></td>
+                </tr>
+              }
             }
             case HealthMetric.LatestActionRequiredVulnerabilities => {
-              <tr>
-                <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
-                <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest))"> @metric.displayString</a></td>
-              </tr>
+              @if(vulnBaseUrl.isEmpty) {
+                <tr>
+                  <td><span class="badge rounded-pill @if(count == 0) { text-bg-secondary } else { text-bg-danger }">@count</span></td>
+                  <td><a href="@vulnerabilityRoutes.VulnerabilitiesController.vulnerabilitiesForServices(curationStatus = Some(CurationStatus.ActionRequired), team = teamName, digitalService = digitalService, flag = Some(SlugInfoFlag.Latest))"> @metric.displayString</a></td>
+                </tr>
+              }
             }
             case HealthMetric.ProductionBobbyWarnings => {
               <tr>

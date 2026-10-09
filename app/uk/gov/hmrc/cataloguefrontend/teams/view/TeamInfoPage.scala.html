@@ -44,6 +44,8 @@
 , openPRsForReposOwnedByTeamUrl  : URL
 , canEditTeam                    : Boolean
 , canDeleteTeams                 : Boolean
+, vulnV2Enabled                  : Boolean
+, vulnV2Summary                  : Option[TeamVulnerabilitySummary]
 )(implicit
   vulnerabilityView: VulnerabilityView,
   request: RequestHeader
@@ -51,6 +53,10 @@
 
 @serviceMetricsLogDuration: Duration = @{
   configuration.get[Duration]("service-metrics.logDuration")
+}
+
+@vulnrerabilitiesBaseUrl: Option[String] = @{
+  if(vulnV2Enabled) Some(configuration.get[String]("vulnerabilities-frontend.baseUrl")) else None
 }
 
 @standard_layout(teamName.asString, active = "teams") {
@@ -79,6 +85,11 @@
     }
 
     <section class="section-wrapper">
+      @if(vulnV2Enabled && vulnV2Summary.exists(_.hasBreachedSla)) {
+        <div class="alert alert-danger" id="sla-breached">
+          <strong>This team has one or more vulnerabilities that are overdue for remediation. Urgent action is required</strong>
+        </div>
+      }
       <div class="row mb-3">
         <div class="col-md-4">
           <div class="card">
@@ -253,11 +264,15 @@
             </div>
           </div>
           <div class="col md-3">
-            @shutteringPartial(
-              teamName       = Some(teamName)
-            , digitalService = None
-            , shutterStates  = healthMetrics
-            )
+            @if(!vulnV2Enabled) {
+              @shutteringPartial(teamName = Some(teamName), digitalService = None, shutterStates  = healthMetrics)
+            } else {
+              @vulnerabilitiesPartial(
+                teamName                        = Some(teamName),
+                vulnBaseUrl                     = vulnrerabilitiesBaseUrl,
+                vulnV2Summary                   = vulnV2Summary
+              )
+            } 
           </div>
           <div class="col md-3">
             @healthPartial(
@@ -267,10 +282,18 @@
             , teamName                        = Some(teamName)
             , digitalService                  = None
             , serviceMetricsLogDuration       = serviceMetricsLogDuration
+            , vulnBaseUrl                     = vulnrerabilitiesBaseUrl
+            , vulnV2Summary                   = vulnV2Summary
             )
           </div>
           <div class="col md-3">
-            @explorePartial(teamName = Some(teamName), digitalService = None)
+            @if(vulnV2Enabled) {
+              @shutteringPartial(teamName = Some(teamName), digitalService = None, shutterStates  = healthMetrics)
+              <br/>
+              @explorePartial(teamName = Some(teamName), digitalService = None)
+            } else {
+              @explorePartial(teamName = Some(teamName), digitalService = None)
+            }
           </div>
         </div>
         @repositoriesPartial(repos, viewMessages)
