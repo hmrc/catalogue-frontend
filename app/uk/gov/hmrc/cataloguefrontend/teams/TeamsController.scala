@@ -35,10 +35,12 @@ import uk.gov.hmrc.cataloguefrontend.view.html.{OutOfDateTeamDependenciesPage, e
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.cataloguefrontend.config.VulnerabilitiesConfig
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 
 @Singleton
 class TeamsController @Inject()(
@@ -49,6 +51,8 @@ class TeamsController @Inject()(
 , teamInfoPage                       : TeamInfoPage
 , digitalServicePage                 : DigitalServicePage
 , outOfDateTeamDependenciesPage      : OutOfDateTeamDependenciesPage
+, vulnerabilitiesConnector           : VulnerabilitiesConnector
+, vulnerabilitiesConfig              : VulnerabilitiesConfig
 , override val mcc                   : MessagesControllerComponents
 , override val auth                  : FrontendAuthComponents
 )(using
@@ -82,6 +86,11 @@ class TeamsController @Inject()(
                        resourceType = Some(ResourceType("catalogue-frontend")),
                        action       = Some(IAAction("MANAGE_TEAM"))
                      )
+      v2VulnerabilitiesSummary <- EitherT.right:
+                                  if (vulnerabilitiesConfig.v2Enabled)
+                                    vulnerabilitiesConnector.v2TeamSummary(teamName).map(Some(_))
+                                  else
+                                    Future.successful(None)
       results <- EitherT.right:
                    ( teamsAndRepositoriesConnector.allTeams(Some(teamName)).map(_.headOption.map(_.githubUrl))
                    , teamsAndRepositoriesConnector.allRepositories(team = Some(teamName), archived = Some(false))
@@ -105,7 +114,9 @@ class TeamsController @Inject()(
          , openPRsForReposOwnedByTeamUrl   = results._4
          , healthMetrics                   = results._5
          , canEditTeam                     = canEditTeam(editR, teamName)
-         , canDeleteTeams                  = canCreateAndDeleteTeams(deleteR))
+         , canDeleteTeams                  = canCreateAndDeleteTeams(deleteR)
+         , vulnV2Enabled                   = vulnerabilitiesConfig.v2Enabled
+         , vulnV2Summary                   = v2VulnerabilitiesSummary)
          )
     ).merge
 
