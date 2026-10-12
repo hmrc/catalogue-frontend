@@ -28,6 +28,7 @@ import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
 
 import scala.io.Source
 import scala.jdk.CollectionConverters._
+import uk.gov.hmrc.cataloguefrontend.jsondata.VulnerabilitiesJsonData
 
 class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicationBuilder {
 
@@ -72,6 +73,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
           serviceEndpoint(GET, "/user-management/teams/teamA?includeNonHuman=true", willRespondWith = (200, Some(readFile("user-management-team-details-response.json"))))
           serviceEndpoint(GET, "/api/v2/teams?name=teamA", willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.teams)))
           serviceEndpoint(GET, "/api/v2/repositories", queryParameters = Seq("owningTeam" -> "teamA", "archived" -> "false"), willRespondWith = (200, Some(TeamsAndRepositoriesJsonData.repositoriesTeamAData)))
+          serviceEndpoint(GET, "/vulnerabilities/v2/team", queryParameters = Seq("team" -> "teamA"), willRespondWith = (200, Some(VulnerabilitiesJsonData.data)))
           val response = wsClient.url(s"http://localhost:$port/teams/teamA")
             .withAuthToken("Token token")
             .withCookies(DefaultWSCookie(VulnerabilityView.cookieName, cookieValue)).get().futureValue
@@ -93,9 +95,7 @@ class TeamsControllerSpec extends UnitSpec with BeforeAndAfter with FakeApplicat
             changed.header("Location").value shouldBe "/teams/teamA"
             val preference = changed.cookies.find(_.name == VulnerabilityView.cookieName).value
             if cookieValue == "preview" then preference.maxAge.value should be <= 0L
-            else preference.value shouldBe "preview"
-          import com.github.tomakehurst.wiremock.client.WireMock.*
-          wireMockServer.verify(0, getRequestedFor(urlPathMatching("/vulnerabilities/.*v2.*")))
+            else preference.value shouldBe "preview"   
         }
       }
 

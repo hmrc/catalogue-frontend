@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
+import models.TeamVulnerabilitySummary
 import play.api.libs.json.Reads
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
@@ -83,5 +84,12 @@ class VulnerabilitiesConnector @Inject() (
     httpClientV2
       .get(url"$url/vulnerabilities/api/reports/timeline?service=${serviceName.map(s => s"\"${s.asString}\"")}&team=${team.map(_.asString)}&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
       .execute[Seq[VulnerabilitiesTimelineCount]]
+
+  def v2TeamSummary(team: TeamName)
+  (using HeaderCarrier) =
+    given Reads[TeamVulnerabilitySummary] = TeamVulnerabilitySummary.format
+    httpClientV2
+      .get(url"$url/vulnerabilities/v2/team?team=${team.asString}")
+      .execute[TeamVulnerabilitySummary]
 
 end VulnerabilitiesConnector

@@ -39,6 +39,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitiesConnector
 
 @Singleton
 class TeamsController @Inject()(
@@ -49,6 +50,7 @@ class TeamsController @Inject()(
 , teamInfoPage                       : TeamInfoPage
 , digitalServicePage                 : DigitalServicePage
 , outOfDateTeamDependenciesPage      : OutOfDateTeamDependenciesPage
+, vulnerabilitiesConnector           : VulnerabilitiesConnector
 , override val mcc                   : MessagesControllerComponents
 , override val auth                  : FrontendAuthComponents
 )(using
@@ -67,7 +69,7 @@ class TeamsController @Inject()(
     resultType: Html => Result,
     teamDetailsForm: Form[EditTeamDetails]
   )(using HeaderCarrier, RequestHeader): Future[Result] =
-    given VulnerabilityView = VulnerabilityView.select(summon[RequestHeader])
+    given vulnerabilityView: VulnerabilityView = VulnerabilityView.select(summon[RequestHeader])
     (for
       umpTeam <- EitherT.fromOptionF[Future, Result, UmpTeam](userManagementConnector.getTeam(teamName), NotFound(error_404_template()))
       editR   <- EitherT.right:
@@ -82,6 +84,11 @@ class TeamsController @Inject()(
                        resourceType = Some(ResourceType("catalogue-frontend")),
                        action       = Some(IAAction("MANAGE_TEAM"))
                      )
+      v2VulnerabilitiesSummary <- EitherT.right:
+                                  if (vulnerabilityView.isPreview)
+                                    vulnerabilitiesConnector.v2TeamSummary(teamName).map(Some(_))
+                                  else
+                                    Future.successful(None)
       results <- EitherT.right:
                    ( teamsAndRepositoriesConnector.allTeams(Some(teamName)).map(_.headOption.map(_.githubUrl))
                    , teamsAndRepositoriesConnector.allRepositories(team = Some(teamName), archived = Some(false))
@@ -105,7 +112,9 @@ class TeamsController @Inject()(
          , openPRsForReposOwnedByTeamUrl   = results._4
          , healthMetrics                   = results._5
          , canEditTeam                     = canEditTeam(editR, teamName)
-         , canDeleteTeams                  = canCreateAndDeleteTeams(deleteR))
+         , canDeleteTeams                  = canCreateAndDeleteTeams(deleteR)
+         , vulnV2Enabled                   = vulnerabilityView.isPreview
+         , vulnV2Summary                   = v2VulnerabilitiesSummary)
          )
     ).merge
 
