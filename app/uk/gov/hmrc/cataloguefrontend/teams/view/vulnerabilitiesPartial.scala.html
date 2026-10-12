@@ -1,0 +1,87 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@(
+  teamName                       : Option[TeamName],
+  vulnBaseUrl                    : Option[String] = None,
+  vulnV2Summary                  : Option[TeamVulnerabilitySummary] = None
+)(implicit request: RequestHeader)
+
+<div class="card">
+  <div class="card-header">
+    <div class="h4 mb-0">Vulnerabilities</div>
+  </div>
+  <div class="card-body">
+    <table style="width:100%;border-collapse:separate;border-spacing:2px 0px;">
+      <tbody>
+        @vulnBaseUrl.map { url =>
+          <a href="@url?team=@teamName.get.asString">
+            Vulnerabilities
+          </a>
+
+          @vulnV2Summary.map { vs =>
+            @vs.shortestRemainingSlaDays.fold(Html("")) { s =>
+              <tr>
+                <td><span class="badge rounded-pill @if(s < 30) { text-bg-danger } else { text-bg-warning }">@s</span></td>
+                <td>days until next remediation deadline</td>
+              </tr>
+            }
+            <tr>
+              <td><span class="badge rounded-pill @if(vs.byPriority.immediate == 0) { text-bg-success } else { text-bg-danger } ">@vs.byPriority.immediate</span></td>
+              <td><a href="@url?team=@teamName.get.asString&priority=immediate&state=all">Priority - Immediate</a></td>
+            </tr>
+            <tr>
+              <td><span class="badge rounded-pill @if(vs.byPriority.expedite == 0) { text-bg-success } else { text-bg-danger } ">@vs.byPriority.expedite</span></td>
+              <td><a href="@url?team=@teamName.get.asString&priority=expedite&state=all">Priority - Expedite</a></td>
+            </tr>
+            <tr>
+              <td><span class="badge rounded-pill @if(vs.byPriority.schedule == 0) { text-bg-success } else { text-bg-warning } ">@vs.byPriority.schedule</span></td>
+              <td><a href="@url?team=@teamName.get.asString&priority=schedule&state=all">Priority - Schedule</a></td>
+            </tr>
+            <tr>
+              <td><span class="badge rounded-pill @if(vs.byPriority.monitor == 0) { text-bg-success } else { text-bg-info } ">@vs.byPriority.monitor</span></td>
+              <td><a href="@url?team=@teamName.get.asString&priority=monitor&state=all">Priority - Monitor</a></td>
+            </tr>           
+            <tr>
+              <td><span class="badge rounded-pill @if(vs.byState.actionable == 0) { text-bg-success } else { text-bg-danger } ">@vs.byState.actionable</span></td>
+              <td><a href="@url?team=@teamName.get.asString&state=actionable">State - Actionable</a></td>
+            </tr>
+            <tr>
+              <td><span class="badge rounded-pill @if(vs.byState.notApplicable == 0) { text-bg-success } else { text-bg-info } ">@vs.byState.notApplicable</span></td>
+              <td><a href="@url?team=@teamName.get.asString&state=notApplicable">State - Not Applicable</a></td>
+            </tr>
+            <tr>
+              <td><span class="badge rounded-pill @if(vs.byState.noFixAvailable == 0) { text-bg-success } else { text-bg-info } ">@vs.byState.noFixAvailable</span></td>
+              <td><a href="@url?team=@teamName.get.asString&state=noFixAvailable">State - No Fix Available</a></td>
+            </tr>
+            <tr>
+              <td><span class="badge rounded-pill text-bg-info">@vs.byState.riskAccepted</span></td>
+              <td><a href="@url?team=@teamName.get.asString&state=riskAccepted">State - Risk Accepted</a></td>
+            </tr>
+            <tr>
+              <td><span class="badge rounded-pill text-bg-success">@vs.byState.resolved</span></td>
+              <td><a href="@url?team=@teamName.get.asString&state=resolved">State - Resolved</a></td>
+            </tr>
+            <tr>
+              <td><span class="badge rounded-pill @if(vs.affectedServices == 0) { text-bg-success } else { text-bg-danger } ">@vs.affectedServices</span></td>
+              <td>Total affected services</td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
