@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
 import play.api.libs.functional.syntax.*
-import play.api.libs.json.{JsArray, JsNull, JsSuccess, Reads, __}
+import play.api.libs.json.{Reads, __}
 import uk.gov.hmrc.cataloguefrontend.model.{ServiceName, Version, VersionRange}
 
 import java.time.Instant

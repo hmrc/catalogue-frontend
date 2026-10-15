@@ -218,8 +218,27 @@ class DeployServiceController @Inject()(
                                    .right[Result](serviceConfigsService.configChangesNextDeployment(formObject.serviceName, formObject.environment, formObject.version))
          configWarnings       <- EitherT
                                    .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
-         vulnerabilities      <- EitherT
-                                   .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired)))
+         vulnerabilities      <- EitherT.right[Result](
+                                   if summon[VulnerabilityView].isPreview then
+                                     Future.successful(None)
+                                   else
+                                     vulnerabilitiesConnector.vulnerabilitySummaries(
+                                       serviceQuery   = Some(formObject.serviceName.asString),
+                                       version        = Some(formObject.version),
+                                       curationStatus = Some(CurationStatus.ActionRequired)
+                                     )
+                                 )
+         deploymentVulnerabilities <- EitherT.right[Result](
+                                        if summon[VulnerabilityView].isPreview then
+                                          vulnerabilitiesConnector.deploymentOccurrences(
+                                            formObject.serviceName,
+                                            formObject.version
+                                          ).recover { case NonFatal(ex) =>
+                                            logger.warn(s"Deployment vulnerability report unavailable: ${ex.getMessage}")
+                                            None
+                                          }
+                                        else Future.successful(None)
+                                      )
          violations           <- EitherT
                                    .right[Result](serviceDependenciesConnector.getRepositoryModules(repoName, formObject.version))
        yield
@@ -230,7 +249,8 @@ class DeployServiceController @Inject()(
            latest,
            releases,
            environments,
-           Some((gitHubCompare, jvmChanges, configChanges, configWarnings, vulnerabilities, violations))
+           Some((gitHubCompare, jvmChanges, configChanges, configWarnings, vulnerabilities, violations)),
+           deploymentVulnerabilities
          ))
       ).merge
 

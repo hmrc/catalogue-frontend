@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models
+package uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2
 
 import play.api.libs.json.{Format, Json}
 

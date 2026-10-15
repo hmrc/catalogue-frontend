@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
-import models.TeamVulnerabilitySummary
-import play.api.libs.json.Reads
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.TeamVulnerabilitySummary
+import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, ServiceName, SlugInfoFlag, TeamName, Version}
-import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atStartOfDayInstant, atEndOfDayInstant}
+import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atEndOfDayInstant, atStartOfDayInstant}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -84,6 +84,127 @@ class VulnerabilitiesConnector @Inject() (
     httpClientV2
       .get(url"$url/vulnerabilities/api/reports/timeline?service=${serviceName.map(s => s"\"${s.asString}\"")}&team=${team.map(_.asString)}&vulnerability=$vulnerability&curationStatus=${curationStatus.map(_.asString)}&from=$fromInstant&to=$toInstant")
       .execute[Seq[VulnerabilitiesTimelineCount]]
+
+  def deploymentOccurrences(
+    serviceName: ServiceName,
+    version    : Version
+  )(using HeaderCarrier): Future[Option[DeploymentVulnerabilityReport]] =
+    given Reads[DeploymentVulnerabilityReport] = DeploymentVulnerabilityReport.given_Reads_DeploymentVulnerabilityReport
+
+    val endpoint = url"$url/vulnerabilities/api/v2/services/${serviceName.asString}/app-versions/${version.original}/occurrences"
+
+    // TODO: Replace stub with the actual request when VULN004 is available:
+    //
+    // httpClientV2
+    //   .get(endpoint)
+    //   .execute[Option[DeploymentVulnerabilityReport]]
+
+    val stubResponse = Json.parse(
+      s"""
+      {
+        "serviceName": "${serviceName.asString}",
+        "appVersion": "${version.original}",
+        "scanStatus": "succeeded",
+        "lastSuccessfulScan": "2026-09-11T10:00:00Z",
+        "results": [
+          {
+            "occurrenceId": "OCC-1",
+            "serviceName": "${serviceName.asString}",
+            "appVersion": "${version.original}",
+            "vulnerabilityId": "CVE-2026-0001",
+            "summary": "Example dependency vulnerability",
+            "cvss": 8.1,
+            "kev": true,
+            "epss": 0.14,
+            "fixedVersions": ["2.4.1"],
+            "component": "gav://uk.gov.hmrc:example-lib",
+            "componentVersion": "2.4.0",
+            "importedBy": [],
+            "priority": "immediate",
+            "sla": {
+              "status": "running",
+              "clockStartedAt": "2026-09-01T10:00:00Z",
+              "deadline": "2026-09-15T10:00:00Z",
+              "breached": true,
+              "breachedAt": "2026-09-15T10:00:00Z",
+              "nearBreach": true
+            },
+            "state": "actionable"
+          },
+          {
+            "occurrenceId": "OCC-2",
+            "serviceName": "${serviceName.asString}",
+            "appVersion": "${version.original}",
+            "vulnerabilityId": "CVE-2026-0002",
+            "summary": "Another dependency vulnerability",
+            "fixedVersions": [],
+            "component": "gav://uk.gov.hmrc:another-lib",
+            "componentVersion": "3.0.0",
+            "importedBy": [],
+            "priority": "expedite",
+            "sla": {
+              "status": "running",
+              "deadline": "2026-10-15T10:00:00Z",
+              "breached": false,
+              "nearBreach": true
+            },
+            "state": "actionable"
+          },
+          {
+            "occurrenceId": "OCC-3",
+            "serviceName": "${serviceName.asString}",
+            "appVersion": "${version.original}",
+            "vulnerabilityId": "CVE-2026-0003",
+            "summary": "A third dependency vulnerability",
+            "fixedVersions": [],
+            "component": "gav://org.apache.logging.log4j:log4j-core",
+            "componentVersion": "3.0.0",
+            "importedBy": [
+              {
+                "group": "uk.gov.hmrc",
+                "artefact": "bootstrap-play",
+                "version": "10.1.0"
+              }
+            ],
+            "priority": "schedule",
+            "sla": {
+              "status": "running",
+              "deadline": "2026-10-15T10:00:00Z",
+              "breached": false,
+              "nearBreach": true
+            },
+            "state": "riskAccepted"
+          },
+          {
+            "occurrenceId": "OCC-4",
+            "serviceName": "${serviceName.asString}",
+            "appVersion": "${version.original}",
+            "vulnerabilityId": "CVE-2026-0004",
+            "summary": "A fourth dependency vulnerability",
+            "fixedVersions": [],
+            "component": "gav://uk.gov.hmrc:another-lib",
+            "componentVersion": "3.0.0",
+            "importedBy": [],
+            "priority": "schedule",
+            "sla": {
+              "status": "running",
+              "deadline": "2026-10-15T10:00:00Z",
+              "breached": false,
+              "nearBreach": true
+            },
+            "state": "noFixAvailable"
+          }
+        ],
+        "page": {
+          "limit": 50,
+          "offset": 0,
+          "total": 4
+        }
+      }
+      """
+    )
+
+    Future.successful(Some(stubResponse.as[DeploymentVulnerabilityReport]))
 
   def v2TeamSummary(team: TeamName)
   (using HeaderCarrier) =

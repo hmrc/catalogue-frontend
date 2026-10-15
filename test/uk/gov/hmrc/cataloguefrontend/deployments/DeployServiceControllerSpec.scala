@@ -19,7 +19,7 @@ package uk.gov.hmrc.cataloguefrontend.deployments
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{never, verify, when}
 import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -36,7 +36,9 @@ import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVer
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ConfigChanges, ServiceConfigsService, ServiceToRepoName}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary, VulnerabilityView, VulnerabilityViewTestSupport}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.OccurrencePriority.{Expedite, Immediate, Schedule}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.OccurrenceState.{Actionable, RiskAccepted}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DeploymentOccurrence, DeploymentVulnerabilityReport, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary, VulnerabilityView, VulnerabilityViewTestSupport}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.{IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
@@ -282,9 +284,14 @@ class DeployServiceControllerSpec
             curationStatus = eqTo(Some(CurationStatus.ActionRequired))
           )(using any[HeaderCarrier]))
             .thenReturn(Future.successful(Some(Seq(someVulnerabilities))))
+          when(mockVulnerabilitiesConnector.deploymentOccurrences(
+            serviceName = ServiceName(eqTo("some-service")),
+            version     = eqTo(Version("0.3.0"))
+          )(using any[HeaderCarrier]))
+            .thenReturn(Future.successful(Some(someDeploymentVulnerabilityReport)))
           when(mockServiceDependenciesConnector.getRepositoryModules(
             repositoryName = eqTo("some-service"),
-            version = eqTo(Version("0.3.0"))
+            version        = eqTo(Version("0.3.0"))
           )(using any[HeaderCarrier]))
             .thenReturn(Future.successful(Some(violations)))
 
@@ -308,7 +315,28 @@ class DeployServiceControllerSpec
 
           jsoupDocument.select("#config-updates-rows").first.children.size shouldBe 3
           jsoupDocument.select("#config-warnings-rows").first.children.size shouldBe 1
-          jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
+          if enabled && cookieValue == "preview" then
+            jsoupDocument.select("#vulnerabilities-rows").size shouldBe 0
+            jsoupDocument.text() should include("Vulnerabilities with action required")
+            jsoupDocument.select("#collapseVulnerabilities tbody tr").size shouldBe 2
+            jsoupDocument.text() should include("CVE-2026-0001")
+            jsoupDocument.text() should include("CVE-2026-0002")
+            jsoupDocument.text() should not include "CVE-2026-0003"
+            jsoupDocument.text() should include("2.4.1")
+            jsoupDocument.text() should include("Immediate")
+            jsoupDocument.text() should include("Expedite")
+            jsoupDocument.text() should include("Breached")
+            jsoupDocument.text() should include("Near breach")
+            verify(mockVulnerabilitiesConnector, never).vulnerabilitySummaries(
+              flag           = any[Option[SlugInfoFlag]],
+              serviceQuery   = any[Option[String]],
+              version        = any[Option[Version]],
+              team           = any[Option[TeamName]],
+              curationStatus = any[Option[CurationStatus]]
+            )(using any[HeaderCarrier])
+          else
+            verify(mockVulnerabilitiesConnector, never).deploymentOccurrences(any[ServiceName], any[Version])(using any[HeaderCarrier])
+            jsoupDocument.select("#vulnerabilities-rows").first.children.size shouldBe 2 // has a collapse tr too
           jsoupDocument.select("#deployment-config-updates-rows").first.children.size shouldBe 1
           jsoupDocument.select("div.row.dependency-row").size shouldBe 1
           jsoupDocument.select("#deploy-btn").size shouldBe 1
@@ -593,6 +621,49 @@ class DeployServiceControllerSpec
                             )
   , occurrences           = Nil
   , teams                 = Seq("some-team")
+  )
+
+  private val someDeploymentVulnerabilityReport = DeploymentVulnerabilityReport(
+    serviceName = "some-service",
+    appVersion = "0.3.0",
+    scanStatus = "succeeded",
+    lastSuccessfulScan = Some(Instant.now),
+    occurrences = Seq(
+      DeploymentOccurrence(
+        occurrenceId = "some-id-1",
+        vulnerabilityId = "CVE-2026-0001",
+        component = "example-lib",
+        fixedVersions = Seq("2.4.1"),
+        priority = Immediate,
+        state = Actionable,
+        deadline = Some(Instant.now),
+        breached = true,
+        nearBreach = false
+      ),
+      DeploymentOccurrence(
+        occurrenceId = "some-id-2",
+        vulnerabilityId = "CVE-2026-0002",
+        component = "another-lib",
+        fixedVersions = Nil,
+        priority = Expedite,
+        state = Actionable,
+        deadline = Some(Instant.now.plusSeconds(86400)),
+        breached = false,
+        nearBreach = true
+      ),
+      DeploymentOccurrence(
+        occurrenceId = "some-id-3",
+        vulnerabilityId = "CVE-2026-0003",
+        component = "third-lib",
+        fixedVersions = Nil,
+        priority = Schedule,
+        state = RiskAccepted,
+        deadline = None,
+        breached = false,
+        nearBreach = false
+      )
+    ),
+    total = 3
   )
 
   private val violations = RepositoryModules(

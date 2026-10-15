@@ -22,6 +22,7 @@
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 @import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.DeploymentVulnerabilityReport
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @import views.html.helper.{FieldConstructor, select}
@@ -42,6 +43,7 @@
                  , Option[Seq[VulnerabilitySummary]]
                  , Option[RepositoryModules]
                  )]
+, deploymentVulnerabilities: Option[DeploymentVulnerabilityReport] = None
 )(implicit
   vulnerabilityView: VulnerabilityView
 , messages     : Messages
@@ -140,6 +142,28 @@
             </div>
           }
         </div>
+        @if(vulnerabilityView.isPreview) {
+            @deploymentVulnerabilities.filter(_.successful).map { report =>
+                @if(report.breachedCount > 0 || report.nearBreachCount > 0) {
+                    <div class="border rounded p-3 mt-4 mb-3">
+                        <h5 class="mb-3">
+                            <i class="bi bi-shield-exclamation" aria-hidden="true"></i>
+                            Vulnerability warnings
+                        </h5>
+                        @if(report.breachedCount > 0) {
+                            <div class="alert alert-danger">
+                                This service has @report.breachedCount @if(report.breachedCount == 1) {vulnerability that has} else {vulnerabilities that have} breached the SLA.
+                            </div>
+                        }
+                        @if(report.nearBreachCount > 0) {
+                            <div class="alert alert-warning mb-0">
+                                This service has @report.nearBreachCount @if(report.nearBreachCount == 1) {vulnerability that is} else {vulnerabilities that are} near the SLA deadline.
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        }
         <label class="form-label fw-bold">Please review before deploying:</label>
         @evaluationsPartial(
           serviceName           = form.get.serviceName
@@ -153,6 +177,8 @@
         , oVulnerabilities      = oVulnerabilities
         , oViolations           = oViolations
         , showReferenceConfInfo = false
+        , showVulnerabilityPreview = vulnerabilityView.isPreview
+        , deploymentVulnerabilities = deploymentVulnerabilities
         )
 
         @helper.form(
