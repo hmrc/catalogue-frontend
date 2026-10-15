@@ -36,9 +36,10 @@ import uk.gov.hmrc.cataloguefrontend.service.{ServiceDependencies, ServiceJdkVer
 import uk.gov.hmrc.cataloguefrontend.servicecommissioningstatus.{Check, ServiceCommissioningStatusConnector}
 import uk.gov.hmrc.cataloguefrontend.serviceconfigs.{ConfigChange, ConfigChanges, ServiceConfigsService, ServiceToRepoName}
 import uk.gov.hmrc.cataloguefrontend.util.TelemetryLinks
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.OccurrencePriority.{Expedite, Immediate, Schedule}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.OccurrenceState.{Actionable, RiskAccepted}
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DeploymentOccurrence, DeploymentVulnerabilityReport, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary, VulnerabilityView, VulnerabilityViewTestSupport}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.OccurrencePriority.{Expedite, Immediate, Schedule}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.OccurrenceState.{Actionable, RiskAccepted}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.{DeploymentOccurrence, DeploymentVulnerabilityReport}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.{CurationStatus, DistinctVulnerability, VulnerabilitiesConnector, VulnerabilitySummary, VulnerabilityView, VulnerabilityViewTestSupport}
 import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.{ReleasesConnector, WhatsRunningWhere, WhatsRunningWhereVersion}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.internalauth.client.{IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}

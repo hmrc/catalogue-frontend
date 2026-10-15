@@ -22,7 +22,7 @@
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.VulnerabilitySummary
 @import uk.gov.hmrc.cataloguefrontend.whatsrunningwhere.WhatsRunningWhereVersion
 @import uk.gov.hmrc.cataloguefrontend.connector.model.RepositoryModules
-@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.DeploymentVulnerabilityReport
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.DeploymentVulnerabilityReport
 @import uk.gov.hmrc.cataloguefrontend.CatalogueFrontendSwitches
 
 @import views.html.helper.{FieldConstructor, select}
@@ -41,13 +41,13 @@
                  , ConfigChanges
                  , Seq[ServiceConfigsService.ConfigWarning]
                  , Option[Seq[VulnerabilitySummary]]
+                 , Option[DeploymentVulnerabilityReport]
                  , Option[RepositoryModules]
                  )]
-, deploymentVulnerabilities: Option[DeploymentVulnerabilityReport] = None
 )(implicit
   vulnerabilityView: VulnerabilityView
-, messages     : Messages
-, request      : RequestHeader
+, messages         : Messages
+, request          : RequestHeader
 )
 
 @implicitField: FieldConstructor = @{ FieldConstructor(catalogueFieldConstructor.f) }
@@ -133,7 +133,7 @@
       </div>
     </div>
     <div class="col-md-8">
-      @evaluations.map { case (oGitHubCompare, jvmChanges, configChanges, configWarnings, oVulnerabilities, oViolations) =>
+      @evaluations.map { case (oGitHubCompare, jvmChanges, configChanges, configWarnings, oVulnerabilities, v2Vulnerabilities, oViolations) =>
         <div class="alert @if(form.get.environment == Environment.Production) {alert-danger} else {alert-warning}">
           You are about to deploy <strong>@form.get.serviceName.asString:@form.get.version</strong> into <strong>@form.get.environment.displayString</strong>
           @if(releases.isEmpty || !releases.map(_.environment).contains(form.get.environment)) {
@@ -143,7 +143,7 @@
           }
         </div>
         @if(vulnerabilityView.isPreview) {
-            @deploymentVulnerabilities.filter(_.successful).map { report =>
+            @v2Vulnerabilities.filter(_.successful).map { report =>
                 @if(report.breachedCount > 0 || report.nearBreachCount > 0) {
                     <div class="border rounded p-3 mt-4 mb-3">
                         <h5 class="mb-3">
@@ -175,10 +175,10 @@
         , configChanges         = configChanges
         , configWarnings        = configWarnings
         , oVulnerabilities      = oVulnerabilities
+        , v2Vulnerabilities     = v2Vulnerabilities
         , oViolations           = oViolations
         , showReferenceConfInfo = false
-        , showVulnerabilityPreview = vulnerabilityView.isPreview
-        , deploymentVulnerabilities = deploymentVulnerabilities
+        , showV2Vulnerabilities = vulnerabilityView.isPreview
         )
 
         @helper.form(

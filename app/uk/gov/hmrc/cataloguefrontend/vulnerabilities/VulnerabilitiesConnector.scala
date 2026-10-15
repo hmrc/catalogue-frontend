@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.TeamVulnerabilitySummary
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.{DeploymentVulnerabilityReport, TeamVulnerabilitySummary}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atEndOfDayInstant, atStartOfDayInstant}
@@ -89,7 +89,7 @@ class VulnerabilitiesConnector @Inject() (
     serviceName: ServiceName,
     version    : Version
   )(using HeaderCarrier): Future[Option[DeploymentVulnerabilityReport]] =
-    given Reads[DeploymentVulnerabilityReport] = DeploymentVulnerabilityReport.given_Reads_DeploymentVulnerabilityReport
+    given Reads[DeploymentVulnerabilityReport] = DeploymentVulnerabilityReport.reads
 
     val endpoint = url"$url/vulnerabilities/api/v2/services/${serviceName.asString}/app-versions/${version.original}/occurrences"
 
