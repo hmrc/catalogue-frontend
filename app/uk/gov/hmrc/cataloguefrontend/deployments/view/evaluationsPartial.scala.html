@@ -23,24 +23,26 @@
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope}
 @import uk.gov.hmrc.cataloguefrontend.{ routes => appRoutes }
 @import uk.gov.hmrc.cataloguefrontend.bobby.{routes => bobbyRoutes}
-
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.DeploymentVulnerabilityReport
 @(
-  serviceName                : ServiceName
-, environment                : Environment
-, previousVersion            : Option[Version]
-, deployedVersion            : Version
-, oGitHubCompare             : Option[GitHubProxyConnector.Compare]
-, jvmChanges                 : (Option[ServiceJdkVersion], ServiceJdkVersion)
-, configChanges              : ConfigChanges
-, configWarnings             : Seq[ServiceConfigsService.ConfigWarning]        = Nil
-, oVulnerabilities           : Option[Seq[VulnerabilitySummary]]               = None
-, oViolations                : Option[RepositoryModules]                       = None
-, showReferenceConfInfo      : Boolean                                         = true
-, showConfigWarnings         : Boolean                                         = true
-, showVulnerabilities        : Boolean                                         = true
-, showViolations             : Boolean                                         = true
+  serviceName          : ServiceName
+, environment          : Environment
+, previousVersion      : Option[Version]
+, deployedVersion      : Version
+, oGitHubCompare       : Option[GitHubProxyConnector.Compare]
+, jvmChanges           : (Option[ServiceJdkVersion], ServiceJdkVersion)
+, configChanges        : ConfigChanges
+, configWarnings       : Seq[ServiceConfigsService.ConfigWarning] = Nil
+, oVulnerabilities     : Option[Seq[VulnerabilitySummary]]        = None
+, v2Vulnerabilities    : Option[DeploymentVulnerabilityReport]    = None
+, oViolations          : Option[RepositoryModules]                = None
+, showReferenceConfInfo: Boolean                                  = true
+, showConfigWarnings   : Boolean                                  = true
+, showVulnerabilities  : Boolean                                  = true
+, showV2Vulnerabilities: Boolean                                  = false
+, showViolations       : Boolean                                  = true
 )(implicit
-  request                    : RequestHeader
+  request              : RequestHeader
 )
 
 <div class="accordion mb-3" id="accordion">
@@ -269,20 +271,39 @@
     </div>
   }
 
-  @if(showVulnerabilities) {
+  @if(showVulnerabilities || showV2Vulnerabilities) {
     <div class="accordion-item">
       <div class="accordion-header" id="headingVulnerabilities">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVulnerabilities" aria-expanded="false" aria-controls="collapseVulnerabilities" @if(oVulnerabilities.getOrElse(Nil).isEmpty) {disabled}>
-          @if(oVulnerabilities.isEmpty) {
-            Vulnerabilities unknown - report not generated
-          } else {
-            Vulnerabilities with action required
-            @changesBadge(oVulnerabilities.getOrElse(Nil).size)
-          }
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVulnerabilities" aria-expanded="false" aria-controls="collapseVulnerabilities"
+            @if(if(showV2Vulnerabilities) {v2Vulnerabilities.forall(r => !r.successful || r.actionableCount == 0)} else {oVulnerabilities.getOrElse(Nil).isEmpty}) {disabled}>
+        @if(showV2Vulnerabilities) {
+            @v2Vulnerabilities match {
+                case None => {
+                    Vulnerabilities unknown - report not available
+                }
+                case Some(report) if !report.successful => {
+                    Vulnerabilities unknown - scan unsuccessful
+                }
+                case Some(report) => {
+                    Vulnerabilities with action required
+                    @changesBadge(report.actionableCount)
+                }
+            }
+        } else {
+            @if(oVulnerabilities.isEmpty) {
+                Vulnerabilities unknown - report not generated
+            } else {
+                Vulnerabilities with action required
+                @changesBadge(oVulnerabilities.getOrElse(Nil).size)
+            }
+        }
         </button>
       </div>
       <div id="collapseVulnerabilities" class="accordion-collapse collapse" aria-labelledby="headingVulnerabilities" data-bs-parent="#accordion">
         <div class="accordion-body">
+          @if(showV2Vulnerabilities) {
+            @deploymentVulnerabilityPartial(v2Vulnerabilities)
+          } else {
           <table class="table table-striped sticky-header text-break">
             <thead>
               <tr>
@@ -319,6 +340,7 @@
               });
             });
           </script>
+          }
         </div>
       </div>
     </div>

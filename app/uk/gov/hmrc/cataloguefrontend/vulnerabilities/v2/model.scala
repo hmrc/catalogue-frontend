@@ -14,32 +14,143 @@
  * limitations under the License.
  */
 
-package models
+package uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.*
+
+import java.time.{Duration, Instant}
 
 case class TeamVulnerabilitySummary(
   shortestRemainingSlaDays: Option[Int],
-  hasBreachedSla: Boolean,
-  byPriority: OccurrencesByPriority,
-  byState: OccurrencesByState,
-  affectedServices: Int
+  hasBreachedSla          : Boolean,
+  byPriority              : OccurrencesByPriority,
+  byState                 : OccurrencesByState,
+  affectedServices        : Int
 )
 
 object TeamVulnerabilitySummary:
   implicit val format: Format[TeamVulnerabilitySummary] = Json.format[TeamVulnerabilitySummary]
+
+case class DeploymentOccurrence(
+  occurrenceId   : String,
+  vulnerabilityId: String,
+  component      : String,
+  fixedVersions  : Seq[String],
+  priority       : OccurrencePriority,
+  state          : OccurrenceState,
+  deadline       : Option[Instant],
+  breached       : Boolean,
+  nearBreach     : Boolean
+):
+  def daysRemaining(now: Instant = Instant.now()): Option[Long] =
+    deadline.map(d => Math.floorDiv(Duration.between(now, d).getSeconds, 86400L))
+
+object DeploymentOccurrence:
+  val reads: Reads[DeploymentOccurrence] =
+    given Reads[OccurrencePriority] = OccurrencePriority.reads
+    given Reads[OccurrenceState]    = OccurrenceState.reads
+
+    ( (__ \ "occurrenceId"      ).read[String]
+    ~ (__ \ "vulnerabilityId"   ).read[String]
+    ~ (__ \ "component"         ).read[String]
+    ~ (__ \ "fixedVersions"     ).read[Seq[String]]
+    ~ (__ \ "priority"          ).read[OccurrencePriority]
+    ~ (__ \ "state"             ).read[OccurrenceState]
+    ~ (__ \ "sla" \ "deadline"  ).readNullable[Instant]
+    ~ (__ \ "sla" \ "breached"  ).read[Boolean]
+    ~ (__ \ "sla" \ "nearBreach").read[Boolean]
+    )(DeploymentOccurrence.apply)
+
+
+case class DeploymentVulnerabilityReport(
+  serviceName       : String,
+  appVersion        : String,
+  scanStatus        : String,
+  lastSuccessfulScan: Option[Instant],
+  occurrences       : Seq[DeploymentOccurrence],
+  total             : Int
+):
+  def successful: Boolean = scanStatus == "succeeded"
+
+  def breachedCount: Int =
+    actionableOccurrences.count(_.breached)
+
+  def nearBreachCount: Int =
+    actionableOccurrences.count(o => o.nearBreach && !o.breached)
+
+  def actionableOccurrences: Seq[DeploymentOccurrence] =
+    occurrences.filter(_.state == OccurrenceState.Actionable)
+
+  def actionableCount: Int =
+    actionableOccurrences.size
+
+  def priorityCounts: Seq[(OccurrencePriority, Int)] =
+    occurrences.groupBy(_.priority).toSeq
+      .map((priority, values) => priority -> values.size)
+      .sortBy(_._1.ordinal)
+
+  def stateCounts: Seq[(OccurrenceState, Int)] =
+    occurrences.groupBy(_.state).toSeq
+      .map((state, values) => state -> values.size)
+      .sortBy(_._1.ordinal)
+
+object DeploymentVulnerabilityReport:
+  val reads: Reads[DeploymentVulnerabilityReport] =
+    given Reads[DeploymentOccurrence] = DeploymentOccurrence.reads
+
+    ( (__ \ "serviceName"       ).read[String]
+    ~ (__ \ "appVersion"        ).read[String]
+    ~ (__ \ "scanStatus"        ).read[String]
+    ~ (__ \ "lastSuccessfulScan").readNullable[Instant]
+    ~ (__ \ "results"           ).read[Seq[DeploymentOccurrence]]
+    ~ (__ \ "page" \ "total"    ).read[Int]
+    )(DeploymentVulnerabilityReport.apply)
+
+enum OccurrencePriority(val value: String, val label: String, val colour: String):
+  case Immediate extends OccurrencePriority("immediate", "Immediate", "danger"   )
+  case Expedite  extends OccurrencePriority("expedite" , "Expedite" , "warning"  )
+  case Schedule  extends OccurrencePriority("schedule" , "Schedule" , "info"     )
+  case Monitor   extends OccurrencePriority("monitor"  , "Monitor"  , "secondary")
+
+object OccurrencePriority:
+  def fromValue(value: String): Option[OccurrencePriority] =
+    OccurrencePriority.values.find(_.value == value)
+
+  val reads: Reads[OccurrencePriority] =
+    Reads.StringReads.flatMap: value =>
+      fromValue(value) match
+        case Some(priority) => Reads.pure(priority)
+        case None           => Reads(_ => JsError(s"Unknown occurrence priority: $value"))
 
 case class OccurrencesByPriority(immediate: Int, expedite: Int, schedule: Int, monitor: Int)
 
 object OccurrencesByPriority:
   implicit val format: Format[OccurrencesByPriority] = Json.format[OccurrencesByPriority]
 
+enum OccurrenceState(val value: String, val label: String, val colour: String):
+  case Actionable     extends OccurrenceState("actionable"    , "Actionable"      , "danger"   )
+  case NotApplicable  extends OccurrenceState("notApplicable" , "Not applicable"  , "secondary")
+  case NoFixAvailable extends OccurrenceState("noFixAvailable", "No fix available", "warning"  )
+  case RiskAccepted   extends OccurrenceState("riskAccepted"  , "Risk accepted"   , "warning"  )
+  case Resolved       extends OccurrenceState("resolved"      , "Resolved"        , "success"  )
+
+object OccurrenceState:
+  def fromValue(value: String): Option[OccurrenceState] =
+    OccurrenceState.values.find(_.value == value)
+
+  val reads: Reads[OccurrenceState] =
+    Reads.StringReads.flatMap: value =>
+      fromValue(value) match
+        case Some(state) => Reads.pure(state)
+        case None        => Reads(_ => JsError(s"Unknown occurrence state: $value"))
+
 case class OccurrencesByState(
-  actionable: Int,
-  notApplicable: Int,
+  actionable    : Int,
+  notApplicable : Int,
   noFixAvailable: Int,
-  riskAccepted: Int,
-  resolved: Int
+  riskAccepted  : Int,
+  resolved      : Int
 )
 
 object OccurrencesByState:

@@ -168,60 +168,80 @@ class DeployServiceController @Inject()(
       given AuthenticatedRequest[AnyContent, Set[Resource]] = request
       given VulnerabilityView = VulnerabilityView.select(request)
       (for
-         allServices          <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
-         serviceToRepoNames   <- EitherT.right[Result](serviceConfigsService.serviceRepoMappings)
-         accessibleRepos      <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
-         accessibleServices   =  accessibleServiceNames(allServices.map(_.name), accessibleRepos, serviceToRepoNames)
-         form                 =  DeployServiceForm.form.bindFromRequest()
-         formObject           <- EitherT
-                                   .fromEither[Future](form.fold(
-                                     formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, accessibleServices, None, Nil, Nil, evaluations = None)))
-                                   , validForm      => Right(validForm)
-                                   ))
-         repoName             =  repoNameFor(formObject.serviceName, serviceToRepoNames)
-         hasPerm              <- EitherT
-                                   .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(repoName)), predicate = None))
-         _                    <- EitherT
-                                   .fromOption[Future](
-                                     Option.when(hasPerm)(())
-                                   , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
+         allServices        <- EitherT.right[Result](teamsAndRepositoriesConnector.allRepositories(repoType = Some(RepoType.Service), archived = Some(false)))
+         serviceToRepoNames <- EitherT.right[Result](serviceConfigsService.serviceRepoMappings)
+         accessibleRepos    <- EitherT.pure[Future, Result](cleanseServices(request.retrieval))
+         accessibleServices =  accessibleServiceNames(allServices.map(_.name), accessibleRepos, serviceToRepoNames)
+         form               =  DeployServiceForm.form.bindFromRequest()
+         formObject         <- EitherT
+                                 .fromEither[Future](form.fold(
+                                   formWithErrors => Left(BadRequest(deployServicePage(formWithErrors, hasPerm = false, accessibleServices, None, Nil, Nil, evaluations = None)))
+                                 , validForm      => Right(validForm)
+                                 ))
+         repoName           =  repoNameFor(formObject.serviceName, serviceToRepoNames)
+         hasPerm            <- EitherT
+                                 .right[Result](auth.authorised(retrieval = Retrieval.hasPredicate(predicate(repoName)), predicate = None))
+         _                  <- EitherT
+                                 .fromOption[Future](
+                                   Option.when(hasPerm)(())
+                                 , Forbidden(deployServicePage(form.withGlobalError(failedPredicateMsg), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
+                                 )
+         _                  <- EitherT
+                                 .right[Result](auth.verify(retrieval = Retrieval.hasPredicate(predicate(repoName))))
+         latest             <- EitherT
+                                 .fromOptionF(
+                                   serviceDependenciesConnector.getSlugInfo(formObject.serviceName)
+                                 , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
+                                 ).map(x => Some(x.version))
+         releases           <- EitherT
+                                 .right[Result](releasesConnector.releasesForService(formObject.serviceName))
+                                 .map(_.versions.toSeq)
+         environments       <- EitherT
+                                 .right[Result](serviceCommissioningConnector.commissioningStatus(formObject.serviceName))
+                                 .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
+                                 .map(_.sorted)
+         _                  <- EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
+         currentSlug        <- EitherT.right[Result](serviceDependenciesConnector.getSlugInfo(formObject.serviceName, releases.find(_.environment == formObject.environment).map(_.version)))
+         slugToDeploy       <- EitherT
+                                 .fromOptionF(
+                                   serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
+                                 , BadRequest(deployServicePage(form.withGlobalError("Version not found. If this is a recent build, it may take a few minutes to be picked up"), hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
+                                 )
+         gitHubCompare      <- EitherT
+                                 .right[Result]:
+                                   gitHubProxyConnector
+                                     .compare(repoName, v1 = currentSlug.fold(Version("0.1.0"))(_.version), v2 = formObject.version)
+                                     .recover:
+                                       case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
+         jvmChanges         =  (currentSlug.map(_.java), slugToDeploy.java)
+         configChanges      <- EitherT
+                                 .right[Result](serviceConfigsService.configChangesNextDeployment(formObject.serviceName, formObject.environment, formObject.version))
+         configWarnings     <- EitherT
+                                 .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
+         //TODO: This can be removed when we switch over to V2 permanently
+         vulnerabilities    <- EitherT.right[Result](
+                                 if summon[VulnerabilityView].isPreview then
+                                   Future.successful(None)
+                                 else
+                                   vulnerabilitiesConnector.vulnerabilitySummaries(
+                                     serviceQuery   = Some(formObject.serviceName.asString),
+                                     version        = Some(formObject.version),
+                                     curationStatus = Some(CurationStatus.ActionRequired)
                                    )
-         _                    <- EitherT
-                                   .right[Result](auth.verify(retrieval = Retrieval.hasPredicate(predicate(repoName))))
-         latest               <- EitherT
-                                   .fromOptionF(
-                                     serviceDependenciesConnector.getSlugInfo(formObject.serviceName)
-                                   , BadRequest(deployServicePage(form.withGlobalError("Service not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None))
-                                   ).map(x => Some(x.version))
-         releases             <- EitherT
-                                   .right[Result](releasesConnector.releasesForService(formObject.serviceName))
-                                   .map(_.versions.toSeq)
-         environments         <- EitherT
-                                   .right[Result](serviceCommissioningConnector.commissioningStatus(formObject.serviceName))
-                                   .map(_.collect { case x: Check.EnvCheck if x.title == "App Config Environment" => x.checkResults.filter(_._2.isRight).keys }.flatten )
-                                   .map(_.sorted)
-         _                    <- EitherT.fromOption[Future](environments.headOption, BadRequest(deployServicePage(form.withGlobalError("App Config Environment not found"), hasPerm, accessibleServices, None, Nil, Nil, evaluations = None)))
-         currentSlug          <- EitherT.right[Result](serviceDependenciesConnector.getSlugInfo(formObject.serviceName, releases.find(_.environment == formObject.environment).map(_.version)))
-         slugToDeploy         <- EitherT
-                                   .fromOptionF(
-                                     serviceDependenciesConnector.getSlugInfo(formObject.serviceName, Some(formObject.version))
-                                   , BadRequest(deployServicePage(form.withGlobalError("Version not found. If this is a recent build, it may take a few minutes to be picked up"), hasPerm, accessibleServices, latest, releases, environments, evaluations = None))
-                                   )
-         gitHubCompare        <- EitherT
-                                   .right[Result]:
-                                     gitHubProxyConnector
-                                       .compare(repoName, v1 = currentSlug.fold(Version("0.1.0"))(_.version), v2 = formObject.version)
-                                       .recover:
-                                         case NonFatal(ex) => logger.error(s"Could not call git compare ${ex.getMessage}", ex); None
-         jvmChanges           =  (currentSlug.map(_.java), slugToDeploy.java)
-         configChanges        <- EitherT
-                                   .right[Result](serviceConfigsService.configChangesNextDeployment(formObject.serviceName, formObject.environment, formObject.version))
-         configWarnings       <- EitherT
-                                   .right[Result](serviceConfigsService.configWarnings(formObject.serviceName, Seq(formObject.environment), Some(formObject.version), latest = true))
-         vulnerabilities      <- EitherT
-                                   .right[Result](vulnerabilitiesConnector.vulnerabilitySummaries(serviceQuery = Some(formObject.serviceName.asString), version = Some(formObject.version), curationStatus = Some(CurationStatus.ActionRequired)))
-         violations           <- EitherT
-                                   .right[Result](serviceDependenciesConnector.getRepositoryModules(repoName, formObject.version))
+                               )
+         v2Vulnerabilities  <- EitherT.right[Result](
+                                 if summon[VulnerabilityView].isPreview then
+                                   vulnerabilitiesConnector.deploymentOccurrences(
+                                     formObject.serviceName,
+                                     formObject.version
+                                   ).recover:
+                                      case NonFatal(ex) =>
+                                        logger.warn(s"Deployment vulnerability report unavailable: ${ex.getMessage}")
+                                        None
+                                 else Future.successful(None)
+                               )
+         violations         <- EitherT
+                                 .right[Result](serviceDependenciesConnector.getRepositoryModules(repoName, formObject.version))
        yield
          Ok(deployServicePage(
            form,
@@ -230,7 +250,7 @@ class DeployServiceController @Inject()(
            latest,
            releases,
            environments,
-           Some((gitHubCompare, jvmChanges, configChanges, configWarnings, vulnerabilities, violations))
+           Some((gitHubCompare, jvmChanges, configChanges, configWarnings, vulnerabilities, v2Vulnerabilities, violations)),
          ))
       ).merge
 
