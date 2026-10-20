@@ -1,0 +1,159 @@
+@*
+ * Copyright 2026 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope}
+@import uk.gov.hmrc.cataloguefrontend.dependency.{routes => dependencyRoutes}
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.ServiceVulnerabilitiesReport
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.OccurrenceState.Actionable
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.OccurrencePriority.Immediate
+
+@import java.time.Instant.now
+
+@this(configuration : play.api.Configuration)
+
+@(report: Option[ServiceVulnerabilitiesReport])
+
+@url: String = @{
+ configuration.get[String]("vulnerabilities-frontend.baseUrl")
+}
+
+@serviceName: String = @{
+    report.map(_.serviceName.asString).getOrElse("")
+}
+
+
+<div class="row">
+    <div class="col-md-12">
+        <div id="vulnerabilities" class="card mb-3">
+            <div class="card-header">
+                <div class="h4 mb-0">Actionable vulnerabilities</div>
+            </div>
+            <div class="card-body">
+                @report.flatMap(_.reports.headOption).fold {
+                    <p class="text-muted mb-0">No vulnerabilities data available</p>
+                } { r =>
+                    <div class="row align-items-stretch">
+                        <div class="col-9 d-flex flex-column">
+                            <div class="table-responsive flex-grow-1">
+                                <table class="table align-top">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Vulnerability ID</th>
+                                                <th scope="col">Component</th>
+                                                <th scope="col">SLA</th>
+                                                <th scope="col">Priority</th>
+                                            </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for(v <- r.vulnerabilities
+                                            .filter(_.state == Actionable)
+                                            .sortBy(v => (
+                                                if v.slaBreached then 0 else 1,
+                                                if v.state == Actionable then 0 else 1,
+                                                if v.priority == Immediate then 0 else 1
+                                            ))
+                                        .take(5)) {
+                                            <tr>
+                                                <td><a href="@url?vulnerabilityId=@v.id">@v.id</a></td>
+                                                <td>@v.component</td>
+                                                <td>
+                                                    @if(v.slaBreached) {
+                                                        <span class="badge text-bg-danger">Breached</span>
+                                                    } else if (v.daysRemaining < 7) {
+                                                        <span class="badge text-bg-warning">Near breach</span>
+                                                    } else {
+                                                        @v.daysRemaining days
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <span class="badge text-bg-@v.priority.colour">@v.priority.label</span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-2">
+                                @defining(r.vulnerabilities.count(_.state == Actionable)) { actionableCount =>
+                                    <p class="small mb-1" style="margin-top: 0;">Showing 1-@actionableCount of @r.vulnerabilities.size vulnerabilities</p>
+                                }
+                                <a href="@url?service=@serviceName" target="_blank">
+                                    View all vulnerabilities
+                                    <span class="glyphicon glyphicon-new-window"></span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div id="summary" class="card w-100">
+                                <div class="card-header">
+                                    <div class="h6 mb-0">Summary</div>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        @report.flatMap(_.reports.flatMap(_.vulnerabilities).map(_.daysRemaining).minOption).map { d =>
+                                            @if(d > 0) {
+                                                <li>
+                                                    <span class="badge rounded-pill @if(d < 30) { text-bg-danger } else { text-bg-warning }">@d</span>
+                                                    <span>days until next remediation deadline</span>
+                                                </li>
+                                            }
+                                        }
+                                        <li>
+                                            <span class="badge rounded-pill @if(r.summary.byPriority.immediate == 0) { text-bg-success } else { text-bg-danger } ">@r.summary.byPriority.immediate</span>
+                                            <a href="@url?service=@serviceName&priority=immediate&state=all">Priority - Immediate</a>
+                                        </li>
+                                        <li>
+                                            <span class="badge rounded-pill @if(r.summary.byPriority.expedite == 0) { text-bg-success } else { text-bg-danger } ">@r.summary.byPriority.expedite</span>
+                                            <a href="@url?service=@serviceName&priority=expedite&state=all">Priority - Expedite</a>
+                                        </li>
+                                        <li>
+                                            <span class="badge rounded-pill @if(r.summary.byPriority.schedule == 0) { text-bg-success } else { text-bg-warning } ">@r.summary.byPriority.schedule</span>
+                                            <a href="@url?service=@serviceName&priority=schedule&state=all">Priority - Schedule</a>
+                                        </li>
+                                        <li>
+                                            <span class="badge rounded-pill @if(r.summary.byPriority.monitor == 0) { text-bg-success } else { text-bg-info } ">@r.summary.byPriority.monitor</span>
+                                            <a href="@url?service=@serviceName&priority=monitor&state=all">Priority - Monitor</a>
+                                        </li>
+                                        <li>
+                                            <span class="badge rounded-pill @if(r.summary.byState.actionable == 0) { text-bg-success } else { text-bg-danger } ">@r.summary.byState.actionable</span>
+                                            <a href="@url?service=@serviceName&state=actionable">State - Actionable</a>
+                                        </li>
+                                        <li>
+                                            <span class="badge rounded-pill @if(r.summary.byState.notApplicable == 0) { text-bg-success } else { text-bg-info } ">@r.summary.byState.notApplicable</span>
+                                            <a href="@url?service=@serviceName&state=notApplicable">State - Not Applicable</a>
+                                        </li>
+                                        <li>
+                                            <span class="badge rounded-pill @if(r.summary.byState.noFixAvailable == 0) { text-bg-success } else { text-bg-info } ">@r.summary.byState.noFixAvailable</span>
+                                            <a href="@url?service=@serviceName&state=noFixAvailable">State - No Fix Available</a>
+                                        </li>
+                                        <li>
+                                            <span class="badge rounded-pill text-bg-info">@r.summary.byState.riskAccepted</span>
+                                            <a href="@url?service=@serviceName&state=riskAccepted">State - Risk Accepted</a>
+                                        </li>
+                                        <li>
+                                            <span class="badge rounded-pill text-bg-success">@r.summary.byState.resolved</span>
+                                            <a href="@url?service=@serviceName&state=resolved">State - Resolved</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

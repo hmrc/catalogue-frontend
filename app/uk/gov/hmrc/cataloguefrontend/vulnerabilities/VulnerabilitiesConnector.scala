@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.cataloguefrontend.vulnerabilities
 
-import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.{DeploymentVulnerabilityReport, TeamVulnerabilitySummary}
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.*
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.OccurrencePriority.*
+import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.OccurrenceState.*
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.cataloguefrontend.model.{DigitalService, ServiceName, SlugInfoFlag, TeamName, Version}
 import uk.gov.hmrc.cataloguefrontend.util.DateHelper.{atEndOfDayInstant, atStartOfDayInstant}
@@ -91,7 +93,7 @@ class VulnerabilitiesConnector @Inject() (
   )(using HeaderCarrier): Future[Option[DeploymentVulnerabilityReport]] =
     given Reads[DeploymentVulnerabilityReport] = DeploymentVulnerabilityReport.reads
 
-    val endpoint = url"$url/vulnerabilities/api/v2/services/${serviceName.asString}/app-versions/${version.original}/occurrences"
+    // val endpoint = url"$url/vulnerabilities/api/v2/services/${serviceName.asString}/app-versions/${version.original}/occurrences"
 
     // TODO: Replace stub with the actual request when VULN004 is available:
     //
@@ -207,10 +209,67 @@ class VulnerabilitiesConnector @Inject() (
     Future.successful(Some(stubResponse.as[DeploymentVulnerabilityReport]))
 
   def v2TeamSummary(team: TeamName)
-  (using HeaderCarrier) =
+  (using HeaderCarrier): Future[TeamVulnerabilitySummary] =
     given Reads[TeamVulnerabilitySummary] = TeamVulnerabilitySummary.format
     httpClientV2
       .get(url"$url/vulnerabilities/v2/team?team=${team.asString}")
       .execute[TeamVulnerabilitySummary]
+
+  def v2ServiceSummary(envData: Map[ServiceName, Seq[Version]])
+    (using HeaderCarrier): Future[Option[ServiceVulnerabilitiesReport]] =
+      // given Reads[ServiceVulnerabilitiesReport] = ServiceVulnerabilitiesReport.reads
+      // httpClientV2
+      //   .get(url"$url/vulnerabilities/v2/service?service=${envData.keys.head}&versions=${envData.values}")
+      //   .execute[Option[ServiceVulnerabilitiesReport]]
+
+    val priorities = OccurrencePriority.values
+    val states = OccurrenceState.values
+    val versions = envData.values.flatten.toSeq.sorted
+    val versionReports = versions.zipWithIndex.map { case (version, versionIndex) =>
+      val startId = versionIndex * 5 + 1
+      val vulnerabilities = (startId until startId + 5).map { id =>
+          val state = states((id - 1) % states.length)
+          val slaBreached = state == OccurrenceState.Actionable && id < 3
+
+          ServiceVulnerability(
+            id = f"CVE-2026-$id%03d",
+            component = s"Vulnerable component $id",
+            priority = priorities(((id - 1) % 5).min(priorities.length - 1)),
+            state = state,
+            daysRemaining = if slaBreached then -id else id - 3,
+            slaBreached = slaBreached
+          )
+        }
+
+      VersionsVulnerabilitiesReport(
+        version = version,
+        summary = ServiceVulnerabilitySummary(
+          byPriority = OccurrencesByPriority(
+            immediate = vulnerabilities.count(_.priority == Immediate),
+            expedite = vulnerabilities.count(_.priority == Expedite),
+            schedule = vulnerabilities.count(_.priority == Schedule),
+            monitor = vulnerabilities.count(_.priority == Monitor)
+          ),
+          byState = OccurrencesByState(
+            actionable = vulnerabilities.count(_.state == Actionable),
+            notApplicable = vulnerabilities.count(_.state == NotApplicable),
+            noFixAvailable = vulnerabilities.count(_.state == NoFixAvailable),
+            riskAccepted = vulnerabilities.count(_.state == RiskAccepted),
+            resolved = vulnerabilities.count(_.state == Resolved)
+          ),
+          hasBreachedSla = vulnerabilities.exists(_.slaBreached),
+          shortestRemainingSlaDays =
+            vulnerabilities.map(_.daysRemaining).minOption
+        ),
+        vulnerabilities = vulnerabilities
+      )
+    }
+
+    val stubResponse = ServiceVulnerabilitiesReport(
+      serviceName = ServiceName(envData.keys.head.asString),
+      reports = versionReports
+    )
+    
+    Future.successful(Some(stubResponse))
 
 end VulnerabilitiesConnector

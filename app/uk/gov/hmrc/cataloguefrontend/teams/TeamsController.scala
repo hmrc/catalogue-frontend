@@ -87,6 +87,8 @@ class TeamsController @Inject()(
       v2VulnerabilitiesSummary <- EitherT.right:
                                   if (vulnerabilityView.isPreview)
                                     vulnerabilitiesConnector.v2TeamSummary(teamName).map(Some(_))
+                                    .recover: _ =>
+                                      None
                                   else
                                     Future.successful(None)
       results <- EitherT.right:

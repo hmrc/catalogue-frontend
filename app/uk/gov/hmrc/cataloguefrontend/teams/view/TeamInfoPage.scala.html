@@ -269,8 +269,8 @@
               @shutteringPartial(teamName = Some(teamName), digitalService = None, shutterStates  = healthMetrics)
             } else {
               @vulnerabilitiesPartial(
-                teamName                        = Some(teamName),
-                vulnBaseUrl                     = vulnrerabilitiesBaseUrl,
+                teamName                        = teamName,
+                baseUrl                         = vulnrerabilitiesBaseUrl.get,
                 vulnV2Summary                   = vulnV2Summary
               )
             } 
@@ -284,7 +284,6 @@
             , digitalService                  = None
             , serviceMetricsLogDuration       = serviceMetricsLogDuration
             , vulnBaseUrl                     = vulnrerabilitiesBaseUrl
-            , vulnV2Summary                   = vulnV2Summary
             )
           </div>
           <div class="col md-3">

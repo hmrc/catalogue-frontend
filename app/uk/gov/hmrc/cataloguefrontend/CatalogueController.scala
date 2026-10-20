@@ -45,7 +45,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{FrontendAuthComponents, IAAction, Predicate, Resource, Retrieval}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.cataloguefrontend.view.html.{IndexPage, LibraryInfoPage, PrototypeInfoPage, RepositoryInfoPage, ServiceInfoPage, ServiceInfoPreviewPage, TestRepoInfoPage, error_404_template}
+import uk.gov.hmrc.cataloguefrontend.view.html.*
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -79,7 +79,6 @@ class CatalogueController @Inject() (
   telemetryLinks                     : TelemetryLinks,
   indexPage                          : IndexPage,
   serviceInfoPage                    : ServiceInfoPage,
-  serviceInfoPreviewPage             : ServiceInfoPreviewPage,
   libraryInfoPage                    : LibraryInfoPage,
   prototypeInfoPage                  : PrototypeInfoPage,
   testRepoInfoPage                   : TestRepoInfoPage,
@@ -148,7 +147,6 @@ class CatalogueController @Inject() (
     request : RequestHeader
   ): Future[Result] =
     given vulnerabilityView: VulnerabilityView = VulnerabilityView.select(request)
-    val renderPage = if vulnerabilityView.isPreview then serviceInfoPreviewPage.f else serviceInfoPage.f
     // Future connector integrations must use this same selection before fetching preview data.
     for
       deployments               <- whatsRunningWhereService.releasesForService(serviceName).map(_.versions)
@@ -226,8 +224,12 @@ class CatalogueController @Inject() (
       canMarkForDecommissioning <- hasMarkForDecommissioningAuthorisation(repositoryName)
       lifecycle                 <- serviceCommissioningStatusConnector.getLifecycle(serviceName)
       isGuest                   =  request.session.get(AuthController.SESSION_USERNAME).exists(_.startsWith("guest-"))
+      vulnV2Report              <- if vulnerabilityView.isPreview then
+                                    vulnerabilitiesConnector
+                                    .v2ServiceSummary(Map(serviceName -> deployments.map(_.version).distinct))
+                                    else Future.successful(None)
     yield
-      Ok(renderPage(
+      Ok(serviceInfoPage(
         serviceName,
         repositoryDetails,
         jenkinsJobs,
@@ -246,7 +248,9 @@ class CatalogueController @Inject() (
         canMarkForDecommissioning,
         lifecycle,
         testJobMap,
-        isGuest
+        isGuest,
+        vulnV2Enabled = vulnerabilityView.isPreview,
+        vulnV2Report
       )(vulnerabilityView, messagesApi.preferred(request), request))
 
   def library(name: String): Action[AnyContent] =

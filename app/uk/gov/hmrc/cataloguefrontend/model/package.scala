@@ -84,6 +84,7 @@ package object model:
       original
 
   object Version:
+    given Format[Version] = format
     given Ordering[Version] =
       Ordering.by: v =>
         (v.major, v.minor, v.patch)
