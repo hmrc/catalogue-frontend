@@ -446,3 +446,12 @@ svg > g:last-child > g.google-visualization-tooltip { pointer-events: none }
   background-color: #FFF3A3;
   font-size: large;
 }
+
+#vulnerabilities .table-responsive {
+    flex: 1;
+}
+
+#vulnerabilities table {
+    height: 100%;
+    margin-bottom: 0;
+}

@@ -20,6 +20,8 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.*
 
 import java.time.{Duration, Instant}
+import uk.gov.hmrc.cataloguefrontend.model.ServiceName
+import uk.gov.hmrc.cataloguefrontend.model.Version
 
 case class TeamVulnerabilitySummary(
   shortestRemainingSlaDays: Option[Int],
@@ -117,7 +119,7 @@ object OccurrencePriority:
   def fromValue(value: String): Option[OccurrencePriority] =
     OccurrencePriority.values.find(_.value == value)
 
-  val reads: Reads[OccurrencePriority] =
+  implicit val reads: Reads[OccurrencePriority] =
     Reads.StringReads.flatMap: value =>
       fromValue(value) match
         case Some(priority) => Reads.pure(priority)
@@ -139,7 +141,7 @@ object OccurrenceState:
   def fromValue(value: String): Option[OccurrenceState] =
     OccurrenceState.values.find(_.value == value)
 
-  val reads: Reads[OccurrenceState] =
+  implicit val reads: Reads[OccurrenceState] =
     Reads.StringReads.flatMap: value =>
       fromValue(value) match
         case Some(state) => Reads.pure(state)
@@ -155,3 +157,42 @@ case class OccurrencesByState(
 
 object OccurrencesByState:
   implicit val format: Format[OccurrencesByState] = Json.format[OccurrencesByState]
+
+case class ServiceVulnerabilitiesReport(
+  serviceName: ServiceName,
+  reports    : Seq[VersionsVulnerabilitiesReport]
+)
+
+object ServiceVulnerabilitiesReport:
+  implicit val reads: Reads[ServiceVulnerabilitiesReport] = Json.reads[ServiceVulnerabilitiesReport]
+
+case class VersionsVulnerabilitiesReport(
+  version         : Version,
+  summary         : ServiceVulnerabilitySummary,
+  vulnerabilities : Seq[ServiceVulnerability]
+)
+
+object VersionsVulnerabilitiesReport:
+  implicit val reads: Reads[VersionsVulnerabilitiesReport] = Json.reads[VersionsVulnerabilitiesReport]
+
+case class ServiceVulnerabilitySummary(
+  byPriority               : OccurrencesByPriority,
+  byState                  : OccurrencesByState,
+  hasBreachedSla           : Boolean,
+  shortestRemainingSlaDays : Option[Int]
+)
+
+object ServiceVulnerabilitySummary:
+  implicit val reads: Reads[ServiceVulnerabilitySummary] = Json.reads[ServiceVulnerabilitySummary]
+
+case class ServiceVulnerability(
+  id            : String,
+  component     : String,
+  priority      : OccurrencePriority,
+  state         : OccurrenceState,
+  daysRemaining : Int,
+  slaBreached   : Boolean
+)
+
+object ServiceVulnerability:
+  implicit val reads: Reads[ServiceVulnerability] = Json.reads[ServiceVulnerability]

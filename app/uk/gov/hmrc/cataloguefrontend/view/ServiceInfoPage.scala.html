@@ -24,6 +24,7 @@
 @import uk.gov.hmrc.cataloguefrontend.serviceconfigs.ServiceConfigsService
 @import uk.gov.hmrc.cataloguefrontend.servicemetrics.ServiceProvision
 @import uk.gov.hmrc.cataloguefrontend.view.ViewMessages
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.ServiceVulnerabilitiesReport
 
 @import java.time.Instant
 
@@ -51,7 +52,9 @@
   canMarkForDecommissioning    : MarkForDecommissioning.HasAuthorisation,
   lifecycle                    : Option[Lifecycle],
   testJobMap                   : Map[String, Seq[JenkinsJob]],
-  isGuest                      : Boolean
+  isGuest                      : Boolean,
+  vulnV2Enabled                : Boolean,
+  vulnV2Report                 : Option[ServiceVulnerabilitiesReport]
 )(implicit
   vulnerabilityView: VulnerabilityView,
   messages                     : Messages,
@@ -75,6 +78,11 @@
         <script @CSPNonce.attr type="text/javascript" src="@routes.Assets.versioned("charts-loader-51.js")"></script>
     </header>
 
+    @if(vulnV2Enabled && vulnV2Report.exists(_.reports.exists(_.summary.hasBreachedSla))) {
+        <div class="alert alert-danger" id="sla-breached">
+            <strong>This service has one or more vulnerabilities that are overdue for remediation. Urgent action is required</strong>
+        </div>
+    }
     @partials.leak_detection_banner(linkToLeakDetection)
     @defining(envDatas.get(SlugInfoFlag.ForEnvironment(Environment.Production)).toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)){ dependencies =>
       @partials.bobby_violations_banner(environment = Some(Environment.Production), dependencies = dependencies, pending = false)
@@ -138,7 +146,11 @@
             </div>
         </div>
 
-        @dependenciesByEnvironmentPartial(serviceName, envDatas)
+        @dependenciesByEnvironmentPartial(
+            serviceName,
+            envDatas,
+            vulnV2Enabled,
+            if(vulnV2Enabled) vulnV2Report else None)
     </section>
 
     <div class="alert alert-success" role="alert" id="@repositoryDetails.name">

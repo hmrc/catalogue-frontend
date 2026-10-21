@@ -16,17 +16,20 @@
 
 @import uk.gov.hmrc.cataloguefrontend.EnvData
 @import uk.gov.hmrc.cataloguefrontend.connector.Link
+@import uk.gov.hmrc.cataloguefrontend.vulnerabilities.v2.ServiceVulnerabilitiesReport
 @import uk.gov.hmrc.cataloguefrontend.vulnerabilities.TotalVulnerabilityCount
 @import uk.gov.hmrc.cataloguefrontend.connector.model.{Dependency, DependencyScope}
 @import uk.gov.hmrc.cataloguefrontend.shuttering.{ShutterState, ShutterStatusValue}
 
 @this(
-  dependenciesPartial: DependenciesPartial
+  dependenciesPartial: DependenciesPartial, vulnerabilitiesPartial: VulnerabilitiesPartial
 )
 
 @(
-  serviceName: ServiceName,
-  envDatas   : Map[SlugInfoFlag, EnvData]
+  serviceName   : ServiceName,
+  envDatas      : Map[SlugInfoFlag, EnvData],
+  vulnV2Enabled : Boolean,
+  vulnV2Report  : Option[ServiceVulnerabilitiesReport]
 )(implicit
   request : RequestHeader,
   messages: Messages
@@ -58,7 +61,19 @@
                         <span>
                             @renderShutterStatusBadge(optEnvData.fold(Seq.empty[uk.gov.hmrc.cataloguefrontend.shuttering.ShutterState])(_.shutterStates))
                             @defining(optEnvData.toSeq.flatMap(_.repoModules).flatMap(_.allDependencies)) { dependencies =>
-                                @renderViolationBadge(slugInfoFlag, dependencies, optEnvData.fold(0)(_.actionReqVulnerabilityCount))
+                                @if(!vulnV2Enabled) {
+                                  @renderViolationBadge(slugInfoFlag, dependencies, optEnvData.fold(0)(_.actionReqVulnerabilityCount))
+                                } else {
+                                  @renderViolationBadge(
+                                    slugInfoFlag,
+                                    dependencies,
+                                    vulnV2Report.fold(0) { _.reports
+                                        .filter(r => optEnvData.exists(_.version == r.version))
+                                        .flatMap(_.vulnerabilities)
+                                        .count(_.slaBreached)
+                                    } + optEnvData.fold(0)(_.actionReqVulnerabilityCount)                  
+                                  )
+                                }
                                 @renderPendingBobbyRuleViolationBadge(slugInfoFlag, dependencies)
                             }
                         </span>
@@ -74,6 +89,18 @@
   @for(slugInfoFlag <- SlugInfoFlag.values) {
     @defining(envDatas.get(slugInfoFlag)){ (optEnvData: Option[EnvData]) =>
       <div id="@{slugInfoFlag.asString}-pane" class="tab-pane fade @if(slugInfoFlag == lastEnvironmentWithDeployments) { show active }" role="tabpanel" aria-labelledby="@{slugInfoFlag.asString}-tab" tabindex="0">
+
+        @if(vulnV2Enabled) {
+          @vulnerabilitiesPartial(
+            vulnV2Report.map { report =>
+              report.copy(
+                reports = report.reports.filter(r =>
+                  optEnvData.exists(_.version == r.version)
+                )
+              )
+            }
+          )
+        }
 
         @if(slugInfoFlag != SlugInfoFlag.Latest) {
           <div id="@{slugInfoFlag.asString}-telemetry" class="card mb-3">
