@@ -71,26 +71,26 @@
                 <div id="teamName" class="col-md-6">
                     <label class="fw-bold" for="teamInput">Team name:</label>
                     @if(teamNames.nonEmpty){
-                        <p class="mt-2">Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+                        <p class="mt-2">Select the team that will own this repository. You can only create repositories for teams you are a member of.</p>
+                        <select class="form-select" id="teamInput" name="teamName">
+                            @teamNames.map { tn =>
+                                <option value="@{tn.asString}"
+                                        @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}
+                                >@tn.asString</option>
+                            }
+                        </select>
                     } else {
                         <p class="alert alert-danger mt-2">There are currently no teams that you have permissions to create a repository for. Ensure you are signed in to the MDTP Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
-                           If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
+                           If you are already signed in, you will need to ask a Team Admin to add you to the team you wish to create a repository for.
                         </p>
                     }
-                    <select class="form-select" id="teamInput" name="teamName">
-                        @teamNames.map { tn =>
-                            <option value="@{tn.asString}"
-                                    @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}
-                            >@tn.asString</option>
-                        }
-                    </select>
                 </div>
             </div>
             <div class="form-group row mb-4">
                 <div id="organisation" class="col-md-6">
                     <label class="fw-bold" for="organisationInput">Organisation:</label>
                     <p class="mt-2">
-                        Select the organisation which best fits this repositories purpose. Contact PlatOps to add more options.
+                        Select the organisation which best fits this repository's purpose. Contact <a href="https://hmrcdigital.slack.com/archives/C0GS60DK2" target="_blank" rel="noreferrer noopener">#team-platops</a> if the organisation you need isn't on the list.
                     </p>
                     <select class="form-select" id="teInput" name="organisation">
                         <option value="" @if(form.data.getOrElse("organisation", "").isEmpty) { selected="selected" } >
