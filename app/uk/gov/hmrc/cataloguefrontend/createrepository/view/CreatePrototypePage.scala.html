@@ -93,7 +93,10 @@
                 <div id="teamName" class="col-md-6 mb-3">
                     <label class="fw-bold" for="teamInput">Team name:</label>
                     @if(teamNames.nonEmpty){
-                        <p class="mt-2">Select the team that will own this repository. You can only create repositories for teams you are a member of.</p>
+                        <p class="mt-2">Select the team that will own this repository. 
+                            You can only create repositories for teams you are a member of.
+                            If you need to create a repository for a team that's not in the list, a Team Admin in that team needs to add you to that team first.
+                        </p>
                         <select class="form-select" id="teamInput" name="teamName">
                             @teamNames.map { tn =>
                                 <option value="@{tn.asString}"
