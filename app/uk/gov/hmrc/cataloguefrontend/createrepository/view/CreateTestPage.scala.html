@@ -77,28 +77,32 @@
                             @form.data.get("makePrivate").map{ _ => checked }
                         >
                     </div>
-                    <p>You must decide now if you will code in the open, or privately. If you select ‘Make Private’ the GitHub repository you create will only be visible within HMRC.
-                        Private coding usually relates to data security. Open repositories are visible to the public.
-                        As a general rule, most services are open by default. If you’re unsure, talk to your architect or digital service manager (DSM).</p>
+                    <p>If you select 'Make Private', the repository will only be visible within the HMRC GitHub organisation.
+                        Repositories should be <b>Public</b> by default, <b>Private</b> repositories are usually used where data security is a concern.
+                        If you're unsure, speak to your architect or Digital Service Manager (DSM).
+                    </p>
                 </div>
             </div>
             <div class="form-group row">
                 <div id="teamName" class="col-md-6 mb-3">
                     <label class="fw-bold" for="teamInput">Team name:</label>
                     @if(teamNames.nonEmpty){
-                        <p class="mt-2">Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+                        <p class="mt-2">Select the team that will own this repository. 
+                            You can only create repositories for teams you are a member of.
+                            If you need to create a repository for a team that's not in the list, a Team Admin in that team needs to add you to that team first.
+                        </p>
+                        <select class="form-select" id="teamInput" name="teamName">
+                            @teamNames.map { tn =>
+                                <option value="@{tn.asString}"
+                                        @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}
+                                >@tn.asString</option>
+                            }
+                        </select>
                     } else {
                         <p class="alert alert-danger mt-2">There are currently no teams that you have permissions to create a repository for. Ensure you are signed in to the MDTP Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
-                           If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
+                           If you are already signed in, you will need to ask a Team Admin to add you to the team you wish to create a repository for.
                         </p>
                     }
-                    <select class="form-select" id="teamInput" name="teamName">
-                        @teamNames.map { tn =>
-                            <option value="@{tn.asString}"
-                                    @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}
-                            >@tn.asString</option>
-                        }
-                    </select>
                 </div>
             </div>
             <div class="form-group row mb-3">

@@ -93,28 +93,31 @@
                 <div id="teamName" class="col-md-6 mb-3">
                     <label class="fw-bold" for="teamInput">Team name:</label>
                     @if(teamNames.nonEmpty){
-                        <p class="mt-2">Enter the name of the team that will own this repository on GitHub. If the team you wish to create a repository for is not in the below list, then you will need to ask a team-admin to add you to the desired team on UMP.</p>
+                        <p class="mt-2">Select the team that will own this repository. 
+                            You can only create repositories for teams you are a member of.
+                            If you need to create a repository for a team that's not in the list, a Team Admin in that team needs to add you to that team first.
+                        </p>
+                        <select class="form-select" id="teamInput" name="teamName">
+                            @teamNames.map { tn =>
+                                <option value="@{tn.asString}"
+                                        @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}
+                                >@tn.asString</option>
+                            }
+                        </select>
                     } else {
                         <p class="alert alert-danger mt-2">There are currently no teams that you have permissions to create a repository for. Ensure you are signed in to the MDTP Catalogue using your LDAP credentials (as opposed to using the guest sign-in process).
-                           If you are already signed in, then you will need to ask a team-admin to add you to your desired team on UMP.
+                           If you are already signed in, you will need to ask a Team Admin to add you to the team you wish to create a repository for.
                         </p>
                     }
-                    <select class="form-select" id="teamInput" name="teamName">
-                        @teamNames.map { tn =>
-                            <option value="@{tn.asString}"
-                                    @if(form.data.getOrElse("teamName", "").equals(tn.asString)) { selected="selected" else ""}
-                            >@tn.asString</option>
-                        }
-                    </select>
                 </div>
             </div>
 
             <div class="form-group row mb-2">
                 <div class="col-md-6 d-grid gap-2">
-                    <label class="fw-bold" for="slackChannelsInput">Slack Channels:</label>
+                    <label class="fw-bold" for="slackChannelsInput">Slack Channels (optional):</label>
                     <div id="slackChannels" class="mb-2">
                         <div class="mb-2">
-                            (Optional) A comma separated list of Slack channels for receiving prototype notifications. These channels can be added to and changed in the repository.yaml file in the prototype's repository.
+                            List of comma-separated Slack channels for receiving prototype notifications. These channels can be added to and changed in the <code>repository.yaml</code> file in the prototype's repository.
                         </div>
                         <div class="mb-2">
                             Slack channel names can only contain the following characters:
