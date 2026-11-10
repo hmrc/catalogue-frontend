@@ -32,7 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ServiceDependenciesConnector @Inject() (
   httpClientV2  : HttpClientV2,
-  servicesConfig: ServicesConfig
+  servicesConfig: ServicesConfig,
+  teamsAndRepositoriesConnector: TeamsAndRepositoriesConnector
 )(using
   ec: ExecutionContext
 ):
@@ -46,6 +47,7 @@ class ServiceDependenciesConnector @Inject() (
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/teams/${team.asString}/dependencies")
       .execute[Seq[Dependencies]]
+      .flatMap(teamRepositoryLinks)
 
   def getSlugInfo(
     serviceName: ServiceName,
@@ -153,6 +155,7 @@ class ServiceDependenciesConnector @Inject() (
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=latest")
       .execute[Seq[RepositoryModules]]
+      .flatMap(moduleRepositoryLinks)
       .map(_.headOption)
 
   def getRepositoryModules(repositoryName: String, version: Version)(using HeaderCarrier): Future[Option[RepositoryModules]] =
@@ -160,6 +163,7 @@ class ServiceDependenciesConnector @Inject() (
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies?version=${version.toString}")
       .execute[Seq[RepositoryModules]]
+      .flatMap(moduleRepositoryLinks)
       .map(_.headOption)
 
   def getRepositoryModulesAllVersions(repositoryName: String)(using HeaderCarrier): Future[Seq[RepositoryModules]] =
@@ -167,3 +171,53 @@ class ServiceDependenciesConnector @Inject() (
     httpClientV2
       .get(url"$servicesDependenciesBaseUrl/api/repositories/$repositoryName/module-dependencies")
       .execute[Seq[RepositoryModules]]
+      .flatMap(moduleRepositoryLinks)
+
+  private def repositoryExists(dependency: Dependency)(using HeaderCarrier): Future[Boolean] =
+    getRepositoryName(dependency.group, dependency.name, dependency.currentVersion).flatMap:
+      case Some(_) => Future.successful(true)
+      case None    => teamsAndRepositoriesConnector.repositoryDetails(dependency.name).map(_.isDefined)
+
+  private def repositoryLinkFlags(dependencies: Seq[Dependency])(using HeaderCarrier): Future[Dependency => Dependency] =
+    def key(dependency: Dependency) =
+      (dependency.group, dependency.name, dependency.currentVersion.toString)
+
+    val dependenciesToCheck = dependencies.filterNot(_.isExternal).distinctBy(key)
+
+    Future.traverse(dependenciesToCheck): dependency =>
+      repositoryExists(dependency).map: exists =>
+        key(dependency) -> exists
+    .map: results =>
+      val repositoryLinks = results.toMap
+
+      def updateDependency(dependency: Dependency): Dependency =
+        dependency.copy(hasRepositoryLink = repositoryLinks.getOrElse(key(dependency), false))
+
+      updateDependency
+
+  private def moduleRepositoryLinks(repositories: Seq[RepositoryModules])(using HeaderCarrier): Future[Seq[RepositoryModules]] =
+    val dependencies = repositories.flatMap(_.allDependencies)
+
+    repositoryLinkFlags(dependencies).map: updateDependency =>
+      repositories.map: repository =>
+        repository.copy(
+          dependenciesBuild = repository.dependenciesBuild.map(updateDependency),
+          modules           = repository.modules.map: module =>
+                                module.copy(
+                                  dependenciesCompile  = module.dependenciesCompile.map(updateDependency),
+                                  dependenciesProvided = module.dependenciesProvided.map(updateDependency),
+                                  dependenciesTest     = module.dependenciesTest.map(updateDependency),
+                                  dependenciesIt       = module.dependenciesIt.map(updateDependency)
+                                )
+        )
+
+  private def teamRepositoryLinks(repositories: Seq[Dependencies])(using HeaderCarrier): Future[Seq[Dependencies]] =
+    val dependencies = repositories.flatMap(_.toDependencySeq)
+
+    repositoryLinkFlags(dependencies).map: updateDependency =>
+      repositories.map: repository =>
+        repository.copy(
+          libraryDependencies    = repository.libraryDependencies.map(updateDependency),
+          sbtPluginsDependencies = repository.sbtPluginsDependencies.map(updateDependency),
+          otherDependencies      = repository.otherDependencies.map(updateDependency)
+        )

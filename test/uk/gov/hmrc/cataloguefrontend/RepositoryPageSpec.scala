@@ -62,6 +62,35 @@ class RepositoryPageSpec extends UnitSpec with FakeApplicationBuilder {
       response.body   should include(s"GitHub")
     }
 
+    "show dependency links when metadata or the artefact name resolves to a repository and omit links otherwise" in {
+      val repoName = "other"
+      def dependency(name: String, group: String, version: String): String =
+        s"""{"name":"$name","group":"$group","currentVersion":"$version",
+             "bobbyRuleViolations":[],"vulnerabilities":[],"scope":"compile"}"""
+      val dependencies = Seq(
+        dependency("example-unregistered-library", "uk.gov.hmrc.example", "1.0.0"),
+        dependency("example-legacy-library", "uk.gov.hmrc.example", "2.0.0"),
+        dependency("example-registered-library", "uk.gov.hmrc.example", "3.0.0")
+      ).mkString("[", ",", "]")
+      serviceEndpoint(GET, s"/api/v2/repositories/$repoName", willRespondWith = (200, Some(repositoryData(RepositoryDetails(repoName, RepoType.Other)))))
+      serviceEndpoint(GET, s"/api/repositories/$repoName/module-dependencies?version=latest", willRespondWith = (200, Some(JsonData.repositoryModules(repoName, dependencies))))
+      serviceEndpoint(GET, "/api/repository-name?group=uk.gov.hmrc.example&artefact=example-unregistered-library&version=1.0.0", willRespondWith = (404, None))
+      serviceEndpoint(GET, "/api/v2/repositories/example-unregistered-library", willRespondWith = (404, None))
+      serviceEndpoint(GET, "/api/repository-name?group=uk.gov.hmrc.example&artefact=example-legacy-library&version=2.0.0", willRespondWith = (404, None))
+      serviceEndpoint(GET, "/api/v2/repositories/example-legacy-library", willRespondWith = (200, Some(repositoryData(RepositoryDetails("example-legacy-library", RepoType.Library)))))
+      serviceEndpoint(GET, "/api/repository-name?group=uk.gov.hmrc.example&artefact=example-registered-library&version=3.0.0", willRespondWith = (200, Some("\"example-registered-library\"")))
+
+      val response = wsClient.url(s"http://localhost:$port/repositories/$repoName").withAuthToken("Token token").get().futureValue
+      response.status shouldBe 200
+      val document = Jsoup.parse(response.body)
+      document.select("#example-unregistered-library-platform-dependencies-m1 .dep-name").text() shouldBe "example-unregistered-library"
+      document.select("#example-unregistered-library-platform-dependencies-m1-current-version").text() shouldBe "1.0.0"
+      document.select("#link-to-example-unregistered-library-platform-dependencies-m1").isEmpty shouldBe true
+      document.select("#link-to-example-legacy-library-platform-dependencies-m1").attr("href") shouldBe
+        "/dependency-repository?group=uk.gov.hmrc.example&artefact=example-legacy-library&version=2.0.0"
+      document.select("#link-to-example-registered-library-platform-dependencies-m1").size() shouldBe 1
+    }
+
     "render dependencies" in {
       val repoName = "other"
       val repositoryDetails = RepositoryDetails(repoName, RepoType.Other)
