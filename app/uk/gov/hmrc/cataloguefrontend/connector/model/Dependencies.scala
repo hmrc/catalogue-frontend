@@ -84,7 +84,8 @@ case class Dependency(
   bobbyRuleViolations: Seq[BobbyRuleViolation] = Seq.empty,
   vulnerabilityIds   : Seq[String]             = Seq.empty,
   importBy           : Option[ImportedBy]      = None,
-  scope              : DependencyScope
+  scope              : DependencyScope,
+  hasRepositoryLink  : Boolean                 = true
 ):
 
   val isExternal =
@@ -131,7 +132,7 @@ object Dependency:
     ~ (__ \ "vulnerabilities"    ).read[Seq[String]]
     ~ (__ \ "importBy"           ).readNullable[ImportedBy]
     ~ (__ \ "scope"              ).read[DependencyScope]
-    )(Dependency.apply)
+    )(Dependency.apply(_, _, _, _, _, _, _, _))
 
 case class Dependencies(
   repositoryName        : String,

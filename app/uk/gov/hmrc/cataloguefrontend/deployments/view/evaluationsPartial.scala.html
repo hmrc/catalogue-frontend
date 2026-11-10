@@ -410,7 +410,7 @@
 @dependencyRow(dependency: Dependency, scopes: Seq[DependencyScope]) = {
   <div class="row dependency-row" id="@{dependency.name}">
     <div class="col-3">
-      @if(!dependency.isExternal) {
+      @if(!dependency.isExternal && dependency.hasRepositoryLink) {
       <a id="link-to-@{dependency.name}" href="@appRoutes.CatalogueController.dependencyRepository(group = dependency.group, artefact = dependency.name, version = dependency.currentVersion.toString)">
         <span class="dep-group">@dependency.group:</span>
         <span class="dep-name">@dependency.name</span>

@@ -40,6 +40,49 @@ class DependencySectionSpec extends AnyWordSpec with Matchers {
   val rootId = "rootId"
 
   "dependency_section" should {
+    "show an HMRC dependency as plain text when its repository link flag is false" in {
+      val dependency = dependency2.copy(name = "example-unregistered-library", group = "uk.gov.hmrc.example", currentVersion = Version("1.0.0"), hasRepositoryLink = false)
+      val document = org.jsoup.Jsoup.parse(dependency_section(Seq(dependency), rootId).body)
+
+      document.select(".dep-group").text() shouldBe "uk.gov.hmrc.example:"
+      document.select(".dep-name").text() shouldBe "example-unregistered-library"
+      document.select(s"#example-unregistered-library-$rootId-current-version").text() shouldBe "1.0.0"
+      document.select(s"#link-to-example-unregistered-library-$rootId").isEmpty shouldBe true
+    }
+
+    "show a repository link with the full HMRC subgroup when a link is available" in {
+      val dependency = dependency2.copy(group = "uk.gov.hmrc.example", hasRepositoryLink = true)
+      val document = org.jsoup.Jsoup.parse(dependency_section(Seq(dependency), rootId).body)
+
+      document.select(s"#link-to-library4j-$rootId").attr("href") should include("group=uk.gov.hmrc.example")
+    }
+
+    "show a repository link with the dependency's group, artefact and version" in {
+      val dependency = dependency2.copy(
+        name = "example-legacy-library",
+        group = "uk.gov.hmrc.example",
+        currentVersion = Version("2.0.0"),
+        hasRepositoryLink = true
+      )
+      val document = org.jsoup.Jsoup.parse(dependency_section(Seq(dependency), rootId).body)
+
+      document.select(s"#link-to-example-legacy-library-$rootId").attr("href") shouldBe
+        "/dependency-repository?group=uk.gov.hmrc.example&artefact=example-legacy-library&version=2.0.0"
+    }
+
+    "show a repository link for a dependency in the base uk.gov.hmrc group" in {
+      val document = org.jsoup.Jsoup.parse(dependency_section(Seq(dependency1), rootId).body)
+
+      document.select(s"#link-to-example-library-$rootId").size() shouldBe 1
+    }
+
+    "show an external dependency as plain text even when its repository link flag is true" in {
+      val document = org.jsoup.Jsoup.parse(dependency_section(Seq(dependency2.copy(group = "org.example")), rootId).body)
+
+      document.select(".dep-name").text() shouldBe "library4j"
+      document.select(s"#link-to-library4j-$rootId").isEmpty shouldBe true
+    }
+
     "display the version suffix when present" in {
       val res = dependency_section(Seq(dependency1), rootId, showVulnerabilityColumn = false).body
       res should include(s"""<div id="example-library-$rootId-current-version" class="col-3">1.2.3-play-25</div>""")
