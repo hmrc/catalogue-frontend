@@ -224,7 +224,7 @@ class DeployServiceController @Inject()(
                                    Future.successful(None)
                                  else
                                    vulnerabilitiesConnector.vulnerabilitySummaries(
-                                     serviceQuery   = Some(formObject.serviceName.asString),
+                                     serviceQuery   = Some(s""""${formObject.serviceName.asString}""""),
                                      version        = Some(formObject.version),
                                      curationStatus = Some(CurationStatus.ActionRequired)
                                    )
