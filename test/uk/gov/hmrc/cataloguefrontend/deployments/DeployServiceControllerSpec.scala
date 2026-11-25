@@ -279,7 +279,7 @@ class DeployServiceControllerSpec
             .thenReturn(Future.successful(Seq(someConfigWarning)))
           when(mockVulnerabilitiesConnector.vulnerabilitySummaries(
             flag           = any[Option[SlugInfoFlag]],
-            serviceQuery   = eqTo(Some("some-service")),
+            serviceQuery   = eqTo(Some(""""some-service"""")),
             version        = eqTo(Some(Version("0.3.0"))),
             team           = any[Option[TeamName]],
             curationStatus = eqTo(Some(CurationStatus.ActionRequired))
